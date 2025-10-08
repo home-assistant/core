@@ -6,7 +6,7 @@
         "data": {
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
-          "distance": "Search Radius"
+          "distance": "Search radius"
         },
         "data_description": {
           "latitude": "The latitude around which to search for sensors",
@@ -53,11 +53,11 @@
   "options": {
     "step": {
       "add_sensor": {
-        "title": "Add Sensor",
+        "title": "Add sensor",
         "description": "[%key:component::purpleair::config::step::by_coordinates::description%]",
         "data": {
-          "latitude": "[%key:component::purpleair::config::step::by_coordinates::data::latitude%]",
-          "longitude": "[%key:component::purpleair::config::step::by_coordinates::data::longitude%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
           "distance": "[%key:component::purpleair::config::step::by_coordinates::data::distance%]"
         },
         "data_description": {
@@ -67,7 +67,7 @@
         }
       },
       "choose_sensor": {
-        "title": "Choose Sensor to Add",
+        "title": "Choose sensor to add",
         "description": "[%key:component::purpleair::config::step::choose_sensor::description%]",
         "data": {
           "sensor_index": "[%key:component::purpleair::config::step::choose_sensor::data::sensor_index%]"
@@ -84,16 +84,16 @@
         }
       },
       "remove_sensor": {
-        "title": "Remove Sensor",
+        "title": "Remove sensor",
         "data": {
-          "sensor_device_id": "Sensor Name"
+          "sensor_device_id": "Sensor name"
         },
         "data_description": {
           "sensor_device_id": "The sensor to remove"
         }
       },
       "settings": {
-        "title": "Settings",
+        "title": "[%key:component::purpleair::options::step::init::menu_options::settings%]",
         "data": {
           "show_on_map": "Show configured sensor locations on the map"
         }

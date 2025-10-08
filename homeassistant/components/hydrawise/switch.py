@@ -1,126 +1,106 @@
 """Support for Hydrawise cloud switches."""
+
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine, Iterable
+from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any
 
-from hydrawiser.core import Hydrawiser
-import voluptuous as vol
+from pydrawise import Controller, HydrawiseBase, Zone
 
 from homeassistant.components.switch import (
-    PLATFORM_SCHEMA,
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from .const import (
-    ALLOWED_WATERING_TIME,
-    CONF_WATERING_TIME,
-    DEFAULT_WATERING_TIME,
-    DOMAIN,
-    LOGGER,
-)
-from .coordinator import HydrawiseDataUpdateCoordinator
+from .const import DEFAULT_WATERING_TIME
+from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
 
-SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
-    SwitchEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class HydrawiseSwitchEntityDescription(SwitchEntityDescription):
+    """Describes Hydrawise binary sensor."""
+
+    turn_on_fn: Callable[[HydrawiseBase, Zone], Coroutine[Any, Any, None]]
+    turn_off_fn: Callable[[HydrawiseBase, Zone], Coroutine[Any, Any, None]]
+    value_fn: Callable[[Zone], bool]
+
+
+SWITCH_TYPES: tuple[HydrawiseSwitchEntityDescription, ...] = (
+    HydrawiseSwitchEntityDescription(
         key="auto_watering",
-        name="Automatic Watering",
+        translation_key="auto_watering",
         device_class=SwitchDeviceClass.SWITCH,
+        value_fn=lambda zone: zone.status.suspended_until is None,
+        turn_on_fn=lambda api, zone: api.resume_zone(zone),
+        turn_off_fn=lambda api, zone: api.suspend_zone(
+            zone, dt_util.now() + timedelta(days=365)
+        ),
     ),
-    SwitchEntityDescription(
+    HydrawiseSwitchEntityDescription(
         key="manual_watering",
-        name="Manual Watering",
+        translation_key="manual_watering",
         device_class=SwitchDeviceClass.SWITCH,
+        value_fn=lambda zone: zone.scheduled_runs.current_run is not None,
+        turn_on_fn=lambda api, zone: api.start_zone(
+            zone,
+            custom_run_duration=int(DEFAULT_WATERING_TIME.total_seconds()),
+        ),
+        turn_off_fn=lambda api, zone: api.stop_zone(zone),
     ),
 )
 
 SWITCH_KEYS: list[str] = [desc.key for desc in SWITCH_TYPES]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=SWITCH_KEYS): vol.All(
-            cv.ensure_list, [vol.In(SWITCH_KEYS)]
-        ),
-        vol.Optional(CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME): vol.All(
-            vol.In(ALLOWED_WATERING_TIME)
-        ),
-    }
-)
 
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: HydrawiseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up a sensor for a Hydrawise device."""
-    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN]
-    hydrawise: Hydrawiser = coordinator.api
-    monitored_conditions: list[str] = config[CONF_MONITORED_CONDITIONS]
-    default_watering_timer: int = config[CONF_WATERING_TIME]
+    """Set up the Hydrawise switch platform."""
+    coordinators = config_entry.runtime_data
 
-    entities = [
-        HydrawiseSwitch(
-            data=zone,
-            coordinator=coordinator,
-            description=description,
-            default_watering_timer=default_watering_timer,
+    def _add_new_zones(zones: Iterable[tuple[Zone, Controller]]) -> None:
+        async_add_entities(
+            HydrawiseSwitch(coordinators.main, description, controller, zone_id=zone.id)
+            for zone, controller in zones
+            for description in SWITCH_TYPES
         )
-        for zone in hydrawise.relays
-        for description in SWITCH_TYPES
-        if description.key in monitored_conditions
-    ]
 
-    add_entities(entities, True)
+    _add_new_zones(
+        [
+            (zone, coordinators.main.data.zone_id_to_controller[zone.id])
+            for zone in coordinators.main.data.zones.values()
+        ]
+    )
+    coordinators.main.new_zones_callbacks.append(_add_new_zones)
 
 
 class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
     """A switch implementation for Hydrawise device."""
 
-    def __init__(
-        self,
-        *,
-        data: dict[str, Any],
-        coordinator: HydrawiseDataUpdateCoordinator,
-        description: SwitchEntityDescription,
-        default_watering_timer: int,
-    ) -> None:
-        """Initialize a switch for Hydrawise device."""
-        super().__init__(data=data, coordinator=coordinator, description=description)
-        self._default_watering_timer = default_watering_timer
+    entity_description: HydrawiseSwitchEntityDescription
+    zone: Zone
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        relay_data = self.data["relay"] - 1
-        if self.entity_description.key == "manual_watering":
-            self.coordinator.api.run_zone(self._default_watering_timer, relay_data)
-        elif self.entity_description.key == "auto_watering":
-            self.coordinator.api.suspend_zone(0, relay_data)
+        await self.entity_description.turn_on_fn(self.coordinator.api, self.zone)
+        self._attr_is_on = True
+        self.async_write_ha_state()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        relay_data = self.data["relay"] - 1
-        if self.entity_description.key == "manual_watering":
-            self.coordinator.api.run_zone(0, relay_data)
-        elif self.entity_description.key == "auto_watering":
-            self.coordinator.api.suspend_zone(365, relay_data)
+        await self.entity_description.turn_off_fn(self.coordinator.api, self.zone)
+        self._attr_is_on = False
+        self.async_write_ha_state()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update device state."""
-        relay_data = self.data["relay"] - 1
-        LOGGER.debug("Updating Hydrawise switch: %s", self.name)
-        timestr = self.coordinator.api.relays[relay_data]["timestr"]
-        if self.entity_description.key == "manual_watering":
-            self._attr_is_on = timestr == "Now"
-        elif self.entity_description.key == "auto_watering":
-            self._attr_is_on = timestr not in {"", "Now"}
-        super()._handle_coordinator_update()
+    def _update_attrs(self) -> None:
+        """Update state attributes."""
+        self._attr_is_on = self.entity_description.value_fn(self.zone)

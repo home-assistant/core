@@ -1,4 +1,5 @@
 """Platform for switch integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,35 +8,33 @@ from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .devolo_device import DevoloDeviceEntity
+from . import DevoloHomeControlConfigEntry
+from .entity import DevoloDeviceEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeControlConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all devices and setup the switch devices via config entry."""
-    entities = []
 
-    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
-        for device in gateway.binary_switch_devices:
-            for binary_switch in device.binary_switch_property:
-                # Exclude the binary switch which also has multi_level_switches here,
-                # because those are implemented as light entities now.
-                if not hasattr(device, "multi_level_switch_property"):
-                    entities.append(
-                        DevoloSwitch(
-                            homecontrol=gateway,
-                            device_instance=device,
-                            element_uid=binary_switch,
-                        )
-                    )
-
-    async_add_entities(entities)
+    async_add_entities(
+        DevoloSwitch(
+            homecontrol=gateway,
+            device_instance=device,
+            element_uid=binary_switch,
+        )
+        for gateway in entry.runtime_data
+        for device in gateway.binary_switch_devices
+        for binary_switch in device.binary_switch_property
+        # Exclude the binary switch which also has multi_level_switches here,
+        # because those are implemented as light entities now.
+        if not hasattr(device, "multi_level_switch_property")
+    )
 
 
 class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
@@ -46,7 +45,7 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
     ) -> None:
-        """Initialize an devolo Switch."""
+        """Initialize a devolo Switch."""
         super().__init__(
             homecontrol=homecontrol,
             device_instance=device_instance,
@@ -65,7 +64,7 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
         """Switch off the device."""
         self._binary_switch_property.set(state=False)
 
-    def _sync(self, message: tuple) -> None:
+    def sync_callback(self, message: tuple) -> None:
         """Update the binary switch state and consumption."""
         if message[0].startswith("devolo.BinarySwitch"):
             self._attr_is_on = self._device_instance.binary_switch_property[

@@ -1,11 +1,12 @@
 """Tests for Vallox switch platform."""
+
 import pytest
 
-from homeassistant.components.switch.const import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 
-from .conftest import patch_metrics, patch_metrics_set
+from .conftest import patch_set_values
 
 from tests.common import MockConfigEntry
 
@@ -24,15 +25,15 @@ async def test_switch_entities(
     expected_state: str,
     mock_entry: MockConfigEntry,
     hass: HomeAssistant,
+    setup_fetch_metric_data_mock,
 ) -> None:
     """Test switch entities."""
     # Arrange
-    metrics = {metric_key: value}
+    setup_fetch_metric_data_mock(metrics={metric_key: value})
 
     # Act
-    with patch_metrics(metrics=metrics):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Assert
     sensor = hass.states.get(entity_id)
@@ -56,7 +57,7 @@ async def test_bypass_lock_switch_entitity_set(
 ) -> None:
     """Test bypass lock switch set."""
     # Act
-    with patch_metrics(metrics={}), patch_metrics_set() as metrics_set:
+    with patch_set_values() as set_values:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
         await hass.services.async_call(
@@ -65,4 +66,4 @@ async def test_bypass_lock_switch_entitity_set(
             service_data={ATTR_ENTITY_ID: "switch.vallox_bypass_locked"},
         )
         await hass.async_block_till_done()
-        metrics_set.assert_called_once_with({metric_key: value})
+        set_values.assert_called_once_with({metric_key: value})

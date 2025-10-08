@@ -1,13 +1,9 @@
 set_value:
-  name: Set Date
-  description: Set the date for a date entity.
   target:
     entity:
       domain: date
   fields:
     date:
-      name: Date
-      description: The date to set.
       required: true
       example: "2022/11/01"
       selector:

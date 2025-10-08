@@ -1,62 +1,79 @@
 """Component providing support for Reolink switch entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from reolink_aio.api import Host
+from reolink_aio.api import Chime, Host
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ReolinkData
-from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
+from .entity import (
+    ReolinkChannelCoordinatorEntity,
+    ReolinkChannelEntityDescription,
+    ReolinkChimeCoordinatorEntity,
+    ReolinkChimeEntityDescription,
+    ReolinkHostChimeCoordinatorEntity,
+    ReolinkHostCoordinatorEntity,
+    ReolinkHostEntityDescription,
+)
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
+
+PARALLEL_UPDATES = 0
 
 
-@dataclass
-class ReolinkSwitchEntityDescriptionMixin:
-    """Mixin values for Reolink switch entities."""
-
-    value: Callable[[Host, int], bool]
-    method: Callable[[Host, int, bool], Any]
-
-
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ReolinkSwitchEntityDescription(
-    SwitchEntityDescription, ReolinkSwitchEntityDescriptionMixin
+    SwitchEntityDescription,
+    ReolinkChannelEntityDescription,
 ):
     """A class that describes switch entities."""
 
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
+    method: Callable[[Host, int, bool], Any]
+    value: Callable[[Host, int], bool | None]
 
 
-@dataclass
-class ReolinkNVRSwitchEntityDescriptionMixin:
-    """Mixin values for Reolink NVR switch entities."""
-
-    value: Callable[[Host], bool]
-    method: Callable[[Host, bool], Any]
-
-
-@dataclass
-class ReolinkNVRSwitchEntityDescription(
-    SwitchEntityDescription, ReolinkNVRSwitchEntityDescriptionMixin
+@dataclass(frozen=True, kw_only=True)
+class ReolinkHostSwitchEntityDescription(
+    SwitchEntityDescription,
+    ReolinkHostEntityDescription,
 ):
-    """A class that describes NVR switch entities."""
+    """A class that describes host switch entities."""
 
-    supported: Callable[[Host], bool] = lambda api: True
+    method: Callable[[Host, bool], Any]
+    value: Callable[[Host], bool]
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReolinkChimeSwitchEntityDescription(
+    SwitchEntityDescription,
+    ReolinkChimeEntityDescription,
+):
+    """A class that describes switch entities for a chime."""
+
+    method: Callable[[Chime, bool], Any]
+    value: Callable[[Chime], bool | None]
 
 
 SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
+        key="ir_lights",
+        cmd_key="GetIrLights",
+        translation_key="ir_lights",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "ir_lights"),
+        value=lambda api, ch: api.ir_enabled(ch),
+        method=lambda api, ch, value: api.set_ir_lights(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
         key="record_audio",
-        name="Record audio",
-        icon="mdi:microphone",
+        cmd_key="GetEnc",
+        translation_key="record_audio",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "audio"),
         value=lambda api, ch: api.audio_record(ch),
@@ -64,8 +81,8 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="siren_on_event",
-        name="Siren on event",
-        icon="mdi:alarm-light",
+        cmd_key="GetAudioAlarm",
+        translation_key="siren_on_event",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "siren"),
         value=lambda api, ch: api.audio_alarm_enabled(ch),
@@ -73,8 +90,8 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="auto_tracking",
-        name="Auto tracking",
-        icon="mdi:target-account",
+        cmd_key="GetAiCfg",
+        translation_key="auto_tracking",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "auto_track"),
         value=lambda api, ch: api.auto_track_enabled(ch),
@@ -82,8 +99,8 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="auto_focus",
-        name="Auto focus",
-        icon="mdi:focus-field",
+        cmd_key="GetAutoFocus",
+        translation_key="auto_focus",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "auto_focus"),
         value=lambda api, ch: api.autofocus_enabled(ch),
@@ -91,17 +108,24 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="gaurd_return",
-        name="Guard return",
-        icon="mdi:crosshairs-gps",
+        cmd_key="GetPtzGuard",
+        translation_key="guard_return",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ptz_guard"),
         value=lambda api, ch: api.ptz_guard_enabled(ch),
         method=lambda api, ch, value: api.set_ptz_guard(ch, enable=value),
     ),
     ReolinkSwitchEntityDescription(
+        key="ptz_patrol",
+        translation_key="ptz_patrol",
+        supported=lambda api, ch: api.supported(ch, "ptz_patrol"),
+        value=lambda api, ch: None,
+        method=lambda api, ch, value: api.ctrl_ptz_patrol(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
         key="email",
-        name="Email on event",
-        icon="mdi:email",
+        cmd_key="GetEmail",
+        translation_key="email",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "email") and api.is_nvr,
         value=lambda api, ch: api.email_enabled(ch),
@@ -109,8 +133,8 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="ftp_upload",
-        name="FTP upload",
-        icon="mdi:swap-horizontal",
+        cmd_key="GetFtp",
+        translation_key="ftp_upload",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ftp") and api.is_nvr,
         value=lambda api, ch: api.ftp_enabled(ch),
@@ -118,8 +142,8 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="push_notifications",
-        name="Push notifications",
-        icon="mdi:message-badge",
+        cmd_key="GetPush",
+        translation_key="push_notifications",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "push") and api.is_nvr,
         value=lambda api, ch: api.push_enabled(ch),
@@ -127,16 +151,36 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="record",
-        name="Record",
-        icon="mdi:record-rec",
-        supported=lambda api, ch: api.supported(ch, "recording") and api.is_nvr,
+        cmd_key="GetRec",
+        translation_key="record",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "rec_enable") and api.is_nvr,
         value=lambda api, ch: api.recording_enabled(ch),
         method=lambda api, ch, value: api.set_recording(ch, value),
     ),
     ReolinkSwitchEntityDescription(
+        key="manual_record",
+        cmd_key="GetManualRec",
+        cmd_id=588,
+        translation_key="manual_record",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "manual_record"),
+        value=lambda api, ch: api.manual_record_enabled(ch),
+        method=lambda api, ch, value: api.set_manual_record(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="pre_record",
+        cmd_key="594",
+        translation_key="pre_record",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "pre_record"),
+        value=lambda api, ch: api.baichuan.pre_record_enabled(ch),
+        method=lambda api, ch, value: api.baichuan.set_pre_recording(ch, enabled=value),
+    ),
+    ReolinkSwitchEntityDescription(
         key="buzzer",
-        name="Buzzer on event",
-        icon="mdi:room-service",
+        cmd_key="GetBuzzerAlarmV20",
+        translation_key="hub_ringtone_on_event",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "buzzer") and api.is_nvr,
         value=lambda api, ch: api.buzzer_enabled(ch),
@@ -144,84 +188,155 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="doorbell_button_sound",
-        name="Doorbell button sound",
-        icon="mdi:volume-high",
+        cmd_key="GetAudioCfg",
+        translation_key="doorbell_button_sound",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "doorbell_button_sound"),
         value=lambda api, ch: api.doorbell_button_sound(ch),
         method=lambda api, ch, value: api.set_volume(ch, doorbell_button_sound=value),
     ),
+    ReolinkSwitchEntityDescription(
+        key="pir_enabled",
+        cmd_key="GetPirInfo",
+        translation_key="pir_enabled",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "PIR"),
+        value=lambda api, ch: api.pir_enabled(ch) is True,
+        method=lambda api, ch, value: api.set_pir(ch, enable=value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="pir_reduce_alarm",
+        cmd_key="GetPirInfo",
+        translation_key="pir_reduce_alarm",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "PIR"),
+        value=lambda api, ch: api.pir_reduce_alarm(ch) is True,
+        method=lambda api, ch, value: api.set_pir(ch, reduce_alarm=value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="privacy_mode",
+        always_available=True,
+        translation_key="privacy_mode",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "privacy_mode"),
+        value=lambda api, ch: api.baichuan.privacy_mode(ch),
+        method=lambda api, ch, value: api.baichuan.set_privacy_mode(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="privacy_mask",
+        cmd_key="GetMask",
+        translation_key="privacy_mask",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "privacy_mask"),
+        value=lambda api, ch: api.privacy_mask_enabled(ch),
+        method=lambda api, ch, value: api.set_privacy_mask(ch, enable=value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="hardwired_chime_enabled",
+        cmd_key="483",
+        translation_key="hardwired_chime_enabled",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "hardwired_chime"),
+        value=lambda api, ch: api.baichuan.hardwired_chime_enabled(ch),
+        method=lambda api, ch, value: api.baichuan.set_ding_dong_ctrl(ch, enable=value),
+    ),
 )
 
-NVR_SWITCH_ENTITIES = (
-    ReolinkNVRSwitchEntityDescription(
+HOST_SWITCH_ENTITIES = (
+    ReolinkHostSwitchEntityDescription(
         key="email",
-        name="Email on event",
-        icon="mdi:email",
+        cmd_key="GetEmail",
+        translation_key="email",
         entity_category=EntityCategory.CONFIG,
-        supported=lambda api: api.supported(None, "email"),
+        supported=lambda api: api.supported(None, "email") and not api.is_hub,
         value=lambda api: api.email_enabled(),
         method=lambda api, value: api.set_email(None, value),
     ),
-    ReolinkNVRSwitchEntityDescription(
+    ReolinkHostSwitchEntityDescription(
         key="ftp_upload",
-        name="FTP upload",
-        icon="mdi:swap-horizontal",
+        cmd_key="GetFtp",
+        translation_key="ftp_upload",
         entity_category=EntityCategory.CONFIG,
-        supported=lambda api: api.supported(None, "ftp"),
+        supported=lambda api: api.supported(None, "ftp") and not api.is_hub,
         value=lambda api: api.ftp_enabled(),
         method=lambda api, value: api.set_ftp(None, value),
     ),
-    ReolinkNVRSwitchEntityDescription(
+    ReolinkHostSwitchEntityDescription(
         key="push_notifications",
-        name="Push notifications",
-        icon="mdi:message-badge",
+        cmd_key="GetPush",
+        translation_key="push_notifications",
         entity_category=EntityCategory.CONFIG,
-        supported=lambda api: api.supported(None, "push"),
+        supported=lambda api: api.supported(None, "push") and not api.is_hub,
         value=lambda api: api.push_enabled(),
         method=lambda api, value: api.set_push(None, value),
     ),
-    ReolinkNVRSwitchEntityDescription(
+    ReolinkHostSwitchEntityDescription(
         key="record",
-        name="Record",
-        icon="mdi:record-rec",
-        supported=lambda api: api.supported(None, "recording"),
+        cmd_key="GetRec",
+        translation_key="record",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api: api.supported(None, "rec_enable") and not api.is_hub,
         value=lambda api: api.recording_enabled(),
         method=lambda api, value: api.set_recording(None, value),
     ),
-    ReolinkNVRSwitchEntityDescription(
+    ReolinkHostSwitchEntityDescription(
         key="buzzer",
-        name="Buzzer on event",
-        icon="mdi:room-service",
+        cmd_key="GetBuzzerAlarmV20",
+        translation_key="hub_ringtone_on_event",
         entity_category=EntityCategory.CONFIG,
-        supported=lambda api: api.supported(None, "buzzer"),
+        supported=lambda api: api.supported(None, "buzzer") and not api.is_hub,
         value=lambda api: api.buzzer_enabled(),
         method=lambda api, value: api.set_buzzer(None, value),
+    ),
+)
+
+CHIME_SWITCH_ENTITIES = (
+    ReolinkChimeSwitchEntityDescription(
+        key="chime_led",
+        cmd_key="DingDongOpt",
+        translation_key="led",
+        entity_category=EntityCategory.CONFIG,
+        value=lambda chime: chime.led_state,
+        method=lambda chime, value: chime.set_option(led=value),
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ReolinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink switch entities."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
-    entities: list[ReolinkSwitchEntity | ReolinkNVRSwitchEntity] = [
+    entities: list[SwitchEntity] = [
         ReolinkSwitchEntity(reolink_data, channel, entity_description)
         for entity_description in SWITCH_ENTITIES
         for channel in reolink_data.host.api.channels
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(
-        [
-            ReolinkNVRSwitchEntity(reolink_data, entity_description)
-            for entity_description in NVR_SWITCH_ENTITIES
-            if entity_description.supported(reolink_data.host.api)
-        ]
+        ReolinkHostSwitchEntity(reolink_data, entity_description)
+        for entity_description in HOST_SWITCH_ENTITIES
+        if entity_description.supported(reolink_data.host.api)
     )
+    entities.extend(
+        ReolinkChimeSwitchEntity(reolink_data, chime, entity_description)
+        for entity_description in CHIME_SWITCH_ENTITIES
+        for chime in reolink_data.host.api.chime_list
+        if chime.channel is not None
+    )
+    entities.extend(
+        ReolinkHostChimeSwitchEntity(reolink_data, chime, entity_description)
+        for entity_description in CHIME_SWITCH_ENTITIES
+        for chime in reolink_data.host.api.chime_list
+        if chime.channel is None
+    )
+
     async_add_entities(entities)
 
 
@@ -237,56 +352,120 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         entity_description: ReolinkSwitchEntityDescription,
     ) -> None:
         """Initialize Reolink switch entity."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
-
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
+        super().__init__(reolink_data, channel)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api, self._channel)
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(self._host.api, self._channel, True)
         self.async_write_ha_state()
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(self._host.api, self._channel, False)
         self.async_write_ha_state()
 
 
-class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
-    """Switch entity class for Reolink NVR features."""
+class ReolinkHostSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
+    """Switch entity class for Reolink host features."""
 
-    entity_description: ReolinkNVRSwitchEntityDescription
+    entity_description: ReolinkHostSwitchEntityDescription
 
     def __init__(
         self,
         reolink_data: ReolinkData,
-        entity_description: ReolinkNVRSwitchEntityDescription,
+        entity_description: ReolinkHostSwitchEntityDescription,
     ) -> None:
         """Initialize Reolink switch entity."""
-        super().__init__(reolink_data)
         self.entity_description = entity_description
-
-        self._attr_unique_id = f"{self._host.unique_id}_{entity_description.key}"
+        super().__init__(reolink_data)
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api)
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(self._host.api, True)
         self.async_write_ha_state()
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(self._host.api, False)
+        self.async_write_ha_state()
+
+
+class ReolinkChimeSwitchEntity(ReolinkChimeCoordinatorEntity, SwitchEntity):
+    """Base switch entity class for a chime."""
+
+    entity_description: ReolinkChimeSwitchEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        chime: Chime,
+        entity_description: ReolinkChimeSwitchEntityDescription,
+    ) -> None:
+        """Initialize Reolink switch entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, chime)
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if switch is on."""
+        return self.entity_description.value(self._chime)
+
+    @raise_translated_error
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        await self.entity_description.method(self._chime, True)
+        self.async_write_ha_state()
+
+    @raise_translated_error
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        await self.entity_description.method(self._chime, False)
+        self.async_write_ha_state()
+
+
+class ReolinkHostChimeSwitchEntity(ReolinkHostChimeCoordinatorEntity, SwitchEntity):
+    """Base switch entity class for a chime."""
+
+    entity_description: ReolinkChimeSwitchEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        chime: Chime,
+        entity_description: ReolinkChimeSwitchEntityDescription,
+    ) -> None:
+        """Initialize Reolink switch entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, chime)
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if switch is on."""
+        return self.entity_description.value(self._chime)
+
+    @raise_translated_error
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        await self.entity_description.method(self._chime, True)
+        self.async_write_ha_state()
+
+    @raise_translated_error
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        await self.entity_description.method(self._chime, False)
         self.async_write_ha_state()

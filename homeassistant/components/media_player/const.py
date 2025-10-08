@@ -1,7 +1,8 @@
 """Provides the constants needed for component."""
-from enum import IntFlag
 
-from homeassistant.backports.enum import StrEnum
+from enum import IntFlag, StrEnum
+
+from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
 
 # How long our auth signature on the content should be valid for
 CONTENT_AUTH_EXPIRY_TIME = 3600 * 24
@@ -19,6 +20,8 @@ ATTR_MEDIA_ARTIST = "media_artist"
 ATTR_MEDIA_CHANNEL = "media_channel"
 ATTR_MEDIA_CONTENT_ID = "media_content_id"
 ATTR_MEDIA_CONTENT_TYPE = "media_content_type"
+ATTR_MEDIA_SEARCH_QUERY = "search_query"
+ATTR_MEDIA_FILTER_CLASSES = "media_filter_classes"
 ATTR_MEDIA_DURATION = "media_duration"
 ATTR_MEDIA_ENQUEUE = "enqueue"
 ATTR_MEDIA_EXTRA = "extra"
@@ -41,7 +44,13 @@ ATTR_SOUND_MODE_LIST = "sound_mode_list"
 DOMAIN = "media_player"
 
 
-class MediaPlayerState(StrEnum):
+class MediaPlayerState(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "STANDBY": ("MediaPlayerState.OFF or MediaPlayerState.IDLE", "2026.8.0"),
+    },
+):
     """State of media player entities."""
 
     OFF = "off"
@@ -78,30 +87,6 @@ class MediaClass(StrEnum):
     VIDEO = "video"
 
 
-# These MEDIA_CLASS_* constants are deprecated as of Home Assistant 2022.10.
-# Please use the MediaClass enum instead.
-MEDIA_CLASS_ALBUM = "album"
-MEDIA_CLASS_APP = "app"
-MEDIA_CLASS_ARTIST = "artist"
-MEDIA_CLASS_CHANNEL = "channel"
-MEDIA_CLASS_COMPOSER = "composer"
-MEDIA_CLASS_CONTRIBUTING_ARTIST = "contributing_artist"
-MEDIA_CLASS_DIRECTORY = "directory"
-MEDIA_CLASS_EPISODE = "episode"
-MEDIA_CLASS_GAME = "game"
-MEDIA_CLASS_GENRE = "genre"
-MEDIA_CLASS_IMAGE = "image"
-MEDIA_CLASS_MOVIE = "movie"
-MEDIA_CLASS_MUSIC = "music"
-MEDIA_CLASS_PLAYLIST = "playlist"
-MEDIA_CLASS_PODCAST = "podcast"
-MEDIA_CLASS_SEASON = "season"
-MEDIA_CLASS_TRACK = "track"
-MEDIA_CLASS_TV_SHOW = "tv_show"
-MEDIA_CLASS_URL = "url"
-MEDIA_CLASS_VIDEO = "video"
-
-
 class MediaType(StrEnum):
     """Media type for media player entities."""
 
@@ -128,33 +113,11 @@ class MediaType(StrEnum):
     VIDEO = "video"
 
 
-# These MEDIA_TYPE_* constants are deprecated as of Home Assistant 2022.10.
-# Please use the MediaType enum instead.
-MEDIA_TYPE_ALBUM = "album"
-MEDIA_TYPE_APP = "app"
-MEDIA_TYPE_APPS = "apps"
-MEDIA_TYPE_ARTIST = "artist"
-MEDIA_TYPE_CHANNEL = "channel"
-MEDIA_TYPE_CHANNELS = "channels"
-MEDIA_TYPE_COMPOSER = "composer"
-MEDIA_TYPE_CONTRIBUTING_ARTIST = "contributing_artist"
-MEDIA_TYPE_EPISODE = "episode"
-MEDIA_TYPE_GAME = "game"
-MEDIA_TYPE_GENRE = "genre"
-MEDIA_TYPE_IMAGE = "image"
-MEDIA_TYPE_MOVIE = "movie"
-MEDIA_TYPE_MUSIC = "music"
-MEDIA_TYPE_PLAYLIST = "playlist"
-MEDIA_TYPE_PODCAST = "podcast"
-MEDIA_TYPE_SEASON = "season"
-MEDIA_TYPE_TRACK = "track"
-MEDIA_TYPE_TVSHOW = "tvshow"
-MEDIA_TYPE_URL = "url"
-MEDIA_TYPE_VIDEO = "video"
-
 SERVICE_CLEAR_PLAYLIST = "clear_playlist"
 SERVICE_JOIN = "join"
 SERVICE_PLAY_MEDIA = "play_media"
+SERVICE_BROWSE_MEDIA = "browse_media"
+SERVICE_SEARCH_MEDIA = "search_media"
 SERVICE_SELECT_SOUND_MODE = "select_sound_mode"
 SERVICE_SELECT_SOURCE = "select_source"
 SERVICE_UNJOIN = "unjoin"
@@ -168,12 +131,7 @@ class RepeatMode(StrEnum):
     ONE = "one"
 
 
-# These REPEAT_MODE_* constants are deprecated as of Home Assistant 2022.10.
-# Please use the RepeatMode enum instead.
-REPEAT_MODE_ALL = "all"
-REPEAT_MODE_OFF = "off"
-REPEAT_MODE_ONE = "one"
-REPEAT_MODES = [REPEAT_MODE_OFF, REPEAT_MODE_ALL, REPEAT_MODE_ONE]
+REPEAT_MODES = [cls.value for cls in RepeatMode]
 
 
 class MediaPlayerEntityFeature(IntFlag):
@@ -199,28 +157,6 @@ class MediaPlayerEntityFeature(IntFlag):
     BROWSE_MEDIA = 131072
     REPEAT_SET = 262144
     GROUPING = 524288
+    MEDIA_ANNOUNCE = 1048576
     MEDIA_ENQUEUE = 2097152
-
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the MediaPlayerEntityFeature enum instead.
-SUPPORT_PAUSE = 1
-SUPPORT_SEEK = 2
-SUPPORT_VOLUME_SET = 4
-SUPPORT_VOLUME_MUTE = 8
-SUPPORT_PREVIOUS_TRACK = 16
-SUPPORT_NEXT_TRACK = 32
-
-SUPPORT_TURN_ON = 128
-SUPPORT_TURN_OFF = 256
-SUPPORT_PLAY_MEDIA = 512
-SUPPORT_VOLUME_STEP = 1024
-SUPPORT_SELECT_SOURCE = 2048
-SUPPORT_STOP = 4096
-SUPPORT_CLEAR_PLAYLIST = 8192
-SUPPORT_PLAY = 16384
-SUPPORT_SHUFFLE_SET = 32768
-SUPPORT_SELECT_SOUND_MODE = 65536
-SUPPORT_BROWSE_MEDIA = 131072
-SUPPORT_REPEAT_SET = 262144
-SUPPORT_GROUPING = 524288
+    SEARCH_MEDIA = 4194304

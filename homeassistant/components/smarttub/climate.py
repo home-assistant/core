@@ -1,4 +1,5 @@
 """Platform for climate integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,21 +14,23 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SMARTTUB_CONTROLLER
+from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
+from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
 
 PRESET_DAY = "day"
+PRESET_READY = "ready"
 
 PRESET_MODES = {
     Spa.HeatMode.AUTO: PRESET_NONE,
     Spa.HeatMode.ECONOMY: PRESET_ECO,
     Spa.HeatMode.DAY: PRESET_DAY,
+    Spa.HeatMode.READY: PRESET_READY,
 }
 
 HEAT_MODES = {v: k for k, v in PRESET_MODES.items()}
@@ -39,11 +42,13 @@ HVAC_ACTIONS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SmartTubConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate entity for the thermostat in the tub."""
 
-    controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
+    controller = entry.runtime_data
 
     entities = [
         SmartTubThermostat(controller.coordinator, spa) for spa in controller.spas
@@ -64,8 +69,13 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_min_temp = DEFAULT_MIN_TEMP
+    _attr_max_temp = DEFAULT_MAX_TEMP
+    _attr_preset_modes = list(PRESET_MODES.values())
 
-    def __init__(self, coordinator, spa):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, spa, "Thermostat")
 
@@ -84,30 +94,9 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         raise NotImplementedError(hvac_mode)
 
     @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        min_temp = DEFAULT_MIN_TEMP
-        return TemperatureConverter.convert(
-            min_temp, UnitOfTemperature.CELSIUS, self.temperature_unit
-        )
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        max_temp = DEFAULT_MAX_TEMP
-        return TemperatureConverter.convert(
-            max_temp, UnitOfTemperature.CELSIUS, self.temperature_unit
-        )
-
-    @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return the current preset mode."""
         return PRESET_MODES[self.spa_status.heat_mode]
-
-    @property
-    def preset_modes(self):
-        """Return the available preset modes."""
-        return list(PRESET_MODES.values())
 
     @property
     def current_temperature(self):

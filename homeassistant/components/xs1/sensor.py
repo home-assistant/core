@@ -1,14 +1,18 @@
 """Support for XS1 sensors."""
+
 from __future__ import annotations
 
 from xs1_api_client.api_constants import ActuatorType
+from xs1_api_client.device.actuator import XS1Actuator
+from xs1_api_client.device.sensor import XS1Sensor
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
+from . import ACTUATORS, DOMAIN, SENSORS
+from .entity import XS1DeviceEntity
 
 
 def setup_platform(
@@ -18,8 +22,8 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the XS1 sensor platform."""
-    sensors = hass.data[COMPONENT_DOMAIN][SENSORS]
-    actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]
+    sensors: list[XS1Sensor] = hass.data[DOMAIN][SENSORS]
+    actuators: list[XS1Actuator] = hass.data[DOMAIN][ACTUATORS]
 
     sensor_entities = []
     for sensor in sensors:
@@ -33,16 +37,16 @@ def setup_platform(
                 break
 
         if not belongs_to_climate_actuator:
-            sensor_entities.append(XS1Sensor(sensor))
+            sensor_entities.append(XS1SensorEntity(sensor))
 
     add_entities(sensor_entities)
 
 
-class XS1Sensor(XS1DeviceEntity, SensorEntity):
+class XS1SensorEntity(XS1DeviceEntity, SensorEntity):
     """Representation of a Sensor."""
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self.device.name()
 
@@ -52,6 +56,6 @@ class XS1Sensor(XS1DeviceEntity, SensorEntity):
         return self.device.value()
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return self.device.unit()

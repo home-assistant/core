@@ -1,4 +1,5 @@
 """Support for the QNAP QSW update."""
+
 from __future__ import annotations
 
 from typing import Any, Final
@@ -7,8 +8,6 @@ from aioqsw.const import (
     QSD_DESCRIPTION,
     QSD_FIRMWARE_CHECK,
     QSD_FIRMWARE_INFO,
-    QSD_PRODUCT,
-    QSD_SYSTEM_BOARD,
     QSD_VERSION,
 )
 
@@ -21,7 +20,7 @@ from homeassistant.components.update import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, QSW_COORD_FW, QSW_UPDATE
 from .coordinator import QswFirmwareCoordinator
@@ -32,13 +31,14 @@ UPDATE_TYPES: Final[tuple[UpdateEntityDescription, ...]] = (
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         key=QSW_UPDATE,
-        name="Firmware Update",
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add QNAP QSW updates from a config_entry."""
     coordinator: QswFirmwareCoordinator = hass.data[DOMAIN][entry.entry_id][
@@ -63,9 +63,6 @@ class QswUpdate(QswFirmwareEntity, UpdateEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
-        self._attr_name = (
-            f"{self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT)} {description.name}"
-        )
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self.entity_description = description
 

@@ -1,33 +1,33 @@
 """Component to allow for providing device or service updates."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
+from functools import lru_cache
 import logging
 from typing import Any, Final, final
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
+from propcache.api import cached_property
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import ABCCachedProperties, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_AUTO_UPDATE,
     ATTR_BACKUP,
+    ATTR_DISPLAY_PRECISION,
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
@@ -35,6 +35,7 @@ from .const import (
     ATTR_RELEASE_URL,
     ATTR_SKIPPED_VERSION,
     ATTR_TITLE,
+    ATTR_UPDATE_PERCENTAGE,
     ATTR_VERSION,
     DOMAIN,
     SERVICE_INSTALL,
@@ -42,11 +43,13 @@ from .const import (
     UpdateEntityFeature,
 )
 
-SCAN_INTERVAL = timedelta(minutes=15)
-
-ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
-
 _LOGGER = logging.getLogger(__name__)
+
+DATA_COMPONENT: HassKey[EntityComponent[UpdateEntity]] = HassKey(DOMAIN)
+ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(minutes=15)
 
 
 class UpdateDeviceClass(StrEnum):
@@ -65,8 +68,8 @@ __all__ = [
     "ATTR_VERSION",
     "DEVICE_CLASSES_SCHEMA",
     "DOMAIN",
-    "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
     "SERVICE_INSTALL",
     "SERVICE_SKIP",
     "UpdateDeviceClass",
@@ -80,7 +83,7 @@ __all__ = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Select entities."""
-    component = hass.data[DOMAIN] = EntityComponent[UpdateEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[UpdateEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -97,12 +100,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SKIP,
-        {},
+        None,
         async_skip,
     )
     component.async_register_entity_service(
         "clear_skipped",
-        {},
+        None,
         async_clear_skipped,
     )
 
@@ -113,14 +116,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[UpdateEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[UpdateEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None:
@@ -135,7 +136,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
     # If version is specified, but not supported by the entity.
     if (
         version is not None
-        and not entity.supported_features & UpdateEntityFeature.SPECIFIC_VERSION
+        and UpdateEntityFeature.SPECIFIC_VERSION not in entity.supported_features
     ):
         raise HomeAssistantError(
             f"Installing a specific version is not supported for {entity.entity_id}"
@@ -144,7 +145,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
     # If backup is requested, but not supported by the entity.
     if (
         backup := service_call.data[ATTR_BACKUP]
-    ) and not entity.supported_features & UpdateEntityFeature.BACKUP:
+    ) and UpdateEntityFeature.BACKUP not in entity.supported_features:
         raise HomeAssistantError(f"Backup is not supported for {entity.entity_id}")
 
     # Update is already in progress.
@@ -174,42 +175,86 @@ async def async_clear_skipped(entity: UpdateEntity, service_call: ServiceCall) -
     await entity.async_clear_skipped()
 
 
-@dataclass
-class UpdateEntityDescription(EntityDescription):
+class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes update entities."""
 
     device_class: UpdateDeviceClass | None = None
+    display_precision: int = 0
     entity_category: EntityCategory | None = EntityCategory.CONFIG
 
 
-class UpdateEntity(RestoreEntity):
+@lru_cache(maxsize=256)
+def _version_is_newer(latest_version: str, installed_version: str) -> bool:
+    """Return True if latest_version is newer than installed_version."""
+    return AwesomeVersion(latest_version) > installed_version
+
+
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "auto_update",
+    "installed_version",
+    "device_class",
+    "display_precision",
+    "in_progress",
+    "latest_version",
+    "release_summary",
+    "release_url",
+    "supported_features",
+    "title",
+    "update_percentage",
+}
+
+
+class UpdateEntity(
+    RestoreEntity,
+    metaclass=ABCCachedProperties,
+    cached_properties=CACHED_PROPERTIES_WITH_ATTR_,
+):
     """Representation of an update entity."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            ATTR_DISPLAY_PRECISION,
+            ATTR_ENTITY_PICTURE,
+            ATTR_IN_PROGRESS,
+            ATTR_RELEASE_SUMMARY,
+            ATTR_UPDATE_PERCENTAGE,
+        }
+    )
 
     entity_description: UpdateEntityDescription
     _attr_auto_update: bool = False
     _attr_installed_version: str | None = None
     _attr_device_class: UpdateDeviceClass | None
-    _attr_in_progress: bool | int = False
+    _attr_display_precision: int
+    _attr_in_progress: bool = False
     _attr_latest_version: str | None = None
     _attr_release_summary: str | None = None
     _attr_release_url: str | None = None
     _attr_state: None = None
     _attr_supported_features: UpdateEntityFeature = UpdateEntityFeature(0)
     _attr_title: str | None = None
+    _attr_update_percentage: int | float | None = None
     __skipped_version: str | None = None
     __in_progress: bool = False
 
-    @property
+    @cached_property
     def auto_update(self) -> bool:
         """Indicate if the device or service has auto update enabled."""
         return self._attr_auto_update
 
-    @property
+    @cached_property
     def installed_version(self) -> str | None:
         """Version installed and in use."""
         return self._attr_installed_version
 
-    @property
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For updates this is True if the entity has a device class.
+        """
+        return self.device_class is not None
+
+    @cached_property
     def device_class(self) -> UpdateDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -218,6 +263,15 @@ class UpdateEntity(RestoreEntity):
             return self.entity_description.device_class
         return None
 
+    @cached_property
+    def display_precision(self) -> int:
+        """Return number of decimal digits for display of update progress."""
+        if hasattr(self, "_attr_display_precision"):
+            return self._attr_display_precision
+        if hasattr(self, "entity_description"):
+            return self.entity_description.display_precision
+        return 0
+
     @property
     def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
@@ -225,7 +279,7 @@ class UpdateEntity(RestoreEntity):
             return self._attr_entity_category
         if hasattr(self, "entity_description"):
             return self.entity_description.entity_category
-        if self.supported_features & UpdateEntityFeature.INSTALL:
+        if UpdateEntityFeature.INSTALL in self.supported_features:
             return EntityCategory.CONFIG
         return EntityCategory.DIAGNOSTIC
 
@@ -240,23 +294,22 @@ class UpdateEntity(RestoreEntity):
             f"https://brands.home-assistant.io/_/{self.platform.platform_name}/icon.png"
         )
 
-    @property
-    def in_progress(self) -> bool | int | None:
+    @cached_property
+    def in_progress(self) -> bool | None:
         """Update installation progress.
 
         Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
 
-        Can either return a boolean (True if in progress, False if not)
-        or an integer to indicate the progress in from 0 to 100%.
+        Should return a boolean (True if in progress, False if not).
         """
         return self._attr_in_progress
 
-    @property
+    @cached_property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self._attr_latest_version
 
-    @property
+    @cached_property
     def release_summary(self) -> str | None:
         """Summary of the release notes or changelog.
 
@@ -265,17 +318,17 @@ class UpdateEntity(RestoreEntity):
         """
         return self._attr_release_summary
 
-    @property
+    @cached_property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         return self._attr_release_url
 
-    @property
+    @cached_property
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
 
-    @property
+    @cached_property
     def title(self) -> str | None:
         """Title of the software.
 
@@ -283,6 +336,16 @@ class UpdateEntity(RestoreEntity):
         versus the title of the software installed.
         """
         return self._attr_title
+
+    @cached_property
+    def update_percentage(self) -> int | float | None:
+        """Update installation progress.
+
+        Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
+
+        Can either return a number to indicate the progress from 0 to 100% or None.
+        """
+        return self._attr_update_percentage
 
     @final
     async def async_skip(self) -> None:
@@ -322,7 +385,7 @@ class UpdateEntity(RestoreEntity):
         The backup parameter indicates a backup should be taken before
         installing the update.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
@@ -338,7 +401,12 @@ class UpdateEntity(RestoreEntity):
         This is suitable for a long changelog that does not fit in the release_summary
         property. The returned string can contain markdown.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
+
+    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+        """Return True if latest_version is newer than installed_version."""
+        # We don't inline the `_version_is_newer` function because of caching
+        return _version_is_newer(latest_version, installed_version)
 
     @property
     @final
@@ -355,11 +423,11 @@ class UpdateEntity(RestoreEntity):
             return STATE_OFF
 
         try:
-            newer = AwesomeVersion(latest_version) > installed_version
-            return STATE_ON if newer else STATE_OFF
+            newer = self.version_is_newer(latest_version, installed_version)
         except AwesomeVersionCompareException:
             # Can't compare versions, already tried exact match
             return STATE_ON
+        return STATE_ON if newer else STATE_OFF
 
     @final
     @property
@@ -370,31 +438,38 @@ class UpdateEntity(RestoreEntity):
 
         # If entity supports progress, return the in_progress value.
         # Otherwise, we use the internal progress value.
-        if self.supported_features & UpdateEntityFeature.PROGRESS:
+        if UpdateEntityFeature.PROGRESS in self.supported_features:
             in_progress = self.in_progress
+            update_percentage = self.update_percentage if in_progress else None
+            if type(in_progress) is not bool and isinstance(in_progress, int):
+                update_percentage = in_progress  # type: ignore[unreachable]
+                in_progress = True
         else:
             in_progress = self.__in_progress
+            update_percentage = None
 
+        installed_version = self.installed_version
+        latest_version = self.latest_version
+        skipped_version = self.__skipped_version
         # Clear skipped version in case it matches the current installed
         # version or the latest version diverged.
-        if (
-            self.installed_version is not None
-            and self.__skipped_version == self.installed_version
-        ) or (
-            self.latest_version is not None
-            and self.__skipped_version != self.latest_version
+        if (installed_version is not None and skipped_version == installed_version) or (
+            latest_version is not None and skipped_version != latest_version
         ):
+            skipped_version = None
             self.__skipped_version = None
 
         return {
             ATTR_AUTO_UPDATE: self.auto_update,
-            ATTR_INSTALLED_VERSION: self.installed_version,
+            ATTR_DISPLAY_PRECISION: self.display_precision,
+            ATTR_INSTALLED_VERSION: installed_version,
             ATTR_IN_PROGRESS: in_progress,
-            ATTR_LATEST_VERSION: self.latest_version,
+            ATTR_LATEST_VERSION: latest_version,
             ATTR_RELEASE_SUMMARY: release_summary,
             ATTR_RELEASE_URL: self.release_url,
-            ATTR_SKIPPED_VERSION: self.__skipped_version,
+            ATTR_SKIPPED_VERSION: skipped_version,
             ATTR_TITLE: self.title,
+            ATTR_UPDATE_PERCENTAGE: update_percentage,
         }
 
     @final
@@ -406,7 +481,7 @@ class UpdateEntity(RestoreEntity):
         Handles setting the in_progress state in case the entity doesn't
         support it natively.
         """
-        if not self.supported_features & UpdateEntityFeature.PROGRESS:
+        if UpdateEntityFeature.PROGRESS not in self.supported_features:
             self.__in_progress = True
             self.async_write_ha_state()
 
@@ -443,19 +518,18 @@ async def websocket_release_notes(
     msg: dict[str, Any],
 ) -> None:
     """Get the full release notes for a entity."""
-    component: EntityComponent[UpdateEntity] = hass.data[DOMAIN]
-    entity = component.get_entity(msg["entity_id"])
+    entity = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
 
     if entity is None:
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
         )
         return
 
-    if not entity.supported_features & UpdateEntityFeature.RELEASE_NOTES:
+    if UpdateEntityFeature.RELEASE_NOTES not in entity.supported_features:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_SUPPORTED,
+            websocket_api.ERR_NOT_SUPPORTED,
             "Entity does not support release notes",
         )
         return

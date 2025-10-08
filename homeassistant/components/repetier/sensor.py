@@ -1,7 +1,7 @@
 """Support for monitoring Repetier Server Sensors."""
+
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 import time
 
@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL, RepetierSensorEntityDescription
 
@@ -77,7 +78,6 @@ class RepetierSensor(SensorEntity):
         self._attributes: dict = {}
         self._temp_id = temp_id
         self._printer_id = printer_id
-        self._state = None
 
         self._attr_name = name
         self._attr_available = False
@@ -87,17 +87,12 @@ class RepetierSensor(SensorEntity):
         """Return sensor attributes."""
         return self._attributes
 
-    @property
-    def native_value(self):
-        """Return sensor state."""
-        return self._state
-
     @callback
     def update_callback(self):
         """Get new data and update state."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Connect update callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self.update_callback)
@@ -114,14 +109,14 @@ class RepetierSensor(SensorEntity):
         self._attr_available = True
         return data
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         if (data := self._get_data()) is None:
             return
         state = data.pop("state")
         _LOGGER.debug("Printer %s State %s", self.name, state)
         self._attributes.update(data)
-        self._state = state
+        self._attr_native_value = state
 
 
 class RepetierTempSensor(RepetierSensor):
@@ -130,11 +125,11 @@ class RepetierTempSensor(RepetierSensor):
     @property
     def native_value(self):
         """Return sensor state."""
-        if self._state is None:
+        if self._attr_native_value is None:
             return None
-        return round(self._state, 2)
+        return round(self._attr_native_value, 2)
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         if (data := self._get_data()) is None:
             return
@@ -142,7 +137,7 @@ class RepetierTempSensor(RepetierSensor):
         temp_set = data["temp_set"]
         _LOGGER.debug("Printer %s Setpoint: %s, Temp: %s", self.name, temp_set, state)
         self._attributes.update(data)
-        self._state = state
+        self._attr_native_value = state
 
 
 class RepetierJobSensor(RepetierSensor):
@@ -151,9 +146,9 @@ class RepetierJobSensor(RepetierSensor):
     @property
     def native_value(self):
         """Return sensor state."""
-        if self._state is None:
+        if self._attr_native_value is None:
             return None
-        return round(self._state, 2)
+        return round(self._attr_native_value, 2)
 
 
 class RepetierJobEndSensor(RepetierSensor):
@@ -161,7 +156,7 @@ class RepetierJobEndSensor(RepetierSensor):
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         if (data := self._get_data()) is None:
             return
@@ -170,7 +165,7 @@ class RepetierJobEndSensor(RepetierSensor):
         print_time = data["print_time"]
         from_start = data["from_start"]
         time_end = start + round(print_time, 0)
-        self._state = datetime.utcfromtimestamp(time_end)
+        self._attr_native_value = dt_util.utc_from_timestamp(time_end)
         remaining = print_time - from_start
         remaining_secs = int(round(remaining, 0))
         _LOGGER.debug(
@@ -185,14 +180,14 @@ class RepetierJobStartSensor(RepetierSensor):
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         if (data := self._get_data()) is None:
             return
         job_name = data["job_name"]
         start = data["start"]
         from_start = data["from_start"]
-        self._state = datetime.utcfromtimestamp(start)
+        self._attr_native_value = dt_util.utc_from_timestamp(start)
         elapsed_secs = int(round(from_start, 0))
         _LOGGER.debug(
             "Job %s elapsed %s",

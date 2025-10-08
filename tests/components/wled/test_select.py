@@ -1,25 +1,20 @@
 """Tests for the WLED select platform."""
-import json
+
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
 from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
-from homeassistant.components.wled.const import SCAN_INTERVAL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_SELECT_OPTION,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import async_fire_time_changed, async_load_json_object_fixture
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -125,6 +120,7 @@ async def test_color_palette_state(
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
 async def test_color_palette_dynamically_handle_segments(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
@@ -133,11 +129,12 @@ async def test_color_palette_dynamically_handle_segments(
     assert not hass.states.get("select.wled_rgb_light_segment_1_color_palette")
 
     return_value = mock_wled.update.return_value
-    mock_wled.update.return_value = WLEDDevice(
-        json.loads(load_fixture("wled/rgb.json"))
+    mock_wled.update.return_value = WLEDDevice.from_dict(
+        await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (segment0 := hass.states.get("select.wled_rgb_light_color_palette"))
@@ -145,11 +142,12 @@ async def test_color_palette_dynamically_handle_segments(
     assert (
         segment1 := hass.states.get("select.wled_rgb_light_segment_1_color_palette")
     )
-    assert segment1.state == "Random Cycle"
+    assert segment1.state == "* Random Cycle"
 
     # Test adding if segment shows up again, including the master entity
     mock_wled.update.return_value = return_value
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (segment0 := hass.states.get("select.wled_rgb_light_color_palette"))
@@ -170,35 +168,3 @@ async def test_playlist_unavailable_without_playlists(hass: HomeAssistant) -> No
     """Test WLED playlist entity is unavailable when playlists are not available."""
     assert (state := hass.states.get("select.wled_rgb_light_playlist"))
     assert state.state == STATE_UNAVAILABLE
-
-
-@pytest.mark.parametrize("device_fixture", ["rgbw"])
-async def test_old_style_preset_active(
-    hass: HomeAssistant,
-    mock_wled: MagicMock,
-) -> None:
-    """Test unknown preset returned (when old style/unknown) preset is active."""
-    # Set device preset state to a random number
-    mock_wled.update.return_value.state.preset = 99
-
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
-
-    assert (state := hass.states.get("select.wled_rgbw_light_preset"))
-    assert state.state == STATE_UNKNOWN
-
-
-@pytest.mark.parametrize("device_fixture", ["rgbw"])
-async def test_old_style_playlist_active(
-    hass: HomeAssistant,
-    mock_wled: MagicMock,
-) -> None:
-    """Test when old style playlist cycle is active."""
-    # Set device playlist to 0, which meant "cycle" previously.
-    mock_wled.update.return_value.state.playlist = 0
-
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
-
-    assert (state := hass.states.get("select.wled_rgbw_light_playlist"))
-    assert state.state == STATE_UNKNOWN

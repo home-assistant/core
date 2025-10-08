@@ -5,46 +5,26 @@ from __future__ import annotations
 from typing import Any
 
 from google_nest_sdm import diagnostics
-from google_nest_sdm.device import Device
-from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.device_traits import InfoTrait
 
 from homeassistant.components.camera import diagnostics as camera_diagnostics
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DATA_DEVICE_MANAGER, DATA_SDM, DOMAIN
+from .types import NestConfigEntry
 
 REDACT_DEVICE_TRAITS = {InfoTrait.NAME}
 
 
-@callback
-def _async_get_nest_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict[str, Device]:
-    """Return dict of available devices."""
-    if DATA_SDM not in config_entry.data:
-        return {}
-
-    if (
-        config_entry.entry_id not in hass.data[DOMAIN]
-        or DATA_DEVICE_MANAGER not in hass.data[DOMAIN][config_entry.entry_id]
-    ):
-        return {}
-
-    device_manager: DeviceManager = hass.data[DOMAIN][config_entry.entry_id][
-        DATA_DEVICE_MANAGER
-    ]
-    return device_manager.devices
-
-
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: NestConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    nest_devices = _async_get_nest_devices(hass, config_entry)
-    if not nest_devices:
+    if (
+        not hasattr(config_entry, "runtime_data")
+        or not config_entry.runtime_data
+        or not (nest_devices := config_entry.runtime_data.device_manager.devices)
+    ):
         return {}
     data: dict[str, Any] = {
         **diagnostics.get_diagnostics(),
@@ -62,11 +42,11 @@ async def async_get_config_entry_diagnostics(
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NestConfigEntry,
     device: DeviceEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    nest_devices = _async_get_nest_devices(hass, config_entry)
+    nest_devices = config_entry.runtime_data.device_manager.devices
     nest_device_id = next(iter(device.identifiers))[1]
     nest_device = nest_devices.get(nest_device_id)
     return nest_device.get_diagnostics() if nest_device else {}

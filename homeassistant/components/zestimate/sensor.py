@@ -1,4 +1,5 @@
 """Support for zestimate data from zillow.com."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,10 +9,13 @@ import requests
 import voluptuous as vol
 import xmltodict
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -32,7 +36,7 @@ ATTR_LAST_UPDATED = "amount_last_updated"
 ATTR_VAL_HI = "valuation_range_high"
 ATTR_VAL_LOW = "valuation_range_low"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_ZPID): vol.All(cv.ensure_list, [cv.string]),
@@ -103,13 +107,13 @@ class ZestimateDataSensor(SensorEntity):
         attributes["address"] = self.address
         return attributes
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and update the states."""
 
         try:
             response = requests.get(_RESOURCE, params=self.params, timeout=5)
             data = response.content.decode("utf-8")
-            data_dict = xmltodict.parse(data).get(ZESTIMATE)
+            data_dict = xmltodict.parse(data)[ZESTIMATE]
             error_code = int(data_dict["message"]["code"])
             if error_code != 0:
                 _LOGGER.error("The API returned: %s", data_dict["message"]["text"])

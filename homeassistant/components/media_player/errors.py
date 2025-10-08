@@ -1,4 +1,5 @@
 """Errors for the Media Player component."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 
@@ -8,3 +9,7 @@ class MediaPlayerException(HomeAssistantError):
 
 class BrowseError(MediaPlayerException):
     """Error while browsing."""
+
+
+class SearchError(MediaPlayerException):
+    """Error while searching."""

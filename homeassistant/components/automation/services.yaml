@@ -1,46 +1,32 @@
 # Describes the format for available automation services
 turn_on:
-  name: Turn on
-  description: Enable an automation.
   target:
     entity:
       domain: automation
 
 turn_off:
-  name: Turn off
-  description: Disable an automation.
   target:
     entity:
       domain: automation
   fields:
     stop_actions:
-      name: Stop actions
-      description: Stop currently running actions.
       default: true
       selector:
         boolean:
 
 toggle:
-  name: Toggle
-  description: Toggle (enable / disable) an automation.
   target:
     entity:
       domain: automation
 
 trigger:
-  name: Trigger
-  description: Trigger the actions of an automation.
   target:
     entity:
       domain: automation
   fields:
     skip_condition:
-      name: Skip conditions
-      description: Whether or not the conditions will be skipped.
       default: true
       selector:
         boolean:
 
 reload:
-  name: Reload
-  description: Reload the automation configuration.

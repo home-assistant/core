@@ -1,3 +1,7 @@
 {
-  "recommendations": ["esbenp.prettier-vscode", "ms-python.python"]
+  "recommendations": [
+    "charliermarsh.ruff",
+    "esbenp.prettier-vscode",
+    "ms-python.python"
+  ]
 }

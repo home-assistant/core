@@ -1,4 +1,5 @@
 """Support for P1 Monitor sensors."""
+
 from __future__ import annotations
 
 from typing import Literal
@@ -9,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CURRENCY_EURO,
@@ -20,13 +20,11 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import P1MonitorDataUpdateCoordinator
 from .const import (
     DOMAIN,
     SERVICE_PHASES,
@@ -34,6 +32,7 @@ from .const import (
     SERVICE_SMARTMETER,
     SERVICE_WATERMETER,
 )
+from .coordinator import P1MonitorConfigEntry, P1MonitorDataUpdateCoordinator
 
 SENSORS_SMARTMETER: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -89,7 +88,6 @@ SENSORS_SMARTMETER: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="energy_tariff_period",
         translation_key="energy_tariff_period",
-        icon="mdi:calendar-clock",
     ),
 )
 
@@ -237,14 +235,15 @@ SENSORS_WATERMETER: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: P1MonitorConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up P1 Monitor Sensors based on a config entry."""
-    coordinator: P1MonitorDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[P1MonitorSensorEntity] = []
     entities.extend(
         P1MonitorSensorEntity(
-            coordinator=coordinator,
+            entry=entry,
             description=description,
             name="SmartMeter",
             service=SERVICE_SMARTMETER,
@@ -253,7 +252,7 @@ async def async_setup_entry(
     )
     entities.extend(
         P1MonitorSensorEntity(
-            coordinator=coordinator,
+            entry=entry,
             description=description,
             name="Phases",
             service=SERVICE_PHASES,
@@ -262,17 +261,17 @@ async def async_setup_entry(
     )
     entities.extend(
         P1MonitorSensorEntity(
-            coordinator=coordinator,
+            entry=entry,
             description=description,
             name="Settings",
             service=SERVICE_SETTINGS,
         )
         for description in SENSORS_SETTINGS
     )
-    if coordinator.has_water_meter:
+    if entry.runtime_data.has_water_meter:
         entities.extend(
             P1MonitorSensorEntity(
-                coordinator=coordinator,
+                entry=entry,
                 description=description,
                 name="WaterMeter",
                 service=SERVICE_WATERMETER,
@@ -292,24 +291,26 @@ class P1MonitorSensorEntity(
     def __init__(
         self,
         *,
-        coordinator: P1MonitorDataUpdateCoordinator,
+        entry: P1MonitorConfigEntry,
         description: SensorEntityDescription,
         name: str,
         service: Literal["smartmeter", "watermeter", "phases", "settings"],
     ) -> None:
         """Initialize P1 Monitor sensor."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator=entry.runtime_data)
         self._service_key = service
 
         self.entity_description = description
         self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{service}_{description.key}"
+            f"{entry.runtime_data.config_entry.entry_id}_{service}_{description.key}"
         )
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_{service}")},
-            configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
+            identifiers={
+                (DOMAIN, f"{entry.runtime_data.config_entry.entry_id}_{service}")
+            },
+            configuration_url=f"http://{entry.runtime_data.config_entry.data[CONF_HOST]}",
             manufacturer="P1 Monitor",
             name=name,
         )
@@ -322,4 +323,4 @@ class P1MonitorSensorEntity(
         )
         if isinstance(value, str):
             return value.lower()
-        return value
+        return value  # type: ignore[no-any-return]

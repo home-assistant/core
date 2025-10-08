@@ -1,4 +1,5 @@
 """Test Home Assistant unit conversion utility functions."""
+
 from __future__ import annotations
 
 import inspect
@@ -7,40 +8,62 @@ from itertools import chain
 import pytest
 
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfApparentPower,
+    UnitOfArea,
+    UnitOfBloodGlucoseConcentration,
+    UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfEnergyDistance,
     UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfReactiveEnergy,
+    UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
+    ApparentPowerConverter,
+    AreaConverter,
     BaseUnitConverter,
+    BloodGlucoseConcentrationConverter,
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
+    DurationConverter,
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
+    EnergyDistanceConverter,
     InformationConverter,
     MassConverter,
+    MassVolumeConcentrationConverter,
     PowerConverter,
     PressureConverter,
+    ReactiveEnergyConverter,
+    ReactivePowerConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 INVALID_SYMBOL = "bob"
@@ -52,30 +75,57 @@ INVALID_SYMBOL = "bob"
 _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
     converter: sorted(converter.VALID_UNITS, key=lambda x: (x is None, x))
     for converter in (
+        AreaConverter,
+        BloodGlucoseConcentrationConverter,
+        MassVolumeConcentrationConverter,
+        ConductivityConverter,
         DataRateConverter,
         DistanceConverter,
+        DurationConverter,
         ElectricCurrentConverter,
         ElectricPotentialConverter,
         EnergyConverter,
         InformationConverter,
         MassConverter,
+        ApparentPowerConverter,
         PowerConverter,
         PressureConverter,
+        ReactiveEnergyConverter,
+        ReactivePowerConverter,
         SpeedConverter,
         TemperatureConverter,
         UnitlessRatioConverter,
+        EnergyDistanceConverter,
         VolumeConverter,
+        VolumeFlowRateConverter,
     )
 }
 
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
+    ApparentPowerConverter: (
+        UnitOfApparentPower.MILLIVOLT_AMPERE,
+        UnitOfApparentPower.VOLT_AMPERE,
+        1000,
+    ),
+    AreaConverter: (UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_METERS, 0.000001),
+    BloodGlucoseConcentrationConverter: (
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
+        18,
+    ),
+    ConductivityConverter: (
+        UnitOfConductivity.MICROSIEMENS_PER_CM,
+        UnitOfConductivity.MILLISIEMENS_PER_CM,
+        1000,
+    ),
     DataRateConverter: (
         UnitOfDataRate.BITS_PER_SECOND,
         UnitOfDataRate.BYTES_PER_SECOND,
         8,
     ),
     DistanceConverter: (UnitOfLength.KILOMETERS, UnitOfLength.METERS, 0.001),
+    DurationConverter: (UnitOfTime.MINUTES, UnitOfTime.SECONDS, 1 / 60),
     ElectricCurrentConverter: (
         UnitOfElectricCurrent.AMPERE,
         UnitOfElectricCurrent.MILLIAMPERE,
@@ -87,10 +137,30 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         1000,
     ),
     EnergyConverter: (UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
+    EnergyDistanceConverter: (
+        UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        0.621371,
+    ),
     InformationConverter: (UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
     MassConverter: (UnitOfMass.STONES, UnitOfMass.KILOGRAMS, 0.157473),
+    MassVolumeConcentrationConverter: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        1000,
+    ),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
     PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
+    ReactiveEnergyConverter: (
+        UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+        UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        1000,
+    ),
+    ReactivePowerConverter: (
+        UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+        UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        1000,
+    ),
     SpeedConverter: (
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.MILES_PER_HOUR,
@@ -103,12 +173,151 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     ),
     UnitlessRatioConverter: (PERCENTAGE, None, 100),
     VolumeConverter: (UnitOfVolume.GALLONS, UnitOfVolume.LITERS, 0.264172),
+    VolumeFlowRateConverter: (
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        0.06,
+    ),
 }
 
-# Dict containing a conversion test for every know unit.
+# Dict containing a conversion test for every known unit.
 _CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {
+    ApparentPowerConverter: [
+        (
+            10,
+            UnitOfApparentPower.MILLIVOLT_AMPERE,
+            0.01,
+            UnitOfApparentPower.VOLT_AMPERE,
+        ),
+        (
+            10,
+            UnitOfApparentPower.MILLIVOLT_AMPERE,
+            0.00001,
+            UnitOfApparentPower.KILO_VOLT_AMPERE,
+        ),
+        (
+            10,
+            UnitOfApparentPower.VOLT_AMPERE,
+            0.01,
+            UnitOfApparentPower.KILO_VOLT_AMPERE,
+        ),
+        (
+            10,
+            UnitOfApparentPower.KILO_VOLT_AMPERE,
+            10000,
+            UnitOfApparentPower.VOLT_AMPERE,
+        ),
+    ],
+    AreaConverter: [
+        # Square Meters to other units
+        (5, UnitOfArea.SQUARE_METERS, 50000, UnitOfArea.SQUARE_CENTIMETERS),
+        (5, UnitOfArea.SQUARE_METERS, 5000000, UnitOfArea.SQUARE_MILLIMETERS),
+        (5, UnitOfArea.SQUARE_METERS, 0.000005, UnitOfArea.SQUARE_KILOMETERS),
+        (5, UnitOfArea.SQUARE_METERS, 7750.015500031001, UnitOfArea.SQUARE_INCHES),
+        (5, UnitOfArea.SQUARE_METERS, 53.81955, UnitOfArea.SQUARE_FEET),
+        (5, UnitOfArea.SQUARE_METERS, 5.979950231505403, UnitOfArea.SQUARE_YARDS),
+        (5, UnitOfArea.SQUARE_METERS, 1.9305107927122295e-06, UnitOfArea.SQUARE_MILES),
+        (5, UnitOfArea.SQUARE_METERS, 0.0012355269073358272, UnitOfArea.ACRES),
+        (5, UnitOfArea.SQUARE_METERS, 0.0005, UnitOfArea.HECTARES),
+        # Square Kilometers to other units
+        (1, UnitOfArea.SQUARE_KILOMETERS, 1000000, UnitOfArea.SQUARE_METERS),
+        (1, UnitOfArea.SQUARE_KILOMETERS, 1e10, UnitOfArea.SQUARE_CENTIMETERS),
+        (1, UnitOfArea.SQUARE_KILOMETERS, 1e12, UnitOfArea.SQUARE_MILLIMETERS),
+        (5, UnitOfArea.SQUARE_KILOMETERS, 1.9305107927122296, UnitOfArea.SQUARE_MILES),
+        (5, UnitOfArea.SQUARE_KILOMETERS, 1235.5269073358272, UnitOfArea.ACRES),
+        (5, UnitOfArea.SQUARE_KILOMETERS, 500, UnitOfArea.HECTARES),
+        # Acres to other units
+        (5, UnitOfArea.ACRES, 20234.3, UnitOfArea.SQUARE_METERS),
+        (5, UnitOfArea.ACRES, 202342821.11999995, UnitOfArea.SQUARE_CENTIMETERS),
+        (5, UnitOfArea.ACRES, 20234282111.999992, UnitOfArea.SQUARE_MILLIMETERS),
+        (5, UnitOfArea.ACRES, 0.0202343, UnitOfArea.SQUARE_KILOMETERS),
+        (5, UnitOfArea.ACRES, 217800, UnitOfArea.SQUARE_FEET),
+        (5, UnitOfArea.ACRES, 24200.0, UnitOfArea.SQUARE_YARDS),
+        (5, UnitOfArea.ACRES, 0.0078125, UnitOfArea.SQUARE_MILES),
+        (5, UnitOfArea.ACRES, 2.02343, UnitOfArea.HECTARES),
+        # Hectares to other units
+        (5, UnitOfArea.HECTARES, 50000, UnitOfArea.SQUARE_METERS),
+        (5, UnitOfArea.HECTARES, 500000000, UnitOfArea.SQUARE_CENTIMETERS),
+        (5, UnitOfArea.HECTARES, 50000000000.0, UnitOfArea.SQUARE_MILLIMETERS),
+        (5, UnitOfArea.HECTARES, 0.019305107927122298, UnitOfArea.SQUARE_MILES),
+        (5, UnitOfArea.HECTARES, 538195.5, UnitOfArea.SQUARE_FEET),
+        (5, UnitOfArea.HECTARES, 59799.50231505403, UnitOfArea.SQUARE_YARDS),
+        (5, UnitOfArea.HECTARES, 12.355269073358272, UnitOfArea.ACRES),
+        # Square Miles to other units
+        (5, UnitOfArea.SQUARE_MILES, 12949940.551679997, UnitOfArea.SQUARE_METERS),
+        (5, UnitOfArea.SQUARE_MILES, 129499405516.79997, UnitOfArea.SQUARE_CENTIMETERS),
+        (5, UnitOfArea.SQUARE_MILES, 12949940551679.996, UnitOfArea.SQUARE_MILLIMETERS),
+        (5, UnitOfArea.SQUARE_MILES, 1294.9940551679997, UnitOfArea.HECTARES),
+        (5, UnitOfArea.SQUARE_MILES, 3200, UnitOfArea.ACRES),
+        # Square Yards to other units
+        (5, UnitOfArea.SQUARE_YARDS, 4.1806367999999985, UnitOfArea.SQUARE_METERS),
+        (5, UnitOfArea.SQUARE_YARDS, 41806.4, UnitOfArea.SQUARE_CENTIMETERS),
+        (5, UnitOfArea.SQUARE_YARDS, 4180636.7999999984, UnitOfArea.SQUARE_MILLIMETERS),
+        (
+            5,
+            UnitOfArea.SQUARE_YARDS,
+            4.180636799999998e-06,
+            UnitOfArea.SQUARE_KILOMETERS,
+        ),
+        (5, UnitOfArea.SQUARE_YARDS, 45.0, UnitOfArea.SQUARE_FEET),
+        (5, UnitOfArea.SQUARE_YARDS, 6479.999999999998, UnitOfArea.SQUARE_INCHES),
+        (5, UnitOfArea.SQUARE_YARDS, 1.6141528925619832e-06, UnitOfArea.SQUARE_MILES),
+        (5, UnitOfArea.SQUARE_YARDS, 0.0010330578512396695, UnitOfArea.ACRES),
+    ],
+    BloodGlucoseConcentrationConverter: [
+        (
+            90,
+            UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+            5,
+            UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
+        ),
+        (
+            1,
+            UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
+            18,
+            UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        ),
+    ],
+    ConductivityConverter: [
+        (
+            5,
+            UnitOfConductivity.SIEMENS_PER_CM,
+            5e3,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+        ),
+        (
+            5,
+            UnitOfConductivity.SIEMENS_PER_CM,
+            5e6,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+        ),
+        (
+            5,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+            5e3,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+        ),
+        (
+            5,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+            5e-3,
+            UnitOfConductivity.SIEMENS_PER_CM,
+        ),
+        (
+            5e6,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+            5e3,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+        ),
+        (
+            5e6,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+            5,
+            UnitOfConductivity.SIEMENS_PER_CM,
+        ),
+    ],
     DataRateConverter: [
         (8e3, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.KILOBITS_PER_SECOND),
         (8e6, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.MEGABITS_PER_SECOND),
@@ -144,6 +353,13 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfLength.MILES, 8800.0, UnitOfLength.YARDS),
         (5, UnitOfLength.MILES, 26400.0008448, UnitOfLength.FEET),
         (5, UnitOfLength.MILES, 316800.171072, UnitOfLength.INCHES),
+        (5, UnitOfLength.NAUTICAL_MILES, 9.26, UnitOfLength.KILOMETERS),
+        (5, UnitOfLength.NAUTICAL_MILES, 9260.0, UnitOfLength.METERS),
+        (5, UnitOfLength.NAUTICAL_MILES, 926000.0, UnitOfLength.CENTIMETERS),
+        (5, UnitOfLength.NAUTICAL_MILES, 9260000.0, UnitOfLength.MILLIMETERS),
+        (5, UnitOfLength.NAUTICAL_MILES, 10126.859142607176, UnitOfLength.YARDS),
+        (5, UnitOfLength.NAUTICAL_MILES, 30380.57742782153, UnitOfLength.FEET),
+        (5, UnitOfLength.NAUTICAL_MILES, 364566.9291338583, UnitOfLength.INCHES),
         (5, UnitOfLength.YARDS, 0.004572, UnitOfLength.KILOMETERS),
         (5, UnitOfLength.YARDS, 4.572, UnitOfLength.METERS),
         (5, UnitOfLength.YARDS, 457.2, UnitOfLength.CENTIMETERS),
@@ -194,25 +410,151 @@ _CONVERTED_VALUE: dict[
         (5000000, UnitOfLength.MILLIMETERS, 16404.2, UnitOfLength.FEET),
         (5000000, UnitOfLength.MILLIMETERS, 196850.5, UnitOfLength.INCHES),
     ],
+    DurationConverter: [
+        (5, UnitOfTime.MICROSECONDS, 0.005, UnitOfTime.MILLISECONDS),
+        (5, UnitOfTime.MICROSECONDS, 5e-6, UnitOfTime.SECONDS),
+        (5, UnitOfTime.MICROSECONDS, 8.333333333333333e-8, UnitOfTime.MINUTES),
+        (5, UnitOfTime.MICROSECONDS, 1.388888888888889e-9, UnitOfTime.HOURS),
+        (5, UnitOfTime.MICROSECONDS, 5.787e-11, UnitOfTime.DAYS),
+        (5, UnitOfTime.MICROSECONDS, 8.267195767195767e-12, UnitOfTime.WEEKS),
+        (5, UnitOfTime.MILLISECONDS, 5000, UnitOfTime.MICROSECONDS),
+        (5, UnitOfTime.MILLISECONDS, 0.005, UnitOfTime.SECONDS),
+        (5, UnitOfTime.MILLISECONDS, 8.333333333333333e-5, UnitOfTime.MINUTES),
+        (5, UnitOfTime.MILLISECONDS, 1.388888888888889e-6, UnitOfTime.HOURS),
+        (5, UnitOfTime.MILLISECONDS, 5.787e-8, UnitOfTime.DAYS),
+        (5, UnitOfTime.MILLISECONDS, 8.267195767195767e-9, UnitOfTime.WEEKS),
+        (5, UnitOfTime.SECONDS, 5e6, UnitOfTime.MICROSECONDS),
+        (5, UnitOfTime.SECONDS, 5000, UnitOfTime.MILLISECONDS),
+        (5, UnitOfTime.SECONDS, 0.0833333, UnitOfTime.MINUTES),
+        (5, UnitOfTime.SECONDS, 0.00138889, UnitOfTime.HOURS),
+        (5, UnitOfTime.SECONDS, 5.787037037037037e-5, UnitOfTime.DAYS),
+        (5, UnitOfTime.SECONDS, 8.267195767195768e-06, UnitOfTime.WEEKS),
+        (5, UnitOfTime.MINUTES, 3e8, UnitOfTime.MICROSECONDS),
+        (5, UnitOfTime.MINUTES, 300000, UnitOfTime.MILLISECONDS),
+        (5, UnitOfTime.MINUTES, 300, UnitOfTime.SECONDS),
+        (5, UnitOfTime.MINUTES, 0.0833333, UnitOfTime.HOURS),
+        (5, UnitOfTime.MINUTES, 0.00347222, UnitOfTime.DAYS),
+        (5, UnitOfTime.MINUTES, 0.000496031746031746, UnitOfTime.WEEKS),
+        (5, UnitOfTime.HOURS, 18000000000, UnitOfTime.MICROSECONDS),
+        (5, UnitOfTime.HOURS, 18000000, UnitOfTime.MILLISECONDS),
+        (5, UnitOfTime.HOURS, 18000, UnitOfTime.SECONDS),
+        (5, UnitOfTime.HOURS, 300, UnitOfTime.MINUTES),
+        (5, UnitOfTime.HOURS, 0.208333333, UnitOfTime.DAYS),
+        (5, UnitOfTime.HOURS, 0.02976190476190476, UnitOfTime.WEEKS),
+        (5, UnitOfTime.DAYS, 4.32e11, UnitOfTime.MICROSECONDS),
+        (5, UnitOfTime.DAYS, 4.32e8, UnitOfTime.MILLISECONDS),
+        (5, UnitOfTime.DAYS, 432000, UnitOfTime.SECONDS),
+        (5, UnitOfTime.DAYS, 7200, UnitOfTime.MINUTES),
+        (5, UnitOfTime.DAYS, 120, UnitOfTime.HOURS),
+        (5, UnitOfTime.DAYS, 0.7142857142857143, UnitOfTime.WEEKS),
+        (5, UnitOfTime.WEEKS, 3.024e12, UnitOfTime.MICROSECONDS),
+        (5, UnitOfTime.WEEKS, 3.024e9, UnitOfTime.MILLISECONDS),
+        (5, UnitOfTime.WEEKS, 3024000, UnitOfTime.SECONDS),
+        (5, UnitOfTime.WEEKS, 50400, UnitOfTime.MINUTES),
+        (5, UnitOfTime.WEEKS, 840, UnitOfTime.HOURS),
+        (5, UnitOfTime.WEEKS, 35, UnitOfTime.DAYS),
+    ],
     ElectricCurrentConverter: [
         (5, UnitOfElectricCurrent.AMPERE, 5000, UnitOfElectricCurrent.MILLIAMPERE),
         (5, UnitOfElectricCurrent.MILLIAMPERE, 0.005, UnitOfElectricCurrent.AMPERE),
     ],
     ElectricPotentialConverter: [
         (5, UnitOfElectricPotential.VOLT, 5000, UnitOfElectricPotential.MILLIVOLT),
+        (5, UnitOfElectricPotential.VOLT, 5e6, UnitOfElectricPotential.MICROVOLT),
+        (5, UnitOfElectricPotential.VOLT, 5e-3, UnitOfElectricPotential.KILOVOLT),
+        (5, UnitOfElectricPotential.VOLT, 5e-6, UnitOfElectricPotential.MEGAVOLT),
         (5, UnitOfElectricPotential.MILLIVOLT, 0.005, UnitOfElectricPotential.VOLT),
+        (5, UnitOfElectricPotential.MILLIVOLT, 5e3, UnitOfElectricPotential.MICROVOLT),
+        (5, UnitOfElectricPotential.MILLIVOLT, 5e-6, UnitOfElectricPotential.KILOVOLT),
+        (5, UnitOfElectricPotential.MILLIVOLT, 5e-9, UnitOfElectricPotential.MEGAVOLT),
+        (5, UnitOfElectricPotential.MICROVOLT, 5e-3, UnitOfElectricPotential.MILLIVOLT),
+        (5, UnitOfElectricPotential.MICROVOLT, 5e-6, UnitOfElectricPotential.VOLT),
+        (5, UnitOfElectricPotential.MICROVOLT, 5e-9, UnitOfElectricPotential.KILOVOLT),
+        (5, UnitOfElectricPotential.MICROVOLT, 5e-12, UnitOfElectricPotential.MEGAVOLT),
+        (5, UnitOfElectricPotential.KILOVOLT, 5e9, UnitOfElectricPotential.MICROVOLT),
+        (5, UnitOfElectricPotential.KILOVOLT, 5e6, UnitOfElectricPotential.MILLIVOLT),
+        (5, UnitOfElectricPotential.KILOVOLT, 5e3, UnitOfElectricPotential.VOLT),
+        (5, UnitOfElectricPotential.KILOVOLT, 5e-3, UnitOfElectricPotential.MEGAVOLT),
+        (5, UnitOfElectricPotential.MEGAVOLT, 5e12, UnitOfElectricPotential.MICROVOLT),
+        (5, UnitOfElectricPotential.MEGAVOLT, 5e9, UnitOfElectricPotential.MILLIVOLT),
+        (5, UnitOfElectricPotential.MEGAVOLT, 5e6, UnitOfElectricPotential.VOLT),
+        (5, UnitOfElectricPotential.MEGAVOLT, 5e3, UnitOfElectricPotential.KILOVOLT),
     ],
     EnergyConverter: [
+        (10, UnitOfEnergy.MILLIWATT_HOUR, 0.00001, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.WATT_HOUR, 10000, UnitOfEnergy.MILLIWATT_HOUR),
         (10, UnitOfEnergy.WATT_HOUR, 0.01, UnitOfEnergy.KILO_WATT_HOUR),
         (10, UnitOfEnergy.WATT_HOUR, 0.00001, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.WATT_HOUR, 0.00000001, UnitOfEnergy.GIGA_WATT_HOUR),
+        (10, UnitOfEnergy.WATT_HOUR, 0.00000000001, UnitOfEnergy.TERA_WATT_HOUR),
         (10, UnitOfEnergy.KILO_WATT_HOUR, 10000, UnitOfEnergy.WATT_HOUR),
         (10, UnitOfEnergy.KILO_WATT_HOUR, 0.01, UnitOfEnergy.MEGA_WATT_HOUR),
         (10, UnitOfEnergy.MEGA_WATT_HOUR, 10000000, UnitOfEnergy.WATT_HOUR),
         (10, UnitOfEnergy.MEGA_WATT_HOUR, 10000, UnitOfEnergy.KILO_WATT_HOUR),
-        (10, UnitOfEnergy.GIGA_JOULE, 10000 / 3.6, UnitOfEnergy.KILO_WATT_HOUR),
-        (10, UnitOfEnergy.GIGA_JOULE, 10 / 3.6, UnitOfEnergy.MEGA_WATT_HOUR),
-        (10, UnitOfEnergy.MEGA_JOULE, 10 / 3.6, UnitOfEnergy.KILO_WATT_HOUR),
-        (10, UnitOfEnergy.MEGA_JOULE, 0.010 / 3.6, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_WATT_HOUR, 10e6, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_WATT_HOUR, 10e9, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.TERA_WATT_HOUR, 10e9, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.TERA_WATT_HOUR, 10e12, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_JOULE, 2777.78, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_JOULE, 2.77778, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.MEGA_JOULE, 2.77778, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.MEGA_JOULE, 2.77778e-3, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.KILO_JOULE, 2.77778, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.KILO_JOULE, 2.77778e-6, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.JOULE, 2.77778e-3, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.JOULE, 2.390057, UnitOfEnergy.CALORIE),
+        (10, UnitOfEnergy.CALORIE, 0.01, UnitOfEnergy.KILO_CALORIE),
+        (10, UnitOfEnergy.CALORIE, 0.011622222, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.KILO_CALORIE, 0.01, UnitOfEnergy.MEGA_CALORIE),
+        (10, UnitOfEnergy.KILO_CALORIE, 0.011622222, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.MEGA_CALORIE, 0.01, UnitOfEnergy.GIGA_CALORIE),
+        (10, UnitOfEnergy.MEGA_CALORIE, 0.011622222, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_CALORIE, 10000, UnitOfEnergy.MEGA_CALORIE),
+        (10, UnitOfEnergy.GIGA_CALORIE, 11.622222, UnitOfEnergy.MEGA_WATT_HOUR),
+    ],
+    EnergyDistanceConverter: [
+        (
+            10,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            6.213712,
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+        ),
+        (
+            10,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            100,
+            UnitOfEnergyDistance.WATT_HOUR_PER_KM,
+        ),
+        (
+            15,
+            UnitOfEnergyDistance.WATT_HOUR_PER_KM,
+            1.5,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+        ),
+        (
+            25,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            4,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        ),
+        (
+            20,
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+            3.106856,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+        ),
+        (
+            10,
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+            16.09344,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        ),
+        (
+            16.09344,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+            10,
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+        ),
     ],
     InformationConverter: [
         (8e3, UnitOfInformation.BITS, 8, UnitOfInformation.KILOBITS),
@@ -275,7 +617,12 @@ _CONVERTED_VALUE: dict[
     ],
     PowerConverter: [
         (10, UnitOfPower.KILO_WATT, 10000, UnitOfPower.WATT),
+        (10, UnitOfPower.MEGA_WATT, 10e6, UnitOfPower.WATT),
+        (10, UnitOfPower.GIGA_WATT, 10e9, UnitOfPower.WATT),
+        (10, UnitOfPower.TERA_WATT, 10e12, UnitOfPower.WATT),
         (10, UnitOfPower.WATT, 0.01, UnitOfPower.KILO_WATT),
+        (10, UnitOfPower.MILLIWATT, 0.01, UnitOfPower.WATT),
+        (10, UnitOfPower.BTU_PER_HOUR, 2.9307107, UnitOfPower.WATT),
     ],
     PressureConverter: [
         (1000, UnitOfPressure.HPA, 14.5037743897, UnitOfPressure.PSI),
@@ -284,12 +631,21 @@ _CONVERTED_VALUE: dict[
         (1000, UnitOfPressure.HPA, 100, UnitOfPressure.KPA),
         (1000, UnitOfPressure.HPA, 1000, UnitOfPressure.MBAR),
         (1000, UnitOfPressure.HPA, 100, UnitOfPressure.CBAR),
+        (1000, UnitOfPressure.HPA, 401.46307866177, UnitOfPressure.INH2O),
         (100, UnitOfPressure.KPA, 14.5037743897, UnitOfPressure.PSI),
         (100, UnitOfPressure.KPA, 29.5299801647, UnitOfPressure.INHG),
         (100, UnitOfPressure.KPA, 100000, UnitOfPressure.PA),
         (100, UnitOfPressure.KPA, 1000, UnitOfPressure.HPA),
         (100, UnitOfPressure.KPA, 1000, UnitOfPressure.MBAR),
         (100, UnitOfPressure.KPA, 100, UnitOfPressure.CBAR),
+        (100, UnitOfPressure.INH2O, 3.6127291827353996, UnitOfPressure.PSI),
+        (100, UnitOfPressure.INH2O, 186.83201548767, UnitOfPressure.MMHG),
+        (100, UnitOfPressure.INH2O, 7.3555912463681, UnitOfPressure.INHG),
+        (100, UnitOfPressure.INH2O, 24908.890833333, UnitOfPressure.PA),
+        (100, UnitOfPressure.INH2O, 249.08890833333, UnitOfPressure.HPA),
+        (100, UnitOfPressure.INH2O, 249.08890833333, UnitOfPressure.MBAR),
+        (100, UnitOfPressure.INH2O, 24.908890833333, UnitOfPressure.KPA),
+        (100, UnitOfPressure.INH2O, 24.908890833333, UnitOfPressure.CBAR),
         (30, UnitOfPressure.INHG, 14.7346266155, UnitOfPressure.PSI),
         (30, UnitOfPressure.INHG, 101.59167, UnitOfPressure.KPA),
         (30, UnitOfPressure.INHG, 1015.9167, UnitOfPressure.HPA),
@@ -297,6 +653,7 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.INHG, 1015.9167, UnitOfPressure.MBAR),
         (30, UnitOfPressure.INHG, 101.59167, UnitOfPressure.CBAR),
         (30, UnitOfPressure.INHG, 762, UnitOfPressure.MMHG),
+        (30, UnitOfPressure.INHG, 407.85300589959, UnitOfPressure.INH2O),
         (30, UnitOfPressure.MMHG, 0.580103, UnitOfPressure.PSI),
         (30, UnitOfPressure.MMHG, 3.99967, UnitOfPressure.KPA),
         (30, UnitOfPressure.MMHG, 39.9967, UnitOfPressure.HPA),
@@ -304,13 +661,68 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.MMHG, 39.9967, UnitOfPressure.MBAR),
         (30, UnitOfPressure.MMHG, 3.99967, UnitOfPressure.CBAR),
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
+        (30, UnitOfPressure.MMHG, 16.0572051431838, UnitOfPressure.INH2O),
         (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
+    ],
+    ReactiveEnergyConverter: [
+        (
+            5,
+            UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+            5000,
+            UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+        ),
+        (
+            5,
+            UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+            0.005,
+            UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        ),
+    ],
+    ReactivePowerConverter: [
+        (
+            10,
+            UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+            10000,
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        ),
+        (
+            10,
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+            0.01,
+            UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+        ),
+        (
+            10,
+            UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+            0.01,
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        ),
+        (
+            10,
+            UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+            0.00001,
+            UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+        ),
     ],
     SpeedConverter: [
         # 5 km/h / 1.609 km/mi = 3.10686 mi/h
         (5, UnitOfSpeed.KILOMETERS_PER_HOUR, 3.106856, UnitOfSpeed.MILES_PER_HOUR),
         # 5 mi/h * 1.609 km/mi = 8.04672 km/h
         (5, UnitOfSpeed.MILES_PER_HOUR, 8.04672, UnitOfSpeed.KILOMETERS_PER_HOUR),
+        # 300 m/min / 60 s/min = 5 m/s
+        (
+            300,
+            UnitOfSpeed.METERS_PER_MINUTE,
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+        ),
+        # 5 m/s * 60 s/min = 300 m/min
+        (
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+            300,
+            UnitOfSpeed.METERS_PER_MINUTE,
+        ),
         # 5 in/day * 25.4 mm/in = 127 mm/day
         (
             5,
@@ -346,6 +758,20 @@ _CONVERTED_VALUE: dict[
             708661.42,
             UnitOfVolumetricFlux.INCHES_PER_HOUR,
         ),
+        # 5 m/s * 1000 = 5000 mm/s
+        (
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+            5000,
+            UnitOfSpeed.MILLIMETERS_PER_SECOND,
+        ),
+        # 5 m/s ÷ 0.0254 = 196.8503937 in/s
+        (
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+            5 / 0.0254,
+            UnitOfSpeed.INCHES_PER_SECOND,
+        ),
         # 5000 in/h / 39.3701 in/m / 3600 s/h = 0.03528 m/s
         (
             5000,
@@ -357,6 +783,8 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfSpeed.KNOTS, 2.57222, UnitOfSpeed.METERS_PER_SECOND),
         # 5 ft/s * 0.3048 m/ft = 1.524 m/s
         (5, UnitOfSpeed.FEET_PER_SECOND, 1.524, UnitOfSpeed.METERS_PER_SECOND),
+        # float(round(((20.7 m/s / 0.836) ** 2) ** (1 / 3))) = 8.0Bft
+        (20.7, UnitOfSpeed.METERS_PER_SECOND, 8.0, UnitOfSpeed.BEAUFORT),
     ],
     TemperatureConverter: [
         (100, UnitOfTemperature.CELSIUS, 212, UnitOfTemperature.FAHRENHEIT),
@@ -371,6 +799,29 @@ _CONVERTED_VALUE: dict[
         (5, None, 5000000000, CONCENTRATION_PARTS_PER_BILLION),
         (5, None, 5000000, CONCENTRATION_PARTS_PER_MILLION),
         (5, PERCENTAGE, 0.05, None),
+    ],
+    MassVolumeConcentrationConverter: [
+        # 1000 µg/m³ = 1 mg/m³
+        (
+            1000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            1,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
+        # 2 mg/m³ = 2000 µg/m³
+        (
+            2,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            2000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        # 3 g/m³ = 3000 mg/m³
+        (
+            3,
+            CONCENTRATION_GRAMS_PER_CUBIC_METER,
+            3000,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
     ],
     VolumeConverter: [
         (5, UnitOfVolume.LITERS, 1.32086, UnitOfVolume.GALLONS),
@@ -412,6 +863,103 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 478753.24, UnitOfVolume.FLUID_OUNCES),
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 3740.26, UnitOfVolume.GALLONS),
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 14158.42, UnitOfVolume.LITERS),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 5000, UnitOfVolume.CUBIC_FEET),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 141.5842, UnitOfVolume.CUBIC_METERS),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 4787532.4, UnitOfVolume.FLUID_OUNCES),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 37402.6, UnitOfVolume.GALLONS),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 141584.2, UnitOfVolume.LITERS),
+    ],
+    VolumeFlowRateConverter: [
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            16.6666667,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            0.58857777,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            4.40286754,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            0.06,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            0.03531466,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            0.264172052,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            1.69901079,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            28.3168465,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            7.48051948,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            9,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            2500,
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+            3600,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+            3600000,
+            UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        ),
+        (
+            3,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            50,
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+        ),
+        (
+            3.6,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_SECOND,
+        ),
+        (
+            0.6,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
+            10,
+            UnitOfVolumeFlowRate.LITERS_PER_SECOND,
+        ),
     ],
 }
 
@@ -502,8 +1050,8 @@ def test_convert_nonnumeric_value(
     ("converter", "from_unit", "to_unit", "expected"),
     [
         # Process all items in _GET_UNIT_RATIO
-        (converter, item[0], item[1], item[2])
-        for converter, item in _GET_UNIT_RATIO.items()
+        (converter, from_unit, to_unit, expected)
+        for converter, (from_unit, to_unit, expected) in _GET_UNIT_RATIO.items()
     ],
 )
 def test_get_unit_ratio(
@@ -516,12 +1064,33 @@ def test_get_unit_ratio(
 
 
 @pytest.mark.parametrize(
+    ("converter", "from_unit", "to_unit", "expected"),
+    [
+        # Process all items in _GET_UNIT_RATIO
+        (converter, from_unit, to_unit, expected)
+        for converter, (from_unit, to_unit, expected) in _GET_UNIT_RATIO.items()
+    ],
+)
+def get_unit_floored_log_ratio(
+    converter: type[BaseUnitConverter], from_unit: str, to_unit: str, expected: float
+) -> None:
+    """Test floored log unit ratio.
+
+    Should not use pytest.approx since we are checking these
+    values are exact.
+    """
+    ratio = converter.get_unit_floored_log_ratio(from_unit, to_unit)
+    assert ratio == expected
+    assert converter.get_unit_floored_log_ratio(to_unit, from_unit) == 1 / ratio
+
+
+@pytest.mark.parametrize(
     ("converter", "value", "from_unit", "expected", "to_unit"),
     [
         # Process all items in _CONVERTED_VALUE
-        (converter, list_item[0], list_item[1], list_item[2], list_item[3])
+        (converter, value, from_unit, expected, to_unit)
         for converter, item in _CONVERTED_VALUE.items()
-        for list_item in item
+        for value, from_unit, expected, to_unit in item
     ],
 )
 def test_unit_conversion(

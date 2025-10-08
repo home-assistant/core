@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/cloudflare",
   "iot_class": "cloud_push",
   "loggers": ["pycfdns"],
-  "requirements": ["pycfdns==2.0.1"]
+  "requirements": ["pycfdns==3.0.0"],
+  "single_config_entry": true
 }

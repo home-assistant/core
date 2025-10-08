@@ -1,4 +1,5 @@
 """The sia hub."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -28,7 +29,6 @@ from .utils import get_event_data_from_sia_event
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEBAND = (80, 40)
-IGNORED_TIMEBAND = (3600, 1800)
 
 
 class SIAHub:
@@ -100,7 +100,7 @@ class SIAHub:
             SIAAccount(
                 account_id=a[CONF_ACCOUNT],
                 key=a.get(CONF_ENCRYPTION_KEY),
-                allowed_timeband=IGNORED_TIMEBAND
+                allowed_timeband=None
                 if a[CONF_IGNORE_TIMESTAMPS]
                 else DEFAULT_TIMEBAND,
             )
@@ -110,14 +110,12 @@ class SIAHub:
             self.sia_client.accounts = self.sia_accounts
             return
         # the new client class method creates a subclass based on protocol, hence the type ignore
-        self.sia_client = (
-            SIAClient(  # pylint: disable=abstract-class-instantiated # type: ignore
-                host="",
-                port=self._port,
-                accounts=self.sia_accounts,
-                function=self.async_create_and_fire_event,
-                protocol=CommunicationsProtocol(self._protocol),
-            )
+        self.sia_client = SIAClient(
+            host="",
+            port=self._port,
+            accounts=self.sia_accounts,
+            function=self.async_create_and_fire_event,
+            protocol=CommunicationsProtocol(self._protocol),
         )
 
     def _load_options(self) -> None:

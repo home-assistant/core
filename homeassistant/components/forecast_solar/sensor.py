@@ -1,4 +1,5 @@
 """Support for the Forecast.Solar sensor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -15,20 +16,19 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import ForecastSolarConfigEntry
 from .const import DOMAIN
 from .coordinator import ForecastSolarDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class ForecastSolarSensorEntityDescription(SensorEntityDescription):
     """Describes a Forecast.Solar Sensor."""
 
@@ -38,7 +38,7 @@ class ForecastSolarSensorEntityDescription(SensorEntityDescription):
 SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
     ForecastSolarSensorEntityDescription(
         key="energy_production_today",
-        name="Estimated energy production - today",
+        translation_key="energy_production_today",
         state=lambda estimate: estimate.energy_production_today,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -47,7 +47,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_production_today_remaining",
-        name="Estimated energy production - remaining today",
+        translation_key="energy_production_today_remaining",
         state=lambda estimate: estimate.energy_production_today_remaining,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -56,7 +56,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_production_tomorrow",
-        name="Estimated energy production - tomorrow",
+        translation_key="energy_production_tomorrow",
         state=lambda estimate: estimate.energy_production_tomorrow,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -65,17 +65,17 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
     ),
     ForecastSolarSensorEntityDescription(
         key="power_highest_peak_time_today",
-        name="Highest power peak time - today",
+        translation_key="power_highest_peak_time_today",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_highest_peak_time_tomorrow",
-        name="Highest power peak time - tomorrow",
+        translation_key="power_highest_peak_time_tomorrow",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_production_now",
-        name="Estimated power production - now",
+        translation_key="power_production_now",
         device_class=SensorDeviceClass.POWER,
         state=lambda estimate: estimate.power_production_now,
         state_class=SensorStateClass.MEASUREMENT,
@@ -83,37 +83,37 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
     ),
     ForecastSolarSensorEntityDescription(
         key="power_production_next_hour",
+        translation_key="power_production_next_hour",
         state=lambda estimate: estimate.power_production_at_time(
             estimate.now() + timedelta(hours=1)
         ),
-        name="Estimated power production - next hour",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfPower.WATT,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_production_next_12hours",
+        translation_key="power_production_next_12hours",
         state=lambda estimate: estimate.power_production_at_time(
             estimate.now() + timedelta(hours=12)
         ),
-        name="Estimated power production - next 12 hours",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfPower.WATT,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_production_next_24hours",
+        translation_key="power_production_next_24hours",
         state=lambda estimate: estimate.power_production_at_time(
             estimate.now() + timedelta(hours=24)
         ),
-        name="Estimated power production - next 24 hours",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfPower.WATT,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_current_hour",
-        name="Estimated energy production - this hour",
+        translation_key="energy_current_hour",
         state=lambda estimate: estimate.energy_current_hour,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -122,8 +122,8 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_next_hour",
+        translation_key="energy_next_hour",
         state=lambda estimate: estimate.sum_energy_production(1),
-        name="Estimated energy production - next hour",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -133,10 +133,12 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ForecastSolarConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator: ForecastSolarDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         ForecastSolarSensorEntity(

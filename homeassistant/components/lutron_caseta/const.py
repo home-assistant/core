@@ -14,6 +14,10 @@ LUTRON_CASETA_BUTTON_EVENT = "lutron_caseta_button_event"
 
 BRIDGE_DEVICE_ID = "1"
 
+DEVICE_TYPE_WHITE_TUNE = "WhiteTune"
+DEVICE_TYPE_SPECTRUM_TUNE = "SpectrumTune"
+DEVICE_TYPE_COLOR_TUNE = "ColorTune"
+
 MANUFACTURER = "Lutron Electronics Co., Inc"
 
 ATTR_SERIAL = "serial"
@@ -25,12 +29,14 @@ ATTR_DEVICE_NAME = "device_name"
 ATTR_AREA_NAME = "area_name"
 ATTR_ACTION = "action"
 
+ACTION_MULTITAP = "multi_tap"
 ACTION_PRESS = "press"
 ACTION_RELEASE = "release"
 
 CONF_SUBTYPE = "subtype"
 
-BRIDGE_TIMEOUT = 35
+CONNECT_TIMEOUT = 9
+CONFIGURE_TIMEOUT = 50
 
 UNASSIGNED_AREA = "Unassigned"
 

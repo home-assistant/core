@@ -1,14 +1,10 @@
 set_value:
-  name: Set Date/Time
-  description: Set the date/time for a datetime entity.
   target:
     entity:
       domain: datetime
   fields:
     datetime:
-      name: Date & Time
-      description: The date/time to set. The time zone of the Home Assistant instance is assumed.
       required: true
-      example: "2022/11/01 22:15"
+      example: "2023-10-07T21:35:22"
       selector:
         datetime:

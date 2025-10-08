@@ -5,6 +5,9 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Radio Thermostat."
         }
       },
       "confirm": {
@@ -25,6 +28,13 @@
         "data": {
           "hold_temp": "Set a permanent hold when adjusting the temperature."
         }
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "hold": {
+        "name": "Hold"
       }
     }
   }

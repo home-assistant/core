@@ -1,4 +1,5 @@
 """All queries for logbook."""
+
 from __future__ import annotations
 
 from sqlalchemy import lambda_stmt
@@ -28,18 +29,13 @@ def all_stmt(
     )
     if context_id_bin is not None:
         stmt += lambda s: s.where(Events.context_id_bin == context_id_bin).union_all(
-            _states_query_for_context_id(
-                start_day,
-                end_day,
-                # https://github.com/python/mypy/issues/2608
-                context_id_bin,  # type:ignore[arg-type]
-            ),
+            _states_query_for_context_id(start_day, end_day, context_id_bin),
         )
     elif filters and filters.has_config:
         stmt = stmt.add_criteria(
-            lambda q: q.filter(filters.events_entity_filter()).union_all(  # type: ignore[union-attr]
+            lambda q: q.filter(filters.events_entity_filter()).union_all(
                 _states_query_for_all(start_day, end_day).where(
-                    filters.states_metadata_entity_filter()  # type: ignore[union-attr]
+                    filters.states_metadata_entity_filter()
                 )
             ),
             track_on=[filters],

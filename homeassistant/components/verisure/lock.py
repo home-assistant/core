@@ -1,4 +1,5 @@
 """Support for Verisure locks."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,13 +7,13 @@ from typing import Any
 
 from verisure import Error as VerisureError
 
-from homeassistant.components.lock import LockEntity
+from homeassistant.components.lock import LockEntity, LockState
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.const import ATTR_CODE
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -20,7 +21,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     CONF_GIID,
     CONF_LOCK_CODE_DIGITS,
-    CONF_LOCK_DEFAULT_CODE,
     DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
     LOGGER,
@@ -33,7 +33,7 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Verisure alarm control panel from a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -41,12 +41,12 @@ async def async_setup_entry(
     platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_DISABLE_AUTOLOCK,
-        {},
+        None,
         VerisureDoorlock.disable_autolock.__name__,
     )
     platform.async_register_entity_service(
         SERVICE_ENABLE_AUTOLOCK,
-        {},
+        None,
         VerisureDoorlock.enable_autolock.__name__,
     )
 
@@ -60,6 +60,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
     """Representation of a Verisure doorlock."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -69,10 +70,9 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
-        self._state: str | None = None
-        self._digits = coordinator.entry.options.get(
-            CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
-        )
+        self._attr_is_locked = None
+        self._attr_changed_by = None
+        self._changed_method: str | None = None
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -80,11 +80,10 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         area = self.coordinator.data["locks"][self.serial_number]["device"]["area"]
         return DeviceInfo(
             name=area,
-            suggested_area=area,
             manufacturer="Verisure",
             model="Lockguard Smartlock",
             identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
             configuration_url="https://mypages.verisure.com",
         )
 
@@ -96,63 +95,35 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         )
 
     @property
-    def changed_by(self) -> str | None:
-        """Last change triggered by."""
-        return (
-            self.coordinator.data["locks"][self.serial_number]
-            .get("user", {})
-            .get("name")
-        )
-
-    @property
-    def changed_method(self) -> str:
-        """Last change method."""
-        return self.coordinator.data["locks"][self.serial_number]["lockMethod"]
-
-    @property
     def code_format(self) -> str:
-        """Return the required six digit code."""
-        return "^\\d{%s}$" % self._digits
-
-    @property
-    def is_locked(self) -> bool:
-        """Return true if lock is locked."""
-        return (
-            self.coordinator.data["locks"][self.serial_number]["lockStatus"] == "LOCKED"
+        """Return the configured code format."""
+        digits = self.coordinator.config_entry.options.get(
+            CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
         )
+        return f"^\\d{{{digits}}}$"
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        return {"method": self.changed_method}
+        return {"method": self._changed_method}
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send unlock command."""
-        code = kwargs.get(
-            ATTR_CODE, self.coordinator.entry.options.get(CONF_LOCK_DEFAULT_CODE)
-        )
-        if code is None:
-            LOGGER.error("Code required but none provided")
-            return
-
-        await self.async_set_lock_state(code, STATE_UNLOCKED)
+        code = kwargs.get(ATTR_CODE)
+        if code:
+            await self.async_set_lock_state(code, LockState.UNLOCKED)
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Send lock command."""
-        code = kwargs.get(
-            ATTR_CODE, self.coordinator.entry.options.get(CONF_LOCK_DEFAULT_CODE)
-        )
-        if code is None:
-            LOGGER.error("Code required but none provided")
-            return
+        code = kwargs.get(ATTR_CODE)
+        if code:
+            await self.async_set_lock_state(code, LockState.LOCKED)
 
-        await self.async_set_lock_state(code, STATE_LOCKED)
-
-    async def async_set_lock_state(self, code: str, state: str) -> None:
+    async def async_set_lock_state(self, code: str, state: LockState) -> None:
         """Send set lock state command."""
         command = (
             self.coordinator.verisure.door_lock(self.serial_number, code)
-            if state == STATE_LOCKED
+            if state == LockState.LOCKED
             else self.coordinator.verisure.door_unlock(self.serial_number, code)
         )
         lock_request = await self.hass.async_add_executor_job(
@@ -161,10 +132,10 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         )
         LOGGER.debug("Verisure doorlock %s", state)
         transaction_id = lock_request.get("data", {}).get(command["operationName"])
-        target_state = "LOCKED" if state == STATE_LOCKED else "UNLOCKED"
+        target_state = "LOCKED" if state == LockState.LOCKED else "UNLOCKED"
         lock_status = None
         attempts = 0
-        while lock_status != "OK":
+        while lock_status is None:
             if attempts == 30:
                 break
             if attempts > 1:
@@ -182,8 +153,10 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
                 .get("doorLockStateChangePollResult", {})
                 .get("result")
             )
+            LOGGER.debug("Lock status is %s", lock_status)
         if lock_status == "OK":
-            self._state = state
+            self._attr_is_locked = state == LockState.LOCKED
+            self.async_write_ha_state()
 
     def disable_autolock(self) -> None:
         """Disable autolock on a doorlock."""
@@ -206,3 +179,21 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
             LOGGER.debug("Enabling autolock on %s", self.serial_number)
         except VerisureError as ex:
             LOGGER.error("Could not enable autolock, %s", ex)
+
+    def _update_lock_attributes(self) -> None:
+        """Update lock state, changed by, and method from coordinator data."""
+        lock_data = self.coordinator.data["locks"][self.serial_number]
+        self._attr_is_locked = lock_data["lockStatus"] == "LOCKED"
+        self._attr_changed_by = lock_data.get("user", {}).get("name")
+        self._changed_method = lock_data["lockMethod"]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_lock_attributes()
+        super()._handle_coordinator_update()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._update_lock_attributes()

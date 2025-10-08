@@ -1,12 +1,13 @@
 """Support for EZVIZ number controls."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from pyezviz.constants import SupportExt
-from pyezviz.exceptions import (
+from pyezvizapi.constants import SupportExt
+from pyezvizapi.exceptions import (
     EzvizAuthTokenExpired,
     EzvizAuthVerificationCode,
     HTTPError,
@@ -15,14 +16,12 @@ from pyezviz.exceptions import (
 )
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_COORDINATOR, DOMAIN
-from .coordinator import EzvizDataUpdateCoordinator
+from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizBaseEntity
 
 SCAN_INTERVAL = timedelta(seconds=3600)
@@ -30,25 +29,17 @@ PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class EzvizNumberEntityDescriptionMixin:
-    """Mixin values for EZVIZ Number entities."""
+@dataclass(frozen=True, kw_only=True)
+class EzvizNumberEntityDescription(NumberEntityDescription):
+    """Describe a EZVIZ Number."""
 
     supported_ext: str
     supported_ext_value: list
 
 
-@dataclass
-class EzvizNumberEntityDescription(
-    NumberEntityDescription, EzvizNumberEntityDescriptionMixin
-):
-    """Describe a EZVIZ Number."""
-
-
 NUMBER_TYPE = EzvizNumberEntityDescription(
     key="detection_sensibility",
-    name="Detection sensitivity",
-    icon="mdi:eye",
+    translation_key="detection_sensibility",
     entity_category=EntityCategory.CONFIG,
     native_min_value=0,
     native_step=1,
@@ -58,29 +49,24 @@ NUMBER_TYPE = EzvizNumberEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EzvizConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ sensors based on a config entry."""
-    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        [
-            EzvizSensor(coordinator, camera, value, entry.entry_id)
-            for camera in coordinator.data
-            for capibility, value in coordinator.data[camera]["supportExt"].items()
-            if capibility == NUMBER_TYPE.supported_ext
-            if value in NUMBER_TYPE.supported_ext_value
-        ],
-        update_before_add=True,
+        EzvizNumber(coordinator, camera, value, entry.entry_id)
+        for camera in coordinator.data
+        for capability, value in coordinator.data[camera]["supportExt"].items()
+        if capability == NUMBER_TYPE.supported_ext
+        if value in NUMBER_TYPE.supported_ext_value
     )
 
 
-class EzvizSensor(EzvizBaseEntity, NumberEntity):
+class EzvizNumber(EzvizBaseEntity, NumberEntity):
     """Representation of a EZVIZ number entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -89,7 +75,7 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
         value: str,
         config_entry_id: str,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the entity."""
         super().__init__(coordinator, serial)
         self.sensitivity_type = 3 if value == "3" else 0
         self._attr_native_max_value = 100 if value == "3" else 6
@@ -97,6 +83,10 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
         self.entity_description = NUMBER_TYPE
         self.config_entry_id = config_entry_id
         self.sensor_value: int | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        self.async_schedule_update_ha_state(True)
 
     @property
     def native_value(self) -> float | None:

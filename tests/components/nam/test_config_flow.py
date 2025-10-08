@@ -1,21 +1,24 @@
 """Define tests for the Nettigo Air Monitor config flow."""
-import asyncio
-from unittest.mock import patch
+
+from collections.abc import Generator
+from ipaddress import ip_address
+from unittest.mock import AsyncMock, patch
 
 from nettigo_air_monitor import ApiError, AuthFailedError, CannotGetMacError
 import pytest
 
-from homeassistant import data_entry_flow
-from homeassistant.components import zeroconf
 from homeassistant.components.nam.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
-DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    host="10.10.2.3",
-    addresses=["10.10.2.3"],
+DISCOVERY_INFO = ZeroconfServiceInfo(
+    ip_address=ip_address("10.10.2.3"),
+    ip_addresses=[ip_address("10.10.2.3")],
     hostname="mock_hostname",
     name="mock_name",
     port=None,
@@ -24,64 +27,66 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
 )
 VALID_CONFIG = {"host": "10.10.2.3"}
 VALID_AUTH = {"username": "fake_username", "password": "fake_password"}
-DEVICE_CONFIG = {"www_basicauth_enabled": False}
-DEVICE_CONFIG_AUTH = {"www_basicauth_enabled": True}
 
 
-async def test_form_create_entry_without_auth(hass: HomeAssistant) -> None:
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.nam.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+async def test_form_create_entry_without_auth(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test that the user step without auth works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        return_value=DEVICE_CONFIG,
-    ), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
-    ), patch(
-        "homeassistant.components.nam.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_CONFIG,
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"]["host"] == "10.10.2.3"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_create_entry_with_auth(hass: HomeAssistant) -> None:
+async def test_form_create_entry_with_auth(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test that the user step with auth works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        return_value=DEVICE_CONFIG_AUTH,
-    ), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        return_value="aa:bb:cc:dd:ee:ff",
-    ), patch(
-        "homeassistant.components.nam.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+        side_effect=[AuthFailedError("Authorization has failed"), "aa:bb:cc:dd:ee:ff"],
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_CONFIG,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "credentials"
 
         result = await hass.config_entries.flow.async_configure(
@@ -90,7 +95,7 @@ async def test_form_create_entry_with_auth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"]["host"] == "10.10.2.3"
     assert result["data"]["username"] == "fake_username"
@@ -107,30 +112,21 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
         data={"host": "10.10.2.3"},
     )
     entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        return_value=DEVICE_CONFIG_AUTH,
-    ), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data=entry.data,
-        )
-
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=VALID_AUTH,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_unsuccessful(hass: HomeAssistant) -> None:
@@ -142,27 +138,21 @@ async def test_reauth_unsuccessful(hass: HomeAssistant) -> None:
         data={"host": "10.10.2.3"},
     )
     entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         side_effect=ApiError("API Error"),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data=entry.data,
-        )
-
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=VALID_AUTH,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "reauth_unsuccessful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_unsuccessful"
 
 
 @pytest.mark.parametrize(
@@ -170,7 +160,7 @@ async def test_reauth_unsuccessful(hass: HomeAssistant) -> None:
     [
         (ApiError("API Error"), "cannot_connect"),
         (AuthFailedError("Auth Error"), "invalid_auth"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
 )
@@ -178,11 +168,8 @@ async def test_form_with_auth_errors(hass: HomeAssistant, error) -> None:
     """Test we handle errors when auth is required."""
     exc, base_error = error
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        side_effect=AuthFailedError("Auth Error"),
-    ), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        return_value="aa:bb:cc:dd:ee:ff",
+        side_effect=AuthFailedError("Authorization has failed"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -190,11 +177,11 @@ async def test_form_with_auth_errors(hass: HomeAssistant, error) -> None:
             data=VALID_CONFIG,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.initialize",
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         side_effect=exc,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -209,7 +196,7 @@ async def test_form_with_auth_errors(hass: HomeAssistant, error) -> None:
     "error",
     [
         (ApiError("API Error"), "cannot_connect"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
 )
@@ -231,12 +218,11 @@ async def test_form_errors(hass: HomeAssistant, error) -> None:
 
 async def test_form_abort(hass: HomeAssistant) -> None:
     """Test we handle abort after error."""
-    with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        return_value=DEVICE_CONFIG,
-    ), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        side_effect=CannotGetMacError("Cannot get MAC address from device"),
+    with (
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+            side_effect=CannotGetMacError("Cannot get MAC address from device"),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -244,7 +230,7 @@ async def test_form_abort(hass: HomeAssistant) -> None:
             data=VALID_CONFIG,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "device_unsupported"
 
 
@@ -260,9 +246,6 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        return_value=DEVICE_CONFIG,
-    ), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ):
@@ -271,19 +254,16 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             {"host": "1.1.1.1"},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
     assert entry.data["host"] == "1.1.1.1"
 
 
-async def test_zeroconf(hass: HomeAssistant) -> None:
+async def test_zeroconf(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        return_value=DEVICE_CONFIG,
-    ), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ):
@@ -298,35 +278,27 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
             if flow["flow_id"] == result["flow_id"]
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert context["title_placeholders"]["host"] == "10.10.2.3"
     assert context["confirm_only"] is True
 
-    with patch(
-        "homeassistant.components.nam.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"] == {"host": "10.10.2.3"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_with_auth(hass: HomeAssistant) -> None:
+async def test_zeroconf_with_auth(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test that the zeroconf step with auth works."""
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        side_effect=AuthFailedError("Auth Error"),
-    ), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        return_value="aa:bb:cc:dd:ee:ff",
+        side_effect=AuthFailedError("Auth Error"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -339,27 +311,22 @@ async def test_zeroconf_with_auth(hass: HomeAssistant) -> None:
             if flow["flow_id"] == result["flow_id"]
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
     assert result["errors"] == {}
     assert context["title_placeholders"]["host"] == "10.10.2.3"
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        return_value=DEVICE_CONFIG_AUTH,
-    ), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
-    ), patch(
-        "homeassistant.components.nam.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_AUTH,
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"]["host"] == "10.10.2.3"
     assert result["data"]["username"] == "fake_username"
@@ -380,7 +347,7 @@ async def test_zeroconf_host_already_configured(hass: HomeAssistant) -> None:
         context={"source": SOURCE_ZEROCONF},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -404,5 +371,124 @@ async def test_zeroconf_errors(hass: HomeAssistant, error) -> None:
             context={"source": SOURCE_ZEROCONF},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+async def test_reconfigure_successful(hass: HomeAssistant) -> None:
+    """Test starting a reconfigure flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="10.10.2.3",
+        unique_id="aa:bb:cc:dd:ee:ff",
+        data={
+            CONF_HOST: "10.10.2.3",
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        return_value="aa:bb:cc:dd:ee:ff",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "10.10.10.10"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: "10.10.10.10",
+        CONF_USERNAME: "fake_username",
+        CONF_PASSWORD: "fake_password",
+    }
+
+
+async def test_reconfigure_not_successful(hass: HomeAssistant) -> None:
+    """Test starting a reconfigure flow but no connection found."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="10.10.2.3",
+        unique_id="aa:bb:cc:dd:ee:ff",
+        data={
+            CONF_HOST: "10.10.2.3",
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        side_effect=ApiError("API Error"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "10.10.10.10"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        return_value="aa:bb:cc:dd:ee:ff",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "10.10.10.10"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: "10.10.10.10",
+        CONF_USERNAME: "fake_username",
+        CONF_PASSWORD: "fake_password",
+    }
+
+
+async def test_reconfigure_not_the_same_device(hass: HomeAssistant) -> None:
+    """Test starting the reconfiguration process, but with a different printer."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="10.10.2.3",
+        unique_id="11:22:33:44:55:66",
+        data={
+            CONF_HOST: "10.10.2.3",
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        return_value="aa:bb:cc:dd:ee:ff",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "10.10.10.10"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "another_device"

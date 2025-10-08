@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterable
 import logging
 from typing import Any
@@ -9,12 +10,11 @@ from typing import Any
 from jvcprojector import const
 
 from homeassistant.components.remote import RemoteEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import JVCConfigEntry
 from .entity import JvcProjectorEntity
 
 COMMANDS = {
@@ -36,16 +36,30 @@ COMMANDS = {
     "lens_control": const.REMOTE_LENS_CONTROL,
     "setting_memory": const.REMOTE_SETTING_MEMORY,
     "gamma_settings": const.REMOTE_GAMMA_SETTINGS,
+    "hdmi_1": const.REMOTE_HDMI_1,
+    "hdmi_2": const.REMOTE_HDMI_2,
+    "mode_1": const.REMOTE_MODE_1,
+    "mode_2": const.REMOTE_MODE_2,
+    "mode_3": const.REMOTE_MODE_3,
+    "lens_ap": const.REMOTE_LENS_AP,
+    "gamma": const.REMOTE_GAMMA,
+    "color_temp": const.REMOTE_COLOR_TEMP,
+    "natural": const.REMOTE_NATURAL,
+    "cinema": const.REMOTE_CINEMA,
+    "anamo": const.REMOTE_ANAMO,
+    "3d_format": const.REMOTE_3D_FORMAT,
 }
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: JVCConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the JVC Projector platform from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities([JvcProjectorRemote(coordinator)], True)
 
 
@@ -62,11 +76,13 @@ class JvcProjectorRemote(JvcProjectorEntity, RemoteEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.device.power_on()
+        await asyncio.sleep(1)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.device.power_off()
+        await asyncio.sleep(1)
         await self.coordinator.async_refresh()
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:

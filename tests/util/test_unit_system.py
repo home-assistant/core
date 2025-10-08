@@ -1,28 +1,33 @@
 """Test the unit system helper."""
+
 from __future__ import annotations
 
 import pytest
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.sensor.const import DEVICE_CLASS_UNITS
+from homeassistant.components.sensor import DEVICE_CLASS_UNITS, SensorDeviceClass
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
+    AREA,
     LENGTH,
     MASS,
     PRESSURE,
     TEMPERATURE,
     VOLUME,
     WIND_SPEED,
+    UnitOfArea,
     UnitOfLength,
     UnitOfMass,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
     UnitOfVolumetricFlux,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.unit_system import (
+from homeassistant.util.unit_system import (  # pylint: disable=hass-deprecated-import
     _CONF_UNIT_SYSTEM_IMPERIAL,
     _CONF_UNIT_SYSTEM_METRIC,
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
@@ -42,7 +47,8 @@ def test_invalid_units() -> None:
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -55,7 +61,8 @@ def test_invalid_units() -> None:
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=INVALID_UNIT,
             mass=UnitOfMass.GRAMS,
@@ -68,7 +75,8 @@ def test_invalid_units() -> None:
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -81,7 +89,8 @@ def test_invalid_units() -> None:
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -94,7 +103,8 @@ def test_invalid_units() -> None:
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=INVALID_UNIT,
@@ -107,7 +117,8 @@ def test_invalid_units() -> None:
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -121,6 +132,21 @@ def test_invalid_units() -> None:
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=INVALID_UNIT,
+            area=UnitOfArea.SQUARE_METERS,
+            conversions={},
+            length=UnitOfLength.METERS,
+            mass=UnitOfMass.GRAMS,
+            pressure=UnitOfPressure.PA,
+            temperature=UnitOfTemperature.CELSIUS,
+            volume=UnitOfVolume.LITERS,
+            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+        )
+
+    with pytest.raises(ValueError):
+        UnitSystem(
+            SYSTEM_NAME,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=INVALID_UNIT,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -145,6 +171,8 @@ def test_invalid_value() -> None:
         METRIC_SYSTEM.pressure("50Pa", UnitOfPressure.PA)
     with pytest.raises(TypeError):
         METRIC_SYSTEM.accumulated_precipitation("50mm", UnitOfLength.MILLIMETERS)
+    with pytest.raises(TypeError):
+        METRIC_SYSTEM.area("2m²", UnitOfArea.SQUARE_METERS)
 
 
 def test_as_dict() -> None:
@@ -157,6 +185,7 @@ def test_as_dict() -> None:
         MASS: UnitOfMass.GRAMS,
         PRESSURE: UnitOfPressure.PA,
         ACCUMULATED_PRECIPITATION: UnitOfLength.MILLIMETERS,
+        AREA: UnitOfArea.SQUARE_METERS,
     }
 
     assert expected == METRIC_SYSTEM.as_dict()
@@ -302,6 +331,29 @@ def test_accumulated_precipitation_to_imperial() -> None:
     ) == pytest.approx(10, abs=1e-4)
 
 
+def test_area_same_unit() -> None:
+    """Test no conversion happens if to unit is same as from unit."""
+    assert METRIC_SYSTEM.area(5, METRIC_SYSTEM.area_unit) == 5
+
+
+def test_area_unknown_unit() -> None:
+    """Test no conversion happens if unknown unit."""
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
+        METRIC_SYSTEM.area(5, "abc")
+
+
+def test_area_to_metric() -> None:
+    """Test area conversion to metric system."""
+    assert METRIC_SYSTEM.area(25, METRIC_SYSTEM.area_unit) == 25
+    assert round(METRIC_SYSTEM.area(10, IMPERIAL_SYSTEM.area_unit), 1) == 0.9
+
+
+def test_area_to_imperial() -> None:
+    """Test area conversion to imperial system."""
+    assert IMPERIAL_SYSTEM.area(77, IMPERIAL_SYSTEM.area_unit) == 77
+    assert IMPERIAL_SYSTEM.area(25, METRIC_SYSTEM.area_unit) == 269.09776041774313
+
+
 def test_properties() -> None:
     """Test the unit properties are returned as expected."""
     assert METRIC_SYSTEM.length_unit == UnitOfLength.KILOMETERS
@@ -311,6 +363,7 @@ def test_properties() -> None:
     assert METRIC_SYSTEM.volume_unit == UnitOfVolume.LITERS
     assert METRIC_SYSTEM.pressure_unit == UnitOfPressure.PA
     assert METRIC_SYSTEM.accumulated_precipitation_unit == UnitOfLength.MILLIMETERS
+    assert METRIC_SYSTEM.area_unit == UnitOfArea.SQUARE_METERS
 
 
 @pytest.mark.parametrize(
@@ -336,7 +389,19 @@ def test_get_unit_system_invalid(key: str) -> None:
 
 @pytest.mark.parametrize(
     ("device_class", "original_unit", "state_unit"),
-    (
+    [
+        # Test area conversion
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_FEET, UnitOfArea.SQUARE_METERS),
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_INCHES,
+            UnitOfArea.SQUARE_CENTIMETERS,
+        ),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_MILES, UnitOfArea.SQUARE_KILOMETERS),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_YARDS, UnitOfArea.SQUARE_METERS),
+        (SensorDeviceClass.AREA, UnitOfArea.ACRES, UnitOfArea.HECTARES),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_KILOMETERS, None),
+        (SensorDeviceClass.AREA, "very_long", None),
         # Test atmospheric pressure
         (
             SensorDeviceClass.ATMOSPHERIC_PRESSURE,
@@ -368,7 +433,13 @@ def test_get_unit_system_invalid(key: str) -> None:
             UnitOfVolume.CENTUM_CUBIC_FEET,
             UnitOfVolume.CUBIC_METERS,
         ),
+        (
+            SensorDeviceClass.GAS,
+            UnitOfVolume.MILLE_CUBIC_FEET,
+            UnitOfVolume.CUBIC_METERS,
+        ),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
+        (SensorDeviceClass.GAS, UnitOfVolume.LITERS, None),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, None),
         (SensorDeviceClass.GAS, "very_much", None),
         # Test precipitation conversion
@@ -414,6 +485,11 @@ def test_get_unit_system_invalid(key: str) -> None:
         ),
         (
             SensorDeviceClass.SPEED,
+            UnitOfSpeed.INCHES_PER_SECOND,
+            UnitOfSpeed.MILLIMETERS_PER_SECOND,
+        ),
+        (
+            SensorDeviceClass.SPEED,
             UnitOfSpeed.MILES_PER_HOUR,
             UnitOfSpeed.KILOMETERS_PER_HOUR,
         ),
@@ -439,6 +515,11 @@ def test_get_unit_system_invalid(key: str) -> None:
             UnitOfVolume.CENTUM_CUBIC_FEET,
             UnitOfVolume.CUBIC_METERS,
         ),
+        (
+            SensorDeviceClass.VOLUME,
+            UnitOfVolume.MILLE_CUBIC_FEET,
+            UnitOfVolume.CUBIC_METERS,
+        ),
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
         (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCES, UnitOfVolume.MILLILITERS),
         (SensorDeviceClass.VOLUME, UnitOfVolume.GALLONS, UnitOfVolume.LITERS),
@@ -450,6 +531,11 @@ def test_get_unit_system_invalid(key: str) -> None:
         (
             SensorDeviceClass.WATER,
             UnitOfVolume.CENTUM_CUBIC_FEET,
+            UnitOfVolume.CUBIC_METERS,
+        ),
+        (
+            SensorDeviceClass.WATER,
+            UnitOfVolume.MILLE_CUBIC_FEET,
             UnitOfVolume.CUBIC_METERS,
         ),
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
@@ -476,7 +562,7 @@ def test_get_unit_system_invalid(key: str) -> None:
             UnitOfSpeed.KILOMETERS_PER_HOUR,
         ),
         (SensorDeviceClass.WIND_SPEED, "very_fast", None),
-    ),
+    ],
 )
 def test_get_metric_converted_unit_(
     device_class: SensorDeviceClass,
@@ -489,6 +575,13 @@ def test_get_metric_converted_unit_(
 
 
 UNCONVERTED_UNITS_METRIC_SYSTEM = {
+    SensorDeviceClass.AREA: (
+        UnitOfArea.SQUARE_MILLIMETERS,
+        UnitOfArea.SQUARE_CENTIMETERS,
+        UnitOfArea.SQUARE_METERS,
+        UnitOfArea.SQUARE_KILOMETERS,
+        UnitOfArea.HECTARES,
+    ),
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.HPA,),
     SensorDeviceClass.DISTANCE: (
         UnitOfLength.CENTIMETERS,
@@ -496,7 +589,10 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfLength.METERS,
         UnitOfLength.MILLIMETERS,
     ),
-    SensorDeviceClass.GAS: (UnitOfVolume.CUBIC_METERS,),
+    SensorDeviceClass.GAS: (
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.LITERS,
+    ),
     SensorDeviceClass.PRECIPITATION: (
         UnitOfLength.CENTIMETERS,
         UnitOfLength.MILLIMETERS,
@@ -515,9 +611,12 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfPressure.PA,
     ),
     SensorDeviceClass.SPEED: (
+        UnitOfSpeed.BEAUFORT,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.KNOTS,
+        UnitOfSpeed.METERS_PER_MINUTE,
         UnitOfSpeed.METERS_PER_SECOND,
+        UnitOfSpeed.MILLIMETERS_PER_SECOND,
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
     ),
@@ -535,7 +634,8 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
+        SensorDeviceClass.AREA,
         SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         SensorDeviceClass.DISTANCE,
         SensorDeviceClass.GAS,
@@ -545,7 +645,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         SensorDeviceClass.SPEED,
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,
-    ),
+    ],
 )
 def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
     """Test unit conversion rules are in place for all units."""
@@ -563,7 +663,22 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
 
 @pytest.mark.parametrize(
     ("device_class", "original_unit", "state_unit"),
-    (
+    [
+        # Test area conversion
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_MILLIMETERS,
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_CENTIMETERS,
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_METERS, UnitOfArea.SQUARE_FEET),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_MILES),
+        (SensorDeviceClass.AREA, UnitOfArea.HECTARES, UnitOfArea.ACRES),
+        (SensorDeviceClass.AREA, "very_area", None),
         # Test atmospheric pressure
         (
             SensorDeviceClass.ATMOSPHERIC_PRESSURE,
@@ -591,7 +706,9 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         (SensorDeviceClass.DISTANCE, "very_long", None),
         # Test gas meter conversion
         (SensorDeviceClass.GAS, UnitOfVolume.CENTUM_CUBIC_FEET, None),
+        (SensorDeviceClass.GAS, UnitOfVolume.MILLE_CUBIC_FEET, None),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
+        (SensorDeviceClass.GAS, UnitOfVolume.LITERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.GAS, "very_much", None),
         # Test precipitation conversion
@@ -659,12 +776,18 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         ),
         (SensorDeviceClass.SPEED, UnitOfVolumetricFlux.INCHES_PER_DAY, None),
         (SensorDeviceClass.SPEED, UnitOfVolumetricFlux.INCHES_PER_HOUR, None),
+        (
+            SensorDeviceClass.SPEED,
+            UnitOfSpeed.MILLIMETERS_PER_SECOND,
+            UnitOfSpeed.INCHES_PER_SECOND,
+        ),
         (SensorDeviceClass.SPEED, "very_fast", None),
         # Test volume conversion
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.VOLUME, UnitOfVolume.LITERS, UnitOfVolume.GALLONS),
         (SensorDeviceClass.VOLUME, UnitOfVolume.MILLILITERS, UnitOfVolume.FLUID_OUNCES),
         (SensorDeviceClass.VOLUME, UnitOfVolume.CENTUM_CUBIC_FEET, None),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.MILLE_CUBIC_FEET, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCES, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.GALLONS, None),
@@ -673,6 +796,7 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.WATER, UnitOfVolume.LITERS, UnitOfVolume.GALLONS),
         (SensorDeviceClass.WATER, UnitOfVolume.CENTUM_CUBIC_FEET, None),
+        (SensorDeviceClass.WATER, UnitOfVolume.MILLE_CUBIC_FEET, None),
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.WATER, UnitOfVolume.GALLONS, None),
         (SensorDeviceClass.WATER, "very_much", None),
@@ -695,7 +819,7 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         (SensorDeviceClass.WIND_SPEED, UnitOfSpeed.KNOTS, None),
         (SensorDeviceClass.WIND_SPEED, UnitOfSpeed.MILES_PER_HOUR, None),
         (SensorDeviceClass.WIND_SPEED, "very_fast", None),
-    ),
+    ],
 )
 def test_get_us_converted_unit(
     device_class: SensorDeviceClass,
@@ -708,14 +832,26 @@ def test_get_us_converted_unit(
 
 
 UNCONVERTED_UNITS_US_SYSTEM = {
+    SensorDeviceClass.AREA: (
+        UnitOfArea.SQUARE_FEET,
+        UnitOfArea.SQUARE_INCHES,
+        UnitOfArea.SQUARE_MILES,
+        UnitOfArea.SQUARE_YARDS,
+        UnitOfArea.ACRES,
+    ),
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.INHG,),
     SensorDeviceClass.DISTANCE: (
         UnitOfLength.FEET,
         UnitOfLength.INCHES,
+        UnitOfLength.NAUTICAL_MILES,
         UnitOfLength.MILES,
         UnitOfLength.YARDS,
     ),
-    SensorDeviceClass.GAS: (UnitOfVolume.CENTUM_CUBIC_FEET, UnitOfVolume.CUBIC_FEET),
+    SensorDeviceClass.GAS: (
+        UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.MILLE_CUBIC_FEET,
+        UnitOfVolume.CUBIC_FEET,
+    ),
     SensorDeviceClass.PRECIPITATION: (UnitOfLength.INCHES,),
     SensorDeviceClass.PRECIPITATION_INTENSITY: (
         UnitOfVolumetricFlux.INCHES_PER_DAY,
@@ -723,20 +859,24 @@ UNCONVERTED_UNITS_US_SYSTEM = {
     ),
     SensorDeviceClass.PRESSURE: (UnitOfPressure.INHG, UnitOfPressure.PSI),
     SensorDeviceClass.SPEED: (
+        UnitOfSpeed.BEAUFORT,
         UnitOfSpeed.FEET_PER_SECOND,
         UnitOfSpeed.KNOTS,
         UnitOfSpeed.MILES_PER_HOUR,
+        UnitOfSpeed.INCHES_PER_SECOND,
         UnitOfVolumetricFlux.INCHES_PER_DAY,
         UnitOfVolumetricFlux.INCHES_PER_HOUR,
     ),
     SensorDeviceClass.VOLUME: (
         UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.MILLE_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.FLUID_OUNCES,
         UnitOfVolume.GALLONS,
     ),
     SensorDeviceClass.WATER: (
         UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.MILLE_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.GALLONS,
     ),
@@ -745,7 +885,7 @@ UNCONVERTED_UNITS_US_SYSTEM = {
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         SensorDeviceClass.DISTANCE,
         SensorDeviceClass.GAS,
@@ -755,7 +895,7 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         SensorDeviceClass.SPEED,
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,
-    ),
+    ],
 )
 def test_imperial_converted_units(device_class: SensorDeviceClass) -> None:
     """Test unit conversion rules are in place for all units."""
@@ -769,3 +909,35 @@ def test_imperial_converted_units(device_class: SensorDeviceClass) -> None:
             assert (device_class, unit) not in unit_system._conversions
             continue
         assert (device_class, unit) in unit_system._conversions
+
+
+async def test_imperial_deprecated_log_warning(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test deprecated imperial unit system logs warning."""
+    await async_process_ha_core_config(
+        hass,
+        {
+            "latitude": 60,
+            "longitude": 50,
+            "elevation": 25,
+            "name": "Home",
+            "unit_system": "imperial",
+            "time_zone": "America/New_York",
+            "currency": "USD",
+            "country": "US",
+            "language": "en",
+            "radius": 150,
+        },
+    )
+
+    assert hass.config.latitude == 60
+    assert hass.config.longitude == 50
+    assert hass.config.elevation == 25
+    assert hass.config.location_name == "Home"
+    assert hass.config.units is US_CUSTOMARY_SYSTEM
+    assert hass.config.time_zone == "America/New_York"
+    assert hass.config.currency == "USD"
+    assert hass.config.country == "US"
+    assert hass.config.language == "en"
+    assert hass.config.radius == 150

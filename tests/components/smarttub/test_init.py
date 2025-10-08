@@ -1,10 +1,9 @@
 """Test smarttub setup process."""
-import asyncio
+
 from unittest.mock import patch
 
 from smarttub import LoginFailed
 
-from homeassistant.components import smarttub
 from homeassistant.components.smarttub.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -26,7 +25,7 @@ async def test_setup_entry_not_ready(
     setup_component, hass: HomeAssistant, config_entry, smarttub_api
 ) -> None:
     """Test setup when the entry is not ready."""
-    smarttub_api.login.side_effect = asyncio.TimeoutError
+    smarttub_api.login.side_effect = TimeoutError
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -42,6 +41,7 @@ async def test_setup_auth_failed(
     config_entry.add_to_hass(hass)
     with patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.SETUP_ERROR
         mock_flow_init.assert_called_with(
             DOMAIN,
@@ -60,13 +60,13 @@ async def test_config_passed_to_config_entry(
 ) -> None:
     """Test that configured options are loaded via config entry."""
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, smarttub.DOMAIN, config_data)
+    assert await async_setup_component(hass, DOMAIN, config_data)
 
 
 async def test_unload_entry(hass: HomeAssistant, config_entry) -> None:
     """Test being able to unload an entry."""
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, smarttub.DOMAIN, {}) is True
+    assert await async_setup_component(hass, DOMAIN, {}) is True
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)

@@ -2,18 +2,21 @@
   "title": "Fan",
   "device_automation": {
     "condition_type": {
-      "is_on": "{entity_name} is on",
-      "is_off": "{entity_name} is off"
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]"
     },
     "trigger_type": {
-      "changed_states": "{entity_name} turned on or off",
-      "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off"
+      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]"
     },
     "action_type": {
-      "toggle": "Toggle {entity_name}",
-      "turn_on": "Turn on {entity_name}",
-      "turn_off": "Turn off {entity_name}"
+      "toggle": "[%key:common::device_automation::action_type::toggle%]",
+      "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
+      "turn_off": "[%key:common::device_automation::action_type::turn_off%]"
+    },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
     }
   },
   "entity_component": {
@@ -51,6 +54,103 @@
           "name": "Preset mode"
         }
       }
+    }
+  },
+  "services": {
+    "set_preset_mode": {
+      "name": "Set preset mode",
+      "description": "Sets preset fan mode.",
+      "fields": {
+        "preset_mode": {
+          "name": "Preset mode",
+          "description": "Preset fan mode."
+        }
+      }
+    },
+    "set_percentage": {
+      "name": "Set speed",
+      "description": "Sets the speed of a fan.",
+      "fields": {
+        "percentage": {
+          "name": "Percentage",
+          "description": "Speed of the fan."
+        }
+      }
+    },
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Turns fan on.",
+      "fields": {
+        "percentage": {
+          "name": "[%key:component::fan::services::set_percentage::fields::percentage::name%]",
+          "description": "[%key:component::fan::services::set_percentage::fields::percentage::description%]"
+        },
+        "preset_mode": {
+          "name": "[%key:component::fan::services::set_preset_mode::fields::preset_mode::name%]",
+          "description": "[%key:component::fan::services::set_preset_mode::fields::preset_mode::description%]"
+        }
+      }
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turns fan off."
+    },
+    "oscillate": {
+      "name": "Oscillate",
+      "description": "Controls the oscillation of a fan.",
+      "fields": {
+        "oscillating": {
+          "name": "Oscillating",
+          "description": "Turns oscillation on/off."
+        }
+      }
+    },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles a fan on/off."
+    },
+    "set_direction": {
+      "name": "Set direction",
+      "description": "Sets a fan's rotation direction.",
+      "fields": {
+        "direction": {
+          "name": "Direction",
+          "description": "Direction of the fan rotation."
+        }
+      }
+    },
+    "increase_speed": {
+      "name": "Increase speed",
+      "description": "Increases the speed of a fan.",
+      "fields": {
+        "percentage_step": {
+          "name": "Increment",
+          "description": "Percentage step by which the speed should be increased."
+        }
+      }
+    },
+    "decrease_speed": {
+      "name": "Decrease speed",
+      "description": "Decreases the speed of a fan.",
+      "fields": {
+        "percentage_step": {
+          "name": "Decrement",
+          "description": "Percentage step by which the speed should be decreased."
+        }
+      }
+    }
+  },
+  "selector": {
+    "direction": {
+      "options": {
+        "forward": "Forward",
+        "reverse": "Reverse"
+      }
+    }
+  },
+  "exceptions": {
+    "not_valid_preset_mode": {
+      "message": "Preset mode {preset_mode} is not valid, valid preset modes are: {preset_modes}."
     }
   }
 }

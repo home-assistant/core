@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -15,54 +17,71 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "station": "Station"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "station": "[%key:component::trafikverket_weatherstation::config::step::user::data::station%]"
+        }
       }
     }
   },
   "entity": {
     "sensor": {
-      "wind_direction_text": {
-        "state": {
-          "east": "East",
-          "north_east": "North east",
-          "east_south_east": "East-south east",
-          "north": "North",
-          "north_north_east": "North-north east",
-          "north_north_west": "North-north west",
-          "north_west": "North west",
-          "south": "South",
-          "south_east": "South east",
-          "south_south_west": "South-south west",
-          "south_west": "South west",
-          "west": "West"
-        }
+      "air_temperature": {
+        "name": "Air temperature"
       },
-      "precipitation_amountname": {
-        "state": {
-          "error": "Error",
-          "mild_rain": "Mild rain",
-          "moderate_rain": "Moderate rain",
-          "heavy_rain": "Heavy rain",
-          "mild_snow_rain": "Mild rain and snow mixed",
-          "moderate_snow_rain": "Moderate rain and snow mixed",
-          "heavy_snow_rain": "Heavy rain and snow mixed",
-          "mild_snow": "Mild snow",
-          "moderate_snow": "Moderate snow",
-          "heavy_snow": "Heavy snow",
-          "other": "Other",
-          "none": "None",
-          "unknown": "Unknown"
-        }
+      "road_temperature": {
+        "name": "Road temperature"
       },
       "precipitation": {
+        "name": "Precipitation type",
         "state": {
-          "drizzle": "Drizzle",
-          "hail": "Hail",
-          "none": "None",
+          "no": "None",
           "rain": "Rain",
+          "freezing_rain": "Freezing rain",
           "snow": "Snow",
-          "rain_snow_mixed": "Rain and snow mixed",
-          "freezing_rain": "Freezing rain"
+          "sleet": "Sleet",
+          "yes": "Yes (unknown)"
         }
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_speed_max": {
+        "name": "Wind speed max"
+      },
+      "measure_time": {
+        "name": "Measure time"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "visible_distance": {
+        "name": "Visible distance"
+      },
+      "road_ice_depth": {
+        "name": "Ice depth on road"
+      },
+      "road_snow_depth": {
+        "name": "Snow depth on road"
+      },
+      "road_water_depth": {
+        "name": "Water depth on road"
+      },
+      "road_water_equivalent_depth": {
+        "name": "Water equivalent depth on road"
+      },
+      "wind_height": {
+        "name": "Wind measurement height"
+      },
+      "modified_time": {
+        "name": "Data modified time"
       }
     }
   }

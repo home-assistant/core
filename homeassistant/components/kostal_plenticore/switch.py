@@ -1,4 +1,5 @@
 """Platform for Kostal Plenticore switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,22 +8,21 @@ import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .helper import SettingDataUpdateCoordinator
+from .const import CONF_SERVICE_CODE
+from .coordinator import PlenticoreConfigEntry, SettingDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class PlenticoreRequiredKeysMixin:
-    """A class that describes required properties for plenticore switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class PlenticoreSwitchEntityDescription(SwitchEntityDescription):
+    """A class that describes plenticore switch entities."""
 
     module_id: str
     is_on: str
@@ -30,13 +30,7 @@ class PlenticoreRequiredKeysMixin:
     on_label: str
     off_value: str
     off_label: str
-
-
-@dataclass
-class PlenticoreSwitchEntityDescription(
-    SwitchEntityDescription, PlenticoreRequiredKeysMixin
-):
-    """A class that describes plenticore switch entities."""
+    installer_required: bool = False
 
 
 SWITCH_SETTINGS_DATA = [
@@ -50,24 +44,33 @@ SWITCH_SETTINGS_DATA = [
         off_value="2",
         off_label="Automatic economical",
     ),
+    PlenticoreSwitchEntityDescription(
+        module_id="devices:local",
+        key="Battery:ManualCharge",
+        name="Battery Manual Charge",
+        is_on="1",
+        on_value="1",
+        on_label="On",
+        off_value="0",
+        off_label="Off",
+        installer_required=True,
+    ),
 ]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PlenticoreConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add kostal plenticore Switch."""
-    plenticore = hass.data[DOMAIN][entry.entry_id]
+    plenticore = entry.runtime_data
 
     entities = []
 
     available_settings_data = await plenticore.client.get_settings()
     settings_data_update_coordinator = SettingDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Settings Data",
-        timedelta(seconds=30),
-        plenticore,
+        hass, entry, _LOGGER, "Settings Data", timedelta(seconds=30), plenticore
     )
     for description in SWITCH_SETTINGS_DATA:
         if (
@@ -83,7 +86,13 @@ async def async_setup_entry(
                 description.key,
             )
             continue
-
+        if entry.data.get(CONF_SERVICE_CODE) is None and description.installer_required:
+            _LOGGER.debug(
+                "Skipping installer required setting data %s/%s",
+                description.module_id,
+                description.key,
+            )
+            continue
         entities.append(
             PlenticoreDataSwitch(
                 settings_data_update_coordinator,
@@ -116,7 +125,6 @@ class PlenticoreDataSwitch(
         """Create a new Switch Entity for Plenticore process data."""
         super().__init__(coordinator)
         self.entity_description = description
-        self.entry_id = entry_id
         self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
@@ -129,7 +137,7 @@ class PlenticoreDataSwitch(
         self.off_label = description.off_label
         self._attr_unique_id = f"{entry_id}_{description.module_id}_{description.key}"
 
-        self._device_info = device_info
+        self._attr_device_info = device_info
 
     @property
     def available(self) -> bool:
@@ -170,11 +178,6 @@ class PlenticoreDataSwitch(
                 f"{self.platform_name} {self._name} {self.off_label}"
             )
             await self.coordinator.async_request_refresh()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return self._device_info
 
     @property
     def is_on(self) -> bool:

@@ -1,4 +1,5 @@
 """Config flow for inkbird ble integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -10,11 +11,10 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import CONF_DEVICE_TYPE, DOMAIN
 
 
 class INKBIRDConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -26,11 +26,11 @@ class INKBIRDConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_device: DeviceData | None = None
-        self._discovered_devices: dict[str, str] = {}
+        self._discovered_devices: dict[str, tuple[str, str]] = {}
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
@@ -43,7 +43,7 @@ class INKBIRDConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self._discovered_device is not None
         device = self._discovered_device
@@ -51,7 +51,10 @@ class INKBIRDConfigFlow(ConfigFlow, domain=DOMAIN):
         discovery_info = self._discovery_info
         title = device.title or device.get_device_name() or discovery_info.name
         if user_input is not None:
-            return self.async_create_entry(title=title, data={})
+            return self.async_create_entry(
+                title=title,
+                data={CONF_DEVICE_TYPE: str(self._discovered_device.device_type)},
+            )
 
         self._set_confirm_only()
         placeholders = {"name": title}
@@ -62,17 +65,18 @@ class INKBIRDConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
+            title, device_type = self._discovered_devices[address]
             return self.async_create_entry(
-                title=self._discovered_devices[address], data={}
+                title=title, data={CONF_DEVICE_TYPE: device_type}
             )
 
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
@@ -80,7 +84,8 @@ class INKBIRDConfigFlow(ConfigFlow, domain=DOMAIN):
             device = DeviceData()
             if device.supported(discovery_info):
                 self._discovered_devices[address] = (
-                    device.title or device.get_device_name() or discovery_info.name
+                    device.title or device.get_device_name() or discovery_info.name,
+                    str(device.device_type),
                 )
 
         if not self._discovered_devices:

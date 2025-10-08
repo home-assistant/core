@@ -1,39 +1,39 @@
 """Test repairs for unifiprotect."""
+
 from __future__ import annotations
 
-from copy import copy
-from http import HTTPStatus
-from unittest.mock import Mock
+from copy import deepcopy
+from unittest.mock import AsyncMock
 
-from pyunifiprotect.data import Camera, Version
+from uiprotect.data import Camera, CloudAccount, Version
 
-from homeassistant.components.repairs.issue_handler import (
-    async_process_repairs_platforms,
-)
-from homeassistant.components.repairs.websocket_api import (
-    RepairsFlowIndexView,
-    RepairsFlowResourceView,
-)
 from homeassistant.components.unifiprotect.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from .utils import MockUFPFixture, init_entry
 
+from tests.components.repairs import (
+    async_process_repairs_platforms,
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
-async def test_ea_warning_ignore(
+async def test_cloud_user_fix(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
+    cloud_account: CloudAccount,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test EA warning is created if using prerelease version of Protect."""
 
-    version = ufp.api.bootstrap.nvr.version
-    assert version.is_prerelease
+    ufp.api.bootstrap.nvr.version = Version("2.2.6")
+    user = ufp.api.bootstrap.users[ufp.api.bootstrap.auth_user_id]
+    user.cloud_account = cloud_account
+    ufp.api.bootstrap.users[ufp.api.bootstrap.auth_user_id] = user
     await init_entry(hass, ufp, [])
     await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
@@ -46,50 +46,45 @@ async def test_ea_warning_ignore(
     assert len(msg["result"]["issues"]) > 0
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "ea_warning":
+        if i["issue_id"] == "cloud_user":
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "ea_warning"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, "cloud_user")
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {"version": str(version)}
-    assert data["step_id"] == "start"
-
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {"version": str(version)}
     assert data["step_id"] == "confirm"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id)
 
     assert data["type"] == "create_entry"
+    await hass.async_block_till_done()
+    assert any(ufp.entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
-async def test_ea_warning_fix(
+async def test_rtsp_read_only_ignore(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
+    doorbell: Camera,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test EA warning is created if using prerelease version of Protect."""
+    """Test RTSP disabled warning if camera is read-only and it is ignored."""
 
-    version = ufp.api.bootstrap.nvr.version
-    assert version.is_prerelease
-    await init_entry(hass, ufp, [])
+    for channel in doorbell.channels:
+        channel.is_rtsp_enabled = False
+    for user in ufp.api.bootstrap.users.values():
+        user.all_permissions = []
+
+    ufp.api.get_camera = AsyncMock(return_value=doorbell)
+    ufp.api.create_camera_rtsps_streams = AsyncMock(return_value=None)
+
+    await init_entry(hass, ufp, [doorbell])
     await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
+
+    issue_id = f"rtsp_disabled_{doorbell.id}"
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
@@ -98,47 +93,187 @@ async def test_ea_warning_fix(
     assert len(msg["result"]["issues"]) > 0
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "ea_warning":
+        if i["issue_id"] == issue_id:
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "ea_warning"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {"version": str(version)}
     assert data["step_id"] == "start"
 
-    new_nvr = copy(ufp.api.bootstrap.nvr)
-    new_nvr.version = Version("2.2.6")
-    mock_msg = Mock()
-    mock_msg.changed_data = {"version": "2.2.6"}
-    mock_msg.new_obj = new_nvr
+    data = await process_repair_fix_flow(client, flow_id)
 
-    ufp.api.bootstrap.nvr = new_nvr
-    ufp.ws_msg(mock_msg)
-    await hass.async_block_till_done()
+    flow_id = data["flow_id"]
+    assert data["step_id"] == "confirm"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id)
 
     assert data["type"] == "create_entry"
 
 
-async def test_deprecate_smart_default(
+async def test_rtsp_read_only_fix(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
-    hass_ws_client: WebSocketGenerator,
     doorbell: Camera,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test Deprecate Sensor repair does not exist by default (new installs)."""
+    """Test RTSP disabled warning if camera is read-only and it is fixed."""
+
+    for channel in doorbell.channels:
+        channel.is_rtsp_enabled = False
+    for user in ufp.api.bootstrap.users.values():
+        user.all_permissions = []
 
     await init_entry(hass, ufp, [doorbell])
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
 
+    new_doorbell = deepcopy(doorbell)
+    new_doorbell.channels[1].is_rtsp_enabled = True
+    ufp.api.get_camera = AsyncMock(return_value=new_doorbell)
+    ufp.api.create_camera_rtsps_streams = AsyncMock(return_value=None)
+    issue_id = f"rtsp_disabled_{doorbell.id}"
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) > 0
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == issue_id:
+            issue = i
+    assert issue is not None
+
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = data["flow_id"]
+    assert data["step_id"] == "start"
+
+    data = await process_repair_fix_flow(client, flow_id)
+
+    assert data["type"] == "create_entry"
+
+
+async def test_rtsp_writable_fix(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test RTSP disabled warning if camera is writable and it is ignored."""
+
+    for channel in doorbell.channels:
+        channel.is_rtsp_enabled = False
+
+    await init_entry(hass, ufp, [doorbell])
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    new_doorbell = deepcopy(doorbell)
+    new_doorbell.channels[0].is_rtsp_enabled = True
+
+    ufp.api.get_camera = AsyncMock(side_effect=[doorbell, new_doorbell])
+    ufp.api.create_camera_rtsps_streams = AsyncMock(return_value=None)
+    issue_id = f"rtsp_disabled_{doorbell.id}"
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) > 0
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == issue_id:
+            issue = i
+    assert issue is not None
+
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = data["flow_id"]
+    assert data["step_id"] == "start"
+
+    data = await process_repair_fix_flow(client, flow_id)
+
+    assert data["type"] == "create_entry"
+
+    ufp.api.create_camera_rtsps_streams.assert_called_with(doorbell.id, "high")
+
+
+async def test_rtsp_writable_fix_when_not_setup(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test RTSP disabled warning if the integration is no longer set up."""
+
+    for channel in doorbell.channels:
+        channel.is_rtsp_enabled = False
+
+    await init_entry(hass, ufp, [doorbell])
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    new_doorbell = deepcopy(doorbell)
+    new_doorbell.channels[0].is_rtsp_enabled = True
+
+    ufp.api.get_camera = AsyncMock(side_effect=[doorbell, new_doorbell])
+    ufp.api.create_camera_rtsps_streams = AsyncMock(return_value=None)
+    issue_id = f"rtsp_disabled_{doorbell.id}"
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) > 0
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == issue_id:
+            issue = i
+    assert issue is not None
+
+    # Unload the integration to ensure the fix flow still works
+    # if the integration is no longer set up
+    await hass.config_entries.async_unload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = data["flow_id"]
+    assert data["step_id"] == "start"
+
+    data = await process_repair_fix_flow(client, flow_id)
+
+    assert data["type"] == "create_entry"
+
+    ufp.api.create_camera_rtsps_streams.assert_called_with(doorbell.id, "high")
+
+
+async def test_rtsp_no_fix_if_third_party(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test no RTSP disabled warning if camera is third-party."""
+
+    for channel in doorbell.channels:
+        channel.is_rtsp_enabled = False
+    for user in ufp.api.bootstrap.users.values():
+        user.all_permissions = []
+
+    ufp.api.get_camera = AsyncMock(return_value=doorbell)
+    doorbell.is_third_party_camera = True
+
+    await init_entry(hass, ufp, [doorbell])
     await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
@@ -146,40 +281,4 @@ async def test_deprecate_smart_default(
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"] == "deprecate_smart_sensor":
-            issue = i
-    assert issue is None
-
-
-async def test_deprecate_smart_no_automations(
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    hass_ws_client: WebSocketGenerator,
-    doorbell: Camera,
-) -> None:
-    """Test Deprecate Sensor repair exists for existing installs."""
-
-    registry = er.async_get(hass)
-    registry.async_get_or_create(
-        Platform.SENSOR,
-        DOMAIN,
-        f"{doorbell.mac}_detected_object",
-        config_entry=ufp.entry,
-    )
-
-    await init_entry(hass, ufp, [doorbell])
-
-    await async_process_repairs_platforms(hass)
-    ws_client = await hass_ws_client(hass)
-
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"] == "deprecate_smart_sensor":
-            issue = i
-    assert issue is None
+    assert not msg["result"]["issues"]

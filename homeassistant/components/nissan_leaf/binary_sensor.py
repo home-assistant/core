@@ -1,4 +1,5 @@
 """Plugged In Status Support for the Nissan Leaf."""
+
 from __future__ import annotations
 
 import logging
@@ -11,8 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import LeafDataStore, LeafEntity
+from . import LeafDataStore
 from .const import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN
+from .entity import LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 

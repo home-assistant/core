@@ -1,12 +1,13 @@
 """ONVIF event abstraction."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
 import datetime as dt
 
+import aiohttp
 from aiohttp.web import Request
-from httpx import RemoteProtocolError, RequestError, TransportError
 from onvif import ONVIFCamera
 from onvif.client import (
     NotificationManager,
@@ -15,7 +16,7 @@ from onvif.client import (
 )
 from onvif.exceptions import ONVIFError
 from onvif.util import stringify_onvif_error
-from zeep.exceptions import Fault, ValidationError, XMLParseError
+from zeep.exceptions import Fault, TransportError, ValidationError, XMLParseError
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -32,11 +33,24 @@ from .parsers import PARSERS
 # entities for them.
 UNHANDLED_TOPICS: set[str] = {"tns1:MediaControl/VideoEncoderConfiguration"}
 
-SUBSCRIPTION_ERRORS = (Fault, asyncio.TimeoutError, TransportError)
-CREATE_ERRORS = (ONVIFError, Fault, RequestError, XMLParseError, ValidationError)
+SUBSCRIPTION_ERRORS = (Fault, TimeoutError, TransportError)
+CREATE_ERRORS = (
+    ONVIFError,
+    Fault,
+    aiohttp.ClientError,
+    asyncio.TimeoutError,
+    XMLParseError,
+    ValidationError,
+)
 SET_SYNCHRONIZATION_POINT_ERRORS = (*SUBSCRIPTION_ERRORS, TypeError)
 UNSUBSCRIBE_ERRORS = (XMLParseError, *SUBSCRIPTION_ERRORS)
-RENEW_ERRORS = (ONVIFError, RequestError, XMLParseError, *SUBSCRIPTION_ERRORS)
+RENEW_ERRORS = (
+    ONVIFError,
+    aiohttp.ClientError,
+    asyncio.TimeoutError,
+    XMLParseError,
+    *SUBSCRIPTION_ERRORS,
+)
 #
 # We only keep the subscription alive for 10 minutes, and will keep
 # renewing it every 8 minutes. This is to avoid the camera
@@ -142,7 +156,6 @@ class EventManager:
         for update_callback in self._listeners:
             update_callback()
 
-    # pylint: disable=protected-access
     async def async_parse_messages(self, messages) -> None:
         """Parse notification message."""
         unique_id = self.unique_id
@@ -157,14 +170,15 @@ class EventManager:
             # tns1:RuleEngine/CellMotionDetector/Motion//.
             # tns1:RuleEngine/CellMotionDetector/Motion
             # tns1:RuleEngine/CellMotionDetector/Motion/
+            # tns1:UserAlarm/IVA/HumanShapeDetect
             #
             # Our parser expects the topic to be
             # tns1:RuleEngine/CellMotionDetector/Motion
-            topic = msg.Topic._value_1.rstrip("/.")
+            topic = msg.Topic._value_1.rstrip("/.")  # noqa: SLF001
 
             if not (parser := PARSERS.get(topic)):
                 if topic not in UNHANDLED_TOPICS:
-                    LOGGER.info(
+                    LOGGER.warning(
                         "%s: No registered handler for event from %s: %s",
                         self.name,
                         unique_id,
@@ -173,11 +187,20 @@ class EventManager:
                     UNHANDLED_TOPICS.add(topic)
                 continue
 
-            event = await parser(unique_id, msg)
+            try:
+                event = await parser(unique_id, msg)
+                error = None
+            except (AttributeError, KeyError) as e:
+                event = None
+                error = e
 
             if not event:
-                LOGGER.info(
-                    "%s: Unable to parse event from %s: %s", self.name, unique_id, msg
+                LOGGER.warning(
+                    "%s: Unable to parse event from %s: %s: %s",
+                    self.name,
+                    unique_id,
+                    error,
+                    msg,
                 )
                 return
 
@@ -251,9 +274,9 @@ class PullPointManager:
 
     async def async_start(self) -> bool:
         """Start pullpoint subscription."""
-        assert (
-            self.state == PullPointManagerState.STOPPED
-        ), "PullPoint manager already started"
+        assert self.state == PullPointManagerState.STOPPED, (
+            "PullPoint manager already started"
+        )
         LOGGER.debug("%s: Starting PullPoint manager", self._name)
         if not await self._async_start_pullpoint():
             self.state = PullPointManagerState.FAILED
@@ -362,13 +385,13 @@ class PullPointManager:
                     "%s: PullPoint skipped because Home Assistant is not running yet",
                     self._name,
                 )
-        except RemoteProtocolError as err:
+        except aiohttp.ServerDisconnectedError as err:
             # Either a shutdown event or the camera closed the connection. Because
             # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
             # to close the connection at any time, we treat this as a normal. Some
             # cameras may close the connection if there are no messages to pull.
             LOGGER.debug(
-                "%s: PullPoint subscription encountered a remote protocol error "
+                "%s: PullPoint subscription encountered a server disconnected error "
                 "(this is normal for some cameras): %s",
                 self._name,
                 stringify_onvif_error(err),
@@ -384,7 +407,12 @@ class PullPointManager:
             # Treat errors as if the camera restarted. Assume that the pullpoint
             # subscription is no longer valid.
             self._pullpoint_manager.resume()
-        except (XMLParseError, RequestError, TimeoutError, TransportError) as err:
+        except (
+            XMLParseError,
+            aiohttp.ClientError,
+            TimeoutError,
+            TransportError,
+        ) as err:
             LOGGER.debug(
                 "%s: PullPoint subscription encountered an unexpected error and will be retried "
                 "(this is normal for some cameras): %s",
@@ -500,9 +528,9 @@ class WebHookManager:
     async def async_start(self) -> bool:
         """Start polling events."""
         LOGGER.debug("%s: Starting webhook manager", self._name)
-        assert (
-            self.state == WebHookManagerState.STOPPED
-        ), "Webhook manager already started"
+        assert self.state == WebHookManagerState.STOPPED, (
+            "Webhook manager already started"
+        )
         assert self._webhook_url is None, "Webhook already registered"
         self._async_register_webhook()
         if not await self._async_start_webhook():

@@ -1,4 +1,5 @@
 """Demo platform that offers a fake humidifier device."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,19 +12,17 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 SUPPORT_FLAGS = HumidifierEntityFeature(0)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Demo humidifier devices."""
+    """Set up the Demo humidifier devices config entry."""
     async_add_entities(
         [
             DemoHumidifier(
@@ -37,8 +36,8 @@ async def async_setup_platform(
             DemoHumidifier(
                 name="Dehumidifier",
                 mode=None,
-                target_humidity=54,
-                current_humidity=59,
+                target_humidity=54.2,
+                current_humidity=59.4,
                 action=HumidifierAction.DRYING,
                 device_class=HumidifierDeviceClass.DEHUMIDIFIER,
             ),
@@ -52,15 +51,6 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Demo humidifier devices config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
-
-
 class DemoHumidifier(HumidifierEntity):
     """Representation of a demo humidifier device."""
 
@@ -70,8 +60,8 @@ class DemoHumidifier(HumidifierEntity):
         self,
         name: str,
         mode: str | None,
-        target_humidity: int,
-        current_humidity: int | None = None,
+        target_humidity: float,
+        current_humidity: float | None = None,
         available_modes: list[str] | None = None,
         is_on: bool = True,
         action: HumidifierAction | None = None,

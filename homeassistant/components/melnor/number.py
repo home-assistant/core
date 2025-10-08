@@ -13,32 +13,20 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .models import (
-    MelnorDataUpdateCoordinator,
-    MelnorZoneEntity,
-    get_entities_for_valves,
-)
+from .coordinator import MelnorConfigEntry, MelnorDataUpdateCoordinator
+from .entity import MelnorZoneEntity, get_entities_for_valves
 
 
-@dataclass
-class MelnorZoneNumberEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class MelnorZoneNumberEntityDescription(NumberEntityDescription):
+    """Describes Melnor number entity."""
 
     set_num_fn: Callable[[Valve, int], Coroutine[Any, Any, None]]
     state_fn: Callable[[Valve], Any]
-
-
-@dataclass
-class MelnorZoneNumberEntityDescription(
-    NumberEntityDescription, MelnorZoneNumberEntityDescriptionMixin
-):
-    """Describes Melnor number entity."""
 
 
 ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneNumberEntityDescription] = [
@@ -46,7 +34,6 @@ ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneNumberEntityDescription] = [
         entity_category=EntityCategory.CONFIG,
         native_max_value=360,
         native_min_value=1,
-        icon="mdi:timer-cog-outline",
         key="manual_minutes",
         translation_key="manual_minutes",
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -57,7 +44,6 @@ ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneNumberEntityDescription] = [
         entity_category=EntityCategory.CONFIG,
         native_max_value=168,
         native_min_value=1,
-        icon="mdi:calendar-refresh-outline",
         key="frequency_interval_hours",
         translation_key="frequency_interval_hours",
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -68,7 +54,6 @@ ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneNumberEntityDescription] = [
         entity_category=EntityCategory.CONFIG,
         native_max_value=360,
         native_min_value=1,
-        icon="mdi:timer-outline",
         key="frequency_duration_minutes",
         translation_key="frequency_duration_minutes",
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -80,12 +65,12 @@ ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneNumberEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: MelnorConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the number platform."""
 
-    coordinator: MelnorDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         get_entities_for_valves(

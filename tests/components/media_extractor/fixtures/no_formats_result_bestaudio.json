@@ -1,0 +1,124 @@
+{
+  "id": "223644255",
+  "uploader": "BRUTTOBAND",
+  "uploader_id": "111488150",
+  "uploader_url": "https://soundcloud.com/bruttoband",
+  "timestamp": 1442140228,
+  "title": "BRUTTO - \u0420\u043e\u0434\u043d\u044b \u043a\u0440\u0430\u0439",
+  "description": "",
+  "thumbnails": [
+    {
+      "id": "mini",
+      "url": "https://i1.sndcdn.com/artworks-000129385232-ysbisn-mini.jpg",
+      "width": 16,
+      "height": 16,
+      "resolution": "16x16"
+    },
+    {
+      "id": "tiny",
+      "url": "https://i1.sndcdn.com/artworks-000129385232-ysbisn-tiny.jpg",
+      "width": 20,
+      "height": 20,
+      "resolution": "20x20"
+    },
+    {
+      "id": "small",
+      "url": "https://i1.sndcdn.com/artworks-000129385232-ysbisn-small.jpg",
+      "width": 32,
+      "height": 32,
+      "resolution": "32x32"
+    },
+    {
+      "id": "badge",
+      "url": "https://i1.sndcdn.com/artworks-000129385232-ysbisn-badge.jpg",
+      "width": 47,
+      "height": 47,
+      "resolution": "47x47"
+    },
+    {
+      "id": "t67x67",
+      "url": "https://i1.sndcdn.com/artworks-000129385232-ysbisn-t67x67.jpg",
+      "width": 67,
+      "height": 67,
+      "resolution": "67x67"
+    },
+    {
+      "id": "large",
+      "url": "https://i1.sndcdn.com/artworks-000129385232-ysbisn-large.jpg",
+      "width": 100,
+      "height": 100,
+      "resolution": "100x100"
+    },
+    {
+      "id": "t300x300",
+      "url": "https://i1.sndcdn.com/artworks-000129385232-ysbisn-t300x300.jpg",
+      "width": 300,
+      "height": 300,
+      "resolution": "300x300"
+    },
+    {
+      "id": "crop",
+      "url": "https://i1.sndcdn.com/artworks-000129385232-ysbisn-crop.jpg",
+      "width": 400,
+      "height": 400,
+      "resolution": "400x400"
+    },
+    {
+      "id": "t500x500",
+      "url": "https://i1.sndcdn.com/artworks-000129385232-ysbisn-t500x500.jpg",
+      "width": 500,
+      "height": 500,
+      "resolution": "500x500"
+    },
+    {
+      "id": "original",
+      "url": "https://i1.sndcdn.com/artworks-000129385232-ysbisn-original.jpg",
+      "preference": 10
+    }
+  ],
+  "duration": 229.089,
+  "webpage_url": "https://soundcloud.com/bruttoband/brutto-11",
+  "license": "all-rights-reserved",
+  "view_count": 290870,
+  "like_count": 3342,
+  "comment_count": 14,
+  "repost_count": 60,
+  "genre": "Brutto",
+  "original_url": "https://soundcloud.com/bruttoband/brutto-11",
+  "webpage_url_basename": "brutto-11",
+  "webpage_url_domain": "soundcloud.com",
+  "extractor": "soundcloud",
+  "extractor_key": "Soundcloud",
+  "heatmap": [],
+  "automatic_captions": {},
+  "playlist": null,
+  "playlist_index": null,
+  "thumbnail": "https://i1.sndcdn.com/artworks-000129385232-ysbisn-original.jpg",
+  "display_id": "223644255",
+  "fulltitle": "BRUTTO - \u0420\u043e\u0434\u043d\u044b \u043a\u0440\u0430\u0439",
+  "duration_string": "3:49",
+  "upload_date": "20150913",
+  "requested_subtitles": null,
+  "_has_drm": null,
+  "epoch": 1694798829,
+  "url": "https://cf-media.sndcdn.com/50remGX1OqRY.128.mp3?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLW1lZGlhLnNuZGNkbi5jb20vNTByZW1HWDFPcVJZLjEyOC5tcDMqIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNjk0Nzk5MTc5fX19XX0_&Signature=JtF8BXxTCElhjCrhnSAq3W6z960VmdVXx7BPhQvI0MCxr~J43JFGO8CVw9-VBM2oEf14mqWo63-C0FO29DvUuBZnmLD3dhDfryVfWJsrix7voimoRDaNFE~3zntDbg7O2S8uWYyZK8OZC9anzwokvjH7jbmviWqK4~2IM9dwgejGgzrQU1aadV2Yro7NJZnF7SD~7tVjkM-hBg~X5zDYVxmGrdzN3tFoLwRmUch6RNDL~1DcWBk0AveBKQFAdBrFBjDDUeIyDz9Idhw2aG9~fjfckcf95KwqrVQxz1N5XEzfNDDo8xkUgDt0eb9dtXdwxLJ0swC6e5VLS8bsH91GMg__&Key-Pair-Id=APKAI6TU7MMXM5DG6EPQ",
+  "ext": "mp3",
+  "abr": 128,
+  "format_id": "http_mp3_128",
+  "protocol": "http",
+  "preference": null,
+  "vcodec": "none",
+  "resolution": "audio only",
+  "aspect_ratio": null,
+  "http_headers": {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-us,en;q=0.5",
+    "Sec-Fetch-Mode": "navigate"
+  },
+  "audio_ext": "mp3",
+  "video_ext": "none",
+  "vbr": 0,
+  "tbr": 128,
+  "format": "http_mp3_128 - audio only"
+}

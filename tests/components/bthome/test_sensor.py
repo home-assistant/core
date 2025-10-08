@@ -1,15 +1,15 @@
 """Test the BTHome sensors."""
+
 from datetime import timedelta
 import logging
 import time
-from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
-from homeassistant.components.bthome.const import DOMAIN
+from homeassistant.components.bthome.const import CONF_SLEEPY_DEVICE, DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -25,6 +25,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
     inject_bluetooth_service_info,
     patch_all_discovered_devices,
+    patch_bluetooth_time,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -161,7 +162,7 @@ _LOGGER = logging.getLogger(__name__)
             "A4:C1:38:8D:18:B2",
             make_bthome_v1_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x23\x08\xCA\x06",
+                b"\x23\x08\xca\x06",
             ),
             None,
             [
@@ -252,14 +253,14 @@ _LOGGER = logging.getLogger(__name__)
                 {
                     "sensor_entity": "sensor.test_device_18b2_pm10",
                     "friendly_name": "Test Device 18B2 Pm10",
-                    "unit_of_measurement": "µg/m³",
+                    "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "7170",
                 },
                 {
                     "sensor_entity": "sensor.test_device_18b2_pm25",
                     "friendly_name": "Test Device 18B2 Pm25",
-                    "unit_of_measurement": "µg/m³",
+                    "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "3090",
                 },
@@ -295,7 +296,7 @@ _LOGGER = logging.getLogger(__name__)
                         "sensor.test_device_18b2_volatile_organic_compounds"
                     ),
                     "friendly_name": "Test Device 18B2 Volatile Organic Compounds",
-                    "unit_of_measurement": "µg/m³",
+                    "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "307",
                 },
@@ -481,7 +482,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x06\x5E\x1F",
+                b"\x40\x06\x5e\x1f",
             ),
             None,
             [
@@ -498,7 +499,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x07\x3E\x1d",
+                b"\x40\x07\x3e\x1d",
             ),
             None,
             [
@@ -515,7 +516,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x08\xCA\x06",
+                b"\x40\x08\xca\x06",
             ),
             None,
             [
@@ -606,14 +607,14 @@ async def test_v1_sensors(
                 {
                     "sensor_entity": "sensor.test_device_18b2_pm10",
                     "friendly_name": "Test Device 18B2 Pm10",
-                    "unit_of_measurement": "µg/m³",
+                    "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "7170",
                 },
                 {
                     "sensor_entity": "sensor.test_device_18b2_pm25",
                     "friendly_name": "Test Device 18B2 Pm25",
-                    "unit_of_measurement": "µg/m³",
+                    "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "3090",
                 },
@@ -649,7 +650,7 @@ async def test_v1_sensors(
                         "sensor.test_device_18b2_volatile_organic_compounds"
                     ),
                     "friendly_name": "Test Device 18B2 Volatile Organic Compounds",
-                    "unit_of_measurement": "µg/m³",
+                    "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "307",
                 },
@@ -676,7 +677,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x3F\x02\x0c",
+                b"\x40\x3f\x02\x0c",
             ),
             None,
             [
@@ -693,7 +694,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x40\x0C\x00",
+                b"\x40\x40\x0c\x00",
             ),
             None,
             [
@@ -710,7 +711,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x41\x4E\x00",
+                b"\x40\x41\x4e\x00",
             ),
             None,
             [
@@ -727,7 +728,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x42\x4E\x34\x00",
+                b"\x40\x42\x4e\x34\x00",
             ),
             None,
             [
@@ -744,7 +745,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x43\x4E\x34",
+                b"\x40\x43\x4e\x34",
             ),
             None,
             [
@@ -761,7 +762,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x44\x4E\x34",
+                b"\x40\x44\x4e\x34",
             ),
             None,
             [
@@ -819,7 +820,7 @@ async def test_v1_sensors(
                     "sensor_entity": "sensor.test_device_18b2_volume",
                     "friendly_name": "Test Device 18B2 Volume",
                     "unit_of_measurement": "L",
-                    "state_class": "measurement",
+                    "state_class": "total",
                     "expected_state": "2215.1",
                 },
             ],
@@ -828,7 +829,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x48\xDC\x87",
+                b"\x40\x48\xdc\x87",
             ),
             None,
             [
@@ -836,7 +837,7 @@ async def test_v1_sensors(
                     "sensor_entity": "sensor.test_device_18b2_volume",
                     "friendly_name": "Test Device 18B2 Volume",
                     "unit_of_measurement": "mL",
-                    "state_class": "measurement",
+                    "state_class": "total",
                     "expected_state": "34780",
                 },
             ],
@@ -845,7 +846,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x49\xDC\x87",
+                b"\x40\x49\xdc\x87",
             ),
             None,
             [
@@ -862,15 +863,14 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x44\x50\x5D\x39\x61\x64",
+                b"\x44\x50\x5d\x39\x61\x64",
             ),
             None,
             [
                 {
                     "sensor_entity": "sensor.test_device_18b2_timestamp",
                     "friendly_name": "Test Device 18B2 Timestamp",
-                    "unit_of_measurement": "s",
-                    "state_class": "measurement",
+                    "state_class": None,
                     "expected_state": "2023-05-14T19:41:17+00:00",
                 },
             ],
@@ -939,6 +939,53 @@ async def test_v1_sensors(
                     "friendly_name": "Test Device 18B2 Water",
                     "unit_of_measurement": "L",
                     "state_class": "total",
+                    "expected_state": "19551.879",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x44\x53\x0c\x48\x65\x6c\x6c\x6f\x20\x57\x6f\x72\x6c\x64\x21",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_text",
+                    "friendly_name": "Test Device 18B2 Text",
+                    "expected_state": "Hello World!",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x44\x54\x0c\x48\x65\x6c\x6c\x6f\x20\x57\x6f\x72\x6c\x64\x21",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_raw",
+                    "friendly_name": "Test Device 18B2 Raw",
+                    "expected_state": "48656c6c6f20576f726c6421",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x55\x87\x56\x2a\x01",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_volume_storage",
+                    "friendly_name": "Test Device 18B2 Volume Storage",
+                    "unit_of_measurement": "L",
+                    "state_class": "measurement",
                     "expected_state": "19551.879",
                 },
             ],
@@ -1080,7 +1127,9 @@ async def test_v2_sensors(
         if ATTR_UNIT_OF_MEASUREMENT in sensor_attr:
             # Some sensors don't have a unit of measurement
             assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == meas["unit_of_measurement"]
-        assert sensor_attr[ATTR_STATE_CLASS] == meas["state_class"]
+        if ATTR_STATE_CLASS in sensor_attr:
+            # Some sensors have state class None
+            assert sensor_attr[ATTR_STATE_CLASS] == meas["state_class"]
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -1119,10 +1168,7 @@ async def test_unavailable(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices([]):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -1137,6 +1183,8 @@ async def test_unavailable(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert CONF_SLEEPY_DEVICE not in entry.data
 
 
 async def test_sleepy_device(hass: HomeAssistant) -> None:
@@ -1173,10 +1221,7 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices([]):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -1191,3 +1236,66 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert entry.data[CONF_SLEEPY_DEVICE] is True
+
+
+async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
+    """Test sleepy device does not go to unavailable after 60 minutes and restores state."""
+    start_monotonic = time.monotonic()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="A4:C1:38:8D:18:B2",
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+
+    inject_bluetooth_service_info(
+        hass,
+        make_bthome_v2_adv(
+            "A4:C1:38:8D:18:B2",
+            b"\x44\x04\x13\x8a\x01",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    pressure_sensor = hass.states.get("sensor.test_device_18b2_pressure")
+
+    assert pressure_sensor.state == "1008.83"
+
+    # Fastforward time without BLE advertisements
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+
+    with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices([]):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
+        )
+        await hass.async_block_till_done()
+
+    pressure_sensor = hass.states.get("sensor.test_device_18b2_pressure")
+
+    # Sleepy devices should keep their state over time
+    assert pressure_sensor.state == "1008.83"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    pressure_sensor = hass.states.get("sensor.test_device_18b2_pressure")
+
+    # Sleepy devices should keep their state over time and restore it
+    assert pressure_sensor.state == "1008.83"
+
+    assert entry.data[CONF_SLEEPY_DEVICE] is True

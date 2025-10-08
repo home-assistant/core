@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/yale_smart_alarm",
   "iot_class": "cloud_polling",
   "loggers": ["yalesmartalarmclient"],
-  "requirements": ["yalesmartalarmclient==0.3.9"]
+  "requirements": ["yalesmartalarmclient==0.4.3"]
 }

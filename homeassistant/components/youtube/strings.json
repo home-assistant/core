@@ -5,7 +5,13 @@
       "no_channel": "Please create a YouTube channel to be able to use the integration. Instructions can be found at {support_url}.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "no_subscriptions": "You need to be subscribed to YouTube channels in order to add them.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "wrong_account": "Wrong account: please authenticate with the right account."
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -14,9 +20,7 @@
     "step": {
       "channels": {
         "description": "Select the channels you want to add.",
-        "data": {
-          "channels": "YouTube channels"
-        }
+        "data": { "channels": "YouTube channels" }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
@@ -27,9 +31,9 @@
   "options": {
     "step": {
       "init": {
-        "description": "Select the channels you want to add.",
+        "description": "[%key:component::youtube::config::step::channels::description%]",
         "data": {
-          "channels": "YouTube channels"
+          "channels": "[%key:component::youtube::config::step::channels::data::channels%]"
         }
       }
     }
@@ -37,11 +41,14 @@
   "entity": {
     "sensor": {
       "latest_upload": {
-        "name": "Latest upload"
+        "name": "Latest upload",
+        "state_attributes": {
+          "video_id": { "name": "Video ID" },
+          "published_at": { "name": "Published at" }
+        }
       },
-      "subscribers": {
-        "name": "Subscribers"
-      }
+      "subscribers": { "name": "Subscribers" },
+      "views": { "name": "Views" }
     }
   }
 }

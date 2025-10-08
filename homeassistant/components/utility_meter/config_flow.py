@@ -1,4 +1,5 @@
 """Config flow for Utility Meter integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -23,6 +24,7 @@ from .const import (
     CONF_METER_OFFSET,
     CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
+    CONF_SENSOR_ALWAYS_AVAILABLE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFFS,
     DAILY,
@@ -68,6 +70,10 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Required(
             CONF_METER_PERIODICALLY_RESETTING,
         ): selector.BooleanSelector(),
+        vol.Optional(
+            CONF_SENSOR_ALWAYS_AVAILABLE,
+            default=False,
+        ): selector.BooleanSelector(),
     }
 )
 
@@ -88,6 +94,7 @@ CONFIG_SCHEMA = vol.Schema(
                 max=28,
                 mode=selector.NumberSelectorMode.BOX,
                 unit_of_measurement="days",
+                translation_key=CONF_METER_OFFSET,
             ),
         ),
         vol.Required(CONF_TARIFFS, default=[]): selector.SelectSelector(
@@ -102,6 +109,10 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(
             CONF_METER_PERIODICALLY_RESETTING,
             default=True,
+        ): selector.BooleanSelector(),
+        vol.Optional(
+            CONF_SENSOR_ALWAYS_AVAILABLE,
+            default=False,
         ): selector.BooleanSelector(),
     }
 )
@@ -119,9 +130,11 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Utility Meter."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

@@ -18,7 +18,7 @@
         "snowy-rainy": "Snowy, rainy",
         "sunny": "Sunny",
         "windy": "Windy",
-        "windy-variant": "Windy"
+        "windy-variant": "Windy, cloudy"
       },
       "state_attributes": {
         "forecast": {
@@ -71,6 +71,53 @@
         },
         "wind_speed_unit": {
           "name": "Wind speed unit"
+        },
+        "uv_index": {
+          "name": "UV index"
+        }
+      }
+    }
+  },
+  "selector": {
+    "forecast_type": {
+      "options": {
+        "daily": "Daily",
+        "hourly": "Hourly",
+        "twice_daily": "Twice daily"
+      }
+    }
+  },
+  "services": {
+    "get_forecasts": {
+      "name": "Get forecasts",
+      "description": "Retrieves the forecast from selected weather services.",
+      "fields": {
+        "type": {
+          "name": "Forecast type",
+          "description": "The scope of the weather forecast."
+        }
+      }
+    },
+    "get_forecast": {
+      "name": "Get forecast",
+      "description": "Retrieves the forecast from a selected weather service.",
+      "fields": {
+        "type": {
+          "name": "[%key:component::weather::services::get_forecasts::fields::type::name%]",
+          "description": "[%key:component::weather::services::get_forecasts::fields::type::description%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_service_weather_get_forecast": {
+      "title": "Detected use of deprecated action weather.get_forecast",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::weather::issues::deprecated_service_weather_get_forecast::title%]",
+            "description": "Use `weather.get_forecasts` instead which supports multiple entities.\n\nPlease replace this action and adjust your automations and scripts and select **Submit** to close this issue."
+          }
         }
       }
     }

@@ -1,13 +1,12 @@
 """Provides device conditions for sensors."""
+
 from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
-    async_get_entity_registry_entry_or_raise,
-)
-from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
+    async_get_entity_registry_entry_or_raise,
 )
 from homeassistant.const import (
     CONF_ABOVE,
@@ -34,18 +33,23 @@ from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
 DEVICE_CLASS_NONE = "none"
 
+CONF_IS_ABSOLUTE_HUMIDITY = "is_absolute_humidity"
 CONF_IS_APPARENT_POWER = "is_apparent_power"
 CONF_IS_AQI = "is_aqi"
+CONF_IS_AREA = "is_area"
 CONF_IS_ATMOSPHERIC_PRESSURE = "is_atmospheric_pressure"
 CONF_IS_BATTERY_LEVEL = "is_battery_level"
+CONF_IS_BLOOD_GLUCOSE_CONCENTRATION = "is_blood_glucose_concentration"
 CONF_IS_CO = "is_carbon_monoxide"
 CONF_IS_CO2 = "is_carbon_dioxide"
+CONF_IS_CONDUCTIVITY = "is_conductivity"
 CONF_IS_CURRENT = "is_current"
 CONF_IS_DATA_RATE = "is_data_rate"
 CONF_IS_DATA_SIZE = "is_data_size"
 CONF_IS_DISTANCE = "is_distance"
 CONF_IS_DURATION = "is_duration"
 CONF_IS_ENERGY = "is_energy"
+CONF_IS_ENERGY_DISTANCE = "is_energy_distance"
 CONF_IS_FREQUENCY = "is_frequency"
 CONF_IS_HUMIDITY = "is_humidity"
 CONF_IS_GAS = "is_gas"
@@ -57,15 +61,18 @@ CONF_IS_NITROGEN_DIOXIDE = "is_nitrogen_dioxide"
 CONF_IS_NITROGEN_MONOXIDE = "is_nitrogen_monoxide"
 CONF_IS_NITROUS_OXIDE = "is_nitrous_oxide"
 CONF_IS_OZONE = "is_ozone"
+CONF_IS_PH = "is_ph"
 CONF_IS_PM1 = "is_pm1"
 CONF_IS_PM10 = "is_pm10"
 CONF_IS_PM25 = "is_pm25"
+CONF_IS_PM4 = "is_pm4"
 CONF_IS_POWER = "is_power"
 CONF_IS_POWER_FACTOR = "is_power_factor"
 CONF_IS_PRECIPITATION = "is_precipitation"
 CONF_IS_PRECIPITATION_INTENSITY = "is_precipitation_intensity"
 CONF_IS_PRESSURE = "is_pressure"
 CONF_IS_SPEED = "is_speed"
+CONF_IS_REACTIVE_ENERGY = "is_reactive_energy"
 CONF_IS_REACTIVE_POWER = "is_reactive_power"
 CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
 CONF_IS_SOUND_PRESSURE = "is_sound_pressure"
@@ -76,23 +83,32 @@ CONF_IS_VOLATILE_ORGANIC_COMPOUNDS = "is_volatile_organic_compounds"
 CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS = "is_volatile_organic_compounds_parts"
 CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VOLUME = "is_volume"
+CONF_IS_VOLUME_FLOW_RATE = "is_volume_flow_rate"
 CONF_IS_WATER = "is_water"
 CONF_IS_WEIGHT = "is_weight"
+CONF_IS_WIND_DIRECTION = "is_wind_direction"
 CONF_IS_WIND_SPEED = "is_wind_speed"
 
 ENTITY_CONDITIONS = {
+    SensorDeviceClass.ABSOLUTE_HUMIDITY: [{CONF_TYPE: CONF_IS_ABSOLUTE_HUMIDITY}],
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_IS_APPARENT_POWER}],
     SensorDeviceClass.AQI: [{CONF_TYPE: CONF_IS_AQI}],
+    SensorDeviceClass.AREA: [{CONF_TYPE: CONF_IS_AREA}],
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: [{CONF_TYPE: CONF_IS_ATMOSPHERIC_PRESSURE}],
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_IS_BATTERY_LEVEL}],
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: [
+        {CONF_TYPE: CONF_IS_BLOOD_GLUCOSE_CONCENTRATION}
+    ],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_IS_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_IS_CO2}],
+    SensorDeviceClass.CONDUCTIVITY: [{CONF_TYPE: CONF_IS_CONDUCTIVITY}],
     SensorDeviceClass.CURRENT: [{CONF_TYPE: CONF_IS_CURRENT}],
     SensorDeviceClass.DATA_RATE: [{CONF_TYPE: CONF_IS_DATA_RATE}],
     SensorDeviceClass.DATA_SIZE: [{CONF_TYPE: CONF_IS_DATA_SIZE}],
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_IS_DISTANCE}],
     SensorDeviceClass.DURATION: [{CONF_TYPE: CONF_IS_DURATION}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_IS_ENERGY}],
+    SensorDeviceClass.ENERGY_DISTANCE: [{CONF_TYPE: CONF_IS_ENERGY_DISTANCE}],
     SensorDeviceClass.ENERGY_STORAGE: [{CONF_TYPE: CONF_IS_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_IS_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_IS_GAS}],
@@ -107,14 +123,17 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.OZONE: [{CONF_TYPE: CONF_IS_OZONE}],
     SensorDeviceClass.POWER: [{CONF_TYPE: CONF_IS_POWER}],
     SensorDeviceClass.POWER_FACTOR: [{CONF_TYPE: CONF_IS_POWER_FACTOR}],
+    SensorDeviceClass.PH: [{CONF_TYPE: CONF_IS_PH}],
     SensorDeviceClass.PM1: [{CONF_TYPE: CONF_IS_PM1}],
     SensorDeviceClass.PM10: [{CONF_TYPE: CONF_IS_PM10}],
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_IS_PM25}],
+    SensorDeviceClass.PM4: [{CONF_TYPE: CONF_IS_PM4}],
     SensorDeviceClass.PRECIPITATION: [{CONF_TYPE: CONF_IS_PRECIPITATION}],
     SensorDeviceClass.PRECIPITATION_INTENSITY: [
         {CONF_TYPE: CONF_IS_PRECIPITATION_INTENSITY}
     ],
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
+    SensorDeviceClass.REACTIVE_ENERGY: [{CONF_TYPE: CONF_IS_REACTIVE_ENERGY}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_IS_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
     SensorDeviceClass.SOUND_PRESSURE: [{CONF_TYPE: CONF_IS_SOUND_PRESSURE}],
@@ -130,8 +149,10 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_IS_VOLUME}],
     SensorDeviceClass.VOLUME_STORAGE: [{CONF_TYPE: CONF_IS_VOLUME}],
+    SensorDeviceClass.VOLUME_FLOW_RATE: [{CONF_TYPE: CONF_IS_VOLUME_FLOW_RATE}],
     SensorDeviceClass.WATER: [{CONF_TYPE: CONF_IS_WATER}],
     SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_IS_WEIGHT}],
+    SensorDeviceClass.WIND_DIRECTION: [{CONF_TYPE: CONF_IS_WIND_DIRECTION}],
     SensorDeviceClass.WIND_SPEED: [{CONF_TYPE: CONF_IS_WIND_SPEED}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_VALUE}],
 }
@@ -142,18 +163,23 @@ CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_TYPE): vol.In(
                 [
+                    CONF_IS_ABSOLUTE_HUMIDITY,
                     CONF_IS_APPARENT_POWER,
                     CONF_IS_AQI,
+                    CONF_IS_AREA,
                     CONF_IS_ATMOSPHERIC_PRESSURE,
                     CONF_IS_BATTERY_LEVEL,
+                    CONF_IS_BLOOD_GLUCOSE_CONCENTRATION,
                     CONF_IS_CO,
                     CONF_IS_CO2,
+                    CONF_IS_CONDUCTIVITY,
                     CONF_IS_CURRENT,
                     CONF_IS_DATA_RATE,
                     CONF_IS_DATA_SIZE,
                     CONF_IS_DISTANCE,
                     CONF_IS_DURATION,
                     CONF_IS_ENERGY,
+                    CONF_IS_ENERGY_DISTANCE,
                     CONF_IS_FREQUENCY,
                     CONF_IS_GAS,
                     CONF_IS_HUMIDITY,
@@ -167,12 +193,15 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_OZONE,
                     CONF_IS_POWER,
                     CONF_IS_POWER_FACTOR,
+                    CONF_IS_PH,
                     CONF_IS_PM1,
                     CONF_IS_PM10,
                     CONF_IS_PM25,
+                    CONF_IS_PM4,
                     CONF_IS_PRECIPITATION,
                     CONF_IS_PRECIPITATION_INTENSITY,
                     CONF_IS_PRESSURE,
+                    CONF_IS_REACTIVE_ENERGY,
                     CONF_IS_REACTIVE_POWER,
                     CONF_IS_SIGNAL_STRENGTH,
                     CONF_IS_SOUND_PRESSURE,
@@ -183,8 +212,10 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS,
                     CONF_IS_VOLTAGE,
                     CONF_IS_VOLUME,
+                    CONF_IS_VOLUME_FLOW_RATE,
                     CONF_IS_WATER,
                     CONF_IS_WEIGHT,
+                    CONF_IS_WIND_DIRECTION,
                     CONF_IS_WIND_SPEED,
                     CONF_IS_VALUE,
                 ]

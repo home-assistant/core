@@ -5,7 +5,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SENSOR
 
@@ -13,7 +13,7 @@ from .const import SENSOR
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform from config_entry."""
     name = entry.data.get(CONF_NAME) or "Local IP"
@@ -24,7 +24,7 @@ class IPSensor(SensorEntity):
     """A simple sensor."""
 
     _attr_unique_id = SENSOR
-    _attr_icon = "mdi:ip"
+    _attr_translation_key = "local_ip"
 
     def __init__(self, name: str) -> None:
         """Initialize the sensor."""

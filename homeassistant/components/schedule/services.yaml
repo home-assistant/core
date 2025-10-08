@@ -1,3 +1,5 @@
 reload:
-  name: Reload
-  description: Reload the schedule configuration
+get_schedule:
+  target:
+    entity:
+      domain: schedule

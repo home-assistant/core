@@ -1,4 +1,5 @@
 """Helper methods for language selection in Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -136,9 +137,6 @@ class Dialect:
                 region_idx = pref_regions.index(self.region)
             elif dialect.region is not None:
                 region_idx = pref_regions.index(dialect.region)
-            else:
-                # Can't happen, but mypy is not smart enough
-                raise ValueError()
 
             # More preferred regions are at the front.
             # Add 1 to boost above a weak match where no regions are set.
@@ -199,3 +197,14 @@ def matches(
 
     # Score < 0 is not a match
     return [tag for _dialect, score, tag in scored if score[0] >= 0]
+
+
+def intersect(languages_1: set[str], languages_2: set[str]) -> set[str]:
+    """Intersect two sets of languages using is_match for aliases."""
+    languages = set()
+    for lang_1 in languages_1:
+        for lang_2 in languages_2:
+            if is_language_match(lang_1, lang_2):
+                languages.add(lang_1)
+
+    return languages

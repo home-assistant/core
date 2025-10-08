@@ -1,4 +1,5 @@
 """Tests for config/script."""
+
 from http import HTTPStatus
 import json
 from typing import Any
@@ -6,12 +7,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
+from homeassistant.components.config import script
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import yaml
+from homeassistant.setup import async_setup_component
+from homeassistant.util import yaml as yaml_util
 
 from tests.typing import ClientSessionGenerator
 
@@ -22,17 +24,19 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture(autouse=True)
-async def setup_script(hass, script_config, stub_blueprint_populate):  # noqa: F811
+async def setup_script(hass: HomeAssistant, script_config: dict[str, Any]) -> None:
     """Set up script integration."""
     assert await async_setup_component(hass, "script", {"script": script_config})
 
 
-@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize("script_config", [{}])
 async def test_get_script_config(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_config_store: dict[str, Any],
 ) -> None:
     """Test getting script config."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     client = await hass_client()
@@ -50,12 +54,14 @@ async def test_get_script_config(
     assert result == {"alias": "Moon"}
 
 
-@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize("script_config", [{}])
 async def test_update_script_config(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_config_store: dict[str, Any],
 ) -> None:
     """Test updating script config."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
@@ -86,7 +92,43 @@ async def test_update_script_config(
     assert new_data["moon"] == {"alias": "Moon updated", "sequence": []}
 
 
-@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize("script_config", [{}])
+async def test_invalid_object_id(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_config_store: dict[str, Any],
+) -> None:
+    """Test creating a script with an invalid object_id."""
+    with patch.object(config, "SECTIONS", [script]):
+        await async_setup_component(hass, "config", {})
+
+    assert sorted(hass.states.async_entity_ids("script")) == []
+
+    client = await hass_client()
+
+    hass_config_store["scripts.yaml"] = {}
+
+    resp = await client.post(
+        "/api/config/script/config/turn_on",
+        data=json.dumps({"alias": "Turn on", "sequence": []}),
+    )
+    await hass.async_block_till_done()
+    assert sorted(hass.states.async_entity_ids("script")) == []
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    result = await resp.json()
+    assert result == {
+        "message": (
+            "Message malformed: A script's object_id must not be one of "
+            "reload, toggle, turn_off, turn_on"
+        )
+    }
+
+    new_data = hass_config_store["scripts.yaml"]
+    assert new_data == {}
+
+
+@pytest.mark.parametrize("script_config", [{}])
 @pytest.mark.parametrize(
     ("updated_config", "validation_error"),
     [
@@ -116,13 +158,13 @@ async def test_update_script_config(
 async def test_update_script_config_with_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_config_store,
+    hass_config_store: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
     updated_config: Any,
     validation_error: str,
 ) -> None:
     """Test updating script config with errors."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
@@ -146,7 +188,7 @@ async def test_update_script_config_with_error(
     assert validation_error not in caplog.text
 
 
-@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize("script_config", [{}])
 @pytest.mark.parametrize(
     ("updated_config", "validation_error"),
     [
@@ -166,14 +208,13 @@ async def test_update_script_config_with_error(
 async def test_update_script_config_with_blueprint_substitution_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_config_store,
-    # setup_automation,
+    hass_config_store: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
     updated_config: Any,
     validation_error: str,
 ) -> None:
     """Test updating script config with errors."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
@@ -185,7 +226,7 @@ async def test_update_script_config_with_blueprint_substitution_error(
 
     with patch(
         "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",
-        side_effect=yaml.UndefinedSubstitution("blah"),
+        side_effect=yaml_util.UndefinedSubstitution("blah"),
     ):
         resp = await client.post(
             "/api/config/script/config/moon",
@@ -201,12 +242,14 @@ async def test_update_script_config_with_blueprint_substitution_error(
     assert validation_error not in caplog.text
 
 
-@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize("script_config", [{}])
 async def test_update_remove_key_script_config(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_config_store: dict[str, Any],
 ) -> None:
     """Test updating script config while removing a key."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
@@ -239,18 +282,21 @@ async def test_update_remove_key_script_config(
 
 @pytest.mark.parametrize(
     "script_config",
-    (
+    [
         {
             "one": {"alias": "Light on", "sequence": []},
             "two": {"alias": "Light off", "sequence": []},
         },
-    ),
+    ],
 )
 async def test_delete_script(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    hass_config_store: dict[str, Any],
 ) -> None:
     """Test deleting a script."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("script")) == [
@@ -258,8 +304,7 @@ async def test_delete_script(
         "script.two",
     ]
 
-    ent_reg = er.async_get(hass)
-    assert len(ent_reg.entities) == 2
+    assert len(entity_registry.entities) == 2
 
     client = await hass_client()
 
@@ -279,4 +324,37 @@ async def test_delete_script(
 
     assert hass_config_store["scripts.yaml"] == {"one": {}}
 
-    assert len(ent_reg.entities) == 1
+    assert len(entity_registry.entities) == 1
+
+
+@pytest.mark.parametrize("script_config", [{}])
+async def test_api_calls_require_admin(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+    hass_config_store: dict[str, Any],
+) -> None:
+    """Test script APIs endpoints do not work as a normal user."""
+    with patch.object(config, "SECTIONS", [script]):
+        await async_setup_component(hass, "config", {})
+
+    hass_config_store["scripts.yaml"] = {
+        "moon": {"alias": "Moon"},
+    }
+
+    client = await hass_client(hass_read_only_access_token)
+
+    # Get
+    resp = await client.get("/api/config/script/config/moon")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # Update
+    resp = await client.post(
+        "/api/config/script/config/moon",
+        data=json.dumps({"sequence": []}),
+    )
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # Delete
+    resp = await client.delete("/api/config/script/config/moon")
+    assert resp.status == HTTPStatus.UNAUTHORIZED

@@ -1,4 +1,5 @@
 """Test the ThermoBeacon sensors."""
+
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.thermobeacon.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
@@ -24,7 +25,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("sensor")) == 0
     inject_bluetooth_service_info(hass, THERMOBEACON_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 4
+    assert len(hass.states.async_all("sensor")) == 3
 
     humid_sensor = hass.states.get("sensor.lanyard_mini_hygrometer_eeff_humidity")
     humid_sensor_attrs = humid_sensor.attributes

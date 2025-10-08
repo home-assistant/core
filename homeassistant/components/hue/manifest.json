@@ -1,7 +1,7 @@
 {
   "domain": "hue",
   "name": "Philips Hue",
-  "codeowners": ["@balloob", "@marcelveldt"],
+  "codeowners": ["@marcelveldt"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hue",
   "homekit": {
@@ -10,7 +10,6 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["aiohue"],
-  "quality_scale": "platinum",
-  "requirements": ["aiohue==4.6.2"],
+  "requirements": ["aiohue==4.8.0"],
   "zeroconf": ["_hue._tcp.local."]
 }

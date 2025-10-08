@@ -1,4 +1,5 @@
 """Support for WiLight lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,9 +15,10 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, WiLightDevice
+from .const import DOMAIN
+from .entity import WiLightDevice
 from .parent_device import WiLightParent
 
 
@@ -39,7 +41,9 @@ def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> list[LightE
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiLight lights from a config entry."""
     parent: WiLightParent = hass.data[DOMAIN][entry.entry_id]
@@ -53,6 +57,7 @@ async def async_setup_entry(
 class WiLightLightOnOff(WiLightDevice, LightEntity):
     """Representation of a WiLights light on-off."""
 
+    _attr_name = None
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
@@ -73,6 +78,7 @@ class WiLightLightOnOff(WiLightDevice, LightEntity):
 class WiLightLightDimmer(WiLightDevice, LightEntity):
     """Representation of a WiLights light dimmer."""
 
+    _attr_name = None
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
@@ -124,6 +130,7 @@ def hass_to_wilight_saturation(value: float) -> int:
 class WiLightLightColor(WiLightDevice, LightEntity):
     """Representation of a WiLights light rgb."""
 
+    _attr_name = None
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
 

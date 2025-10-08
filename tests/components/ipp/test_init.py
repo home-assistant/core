@@ -1,33 +1,45 @@
 """Tests for the IPP integration."""
-from homeassistant.components.ipp.const import DOMAIN
+
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from pyipp import IPPConnectionError
+
+from homeassistant.components.ipp.coordinator import IPPDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import init_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry
 
 
+@patch(
+    "homeassistant.components.ipp.coordinator.IPP._request",
+    side_effect=IPPConnectionError,
+)
 async def test_config_entry_not_ready(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    mock_request: MagicMock, hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the IPP configuration entry not ready."""
-    entry = await init_integration(hass, aioclient_mock, conn_error=True)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_unload_config_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test the IPP configuration entry unloading."""
-    entry = await init_integration(hass, aioclient_mock)
-
-    assert hass.data[DOMAIN]
-    assert entry.entry_id in hass.data[DOMAIN]
-    assert entry.state is ConfigEntryState.LOADED
-
-    await hass.config_entries.async_unload(entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.entry_id not in hass.data[DOMAIN]
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_request.call_count == 1
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_load_unload_config_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ipp: AsyncMock,
+) -> None:
+    """Test the IPP configuration entry loading/unloading."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert isinstance(mock_config_entry.runtime_data, IPPDataUpdateCoordinator)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED

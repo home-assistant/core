@@ -1,4 +1,5 @@
 """Test init of Nettigo Air Monitor integration."""
+
 from unittest.mock import patch
 
 from nettigo_air_monitor import ApiError, AuthFailedError
@@ -22,7 +23,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_pm2_5")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "11.0"
+    assert state.state == "11.03"
 
 
 async def test_config_not_ready(hass: HomeAssistant) -> None:
@@ -43,24 +44,6 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_config_not_ready_while_checking_credentials(hass: HomeAssistant) -> None:
-    """Test for setup failure if the connection fails while checking credentials."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="10.10.2.3",
-        unique_id="aa:bb:cc:dd:ee:ff",
-        data={"host": "10.10.2.3"},
-    )
-    entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        side_effect=ApiError("API Error"),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
 async def test_config_auth_failed(hass: HomeAssistant) -> None:
     """Test for setup failure if the auth fails."""
     entry = MockConfigEntry(
@@ -72,7 +55,7 @@ async def test_config_auth_failed(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         side_effect=AuthFailedError("Authorization has failed"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -93,11 +76,11 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     assert not hass.data.get(DOMAIN)
 
 
-async def test_remove_air_quality_entities(hass: HomeAssistant) -> None:
+async def test_remove_air_quality_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test remove air_quality entities from registry."""
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         AIR_QUALITY_PLATFORM,
         DOMAIN,
         "aa:bb:cc:dd:ee:ff-sds011",
@@ -105,7 +88,7 @@ async def test_remove_air_quality_entities(hass: HomeAssistant) -> None:
         disabled_by=None,
     )
 
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         AIR_QUALITY_PLATFORM,
         DOMAIN,
         "aa:bb:cc:dd:ee:ff-sps30",
@@ -115,8 +98,8 @@ async def test_remove_air_quality_entities(hass: HomeAssistant) -> None:
 
     await init_integration(hass)
 
-    entry = registry.async_get("air_quality.nettigo_air_monitor_sds011")
+    entry = entity_registry.async_get("air_quality.nettigo_air_monitor_sds011")
     assert entry is None
 
-    entry = registry.async_get("air_quality.nettigo_air_monitor_sps30")
+    entry = entity_registry.async_get("air_quality.nettigo_air_monitor_sps30")
     assert entry is None

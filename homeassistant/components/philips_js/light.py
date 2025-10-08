@@ -1,8 +1,9 @@
 """Component to integrate ambilight for TVs exposing the Joint Space API."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from haphilipsjs import PhilipsTV
 from haphilipsjs.typing import AmbilightCurrentConfiguration
@@ -15,16 +16,13 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
-from . import PhilipsTVDataUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
+from .entity import PhilipsJsEntity
 
 EFFECT_PARTITION = ": "
 EFFECT_MODE = "Mode"
@@ -35,11 +33,11 @@ EFFECT_EXPERT_STYLES = {"FOLLOW_AUDIO", "FOLLOW_COLOR", "Lounge light"}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: PhilipsTVConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the configuration entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     async_add_entities([PhilipsTVLightEntity(coordinator)])
 
 
@@ -134,12 +132,10 @@ def _average_pixels(data):
     return 0.0, 0.0, 0.0
 
 
-class PhilipsTVLightEntity(
-    CoordinatorEntity[PhilipsTVDataUpdateCoordinator], LightEntity
-):
+class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
-    _attr_has_entity_name = True
+    _attr_translation_key = "ambilight"
 
     def __init__(
         self,
@@ -155,18 +151,7 @@ class PhilipsTVLightEntity(
 
         self._attr_supported_color_modes = {ColorMode.HS, ColorMode.ONOFF}
         self._attr_supported_features = LightEntityFeature.EFFECT
-        self._attr_name = "Ambilight"
         self._attr_unique_id = coordinator.unique_id
-        self._attr_icon = "mdi:television-ambient-light"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, self._attr_unique_id),
-            },
-            manufacturer="Philips",
-            model=coordinator.system.get("model"),
-            name=coordinator.system["name"],
-            sw_version=coordinator.system.get("softwareversion"),
-        )
 
         self._update_from_coordinator()
 
@@ -343,7 +328,7 @@ class PhilipsTVLightEntity(
         """Turn the bulb on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
         hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
-        attr_effect = kwargs.get(ATTR_EFFECT, self.effect)
+        attr_effect = cast(str, kwargs.get(ATTR_EFFECT, self.effect))
 
         if not self._tv.on:
             raise HomeAssistantError("TV is not available")
@@ -393,3 +378,12 @@ class PhilipsTVLightEntity(
 
         self._update_from_coordinator()
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return true if entity is available."""
+        if not super().available:
+            return False
+        if not self._tv.on:
+            return False
+        return True

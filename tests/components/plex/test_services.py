@@ -1,4 +1,5 @@
 """Tests for various Plex services."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -16,7 +17,6 @@ from homeassistant.components.plex.const import (
     PLEX_SERVER_CONFIG,
     PLEX_URI_SCHEME,
     SERVICE_REFRESH_LIBRARY,
-    SERVICE_SCAN_CLIENTS,
 )
 from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.const import CONF_URL
@@ -106,15 +106,6 @@ async def test_refresh_library(
     assert refresh.call_count == 1
 
 
-async def test_scan_clients(hass: HomeAssistant, mock_plex_server) -> None:
-    """Test scan_for_clients service call."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SCAN_CLIENTS,
-        blocking=True,
-    )
-
-
 async def test_lookup_media_for_other_integrations(
     hass: HomeAssistant,
     entry,
@@ -190,7 +181,11 @@ async def test_lookup_media_for_other_integrations(
     assert result.shuffle
 
     # Test with media not found
-    with patch("plexapi.library.LibrarySection.search", return_value=None):
+    with patch(
+        "plexapi.library.LibrarySection.search",
+        return_value=None,
+        __qualname__="search",
+    ):
         with pytest.raises(HomeAssistantError) as excinfo:
             process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID_BAD_MEDIA)
         assert f"No {MediaType.MUSIC} results in 'Music' for" in str(excinfo.value)

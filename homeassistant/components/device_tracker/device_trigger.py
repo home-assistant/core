@@ -1,6 +1,8 @@
 """Provides device automations for Device Tracker."""
+
 from __future__ import annotations
 
+from operator import attrgetter
 from typing import Final
 
 import voluptuous as vol
@@ -98,7 +100,7 @@ async def async_get_trigger_capabilities(
     """List trigger capabilities."""
     zones = {
         ent.entity_id: ent.name
-        for ent in sorted(hass.states.async_all(DOMAIN_ZONE), key=lambda ent: ent.name)
+        for ent in sorted(hass.states.async_all(DOMAIN_ZONE), key=attrgetter("name"))
     }
     return {
         "extra_fields": vol.Schema(

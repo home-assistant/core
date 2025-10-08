@@ -1,0 +1,164 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "muted": {
+        "default": "mdi:bell-off"
+      }
+    },
+    "button": {
+      "pause": {
+        "default": "mdi:pause"
+      },
+      "resume": {
+        "default": "mdi:play-pause"
+      },
+      "start": {
+        "default": "mdi:play"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      },
+      "self_test_request": {
+        "default": "mdi:refresh-auto"
+      }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:fan",
+            "state": {
+              "low": "mdi:fan-speed-1",
+              "medium": "mdi:fan-speed-2",
+              "high": "mdi:fan-speed-3",
+              "auto": "mdi:fan-auto",
+              "natural_wind": "mdi:tailwind",
+              "sleep_wind": "mdi:sleep"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "laundry_washer_spin_speed": {
+        "default": "mdi:reload"
+      },
+      "power_level": {
+        "default": "mdi:power-settings"
+      },
+      "temperature_level": {
+        "default": "mdi:thermometer"
+      }
+    },
+    "sensor": {
+      "contamination_state": {
+        "default": "mdi:air-filter"
+      },
+      "current_phase": {
+        "default": "mdi:state-machine"
+      },
+      "eve_weather_trend": {
+        "default": "mdi:weather",
+        "state": {
+          "sunny": "mdi:weather-sunny",
+          "cloudy": "mdi:weather-cloudy",
+          "rainy": "mdi:weather-rainy",
+          "stormy": "mdi:weather-windy"
+        }
+      },
+      "air_quality": {
+        "default": "mdi:air-filter"
+      },
+      "bat_replacement_description": {
+        "default": "mdi:battery-sync"
+      },
+      "battery_voltage": {
+        "default": "mdi:current-dc"
+      },
+      "flow": {
+        "default": "mdi:pipe"
+      },
+      "hepa_filter_condition": {
+        "default": "mdi:filter-check"
+      },
+      "activated_carbon_filter_condition": {
+        "default": "mdi:filter-check"
+      },
+      "operational_state": {
+        "default": "mdi:play-pause"
+      },
+      "tank_volume": {
+        "default": "mdi:water-boiler"
+      },
+      "tank_percentage": {
+        "default": "mdi:water-boiler"
+      },
+      "valve_position": {
+        "default": "mdi:valve"
+      },
+      "battery_charge_state": {
+        "default": "mdi:battery-charging"
+      },
+      "battery_replacement_description": {
+        "default": "mdi:battery-sync-outline"
+      },
+      "battery_time_remaining": {
+        "default": "mdi:battery-clock-outline"
+      },
+      "battery_time_to_full_charge": {
+        "default": "mdi:battery-clock"
+      },
+      "esa_opt_out_state": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "esa_state": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "evse_state": {
+        "default": "mdi:ev-station"
+      },
+      "evse_supply_state": {
+        "default": "mdi:ev-station"
+      },
+      "evse_fault_state": {
+        "default": "mdi:ev-station"
+      },
+      "pump_control_mode": {
+        "default": "mdi:pipe-wrench"
+      },
+      "pump_speed": {
+        "default": "mdi:speedometer"
+      },
+      "pump_status": {
+        "default": "mdi:pump"
+      }
+    },
+    "number": {
+      "cook_time": {
+        "default": "mdi:microwave"
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "default": "mdi:lock",
+        "state": {
+          "on": "mdi:lock",
+          "off": "mdi:lock-off"
+        }
+      },
+      "speaker_mute": {
+        "default": "mdi:volume-high",
+        "state": {
+          "on": "mdi:volume-mute",
+          "off": "mdi:volume-high"
+        }
+      },
+      "evse_charging_switch": {
+        "default": "mdi:ev-station"
+      },
+      "privacy_mode_button": {
+        "default": "mdi:shield-lock"
+      }
+    }
+  }
+}

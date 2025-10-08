@@ -1,4 +1,5 @@
 """YoLink Thermostat."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -21,7 +22,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
@@ -46,7 +47,7 @@ YOLINK_ACTION_2_HA = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink Thermostat from a config entry."""
     device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
@@ -61,6 +62,8 @@ async def async_setup_entry(
 class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
     """YoLink Climate Entity."""
 
+    _attr_name = None
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -69,11 +72,11 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         """Init YoLink Thermostat."""
         super().__init__(config_entry, coordinator)
         self._attr_unique_id = f"{coordinator.device.device_id}_climate"
-        self._attr_name = f"{coordinator.device.device_name} (Thermostat)"
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_fan_modes = [FAN_ON, FAN_AUTO]
         self._attr_min_temp = -10
         self._attr_max_temp = 50
+        self._attr_hvac_mode = None
         self._attr_hvac_modes = [
             HVACMode.COOL,
             HVACMode.HEAT,
@@ -85,6 +88,8 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
             ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.PRESET_MODE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
 
     @callback

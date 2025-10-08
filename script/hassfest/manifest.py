@@ -1,7 +1,8 @@
 """Manifest validation."""
+
 from __future__ import annotations
 
-from enum import IntEnum
+from enum import StrEnum, auto
 import json
 from pathlib import Path
 import subprocess
@@ -18,25 +19,32 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
+from script.util import sort_manifest as util_sort_manifest
 
-from .model import Config, Integration
+from .model import Config, Integration, ScaledQualityScaleTiers
 
 DOCUMENTATION_URL_SCHEMA = "https"
 DOCUMENTATION_URL_HOST = "www.home-assistant.io"
 DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
+_CORE_DOCUMENTATION_BASE = "https://www.home-assistant.io/integrations"
 
-class QualityScale(IntEnum):
+
+class NonScaledQualityScaleTiers(StrEnum):
     """Supported manifest quality scales."""
 
-    INTERNAL = -1
-    SILVER = 1
-    GOLD = 2
-    PLATINUM = 3
+    CUSTOM = auto()
+    NO_SCORE = auto()
+    INTERNAL = auto()
+    LEGACY = auto()
 
 
-SUPPORTED_QUALITY_SCALES = [enum.name.lower() for enum in QualityScale]
+SUPPORTED_QUALITY_SCALES = [
+    value.name.lower()
+    for enum in [ScaledQualityScaleTiers, NonScaledQualityScaleTiers]
+    for value in enum
+]
 SUPPORTED_IOT_CLASSES = [
     "assumed_state",
     "calculated",
@@ -62,7 +70,6 @@ NO_IOT_CLASS = [
     "device_automation",
     "device_tracker",
     "diagnostics",
-    "discovery",
     "downloader",
     "ffmpeg",
     "file_upload",
@@ -72,6 +79,8 @@ NO_IOT_CLASS = [
     "history",
     "homeassistant",
     "homeassistant_alerts",
+    "homeassistant_connect_zbt2",
+    "homeassistant_green",
     "homeassistant_hardware",
     "homeassistant_sky_connect",
     "homeassistant_yellow",
@@ -87,19 +96,17 @@ NO_IOT_CLASS = [
     "logbook",
     "logger",
     "lovelace",
-    "map",
     "media_source",
     "my",
     "onboarding",
     "panel_custom",
-    "panel_iframe",
     "plant",
     "profiler",
     "proxy",
     "python_script",
     "raspberry_pi",
+    "recovery_mode",
     "repairs",
-    "safe_mode",
     "schedule",
     "script",
     "search",
@@ -114,19 +121,26 @@ NO_IOT_CLASS = [
 ]
 
 
-def documentation_url(value: str) -> str:
+def core_documentation_url(value: str) -> str:
     """Validate that a documentation url has the correct path and domain."""
     if value in DOCUMENTATION_URL_EXCEPTIONS:
         return value
+    if not value.startswith(_CORE_DOCUMENTATION_BASE):
+        raise vol.Invalid(
+            f"Documentation URL does not begin with {_CORE_DOCUMENTATION_BASE}"
+        )
 
+    return value
+
+
+def custom_documentation_url(value: str) -> str:
+    """Validate that a custom integration documentation url is correct."""
     parsed_url = urlparse(value)
     if parsed_url.scheme != DOCUMENTATION_URL_SCHEMA:
         raise vol.Invalid("Documentation url is not prefixed with https")
-    if parsed_url.netloc == DOCUMENTATION_URL_HOST and not parsed_url.path.startswith(
-        DOCUMENTATION_URL_PATH_PREFIX
-    ):
+    if value.startswith(_CORE_DOCUMENTATION_BASE):
         raise vol.Invalid(
-            "Documentation url does not begin with www.home-assistant.io/integrations"
+            "Documentation URL should point to the custom integration documentation"
         )
 
     return value
@@ -255,12 +269,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
-        vol.Required("documentation"): vol.All(
-            vol.Url(), documentation_url  # pylint: disable=no-value-for-parameter
-        ),
-        vol.Optional(
-            "issue_tracker"
-        ): vol.Url(),  # pylint: disable=no-value-for-parameter
+        vol.Required("documentation"): vol.All(vol.Url(), core_documentation_url),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
         vol.Optional("dependencies"): [str],
@@ -269,6 +278,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("loggers"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
+        vol.Optional("single_config_entry"): bool,
     }
 )
 
@@ -294,7 +304,10 @@ def manifest_schema(value: dict[str, Any]) -> vol.Schema:
 
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
+        vol.Required("documentation"): vol.All(vol.Url(), custom_documentation_url),
         vol.Optional("version"): vol.All(str, verify_version),
+        vol.Optional("issue_tracker"): vol.Url(),
+        vol.Optional("import_executor"): bool,
     }
 )
 
@@ -351,34 +364,40 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
 
     if (
         (quality_scale := integration.manifest.get("quality_scale"))
-        and QualityScale[quality_scale.upper()] > QualityScale.SILVER
-        and not integration.manifest.get("codeowners")
+        and quality_scale.upper() in ScaledQualityScaleTiers
+        and ScaledQualityScaleTiers[quality_scale.upper()]
+        >= ScaledQualityScaleTiers.SILVER
     ):
-        integration.add_error(
-            "manifest",
-            f"{quality_scale} integration does not have a code owner",
-        )
+        if not integration.manifest.get("codeowners"):
+            integration.add_error(
+                "manifest",
+                f"{quality_scale} integration does not have a code owner",
+            )
 
     if not integration.core:
         validate_version(integration)
 
 
-_SORT_KEYS = {"domain": ".domain", "name": ".name"}
-
-
-def _sort_manifest_keys(key: str) -> str:
-    return _SORT_KEYS.get(key, key)
-
-
-def sort_manifest(integration: Integration) -> bool:
+def sort_manifest(integration: Integration, config: Config) -> bool:
     """Sort manifest."""
-    keys = list(integration.manifest.keys())
-    if (keys_sorted := sorted(keys, key=_sort_manifest_keys)) != keys:
-        manifest = {key: integration.manifest[key] for key in keys_sorted}
-        integration.manifest_path.write_text(json.dumps(manifest, indent=2))
+    if integration.manifest_path is None:
         integration.add_error(
             "manifest",
-            "Manifest keys have been sorted: domain, name, then alphabetical order",
+            "Manifest path not set, unable to sort manifest keys",
+        )
+        return False
+
+    if util_sort_manifest(integration.manifest):
+        if config.action == "generate":
+            integration.manifest_path.write_text(
+                json.dumps(integration.manifest, indent=2) + "\n"
+            )
+            text = "have been sorted"
+        else:
+            text = "are not sorted correctly"
+        integration.add_error(
+            "manifest",
+            f"Manifest keys {text}: domain, name, then alphabetical order",
         )
         return True
     return False
@@ -391,11 +410,19 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     for integration in integrations.values():
         validate_manifest(integration, core_components_dir)
         if not integration.errors:
-            if sort_manifest(integration):
+            if sort_manifest(integration, config):
                 manifests_resorted.append(integration.manifest_path)
-    if manifests_resorted:
+    if config.action == "generate" and manifests_resorted:
         subprocess.run(
-            ["pre-commit", "run", "--hook-stage", "manual", "prettier", "--files"]
-            + manifests_resorted,
+            [
+                "pre-commit",
+                "run",
+                "--hook-stage",
+                "manual",
+                "prettier",
+                "--files",
+                *manifests_resorted,
+            ],
             stdout=subprocess.DEVNULL,
+            check=True,
         )

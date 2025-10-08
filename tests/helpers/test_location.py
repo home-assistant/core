@@ -1,4 +1,5 @@
 """Tests Home Assistant location helpers."""
+
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import location

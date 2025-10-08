@@ -1,5 +1,5 @@
 """Receive signals from a keyboard and use it as a remote control."""
-# pylint: disable=import-error
+
 from __future__ import annotations
 
 import asyncio
@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -331,7 +331,6 @@ class KeyboardRemote:
                 _LOGGER.debug("Start device monitoring")
                 await self.hass.async_add_executor_job(self.dev.grab)
                 async for event in self.dev.async_read_loop():
-                    # pylint: disable=no-member
                     if event.type is ecodes.EV_KEY:
                         if event.value in self.key_values:
                             _LOGGER.debug(

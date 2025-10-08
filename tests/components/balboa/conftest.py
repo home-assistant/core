@@ -1,10 +1,12 @@
 """Provide common fixtures."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
+from datetime import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pybalboa.enums import HeatMode
+from pybalboa.enums import HeatMode, LowHighRange
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -21,7 +23,7 @@ async def integration_fixture(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(name="client")
-def client_fixture() -> Generator[MagicMock, None, None]:
+def client_fixture() -> Generator[MagicMock]:
     """Mock balboa spa client."""
     with patch(
         "homeassistant.components.balboa.SpaClient", autospec=True
@@ -29,7 +31,7 @@ def client_fixture() -> Generator[MagicMock, None, None]:
         client = mock_balboa.return_value
         callback: list[Callable] = []
 
-        def on(_, _callback: Callable):  # pylint: disable=invalid-name
+        def on(_, _callback: Callable):
             callback.append(_callback)
             return lambda: None
 
@@ -47,7 +49,12 @@ def client_fixture() -> Generator[MagicMock, None, None]:
         client.blowers = []
         client.circulation_pump.state = 0
         client.filter_cycle_1_running = False
+        client.filter_cycle_1_start = time(8, 0)
+        client.filter_cycle_1_end = time(9, 0)
         client.filter_cycle_2_running = False
+        client.filter_cycle_2_enabled = True
+        client.filter_cycle_2_start = time(19, 0)
+        client.filter_cycle_2_end = time(21, 30)
         client.temperature_unit = 1
         client.temperature = 10
         client.temperature_minimum = 10
@@ -57,5 +64,11 @@ def client_fixture() -> Generator[MagicMock, None, None]:
         client.heat_mode.set_state = AsyncMock()
         client.heat_mode.options = list(HeatMode)[:2]
         client.heat_state = 2
+        client.lights = []
+        client.pumps = []
+        client.temperature_range.client = client
+        client.temperature_range.state = LowHighRange.LOW
+
+        client.fault = None
 
         yield client

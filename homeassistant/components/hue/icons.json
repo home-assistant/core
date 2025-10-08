@@ -1,0 +1,34 @@
+{
+  "entity": {
+    "light": {
+      "hue_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "candle": "mdi:candle",
+              "sparkle": "mdi:shimmer",
+              "glisten": "mdi:creation",
+              "sunrise": "mdi:weather-sunset-up",
+              "sunset": "mdi:weather-sunset",
+              "fire": "mdi:fire",
+              "prism": "mdi:triangle-outline",
+              "opal": "mdi:diamond-stone",
+              "underwater": "mdi:waves",
+              "cosmos": "mdi:star-shooting",
+              "sunbeam": "mdi:spotlight-beam",
+              "enchant": "mdi:magic-staff"
+            }
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "hue_activate_scene": {
+      "service": "mdi:palette"
+    },
+    "activate_scene": {
+      "service": "mdi:palette"
+    }
+  }
+}

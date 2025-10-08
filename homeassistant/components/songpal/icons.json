@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_sound_setting": {
+      "service": "mdi:volume-high"
+    }
+  }
+}

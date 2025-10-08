@@ -1,4 +1,5 @@
 """Config flow to configure qnap component."""
+
 from __future__ import annotations
 
 import logging
@@ -8,23 +9,18 @@ from qnapstats import QNAPStats
 from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    CONF_DRIVES,
-    CONF_NICS,
-    CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_TIMEOUT,
@@ -46,23 +42,15 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class QnapConfigFlow(ConfigFlow, domain=DOMAIN):
     """Qnap configuration flow."""
 
     VERSION = 1
 
-    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
-        """Set the config entry up from yaml."""
-        import_info.pop(CONF_MONITORED_CONDITIONS, None)
-        import_info.pop(CONF_NICS, None)
-        import_info.pop(CONF_DRIVES, None)
-        import_info.pop(CONF_VOLUMES, None)
-        return await self.async_step_user(import_info)
-
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -82,8 +70,8 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except TypeError:
                 errors["base"] = "invalid_auth"
-            except Exception as error:  # pylint: disable=broad-except
-                _LOGGER.error(error)
+            except Exception:
+                _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
                 unique_id = stats["system"]["serial_number"]

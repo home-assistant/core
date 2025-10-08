@@ -1,9 +1,10 @@
 """Support for SMS notification services."""
+
 from __future__ import annotations
 
 import logging
 
-import gammu  # pylint: disable=import-error
+import gammu
 
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.const import CONF_TARGET

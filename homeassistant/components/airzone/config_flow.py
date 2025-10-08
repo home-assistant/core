@@ -1,4 +1,5 @@
 """Config flow for Airzone."""
+
 from __future__ import annotations
 
 import logging
@@ -9,12 +10,12 @@ from aioairzone.exceptions import AirzoneError, InvalidSystem
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components import dhcp
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
 
@@ -38,20 +39,24 @@ def short_mac(addr: str) -> str:
     return addr.replace(":", "")[-4:].upper()
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for an Airzone device."""
 
     _discovered_ip: str | None = None
     _discovered_mac: str | None = None
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         data_schema = CONFIG_SCHEMA
         errors = {}
 
         if user_input is not None:
+            if CONF_ID not in user_input:
+                user_input[CONF_ID] = DEFAULT_SYSTEM_ID
+
             self._async_abort_entries_match(user_input)
 
             airzone = AirzoneLocalApi(
@@ -59,7 +64,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ConnectionOptions(
                     user_input[CONF_HOST],
                     user_input[CONF_PORT],
-                    user_input.get(CONF_ID, DEFAULT_SYSTEM_ID),
+                    user_input[CONF_ID],
                 ),
             )
 
@@ -83,6 +88,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
 
                 title = f"Airzone {user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
+                if user_input[CONF_ID] != DEFAULT_SYSTEM_ID:
+                    title += f" #{user_input[CONF_ID]}"
+
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
@@ -91,7 +99,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         self._discovered_ip = discovery_info.ip
         self._discovered_mac = discovery_info.macaddress
@@ -111,14 +121,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         try:
             await airzone.get_version()
-        except AirzoneError as err:
+        except (AirzoneError, TimeoutError) as err:
             raise AbortFlow("cannot_connect") from err
 
         return await self.async_step_discovered_connection()
 
     async def async_step_discovered_connection(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self._discovered_ip is not None
         assert self._discovered_mac is not None

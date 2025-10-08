@@ -3,51 +3,140 @@
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
 """
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
-import functools as ft
 import importlib
 import logging
+import os
 import pathlib
 import sys
+import time
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, cast, final
 
 from awesomeversion import (
     AwesomeVersion,
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+from propcache.api import cached_property
 import voluptuous as vol
 
 from . import generated
+from .const import Platform
+from .core import HomeAssistant, callback
 from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
+from .generated.config_flows import FLOWS
 from .generated.dhcp import DHCP
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
+from .helpers.json import json_bytes, json_fragment
+from .helpers.typing import UNDEFINED, UndefinedType
+from .util.async_ import create_eager_task
+from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
-# Typing imports that create a circular dependency
 if TYPE_CHECKING:
+    # The relative imports below are guarded by TYPE_CHECKING
+    # because they would cause a circular import otherwise.
     from .config_entries import ConfigEntry
-    from .core import HomeAssistant
     from .helpers import device_registry as dr
     from .helpers.typing import ConfigType
 
-_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
-
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENTS = "components"
-DATA_INTEGRATIONS = "integrations"
-DATA_CUSTOM_COMPONENTS = "custom_components"
+#
+# Integration.get_component will check preload platforms and
+# try to import the code to avoid a thundering heard of import
+# executor jobs later in the startup process.
+#
+# default platforms are prepopulated in this list to ensure that
+# by the time the component is loaded, we check if the platform is
+# available.
+#
+# This list can be extended by calling async_register_preload_platform
+#
+BASE_PRELOAD_PLATFORMS = [
+    "backup",
+    "condition",
+    "config",
+    "config_flow",
+    "diagnostics",
+    "energy",
+    "group",
+    "hardware",
+    "intent",
+    "logbook",
+    "media_source",
+    "recorder",
+    "repairs",
+    "system_health",
+    "trigger",
+]
+
+
+@dataclass
+class BlockedIntegration:
+    """Blocked custom integration details."""
+
+    lowest_good_version: AwesomeVersion | None
+    reason: str
+
+
+BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
+    # Added in 2024.3.0 because of https://github.com/home-assistant/core/issues/112464
+    "start_time": BlockedIntegration(AwesomeVersion("1.1.7"), "breaks Home Assistant"),
+    # Added in 2024.5.1 because of
+    # https://community.home-assistant.io/t/psa-2024-5-upgrade-failure-and-dreame-vacuum-custom-integration/724612
+    "dreame_vacuum": BlockedIntegration(
+        AwesomeVersion("1.0.4"), "crashes Home Assistant"
+    ),
+    # Added in 2024.5.5 because of
+    # https://github.com/sh00t2kill/dolphin-robot/issues/185
+    "mydolphin_plus": BlockedIntegration(
+        AwesomeVersion("1.0.13"), "crashes Home Assistant"
+    ),
+    # Added in 2024.7.2 because of
+    # https://github.com/gcobb321/icloud3/issues/349
+    # Note: Current version 3.0.5.2, the fixed version is a guesstimate,
+    # as no solution is available at time of writing.
+    "icloud3": BlockedIntegration(
+        AwesomeVersion("3.0.5.3"), "prevents recorder from working"
+    ),
+    # Added in 2024.7.2 because of
+    # https://github.com/custom-components/places/issues/289
+    "places": BlockedIntegration(
+        AwesomeVersion("2.7.1"), "prevents recorder from working"
+    ),
+    # Added in 2024.7.2 because of
+    # https://github.com/enkama/hass-variables/issues/120
+    "variable": BlockedIntegration(
+        AwesomeVersion("3.4.4"), "prevents recorder from working"
+    ),
+    # Added in 2025.10.0 because of
+    # https://github.com/frenck/spook/issues/1066
+    "spook": BlockedIntegration(AwesomeVersion("4.0.0"), "breaks the template engine"),
+}
+
+DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(
+    "components"
+)
+DATA_INTEGRATIONS: HassKey[
+    dict[str, Integration | asyncio.Future[Integration | IntegrationNotFound]]
+] = HassKey("integrations")
+DATA_MISSING_PLATFORMS: HassKey[dict[str, bool]] = HassKey("missing_platforms")
+DATA_CUSTOM_COMPONENTS: HassKey[
+    dict[str, Integration] | asyncio.Future[dict[str, Integration]]
+] = HassKey("custom_components")
+DATA_PRELOAD_PLATFORMS: HassKey[list[str]] = HassKey("preload_platforms")
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
 CUSTOM_WARNING = (
@@ -56,10 +145,12 @@ CUSTOM_WARNING = (
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant"
 )
-
-_UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
-
-MAX_LOAD_CONCURRENTLY = 4
+IMPORT_EVENT_LOOP_WARNING = (
+    "We found an integration %s which is configured to "
+    "to import its code in the event loop. This component might "
+    "cause stability problems, be sure to disable it if you "
+    "experience issues with Home Assistant"
+)
 
 MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
 
@@ -120,7 +211,7 @@ class USBMatcherOptional(TypedDict, total=False):
 
 
 class USBMatcher(USBMatcherRequired, USBMatcherOptional):
-    """Matcher for the bluetooth integration."""
+    """Matcher for the USB integration."""
 
 
 @dataclass(slots=True)
@@ -129,6 +220,14 @@ class HomeKitDiscoveredIntegration:
 
     domain: str
     always_discover: bool
+
+
+class ZeroconfMatcher(TypedDict, total=False):
+    """Matcher for zeroconf."""
+
+    domain: str
+    name: str
+    properties: dict[str, str]
 
 
 class Manifest(TypedDict, total=False):
@@ -143,7 +242,7 @@ class Manifest(TypedDict, total=False):
     disabled: str
     domain: str
     integration_type: Literal[
-        "entity", "device", "hardware", "helper", "hub", "service", "system"
+        "entity", "device", "hardware", "helper", "hub", "service", "system", "virtual"
     ]
     dependencies: list[str]
     after_dependencies: list[str]
@@ -161,9 +260,21 @@ class Manifest(TypedDict, total=False):
     usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
     is_built_in: bool
+    overwrites_built_in: bool
     version: str
     codeowners: list[str]
     loggers: list[str]
+    import_executor: bool
+    single_config_entry: bool
+
+
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up the necessary data structures."""
+    _async_mount_config_dir(hass)
+    hass.data[DATA_COMPONENTS] = {}
+    hass.data[DATA_INTEGRATIONS] = {}
+    hass.data[DATA_MISSING_PLATFORMS] = {}
+    hass.data[DATA_PRELOAD_PLATFORMS] = BASE_PRELOAD_PLATFORMS.copy()
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
@@ -177,33 +288,24 @@ def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
     }
 
 
-async def _async_get_custom_components(
-    hass: HomeAssistant,
-) -> dict[str, Integration]:
+def _get_custom_components(hass: HomeAssistant) -> dict[str, Integration]:
     """Return list of custom integrations."""
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode or hass.config.safe_mode:
         return {}
 
     try:
-        import custom_components  # pylint: disable=import-outside-toplevel
+        import custom_components  # noqa: PLC0415
     except ImportError:
         return {}
 
-    def get_sub_directories(paths: list[str]) -> list[pathlib.Path]:
-        """Return all sub directories in a set of paths."""
-        return [
-            entry
-            for path in paths
-            for entry in pathlib.Path(path).iterdir()
-            if entry.is_dir()
-        ]
+    dirs = [
+        entry
+        for path in custom_components.__path__
+        for entry in pathlib.Path(path).iterdir()
+        if entry.is_dir()
+    ]
 
-    dirs = await hass.async_add_executor_job(
-        get_sub_directories, custom_components.__path__
-    )
-
-    integrations = await hass.async_add_executor_job(
-        _resolve_integrations_from_root,
+    integrations = _resolve_integrations_from_root(
         hass,
         custom_components,
         [comp.name for comp in dirs],
@@ -219,20 +321,21 @@ async def async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return cached list of custom integrations."""
-    if (reg_or_evt := hass.data.get(DATA_CUSTOM_COMPONENTS)) is None:
-        evt = hass.data[DATA_CUSTOM_COMPONENTS] = asyncio.Event()
+    comps_or_future = hass.data.get(DATA_CUSTOM_COMPONENTS)
 
-        reg = await _async_get_custom_components(hass)
+    if comps_or_future is None:
+        future = hass.data[DATA_CUSTOM_COMPONENTS] = hass.loop.create_future()
 
-        hass.data[DATA_CUSTOM_COMPONENTS] = reg
-        evt.set()
-        return reg
+        comps = await hass.async_add_executor_job(_get_custom_components, hass)
 
-    if isinstance(reg_or_evt, asyncio.Event):
-        await reg_or_evt.wait()
-        return cast(dict[str, "Integration"], hass.data.get(DATA_CUSTOM_COMPONENTS))
+        hass.data[DATA_CUSTOM_COMPONENTS] = comps
+        future.set_result(comps)
+        return comps
 
-    return cast(dict[str, "Integration"], reg_or_evt)
+    if isinstance(comps_or_future, asyncio.Future):
+        return await comps_or_future
+
+    return comps_or_future
 
 
 async def async_get_config_flows(
@@ -240,9 +343,6 @@ async def async_get_config_flows(
     type_filter: Literal["device", "helper", "hub", "service"] | None = None,
 ) -> set[str]:
     """Return cached list of config flows."""
-    # pylint: disable-next=import-outside-toplevel
-    from .generated.config_flows import FLOWS
-
     integrations = await async_get_custom_components(hass)
     flows: set[str] = set()
 
@@ -253,12 +353,10 @@ async def async_get_config_flows(
             flows.update(type_flows)
 
     flows.update(
-        [
-            integration.domain
-            for integration in integrations.values()
-            if integration.config_flow
-            and (type_filter is None or integration.integration_type == type_filter)
-        ]
+        integration.domain
+        for integration in integrations.values()
+        if integration.config_flow
+        and (type_filter is None or integration.integration_type == type_filter)
     )
 
     return flows
@@ -347,6 +445,10 @@ async def async_get_integration_descriptions(
             "integration_type": integration.integration_type,
             "iot_class": integration.iot_class,
             "name": integration.name,
+            "single_config_entry": integration.manifest.get(
+                "single_config_entry", False
+            ),
+            "overwrites_built_in": integration.overwrites_built_in,
         }
         custom_flows[integration_key][integration.domain] = metadata
 
@@ -367,7 +469,7 @@ async def async_get_application_credentials(hass: HomeAssistant) -> list[str]:
     ]
 
 
-def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
+def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> ZeroconfMatcher:
     """Handle backwards compat with zeroconf matchers."""
     entry_without_type: dict[str, Any] = entry.copy()
     del entry_without_type["type"]
@@ -389,23 +491,21 @@ def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
             else:
                 prop_dict = entry_without_type["properties"]
             prop_dict[moved_prop] = value.lower()
-    return entry_without_type
+    return cast(ZeroconfMatcher, entry_without_type)
 
 
 async def async_get_zeroconf(
     hass: HomeAssistant,
-) -> dict[str, list[dict[str, str | dict[str, str]]]]:
+) -> dict[str, list[ZeroconfMatcher]]:
     """Return cached list of zeroconf types."""
-    zeroconf: dict[
-        str, list[dict[str, str | dict[str, str]]]
-    ] = ZEROCONF.copy()  # type: ignore[assignment]
+    zeroconf: dict[str, list[ZeroconfMatcher]] = ZEROCONF.copy()  # type: ignore[assignment]
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.zeroconf:
             continue
         for entry in integration.zeroconf:
-            data: dict[str, str | dict[str, str]] = {"domain": integration.domain}
+            data: ZeroconfMatcher = {"domain": integration.domain}
             if isinstance(entry, dict):
                 typ = entry["type"]
                 data.update(async_process_zeroconf_match_dict(entry))
@@ -541,6 +641,15 @@ async def async_get_mqtt(hass: HomeAssistant) -> dict[str, list[str]]:
     return mqtt
 
 
+@callback
+def async_register_preload_platform(hass: HomeAssistant, platform_name: str) -> None:
+    """Register a platform to be preloaded."""
+    preload_platforms = hass.data[DATA_PRELOAD_PLATFORMS]
+    if platform_name not in preload_platforms:
+        preload_platforms.append(platform_name)
+
+
+@final  # Final to allow direct checking of the type instead of using isinstance
 class Integration:
     """An integration in Home Assistant."""
 
@@ -563,17 +672,26 @@ class Integration:
                 )
                 continue
 
+            file_path = manifest_path.parent
+            # Avoid the listdir for virtual integrations
+            # as they cannot have any platforms
+            is_virtual = manifest.get("integration_type") == "virtual"
             integration = cls(
                 hass,
                 f"{root_module.__name__}.{domain}",
-                manifest_path.parent,
+                file_path,
                 manifest,
+                None if is_virtual else set(os.listdir(file_path)),
             )
+
+            if not integration.import_executor:
+                _LOGGER.warning(IMPORT_EVENT_LOOP_WARNING, integration.domain)
 
             if integration.is_built_in:
                 return integration
 
             _LOGGER.warning(CUSTOM_WARNING, integration.domain)
+
             if integration.version is None:
                 _LOGGER.error(
                     (
@@ -610,6 +728,21 @@ class Integration:
                     integration.version,
                 )
                 return None
+
+            if blocked := BLOCKED_CUSTOM_INTEGRATIONS.get(integration.domain):
+                if _version_blocked(integration.version, blocked):
+                    _LOGGER.error(
+                        (
+                            "Version %s of custom integration '%s' %s and was blocked "
+                            "from loading, please %s"
+                        ),
+                        integration.version,
+                        integration.domain,
+                        blocked.reason,
+                        async_suggest_report_issue(None, integration=integration),
+                    )
+                    return None
+
             return integration
 
         return None
@@ -620,6 +753,7 @@ class Integration:
         pkg_path: str,
         file_path: pathlib.Path,
         manifest: Manifest,
+        top_level_files: set[str] | None = None,
     ) -> None:
         """Initialize an integration."""
         self.hass = hass
@@ -627,82 +761,124 @@ class Integration:
         self.file_path = file_path
         self.manifest = manifest
         manifest["is_built_in"] = self.is_built_in
+        manifest["overwrites_built_in"] = self.overwrites_built_in
 
         if self.dependencies:
-            self._all_dependencies_resolved: bool | None = None
-            self._all_dependencies: set[str] | None = None
+            self._all_dependencies: set[str] | Exception | None = None
         else:
-            self._all_dependencies_resolved = True
             self._all_dependencies = set()
 
+        self._platforms_to_preload = hass.data[DATA_PRELOAD_PLATFORMS]
+        self._component_future: asyncio.Future[ComponentProtocol] | None = None
+        self._import_futures: dict[str, asyncio.Future[ModuleType]] = {}
+        self._cache = hass.data[DATA_COMPONENTS]
+        self._missing_platforms_cache = hass.data[DATA_MISSING_PLATFORMS]
+        self._top_level_files = top_level_files or set()
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
-    @property
+    @cached_property
+    def manifest_json_fragment(self) -> json_fragment:
+        """Return manifest as a JSON fragment."""
+        return json_fragment(json_bytes(self.manifest))
+
+    @cached_property
     def name(self) -> str:
         """Return name."""
         return self.manifest["name"]
 
-    @property
+    @cached_property
     def disabled(self) -> str | None:
         """Return reason integration is disabled."""
         return self.manifest.get("disabled")
 
-    @property
+    @cached_property
     def domain(self) -> str:
         """Return domain."""
         return self.manifest["domain"]
 
-    @property
+    @cached_property
     def dependencies(self) -> list[str]:
         """Return dependencies."""
         return self.manifest.get("dependencies", [])
 
-    @property
+    @cached_property
     def after_dependencies(self) -> list[str]:
         """Return after_dependencies."""
         return self.manifest.get("after_dependencies", [])
 
-    @property
+    @cached_property
     def requirements(self) -> list[str]:
         """Return requirements."""
         return self.manifest.get("requirements", [])
 
-    @property
+    @cached_property
     def config_flow(self) -> bool:
         """Return config_flow."""
         return self.manifest.get("config_flow") or False
 
-    @property
+    @cached_property
     def documentation(self) -> str | None:
         """Return documentation."""
         return self.manifest.get("documentation")
 
-    @property
+    @cached_property
     def issue_tracker(self) -> str | None:
         """Return issue tracker link."""
         return self.manifest.get("issue_tracker")
 
-    @property
+    @cached_property
     def loggers(self) -> list[str] | None:
         """Return list of loggers used by the integration."""
         return self.manifest.get("loggers")
 
-    @property
+    @cached_property
     def quality_scale(self) -> str | None:
         """Return Integration Quality Scale."""
+        # Custom integrations default to "custom" quality scale.
+        if not self.is_built_in or self.overwrites_built_in:
+            return "custom"
         return self.manifest.get("quality_scale")
 
-    @property
+    @cached_property
     def iot_class(self) -> str | None:
         """Return the integration IoT Class."""
         return self.manifest.get("iot_class")
 
-    @property
+    @cached_property
     def integration_type(
         self,
-    ) -> Literal["entity", "device", "hardware", "helper", "hub", "service", "system"]:
+    ) -> Literal[
+        "entity", "device", "hardware", "helper", "hub", "service", "system", "virtual"
+    ]:
         """Return the integration type."""
         return self.manifest.get("integration_type", "hub")
+
+    @cached_property
+    def import_executor(self) -> bool:
+        """Import integration in the executor."""
+        # If the integration does not explicitly set import_executor, we default to
+        # True.
+        return self.manifest.get("import_executor", True)
+
+    @cached_property
+    def has_conditions(self) -> bool:
+        """Return if the integration has conditions."""
+        return "conditions.yaml" in self._top_level_files
+
+    @cached_property
+    def has_services(self) -> bool:
+        """Return if the integration has services."""
+        return "services.yaml" in self._top_level_files
+
+    @cached_property
+    def has_translations(self) -> bool:
+        """Return if the integration has translations."""
+        return "translations" in self._top_level_files
+
+    @cached_property
+    def has_triggers(self) -> bool:
+        """Return if the integration has triggers."""
+        return "triggers.yaml" in self._top_level_files
 
     @property
     def mqtt(self) -> list[str] | None:
@@ -745,94 +921,359 @@ class Integration:
         return self.pkg_path.startswith(PACKAGE_BUILTIN)
 
     @property
+    def overwrites_built_in(self) -> bool:
+        """Return if package overwrites a built-in integration."""
+        if self.is_built_in:
+            return False
+        core_comp_path = (
+            pathlib.Path(__file__).parent / "components" / self.domain / "manifest.json"
+        )
+        return core_comp_path.is_file()
+
+    @property
     def version(self) -> AwesomeVersion | None:
         """Return the version of the integration."""
         if "version" not in self.manifest:
             return None
         return AwesomeVersion(self.manifest["version"])
 
+    @cached_property
+    def single_config_entry(self) -> bool:
+        """Return if the integration supports a single config entry only."""
+        return self.manifest.get("single_config_entry", False)
+
     @property
     def all_dependencies(self) -> set[str]:
         """Return all dependencies including sub-dependencies."""
         if self._all_dependencies is None:
             raise RuntimeError("Dependencies not resolved!")
+        if isinstance(self._all_dependencies, Exception):
+            raise self._all_dependencies
 
         return self._all_dependencies
 
     @property
     def all_dependencies_resolved(self) -> bool:
         """Return if all dependencies have been resolved."""
-        return self._all_dependencies_resolved is not None
+        return self._all_dependencies is not None
 
-    async def resolve_dependencies(self) -> bool:
+    async def resolve_dependencies(self) -> set[str] | None:
         """Resolve all dependencies."""
-        if self._all_dependencies_resolved is not None:
-            return self._all_dependencies_resolved
+        if self._all_dependencies is not None:
+            if isinstance(self._all_dependencies, Exception):
+                return None
+            return self._all_dependencies
 
+        result = await resolve_integrations_dependencies(self.hass, (self,))
+        return result.get(self.domain)
+
+    async def async_get_component(self) -> ComponentProtocol:
+        """Return the component.
+
+        This method will load the component if it's not already loaded
+        and will check if import_executor is set and load it in the executor,
+        otherwise it will load it in the event loop.
+        """
+        domain = self.domain
+        if domain in (cache := self._cache):
+            return cache[domain]
+
+        if self._component_future:
+            return await self._component_future
+
+        if debug := _LOGGER.isEnabledFor(logging.DEBUG):
+            start = time.perf_counter()
+
+        # Some integrations fail on import because they call functions incorrectly.
+        # So we do it before validating config to catch these errors.
+        load_executor = self.import_executor and (
+            self.pkg_path not in sys.modules
+            or (self.config_flow and f"{self.pkg_path}.config_flow" not in sys.modules)
+        )
+        if not load_executor:
+            comp = self._get_component()
+            if debug:
+                _LOGGER.debug(
+                    "Component %s import took %.3f seconds (loaded_executor=False)",
+                    self.domain,
+                    time.perf_counter() - start,
+                )
+            return comp
+
+        self._component_future = self.hass.loop.create_future()
         try:
-            dependencies = await _async_component_dependencies(
-                self.hass, self.domain, self, set(), set()
-            )
-            dependencies.discard(self.domain)
-            self._all_dependencies = dependencies
-            self._all_dependencies_resolved = True
-        except IntegrationNotFound as err:
-            _LOGGER.error(
-                (
-                    "Unable to resolve dependencies for %s:  we are unable to resolve"
-                    " (sub)dependency %s"
-                ),
-                self.domain,
-                err.domain,
-            )
-            self._all_dependencies_resolved = False
-        except CircularDependency as err:
-            _LOGGER.error(
-                (
-                    "Unable to resolve dependencies for %s:  it contains a circular"
-                    " dependency: %s -> %s"
-                ),
-                self.domain,
-                err.from_domain,
-                err.to_domain,
-            )
-            self._all_dependencies_resolved = False
+            try:
+                comp = await self.hass.async_add_import_executor_job(
+                    self._get_component, True
+                )
+            except ModuleNotFoundError:
+                raise
+            except ImportError as ex:
+                load_executor = False
+                _LOGGER.debug(
+                    "Failed to import %s in executor", self.domain, exc_info=ex
+                )
+                # If importing in the executor deadlocks because there is a circular
+                # dependency, we fall back to the event loop.
+                comp = self._get_component()
+            self._component_future.set_result(comp)
+        except BaseException as ex:
+            self._component_future.set_exception(ex)
+            with suppress(BaseException):
+                # Set the exception retrieved flag on the future since
+                # it will never be retrieved unless there
+                # are concurrent calls to async_get_component
+                self._component_future.result()
+            raise
+        finally:
+            self._component_future = None
 
-        return self._all_dependencies_resolved
+        if debug:
+            _LOGGER.debug(
+                "Component %s import took %.3f seconds (loaded_executor=%s)",
+                self.domain,
+                time.perf_counter() - start,
+                load_executor,
+            )
+
+        return comp
 
     def get_component(self) -> ComponentProtocol:
-        """Return the component."""
-        cache: dict[str, ComponentProtocol] = self.hass.data.setdefault(
-            DATA_COMPONENTS, {}
-        )
-        if self.domain in cache:
-            return cache[self.domain]
+        """Return the component.
 
+        This method must be thread-safe as it's called from the executor
+        and the event loop.
+
+        This method checks the cache and if the component is not loaded
+        it will load it in the executor if import_executor is set, otherwise
+        it will load it in the event loop.
+
+        This is mostly a thin wrapper around importlib.import_module
+        with a dict cache which is thread-safe since importlib has
+        appropriate locks.
+        """
+        domain = self.domain
+        if domain in (cache := self._cache):
+            return cache[domain]
+        return self._get_component()
+
+    def _get_component(self, preload_platforms: bool = False) -> ComponentProtocol:
+        """Return the component."""
+        cache = self._cache
+        domain = self.domain
         try:
-            cache[self.domain] = cast(
+            cache[domain] = cast(
                 ComponentProtocol, importlib.import_module(self.pkg_path)
             )
         except ImportError:
             raise
+        except RuntimeError as err:
+            # _DeadlockError inherits from RuntimeError
+            raise ImportError(f"RuntimeError importing {self.pkg_path}: {err}") from err
         except Exception as err:
             _LOGGER.exception(
                 "Unexpected exception importing component %s", self.pkg_path
             )
             raise ImportError(f"Exception importing {self.pkg_path}") from err
 
-        return cache[self.domain]
+        if preload_platforms:
+            for platform_name in self.platforms_exists(self._platforms_to_preload):
+                with suppress(ImportError):
+                    self.get_platform(platform_name)
+
+        return cache[domain]
+
+    def _load_platforms(self, platform_names: Iterable[str]) -> dict[str, ModuleType]:
+        """Load platforms for an integration."""
+        return {
+            platform_name: self._load_platform(platform_name)
+            for platform_name in platform_names
+        }
+
+    async def async_get_platform(self, platform_name: str) -> ModuleType:
+        """Return a platform for an integration."""
+        # Fast path for a single platform when it is already cached.
+        # This is the common case.
+        if platform := self._cache.get(f"{self.domain}.{platform_name}"):
+            return platform  # type: ignore[return-value]
+        platforms = await self.async_get_platforms((platform_name,))
+        return platforms[platform_name]
+
+    async def async_get_platforms(
+        self, platform_names: Iterable[Platform | str]
+    ) -> dict[str, ModuleType]:
+        """Return a platforms for an integration."""
+        domain = self.domain
+        platforms: dict[str, ModuleType] = {}
+
+        load_executor_platforms: list[str] = []
+        load_event_loop_platforms: list[str] = []
+        in_progress_imports: dict[str, asyncio.Future[ModuleType]] = {}
+        import_futures: list[tuple[str, asyncio.Future[ModuleType]]] = []
+
+        for platform_name in platform_names:
+            if platform := self._get_platform_cached_or_raise(platform_name):
+                platforms[platform_name] = platform
+                continue
+
+            # Another call to async_get_platforms is already importing this platform
+            if future := self._import_futures.get(platform_name):
+                in_progress_imports[platform_name] = future
+                continue
+
+            full_name = f"{domain}.{platform_name}"
+            if (
+                self.import_executor
+                and full_name not in self.hass.config.components
+                and f"{self.pkg_path}.{platform_name}" not in sys.modules
+            ):
+                load_executor_platforms.append(platform_name)
+            else:
+                load_event_loop_platforms.append(platform_name)
+
+            import_future = self.hass.loop.create_future()
+            self._import_futures[platform_name] = import_future
+            import_futures.append((platform_name, import_future))
+
+        if load_executor_platforms or load_event_loop_platforms:
+            if debug := _LOGGER.isEnabledFor(logging.DEBUG):
+                start = time.perf_counter()
+
+            try:
+                if load_executor_platforms:
+                    try:
+                        platforms.update(
+                            await self.hass.async_add_import_executor_job(
+                                self._load_platforms, platform_names
+                            )
+                        )
+                    except ModuleNotFoundError:
+                        raise
+                    except ImportError as ex:
+                        _LOGGER.debug(
+                            "Failed to import %s platforms %s in executor",
+                            domain,
+                            load_executor_platforms,
+                            exc_info=ex,
+                        )
+                        # If importing in the executor deadlocks because there is a circular
+                        # dependency, we fall back to the event loop.
+                        load_event_loop_platforms.extend(load_executor_platforms)
+
+                if load_event_loop_platforms:
+                    platforms.update(self._load_platforms(platform_names))
+
+                for platform_name, import_future in import_futures:
+                    import_future.set_result(platforms[platform_name])
+
+            except BaseException as ex:
+                for _, import_future in import_futures:
+                    import_future.set_exception(ex)
+                    with suppress(BaseException):
+                        # Set the exception retrieved flag on the future since
+                        # it will never be retrieved unless there
+                        # are concurrent calls to async_get_platforms
+                        import_future.result()
+                raise
+
+            finally:
+                for platform_name, _ in import_futures:
+                    self._import_futures.pop(platform_name)
+
+                if debug:
+                    _LOGGER.debug(
+                        "Importing platforms for %s executor=%s loop=%s took %.2fs",
+                        domain,
+                        load_executor_platforms,
+                        load_event_loop_platforms,
+                        time.perf_counter() - start,
+                    )
+
+        if in_progress_imports:
+            for platform_name, future in in_progress_imports.items():
+                platforms[platform_name] = await future
+
+        return platforms
+
+    def _get_platform_cached_or_raise(self, platform_name: str) -> ModuleType | None:
+        """Return a platform for an integration from cache."""
+        full_name = f"{self.domain}.{platform_name}"
+        if full_name in self._cache:
+            # the cache is either a ModuleType or a ComponentProtocol
+            # but we only care about the ModuleType here
+            return self._cache[full_name]  # type: ignore[return-value]
+        if full_name in self._missing_platforms_cache:
+            raise ModuleNotFoundError(
+                f"Platform {full_name} not found",
+                name=f"{self.pkg_path}.{platform_name}",
+            )
+        return None
+
+    def platforms_are_loaded(self, platform_names: Iterable[str]) -> bool:
+        """Check if a platforms are loaded for an integration."""
+        return all(
+            f"{self.domain}.{platform_name}" in self._cache
+            for platform_name in platform_names
+        )
+
+    def get_platform_cached(self, platform_name: str) -> ModuleType | None:
+        """Return a platform for an integration from cache."""
+        return self._cache.get(f"{self.domain}.{platform_name}")  # type: ignore[return-value]
 
     def get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        cache: dict[str, ModuleType] = self.hass.data.setdefault(DATA_COMPONENTS, {})
-        full_name = f"{self.domain}.{platform_name}"
-        if full_name in cache:
-            return cache[full_name]
+        if platform := self._get_platform_cached_or_raise(platform_name):
+            return platform
+        return self._load_platform(platform_name)
 
+    def platforms_exists(self, platform_names: Iterable[str]) -> list[str]:
+        """Check if a platforms exists for an integration.
+
+        This method is thread-safe and can be called from the executor
+        or event loop without doing blocking I/O.
+        """
+        files = self._top_level_files
+        domain = self.domain
+        existing_platforms: list[str] = []
+        missing_platforms = self._missing_platforms_cache
+        for platform_name in platform_names:
+            full_name = f"{domain}.{platform_name}"
+            if full_name not in missing_platforms and (
+                f"{platform_name}.py" in files or platform_name in files
+            ):
+                existing_platforms.append(platform_name)
+                continue
+            missing_platforms[full_name] = True
+
+        return existing_platforms
+
+    def _load_platform(self, platform_name: str) -> ModuleType:
+        """Load a platform for an integration.
+
+        This method must be thread-safe as it's called from the executor
+        and the event loop.
+
+        This is mostly a thin wrapper around importlib.import_module
+        with a dict cache which is thread-safe since importlib has
+        appropriate locks.
+        """
+        full_name = f"{self.domain}.{platform_name}"
+        cache = self.hass.data[DATA_COMPONENTS]
         try:
             cache[full_name] = self._import_platform(platform_name)
+        except ModuleNotFoundError:
+            if self.domain in cache:
+                # If the domain is loaded, cache that the platform
+                # does not exist so we do not try to load it again
+                self._missing_platforms_cache[full_name] = True
+            raise
         except ImportError:
             raise
+        except RuntimeError as err:
+            # _DeadlockError inherits from RuntimeError
+            raise ImportError(
+                f"RuntimeError importing {self.pkg_path}.{platform_name}: {err}"
+            ) from err
         except Exception as err:
             _LOGGER.exception(
                 "Unexpected exception importing platform %s.%s",
@@ -843,10 +1284,14 @@ class Integration:
                 f"Exception importing {self.pkg_path}.{platform_name}"
             ) from err
 
-        return cache[full_name]
+        return cast(ModuleType, cache[full_name])
 
     def _import_platform(self, platform_name: str) -> ModuleType:
-        """Import the platform."""
+        """Import the platform.
+
+        This method must be thread-safe as it's called from the executor
+        and the event loop.
+        """
         return importlib.import_module(f"{self.pkg_path}.{platform_name}")
 
     def __repr__(self) -> str:
@@ -854,15 +1299,29 @@ class Integration:
         return f"<Integration {self.domain}: {self.pkg_path}>"
 
 
+def _version_blocked(
+    integration_version: AwesomeVersion,
+    blocked_integration: BlockedIntegration,
+) -> bool:
+    """Return True if the integration version is blocked."""
+    if blocked_integration.lowest_good_version is None:
+        return True
+
+    if integration_version >= blocked_integration.lowest_good_version:
+        return False
+
+    return True
+
+
 def _resolve_integrations_from_root(
-    hass: HomeAssistant, root_module: ModuleType, domains: list[str]
+    hass: HomeAssistant, root_module: ModuleType, domains: Iterable[str]
 ) -> dict[str, Integration]:
     """Resolve multiple integrations from root."""
     integrations: dict[str, Integration] = {}
     for domain in domains:
         try:
             integration = Integration.resolve_from_root(hass, root_module, domain)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error loading integration: %s", domain)
         else:
             if integration:
@@ -870,8 +1329,25 @@ def _resolve_integrations_from_root(
     return integrations
 
 
+@callback
+def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integration:
+    """Get an integration which is already loaded.
+
+    Raises IntegrationNotLoaded if the integration is not loaded.
+    """
+    cache = hass.data[DATA_INTEGRATIONS]
+    int_or_fut = cache.get(domain)
+    # Integration is never subclassed, so we can check for type
+    if type(int_or_fut) is Integration:
+        return int_or_fut
+    raise IntegrationNotLoaded(domain)
+
+
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get integration."""
+    cache = hass.data[DATA_INTEGRATIONS]
+    if type(int_or_fut := cache.get(domain)) is Integration:
+        return int_or_fut
     integrations_or_excs = await async_get_integrations(hass, [domain])
     int_or_exc = integrations_or_excs[domain]
     if isinstance(int_or_exc, Integration):
@@ -883,38 +1359,33 @@ async def async_get_integrations(
     hass: HomeAssistant, domains: Iterable[str]
 ) -> dict[str, Integration | Exception]:
     """Get integrations."""
-    if (cache := hass.data.get(DATA_INTEGRATIONS)) is None:
-        if not _async_mount_config_dir(hass):
-            return {domain: IntegrationNotFound(domain) for domain in domains}
-        cache = hass.data[DATA_INTEGRATIONS] = {}
-
+    cache = hass.data[DATA_INTEGRATIONS]
     results: dict[str, Integration | Exception] = {}
-    needed: dict[str, asyncio.Future[None]] = {}
-    in_progress: dict[str, asyncio.Future[None]] = {}
-    if TYPE_CHECKING:
-        cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
+    needed: dict[str, asyncio.Future[Integration | IntegrationNotFound]] = {}
+    in_progress: dict[str, asyncio.Future[Integration | IntegrationNotFound]] = {}
     for domain in domains:
-        int_or_fut = cache.get(domain, _UNDEF)
+        int_or_fut = cache.get(domain)
         # Integration is never subclassed, so we can check for type
-        if type(int_or_fut) is Integration:  # pylint: disable=unidiomatic-typecheck
+        if type(int_or_fut) is Integration:
             results[domain] = int_or_fut
-        elif int_or_fut is not _UNDEF:
-            in_progress[domain] = cast(asyncio.Future[None], int_or_fut)
+        elif int_or_fut:
+            if TYPE_CHECKING:
+                assert isinstance(int_or_fut, asyncio.Future)
+            in_progress[domain] = int_or_fut
         elif "." in domain:
             results[domain] = ValueError(f"Invalid domain {domain}")
         else:
             needed[domain] = cache[domain] = hass.loop.create_future()
 
     if in_progress:
-        await asyncio.gather(*in_progress.values())
-        for domain in in_progress:
-            # When we have waited and it's _UNDEF, it doesn't exist
-            # We don't cache that it doesn't exist, or else people can't fix it
-            # and then restart, because their config will never be valid.
-            if (int_or_fut := cache.get(domain, _UNDEF)) is _UNDEF:
-                results[domain] = IntegrationNotFound(domain)
-            else:
-                results[domain] = cast(Integration, int_or_fut)
+        await asyncio.wait(in_progress.values())
+        # Here we retrieve the results we waited for
+        # instead of reading them from the cache since
+        # reading from the cache will have a race if
+        # the integration gets removed from the cache
+        # because it was not found.
+        for domain, future in in_progress.items():
+            results[domain] = future.result()
 
     if not needed:
         return results
@@ -926,7 +1397,7 @@ async def async_get_integrations(
     for domain, future in needed.items():
         if integration := custom.get(domain):
             results[domain] = cache[domain] = integration
-            future.set_result(None)
+            future.set_result(integration)
 
     for domain in results:
         if domain in needed:
@@ -934,26 +1405,217 @@ async def async_get_integrations(
 
     # Now the rest use resolve_from_root
     if needed:
-        from . import components  # pylint: disable=import-outside-toplevel
+        from . import components  # noqa: PLC0415
 
         integrations = await hass.async_add_executor_job(
-            _resolve_integrations_from_root, hass, components, list(needed)
+            _resolve_integrations_from_root, hass, components, needed
         )
         for domain, future in needed.items():
-            int_or_exc = integrations.get(domain)
-            if not int_or_exc:
-                cache.pop(domain)
-                results[domain] = IntegrationNotFound(domain)
-            elif isinstance(int_or_exc, Exception):
-                cache.pop(domain)
-                exc = IntegrationNotFound(domain)
-                exc.__cause__ = int_or_exc
-                results[domain] = exc
+            if integration := integrations.get(domain):
+                results[domain] = cache[domain] = integration
+                future.set_result(integration)
             else:
-                results[domain] = cache[domain] = int_or_exc
-            future.set_result(None)
+                # We don't cache that it doesn't exist as configuration
+                # validation that relies on integrations being loaded
+                # would be unfixable. For example if a custom integration
+                # was temporarily removed.
+                # This allows restoring a missing integration to fix the
+                # validation error so the config validations checks do not
+                # block restarting.
+                del cache[domain]
+                exc = IntegrationNotFound(domain)
+                results[domain] = exc
+                # We don't use set_exception because
+                # we expect there will be cases where
+                # the future exception is never retrieved
+                future.set_result(exc)
 
     return results
+
+
+class _ResolveDependenciesCacheProtocol(Protocol):
+    def get(self, itg: Integration) -> set[str] | Exception | None: ...
+
+    def __setitem__(
+        self, itg: Integration, all_dependencies: set[str] | Exception
+    ) -> None: ...
+
+
+class _ResolveDependenciesCache(_ResolveDependenciesCacheProtocol):
+    """Cache for resolve_integrations_dependencies."""
+
+    def get(self, itg: Integration) -> set[str] | Exception | None:
+        return itg._all_dependencies  # noqa: SLF001
+
+    def __setitem__(
+        self, itg: Integration, all_dependencies: set[str] | Exception
+    ) -> None:
+        itg._all_dependencies = all_dependencies  # noqa: SLF001
+
+
+async def resolve_integrations_dependencies(
+    hass: HomeAssistant, integrations: Iterable[Integration]
+) -> dict[str, set[str]]:
+    """Resolve all dependencies for integrations.
+
+    Detects circular dependencies and missing integrations.
+    """
+    return await _resolve_integrations_dependencies(
+        hass,
+        "resolve dependencies",
+        integrations,
+        cache=_ResolveDependenciesCache(),
+        ignore_exceptions=False,
+    )
+
+
+async def resolve_integrations_after_dependencies(
+    hass: HomeAssistant,
+    integrations: Iterable[Integration],
+    possible_after_dependencies: set[str] | None = None,
+    *,
+    ignore_exceptions: bool = False,
+) -> dict[str, set[str]]:
+    """Resolve all dependencies, including after_dependencies, for integrations.
+
+    Detects circular dependencies and missing integrations.
+    """
+    return await _resolve_integrations_dependencies(
+        hass,
+        "resolve (after) dependencies",
+        integrations,
+        cache={},
+        possible_after_dependencies=possible_after_dependencies,
+        ignore_exceptions=ignore_exceptions,
+    )
+
+
+async def _resolve_integrations_dependencies(
+    hass: HomeAssistant,
+    name: str,
+    integrations: Iterable[Integration],
+    *,
+    cache: _ResolveDependenciesCacheProtocol,
+    possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+    ignore_exceptions: bool,
+) -> dict[str, set[str]]:
+    """Resolve all dependencies, possibly including after_dependencies, for integrations.
+
+    Detects circular dependencies and missing integrations.
+    """
+
+    async def _resolve_deps_catch_exceptions(itg: Integration) -> set[str] | None:
+        try:
+            return await _resolve_integration_dependencies(
+                itg,
+                cache=cache,
+                possible_after_dependencies=possible_after_dependencies,
+                ignore_exceptions=ignore_exceptions,
+            )
+        except Exception as exc:  # noqa: BLE001
+            _LOGGER.error("Unable to %s for %s: %s", name, itg.domain, exc)
+            return None
+
+    resolve_dependencies_tasks = {
+        itg.domain: create_eager_task(
+            _resolve_deps_catch_exceptions(itg),
+            name=f"{name} {itg.domain}",
+            loop=hass.loop,
+        )
+        for itg in integrations
+    }
+
+    result = await asyncio.gather(*resolve_dependencies_tasks.values())
+
+    return {
+        domain: deps
+        for domain, deps in zip(resolve_dependencies_tasks, result, strict=True)
+        if deps is not None
+    }
+
+
+async def _resolve_integration_dependencies(
+    itg: Integration,
+    *,
+    cache: _ResolveDependenciesCacheProtocol,
+    possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+    ignore_exceptions: bool = False,
+) -> set[str]:
+    """Recursively resolve all dependencies.
+
+    Uses `cache` to cache the results.
+
+    If `possible_after_dependencies` is not UNDEFINED,
+    listed after dependencies are also considered.
+    If `possible_after_dependencies` is None,
+    all the possible after dependencies are considered.
+
+    If `ignore_exceptions` is True, exceptions are caught and ignored
+    and the normal resolution algorithm continues.
+    Otherwise, exceptions are raised.
+    """
+    resolved = cache
+    resolving: set[str] = set()
+
+    async def resolve_dependencies_impl(itg: Integration) -> set[str]:
+        domain = itg.domain
+
+        # If it's already resolved, no point doing it again.
+        if (result := resolved.get(itg)) is not None:
+            if isinstance(result, Exception):
+                raise result
+            return result
+
+        # If we are already resolving it, we have a circular dependency.
+        if domain in resolving:
+            if ignore_exceptions:
+                resolved[itg] = set()
+                return set()
+            exc = CircularDependency([domain])
+            resolved[itg] = exc
+            raise exc
+
+        resolving.add(domain)
+
+        dependencies_domains = set(itg.dependencies)
+        if possible_after_dependencies is not UNDEFINED:
+            if possible_after_dependencies is None:
+                after_dependencies: Iterable[str] = itg.after_dependencies
+            else:
+                after_dependencies = (
+                    set(itg.after_dependencies) & possible_after_dependencies
+                )
+            dependencies_domains.update(after_dependencies)
+        dependencies = await async_get_integrations(itg.hass, dependencies_domains)
+
+        all_dependencies: set[str] = set()
+        for dep_domain, dep_integration in dependencies.items():
+            if isinstance(dep_integration, Exception):
+                if ignore_exceptions:
+                    continue
+                resolved[itg] = dep_integration
+                raise dep_integration
+
+            all_dependencies.add(dep_domain)
+
+            try:
+                dep_dependencies = await resolve_dependencies_impl(dep_integration)
+            except CircularDependency as exc:
+                exc.extend_cycle(domain)
+                resolved[itg] = exc
+                raise
+            except Exception as exc:
+                resolved[itg] = exc
+                raise
+
+            all_dependencies.update(dep_dependencies)
+
+        resolving.remove(domain)
+
+        resolved[itg] = all_dependencies
+        return all_dependencies
+
+    return await resolve_dependencies_impl(itg)
 
 
 class LoaderError(Exception):
@@ -969,198 +1631,141 @@ class IntegrationNotFound(LoaderError):
         self.domain = domain
 
 
+class IntegrationNotLoaded(LoaderError):
+    """Raised when a component is not loaded."""
+
+    def __init__(self, domain: str) -> None:
+        """Initialize a component not found error."""
+        super().__init__(f"Integration '{domain}' not loaded.")
+        self.domain = domain
+
+
 class CircularDependency(LoaderError):
     """Raised when a circular dependency is found when resolving components."""
 
-    def __init__(self, from_domain: str, to_domain: str) -> None:
+    def __init__(self, domain_cycle: list[str]) -> None:
         """Initialize circular dependency error."""
-        super().__init__(f"Circular dependency detected: {from_domain} -> {to_domain}.")
-        self.from_domain = from_domain
-        self.to_domain = to_domain
+        super().__init__("Circular dependency detected", domain_cycle)
+
+    def extend_cycle(self, domain: str) -> None:
+        """Extend the cycle with the domain."""
+        self.args[1].insert(0, domain)
 
 
-def _load_file(
-    hass: HomeAssistant, comp_or_platform: str, base_paths: list[str]
-) -> ComponentProtocol | None:
-    """Try to load specified file.
+def bind_hass[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
+    """Decorate function to indicate that first argument is hass.
 
-    Looks in config dir first, then built-in components.
-    Only returns it if also found to be valid.
-    Async friendly.
+    The use of this decorator is discouraged, and it should not be used
+    for new functions.
     """
-    with suppress(KeyError):
-        return hass.data[DATA_COMPONENTS][  # type: ignore[no-any-return]
-            comp_or_platform
-        ]
-
-    if (cache := hass.data.get(DATA_COMPONENTS)) is None:
-        if not _async_mount_config_dir(hass):
-            return None
-        cache = hass.data[DATA_COMPONENTS] = {}
-
-    for path in (f"{base}.{comp_or_platform}" for base in base_paths):
-        try:
-            module = importlib.import_module(path)
-
-            # In Python 3 you can import files from directories that do not
-            # contain the file __init__.py. A directory is a valid module if
-            # it contains a file with the .py extension. In this case Python
-            # will succeed in importing the directory as a module and call it
-            # a namespace. We do not care about namespaces.
-            # This prevents that when only
-            # custom_components/switch/some_platform.py exists,
-            # the import custom_components.switch would succeed.
-            # __file__ was unset for namespaces before Python 3.7
-            if getattr(module, "__file__", None) is None:
-                continue
-
-            cache[comp_or_platform] = module
-
-            return cast(ComponentProtocol, module)
-
-        except ImportError as err:
-            # This error happens if for example custom_components/switch
-            # exists and we try to load switch.demo.
-            # Ignore errors for custom_components, custom_components.switch
-            # and custom_components.switch.demo.
-            white_listed_errors = []
-            parts = []
-            for part in path.split("."):
-                parts.append(part)
-                white_listed_errors.append(f"No module named '{'.'.join(parts)}'")
-
-            if str(err) not in white_listed_errors:
-                _LOGGER.exception(
-                    "Error loading %s. Make sure all dependencies are installed", path
-                )
-
-    return None
-
-
-class ModuleWrapper:
-    """Class to wrap a Python module and auto fill in hass argument."""
-
-    def __init__(self, hass: HomeAssistant, module: ComponentProtocol) -> None:
-        """Initialize the module wrapper."""
-        self._hass = hass
-        self._module = module
-
-    def __getattr__(self, attr: str) -> Any:
-        """Fetch an attribute."""
-        value = getattr(self._module, attr)
-
-        if hasattr(value, "__bind_hass"):
-            value = ft.partial(value, self._hass)
-
-        setattr(self, attr, value)
-        return value
-
-
-class Components:
-    """Helper to load components."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the Components class."""
-        self._hass = hass
-
-    def __getattr__(self, comp_name: str) -> ModuleWrapper:
-        """Fetch a component."""
-        # Test integration cache
-        integration = self._hass.data.get(DATA_INTEGRATIONS, {}).get(comp_name)
-
-        if isinstance(integration, Integration):
-            component: ComponentProtocol | None = integration.get_component()
-        else:
-            # Fallback to importing old-school
-            component = _load_file(self._hass, comp_name, _lookup_path(self._hass))
-
-        if component is None:
-            raise ImportError(f"Unable to load {comp_name}")
-
-        wrapped = ModuleWrapper(self._hass, component)
-        setattr(self, comp_name, wrapped)
-        return wrapped
-
-
-class Helpers:
-    """Helper to load helpers."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the Helpers class."""
-        self._hass = hass
-
-    def __getattr__(self, helper_name: str) -> ModuleWrapper:
-        """Fetch a helper."""
-        helper = importlib.import_module(f"homeassistant.helpers.{helper_name}")
-        wrapped = ModuleWrapper(self._hass, helper)
-        setattr(self, helper_name, wrapped)
-        return wrapped
-
-
-def bind_hass(func: _CallableT) -> _CallableT:
-    """Decorate function to indicate that first argument is hass."""
     setattr(func, "__bind_hass", True)
     return func
 
 
-async def _async_component_dependencies(
-    hass: HomeAssistant,
-    start_domain: str,
-    integration: Integration,
-    loaded: set[str],
-    loading: set[str],
-) -> set[str]:
-    """Recursive function to get component dependencies.
-
-    Async friendly.
-    """
-    domain = integration.domain
-    loading.add(domain)
-
-    for dependency_domain in integration.dependencies:
-        # Check not already loaded
-        if dependency_domain in loaded:
-            continue
-
-        # If we are already loading it, we have a circular dependency.
-        if dependency_domain in loading:
-            raise CircularDependency(domain, dependency_domain)
-
-        loaded.add(dependency_domain)
-
-        dep_integration = await async_get_integration(hass, dependency_domain)
-
-        if start_domain in dep_integration.after_dependencies:
-            raise CircularDependency(start_domain, dependency_domain)
-
-        if dep_integration.dependencies:
-            dep_loaded = await _async_component_dependencies(
-                hass, start_domain, dep_integration, loaded, loading
-            )
-
-            loaded.update(dep_loaded)
-
-    loaded.add(domain)
-    loading.remove(domain)
-
-    return loaded
-
-
-def _async_mount_config_dir(hass: HomeAssistant) -> bool:
+def _async_mount_config_dir(hass: HomeAssistant) -> None:
     """Mount config dir in order to load custom_component.
 
     Async friendly but not a coroutine.
     """
-    if hass.config.config_dir is None:
-        _LOGGER.error("Can't load integrations - configuration directory is not set")
-        return False
-    if hass.config.config_dir not in sys.path:
-        sys.path.insert(0, hass.config.config_dir)
-    return True
+
+    sys.path.insert(0, hass.config.config_dir)
+    with suppress(ImportError):
+        import custom_components  # noqa: F401, PLC0415
+    sys.path.remove(hass.config.config_dir)
+    sys.path_importer_cache.pop(hass.config.config_dir, None)
 
 
-def _lookup_path(hass: HomeAssistant) -> list[str]:
-    """Return the lookup paths for legacy lookups."""
-    if hass.config.safe_mode:
-        return [PACKAGE_BUILTIN]
-    return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
+def is_component_module_loaded(hass: HomeAssistant, module: str) -> bool:
+    """Test if a component module is loaded."""
+    return module in hass.data[DATA_COMPONENTS]
+
+
+@callback
+def async_get_issue_integration(
+    hass: HomeAssistant | None,
+    integration_domain: str | None,
+) -> Integration | None:
+    """Return details of an integration for issue reporting."""
+    integration: Integration | None = None
+    if not hass or not integration_domain:
+        # We are unable to get the integration
+        return None
+
+    if (comps_or_future := hass.data.get(DATA_CUSTOM_COMPONENTS)) and not isinstance(
+        comps_or_future, asyncio.Future
+    ):
+        integration = comps_or_future.get(integration_domain)
+
+    if not integration:
+        with suppress(IntegrationNotLoaded):
+            integration = async_get_loaded_integration(hass, integration_domain)
+
+    return integration
+
+
+@callback
+def async_get_issue_tracker(
+    hass: HomeAssistant | None,
+    *,
+    integration: Integration | None = None,
+    integration_domain: str | None = None,
+    module: str | None = None,
+) -> str | None:
+    """Return a URL for an integration's issue tracker."""
+    issue_tracker = (
+        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+    )
+    if not integration and not integration_domain and not module:
+        # If we know nothing about the integration, suggest opening an issue on HA core
+        return issue_tracker
+
+    if module and not integration_domain:
+        # If we only have a module, we can try to get the integration domain from it
+        if module.startswith("custom_components."):
+            integration_domain = module.split(".")[1]
+        elif module.startswith("homeassistant.components."):
+            integration_domain = module.split(".")[2]
+
+    if not integration:
+        integration = async_get_issue_integration(hass, integration_domain)
+
+    if integration and not integration.is_built_in:
+        return integration.issue_tracker
+
+    if module and "custom_components" in module:
+        return None
+
+    if integration:
+        integration_domain = integration.domain
+
+    if integration_domain:
+        issue_tracker += f"+label%3A%22integration%3A+{integration_domain}%22"
+    return issue_tracker
+
+
+@callback
+def async_suggest_report_issue(
+    hass: HomeAssistant | None,
+    *,
+    integration: Integration | None = None,
+    integration_domain: str | None = None,
+    module: str | None = None,
+) -> str:
+    """Generate a blurb asking the user to file a bug report."""
+    issue_tracker = async_get_issue_tracker(
+        hass,
+        integration=integration,
+        integration_domain=integration_domain,
+        module=module,
+    )
+
+    if not issue_tracker:
+        if integration:
+            integration_domain = integration.domain
+        if not integration_domain:
+            return "report it to the custom integration author"
+        return (
+            f"report it to the author of the '{integration_domain}' custom integration"
+        )
+
+    return f"create a bug report at {issue_tracker}"

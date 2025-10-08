@@ -1,4 +1,5 @@
 """Buttons for the RainMachine integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -12,32 +13,24 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RainMachineData, RainMachineEntity
-from .const import DATA_PROVISION_SETTINGS, DOMAIN
-from .model import RainMachineEntityDescription
-
-
-@dataclass
-class RainMachineButtonDescriptionMixin:
-    """Define an entity description mixin for RainMachine buttons."""
-
-    push_action: Callable[[Controller], Awaitable]
+from . import RainMachineConfigEntry
+from .const import DATA_PROVISION_SETTINGS
+from .entity import RainMachineEntity, RainMachineEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class RainMachineButtonDescription(
-    ButtonEntityDescription,
-    RainMachineEntityDescription,
-    RainMachineButtonDescriptionMixin,
+    ButtonEntityDescription, RainMachineEntityDescription
 ):
     """Describe a RainMachine button description."""
+
+    push_action: Callable[[Controller], Awaitable]
 
 
 BUTTON_KIND_REBOOT = "reboot"
@@ -58,11 +51,12 @@ BUTTON_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: RainMachineConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RainMachine buttons based on a config entry."""
-    data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
-
+    data = entry.runtime_data
     async_add_entities(
         RainMachineButton(entry, data, description)
         for description in BUTTON_DESCRIPTIONS

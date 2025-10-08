@@ -1,4 +1,5 @@
 """Minio helper methods."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -8,10 +9,10 @@ from queue import Queue
 import re
 import threading
 import time
+from typing import Self
 from urllib.parse import unquote
 
 from minio import Minio
-from typing_extensions import Self
 from urllib3.exceptions import HTTPError
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,8 +46,7 @@ def get_minio_notification_response(
 ):
     """Start listening to minio events. Copied from minio-py."""
     query = {"prefix": prefix, "suffix": suffix, "events": events}
-    # pylint: disable-next=protected-access
-    return minio_client._url_open(
+    return minio_client._url_open(  # noqa: SLF001
         "GET", bucket_name=bucket_name, query=query, preload_content=False
     )
 
@@ -116,7 +116,7 @@ class MinioEventThread(threading.Thread):
 
     def run(self):
         """Create MinioClient and run the loop."""
-        _LOGGER.info("Running MinioEventThread")
+        _LOGGER.debug("Running MinioEventThread")
 
         self._should_stop = False
 
@@ -125,7 +125,7 @@ class MinioEventThread(threading.Thread):
         )
 
         while not self._should_stop:
-            _LOGGER.info("Connecting to minio event stream")
+            _LOGGER.debug("Connecting to minio event stream")
             response = None
             try:
                 response = get_minio_notification_response(
@@ -160,8 +160,7 @@ class MinioEventThread(threading.Thread):
                     presigned_url = minio_client.presigned_get_object(bucket, key)
                 # Fail gracefully. If for whatever reason this stops working,
                 # it shouldn't prevent it from firing events.
-                # pylint: disable-next=broad-except
-                except Exception as error:
+                except Exception as error:  # noqa: BLE001
                     _LOGGER.error("Failed to generate presigned url: %s", error)
 
                 queue_entry = {

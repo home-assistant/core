@@ -1,11 +1,12 @@
 """Migrate lifx devices to their own config entry."""
+
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import _LOGGER, DOMAIN
+from .coordinator import LIFXConfigEntry
 from .discovery import async_init_discovery_flow
 
 
@@ -14,7 +15,7 @@ def async_migrate_legacy_entries(
     hass: HomeAssistant,
     discovered_hosts_by_serial: dict[str, str],
     existing_serials: set[str],
-    legacy_entry: ConfigEntry,
+    legacy_entry: LIFXConfigEntry,
 ) -> int:
     """Migrate the legacy config entries to have an entry per device."""
     _LOGGER.debug(
@@ -44,7 +45,7 @@ def async_migrate_legacy_entries(
 
 @callback
 def async_migrate_entities_devices(
-    hass: HomeAssistant, legacy_entry_id: str, new_entry: ConfigEntry
+    hass: HomeAssistant, legacy_entry_id: str, new_entry: LIFXConfigEntry
 ) -> None:
     """Move entities and devices to the new config entry."""
     migrated_devices = []

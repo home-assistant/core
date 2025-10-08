@@ -1,16 +1,18 @@
 """Support for sending Wake-On-LAN magic packets."""
+
 from functools import partial
 import logging
 
 import voluptuous as vol
 import wakeonlan
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if broadcast_port is not None:
             service_kwargs["port"] = broadcast_port
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Send magic packet to mac %s (broadcast: %s, port: %s)",
             mac_address,
             broadcast_address,
@@ -50,7 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         await hass.async_add_executor_job(
-            partial(wakeonlan.send_magic_packet, mac_address, **service_kwargs)
+            partial(wakeonlan.send_magic_packet, mac_address, **service_kwargs)  # type: ignore[arg-type]
         )
 
     hass.services.async_register(
@@ -61,3 +63,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a Wake on LAN component entry."""
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

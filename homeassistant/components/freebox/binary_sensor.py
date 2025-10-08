@@ -1,4 +1,5 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
+
 from __future__ import annotations
 
 import logging
@@ -9,18 +10,17 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    EntityCategory,
-)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .router import FreeboxRouter
+from .const import FreeboxHomeCategory
+from .entity import FreeboxHomeEntity
+from .router import FreeboxConfigEntry, FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
+
 
 RAID_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
@@ -33,21 +33,105 @@ RAID_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FreeboxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the binary sensors."""
-    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
+    """Set up binary sensors."""
+    router = entry.runtime_data
 
     _LOGGER.debug("%s - %s - %s raid(s)", router.name, router.mac, len(router.raids))
 
-    binary_entities = [
+    binary_entities: list[BinarySensorEntity] = [
         FreeboxRaidDegradedSensor(router, raid, description)
         for raid in router.raids.values()
         for description in RAID_SENSORS
     ]
 
-    if binary_entities:
-        async_add_entities(binary_entities, True)
+    for node in router.home_devices.values():
+        if node["category"] == FreeboxHomeCategory.PIR:
+            binary_entities.append(FreeboxPirSensor(router, node))
+        elif node["category"] == FreeboxHomeCategory.DWS:
+            binary_entities.append(FreeboxDwsSensor(router, node))
+
+        binary_entities.extend(
+            FreeboxCoverSensor(router, node)
+            for endpoint in node["show_endpoints"]
+            if (
+                endpoint["name"] == "cover"
+                and endpoint["ep_type"] == "signal"
+                and endpoint.get("value") is not None
+            )
+        )
+
+    async_add_entities(binary_entities, True)
+
+
+class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
+    """Representation of a Freebox binary sensor."""
+
+    _sensor_name = "trigger"
+
+    def __init__(
+        self,
+        router: FreeboxRouter,
+        node: dict[str, Any],
+        sub_node: dict[str, Any] | None = None,
+    ) -> None:
+        """Initialize a Freebox binary sensor."""
+        super().__init__(router, node, sub_node)
+        self._command_id = self.get_command_id(
+            node["type"]["endpoints"], "signal", self._sensor_name
+        )
+        self._attr_is_on = self._edit_state(self.get_value("signal", self._sensor_name))
+
+    async def async_update_signal(self) -> None:
+        """Update name & state."""
+        self._attr_is_on = self._edit_state(
+            await self.get_home_endpoint_value(self._command_id)
+        )
+        await FreeboxHomeEntity.async_update_signal(self)
+
+    def _edit_state(self, state: bool | None) -> bool | None:
+        """Edit state depending on sensor name."""
+        if state is None:
+            return None
+        if self._sensor_name == "trigger":
+            return not state
+        return state
+
+
+class FreeboxPirSensor(FreeboxHomeBinarySensor):
+    """Representation of a Freebox motion binary sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.MOTION
+
+
+class FreeboxDwsSensor(FreeboxHomeBinarySensor):
+    """Representation of a Freebox door opener binary sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.DOOR
+
+
+class FreeboxCoverSensor(FreeboxHomeBinarySensor):
+    """Representation of a cover Freebox plastic removal cover binary sensor (for some sensors: motion detector, door opener detector...)."""
+
+    _attr_device_class = BinarySensorDeviceClass.SAFETY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    _sensor_name = "cover"
+
+    def __init__(self, router: FreeboxRouter, node: dict[str, Any]) -> None:
+        """Initialize a cover for another device."""
+        cover_node = next(
+            filter(
+                lambda x: (x["name"] == self._sensor_name and x["ep_type"] == "signal"),
+                node["type"]["endpoints"],
+            ),
+            None,
+        )
+        super().__init__(router, node, cover_node)
 
 
 class FreeboxRaidDegradedSensor(BinarySensorEntity):
@@ -83,7 +167,7 @@ class FreeboxRaidDegradedSensor(BinarySensorEntity):
         return self._raid["degraded"]
 
     @callback
-    def async_on_demand_update(self):
+    def async_on_demand_update(self) -> None:
         """Update state."""
         self.async_update_state()
         self.async_write_ha_state()

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiolifx import products
 from aiolifx.aiolifx import Light
@@ -16,19 +16,17 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_NAME,
-    ATTR_COLOR_TEMP,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
-    ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_XY_COLOR,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from .const import (
+    _ATTR_COLOR_TEMP,
     _LOGGER,
     DEFAULT_ATTEMPTS,
     DOMAIN,
@@ -36,17 +34,20 @@ from .const import (
     OVERALL_TIMEOUT,
 )
 
+if TYPE_CHECKING:
+    from .coordinator import LIFXConfigEntry
+
 FIX_MAC_FW = AwesomeVersion("3.70")
 
 
 @callback
-def async_entry_is_legacy(entry: ConfigEntry) -> bool:
+def async_entry_is_legacy(entry: LIFXConfigEntry) -> bool:
     """Check if a config entry is the legacy shared one."""
     return entry.unique_id is None or entry.unique_id == DOMAIN
 
 
 @callback
-def async_get_legacy_entry(hass: HomeAssistant) -> ConfigEntry | None:
+def async_get_legacy_entry(hass: HomeAssistant) -> LIFXConfigEntry | None:
     """Get the legacy config entry."""
     for entry in hass.config_entries.async_entries(DOMAIN):
         if async_entry_is_legacy(entry):
@@ -62,7 +63,7 @@ def infrared_brightness_value_to_option(value: int) -> str | None:
 def infrared_brightness_option_to_value(option: str) -> int | None:
     """Convert infrared brightness option to value."""
     option_values = {v: k for k, v in INFRARED_BRIGHTNESS_VALUES_MAP.items()}
-    return option_values.get(option, None)
+    return option_values.get(option)
 
 
 def convert_8_to_16(value: int) -> int:
@@ -114,17 +115,14 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
         saturation = int(saturation / 100 * 65535)
         kelvin = 3500
 
-    if ATTR_KELVIN in kwargs:
+    if ATTR_COLOR_TEMP_KELVIN not in kwargs and _ATTR_COLOR_TEMP in kwargs:
+        # added in 2025.1, can be removed in 2026.1
         _LOGGER.warning(
-            "The 'kelvin' parameter is deprecated. Please use 'color_temp_kelvin' for"
+            "The 'color_temp' parameter is deprecated. Please use 'color_temp_kelvin' for"
             " all service calls"
         )
-        kelvin = kwargs.pop(ATTR_KELVIN)
-        saturation = 0
-
-    if ATTR_COLOR_TEMP in kwargs:
         kelvin = color_util.color_temperature_mired_to_kelvin(
-            kwargs.pop(ATTR_COLOR_TEMP)
+            kwargs.pop(_ATTR_COLOR_TEMP)
         )
         saturation = 0
 
@@ -149,7 +147,7 @@ def merge_hsbk(
 
     Hue, Saturation, Brightness, Kelvin
     """
-    return [b if c is None else c for b, c in zip(base, change)]
+    return [b if c is None else c for b, c in zip(base, change, strict=False)]
 
 
 def _get_mac_offset(mac_addr: str, offset: int) -> str:
@@ -202,7 +200,7 @@ async def async_multi_execute_lifx_with_retries(
     a response again.
 
     If we don't get a result after all attempts, we will raise an
-    asyncio.TimeoutError exception.
+    TimeoutError exception.
     """
     loop = asyncio.get_running_loop()
     futures: list[asyncio.Future] = [loop.create_future() for _ in methods]
@@ -236,8 +234,6 @@ async def async_multi_execute_lifx_with_retries(
 
     if failed:
         failed_methods = ", ".join(failed)
-        raise asyncio.TimeoutError(
-            f"{failed_methods} timed out after {attempts} attempts"
-        )
+        raise TimeoutError(f"{failed_methods} timed out after {attempts} attempts")
 
     return results

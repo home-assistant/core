@@ -1,4 +1,5 @@
 """Const for forked-daapd."""
+
 from homeassistant.components.media_player import MediaPlayerEntityFeature, MediaType
 
 CALLBACK_TIMEOUT = 8  # max time between command and callback from forked-daapd server
@@ -29,10 +30,8 @@ DEFAULT_SERVER_NAME = "My Server"
 DEFAULT_TTS_PAUSE_TIME = 1.2
 DEFAULT_TTS_VOLUME = 0.8
 DEFAULT_UNMUTE_VOLUME = 0.6
-DOMAIN = "forked_daapd"  # key for hass.data
+DOMAIN = "forked_daapd"
 FD_NAME = "OwnTone"
-HASS_DATA_REMOVE_LISTENERS_KEY = "REMOVE_LISTENERS"
-HASS_DATA_UPDATER_KEY = "UPDATER"
 KNOWN_PIPES = {"librespot-java"}
 PIPE_FUNCTION_MAP = {
     "librespot-java": {
@@ -82,6 +81,7 @@ SUPPORTED_FEATURES = (
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     | MediaPlayerEntityFeature.MEDIA_ENQUEUE
 )
 SUPPORTED_FEATURES_ZONE = (

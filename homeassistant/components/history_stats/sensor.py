@@ -1,13 +1,16 @@
 """Component to make instant statistics about your history."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable, Mapping
 import datetime
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -21,31 +24,37 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, PLATFORMS
+from . import HistoryStatsConfigEntry
+from .const import (
+    CONF_DURATION,
+    CONF_END,
+    CONF_PERIOD_KEYS,
+    CONF_START,
+    CONF_TYPE_COUNT,
+    CONF_TYPE_KEYS,
+    CONF_TYPE_RATIO,
+    CONF_TYPE_TIME,
+    DEFAULT_NAME,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
 from .helpers import pretty_ratio
 
-CONF_START = "start"
-CONF_END = "end"
-CONF_DURATION = "duration"
-CONF_PERIOD_KEYS = [CONF_START, CONF_END, CONF_DURATION]
-
-CONF_TYPE_TIME = "time"
-CONF_TYPE_RATIO = "ratio"
-CONF_TYPE_COUNT = "count"
-CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
-
-DEFAULT_NAME = "unnamed statistics"
 UNITS: dict[str, str] = {
     CONF_TYPE_TIME: UnitOfTime.HOURS,
     CONF_TYPE_RATIO: PERCENTAGE,
@@ -54,7 +63,7 @@ UNITS: dict[str, str] = {
 ICON = "mdi:chart-line"
 
 
-def exactly_two_period_keys(conf):
+def exactly_two_period_keys[_T: dict[str, Any]](conf: _T) -> _T:
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
     if sum(param in conf for param in CONF_PERIOD_KEYS) != 2:
         raise vol.Invalid(
@@ -64,7 +73,7 @@ def exactly_two_period_keys(conf):
 
 
 PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
+    SENSOR_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Required(CONF_STATE): vol.All(cv.ensure_list, [cv.string]),
@@ -80,7 +89,6 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-# noinspection PyUnusedLocal
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -99,16 +107,47 @@ async def async_setup_platform(
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
-    for template in (start, end):
-        if template is not None:
-            template.hass = hass
-
     history_stats = HistoryStats(hass, entity_id, entity_states, start, end, duration)
-    coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, name)
+    coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name)
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise PlatformNotReady from coordinator.last_exception
-    async_add_entities([HistoryStatsSensor(coordinator, sensor_type, name, unique_id)])
+    async_add_entities(
+        [
+            HistoryStatsSensor(
+                hass,
+                coordinator=coordinator,
+                sensor_type=sensor_type,
+                name=name,
+                unique_id=unique_id,
+                source_entity_id=entity_id,
+            )
+        ]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: HistoryStatsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the History stats sensor entry."""
+
+    sensor_type: str = entry.options[CONF_TYPE]
+    coordinator = entry.runtime_data
+    entity_id: str = entry.options[CONF_ENTITY_ID]
+    async_add_entities(
+        [
+            HistoryStatsSensor(
+                hass,
+                coordinator=coordinator,
+                sensor_type=sensor_type,
+                name=entry.title,
+                unique_id=entry.entry_id,
+                source_entity_id=entity_id,
+            )
+        ]
+    )
 
 
 class HistoryStatsSensorBase(
@@ -150,19 +189,31 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        *,
         coordinator: HistoryStatsUpdateCoordinator,
         sensor_type: str,
         name: str,
         unique_id: str | None,
+        source_entity_id: str,
     ) -> None:
         """Initialize the HistoryStats sensor."""
         super().__init__(coordinator, name)
+        self._preview_callback: (
+            Callable[[Exception | None, str, Mapping[str, Any]], None] | None
+        ) = None
         self._attr_native_unit_of_measurement = UNITS[sensor_type]
         self._type = sensor_type
         self._attr_unique_id = unique_id
+        if source_entity_id:  # Guard against empty source_entity_id in preview mode
+            self.device_entry = async_entity_id_to_device(
+                hass,
+                source_entity_id,
+            )
         self._process_update()
         if self._type == CONF_TYPE_TIME:
             self._attr_device_class = SensorDeviceClass.DURATION
+            self._attr_suggested_display_precision = 2
 
     @callback
     def _process_update(self) -> None:
@@ -173,8 +224,37 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
             return
 
         if self._type == CONF_TYPE_TIME:
-            self._attr_native_value = round(state.seconds_matched / 3600, 2)
+            value = state.seconds_matched / 3600
+            if self._attr_unique_id is None:
+                value = round(value, 2)
+            self._attr_native_value = value
         elif self._type == CONF_TYPE_RATIO:
             self._attr_native_value = pretty_ratio(state.seconds_matched, state.period)
         elif self._type == CONF_TYPE_COUNT:
             self._attr_native_value = state.match_count
+
+        if self._preview_callback:
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(
+                None, calculated_state.state, calculated_state.attributes
+            )
+
+    async def async_start_preview(
+        self,
+        preview_callback: Callable[[Exception | None, str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self._process_update, None)
+        )
+
+        self._preview_callback = preview_callback
+        calculated_state = self._async_calculate_state()
+        preview_callback(
+            self.coordinator.last_exception,
+            calculated_state.state,
+            calculated_state.attributes,
+        )
+
+        return self._call_on_remove_callbacks

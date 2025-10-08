@@ -1,68 +1,35 @@
-"""The sensor tests for the tado platform."""
-from homeassistant.const import STATE_OFF, STATE_ON
+"""The binary sensor tests for the tado platform."""
+
+from collections.abc import AsyncGenerator
+from unittest.mock import patch
+
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.tado import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .util import async_init_integration
 
-
-async def test_air_con_create_binary_sensors(hass: HomeAssistant) -> None:
-    """Test creation of aircon sensors."""
-
-    await async_init_integration(hass)
-
-    state = hass.states.get("binary_sensor.air_conditioning_power")
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.air_conditioning_link")
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.air_conditioning_overlay")
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.air_conditioning_open_window")
-    assert state.state == STATE_OFF
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_heater_create_binary_sensors(hass: HomeAssistant) -> None:
-    """Test creation of heater sensors."""
+@pytest.fixture(autouse=True)
+def setup_platforms() -> AsyncGenerator[None]:
+    """Set up the platforms for the tests."""
+    with patch("homeassistant.components.tado.PLATFORMS", [Platform.BINARY_SENSOR]):
+        yield
+
+
+async def test_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
+    """Test creation of binary sensor."""
 
     await async_init_integration(hass)
 
-    state = hass.states.get("binary_sensor.baseboard_heater_power")
-    assert state.state == STATE_ON
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    state = hass.states.get("binary_sensor.baseboard_heater_link")
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.baseboard_heater_early_start")
-    assert state.state == STATE_OFF
-
-    state = hass.states.get("binary_sensor.baseboard_heater_overlay")
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.baseboard_heater_open_window")
-    assert state.state == STATE_OFF
-
-
-async def test_water_heater_create_binary_sensors(hass: HomeAssistant) -> None:
-    """Test creation of water heater sensors."""
-
-    await async_init_integration(hass)
-
-    state = hass.states.get("binary_sensor.water_heater_link")
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.water_heater_overlay")
-    assert state.state == STATE_OFF
-
-    state = hass.states.get("binary_sensor.water_heater_power")
-    assert state.state == STATE_ON
-
-
-async def test_home_create_binary_sensors(hass: HomeAssistant) -> None:
-    """Test creation of home binary sensors."""
-
-    await async_init_integration(hass)
-
-    state = hass.states.get("binary_sensor.wr1_connection_state")
-    assert state.state == STATE_ON
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

@@ -1,4 +1,5 @@
 """Test the Utility Meter config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -9,10 +10,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
-@pytest.mark.parametrize("platform", ("sensor",))
+@pytest.mark.parametrize("platform", ["sensor"])
 async def test_config_flow(hass: HomeAssistant, platform) -> None:
     """Test the config flow."""
     input_sensor_entity_id = "sensor.input"
@@ -20,7 +21,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -39,7 +40,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Electricity meter"
     assert result["data"] == {}
     assert result["options"] == {
@@ -49,6 +50,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "net_consumption": False,
         "offset": 0,
         "periodically_resetting": True,
+        "always_available": False,
         "source": input_sensor_entity_id,
         "tariffs": [],
     }
@@ -63,6 +65,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "net_consumption": False,
         "offset": 0,
         "periodically_resetting": True,
+        "always_available": False,
         "source": input_sensor_entity_id,
         "tariffs": [],
     }
@@ -76,7 +79,7 @@ async def test_tariffs(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -91,7 +94,7 @@ async def test_tariffs(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Electricity meter"
     assert result["data"] == {}
     assert result["options"] == {
@@ -100,6 +103,7 @@ async def test_tariffs(hass: HomeAssistant) -> None:
         "name": "Electricity meter",
         "net_consumption": False,
         "periodically_resetting": True,
+        "always_available": False,
         "offset": 0,
         "source": input_sensor_entity_id,
         "tariffs": ["cat", "dog", "horse", "cow"],
@@ -114,6 +118,7 @@ async def test_tariffs(hass: HomeAssistant) -> None:
         "net_consumption": False,
         "offset": 0,
         "periodically_resetting": True,
+        "always_available": False,
         "source": input_sensor_entity_id,
         "tariffs": ["cat", "dog", "horse", "cow"],
     }
@@ -122,7 +127,7 @@ async def test_tariffs(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -137,7 +142,7 @@ async def test_tariffs(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "tariffs_not_unique"
 
 
@@ -148,7 +153,7 @@ async def test_non_periodically_resetting(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -164,7 +169,7 @@ async def test_non_periodically_resetting(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Electricity meter"
     assert result["data"] == {}
     assert result["options"] == {
@@ -173,6 +178,7 @@ async def test_non_periodically_resetting(hass: HomeAssistant) -> None:
         "name": "Electricity meter",
         "net_consumption": False,
         "periodically_resetting": False,
+        "always_available": False,
         "offset": 0,
         "source": input_sensor_entity_id,
         "tariffs": [],
@@ -187,20 +193,64 @@ async def test_non_periodically_resetting(hass: HomeAssistant) -> None:
         "net_consumption": False,
         "offset": 0,
         "periodically_resetting": False,
+        "always_available": False,
         "source": input_sensor_entity_id,
         "tariffs": [],
     }
 
 
-def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
-    for k in schema:
-        if k == key:
-            if k.description is None or "suggested_value" not in k.description:
-                return None
-            return k.description["suggested_value"]
-    # Wanted key absent from schema
-    raise Exception
+async def test_always_available(hass: HomeAssistant) -> None:
+    """Test sensor always available."""
+    input_sensor_entity_id = "sensor.input"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "cycle": "monthly",
+            "name": "Electricity meter",
+            "offset": 0,
+            "periodically_resetting": False,
+            "source": input_sensor_entity_id,
+            "tariffs": [],
+            "always_available": True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Electricity meter"
+    assert result["data"] == {}
+    assert result["options"] == {
+        "cycle": "monthly",
+        "delta_values": False,
+        "name": "Electricity meter",
+        "net_consumption": False,
+        "periodically_resetting": False,
+        "always_available": True,
+        "offset": 0,
+        "source": input_sensor_entity_id,
+        "tariffs": [],
+    }
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.data == {}
+    assert config_entry.options == {
+        "cycle": "monthly",
+        "delta_values": False,
+        "name": "Electricity meter",
+        "net_consumption": False,
+        "offset": 0,
+        "periodically_resetting": False,
+        "always_available": True,
+        "source": input_sensor_entity_id,
+        "tariffs": [],
+    }
 
 
 async def test_options(hass: HomeAssistant) -> None:
@@ -229,17 +279,21 @@ async def test_options(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
-    assert get_suggested(schema, "source") == input_sensor1_entity_id
-    assert get_suggested(schema, "periodically_resetting") is True
+    assert get_schema_suggested_value(schema, "source") == input_sensor1_entity_id
+    assert get_schema_suggested_value(schema, "periodically_resetting") is True
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"source": input_sensor2_entity_id, "periodically_resetting": False},
+        user_input={
+            "source": input_sensor2_entity_id,
+            "periodically_resetting": False,
+            "always_available": True,
+        },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "cycle": "monthly",
         "delta_values": False,
@@ -247,6 +301,7 @@ async def test_options(hass: HomeAssistant) -> None:
         "net_consumption": False,
         "offset": 0,
         "periodically_resetting": False,
+        "always_available": True,
         "source": input_sensor2_entity_id,
         "tariffs": "",
     }
@@ -258,6 +313,7 @@ async def test_options(hass: HomeAssistant) -> None:
         "net_consumption": False,
         "offset": 0,
         "periodically_resetting": False,
+        "always_available": True,
         "source": input_sensor2_entity_id,
         "tariffs": "",
     }
@@ -265,18 +321,17 @@ async def test_options(hass: HomeAssistant) -> None:
 
     # Check config entry is reloaded with new options
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.electricity_meter")
-    assert state.attributes["source"] == input_sensor2_entity_id
 
 
-async def test_change_device_source(hass: HomeAssistant) -> None:
+async def test_change_device_source(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test remove the device registry configuration entry when the source entity changes."""
-
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     # Configure source entity 1 (with a linked device)
     source_config_entry_1 = MockConfigEntry()
+    source_config_entry_1.add_to_hass(hass)
     source_device_entry_1 = device_registry.async_get_or_create(
         config_entry_id=source_config_entry_1.entry_id,
         identifiers={("sensor", "identifier_test1")},
@@ -292,6 +347,7 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
 
     # Configure source entity 2 (with a linked device)
     source_config_entry_2 = MockConfigEntry()
+    source_config_entry_2.add_to_hass(hass)
     source_device_entry_2 = device_registry.async_get_or_create(
         config_entry_id=source_config_entry_2.entry_id,
         identifiers={("sensor", "identifier_test2")},
@@ -307,6 +363,7 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
 
     # Configure source entity 3 (without a device)
     source_config_entry_3 = MockConfigEntry()
+    source_config_entry_3.add_to_hass(hass)
     source_entity_3 = entity_registry.async_get_or_create(
         "sensor",
         "test",
@@ -346,11 +403,19 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry has been added to the source entity 1 (current) device registry
+    # Confirm that the configuration entry has not been added to the source entity 1 (current) device registry
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id in current_device.config_entries
+    assert utility_meter_config_entry.entry_id not in current_device.config_entries
+
+    # Check that the entities are linked to the expected device
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
+        utility_meter_config_entry.entry_id
+    ):
+        assert utility_meter_entity.device_id == source_entity_1.device_id
 
     # Change configuration options to use source entity 2 (with a linked device) and reload the integration
     previous_entity_source = source_entity_1
@@ -359,7 +424,7 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(
         utility_meter_config_entry.entry_id
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -367,20 +432,28 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
             "source": current_entity_source.entity_id,
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry has been removed from the source entity 1 (previous) device registry
+    # Confirm that the configuration entry is not in the source entity 1 (previous) device registry
     previous_device = device_registry.async_get(
         device_id=previous_entity_source.device_id
     )
     assert utility_meter_config_entry.entry_id not in previous_device.config_entries
 
-    # Confirm that the configuration entry has been added to the source entity 2 (current) device registry
+    # Confirm that the configuration entry is not in to the source entity 2 (current) device registry
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id in current_device.config_entries
+    assert utility_meter_config_entry.entry_id not in current_device.config_entries
+
+    # Check that the entities are linked to the expected device
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
+        utility_meter_config_entry.entry_id
+    ):
+        assert utility_meter_entity.device_id == source_entity_2.device_id
 
     # Change configuration options to use source entity 3 (without a device) and reload the integration
     previous_entity_source = source_entity_2
@@ -389,7 +462,7 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(
         utility_meter_config_entry.entry_id
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -397,14 +470,22 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
             "source": current_entity_source.entity_id,
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry has been removed from the source entity 2 (previous) device registry
+    # Confirm that the configuration entry has is not in the source entity 2 (previous) device registry
     previous_device = device_registry.async_get(
         device_id=previous_entity_source.device_id
     )
     assert utility_meter_config_entry.entry_id not in previous_device.config_entries
+
+    # Check that the entities are no longer linked to a device
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
+        utility_meter_config_entry.entry_id
+    ):
+        assert utility_meter_entity.device_id is None
 
     # Confirm that there is no device with the helper configuration entry
     assert (
@@ -421,7 +502,7 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(
         utility_meter_config_entry.entry_id
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -429,11 +510,19 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
             "source": current_entity_source.entity_id,
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry has been added to the source entity 2 (current) device registry
+    # Confirm that the configuration entry is not in the source entity 2 (current) device registry
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id in current_device.config_entries
+    assert utility_meter_config_entry.entry_id not in current_device.config_entries
+
+    # Check that the entities are linked to the expected device
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
+        utility_meter_config_entry.entry_id
+    ):
+        assert utility_meter_entity.device_id == source_entity_2.device_id

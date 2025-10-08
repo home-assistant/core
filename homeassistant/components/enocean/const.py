@@ -1,4 +1,5 @@
 """Constants for the EnOcean integration."""
+
 import logging
 
 from homeassistant.const import Platform

@@ -1,42 +1,35 @@
 """Buttons for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from aioguardian import Client
-from aioguardian.errors import GuardianError
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
-from .const import API_SYSTEM_DIAGNOSTICS, DOMAIN
-
-
-@dataclass
-class GuardianButtonEntityDescriptionMixin:
-    """Define an mixin for button entities."""
-
-    push_action: Callable[[Client], Awaitable]
+from . import GuardianConfigEntry, GuardianData
+from .const import API_SYSTEM_DIAGNOSTICS
+from .entity import ValveControllerEntity, ValveControllerEntityDescription
+from .util import convert_exceptions_to_homeassistant_error
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ValveControllerButtonDescription(
-    ButtonEntityDescription,
-    ValveControllerEntityDescription,
-    GuardianButtonEntityDescriptionMixin,
+    ButtonEntityDescription, ValveControllerEntityDescription
 ):
     """Describe a Guardian valve controller button."""
+
+    push_action: Callable[[Client], Awaitable]
 
 
 BUTTON_KIND_REBOOT = "reboot"
@@ -74,10 +67,12 @@ BUTTON_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GuardianConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Guardian buttons based on a config entry."""
-    data: GuardianData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
         GuardianButton(entry, data, description) for description in BUTTON_DESCRIPTIONS
@@ -94,7 +89,7 @@ class GuardianButton(ValveControllerEntity, ButtonEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: GuardianConfigEntry,
         data: GuardianData,
         description: ValveControllerButtonDescription,
     ) -> None:
@@ -103,14 +98,10 @@ class GuardianButton(ValveControllerEntity, ButtonEntity):
 
         self._client = data.client
 
+    @convert_exceptions_to_homeassistant_error
     async def async_press(self) -> None:
         """Send out a restart command."""
-        try:
-            async with self._client:
-                await self.entity_description.push_action(self._client)
-        except GuardianError as err:
-            raise HomeAssistantError(
-                f'Error while pressing button "{self.entity_id}": {err}'
-            ) from err
+        async with self._client:
+            await self.entity_description.push_action(self._client)
 
         async_dispatcher_send(self.hass, self.coordinator.signal_reboot_requested)

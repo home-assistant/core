@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the Luftdaten integration."""
+
 from homeassistant.components.luftdaten.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -23,11 +24,11 @@ from tests.common import MockConfigEntry
 
 async def test_luftdaten_sensors(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Luftdaten sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     entry = entity_registry.async_get("sensor.sensor_12345_temperature")
     assert entry
@@ -71,16 +72,16 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.PA
     assert ATTR_ICON not in state.attributes
 
-    entry = entity_registry.async_get("sensor.sensor_12345_pressure_at_sealevel")
+    entry = entity_registry.async_get("sensor.sensor_12345_pressure_at_sea_level")
     assert entry
     assert entry.device_id
     assert entry.unique_id == "12345_pressure_at_sealevel"
 
-    state = hass.states.get("sensor.sensor_12345_pressure_at_sealevel")
+    state = hass.states.get("sensor.sensor_12345_pressure_at_sea_level")
     assert state
     assert state.state == "103102.13"
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 Pressure at sealevel"
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 Pressure at sea level"
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT

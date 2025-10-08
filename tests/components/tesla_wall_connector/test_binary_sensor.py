@@ -1,4 +1,5 @@
 """Tests for binary sensors."""
+
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -22,8 +23,6 @@ async def test_sensors(hass: HomeAssistant) -> None:
     ]
 
     mock_vitals_first_update = get_vitals_mock()
-    mock_vitals_first_update.contactor_closed = False
-    mock_vitals_first_update.vehicle_connected = True
 
     mock_vitals_second_update = get_vitals_mock()
     mock_vitals_second_update.contactor_closed = True

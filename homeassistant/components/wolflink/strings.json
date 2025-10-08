@@ -18,7 +18,7 @@
       },
       "device": {
         "data": {
-          "device_name": "Device"
+          "device_name": "[%key:common::config_flow::data::device%]"
         },
         "title": "Select WOLF device"
       }
@@ -28,14 +28,15 @@
     "sensor": {
       "state": {
         "state": {
-          "ein": "Enabled",
-          "deaktiviert": "Inactive",
-          "aus": "Disabled",
-          "standby": "Standby",
-          "auto": "Auto",
+          "ein": "[%key:common::state::on%]",
+          "aus": "[%key:common::state::off%]",
+          "deaktiviert": "[%key:common::state::disabled%]",
+          "standby": "[%key:common::state::standby%]",
+          "storung": "[%key:common::state::fault%]",
+          "auto": "[%key:common::state::auto%]",
           "permanent": "Permanent",
           "initialisierung": "Initialization",
-          "antilegionellenfunktion": "Anti-legionella Function",
+          "antilegionellenfunktion": "Anti-legionella function",
           "fernschalter_ein": "Remote control enabled",
           "1_x_warmwasser": "1 x DHW",
           "bereit_keine_ladung": "Ready, not loading",
@@ -53,13 +54,12 @@
           "taktsperre": "Anti-cycle",
           "betrieb_ohne_brenner": "Working without burner",
           "abgasklappe": "Flue gas damper",
-          "storung": "Fault",
           "gradienten_uberwachung": "Gradient monitoring",
           "gasdruck": "Gas pressure",
           "spreizung_hoch": "dT too wide",
           "spreizung_kf": "Spread KF",
           "test": "Test",
-          "start": "Start",
+          "start": "[%key:common::action::start%]",
           "frost_heizkreis": "Heating circuit frost",
           "frost_warmwasser": "DHW frost",
           "schornsteinfeger": "Emissions test",

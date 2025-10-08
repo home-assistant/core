@@ -1,28 +1,40 @@
 """The tests for the image component."""
+
+from datetime import datetime
 from http import HTTPStatus
 import ssl
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 from aiohttp import hdrs
+from freezegun.api import FrozenDateTimeFactory
 import httpx
 import pytest
 import respx
 
 from homeassistant.components import image
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
     MockImageEntity,
+    MockImageEntityCapitalContentType,
     MockImageEntityInvalidContentType,
+    MockImageNoDataEntity,
     MockImageNoStateEntity,
     MockImagePlatform,
     MockImageSyncEntity,
     MockURLImageEntity,
 )
 
-from tests.common import MockModule, mock_integration, mock_platform
+from tests.common import (
+    MockModule,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+)
 from tests.typing import ClientSessionGenerator
 
 
@@ -130,16 +142,54 @@ async def test_no_valid_content_type(
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+async def test_valid_but_capitalized_content_type(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test invalid content type."""
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(
+        hass, "test.image", MockImagePlatform([MockImageEntityCapitalContentType(hass)])
+    )
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    state = hass.states.get("image.test")
+    access_token = state.attributes["access_token"]
+    assert state.attributes == {
+        "access_token": access_token,
+        "entity_picture": f"/api/image_proxy/image.test?token={access_token}",
+        "friendly_name": "Test",
+    }
+    resp = await client.get(f"/api/image_proxy/image.test?token={access_token}")
+    assert resp.status == HTTPStatus.OK
+
+
 async def test_fetch_image_authenticated(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_image_platform: None
 ) -> None:
     """Test fetching an image with an authenticated client."""
     client = await hass_client()
 
+    # Using HEAD
+    resp = await client.head("/api/image_proxy/image.test")
+    assert resp.status == HTTPStatus.OK
+    assert resp.content_type == "image/jpeg"
+    assert resp.content_length == 4
+
+    resp = await client.head("/api/image_proxy/image.unknown")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+    # Using GET
     resp = await client.get("/api/image_proxy/image.test")
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body == b"Test"
+    assert resp.content_type == "image/jpeg"
+    assert resp.content_length == 4
 
     resp = await client.get("/api/image_proxy/image.unknown")
     assert resp.status == HTTPStatus.NOT_FOUND
@@ -222,10 +272,19 @@ async def test_fetch_image_url_success(
 
     client = await hass_client()
 
+    # Using HEAD
+    resp = await client.head("/api/image_proxy/image.test")
+    assert resp.status == HTTPStatus.OK
+    assert resp.content_type == "image/png"
+    assert resp.content_length == 4
+
+    # Using GET
     resp = await client.get("/api/image_proxy/image.test")
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body == b"Test"
+    assert resp.content_type == "image/png"
+    assert resp.content_length == 4
 
 
 @respx.mock
@@ -287,3 +346,180 @@ async def test_fetch_image_url_wrong_content_type(
 
     resp = await client.get("/api/image_proxy/image.test")
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+async def test_image_stream(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test image stream."""
+
+    mock_integration(hass, MockModule(domain="test"))
+    mock_image = MockURLImageEntity(hass)
+    mock_platform(hass, "test.image", MockImagePlatform([mock_image]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    close_future = hass.loop.create_future()
+    original_get_still_stream = image.async_get_still_stream
+
+    async def _wrap_async_get_still_stream(*args, **kwargs):
+        result = await original_get_still_stream(*args, **kwargs)
+        hass.loop.call_soon(close_future.set_result, None)
+        return result
+
+    with patch(
+        "homeassistant.components.image.async_get_still_stream",
+        _wrap_async_get_still_stream,
+    ):
+        with patch.object(mock_image, "async_image", return_value=b""):
+            resp = await client.get("/api/image_proxy_stream/image.test")
+            assert not resp.closed
+            assert resp.status == HTTPStatus.OK
+
+            mock_image.image_last_updated = datetime.now()
+            mock_image.async_write_ha_state()
+            # Two blocks to ensure the frame is written
+            await hass.async_block_till_done()
+            await hass.async_block_till_done()
+
+        with patch.object(mock_image, "async_image", return_value=b"") as mock:
+            # Simulate a "keep alive" frame
+            freezer.tick(55)
+            async_fire_time_changed(hass)
+            # Two blocks to ensure the frame is written
+            await hass.async_block_till_done()
+            await hass.async_block_till_done()
+            mock.assert_called_once()
+
+        with patch.object(mock_image, "async_image", return_value=None):
+            freezer.tick(55)
+            async_fire_time_changed(hass)
+            # Two blocks to ensure the frame is written
+            await hass.async_block_till_done()
+            await hass.async_block_till_done()
+
+    await close_future
+
+
+async def test_get_image_action(hass: HomeAssistant, mock_image_platform: None) -> None:
+    """Test get_image action."""
+    image_data = await image.async_get_image(hass, "image.test")
+    assert image_data == image.Image(content_type="image/jpeg", content=b"Test")
+
+    with pytest.raises(HomeAssistantError, match="not found"):
+        await image.async_get_image(hass, "image.unknown")
+
+
+async def test_snapshot_service(hass: HomeAssistant) -> None:
+    """Test snapshot service."""
+    mopen = mock_open()
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.image", MockImagePlatform([MockImageSyncEntity(hass)]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    with (
+        patch("homeassistant.components.image.open", mopen, create=True),
+        patch("homeassistant.components.image.os.makedirs"),
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+    ):
+        await hass.services.async_call(
+            image.DOMAIN,
+            image.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "image.test",
+                image.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )
+
+        mock_write = mopen().write
+
+        assert len(mock_write.mock_calls) == 1
+        assert mock_write.mock_calls[0][1][0] == b"Test"
+
+
+async def test_snapshot_service_no_image(hass: HomeAssistant) -> None:
+    """Test snapshot service with no image."""
+    mopen = mock_open()
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.image", MockImagePlatform([MockImageNoDataEntity(hass)]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    with (
+        patch("homeassistant.components.image.open", mopen, create=True),
+        patch(
+            "homeassistant.components.image.os.makedirs",
+        ),
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+    ):
+        await hass.services.async_call(
+            image.DOMAIN,
+            image.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "image.test",
+                image.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )
+
+        mock_write = mopen().write
+
+        assert len(mock_write.mock_calls) == 0
+
+
+async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
+    """Test snapshot service with a not allowed path."""
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.image", MockImagePlatform([MockURLImageEntity(hass)]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError, match="/test/snapshot.jpg"):
+        await hass.services.async_call(
+            image.DOMAIN,
+            image.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "image.test",
+                image.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )
+
+
+async def test_snapshot_service_os_error(hass: HomeAssistant) -> None:
+    """Test snapshot service with os error."""
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.image", MockImagePlatform([MockImageSyncEntity(hass)]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch("os.makedirs", side_effect=OSError),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            image.DOMAIN,
+            image.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "image.test",
+                image.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )

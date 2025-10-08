@@ -1,4 +1,5 @@
 """Fixtures for CPU Speed integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -24,7 +25,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_cpuinfo_config_flow() -> Generator[MagicMock, None, None]:
+def mock_cpuinfo_config_flow() -> Generator[MagicMock]:
     """Return a mocked get_cpu_info.
 
     It is only used to check truthy or falsy values, so it is mocked
@@ -38,7 +39,7 @@ def mock_cpuinfo_config_flow() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.cpuspeed.async_setup_entry", return_value=True
@@ -47,7 +48,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_cpuinfo() -> Generator[MagicMock, None, None]:
+def mock_cpuinfo() -> Generator[MagicMock]:
     """Return a mocked get_cpu_info."""
     info = {
         "hz_actual": (3200000001, 0),

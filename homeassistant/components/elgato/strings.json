@@ -5,8 +5,10 @@
       "user": {
         "description": "Set up your Elgato Light to integrate with Home Assistant.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Elgato device."
         }
       },
       "zeroconf_confirm": {
@@ -44,6 +46,12 @@
       "energy_saving": {
         "name": "Energy saving"
       }
+    }
+  },
+  "services": {
+    "identify": {
+      "name": "Identify",
+      "description": "Identifies an Elgato Light. Blinks the light, which can be useful for, e.g., a visual notification."
     }
   }
 }

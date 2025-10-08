@@ -1,4 +1,5 @@
 """Support for Konnected devices."""
+
 import copy
 import hmac
 from http import HTTPStatus
@@ -11,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -34,7 +35,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import (  # Loading the config flow file will register the flow
@@ -57,7 +58,6 @@ from .const import (
     PIN_TO_ZONE,
     STATE_HIGH,
     STATE_LOW,
-    UNDO_UPDATE_LISTENER,
     UPDATE_ENDPOINT,
     ZONE_TO_PIN,
     ZONES,
@@ -197,7 +197,6 @@ DEVICE_SCHEMA_YAML = vol.All(
     import_device_validator,
 )
 
-# pylint: disable=no-value-for-parameter
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -222,6 +221,19 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Konnected platform."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_firmware",
+        breaks_in_ha_version="2026.4.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_firmware",
+        translation_placeholders={
+            "kb_page_url": "https://support.konnected.io/migrating-from-konnected-legacy-home-assistant-integration-to-esphome",
+        },
+    )
     if (cfg := config.get(DOMAIN)) is None:
         cfg = {}
 
@@ -261,10 +273,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # config entry specific data to enable unload
-    hass.data[DOMAIN][entry.entry_id] = {
-        UNDO_UPDATE_LISTENER: entry.add_update_listener(async_entry_updated)
-    }
+    entry.async_on_unload(entry.add_update_listener(async_entry_updated))
     return True
 
 
@@ -272,11 +281,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
-
     if unload_ok:
         hass.data[DOMAIN][CONF_DEVICES].pop(entry.data[CONF_ID])
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -305,7 +311,7 @@ class KonnectedView(HomeAssistantView):
 
     async def update_sensor(self, request: Request, device_id) -> Response:
         """Process a put or post."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         data = hass.data[DOMAIN]
 
         auth = request.headers.get(AUTHORIZATION)
@@ -377,7 +383,7 @@ class KonnectedView(HomeAssistantView):
 
     async def get(self, request: Request, device_id) -> Response:
         """Return the current binary state of a switch."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         data = hass.data[DOMAIN]
 
         if not (device := data[CONF_DEVICES].get(device_id)):
@@ -425,7 +431,8 @@ class KonnectedView(HomeAssistantView):
         # Make sure entity is setup
         if zone_entity_id := zone.get(ATTR_ENTITY_ID):
             resp["state"] = self.binary_value(
-                hass.states.get(zone_entity_id).state, zone[CONF_ACTIVATION]
+                hass.states.get(zone_entity_id).state,  # type: ignore[union-attr]
+                zone[CONF_ACTIVATION],
             )
             return self.json(resp)
 

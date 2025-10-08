@@ -1,36 +1,62 @@
 """Number for Shelly."""
+
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
 from aioshelly.block_device import Block
+from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.number import (
+    DOMAIN as NUMBER_PLATFORM,
+    NumberEntity,
     NumberEntityDescription,
     NumberExtraStoredData,
     NumberMode,
     RestoreNumber,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import CONF_SLEEP_PERIOD, LOGGER
-from .coordinator import ShellyBlockCoordinator
+from .const import (
+    CONF_SLEEP_PERIOD,
+    DOMAIN,
+    LOGGER,
+    MODEL_FRANKEVER_WATER_VALVE,
+    MODEL_LINKEDGO_ST802_THERMOSTAT,
+    MODEL_LINKEDGO_ST1820_THERMOSTAT,
+    MODEL_TOP_EV_CHARGER_EVE01,
+    VIRTUAL_NUMBER_MODE_MAP,
+)
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
+    RpcEntityDescription,
+    ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
+    async_setup_entry_rpc,
+    rpc_call,
+)
+from .utils import (
+    async_remove_orphaned_entities,
+    get_blu_trv_device_info,
+    get_device_entry_gen,
+    get_virtual_component_ids,
+    get_virtual_component_unit,
+    is_view_for_platform,
 )
 
+PARALLEL_UPDATES = 0
 
-@dataclass
+
+@dataclass(frozen=True, kw_only=True)
 class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     """Class to describe a BLOCK sensor."""
 
@@ -38,10 +64,105 @@ class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     rest_arg: str = ""
 
 
-NUMBERS: Final = {
+@dataclass(frozen=True, kw_only=True)
+class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
+    """Class to describe a RPC number entity."""
+
+    max_fn: Callable[[dict], float] | None = None
+    min_fn: Callable[[dict], float] | None = None
+    step_fn: Callable[[dict], float] | None = None
+    mode_fn: Callable[[dict], NumberMode] | None = None
+    method: str
+
+
+class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
+    """Represent a RPC number entity."""
+
+    entity_description: RpcNumberDescription
+    attribute_value: float | None
+    _id: int | None
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcNumberDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if description.max_fn is not None:
+            self._attr_native_max_value = description.max_fn(
+                coordinator.device.config[key]
+            )
+        if description.min_fn is not None:
+            self._attr_native_min_value = description.min_fn(
+                coordinator.device.config[key]
+            )
+        if description.step_fn is not None:
+            self._attr_native_step = description.step_fn(coordinator.device.config[key])
+        if description.mode_fn is not None:
+            self._attr_mode = description.mode_fn(coordinator.device.config[key])
+
+    @property
+    def native_value(self) -> float | None:
+        """Return value of number."""
+        return self.attribute_value
+
+    @rpc_call
+    async def async_set_native_value(self, value: float) -> None:
+        """Change the value."""
+        method = getattr(self.coordinator.device, self.entity_description.method)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        await method(self._id, value)
+
+
+class RpcBluTrvNumber(RpcNumber):
+    """Represent a RPC BluTrv number."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcNumberDescription,
+    ) -> None:
+        """Initialize."""
+
+        super().__init__(coordinator, key, attribute, description)
+        ble_addr: str = coordinator.device.config[key]["addr"]
+        fw_ver = coordinator.device.status[key].get("fw_ver")
+        self._attr_device_info = get_blu_trv_device_info(
+            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
+        )
+
+
+class RpcBluTrvExtTempNumber(RpcBluTrvNumber):
+    """Represent a RPC BluTrv External Temperature number."""
+
+    _reported_value: float | None = None
+
+    @property
+    def native_value(self) -> float | None:
+        """Return value of number."""
+        return self._reported_value
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Change the value."""
+        await super().async_set_native_value(value)
+
+        self._reported_value = value
+        self.async_write_ha_state()
+
+
+NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
-        icon="mdi:pipe-valve",
+        translation_key="valve_position",
         name="Valve position",
         native_unit_of_measurement=PERCENTAGE,
         available=lambda block: cast(int, block.valveError) != 1,
@@ -56,28 +177,135 @@ NUMBERS: Final = {
 }
 
 
-def _build_block_description(entry: RegistryEntry) -> BlockNumberDescription:
-    """Build description when restoring block attribute entities."""
-    assert entry.capabilities
-    return BlockNumberDescription(
-        key="",
-        name="",
-        icon=entry.original_icon,
-        native_unit_of_measurement=entry.unit_of_measurement,
-        device_class=entry.original_device_class,
-        native_min_value=cast(float, entry.capabilities.get("min")),
-        native_max_value=cast(float, entry.capabilities.get("max")),
-        native_step=cast(float, entry.capabilities.get("step")),
-        mode=cast(NumberMode, entry.capabilities.get("mode")),
-    )
+RPC_NUMBERS: Final = {
+    "external_temperature": RpcNumberDescription(
+        key="blutrv",
+        sub_key="current_C",
+        translation_key="external_temperature",
+        name="External temperature",
+        native_min_value=-50,
+        native_max_value=50,
+        native_step=0.1,
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        method="blu_trv_set_external_temperature",
+        entity_class=RpcBluTrvExtTempNumber,
+    ),
+    "number_generic": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, NUMBER_PLATFORM
+        ),
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: VIRTUAL_NUMBER_MODE_MAP.get(
+            config["meta"]["ui"]["view"], NumberMode.BOX
+        ),
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
+        unit=get_virtual_component_unit,
+        method="number_set",
+        role="generic",
+    ),
+    "number_current_limit": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: NumberMode.SLIDER,
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
+        unit=get_virtual_component_unit,
+        method="number_set",
+        role="current_limit",
+        models={MODEL_TOP_EV_CHARGER_EVE01},
+    ),
+    "number_position": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: NumberMode.SLIDER,
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
+        unit=get_virtual_component_unit,
+        method="number_set",
+        role="position",
+        models={MODEL_FRANKEVER_WATER_VALVE},
+    ),
+    "number_target_humidity": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: NumberMode.SLIDER,
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
+        unit=get_virtual_component_unit,
+        method="number_set",
+        role="target_humidity",
+        models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
+    ),
+    "number_target_temperature": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: NumberMode.SLIDER,
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
+        unit=get_virtual_component_unit,
+        method="number_set",
+        role="target_temperature",
+        models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
+    ),
+    "valve_position": RpcNumberDescription(
+        key="blutrv",
+        sub_key="pos",
+        translation_key="valve_position",
+        name="Valve position",
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        native_unit_of_measurement=PERCENTAGE,
+        method="blu_trv_set_valve_position",
+        removal_condition=lambda config, _status, key: config[key].get("enable", True)
+        is True,
+        entity_class=RpcBluTrvNumber,
+    ),
+}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up numbers for device."""
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
+        coordinator = config_entry.runtime_data.rpc
+        assert coordinator
+
+        async_setup_entry_rpc(
+            hass, config_entry, async_add_entities, RPC_NUMBERS, RpcNumber
+        )
+
+        # the user can remove virtual components from the device configuration, so
+        # we need to remove orphaned entities
+        virtual_number_ids = get_virtual_component_ids(
+            coordinator.device.config, NUMBER_PLATFORM
+        )
+        async_remove_orphaned_entities(
+            hass,
+            config_entry.entry_id,
+            coordinator.mac,
+            NUMBER_PLATFORM,
+            virtual_number_ids,
+            "number",
+        )
+        return
+
     if config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_attribute_entities(
             hass,
@@ -85,7 +313,6 @@ async def async_setup_entry(
             async_add_entities,
             NUMBERS,
             BlockSleepingNumber,
-            _build_block_description,
         )
 
 
@@ -101,11 +328,10 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
         attribute: str,
         description: BlockNumberDescription,
         entry: RegistryEntry | None = None,
-        sensors: Mapping[tuple[str, str], BlockNumberDescription] | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
         self.restored_data: NumberExtraStoredData | None = None
-        super().__init__(coordinator, block, attribute, description, entry, sensors)
+        super().__init__(coordinator, block, attribute, description, entry)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -140,8 +366,12 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
-                f"Setting state for entity {self.name} failed, state: {params}, error:"
-                f" {repr(err)}"
+                translation_domain=DOMAIN,
+                translation_key="device_communication_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
             ) from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.async_shutdown_device_and_start_reauth()

@@ -1,0 +1,59 @@
+{
+  "entity": {
+    "number": {
+      "away_extract_fan_setpoint": {
+        "default": "mdi:fan-minus"
+      },
+      "away_supply_fan_setpoint": {
+        "default": "mdi:fan-plus"
+      },
+      "cooker_hood_extract_fan_setpoint": {
+        "default": "mdi:fan-minus"
+      },
+      "cooker_hood_supply_fan_setpoint": {
+        "default": "mdi:fan-plus"
+      },
+      "fireplace_extract_fan_setpoint": {
+        "default": "mdi:fan-minus"
+      },
+      "fireplace_supply_fan_setpoint": {
+        "default": "mdi:fan-plus"
+      },
+      "high_extract_fan_setpoint": {
+        "default": "mdi:fan-minus"
+      },
+      "high_supply_fan_setpoint": {
+        "default": "mdi:fan-plus"
+      },
+      "home_extract_fan_setpoint": {
+        "default": "mdi:fan-minus"
+      },
+      "home_supply_fan_setpoint": {
+        "default": "mdi:fan-plus"
+      },
+      "fireplace_mode_runtime": {
+        "default": "mdi:fireplace"
+      }
+    },
+    "switch": {
+      "electric_heater": {
+        "default": "mdi:radiator",
+        "state": {
+          "off": "mdi:radiator-off"
+        }
+      },
+      "fireplace_mode": {
+        "default": "mdi:fireplace",
+        "state": {
+          "off": "mdi:fireplace-off"
+        }
+      },
+      "cooker_hood_mode": {
+        "default": "mdi:kettle-steam",
+        "state": {
+          "off": "mdi:kettle"
+        }
+      }
+    }
+  }
+}

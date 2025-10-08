@@ -1,30 +1,42 @@
 """The tests for Home Assistant frontend."""
-from datetime import timedelta
+
+from collections.abc import Generator
+from contextlib import nullcontext
 from http import HTTPStatus
+from pathlib import Path
 import re
 from typing import Any
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.frontend import (
-    CONF_EXTRA_HTML_URL,
-    CONF_EXTRA_HTML_URL_ES5,
-    CONF_JS_VERSION,
+    CONF_EXTRA_JS_URL_ES5,
+    CONF_EXTRA_MODULE_URL,
     CONF_THEMES,
     DEFAULT_THEME_COLOR,
     DOMAIN,
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
+    add_extra_js_url,
+    async_register_built_in_panel,
+    async_remove_panel,
+    remove_extra_js_url,
 )
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockUser, async_capture_events, async_fire_time_changed
-from tests.typing import WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 MOCK_THEMES = {
     "happy": {"primary-color": "red", "app-header-background-color": "blue"},
@@ -54,7 +66,7 @@ CONFIG_THEMES = {DOMAIN: {CONF_THEMES: MOCK_THEMES}}
 
 
 @pytest.fixture
-async def ignore_frontend_deps(hass):
+async def ignore_frontend_deps(hass: HomeAssistant) -> None:
     """Frontend dependencies."""
     frontend = await async_get_integration(hass, "frontend")
     for dep in frontend.dependencies:
@@ -63,7 +75,7 @@ async def ignore_frontend_deps(hass):
 
 
 @pytest.fixture
-async def frontend(hass, ignore_frontend_deps):
+async def frontend(hass: HomeAssistant, ignore_frontend_deps: None) -> None:
     """Frontend setup with themes."""
     assert await async_setup_component(
         hass,
@@ -73,7 +85,7 @@ async def frontend(hass, ignore_frontend_deps):
 
 
 @pytest.fixture
-async def frontend_themes(hass):
+async def frontend_themes(hass: HomeAssistant) -> None:
     """Frontend setup with themes."""
     assert await async_setup_component(
         hass,
@@ -83,40 +95,52 @@ async def frontend_themes(hass):
 
 
 @pytest.fixture
-def aiohttp_client(event_loop, aiohttp_client, socket_enabled):
+def aiohttp_client(
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return aiohttp_client and allow opening sockets."""
     return aiohttp_client
 
 
 @pytest.fixture
-async def mock_http_client(hass, aiohttp_client, frontend):
+async def mock_http_client(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, frontend: None
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     return await aiohttp_client(hass.http.app)
 
 
 @pytest.fixture
-async def themes_ws_client(hass, hass_ws_client, frontend_themes):
+async def themes_ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend_themes: None
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def ws_client(hass, hass_ws_client, frontend):
+async def ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend: None
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def mock_http_client_with_urls(hass, aiohttp_client, ignore_frontend_deps):
+async def mock_http_client_with_extra_js(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    ignore_frontend_deps: None,
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     assert await async_setup_component(
         hass,
         "frontend",
         {
             DOMAIN: {
-                CONF_JS_VERSION: "auto",
-                CONF_EXTRA_HTML_URL: ["https://domain.com/my_extra_url.html"],
-                CONF_EXTRA_HTML_URL_ES5: ["https://domain.com/my_extra_url_es5.html"],
+                CONF_EXTRA_MODULE_URL: ["/local/my_module.js"],
+                CONF_EXTRA_JS_URL_ES5: ["/local/my_es5.js"],
             }
         },
     )
@@ -124,7 +148,7 @@ async def mock_http_client_with_urls(hass, aiohttp_client, ignore_frontend_deps)
 
 
 @pytest.fixture
-def mock_onboarded():
+def mock_onboarded() -> Generator[None]:
     """Mock that we're onboarded."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=True
@@ -132,7 +156,8 @@ def mock_onboarded():
         yield
 
 
-async def test_frontend_and_static(mock_http_client, mock_onboarded) -> None:
+@pytest.mark.usefixtures("mock_onboarded")
+async def test_frontend_and_static(mock_http_client: TestClient) -> None:
     """Test if we can get the frontend."""
     resp = await mock_http_client.get("")
     assert resp.status == 200
@@ -141,7 +166,7 @@ async def test_frontend_and_static(mock_http_client, mock_onboarded) -> None:
     text = await resp.text()
 
     # Test we can retrieve frontend.js
-    frontendjs = re.search(r"(?P<app>\/frontend_es5\/app.[A-Za-z0-9_-]{11}.js)", text)
+    frontendjs = re.search(r"(?P<app>\/frontend_es5\/app.[A-Za-z0-9_-]{16}.js)", text)
 
     assert frontendjs is not None, text
     resp = await mock_http_client.get(frontendjs.groups(0)[0])
@@ -149,26 +174,31 @@ async def test_frontend_and_static(mock_http_client, mock_onboarded) -> None:
     assert "public" in resp.headers.get("cache-control")
 
 
-async def test_dont_cache_service_worker(mock_http_client) -> None:
+@pytest.mark.parametrize("sw_url", ["/sw-modern.js", "/sw-legacy.js"])
+async def test_dont_cache_service_worker(
+    mock_http_client: TestClient, sw_url: str
+) -> None:
     """Test that we don't cache the service worker."""
-    resp = await mock_http_client.get("/service_worker.js")
+    resp = await mock_http_client.get(sw_url)
     assert resp.status == 200
     assert "cache-control" not in resp.headers
 
 
-async def test_404(mock_http_client) -> None:
+async def test_404(mock_http_client: TestClient) -> None:
     """Test for HTTP 404 error."""
     resp = await mock_http_client.get("/not-existing")
     assert resp.status == HTTPStatus.NOT_FOUND
 
 
-async def test_we_cannot_POST_to_root(mock_http_client) -> None:
+async def test_we_cannot_POST_to_root(mock_http_client: TestClient) -> None:
     """Test that POST is not allow to root."""
     resp = await mock_http_client.post("/")
     assert resp.status == 405
 
 
-async def test_themes_api(hass: HomeAssistant, themes_ws_client) -> None:
+async def test_themes_api(
+    hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
+) -> None:
     """Test that /api/themes returns correct data."""
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
     msg = await themes_ws_client.receive_json()
@@ -177,22 +207,29 @@ async def test_themes_api(hass: HomeAssistant, themes_ws_client) -> None:
     assert msg["result"]["default_dark_theme"] is None
     assert msg["result"]["themes"] == MOCK_THEMES
 
-    # safe mode
-    hass.config.safe_mode = True
+    # recovery mode
+    hass.config.recovery_mode = True
     await themes_ws_client.send_json({"id": 6, "type": "frontend/get_themes"})
     msg = await themes_ws_client.receive_json()
 
-    assert msg["result"]["default_theme"] == "safe_mode"
-    assert msg["result"]["themes"] == {
-        "safe_mode": {"primary-color": "#db4437", "accent-color": "#ffca28"}
-    }
+    assert msg["result"]["default_theme"] == "default"
+    assert msg["result"]["themes"] == {}
+
+    # safe mode
+    hass.config.recovery_mode = False
+    hass.config.safe_mode = True
+    await themes_ws_client.send_json({"id": 7, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_theme"] == "default"
+    assert msg["result"]["themes"] == {}
 
 
+@pytest.mark.usefixtures("ignore_frontend_deps")
 async def test_themes_persist(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_ws_client: WebSocketGenerator,
-    ignore_frontend_deps,
 ) -> None:
     """Test that theme settings are restores after restart."""
     hass_storage[THEMES_STORAGE_KEY] = {
@@ -214,8 +251,11 @@ async def test_themes_persist(
     assert msg["result"]["default_dark_theme"] == "dark"
 
 
+@pytest.mark.usefixtures("frontend_themes")
 async def test_themes_save_storage(
-    hass: HomeAssistant, hass_storage: dict[str, Any], frontend_themes
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that theme settings are restores after restart."""
 
@@ -228,7 +268,8 @@ async def test_themes_save_storage(
     )
 
     # To trigger the call_later
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    freezer.tick(60.0)
+    async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
 
@@ -238,7 +279,9 @@ async def test_themes_save_storage(
     }
 
 
-async def test_themes_set_theme(hass: HomeAssistant, themes_ws_client) -> None:
+async def test_themes_set_theme(
+    hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
+) -> None:
     """Test frontend.set_theme service."""
     await hass.services.async_call(
         DOMAIN, "set_theme", {"name": "happy"}, blocking=True
@@ -271,7 +314,7 @@ async def test_themes_set_theme(hass: HomeAssistant, themes_ws_client) -> None:
 
 
 async def test_themes_set_theme_wrong_name(
-    hass: HomeAssistant, themes_ws_client
+    hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
 ) -> None:
     """Test frontend.set_theme service called with wrong name."""
 
@@ -286,7 +329,9 @@ async def test_themes_set_theme_wrong_name(
     assert msg["result"]["default_theme"] == "default"
 
 
-async def test_themes_set_dark_theme(hass: HomeAssistant, themes_ws_client) -> None:
+async def test_themes_set_dark_theme(
+    hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
+) -> None:
     """Test frontend.set_theme service called with dark mode."""
 
     await hass.services.async_call(
@@ -326,8 +371,9 @@ async def test_themes_set_dark_theme(hass: HomeAssistant, themes_ws_client) -> N
     assert msg["result"]["default_dark_theme"] == "light_and_dark"
 
 
+@pytest.mark.usefixtures("frontend")
 async def test_themes_set_dark_theme_wrong_name(
-    hass: HomeAssistant, frontend, themes_ws_client
+    hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
 ) -> None:
     """Test frontend.set_theme service called with mode dark and wrong name."""
     await hass.services.async_call(
@@ -341,8 +387,9 @@ async def test_themes_set_dark_theme_wrong_name(
     assert msg["result"]["default_dark_theme"] is None
 
 
+@pytest.mark.usefixtures("frontend")
 async def test_themes_reload_themes(
-    hass: HomeAssistant, frontend, themes_ws_client
+    hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
 ) -> None:
     """Test frontend.reload_themes service."""
 
@@ -363,7 +410,109 @@ async def test_themes_reload_themes(
     assert msg["result"]["default_theme"] == "default"
 
 
-async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
+@pytest.mark.usefixtures("frontend")
+@pytest.mark.parametrize(
+    ("invalid_theme", "error", "log"),
+    [
+        (
+            {
+                "invalid0": "blue",
+            },
+            "expected a dictionary",
+            None,
+        ),
+        (
+            {
+                "invalid1": {
+                    "primary-color": "black",
+                    "modes": "light:{} dark:{}",
+                }
+            },
+            None,
+            "expected a dictionary",
+        ),
+        (
+            {
+                "invalid2": None,
+            },
+            "expected a dictionary",
+            None,
+        ),
+        (
+            {
+                "invalid3": {
+                    "primary-color": "black",
+                    "modes": {},
+                }
+            },
+            None,
+            "must contain at least one of light, dark",
+        ),
+        (
+            {
+                "invalid4": {
+                    "primary-color": "black",
+                    "modes": None,
+                }
+            },
+            "string value is None for dictionary value",
+            None,
+        ),
+        (
+            {
+                "invalid5": {
+                    "primary-color": "black",
+                    "modes": {"light": {}, "dank": {}},
+                }
+            },
+            "extra keys not allowed.*dank",
+            None,
+        ),
+    ],
+)
+async def test_themes_reload_invalid(
+    hass: HomeAssistant,
+    themes_ws_client: MockHAClientWebSocket,
+    invalid_theme: dict,
+    error: str | None,
+    log: str | None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test frontend.reload_themes service with an invalid theme."""
+
+    with patch(
+        "homeassistant.components.frontend.async_hass_config_yaml",
+        return_value={DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "pink"}}}},
+    ):
+        await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
+
+    with (
+        patch(
+            "homeassistant.components.frontend.async_hass_config_yaml",
+            return_value={DOMAIN: {CONF_THEMES: invalid_theme}},
+        ),
+        pytest.raises(HomeAssistantError, match=rf"Failed to reload themes.*{error}")
+        if error is not None
+        else nullcontext(),
+    ):
+        await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
+
+    if log is not None:
+        assert log in caplog.text
+
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
+
+    msg = await themes_ws_client.receive_json()
+
+    expected_themes = {"happy": {"primary-color": "pink"}}
+    if error is None:
+        expected_themes = {}
+
+    assert msg["result"]["themes"] == expected_themes
+    assert msg["result"]["default_theme"] == "default"
+
+
+async def test_missing_themes(ws_client: MockHAClientWebSocket) -> None:
     """Test that themes API works when themes are not defined."""
     await ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
@@ -376,8 +525,97 @@ async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
     assert msg["result"]["themes"] == {}
 
 
+@pytest.mark.usefixtures("mock_onboarded")
+async def test_extra_js(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_http_client_with_extra_js: TestClient,
+) -> None:
+    """Test that extra javascript is loaded."""
+
+    async def get_response():
+        resp = await mock_http_client_with_extra_js.get("")
+        assert resp.status == 200
+        assert "cache-control" not in resp.headers
+
+        return await resp.text()
+
+    text = await get_response()
+    assert '"/local/my_module.js"' in text
+    assert '"/local/my_es5.js"' in text
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "frontend/subscribe_extra_js"})
+    msg = await client.receive_json()
+
+    assert msg["success"] is True
+    subscription_id = msg["id"]
+
+    # Test dynamically adding and removing extra javascript
+    add_extra_js_url(hass, "/local/my_module_2.js", False)
+    add_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' in text
+    assert '"/local/my_es5_2.js"' in text
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"] == {
+        "change_type": "added",
+        "item": {"type": "module", "url": "/local/my_module_2.js"},
+    }
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"] == {
+        "change_type": "added",
+        "item": {"type": "es5", "url": "/local/my_es5_2.js"},
+    }
+
+    remove_extra_js_url(hass, "/local/my_module_2.js", False)
+    remove_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"] == {
+        "change_type": "removed",
+        "item": {"type": "module", "url": "/local/my_module_2.js"},
+    }
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"] == {
+        "change_type": "removed",
+        "item": {"type": "es5", "url": "/local/my_es5_2.js"},
+    }
+
+    # Remove again should not raise
+    remove_extra_js_url(hass, "/local/my_module_2.js", False)
+    remove_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
+
+    # safe mode
+    hass.config.safe_mode = True
+    text = await get_response()
+    assert '"/local/my_module.js"' not in text
+    assert '"/local/my_es5.js"' not in text
+
+    # Test dynamically adding extra javascript
+    add_extra_js_url(hass, "/local/my_module_2.js", False)
+    add_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
+
+
 async def test_get_panels(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_http_client
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_http_client: TestClient,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test get_panels command."""
     events = async_capture_events(hass, EVENT_PANELS_UPDATED)
@@ -385,8 +623,8 @@ async def test_get_panels(
     resp = await mock_http_client.get("/map")
     assert resp.status == HTTPStatus.NOT_FOUND
 
-    hass.components.frontend.async_register_built_in_panel(
-        "map", "Map", "mdi:tooltip-account", require_admin=True
+    async_register_built_in_panel(
+        hass, "map", "Map", "mdi:tooltip-account", require_admin=True
     )
 
     resp = await mock_http_client.get("/map")
@@ -408,26 +646,33 @@ async def test_get_panels(
     assert msg["result"]["map"]["title"] == "Map"
     assert msg["result"]["map"]["require_admin"] is True
 
-    hass.components.frontend.async_remove_panel("map")
+    async_remove_panel(hass, "map")
 
     resp = await mock_http_client.get("/map")
     assert resp.status == HTTPStatus.NOT_FOUND
 
     assert len(events) == 2
 
+    # Remove again, will warn but not trigger event
+    async_remove_panel(hass, "map")
+    assert "Removing unknown panel map" in caplog.text
+    caplog.clear()
+
+    # Remove again, without warning
+    async_remove_panel(hass, "map", warn_if_unknown=False)
+    assert "Removing unknown panel map" not in caplog.text
+
 
 async def test_get_panels_non_admin(
-    hass: HomeAssistant, ws_client, hass_admin_user: MockUser
+    hass: HomeAssistant, ws_client: MockHAClientWebSocket, hass_admin_user: MockUser
 ) -> None:
     """Test get_panels command."""
     hass_admin_user.groups = []
 
-    hass.components.frontend.async_register_built_in_panel(
-        "map", "Map", "mdi:tooltip-account", require_admin=True
+    async_register_built_in_panel(
+        hass, "map", "Map", "mdi:tooltip-account", require_admin=True
     )
-    hass.components.frontend.async_register_built_in_panel(
-        "history", "History", "mdi:history"
-    )
+    async_register_built_in_panel(hass, "history", "History", "mdi:history")
 
     await ws_client.send_json({"id": 5, "type": "get_panels"})
 
@@ -440,7 +685,7 @@ async def test_get_panels_non_admin(
     assert "map" not in msg["result"]
 
 
-async def test_get_translations(hass: HomeAssistant, ws_client) -> None:
+async def test_get_translations(ws_client: MockHAClientWebSocket) -> None:
     """Test get_translations command."""
     with patch(
         "homeassistant.components.frontend.async_get_translations",
@@ -465,7 +710,7 @@ async def test_get_translations(hass: HomeAssistant, ws_client) -> None:
 
 
 async def test_get_translations_for_integrations(
-    hass: HomeAssistant, ws_client
+    ws_client: MockHAClientWebSocket,
 ) -> None:
     """Test get_translations for integrations command."""
     with patch(
@@ -493,7 +738,7 @@ async def test_get_translations_for_integrations(
 
 
 async def test_get_translations_for_single_integration(
-    hass: HomeAssistant, ws_client
+    ws_client: MockHAClientWebSocket,
 ) -> None:
     """Test get_translations for integration command."""
     with patch(
@@ -532,7 +777,7 @@ async def test_onboarding_load(hass: HomeAssistant) -> None:
     assert "onboarding" in frontend.dependencies
 
 
-async def test_auth_authorize(mock_http_client) -> None:
+async def test_auth_authorize(mock_http_client: TestClient) -> None:
     """Test the authorize endpoint works."""
     resp = await mock_http_client.get(
         "/auth/authorize?response_type=code&client_id=https://localhost/&"
@@ -546,7 +791,7 @@ async def test_auth_authorize(mock_http_client) -> None:
 
     # Test we can retrieve authorize.js
     authorizejs = re.search(
-        r"(?P<app>\/frontend_latest\/authorize.[A-Za-z0-9_-]{11}.js)", text
+        r"(?P<app>\/frontend_latest\/authorize.[A-Za-z0-9_-]{16}.js)", text
     )
 
     assert authorizejs is not None, text
@@ -555,7 +800,9 @@ async def test_auth_authorize(mock_http_client) -> None:
     assert "public" in resp.headers.get("cache-control")
 
 
-async def test_get_version(hass: HomeAssistant, ws_client) -> None:
+async def test_get_version(
+    hass: HomeAssistant, ws_client: MockHAClientWebSocket
+) -> None:
     """Test get_version command."""
     frontend = await async_get_integration(hass, "frontend")
     cur_version = next(
@@ -573,7 +820,7 @@ async def test_get_version(hass: HomeAssistant, ws_client) -> None:
     assert msg["result"] == {"version": cur_version}
 
 
-async def test_static_paths(hass: HomeAssistant, mock_http_client) -> None:
+async def test_static_paths(mock_http_client: TestClient) -> None:
     """Test static paths."""
     resp = await mock_http_client.get(
         "/.well-known/change-password", allow_redirects=False
@@ -582,9 +829,8 @@ async def test_static_paths(hass: HomeAssistant, mock_http_client) -> None:
     assert resp.headers["location"] == "/profile"
 
 
-async def test_manifest_json(
-    hass: HomeAssistant, frontend_themes, mock_http_client
-) -> None:
+@pytest.mark.usefixtures("frontend_themes")
+async def test_manifest_json(hass: HomeAssistant, mock_http_client: TestClient) -> None:
     """Test for fetching manifest.json."""
     resp = await mock_http_client.get("/manifest.json")
     assert resp.status == HTTPStatus.OK
@@ -606,7 +852,7 @@ async def test_manifest_json(
     assert json["theme_color"] != DEFAULT_THEME_COLOR
 
 
-async def test_static_path_cache(hass: HomeAssistant, mock_http_client) -> None:
+async def test_static_path_cache(mock_http_client: TestClient) -> None:
     """Test static paths cache."""
     resp = await mock_http_client.get("/lovelace/default_view", allow_redirects=False)
     assert resp.status == 404
@@ -636,3 +882,94 @@ async def test_static_path_cache(hass: HomeAssistant, mock_http_client) -> None:
     # and again to make sure the cache works
     resp = await mock_http_client.get("/static/does-not-exist", allow_redirects=False)
     assert resp.status == 404
+
+
+async def test_get_icons(ws_client: MockHAClientWebSocket) -> None:
+    """Test get_icons command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_icons",
+        side_effect=lambda hass, category, integrations: {},
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_icons",
+                "category": "entity_component",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {"resources": {}}
+
+
+async def test_get_icons_for_integrations(ws_client: MockHAClientWebSocket) -> None:
+    """Test get_icons for integrations command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_icons",
+        side_effect=lambda hass, category, integrations: {
+            integration: {} for integration in integrations
+        },
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_icons",
+                "integration": ["frontend", "http"],
+                "category": "entity",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert set(msg["result"]["resources"]) == {"frontend", "http"}
+
+
+async def test_get_icons_for_single_integration(
+    ws_client: MockHAClientWebSocket,
+) -> None:
+    """Test get_icons for integration command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_icons",
+        side_effect=lambda hass, category, integrations: {
+            integration: {} for integration in integrations
+        },
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_icons",
+                "integration": "http",
+                "category": "entity",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {"resources": {"http": {}}}
+
+
+async def test_www_local_dir(
+    hass: HomeAssistant, tmp_path: Path, hass_client: ClientSessionGenerator
+) -> None:
+    """Test local www folder."""
+    hass.config.config_dir = str(tmp_path)
+    tmp_path_www = tmp_path / "www"
+    x_txt_file = tmp_path_www / "x.txt"
+
+    def _create_www_and_x_txt():
+        tmp_path_www.mkdir()
+        x_txt_file.write_text("any")
+
+    await hass.async_add_executor_job(_create_www_and_x_txt)
+
+    assert await async_setup_component(hass, "frontend", {})
+    client = await hass_client()
+    resp = await client.get("/local/x.txt")
+    assert resp.status == HTTPStatus.OK

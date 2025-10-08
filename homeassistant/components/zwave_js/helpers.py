@@ -1,15 +1,24 @@
 """Helper functions for Z-Wave JS integration."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+import asyncio
+from collections.abc import Callable, Coroutine
 from dataclasses import astuple, dataclass
 import logging
 from typing import Any, cast
 
+import aiohttp
 import voluptuous as vol
-from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.const import (
+    LOG_LEVEL_MAP,
+    CommandClass,
+    ConfigurationValueType,
+    LogLevel,
+)
+from zwave_js_server.model.controller import Controller, ProvisioningEntry
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
@@ -17,10 +26,10 @@ from zwave_js_server.model.value import (
     ValueDataType,
     get_value_id_str,
 )
+from zwave_js_server.version import VersionInfo, get_server_version
 
-from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -31,29 +40,24 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.group import expand_entity_ids
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_ENDPOINT,
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
-    CONF_DATA_COLLECTION_OPTED_IN,
-    DATA_CLIENT,
     DOMAIN,
+    LIB_LOGGER,
     LOGGER,
 )
+from .models import ZwaveJSConfigEntry
 
-
-@dataclass
-class ZwaveValueID:
-    """Class to represent a value ID."""
-
-    property_: str | int
-    command_class: int
-    endpoint: int | None = None
-    property_key: str | int | None = None
+DRIVER_READY_EVENT_TIMEOUT = 60
+SERVER_VERSION_TIMEOUT = 10
 
 
 @dataclass
@@ -87,7 +91,7 @@ def value_matches_matcher(
     return all(
         redacted_field_val is None or redacted_field_val == zwave_value_field_val
         for redacted_field_val, zwave_value_field_val in zip(
-            astuple(matcher), astuple(zwave_value_id)
+            astuple(matcher), astuple(zwave_value_id), strict=False
         )
     )
 
@@ -125,17 +129,59 @@ def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
 async def async_enable_statistics(driver: Driver) -> None:
     """Enable statistics on the driver."""
     await driver.async_enable_statistics("Home Assistant", HA_VERSION)
-    await driver.async_enable_error_reporting()
 
 
-@callback
-def async_update_data_collection_preference(
-    hass: HomeAssistant, entry: ConfigEntry, preference: bool
+async def async_enable_server_logging_if_needed(
+    hass: HomeAssistant, entry: ZwaveJSConfigEntry, driver: Driver
 ) -> None:
-    """Update data collection preference on config entry."""
-    new_data = entry.data.copy()
-    new_data[CONF_DATA_COLLECTION_OPTED_IN] = preference
-    hass.config_entries.async_update_entry(entry, data=new_data)
+    """Enable logging of zwave-js-server in the lib."""
+    # If lib log level is set to debug, we want to enable server logging. First we
+    # check if server log level is less verbose than library logging, and if so, set it
+    # to debug to match library logging. We will store the old server log level in
+    # hass.data so we can reset it later
+    if (
+        not driver
+        or not driver.client.connected
+        or driver.client.server_logging_enabled
+    ):
+        return
+
+    LOGGER.info("Enabling zwave-js-server logging")
+    if (curr_server_log_level := driver.log_config.level) and (
+        LOG_LEVEL_MAP[curr_server_log_level]
+    ) > LIB_LOGGER.getEffectiveLevel():
+        entry.runtime_data.old_server_log_level = curr_server_log_level
+        await driver.async_update_log_config(LogConfig(level=LogLevel.DEBUG))
+    await driver.client.enable_server_logging()
+    LOGGER.info("Zwave-js-server logging is enabled")
+
+
+async def async_disable_server_logging_if_needed(
+    hass: HomeAssistant, entry: ZwaveJSConfigEntry, driver: Driver
+) -> None:
+    """Disable logging of zwave-js-server in the lib if still connected to server."""
+    if (
+        not driver
+        or not driver.client.connected
+        or not driver.client.server_logging_enabled
+    ):
+        return
+    LOGGER.info("Disabling zwave_js server logging")
+    if (
+        old_server_log_level := entry.runtime_data.old_server_log_level
+    ) is not None and old_server_log_level != driver.log_config.level:
+        LOGGER.info(
+            (
+                "Server logging is currently set to %s as a result of server logging "
+                "being enabled. It is now being reset to %s"
+            ),
+            driver.log_config.level,
+            old_server_log_level,
+        )
+        await driver.async_update_log_config(LogConfig(level=old_server_log_level))
+        entry.runtime_data.old_server_log_level = None
+    driver.client.disable_server_logging()
+    LOGGER.info("Zwave-js-server logging is enabled")
 
 
 def get_valueless_base_unique_id(driver: Driver, node: ZwaveNode) -> str:
@@ -180,7 +226,7 @@ def get_home_and_node_id_from_device_entry(
         ),
         None,
     )
-    if device_id is None:
+    if device_id is None or device_id.startswith("provision_"):
         return None
     id_ = device_id.split("-")
     return (id_[0], int(id_[1]))
@@ -203,7 +249,7 @@ def async_get_node_from_device_id(
     # Use device config entry ID's to validate that this is a valid zwave_js device
     # and to get the client
     config_entry_ids = device_entry.config_entries
-    entry = next(
+    entry: ZwaveJSConfigEntry | None = next(
         (
             entry
             for entry in hass.config_entries.async_entries(DOMAIN)
@@ -211,14 +257,14 @@ def async_get_node_from_device_id(
         ),
         None,
     )
-    if entry and entry.state != ConfigEntryState.LOADED:
-        raise ValueError(f"Device {device_id} config entry is not loaded")
-    if entry is None or entry.entry_id not in hass.data[DOMAIN]:
+    if entry is None:
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
+    if entry.state != ConfigEntryState.LOADED:
+        raise ValueError(f"Device {device_id} config entry is not loaded")
 
-    client: ZwaveClient = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    client = entry.runtime_data.client
     driver = client.driver
 
     if driver is None:
@@ -234,6 +280,53 @@ def async_get_node_from_device_id(
         raise ValueError(f"Node for device {device_id} can't be found")
 
     return driver.controller.nodes[node_id]
+
+
+async def async_get_provisioning_entry_from_device_id(
+    hass: HomeAssistant, device_id: str
+) -> ProvisioningEntry | None:
+    """Get provisioning entry from a device ID.
+
+    Raises ValueError if device is invalid
+    """
+    dev_reg = dr.async_get(hass)
+
+    if not (device_entry := dev_reg.async_get(device_id)):
+        raise ValueError(f"Device ID {device_id} is not valid")
+
+    # Use device config entry ID's to validate that this is a valid zwave_js device
+    # and to get the client
+    config_entry_ids = device_entry.config_entries
+    entry: ZwaveJSConfigEntry | None = next(
+        (
+            entry
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.entry_id in config_entry_ids
+        ),
+        None,
+    )
+    if entry is None:
+        raise ValueError(
+            f"Device {device_id} is not from an existing zwave_js config entry"
+        )
+    if entry.state != ConfigEntryState.LOADED:
+        raise ValueError(f"Device {device_id} config entry is not loaded")
+
+    client = entry.runtime_data.client
+    driver = client.driver
+
+    if driver is None:
+        raise ValueError("Driver is not ready.")
+
+    provisioning_entries = await driver.controller.async_get_provisioning_entries()
+    for provisioning_entry in provisioning_entries:
+        if (
+            provisioning_entry.additional_properties
+            and provisioning_entry.additional_properties.get("device_id") == device_id
+        ):
+            return provisioning_entry
+
+    return None
 
 
 @callback
@@ -252,7 +345,7 @@ def async_get_node_from_entity_id(
     entity_entry = ent_reg.async_get(entity_id)
 
     if entity_entry is None or entity_entry.platform != DOMAIN:
-        raise ValueError(f"Entity {entity_id} is not a valid {DOMAIN} entity.")
+        raise ValueError(f"Entity {entity_id} is not a valid {DOMAIN} entity")
 
     # Assert for mypy, safe because we know that zwave_js entities are always
     # tied to a device
@@ -282,20 +375,18 @@ def async_get_nodes_from_area_id(
         }
     )
     # Add devices in an area that are Z-Wave JS devices
-    for device in dr.async_entries_for_area(dev_reg, area_id):
-        if next(
-            (
-                config_entry_id
-                for config_entry_id in device.config_entries
-                if cast(
-                    ConfigEntry,
-                    hass.config_entries.async_get_entry(config_entry_id),
-                ).domain
-                == DOMAIN
-            ),
-            None,
-        ):
-            nodes.add(async_get_node_from_device_id(hass, device.id, dev_reg))
+    nodes.update(
+        async_get_node_from_device_id(hass, device.id, dev_reg)
+        for device in dr.async_entries_for_area(dev_reg, area_id)
+        if any(
+            cast(
+                ZwaveJSConfigEntry,
+                hass.config_entries.async_get_entry(config_entry_id),
+            ).domain
+            == DOMAIN
+            for config_entry_id in device.config_entries
+        )
+    )
 
     return nodes
 
@@ -381,7 +472,9 @@ def async_get_node_status_sensor_entity_id(
     if not (entry_id := _zwave_js_config_entry(hass, device)):
         return None
 
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    entry = hass.config_entries.async_get_entry(entry_id)
+    assert entry
+    client = entry.runtime_data.client
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
     return ent_reg.async_get_entity_id(
         SENSOR_DOMAIN,
@@ -395,7 +488,9 @@ def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
     return {key: value for key, value in config.items() if value not in ("", None)}
 
 
-def check_type_schema_map(schema_map: dict[str, vol.Schema]) -> Callable:
+def check_type_schema_map(
+    schema_map: dict[str, vol.Schema],
+) -> Callable[[ConfigType], ConfigType]:
     """Check type specific schema against config."""
 
     def _check_type_schema(config: ConfigType) -> ConfigType:
@@ -416,7 +511,7 @@ def copy_available_params(
 
 def get_value_state_schema(
     value: ZwaveValue,
-) -> vol.Schema | None:
+) -> VolSchemaType | vol.Coerce | vol.In | None:
     """Return device automation schema for a config entry."""
     if isinstance(value, ConfigurationValue):
         min_ = value.metadata.min
@@ -426,6 +521,9 @@ def get_value_state_schema(
             ConfigurationValueType.MANUAL_ENTRY,
         ):
             return vol.All(vol.Coerce(int), vol.Range(min=min_, max=max_))
+
+        if value.configuration_value_type == ConfigurationValueType.BOOLEAN:
+            return vol.Coerce(bool)
 
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
             return vol.In({int(k): v for k, v in value.metadata.states.items()})
@@ -451,3 +549,87 @@ def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
         manufacturer=node.device_config.manufacturer,
         suggested_area=node.location if node.location else None,
     )
+
+
+def get_network_identifier_for_notification(
+    hass: HomeAssistant, config_entry: ZwaveJSConfigEntry, controller: Controller
+) -> str:
+    """Return the network identifier string for persistent notifications."""
+    home_id = str(controller.home_id)
+    if len(hass.config_entries.async_entries(DOMAIN)) > 1:
+        if str(home_id) != config_entry.title:
+            return f"`{config_entry.title}`, with the home ID `{home_id}`,"
+        return f"with the home ID `{home_id}`"
+    return ""
+
+
+async def async_get_version_info(hass: HomeAssistant, ws_address: str) -> VersionInfo:
+    """Return Z-Wave JS version info."""
+    try:
+        async with asyncio.timeout(SERVER_VERSION_TIMEOUT):
+            version_info: VersionInfo = await get_server_version(
+                ws_address, async_get_clientsession(hass)
+            )
+    except (TimeoutError, aiohttp.ClientError) as err:
+        # We don't want to spam the log if the add-on isn't started
+        # or takes a long time to start.
+        LOGGER.debug("Failed to connect to Z-Wave JS server: %s", err)
+        raise CannotConnect from err
+
+    return version_info
+
+
+@callback
+def async_wait_for_driver_ready_event(
+    config_entry: ZwaveJSConfigEntry,
+    driver: Driver,
+) -> Callable[[], Coroutine[Any, Any, None]]:
+    """Wait for the driver ready event and the config entry reload.
+
+    When the driver ready event is received
+    the config entry will be reloaded by the integration.
+    This function helps wait for that to happen
+    before proceeding with further actions.
+
+    If the config entry is reloaded for another reason,
+    this function will not wait for it to be reloaded again.
+
+    Raises TimeoutError if the driver ready event and reload
+    is not received within the specified timeout.
+    """
+    driver_ready_event_received = asyncio.Event()
+    config_entry_reloaded = asyncio.Event()
+    unsubscribers: list[Callable[[], None]] = []
+
+    @callback
+    def driver_ready_received(event: dict) -> None:
+        """Receive the driver ready event."""
+        driver_ready_event_received.set()
+
+    unsubscribers.append(driver.once("driver ready", driver_ready_received))
+
+    @callback
+    def on_config_entry_state_change() -> None:
+        """Check config entry was loaded after driver ready event."""
+        if config_entry.state is ConfigEntryState.LOADED:
+            config_entry_reloaded.set()
+
+    unsubscribers.append(
+        config_entry.async_on_state_change(on_config_entry_state_change)
+    )
+
+    async def wait_for_events() -> None:
+        try:
+            async with asyncio.timeout(DRIVER_READY_EVENT_TIMEOUT):
+                await asyncio.gather(
+                    driver_ready_event_received.wait(), config_entry_reloaded.wait()
+                )
+        finally:
+            for unsubscribe in unsubscribers:
+                unsubscribe()
+
+    return wait_for_events
+
+
+class CannotConnect(HomeAssistantError):
+    """Indicate connection error."""

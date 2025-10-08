@@ -1,8 +1,11 @@
 """Support for Xiaomi buttons."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
+from miio import Device as MiioDevice
 from miio.integrations.vacuum.roborock.vacuum import Consumable
 
 from homeassistant.components.button import (
@@ -10,20 +13,14 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    DOMAIN,
-    KEY_COORDINATOR,
-    KEY_DEVICE,
-    MODEL_AIRFRESH_A1,
-    MODEL_AIRFRESH_T2017,
-    MODELS_VACUUM,
-)
-from .device import XiaomiCoordinatedMiioEntity
+from .const import MODEL_AIRFRESH_A1, MODEL_AIRFRESH_T2017, MODELS_VACUUM
+from .entity import XiaomiCoordinatedMiioEntity
+from .typing import XiaomiMiioConfigEntry
 
 # Fans
 ATTR_RESET_DUST_FILTER = "reset_dust_filter"
@@ -37,7 +34,7 @@ ATTR_RESET_VACUUM_FILTER = "reset_vacuum_filter"
 ATTR_RESET_VACUUM_SENSOR_DIRTY = "reset_vacuum_sensor_dirty"
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioButtonDescription(ButtonEntityDescription):
     """A class that describes button entities."""
 
@@ -50,7 +47,7 @@ BUTTON_TYPES = (
     # Fans
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_DUST_FILTER,
-        name="Reset dust filter",
+        translation_key=ATTR_RESET_DUST_FILTER,
         icon="mdi:air-filter",
         method_press="reset_dust_filter",
         method_press_error_message="Resetting the dust filter lifetime failed",
@@ -58,7 +55,7 @@ BUTTON_TYPES = (
     ),
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_UPPER_FILTER,
-        name="Reset upper filter",
+        translation_key=ATTR_RESET_UPPER_FILTER,
         icon="mdi:air-filter",
         method_press="reset_upper_filter",
         method_press_error_message="Resetting the upper filter lifetime failed.",
@@ -67,7 +64,7 @@ BUTTON_TYPES = (
     # Vacuums
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_VACUUM_MAIN_BRUSH,
-        name="Reset main brush",
+        translation_key=ATTR_RESET_VACUUM_MAIN_BRUSH,
         icon="mdi:brush",
         method_press=METHOD_VACUUM_RESET_CONSUMABLE,
         method_press_params=Consumable.MainBrush,
@@ -76,7 +73,7 @@ BUTTON_TYPES = (
     ),
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_VACUUM_SIDE_BRUSH,
-        name="Reset side brush",
+        translation_key=ATTR_RESET_VACUUM_SIDE_BRUSH,
         icon="mdi:brush",
         method_press=METHOD_VACUUM_RESET_CONSUMABLE,
         method_press_params=Consumable.SideBrush,
@@ -85,7 +82,7 @@ BUTTON_TYPES = (
     ),
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_VACUUM_FILTER,
-        name="Reset filter",
+        translation_key=ATTR_RESET_VACUUM_FILTER,
         icon="mdi:air-filter",
         method_press=METHOD_VACUUM_RESET_CONSUMABLE,
         method_press_params=Consumable.Filter,
@@ -94,7 +91,7 @@ BUTTON_TYPES = (
     ),
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_VACUUM_SENSOR_DIRTY,
-        name="Reset sensor dirty",
+        translation_key=ATTR_RESET_VACUUM_SENSOR_DIRTY,
         icon="mdi:eye-outline",
         method_press=METHOD_VACUUM_RESET_CONSUMABLE,
         method_press_params=Consumable.SensorDirty,
@@ -116,14 +113,14 @@ MODEL_TO_BUTTON_MAP: dict[str, tuple[str, ...]] = {
         ATTR_RESET_DUST_FILTER,
         ATTR_RESET_UPPER_FILTER,
     ),
-    **{model: BUTTONS_FOR_VACUUM for model in MODELS_VACUUM},
+    **dict.fromkeys(MODELS_VACUUM, BUTTONS_FOR_VACUUM),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: XiaomiMiioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the button from a config entry."""
     model = config_entry.data[CONF_MODEL]
@@ -134,8 +131,8 @@ async def async_setup_entry(
     entities = []
     buttons = MODEL_TO_BUTTON_MAP[model]
     unique_id = config_entry.unique_id
-    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.device_coordinator
 
     for description in BUTTON_TYPES:
         if description.key not in buttons:
@@ -154,14 +151,23 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class XiaomiGenericCoordinatedButton(XiaomiCoordinatedMiioEntity, ButtonEntity):
+class XiaomiGenericCoordinatedButton(
+    XiaomiCoordinatedMiioEntity[DataUpdateCoordinator[Any]], ButtonEntity
+):
     """A button implementation for Xiaomi."""
 
     entity_description: XiaomiMiioButtonDescription
 
     _attr_device_class = ButtonDeviceClass.RESTART
 
-    def __init__(self, device, entry, unique_id, coordinator, description):
+    def __init__(
+        self,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str,
+        coordinator: DataUpdateCoordinator[Any],
+        description: XiaomiMiioButtonDescription,
+    ) -> None:
         """Initialize the plug switch."""
         super().__init__(device, entry, unique_id, coordinator)
         self.entity_description = description
@@ -169,8 +175,12 @@ class XiaomiGenericCoordinatedButton(XiaomiCoordinatedMiioEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         method = getattr(self._device, self.entity_description.method_press)
-        await self._try_command(
-            self.entity_description.method_press_error_message,
-            method,
-            self.entity_description.method_press_params,
-        )
+        params = self.entity_description.method_press_params
+        if params is not None:
+            await self._try_command(
+                self.entity_description.method_press_error_message, method, params
+            )
+        else:
+            await self._try_command(
+                self.entity_description.method_press_error_message, method
+            )

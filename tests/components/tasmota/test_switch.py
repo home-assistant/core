@@ -1,4 +1,5 @@
 """The tests for the Tasmota switch platform."""
+
 import copy
 import json
 from unittest.mock import patch
@@ -20,6 +21,8 @@ from .test_common import (
     help_test_availability_discovery_update,
     help_test_availability_poll_state,
     help_test_availability_when_connection_lost,
+    help_test_deep_sleep_availability,
+    help_test_deep_sleep_availability_when_connection_lost,
     help_test_discovery_device_remove,
     help_test_discovery_removal,
     help_test_discovery_update_unchanged,
@@ -47,34 +50,34 @@ async def test_controlling_state_via_mqtt(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == "unavailable"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON"}')
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"OFF"}')
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_OFF
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"ON"}')
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"OFF"}')
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_OFF
 
 
@@ -95,30 +98,30 @@ async def test_sending_mqtt_commands(
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_OFF
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_mock.async_publish.reset_mock()
 
     # Turn the switch on and verify MQTT message is sent
-    await common.async_turn_on(hass, "switch.test")
+    await common.async_turn_on(hass, "switch.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Power1", "ON", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Tasmota is not optimistic, the state should still be off
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_OFF
 
     # Turn the switch off and verify MQTT message is sent
-    await common.async_turn_off(hass, "switch.test")
+    await common.async_turn_off(hass, "switch.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Power1", "OFF", 0, False
     )
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_OFF
 
 
@@ -138,9 +141,9 @@ async def test_relay_as_light(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state is None
-    state = hass.states.get("light.test")
+    state = hass.states.get("light.tasmota_test")
     assert state is not None
 
 
@@ -158,6 +161,20 @@ async def test_availability_when_connection_lost(
     )
 
 
+async def test_deep_sleep_availability_when_connection_lost(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
+    """Test availability after MQTT disconnection."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 1
+    await help_test_deep_sleep_availability_when_connection_lost(
+        hass, mqtt_client_mock, mqtt_mock, Platform.SWITCH, config
+    )
+
+
 async def test_availability(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
 ) -> None:
@@ -165,6 +182,15 @@ async def test_availability(
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
     await help_test_availability(hass, mqtt_mock, Platform.SWITCH, config)
+
+
+async def test_deep_sleep_availability(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
+    """Test availability."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 1
+    await help_test_deep_sleep_availability(hass, mqtt_mock, Platform.SWITCH, config)
 
 
 async def test_availability_discovery_update(
@@ -283,3 +309,35 @@ async def test_entity_id_update_discovery_update(
     await help_test_entity_id_update_discovery_update(
         hass, mqtt_mock, Platform.SWITCH, config
     )
+
+
+async def test_no_device_name(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
+    """Test name of switches when no device name is set.
+
+    When the device name is not set, Tasmota uses friendly name 1 as device naem.
+    This test ensures that case is handled correctly.
+    """
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["dn"] = "Relay 1"
+    config["fn"][0] = "Relay 1"
+    config["fn"][1] = "Relay 2"
+    config["rl"][0] = 1
+    config["rl"][1] = 1
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.relay_1")
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Relay 1"
+
+    state = hass.states.get("switch.relay_1_relay_2")
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Relay 1 Relay 2"

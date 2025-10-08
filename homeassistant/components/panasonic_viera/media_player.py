@@ -1,4 +1,5 @@
 """Media player support for Panasonic Viera TV."""
+
 from __future__ import annotations
 
 import logging
@@ -12,14 +13,15 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
     MediaType,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_DEVICE_INFO,
@@ -38,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Panasonic Viera TV from a config entry."""
 
@@ -69,44 +71,26 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(self, remote, name, device_info):
         """Initialize the entity."""
         self._remote = remote
-        self._name = name
-        self._device_info = device_info
+        if device_info is not None:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, device_info[ATTR_UDN])},
+                manufacturer=device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
+                model=device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
+                name=name,
+            )
+            self._attr_unique_id = device_info[ATTR_UDN]
+        else:
+            self._attr_name = name
 
     @property
-    def unique_id(self):
-        """Return the unique ID of the device."""
-        if self._device_info is None:
-            return None
-        return self._device_info[ATTR_UDN]
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device specific attributes."""
-        if self._device_info is None:
-            return None
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_info[ATTR_UDN])},
-            manufacturer=self._device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
-            model=self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
-            name=self._name,
-        )
-
-    @property
-    def device_class(self):
-        """Return the device class of the device."""
-        return MediaPlayerDeviceClass.TV
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         return self._remote.state
 
@@ -116,12 +100,12 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         return self._remote.available
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self._remote.volume
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         return self._remote.muted
 
@@ -139,11 +123,11 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
-        await self._remote.async_send_key(Keys.volume_up)
+        await self._remote.async_send_key(Keys.VOLUME_UP)
 
     async def async_volume_down(self) -> None:
         """Volume down media player."""
-        await self._remote.async_send_key(Keys.volume_down)
+        await self._remote.async_send_key(Keys.VOLUME_DOWN)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
@@ -156,33 +140,33 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     async def async_media_play_pause(self) -> None:
         """Simulate play pause media player."""
         if self._remote.playing:
-            await self._remote.async_send_key(Keys.pause)
+            await self._remote.async_send_key(Keys.PAUSE)
             self._remote.playing = False
         else:
-            await self._remote.async_send_key(Keys.play)
+            await self._remote.async_send_key(Keys.PLAY)
             self._remote.playing = True
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._remote.async_send_key(Keys.play)
+        await self._remote.async_send_key(Keys.PLAY)
         self._remote.playing = True
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self._remote.async_send_key(Keys.pause)
+        await self._remote.async_send_key(Keys.PAUSE)
         self._remote.playing = False
 
     async def async_media_stop(self) -> None:
         """Stop playback."""
-        await self._remote.async_send_key(Keys.stop)
+        await self._remote.async_send_key(Keys.STOP)
 
     async def async_media_next_track(self) -> None:
         """Send the fast forward command."""
-        await self._remote.async_send_key(Keys.fast_forward)
+        await self._remote.async_send_key(Keys.FAST_FORWARD)
 
     async def async_media_previous_track(self) -> None:
         """Send the rewind command."""
-        await self._remote.async_send_key(Keys.rewind)
+        await self._remote.async_send_key(Keys.REWIND)
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any

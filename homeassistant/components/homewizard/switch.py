@@ -1,4 +1,5 @@
 """Creates HomeWizard Energy switch entities."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -6,40 +7,32 @@ from dataclasses import dataclass
 from typing import Any
 
 from homewizard_energy import HomeWizardEnergy
+from homewizard_energy.models import CombinedModels as DeviceResponseEntry
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, DeviceResponseEntry
-from .coordinator import HWEnergyDeviceUpdateCoordinator
+from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
 
-
-@dataclass
-class HomeWizardEntityDescriptionMixin:
-    """Mixin values for HomeWizard entities."""
-
-    create_fn: Callable[[HWEnergyDeviceUpdateCoordinator], bool]
-    available_fn: Callable[[DeviceResponseEntry], bool]
-    is_on_fn: Callable[[DeviceResponseEntry], bool | None]
-    set_fn: Callable[[HomeWizardEnergy, bool], Awaitable[Any]]
+PARALLEL_UPDATES = 1
 
 
-@dataclass
-class HomeWizardSwitchEntityDescription(
-    SwitchEntityDescription, HomeWizardEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class HomeWizardSwitchEntityDescription(SwitchEntityDescription):
     """Class describing HomeWizard switch entities."""
 
-    icon_off: str | None = None
+    available_fn: Callable[[DeviceResponseEntry], bool]
+    create_fn: Callable[[DeviceResponseEntry], bool]
+    is_on_fn: Callable[[DeviceResponseEntry], bool | None]
+    set_fn: Callable[[HomeWizardEnergy, bool], Awaitable[Any]]
 
 
 SWITCHES = [
@@ -47,52 +40,42 @@ SWITCHES = [
         key="power_on",
         name=None,
         device_class=SwitchDeviceClass.OUTLET,
-        create_fn=lambda coordinator: coordinator.supports_state(),
-        available_fn=lambda data: data.state is not None and not data.state.switch_lock,
-        is_on_fn=lambda data: data.state.power_on if data.state else None,
-        set_fn=lambda api, active: api.state_set(power_on=active),
+        create_fn=lambda x: x.device.supports_state(),
+        available_fn=lambda x: x.state is not None and not x.state.switch_lock,
+        is_on_fn=lambda x: x.state.power_on if x.state else None,
+        set_fn=lambda api, active: api.state(power_on=active),
     ),
     HomeWizardSwitchEntityDescription(
         key="switch_lock",
         translation_key="switch_lock",
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:lock",
-        icon_off="mdi:lock-open",
-        create_fn=lambda coordinator: coordinator.supports_state(),
-        available_fn=lambda data: data.state is not None,
-        is_on_fn=lambda data: data.state.switch_lock if data.state else None,
-        set_fn=lambda api, active: api.state_set(switch_lock=active),
+        create_fn=lambda x: x.device.supports_state(),
+        available_fn=lambda x: x.state is not None,
+        is_on_fn=lambda x: x.state.switch_lock if x.state else None,
+        set_fn=lambda api, active: api.state(switch_lock=active),
     ),
     HomeWizardSwitchEntityDescription(
         key="cloud_connection",
         translation_key="cloud_connection",
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:cloud",
-        icon_off="mdi:cloud-off-outline",
-        create_fn=lambda coordinator: coordinator.supports_system(),
-        available_fn=lambda data: data.system is not None,
-        is_on_fn=lambda data: data.system.cloud_enabled if data.system else None,
-        set_fn=lambda api, active: api.system_set(cloud_enabled=active),
+        create_fn=lambda x: x.device.supports_cloud_enable(),
+        available_fn=lambda x: x.system is not None,
+        is_on_fn=lambda x: x.system.cloud_enabled if x.system else None,
+        set_fn=lambda api, active: api.system(cloud_enabled=active),
     ),
 ]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: HomeWizardConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        HomeWizardSwitchEntity(
-            coordinator=coordinator,
-            description=description,
-            entry=entry,
-        )
+        HomeWizardSwitchEntity(entry.runtime_data, description)
         for description in SWITCHES
-        if description.create_fn(coordinator)
+        if description.create_fn(entry.runtime_data.data)
     )
 
 
@@ -105,19 +88,11 @@ class HomeWizardSwitchEntity(HomeWizardEntity, SwitchEntity):
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
         description: HomeWizardSwitchEntityDescription,
-        entry: ConfigEntry,
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        if self.entity_description.icon_off and self.is_on is False:
-            return self.entity_description.icon_off
-        return super().icon
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
     def available(self) -> bool:

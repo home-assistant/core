@@ -1,8 +1,10 @@
 """Binary Sensor platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import TYPE_CHECKING
 
 from pysensibo.model import MotionSensor, SensiboDevice
@@ -12,44 +14,30 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import SensiboConfigEntry
+from .const import LOGGER
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 
 PARALLEL_UPDATES = 0
 
 
-@dataclass
-class MotionBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboMotionBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Sensibo Motion binary sensor entity."""
 
     value_fn: Callable[[MotionSensor], bool | None]
 
 
-@dataclass
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboDeviceBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Sensibo Motion binary sensor entity."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
-
-
-@dataclass
-class SensiboMotionBinarySensorEntityDescription(
-    BinarySensorEntityDescription, MotionBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Motion sensor entity."""
-
-
-@dataclass
-class SensiboDeviceBinarySensorEntityDescription(
-    BinarySensorEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Motion sensor entity."""
 
 
 FILTER_CLEAN_REQUIRED_DESCRIPTION = SensiboDeviceBinarySensorEntityDescription(
@@ -70,13 +58,11 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
         key="is_main_sensor",
         translation_key="is_main_sensor",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:connection",
         value_fn=lambda data: data.is_main_sensor,
     ),
     SensiboMotionBinarySensorEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
-        icon="mdi:motion-sensor",
         value_fn=lambda data: data.motion,
     ),
 )
@@ -86,7 +72,6 @@ MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ..
         key="room_occupied",
         translation_key="room_occupied",
         device_class=BinarySensorDeviceClass.MOTION,
-        icon="mdi:motion-sensor",
         value_fn=lambda data: data.room_occupied,
     ),
 )
@@ -131,38 +116,63 @@ DESCRIPTION_BY_MODELS = {"pure": PURE_SENSOR_TYPES}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SensiboConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensibo binary sensor platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
-    entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
+    added_devices: set[str] = set()
 
-    for device_id, device_data in coordinator.data.parsed.items():
-        if device_data.motion_sensors:
+    def _add_remove_devices() -> None:
+        """Handle additions of devices and sensors."""
+        entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
+        nonlocal added_devices
+        new_devices, remove_devices, new_added_devices = coordinator.get_devices(
+            added_devices
+        )
+        added_devices = new_added_devices
+
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug(
+                "New devices: %s, Removed devices: %s, Existing devices: %s",
+                new_devices,
+                remove_devices,
+                added_devices,
+            )
+
+        if new_devices:
             entities.extend(
                 SensiboMotionSensor(
                     coordinator, device_id, sensor_id, sensor_data, description
                 )
+                for device_id, device_data in coordinator.data.parsed.items()
+                if device_data.motion_sensors
                 for sensor_id, sensor_data in device_data.motion_sensors.items()
+                if sensor_id in new_devices
                 for description in MOTION_SENSOR_TYPES
             )
-    entities.extend(
-        SensiboDeviceSensor(coordinator, device_id, description)
-        for description in MOTION_DEVICE_SENSOR_TYPES
-        for device_id, device_data in coordinator.data.parsed.items()
-        if device_data.motion_sensors
-    )
-    entities.extend(
-        SensiboDeviceSensor(coordinator, device_id, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for description in DESCRIPTION_BY_MODELS.get(
-            device_data.model, DEVICE_SENSOR_TYPES
-        )
-    )
 
-    async_add_entities(entities)
+            entities.extend(
+                SensiboDeviceSensor(coordinator, device_id, description)
+                for device_id, device_data in coordinator.data.parsed.items()
+                if device_data.motion_sensors and device_id in new_devices
+                for description in MOTION_DEVICE_SENSOR_TYPES
+            )
+            entities.extend(
+                SensiboDeviceSensor(coordinator, device_id, description)
+                for device_id, device_data in coordinator.data.parsed.items()
+                if device_id in new_devices
+                for description in DESCRIPTION_BY_MODELS.get(
+                    device_data.model, DEVICE_SENSOR_TYPES
+                )
+            )
+            async_add_entities(entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
+    _add_remove_devices()
 
 
 class SensiboMotionSensor(SensiboMotionBaseEntity, BinarySensorEntity):

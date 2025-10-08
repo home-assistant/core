@@ -1,4 +1,8 @@
-"""Reproduce an Alert state."""
+"""Reproduce an Alert state.
+
+DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
+"""
+
 from __future__ import annotations
 
 import asyncio

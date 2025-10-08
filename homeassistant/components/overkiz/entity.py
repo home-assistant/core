@@ -1,4 +1,5 @@
 """Parent class for every Overkiz device."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -6,7 +7,8 @@ from typing import cast
 from pyoverkiz.enums import OverkizAttribute, OverkizState
 from pyoverkiz.models import Device
 
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -33,7 +35,6 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         self.executor = OverkizExecutor(device_url, coordinator)
 
         self._attr_assumed_state = not self.device.states
-        self._attr_available = self.device.available
         self._attr_unique_id = self.device.device_url
 
         if self.is_sub_device:
@@ -41,6 +42,11 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             self._attr_name = self.device.label
 
         self._attr_device_info = self.generate_device_info()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.device.available and super().available
 
     @property
     def is_sub_device(self) -> bool:
@@ -60,9 +66,9 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         if self.is_sub_device:
             # Only return the url of the base device, to inherit device name
             # and model from parent device.
-            return {
-                "identifiers": {(DOMAIN, self.executor.base_device_url)},
-            }
+            return DeviceInfo(
+                identifiers={(DOMAIN, self.executor.base_device_url)},
+            )
 
         manufacturer = (
             self.executor.select_attribute(OverkizAttribute.CORE_MANUFACTURER)

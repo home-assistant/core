@@ -1,10 +1,14 @@
 """Test Home Assistant json utility functions."""
-from pathlib import Path
 
+from pathlib import Path
+import re
+
+import orjson
 import pytest
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.json import (
+    json_loads,
     json_loads_array,
     json_loads_object,
     load_json,
@@ -19,11 +23,11 @@ TEST_BAD_SERIALIED = "THIS IS NOT JSON\n"
 
 
 def test_load_bad_data(tmp_path: Path) -> None:
-    """Test error from trying to load unserialisable data."""
+    """Test error from trying to load unserializable data."""
     fname = tmp_path / "test5.json"
-    with open(fname, "w") as fh:
+    with open(fname, "w", encoding="utf8") as fh:
         fh.write(TEST_BAD_SERIALIED)
-    with pytest.raises(HomeAssistantError) as err:
+    with pytest.raises(HomeAssistantError, match=re.escape(str(fname))) as err:
         load_json(fname)
     assert isinstance(err.value.__cause__, ValueError)
 
@@ -31,7 +35,7 @@ def test_load_bad_data(tmp_path: Path) -> None:
 def test_load_json_os_error() -> None:
     """Test trying to load JSON data from a directory."""
     fname = "/"
-    with pytest.raises(HomeAssistantError) as err:
+    with pytest.raises(HomeAssistantError, match=re.escape(str(fname))) as err:
         load_json(fname)
     assert isinstance(err.value.__cause__, OSError)
 
@@ -127,29 +131,18 @@ def test_json_loads_object() -> None:
         json_loads_object("null")
 
 
-async def test_deprecated_test_find_unserializable_data(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test deprecated test_find_unserializable_data logs a warning."""
-    # pylint: disable-next=hass-deprecated-import,import-outside-toplevel
-    from homeassistant.util.json import find_paths_unserializable_data
+async def test_loading_derived_class() -> None:
+    """Test loading data from classes derived from str."""
 
-    find_paths_unserializable_data(1)
-    assert (
-        "uses find_paths_unserializable_data from homeassistant.util.json"
-        in caplog.text
-    )
-    assert "should be updated to use homeassistant.helpers.json module" in caplog.text
+    class MyStr(str):
+        __slots__ = ()
 
+    class MyBytes(bytes):
+        pass
 
-async def test_deprecated_save_json(
-    caplog: pytest.LogCaptureFixture, tmp_path: Path
-) -> None:
-    """Test deprecated save_json logs a warning."""
-    # pylint: disable-next=hass-deprecated-import,import-outside-toplevel
-    from homeassistant.util.json import save_json
+    assert json_loads('"abc"') == "abc"
+    assert json_loads(MyStr('"abc"')) == "abc"
 
-    fname = tmp_path / "test1.json"
-    save_json(fname, TEST_JSON_A)
-    assert "uses save_json from homeassistant.util.json" in caplog.text
-    assert "should be updated to use homeassistant.helpers.json module" in caplog.text
+    assert json_loads(b'"abc"') == "abc"
+    with pytest.raises(orjson.JSONDecodeError):
+        assert json_loads(MyBytes(b'"abc"')) == "abc"

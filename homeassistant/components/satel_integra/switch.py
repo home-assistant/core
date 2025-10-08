@@ -1,52 +1,55 @@
 """Support for Satel Integra modifiable outputs represented as switches."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import CONF_CODE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import (
-    CONF_DEVICE_CODE,
-    CONF_SWITCHABLE_OUTPUTS,
-    CONF_ZONE_NAME,
-    DATA_SATEL,
+from .const import (
+    CONF_SWITCHABLE_OUTPUT_NUMBER,
     SIGNAL_OUTPUTS_UPDATED,
+    SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+    SatelConfigEntry,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ["satel_integra"]
 
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: SatelConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Satel Integra switch devices."""
-    if not discovery_info:
-        return
 
-    configured_zones = discovery_info[CONF_SWITCHABLE_OUTPUTS]
-    controller = hass.data[DATA_SATEL]
+    controller = config_entry.runtime_data
 
-    devices = []
+    switchable_output_subentries = filter(
+        lambda entry: entry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+        config_entry.subentries.values(),
+    )
 
-    for zone_num, device_config_data in configured_zones.items():
-        zone_name = device_config_data[CONF_ZONE_NAME]
+    for subentry in switchable_output_subentries:
+        switchable_output_num = subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
+        switchable_output_name = subentry.data[CONF_NAME]
 
-        device = SatelIntegraSwitch(
-            controller, zone_num, zone_name, discovery_info[CONF_DEVICE_CODE]
+        async_add_entities(
+            [
+                SatelIntegraSwitch(
+                    controller,
+                    switchable_output_num,
+                    switchable_output_name,
+                    config_entry.options.get(CONF_CODE),
+                ),
+            ],
+            config_subentry_id=subentry.subentry_id,
         )
-        devices.append(device)
-
-    async_add_entities(devices)
 
 
 class SatelIntegraSwitch(SwitchEntity):
@@ -57,6 +60,7 @@ class SatelIntegraSwitch(SwitchEntity):
     def __init__(self, controller, device_number, device_name, code):
         """Initialize the binary_sensor."""
         self._device_number = device_number
+        self._attr_unique_id = f"satel_switch_{device_number}"
         self._name = device_name
         self._state = False
         self._code = code

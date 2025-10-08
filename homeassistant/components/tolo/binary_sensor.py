@@ -4,22 +4,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import ToloConfigEntry, ToloSaunaUpdateCoordinator
+from .entity import ToloSaunaCoordinatorEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: ToloConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensors for TOLO Sauna."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         [
             ToloFlowInBinarySensor(coordinator, entry),
@@ -32,12 +31,11 @@ class ToloFlowInBinarySensor(ToloSaunaCoordinatorEntity, BinarySensorEntity):
     """Water In Valve Sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Water In Valve"
+    _attr_translation_key = "water_in_valve"
     _attr_device_class = BinarySensorDeviceClass.OPENING
-    _attr_icon = "mdi:water-plus-outline"
 
     def __init__(
-        self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
+        self, coordinator: ToloSaunaUpdateCoordinator, entry: ToloConfigEntry
     ) -> None:
         """Initialize TOLO Water In Valve entity."""
         super().__init__(coordinator, entry)
@@ -54,12 +52,11 @@ class ToloFlowOutBinarySensor(ToloSaunaCoordinatorEntity, BinarySensorEntity):
     """Water Out Valve Sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Water Out Valve"
+    _attr_translation_key = "water_out_valve"
     _attr_device_class = BinarySensorDeviceClass.OPENING
-    _attr_icon = "mdi:water-minus-outline"
 
     def __init__(
-        self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
+        self, coordinator: ToloSaunaUpdateCoordinator, entry: ToloConfigEntry
     ) -> None:
         """Initialize TOLO Water Out Valve entity."""
         super().__init__(coordinator, entry)

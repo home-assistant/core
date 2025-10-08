@@ -1,18 +1,12 @@
 add_all_link:
-  name: Add all link
-  description: Tells the Insteom Modem (IM) start All-Linking mode. Once the IM is in All-Linking mode, press the link button on the device to complete All-Linking.
   fields:
     group:
-      name: Group
-      description: All-Link group number.
       required: true
       selector:
         number:
           min: 0
           max: 255
     mode:
-      name: Mode
-      description: Linking mode   controller - IM is controller   responder - IM is responder
       required: true
       selector:
         select:
@@ -20,55 +14,35 @@ add_all_link:
             - "controller"
             - "responder"
 delete_all_link:
-  name: Delete all link
-  description: Tells the Insteon Modem (IM) to remove an All-Link record from the All-Link Database of the IM and a device. Once the IM is set to delete the link, press the link button on the corresponding device to complete the process.
   fields:
     group:
-      name: Group
-      description: All-Link group number.
       required: true
       selector:
         number:
           min: 0
           max: 255
 load_all_link_database:
-  name: Load all link database
-  description: Load the All-Link Database for a device. WARNING - Loading a device All-LInk database is very time consuming and inconsistent. This may take a LONG time and may need to be repeated to obtain all records.
   fields:
     entity_id:
-      name: Entity
-      description: Name of the device to load. Use "all" to load the database of all devices.
       required: true
       example: "light.1a2b3c"
       selector:
         text:
     reload:
-      name: Reload
-      description: Reload all records. If true the current records are cleared from memory (does not effect the device) and the records are reloaded. If false the existing records are left in place and only missing records are added. Default is false.
       default: false
       selector:
         boolean:
 print_all_link_database:
-  name: Print all link database
-  description: Print the All-Link Database for a device. Requires that the All-Link Database is loaded into memory.
   fields:
     entity_id:
-      name: Entity
-      description: Name of the device to print
       required: true
       selector:
         entity:
           integration: insteon
 print_im_all_link_database:
-  name: Print IM all link database
-  description: Print the All-Link Database for the INSTEON Modem (IM).
 x10_all_units_off:
-  name: X10 all units off
-  description: Send X10 All Units Off command
   fields:
     housecode:
-      name: Housecode
-      description: X10 house code
       required: true
       selector:
         select:
@@ -90,12 +64,8 @@ x10_all_units_off:
             - "o"
             - "p"
 x10_all_lights_on:
-  name: X10 all lights on
-  description: Send X10 All Lights On command
   fields:
     housecode:
-      name: Housecode
-      description: X10 house code
       required: true
       selector:
         select:
@@ -117,12 +87,8 @@ x10_all_lights_on:
             - "o"
             - "p"
 x10_all_lights_off:
-  name: X10 all lights off
-  description: Send X10 All Lights Off command
   fields:
     housecode:
-      name: Housecode
-      description: X10 house code
       required: true
       selector:
         select:
@@ -144,36 +110,24 @@ x10_all_lights_off:
             - "o"
             - "p"
 scene_on:
-  name: Scene on
-  description: Trigger an INSTEON scene to turn ON.
   fields:
     group:
-      name: Group
-      description: INSTEON group or scene number
       required: true
       selector:
         number:
           min: 0
           max: 255
 scene_off:
-  name: Scene off
-  description: Trigger an INSTEON scene to turn OFF.
   fields:
     group:
-      name: Group
-      description: INSTEON group or scene number
       required: true
       selector:
         number:
           min: 0
           max: 255
 add_default_links:
-  name: Add default links
-  description: Add the default links between the device and the Insteon Modem (IM)
   fields:
     entity_id:
-      name: Entity
-      description: Name of the device to load. Use "all" to load the database of all devices.
       required: true
       example: "light.1a2b3c"
       selector:

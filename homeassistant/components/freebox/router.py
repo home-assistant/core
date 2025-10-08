@@ -1,12 +1,15 @@
 """Represent the Freebox router and its devices and sensors."""
+
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from datetime import datetime
+import json
 import logging
 import os
 from pathlib import Path
+import re
 from typing import Any
 
 from freebox_api import Freepybox
@@ -18,9 +21,8 @@ from freebox_api.exceptions import HttpRequestError, NotOpenError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
@@ -29,12 +31,28 @@ from .const import (
     APP_DESC,
     CONNECTION_SENSORS_KEYS,
     DOMAIN,
-    HOME_COMPATIBLE_PLATFORMS,
+    HOME_COMPATIBLE_CATEGORIES,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+type FreeboxConfigEntry = ConfigEntry[FreeboxRouter]
+
+
+def is_json(json_str: str) -> bool:
+    """Validate if a String is a JSON value or not."""
+    try:
+        json.loads(json_str)
+    except (ValueError, TypeError) as err:
+        _LOGGER.error(
+            "Failed to parse JSON '%s', error '%s'",
+            json_str,
+            err,
+        )
+        return False
+    return True
 
 
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
@@ -49,13 +67,44 @@ async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
     return Freepybox(APP_DESC, token_file, API_VERSION)
 
 
+async def get_hosts_list_if_supported(
+    fbx_api: Freepybox,
+) -> tuple[bool, list[dict[str, Any]]]:
+    """Hosts list is not supported when freebox is configured in bridge mode."""
+    supports_hosts: bool = True
+    fbx_devices: list[dict[str, Any]] = []
+    try:
+        fbx_interfaces = await fbx_api.lan.get_interfaces() or []
+        for interface in fbx_interfaces:
+            fbx_devices.extend(
+                await fbx_api.lan.get_hosts_list(interface["name"]) or []
+            )
+    except HttpRequestError as err:
+        if (
+            (matcher := re.search(r"Request failed \(APIResponse: (.+)\)", str(err)))
+            and is_json(json_str := matcher.group(1))
+            and (json_resp := json.loads(json_str)).get("error_code") == "nodev"
+        ):
+            # No need to retry, Host list not available
+            supports_hosts = False
+            _LOGGER.debug(
+                "Host list is not available using bridge mode (%s)",
+                json_resp.get("msg"),
+            )
+
+        else:
+            raise
+
+    return supports_hosts, fbx_devices
+
+
 class FreeboxRouter:
     """Representation of a Freebox router."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: FreeboxConfigEntry,
         api: Freepybox,
         freebox_config: Mapping[str, Any],
     ) -> None:
@@ -66,19 +115,23 @@ class FreeboxRouter:
 
         self._api: Freepybox = api
         self.name: str = freebox_config["model_info"]["pretty_name"]
+        self.model_id: str = freebox_config["model_info"]["name"]
         self.mac: str = freebox_config["mac"]
         self._sw_v: str = freebox_config["firmware_version"]
+        self._hw_v: str | None = freebox_config.get("board_name")
         self._attrs: dict[str, Any] = {}
 
+        self.supports_hosts = True
         self.devices: dict[str, dict[str, Any]] = {}
         self.disks: dict[int, dict[str, Any]] = {}
+        self.supports_raid = True
         self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
-        self.listeners: list[dict[str, Any]] = []
+        self.listeners: list[Callable[[], None]] = []
 
     async def update_all(self, now: datetime | None = None) -> None:
         """Update all Freebox platforms."""
@@ -89,7 +142,14 @@ class FreeboxRouter:
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
         new_device = False
-        fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
+
+        fbx_devices: list[dict[str, Any]] = []
+
+        # Access to Host list not available in bridge mode, API return error_code 'nodev'
+        if self.supports_hosts:
+            self.supports_hosts, fbx_devices = await get_hosts_list_if_supported(
+                self._api
+            )
 
         # Adds the Freebox itself
         fbx_devices.append(
@@ -118,6 +178,7 @@ class FreeboxRouter:
 
     async def update_sensors(self) -> None:
         """Update Freebox sensors."""
+
         # System sensors
         syst_datas: dict[str, Any] = await self._api.system.get_config()
 
@@ -145,7 +206,6 @@ class FreeboxRouter:
         self.call_list = await self._api.call.get_calls_log()
 
         await self._update_disks_sensors()
-
         await self._update_raids_sensors()
 
         async_dispatcher_send(self.hass, self.signal_sensor_update)
@@ -156,12 +216,28 @@ class FreeboxRouter:
         fbx_disks: list[dict[str, Any]] = await self._api.storage.get_disks() or []
 
         for fbx_disk in fbx_disks:
-            self.disks[fbx_disk["id"]] = fbx_disk
+            disk: dict[str, Any] = {**fbx_disk}
+            disk_part: dict[int, dict[str, Any]] = {}
+            for fbx_disk_part in fbx_disk["partitions"]:
+                disk_part[fbx_disk_part["id"]] = fbx_disk_part
+            disk["partitions"] = disk_part
+            self.disks[fbx_disk["id"]] = disk
 
     async def _update_raids_sensors(self) -> None:
         """Update Freebox raids."""
         # None at first request
-        fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
+        if not self.supports_raid:
+            return
+
+        try:
+            fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
+        except HttpRequestError:
+            self.supports_raid = False
+            _LOGGER.warning(
+                "Router %s API does not support RAID",
+                self.name,
+            )
+            return
 
         for fbx_raid in fbx_raids:
             self.raids[fbx_raid["id"]] = fbx_raid
@@ -180,7 +256,7 @@ class FreeboxRouter:
 
         new_device = False
         for home_node in home_nodes:
-            if home_node["category"] in HOME_COMPATIBLE_PLATFORMS:
+            if home_node["category"] in HOME_COMPATIBLE_CATEGORIES:
                 if self.home_devices.get(home_node["id"]) is None:
                     new_device = True
                 self.home_devices[home_node["id"]] = home_node
@@ -208,7 +284,10 @@ class FreeboxRouter:
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Freebox SAS",
             name=self.name,
+            model=self.name,
+            model_id=self.model_id,
             sw_version=self._sw_v,
+            hw_version=self._hw_v,
         )
 
     @property

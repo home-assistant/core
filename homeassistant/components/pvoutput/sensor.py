@@ -1,4 +1,5 @@
 """Support for getting collected information from PVOutput."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -20,26 +21,19 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_SYSTEM_ID, DOMAIN
 from .coordinator import PVOutputDataUpdateCoordinator
 
 
-@dataclass
-class PVOutputSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class PVOutputSensorEntityDescription(SensorEntityDescription):
+    """Describes a PVOutput sensor entity."""
 
     value_fn: Callable[[Status], int | float | None]
-
-
-@dataclass
-class PVOutputSensorEntityDescription(
-    SensorEntityDescription, PVOutputSensorEntityDescriptionMixin
-):
-    """Describes a PVOutput sensor entity."""
 
 
 SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
@@ -104,7 +98,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a PVOutput sensors based on a config entry."""
     coordinator: PVOutputDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]

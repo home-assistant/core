@@ -1,0 +1,54 @@
+{
+  "title": "Valve",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::valve::title%]",
+      "state": {
+        "open": "[%key:common::state::open%]",
+        "opening": "[%key:common::state::opening%]",
+        "closed": "[%key:common::state::closed%]",
+        "closing": "[%key:common::state::closing%]",
+        "stopped": "[%key:common::state::stopped%]"
+      },
+      "state_attributes": {
+        "current_position": {
+          "name": "Position"
+        }
+      }
+    },
+    "water": {
+      "name": "Water"
+    },
+    "gas": {
+      "name": "Gas"
+    }
+  },
+  "services": {
+    "open_valve": {
+      "name": "[%key:common::action::open%]",
+      "description": "Opens a valve."
+    },
+    "close_valve": {
+      "name": "[%key:common::action::close%]",
+      "description": "Closes a valve."
+    },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles a valve open/closed."
+    },
+    "set_valve_position": {
+      "name": "Set position",
+      "description": "Moves a valve to a specific position.",
+      "fields": {
+        "position": {
+          "name": "Position",
+          "description": "Target position."
+        }
+      }
+    },
+    "stop_valve": {
+      "name": "[%key:common::action::stop%]",
+      "description": "Stops the valve movement."
+    }
+  }
+}

@@ -1,7 +1,7 @@
 """Support for device tracking of Huawei LTE routers."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import logging
 import re
 from typing import Any, cast
@@ -11,16 +11,15 @@ from stringcase import snakecase
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
-    SourceType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HuaweiLteBaseEntity, Router
+from . import Router
 from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -29,12 +28,13 @@ from .const import (
     KEY_WLAN_HOST_LIST,
     UPDATE_SIGNAL,
 )
+from .entity import HuaweiLteBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 _DEVICE_SCAN = f"{DEVICE_TRACKER_DOMAIN}/device_scan"
 
-_HostType = dict[str, Any]
+type _HostType = dict[str, Any]
 
 
 def _get_hosts(
@@ -53,7 +53,7 @@ def _get_hosts(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
 
@@ -71,11 +71,10 @@ async def async_setup_entry(
     track_wired_clients = router.config_entry.options.get(
         CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
     )
-    for entity in registry.entities.values():
-        if (
-            entity.domain == DEVICE_TRACKER_DOMAIN
-            and entity.config_entry_id == config_entry.entry_id
-        ):
+    for entity in registry.entities.get_entries_for_config_entry_id(
+        config_entry.entry_id
+    ):
+        if entity.domain == DEVICE_TRACKER_DOMAIN:
             mac = entity.unique_id.partition("-")[2]
             # Do not add known wired clients if not tracking them (any more)
             skip = False
@@ -90,8 +89,8 @@ async def async_setup_entry(
     async_add_entities(known_entities, True)
 
     # Tell parent router to poll hosts list to gather new devices
-    router.subscriptions[KEY_LAN_HOST_INFO].add(_DEVICE_SCAN)
-    router.subscriptions[KEY_WLAN_HOST_LIST].add(_DEVICE_SCAN)
+    router.subscriptions[KEY_LAN_HOST_INFO].append(_DEVICE_SCAN)
+    router.subscriptions[KEY_WLAN_HOST_LIST].append(_DEVICE_SCAN)
 
     async def _async_maybe_add_new_entities(unique_id: str) -> None:
         """Add new entities if the update signal comes from our router."""
@@ -129,7 +128,7 @@ def _is_us(host: _HostType) -> bool:
 @callback
 def async_add_new_entities(
     router: Router,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     tracked: set[str],
 ) -> None:
     """Add new entities that are not already being tracked."""
@@ -173,16 +172,18 @@ def _better_snakecase(text: str) -> str:
     return cast(str, snakecase(text))
 
 
-@dataclass
 class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     """Huawei LTE router scanner entity."""
 
-    _mac_address: str
+    _ip_address: str | None = None
+    _is_connected: bool = False
+    _hostname: str | None = None
 
-    _ip_address: str | None = field(default=None, init=False)
-    _is_connected: bool = field(default=False, init=False)
-    _hostname: str | None = field(default=None, init=False)
-    _extra_state_attributes: dict[str, Any] = field(default_factory=dict, init=False)
+    def __init__(self, router: Router, mac_address: str) -> None:
+        """Initialize."""
+        super().__init__(router)
+        self._extra_state_attributes: dict[str, Any] = {}
+        self._mac_address = mac_address
 
     @property
     def name(self) -> str:
@@ -192,11 +193,6 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     @property
     def _device_unique_id(self) -> str:
         return self.mac_address
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return SourceType.ROUTER."""
-        return SourceType.ROUTER
 
     @property
     def ip_address(self) -> str | None:

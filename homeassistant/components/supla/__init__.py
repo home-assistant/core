@@ -1,17 +1,18 @@
 """Support for Supla devices."""
+
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from asyncpysupla import SuplaAPI
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -99,15 +100,13 @@ async def discover_devices(hass, hass_config):
     for server_name, server in hass.data[DOMAIN][SUPLA_SERVERS].items():
 
         async def _fetch_channels():
-            async with async_timeout.timeout(SCAN_INTERVAL.total_seconds()):
-                channels = {
+            async with asyncio.timeout(SCAN_INTERVAL.total_seconds()):
+                return {
                     channel["id"]: channel
-                    # pylint: disable-next=cell-var-from-loop
                     for channel in await server.get_channels(  # noqa: B023
                         include=["iodevice", "state", "connected"]
                     )
                 }
-                return channels
 
         coordinator = DataUpdateCoordinator(
             hass,

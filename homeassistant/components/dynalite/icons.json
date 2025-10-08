@@ -1,0 +1,10 @@
+{
+  "services": {
+    "request_area_preset": {
+      "service": "mdi:texture-box"
+    },
+    "request_channel_level": {
+      "service": "mdi:satellite-uplink"
+    }
+  }
+}

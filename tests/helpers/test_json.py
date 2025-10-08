@@ -1,4 +1,5 @@
 """Test Home Assistant remote methods and classes."""
+
 import datetime
 from functools import partial
 import json
@@ -6,7 +7,7 @@ import math
 import os
 from pathlib import Path
 import time
-from typing import NamedTuple
+from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
 import pytest
@@ -16,21 +17,25 @@ from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     JSONEncoder as DefaultHASSJSONEncoder,
     find_paths_unserializable_data,
+    json_bytes_sorted,
     json_bytes_strip_null,
     json_dumps,
     json_dumps_sorted,
+    json_fragment,
     save_json,
 )
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
 from homeassistant.util.json import SerializationError, load_json
 
+from tests.common import json_round_trip
+
 # Test data that can be saved as JSON
 TEST_JSON_A = {"a": 1, "B": "two"}
 TEST_JSON_B = {"a": "one", "B": 2}
 
 
-@pytest.mark.parametrize("encoder", (DefaultHASSJSONEncoder, ExtendedJSONEncoder))
+@pytest.mark.parametrize("encoder", [DefaultHASSJSONEncoder, ExtendedJSONEncoder])
 def test_json_encoder(hass: HomeAssistant, encoder: type[json.JSONEncoder]) -> None:
     """Test the JSON encoders."""
     ha_json_enc = encoder()
@@ -45,7 +50,8 @@ def test_json_encoder(hass: HomeAssistant, encoder: type[json.JSONEncoder]) -> N
     assert sorted(ha_json_enc.default(data)) == sorted(data)
 
     # Test serializing an object which implements as_dict
-    assert ha_json_enc.default(state) == state.as_dict()
+    default = ha_json_enc.default(state)
+    assert json_round_trip(default) == json_round_trip(state.as_dict())
 
 
 def test_json_encoder_raises(hass: HomeAssistant) -> None:
@@ -96,6 +102,14 @@ def test_json_dumps_sorted() -> None:
     )
 
 
+def test_json_bytes_sorted() -> None:
+    """Test the json bytes sorted function."""
+    data = {"c": 3, "a": 1, "b": 2}
+    assert json_bytes_sorted(data) == json.dumps(
+        data, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+
+
 def test_json_dumps_float_subclass() -> None:
     """Test the json dumps a float subclass."""
 
@@ -131,6 +145,35 @@ def test_json_dumps_rgb_color_subclass() -> None:
     rgb = RGBColor(4, 2, 1)
 
     assert json_dumps(rgb) == "[4,2,1]"
+
+
+def test_json_fragments() -> None:
+    """Test the json dumps with a fragment."""
+
+    assert (
+        json_dumps(
+            [
+                json_fragment('{"inner":"fragment2"}'),
+                json_fragment('{"inner":"fragment2"}'),
+            ]
+        )
+        == '[{"inner":"fragment2"},{"inner":"fragment2"}]'
+    )
+
+    class Fragment1:
+        @property
+        def json_fragment(self):
+            return json_fragment('{"inner":"fragment1"}')
+
+    class Fragment2:
+        @property
+        def json_fragment(self):
+            return json_fragment('{"inner":"fragment2"}')
+
+    assert (
+        json_dumps([Fragment1(), Fragment2()])
+        == '[{"inner":"fragment1"},{"inner":"fragment2"}]'
+    )
 
 
 def test_json_bytes_strip_null() -> None:
@@ -215,6 +258,20 @@ def test_custom_encoder(tmp_path: Path) -> None:
     assert data == "9"
 
 
+def test_saving_subclassed_datetime(tmp_path: Path) -> None:
+    """Test saving subclassed datetime objects."""
+
+    class SubClassDateTime(datetime.datetime):
+        """Subclass datetime."""
+
+    time = SubClassDateTime.fromtimestamp(0)
+
+    fname = tmp_path / "test6.json"
+    save_json(fname, {"time": time})
+    data = load_json(fname)
+    assert data == {"time": time.isoformat()}
+
+
 def test_default_encoder_is_passed(tmp_path: Path) -> None:
     """Test we use orjson if they pass in the default encoder."""
     fname = tmp_path / "test6.json"
@@ -277,10 +334,10 @@ def test_find_unserializable_data() -> None:
     ) == {"$[0](Event: bad_event).data.bad_attribute": bad_data}
 
     class BadData:
-        def __init__(self):
+        def __init__(self) -> None:
             self.bla = bad_data
 
-        def as_dict(self):
+        def as_dict(self) -> dict[str, Any]:
             return {"bla": self.bla}
 
     assert find_paths_unserializable_data(

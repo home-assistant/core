@@ -1,4 +1,5 @@
 """Provide integration helpers that are aware of the matter integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,6 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
@@ -15,6 +17,10 @@ if TYPE_CHECKING:
     from matter_server.common.models import ServerInfoMessage
 
     from .adapter import MatterAdapter
+
+
+class MissingNode(HomeAssistantError):
+    """Exception raised when we can't find a node."""
 
 
 @dataclass
@@ -53,12 +59,12 @@ def get_device_id(
 ) -> str:
     """Return HA device_id for the given MatterEndpoint."""
     operational_instance_id = get_operational_instance_id(server_info, endpoint.node)
-    # Append endpoint ID if this endpoint is a bridged or composed device
-    if endpoint.is_composed_device:
-        compose_parent = endpoint.node.get_compose_parent(endpoint.endpoint_id)
-        assert compose_parent is not None
-        postfix = str(compose_parent.endpoint_id)
-    elif endpoint.is_bridged_device:
+    # if this is a composed device we need to get the compose parent
+    # example: Philips Hue motion sensor on Hue Hub (bridged to Matter)
+    if compose_parent := endpoint.node.get_compose_parent(endpoint.endpoint_id):
+        endpoint = compose_parent
+    if endpoint.is_bridged_device:
+        # Append endpoint ID if this endpoint is a bridged device
         postfix = str(endpoint.endpoint_id)
     else:
         # this should be compatible with previous versions
@@ -66,7 +72,18 @@ def get_device_id(
     return f"{operational_instance_id}-{postfix}"
 
 
-async def get_node_from_device_entry(
+@callback
+def node_from_ha_device_id(hass: HomeAssistant, ha_device_id: str) -> MatterNode | None:
+    """Get node id from ha device id."""
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get(ha_device_id)
+    if device is None:
+        raise MissingNode(f"Invalid device ID: {ha_device_id}")
+    return get_node_from_device_entry(hass, device)
+
+
+@callback
+def get_node_from_device_entry(
     hass: HomeAssistant, device: dr.DeviceEntry
 ) -> MatterNode | None:
     """Return MatterNode from device entry."""
@@ -83,7 +100,7 @@ async def get_node_from_device_entry(
     )
 
     if device_id_full is None:
-        raise ValueError(f"Device {device.id} is not a Matter device")
+        return None
 
     device_id = device_id_full.lstrip(device_id_type_prefix)
     matter_client = matter.matter_client
@@ -92,7 +109,7 @@ async def get_node_from_device_entry(
     if server_info is None:
         raise RuntimeError("Matter server information is not available")
 
-    node = next(
+    return next(
         (
             node
             for node in matter_client.get_nodes()
@@ -101,5 +118,3 @@ async def get_node_from_device_entry(
         ),
         None,
     )
-
-    return node

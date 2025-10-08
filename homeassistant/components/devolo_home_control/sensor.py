@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from devolo_home_control_api.devices.zwave import Zwave
@@ -9,13 +10,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .devolo_device import DevoloDeviceEntity
+from . import DevoloHomeControlConfigEntry
+from .entity import DevoloDeviceEntity
 
 DEVICE_CLASS_MAPPING = {
     "battery": SensorDeviceClass.BATTERY,
@@ -38,41 +38,44 @@ STATE_CLASS_MAPPING = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeControlConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all sensor devices and setup them via config entry."""
     entities: list[SensorEntity] = []
 
-    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
-        for device in gateway.multi_level_sensor_devices:
-            for multi_level_sensor in device.multi_level_sensor_property:
-                entities.append(
-                    DevoloGenericMultiLevelDeviceEntity(
-                        homecontrol=gateway,
-                        device_instance=device,
-                        element_uid=multi_level_sensor,
-                    )
-                )
-        for device in gateway.devices.values():
-            if hasattr(device, "consumption_property"):
-                for consumption in device.consumption_property:
-                    for consumption_type in ("current", "total"):
-                        entities.append(
-                            DevoloConsumptionEntity(
-                                homecontrol=gateway,
-                                device_instance=device,
-                                element_uid=consumption,
-                                consumption=consumption_type,
-                            )
-                        )
-            if hasattr(device, "battery_level"):
-                entities.append(
-                    DevoloBatteryEntity(
-                        homecontrol=gateway,
-                        device_instance=device,
-                        element_uid=f"devolo.BatterySensor:{device.uid}",
-                    )
-                )
+    for gateway in entry.runtime_data:
+        entities.extend(
+            DevoloGenericMultiLevelDeviceEntity(
+                homecontrol=gateway,
+                device_instance=device,
+                element_uid=multi_level_sensor,
+            )
+            for device in gateway.multi_level_sensor_devices
+            for multi_level_sensor in device.multi_level_sensor_property
+        )
+        entities.extend(
+            DevoloConsumptionEntity(
+                homecontrol=gateway,
+                device_instance=device,
+                element_uid=consumption,
+                consumption=consumption_type,
+            )
+            for device in gateway.devices.values()
+            if hasattr(device, "consumption_property")
+            for consumption in device.consumption_property
+            for consumption_type in ("current", "total")
+        )
+        entities.extend(
+            DevoloBatteryEntity(
+                homecontrol=gateway,
+                device_instance=device,
+                element_uid=f"devolo.BatterySensor:{device.uid}",
+            )
+            for device in gateway.devices.values()
+            if hasattr(device, "battery_level")
+        )
 
     async_add_entities(entities)
 
@@ -113,8 +116,10 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
             self._multi_level_sensor_property.sensor_type
         )
         self._attr_native_unit_of_measurement = self._multi_level_sensor_property.unit
-        self._attr_name = self._multi_level_sensor_property.sensor_type.capitalize()
         self._value = self._multi_level_sensor_property.value
+
+        if self._multi_level_sensor_property.sensor_type == "light":
+            self._attr_translation_key = "brightness"
 
         if element_uid.startswith("devolo.VoltageMultiLevelSensor:"):
             self._attr_entity_registry_enabled_default = False
@@ -122,6 +127,11 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
 
 class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
     """Representation of a battery entity within devolo Home Control."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
@@ -134,11 +144,6 @@ class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
             element_uid=element_uid,
         )
 
-        self._attr_device_class = DEVICE_CLASS_MAPPING.get("battery")
-        self._attr_state_class = STATE_CLASS_MAPPING.get("battery")
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_native_unit_of_measurement = PERCENTAGE
-        self._attr_name = "Battery level"
         self._value = device_instance.battery_level
 
 
@@ -171,14 +176,16 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
             device_instance.consumption_property[element_uid], consumption
         )
 
-        self._attr_name = f"{consumption.capitalize()} consumption"
-
     @property
     def unique_id(self) -> str:
-        """Return the unique ID of the entity."""
+        """Return the unique ID of the entity.
+
+        As both sensor types share the same element_uid we need to extend original
+        self._attr_unique_id to be really unique.
+        """
         return f"{self._attr_unique_id}_{self._sensor_type}"
 
-    def _sync(self, message: tuple) -> None:
+    def sync_callback(self, message: tuple) -> None:
         """Update the consumption sensor state."""
         if message[0] == self._attr_unique_id:
             self._value = getattr(

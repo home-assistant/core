@@ -1,72 +1,101 @@
 """Test util methods."""
-from collections.abc import Callable
-from datetime import datetime, timedelta, timezone
+
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
+from datetime import UTC, datetime, timedelta
 import os
 from pathlib import Path
 import sqlite3
+import threading
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sqlalchemy import lambda_stmt, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import util
-from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
-from homeassistant.components.recorder.db_schema import RecorderRuns
-from homeassistant.components.recorder.history.modern import (
-    _get_single_entity_start_time_stmt,
+from homeassistant.components.recorder import Recorder, util
+from homeassistant.components.recorder.const import (
+    DOMAIN,
+    SQLITE_URL_PREFIX,
+    SupportedDialect,
 )
+from homeassistant.components.recorder.db_schema import RecorderRuns
+from homeassistant.components.recorder.history import _get_single_entity_start_time_stmt
 from homeassistant.components.recorder.models import (
     UnsupportedDialect,
     process_timestamp,
 )
 from homeassistant.components.recorder.util import (
+    MIN_VERSION_SQLITE,
+    RETRYABLE_MYSQL_ERRORS,
+    database_job_retry_wrapper,
     end_incomplete_runs,
     is_second_sunday,
     resolve_period,
+    retryable_database_job,
+    retryable_database_job_method,
     session_scope,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
-from .common import corrupt_db_file, run_information_with_session, wait_recording_done
+from .common import (
+    async_wait_recording_done,
+    corrupt_db_file,
+    run_information_with_session,
+)
 
 from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
-def test_session_scope_not_setup(hass_recorder: Callable[..., HomeAssistant]) -> None:
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_test_recorder: RecorderInstanceContextManager,
+) -> None:
+    """Set up recorder."""
+
+
+@pytest.fixture
+def setup_recorder(recorder_mock: Recorder) -> None:
+    """Set up recorder."""
+
+
+async def test_session_scope_not_setup(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
     """Try to create a session scope when not setup."""
-    hass = hass_recorder()
-    with patch.object(
-        util.get_instance(hass), "get_session", return_value=None
-    ), pytest.raises(RuntimeError), util.session_scope(hass=hass):
+    with (
+        patch.object(util.get_instance(hass), "get_session", return_value=None),
+        pytest.raises(RuntimeError),
+        util.session_scope(hass=hass),
+    ):
         pass
 
 
-def test_recorder_bad_execute(hass_recorder: Callable[..., HomeAssistant]) -> None:
+async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -> None:
     """Bad execute, retry 3 times."""
-    from sqlalchemy.exc import SQLAlchemyError
 
-    hass_recorder()
-
-    def to_native(validate_entity_id=True):
+    def _all():
         """Raise exception."""
-        raise SQLAlchemyError()
+        raise SQLAlchemyError
 
     mck1 = MagicMock()
-    mck1.to_native = to_native
+    mck1.all = _all
 
-    with pytest.raises(SQLAlchemyError), patch(
-        "homeassistant.components.recorder.core.time.sleep"
-    ) as e_mock:
-        util.execute((mck1,), to_native=True)
+    with (
+        pytest.raises(SQLAlchemyError),
+        patch("homeassistant.components.recorder.core.time.sleep") as e_mock,
+    ):
+        util.execute(mck1)
 
     assert e_mock.call_count == 2
 
@@ -97,68 +126,76 @@ def test_validate_or_move_away_sqlite_database(
     assert util.validate_or_move_away_sqlite_database(dburl) is True
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_last_run_was_recently_clean(
-    event_loop, async_setup_recorder_instance: RecorderInstanceGenerator, tmp_path: Path
+    async_setup_recorder_instance: RecorderInstanceGenerator,
 ) -> None:
-    """Test we can check if the last recorder run was recently clean."""
+    """Test we can check if the last recorder run was recently clean.
+
+    This is only implemented for SQLite.
+    """
     config = {
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
         recorder.CONF_COMMIT_INTERVAL: 1,
     }
-    hass = await async_test_home_assistant(None)
+    async with async_test_home_assistant() as hass:
+        return_values = []
+        real_last_run_was_recently_clean = util.last_run_was_recently_clean
 
-    return_values = []
-    real_last_run_was_recently_clean = util.last_run_was_recently_clean
+        def _last_run_was_recently_clean(cursor):
+            return_values.append(real_last_run_was_recently_clean(cursor))
+            return return_values[-1]
 
-    def _last_run_was_recently_clean(cursor):
-        return_values.append(real_last_run_was_recently_clean(cursor))
-        return return_values[-1]
+        # Test last_run_was_recently_clean is not called on new DB
+        with patch(
+            "homeassistant.components.recorder.util.last_run_was_recently_clean",
+            wraps=_last_run_was_recently_clean,
+        ) as last_run_was_recently_clean_mock:
+            await async_setup_recorder_instance(hass, config)
+            await hass.async_block_till_done()
+            last_run_was_recently_clean_mock.assert_not_called()
 
-    # Test last_run_was_recently_clean is not called on new DB
-    with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
-        wraps=_last_run_was_recently_clean,
-    ) as last_run_was_recently_clean_mock:
-        await async_setup_recorder_instance(hass, config)
+        # Restart HA, last_run_was_recently_clean should return True
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
-        last_run_was_recently_clean_mock.assert_not_called()
+        await hass.async_stop()
 
-    # Restart HA, last_run_was_recently_clean should return True
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    await hass.async_stop()
+    async with async_test_home_assistant() as hass:
+        with patch(
+            "homeassistant.components.recorder.util.last_run_was_recently_clean",
+            wraps=_last_run_was_recently_clean,
+        ) as last_run_was_recently_clean_mock:
+            await async_setup_recorder_instance(hass, config)
+            last_run_was_recently_clean_mock.assert_called_once()
+            assert return_values[-1] is True
 
-    with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
-        wraps=_last_run_was_recently_clean,
-    ) as last_run_was_recently_clean_mock:
-        hass = await async_test_home_assistant(None)
-        await async_setup_recorder_instance(hass, config)
-        last_run_was_recently_clean_mock.assert_called_once()
-        assert return_values[-1] is True
-
-    # Restart HA with a long downtime, last_run_was_recently_clean should return False
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    await hass.async_stop()
+        # Restart HA with a long downtime, last_run_was_recently_clean should return False
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+        await hass.async_stop()
 
     thirty_min_future_time = dt_util.utcnow() + timedelta(minutes=30)
 
-    with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
-        wraps=_last_run_was_recently_clean,
-    ) as last_run_was_recently_clean_mock, patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=thirty_min_future_time,
-    ):
-        hass = await async_test_home_assistant(None)
-        await async_setup_recorder_instance(hass, config)
-        last_run_was_recently_clean_mock.assert_called_once()
-        assert return_values[-1] is False
+    async with async_test_home_assistant() as hass:
+        with (
+            patch(
+                "homeassistant.components.recorder.util.last_run_was_recently_clean",
+                wraps=_last_run_was_recently_clean,
+            ) as last_run_was_recently_clean_mock,
+            patch(
+                "homeassistant.components.recorder.core.dt_util.utcnow",
+                return_value=thirty_min_future_time,
+            ),
+        ):
+            await async_setup_recorder_instance(hass, config)
+            last_run_was_recently_clean_mock.assert_called_once()
+            assert return_values[-1] is False
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    await hass.async_stop()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+        await hass.async_stop()
 
 
 @pytest.mark.parametrize(
@@ -196,9 +233,9 @@ def test_setup_connection_for_dialect_mysql(mysql_version) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    ["3.31.0"],
+    [str(MIN_VERSION_SQLITE)],
 )
-def test_setup_connection_for_dialect_sqlite(sqlite_version) -> None:
+def test_setup_connection_for_dialect_sqlite(sqlite_version: str) -> None:
     """Test setting up the connection for a sqlite dialect."""
     instance_mock = MagicMock()
     execute_args = []
@@ -249,10 +286,10 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    ["3.31.0"],
+    [str(MIN_VERSION_SQLITE)],
 )
 def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
-    sqlite_version,
+    sqlite_version: str,
 ) -> None:
     """Test setting up the connection for a sqlite dialect with a zero commit interval."""
     instance_mock = MagicMock(commit_interval=0)
@@ -378,7 +415,12 @@ def test_supported_mysql(caplog: pytest.LogCaptureFixture, mysql_version) -> Non
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
+    database_engine = util.setup_connection_for_dialect(
+        instance_mock, "mysql", dbapi_connection, True
+    )
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_dependent_subquery is True
 
     assert "minimum supported version" not in caplog.text
 
@@ -462,7 +504,8 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
 
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
-    assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_range_in_select is True
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.parametrize(
@@ -470,15 +513,11 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
     [
         (
             "3.30.0",
-            "Version 3.30.0 of SQLite is not supported; minimum supported version is 3.31.0.",
+            "Version 3.30.0 of SQLite is not supported; minimum supported version is 3.40.1.",
         ),
         (
             "2.0.0",
-            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.31.0.",
-        ),
-        (
-            "dogs",
-            "Version dogs of SQLite is not supported; minimum supported version is 3.31.0.",
+            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.40.1.",
         ),
     ],
 )
@@ -516,8 +555,8 @@ def test_fail_outdated_sqlite(
 @pytest.mark.parametrize(
     "sqlite_version",
     [
-        ("3.31.0"),
-        ("3.33.0"),
+        ("3.40.1"),
+        ("3.41.0"),
     ],
 )
 def test_supported_sqlite(caplog: pytest.LogCaptureFixture, sqlite_version) -> None:
@@ -548,6 +587,7 @@ def test_supported_sqlite(caplog: pytest.LogCaptureFixture, sqlite_version) -> N
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.parametrize(
@@ -595,7 +635,11 @@ def test_warn_unsupported_dialect(
     ],
 )
 async def test_issue_for_mariadb_with_MDEV_25020(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mysql_version, min_version
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mysql_version,
+    min_version,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we create an issue for MariaDB versions affected.
 
@@ -630,13 +674,13 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     )
     await hass.async_block_till_done()
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    issue = issue_registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
     assert issue is not None
     assert issue.translation_placeholders == {"min_version": min_version}
 
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is True
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.parametrize(
@@ -650,7 +694,10 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     ],
 )
 async def test_no_issue_for_mariadb_with_MDEV_25020(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mysql_version
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mysql_version,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we do not create an issue for MariaDB versions not affected.
 
@@ -685,24 +732,23 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     )
     await hass.async_block_till_done()
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    issue = issue_registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
     assert issue is None
 
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
-def test_basic_sanity_check(
-    hass_recorder: Callable[..., HomeAssistant], recorder_db_url
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+async def test_basic_sanity_check(
+    hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
-    """Test the basic sanity checks with a missing table."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Test the basic sanity checks with a missing table.
 
-    hass = hass_recorder()
-
+    This test is specific for SQLite.
+    """
     cursor = util.get_instance(hass).engine.raw_connection().cursor()
 
     assert util.basic_sanity_check(cursor) is True
@@ -713,17 +759,18 @@ def test_basic_sanity_check(
         util.basic_sanity_check(cursor)
 
 
-def test_combined_checks(
-    hass_recorder: Callable[..., HomeAssistant],
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+async def test_combined_checks(
+    hass: HomeAssistant,
+    setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
-    recorder_db_url,
+    recorder_db_url: str,
 ) -> None:
-    """Run Checks on the open database."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Run Checks on the open database.
 
-    hass = hass_recorder()
+    This test is specific for SQLite.
+    """
     instance = util.get_instance(hass)
     instance.db_retry_wait = 0
 
@@ -751,17 +798,23 @@ def test_combined_checks(
         assert "restarted cleanly and passed the basic sanity check" in caplog.text
 
     caplog.clear()
-    with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
-        side_effect=sqlite3.DatabaseError,
-    ), pytest.raises(sqlite3.DatabaseError):
+    with (
+        patch(
+            "homeassistant.components.recorder.util.last_run_was_recently_clean",
+            side_effect=sqlite3.DatabaseError,
+        ),
+        pytest.raises(sqlite3.DatabaseError),
+    ):
         util.run_checks_on_open_db("fake_db_path", cursor)
 
     caplog.clear()
-    with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
-        side_effect=sqlite3.DatabaseError,
-    ), pytest.raises(sqlite3.DatabaseError):
+    with (
+        patch(
+            "homeassistant.components.recorder.util.last_run_was_recently_clean",
+            side_effect=sqlite3.DatabaseError,
+        ),
+        pytest.raises(sqlite3.DatabaseError),
+    ):
         util.run_checks_on_open_db("fake_db_path", cursor)
 
     cursor.execute("DROP TABLE events;")
@@ -775,12 +828,10 @@ def test_combined_checks(
         util.run_checks_on_open_db("fake_db_path", cursor)
 
 
-def test_end_incomplete_runs(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+async def test_end_incomplete_runs(
+    hass: HomeAssistant, setup_recorder: None, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Ensure we can end incomplete runs."""
-    hass = hass_recorder()
-
     with session_scope(hass=hass) as session:
         run_info = run_information_with_session(session)
         assert isinstance(run_info, RecorderRuns)
@@ -801,15 +852,15 @@ def test_end_incomplete_runs(
     assert "Ended unfinished session" in caplog.text
 
 
-def test_periodic_db_cleanups(
-    hass_recorder: Callable[..., HomeAssistant], recorder_db_url
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+async def test_periodic_db_cleanups(
+    hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
-    """Test periodic db cleanups."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Test periodic db cleanups.
 
-    hass = hass_recorder()
+    This test is specific for SQLite.
+    """
     with patch.object(util.get_instance(hass).engine, "connect") as connect_mock:
         util.periodic_db_cleanups(util.get_instance(hass))
 
@@ -820,20 +871,22 @@ def test_periodic_db_cleanups(
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
 
 
-@patch("homeassistant.components.recorder.pool.check_loop")
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
 async def test_write_lock_db(
-    skip_check_loop,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
-    tmp_path: Path,
+    recorder_db_url: str,
 ) -> None:
-    """Test database write lock."""
-    from sqlalchemy.exc import OperationalError
+    """Test database write lock.
 
-    # Use file DB, in memory DB cannot do write locks.
-    config = {
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
-    }
+    This is only supported for SQLite.
+
+    Use file DB, in memory DB cannot do write locks.
+    """
+
+    config = {recorder.CONF_DB_URL: recorder_db_url + "?timeout=0.1"}
     instance = await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
 
@@ -841,6 +894,7 @@ async def test_write_lock_db(
         with instance.engine.connect() as connection:
             connection.execute(text("DROP TABLE events;"))
 
+    instance.recorder_and_worker_thread_ids.add(threading.get_ident())
     with util.write_lock_db_sqlite(instance), pytest.raises(OperationalError):
         # Database should be locked now, try writing SQL command
         # This needs to be called in another thread since
@@ -849,7 +903,7 @@ async def test_write_lock_db(
         # in the same thread as the one holding the lock since it
         # would be allowed to proceed as the goal is to prevent
         # all the other threads from accessing the database
-        await hass.async_add_executor_job(_drop_table)
+        await instance.async_add_executor_job(_drop_table)
 
 
 def test_is_second_sunday() -> None:
@@ -881,22 +935,22 @@ def test_build_mysqldb_conv() -> None:
 
 
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
-def test_execute_stmt_lambda_element(
-    hass_recorder: Callable[..., HomeAssistant]
+async def test_execute_stmt_lambda_element(
+    hass: HomeAssistant,
+    setup_recorder: None,
 ) -> None:
     """Test executing with execute_stmt_lambda_element."""
-    hass = hass_recorder()
     instance = recorder.get_instance(hass)
-    hass.states.set("sensor.on", "on")
+    hass.states.async_set("sensor.on", "on")
     new_state = hass.states.get("sensor.on")
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     now = dt_util.utcnow()
     tomorrow = now + timedelta(days=1)
     one_week_from_now = now + timedelta(days=7)
     all_calls = 0
 
     class MockExecutor:
-        def __init__(self, stmt):
+        def __init__(self, stmt) -> None:
             assert isinstance(stmt, StatementLambdaElement)
 
         def all(self):
@@ -912,7 +966,7 @@ def test_execute_stmt_lambda_element(
         start_time_ts = dt_util.utcnow().timestamp()
         stmt = lambda_stmt(
             lambda: _get_single_entity_start_time_stmt(
-                start_time_ts, metadata_id, False, False
+                start_time_ts, metadata_id, False, False, False
             )
         )
         rows = util.execute_stmt_lambda_element(session, stmt)
@@ -948,55 +1002,82 @@ def test_execute_stmt_lambda_element(
             assert rows == ["mock_row"]
 
 
-@pytest.mark.freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
-async def test_resolve_period(hass: HomeAssistant) -> None:
-    """Test statistic_during_period."""
+@pytest.mark.parametrize(
+    ("start_time", "periods"),
+    [
+        (
+            # Test 00:25 local time, during DST
+            datetime(2022, 10, 21, 7, 25, 50, 123, tzinfo=UTC),
+            {
+                ("hour", 0): ("2022-10-21T07:00:00", "2022-10-21T08:00:00"),
+                ("hour", -1): ("2022-10-21T06:00:00", "2022-10-21T07:00:00"),
+                ("hour", 1): ("2022-10-21T08:00:00", "2022-10-21T09:00:00"),
+                ("day", 0): ("2022-10-21T07:00:00", "2022-10-22T07:00:00"),
+                ("day", -1): ("2022-10-20T07:00:00", "2022-10-21T07:00:00"),
+                ("day", 1): ("2022-10-22T07:00:00", "2022-10-23T07:00:00"),
+                ("week", 0): ("2022-10-17T07:00:00", "2022-10-24T07:00:00"),
+                ("week", -1): ("2022-10-10T07:00:00", "2022-10-17T07:00:00"),
+                ("week", 1): ("2022-10-24T07:00:00", "2022-10-31T07:00:00"),
+                ("month", 0): ("2022-10-01T07:00:00", "2022-11-01T07:00:00"),
+                ("month", -1): ("2022-09-01T07:00:00", "2022-10-01T07:00:00"),
+                ("month", -12): ("2021-10-01T07:00:00", "2021-11-01T07:00:00"),
+                ("month", 1): ("2022-11-01T07:00:00", "2022-12-01T08:00:00"),
+                ("month", 2): ("2022-12-01T08:00:00", "2023-01-01T08:00:00"),
+                ("month", 3): ("2023-01-01T08:00:00", "2023-02-01T08:00:00"),
+                ("month", 12): ("2023-10-01T07:00:00", "2023-11-01T07:00:00"),
+                ("month", 13): ("2023-11-01T07:00:00", "2023-12-01T08:00:00"),
+                ("month", 14): ("2023-12-01T08:00:00", "2024-01-01T08:00:00"),
+                ("year", 0): ("2022-01-01T08:00:00", "2023-01-01T08:00:00"),
+                ("year", -1): ("2021-01-01T08:00:00", "2022-01-01T08:00:00"),
+                ("year", 1): ("2023-01-01T08:00:00", "2024-01-01T08:00:00"),
+            },
+        ),
+        (
+            # Test 00:25 local time, standard time, February 28th a leap year
+            datetime(2024, 2, 28, 8, 25, 50, 123, tzinfo=UTC),
+            {
+                ("hour", 0): ("2024-02-28T08:00:00", "2024-02-28T09:00:00"),
+                ("hour", -1): ("2024-02-28T07:00:00", "2024-02-28T08:00:00"),
+                ("hour", 1): ("2024-02-28T09:00:00", "2024-02-28T10:00:00"),
+                ("day", 0): ("2024-02-28T08:00:00", "2024-02-29T08:00:00"),
+                ("day", -1): ("2024-02-27T08:00:00", "2024-02-28T08:00:00"),
+                ("day", 1): ("2024-02-29T08:00:00", "2024-03-01T08:00:00"),
+                ("week", 0): ("2024-02-26T08:00:00", "2024-03-04T08:00:00"),
+                ("week", -1): ("2024-02-19T08:00:00", "2024-02-26T08:00:00"),
+                ("week", 1): ("2024-03-04T08:00:00", "2024-03-11T07:00:00"),
+                ("month", 0): ("2024-02-01T08:00:00", "2024-03-01T08:00:00"),
+                ("month", -1): ("2024-01-01T08:00:00", "2024-02-01T08:00:00"),
+                ("month", -2): ("2023-12-01T08:00:00", "2024-01-01T08:00:00"),
+                ("month", -3): ("2023-11-01T07:00:00", "2023-12-01T08:00:00"),
+                ("month", -12): ("2023-02-01T08:00:00", "2023-03-01T08:00:00"),
+                ("month", -13): ("2023-01-01T08:00:00", "2023-02-01T08:00:00"),
+                ("month", -14): ("2022-12-01T08:00:00", "2023-01-01T08:00:00"),
+                ("month", 1): ("2024-03-01T08:00:00", "2024-04-01T07:00:00"),
+                ("year", 0): ("2024-01-01T08:00:00", "2025-01-01T08:00:00"),
+                ("year", -1): ("2023-01-01T08:00:00", "2024-01-01T08:00:00"),
+                ("year", 1): ("2025-01-01T08:00:00", "2026-01-01T08:00:00"),
+            },
+        ),
+    ],
+)
+async def test_resolve_period(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    start_time: datetime,
+    periods: dict[tuple[str, int], tuple[str, str]],
+) -> None:
+    """Test resolve_period."""
+    assert hass.config.time_zone == "US/Pacific"
+    freezer.move_to(start_time)
 
     now = dt_util.utcnow()
 
-    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
-    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
-    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "hour", "offset": -1}})
-    assert start_t.isoformat() == "2022-10-21T06:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "day"}})
-    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-22T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "day", "offset": -1}})
-    assert start_t.isoformat() == "2022-10-20T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "week"}})
-    assert start_t.isoformat() == "2022-10-17T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-24T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "week", "offset": -1}})
-    assert start_t.isoformat() == "2022-10-10T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-17T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "month"}})
-    assert start_t.isoformat() == "2022-10-01T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-11-01T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "month", "offset": -1}})
-    assert start_t.isoformat() == "2022-09-01T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-01T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "year"}})
-    assert start_t.isoformat() == "2022-01-01T08:00:00+00:00"
-    assert end_t.isoformat() == "2023-01-01T08:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "year", "offset": -1}})
-    assert start_t.isoformat() == "2021-01-01T08:00:00+00:00"
-    assert end_t.isoformat() == "2022-01-01T08:00:00+00:00"
+    for period_def, expected_period in periods.items():
+        start_t, end_t = resolve_period(
+            {"calendar": {"period": period_def[0], "offset": period_def[1]}}
+        )
+        assert start_t.isoformat() == f"{expected_period[0]}+00:00"
+        assert end_t.isoformat() == f"{expected_period[1]}+00:00"
 
     # Fixed period
     assert resolve_period({}) == (None, None)
@@ -1023,3 +1104,129 @@ async def test_resolve_period(hass: HomeAssistant) -> None:
             }
         }
     ) == (now - timedelta(hours=1, minutes=25), now - timedelta(minutes=25))
+
+
+NonRetryable = OperationalError(None, None, BaseException())
+Retryable = OperationalError(None, None, BaseException(RETRYABLE_MYSQL_ERRORS[0], ""))
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "dialect", "retval", "expected_result", "num_calls"),
+    [
+        (None, SupportedDialect.MYSQL, None, does_not_raise(), 1),
+        (ValueError, SupportedDialect.MYSQL, None, pytest.raises(ValueError), 1),
+        (
+            NonRetryable,
+            SupportedDialect.MYSQL,
+            None,
+            pytest.raises(OperationalError),
+            1,
+        ),
+        (Retryable, SupportedDialect.MYSQL, None, pytest.raises(OperationalError), 5),
+        (
+            NonRetryable,
+            SupportedDialect.SQLITE,
+            None,
+            pytest.raises(OperationalError),
+            1,
+        ),
+        (Retryable, SupportedDialect.SQLITE, None, pytest.raises(OperationalError), 1),
+    ],
+)
+def test_database_job_retry_wrapper(
+    side_effect: Any,
+    dialect: str,
+    retval: Any,
+    expected_result: AbstractContextManager,
+    num_calls: int,
+) -> None:
+    """Test database_job_retry_wrapper."""
+
+    instance = Mock()
+    instance.db_retry_wait = 0
+    instance.engine.dialect.name = dialect
+    mock_job = Mock(side_effect=side_effect)
+
+    @database_job_retry_wrapper("test", 5)
+    def job(instance, *args, **kwargs) -> None:
+        mock_job()
+        return retval
+
+    with expected_result:
+        assert job(instance) == retval
+
+    assert len(mock_job.mock_calls) == num_calls
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "dialect", "retval", "expected_result"),
+    [
+        (None, SupportedDialect.MYSQL, False, does_not_raise()),
+        (None, SupportedDialect.MYSQL, True, does_not_raise()),
+        (ValueError, SupportedDialect.MYSQL, False, pytest.raises(ValueError)),
+        (NonRetryable, SupportedDialect.MYSQL, True, does_not_raise()),
+        (Retryable, SupportedDialect.MYSQL, False, does_not_raise()),
+        (NonRetryable, SupportedDialect.SQLITE, True, does_not_raise()),
+        (Retryable, SupportedDialect.SQLITE, True, does_not_raise()),
+    ],
+)
+def test_retryable_database_job(
+    side_effect: Any,
+    retval: bool,
+    expected_result: AbstractContextManager,
+    dialect: str,
+) -> None:
+    """Test retryable_database_job."""
+
+    instance = Mock()
+    instance.db_retry_wait = 0
+    instance.engine.dialect.name = dialect
+    mock_job = Mock(side_effect=side_effect)
+
+    @retryable_database_job(description="test")
+    def job(instance, *args, **kwargs) -> bool:
+        mock_job()
+        return retval
+
+    with expected_result:
+        assert job(instance) == retval
+
+    assert len(mock_job.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "dialect", "retval", "expected_result"),
+    [
+        (None, SupportedDialect.MYSQL, False, does_not_raise()),
+        (None, SupportedDialect.MYSQL, True, does_not_raise()),
+        (ValueError, SupportedDialect.MYSQL, False, pytest.raises(ValueError)),
+        (NonRetryable, SupportedDialect.MYSQL, True, does_not_raise()),
+        (Retryable, SupportedDialect.MYSQL, False, does_not_raise()),
+        (NonRetryable, SupportedDialect.SQLITE, True, does_not_raise()),
+        (Retryable, SupportedDialect.SQLITE, True, does_not_raise()),
+    ],
+)
+def test_retryable_database_job_method(
+    side_effect: Any,
+    retval: bool,
+    expected_result: AbstractContextManager,
+    dialect: str,
+) -> None:
+    """Test retryable_database_job_method."""
+
+    instance = Mock()
+    instance.db_retry_wait = 0
+    instance.engine.dialect.name = dialect
+    mock_job = Mock(side_effect=side_effect)
+
+    class Test:
+        @retryable_database_job_method(description="test")
+        def job(self, instance, *args, **kwargs) -> bool:
+            mock_job()
+            return retval
+
+    test = Test()
+    with expected_result:
+        assert test.job(instance) == retval
+
+    assert len(mock_job.mock_calls) == 1

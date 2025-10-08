@@ -1,11 +1,8 @@
 """Constants for the Kodi platform."""
+
 DOMAIN = "kodi"
 
 CONF_WS_PORT = "ws_port"
-
-DATA_CONNECTION = "connection"
-DATA_KODI = "kodi"
-DATA_REMOVE_LISTENER = "remove_listener"
 
 DEFAULT_PORT = 8080
 DEFAULT_SSL = False

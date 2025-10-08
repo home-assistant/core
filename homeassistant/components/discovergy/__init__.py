@@ -1,77 +1,61 @@
 """The Discovergy integration."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
-
-import pydiscovergy
+from pydiscovergy import Discovergy
 from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
-from pydiscovergy.models import Meter
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 
-from .const import APP_NAME, DOMAIN
-from .coordinator import DiscovergyUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import DiscovergyConfigEntry, DiscovergyUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
 
-@dataclass
-class DiscovergyData:
-    """Discovergy data class to share meters and api client."""
-
-    api_client: pydiscovergy.Discovergy
-    meters: list[Meter]
-    coordinators: dict[str, DiscovergyUpdateCoordinator]
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -> bool:
     """Set up Discovergy from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
-    # init discovergy data class
-    discovergy_data = DiscovergyData(
-        api_client=pydiscovergy.Discovergy(
-            email=entry.data[CONF_EMAIL],
-            password=entry.data[CONF_PASSWORD],
-            app_name=APP_NAME,
-            httpx_client=get_async_client(hass),
-            authentication=BasicAuth(),
-        ),
-        meters=[],
-        coordinators={},
+    client = Discovergy(
+        email=entry.data[CONF_EMAIL],
+        password=entry.data[CONF_PASSWORD],
+        httpx_client=create_async_httpx_client(hass),
+        authentication=BasicAuth(),
     )
 
     try:
         # try to get meters from api to check if credentials are still valid and for later use
         # if no exception is raised everything is fine to go
-        discovergy_data.meters = await discovergy_data.api_client.get_meters()
+        meters = await client.meters()
     except discovergyError.InvalidLogin as err:
-        raise ConfigEntryAuthFailed("Invalid email or password") from err
-    except Exception as err:  # pylint: disable=broad-except
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from err
+    except Exception as err:
         raise ConfigEntryNotReady(
-            "Unexpected error while while getting meters"
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect_meters_setup",
         ) from err
 
     # Init coordinators for meters
-    for meter in discovergy_data.meters:
+    coordinators = []
+    for meter in meters:
         # Create coordinator for meter, set config entry and fetch initial data,
         # so we have data when entities are added
         coordinator = DiscovergyUpdateCoordinator(
             hass=hass,
             config_entry=entry,
             meter=meter,
-            discovergy_client=discovergy_data.api_client,
+            discovergy_client=client,
         )
         await coordinator.async_config_entry_first_refresh()
+        coordinators.append(coordinator)
 
-        discovergy_data.coordinators[meter.get_meter_id()] = coordinator
-
-    hass.data[DOMAIN][entry.entry_id] = discovergy_data
+    entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
@@ -79,15 +63,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(entry.entry_id)

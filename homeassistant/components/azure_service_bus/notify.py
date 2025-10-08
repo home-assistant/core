@@ -1,16 +1,12 @@
 """Support for azure service bus notification."""
+
 from __future__ import annotations
 
 import json
 import logging
 
-# pylint: disable-next=import-error, no-name-in-module
 from azure.servicebus import ServiceBusMessage
-
-# pylint: disable-next=import-error, no-name-in-module
 from azure.servicebus.aio import ServiceBusClient, ServiceBusSender
-
-# pylint: disable-next=import-error, no-name-in-module
 from azure.servicebus.exceptions import (
     MessagingEntityNotFoundError,
     ServiceBusConnectionError,
@@ -22,12 +18,12 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     ATTR_TITLE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_CONNECTION_STRING = "connection_string"
@@ -40,7 +36,7 @@ ATTR_ASB_TARGET = "target"
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_QUEUE_NAME, CONF_TOPIC_NAME),
-    PLATFORM_SCHEMA.extend(
+    NOTIFY_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_CONNECTION_STRING): cv.string,
             vol.Exclusive(

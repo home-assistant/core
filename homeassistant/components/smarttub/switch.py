@@ -1,25 +1,29 @@
 """Platform for switch integration."""
+
+import asyncio
 from typing import Any
 
-import async_timeout
 from smarttub import SpaPump
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import API_TIMEOUT, ATTR_PUMPS, DOMAIN, SMARTTUB_CONTROLLER
+from .const import API_TIMEOUT, ATTR_PUMPS
+from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SmartTubConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch entities for the pumps on the tub."""
 
-    controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
+    controller = entry.runtime_data
 
     entities = [
         SmartTubPump(controller.coordinator, pump)
@@ -33,21 +37,19 @@ async def async_setup_entry(
 class SmartTubPump(SmartTubEntity, SwitchEntity):
     """A pump on a spa."""
 
-    def __init__(self, coordinator, pump: SpaPump) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[dict[str, Any]], pump: SpaPump
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, pump.spa, "pump")
         self.pump_id = pump.id
         self.pump_type = pump.type
+        self._attr_unique_id = f"{super().unique_id}-{pump.id}"
 
     @property
     def pump(self) -> SpaPump:
         """Return the underlying SpaPump object for this entity."""
         return self.coordinator.data[self.spa.id][ATTR_PUMPS][self.pump_id]
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for this pump entity."""
-        return f"{super().unique_id}-{self.pump_id}"
 
     @property
     def name(self) -> str:
@@ -80,6 +82,6 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the pump on or off."""
-        async with async_timeout.timeout(API_TIMEOUT):
+        async with asyncio.timeout(API_TIMEOUT):
             await self.pump.toggle()
         await self.coordinator.async_request_refresh()

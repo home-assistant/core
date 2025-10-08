@@ -1,4 +1,5 @@
 """Support for Fjäråskupan fans."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,11 +13,10 @@ from fjaraskupan import (
 )
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
@@ -24,7 +24,7 @@ from homeassistant.util.percentage import (
 )
 
 from . import async_setup_entry_platform
-from .coordinator import FjaraskupanCoordinator
+from .coordinator import FjaraskupanConfigEntry, FjaraskupanCoordinator
 
 ORDERED_NAMED_FAN_SPEEDS = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
@@ -50,8 +50,8 @@ class UnsupportedPreset(HomeAssistantError):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FjaraskupanConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors dynamically through discovery."""
 
@@ -64,7 +64,13 @@ async def async_setup_entry(
 class Fan(CoordinatorEntity[FjaraskupanCoordinator], FanEntity):
     """Fan entity."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+
     _attr_has_entity_name = True
     _attr_name = None
 
@@ -85,7 +91,7 @@ class Fan(CoordinatorEntity[FjaraskupanCoordinator], FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set speed."""
 
-        # Proactively update percentage to mange successive increases
+        # Proactively update percentage to manage successive increases
         self._percentage = percentage
 
         async with self.coordinator.async_connect_and_update() as device:
@@ -131,11 +137,9 @@ class Fan(CoordinatorEntity[FjaraskupanCoordinator], FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if command := PRESET_TO_COMMAND.get(preset_mode):
-            async with self.coordinator.async_connect_and_update() as device:
-                await device.send_command(command)
-        else:
-            raise UnsupportedPreset(f"The preset {preset_mode} is unsupported")
+        command = PRESET_TO_COMMAND[preset_mode]
+        async with self.coordinator.async_connect_and_update() as device:
+            await device.send_command(command)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""

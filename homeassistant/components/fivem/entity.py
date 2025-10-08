@@ -1,4 +1,5 @@
 """The FiveM entity."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -6,21 +7,17 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-)
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DOMAIN,
-    MANUFACTURER,
-)
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import FiveMDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class FiveMEntityDescription(EntityDescription):
     """Describes FiveM entity."""
 

@@ -1,4 +1,5 @@
 """Representation of ISY/IoX buttons."""
+
 from __future__ import annotations
 
 from pyisy import ISY
@@ -14,29 +15,37 @@ from pyisy.networking import NetworkCommand
 from pyisy.nodes import Node
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_NETWORK, DOMAIN
+from .models import IsyConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: IsyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX button from config entry."""
-    isy_data = hass.data[DOMAIN][config_entry.entry_id]
-    isy: ISY = isy_data.root
+    isy_data = config_entry.runtime_data
+    isy = isy_data.root
     device_info = isy_data.devices
     entities: list[
         ISYNodeQueryButtonEntity
         | ISYNodeBeepButtonEntity
         | ISYNetworkResourceButtonEntity
-    ] = []
+    ] = [
+        ISYNetworkResourceButtonEntity(
+            node=node,
+            name=node.name,
+            unique_id=isy_data.uid_base(node),
+            device_info=device_info[CONF_NETWORK],
+        )
+        for node in isy_data.net_resources
+    ]
 
     for node in isy_data.root_nodes[Platform.BUTTON]:
         entities.append(
@@ -58,16 +67,6 @@ async def async_setup_entry(
                     device_info=device_info[node.address],
                 )
             )
-
-    for node in isy_data.net_resources:
-        entities.append(
-            ISYNetworkResourceButtonEntity(
-                node=node,
-                name=node.name,
-                unique_id=isy_data.uid_base(node),
-                device_info=device_info[CONF_NETWORK],
-            )
-        )
 
     # Add entity to query full system
     entities.append(

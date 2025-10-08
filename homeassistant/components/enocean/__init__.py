@@ -1,4 +1,5 @@
 """Support for EnOcean devices."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -6,18 +7,13 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .config_flow import (
-    CONF_ENOCEAN_DEVICES,
-)
+from .config_flow import CONF_ENOCEAN_DEVICES
 from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, LOGGER, PLATFORMS
 from .dongle import EnOceanDongle
-from .importer import (
-    setup_yaml_import,
-)
+from .importer import setup_yaml_import
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -100,7 +96,9 @@ def forward_entry_setup_to_platforms(
     """Forward entry setup to all implemented platforms."""
     for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry=entry, domain=platform)
+            hass.config_entries.async_forward_entry_setups(
+                entry=entry, platforms=[platform]
+            )
         )
 
 

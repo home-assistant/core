@@ -1,9 +1,10 @@
 """Test the IPMA integration."""
+
 from unittest.mock import patch
 
 from pyipma import IPMAException
 
-from homeassistant.components.ipma import DOMAIN
+from homeassistant.components.ipma.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.core import HomeAssistant

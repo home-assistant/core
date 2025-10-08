@@ -1,4 +1,5 @@
 """ONVIF switches for controlling cameras."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -8,17 +9,17 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base import ONVIFBaseEntity
 from .const import DOMAIN
 from .device import ONVIFDevice
+from .entity import ONVIFBaseEntity
 from .models import Profile
 
 
-@dataclass
-class ONVIFSwitchEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class ONVIFSwitchEntityDescription(SwitchEntityDescription):
+    """Describes ONVIF switch entity."""
 
     turn_on_fn: Callable[
         [ONVIFDevice], Callable[[Profile, Any], Coroutine[Any, Any, None]]
@@ -31,18 +32,10 @@ class ONVIFSwitchEntityDescriptionMixin:
     supported_fn: Callable[[ONVIFDevice], bool]
 
 
-@dataclass
-class ONVIFSwitchEntityDescription(
-    SwitchEntityDescription, ONVIFSwitchEntityDescriptionMixin
-):
-    """Describes ONVIF switch entity."""
-
-
 SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
     ONVIFSwitchEntityDescription(
         key="autofocus",
-        name="Autofocus",
-        icon="mdi:focus-auto",
+        translation_key="autofocus",
         turn_on_data={"Focus": {"AutoFocusMode": "AUTO"}},
         turn_off_data={"Focus": {"AutoFocusMode": "MANUAL"}},
         turn_on_fn=lambda device: device.async_set_imaging_settings,
@@ -51,8 +44,7 @@ SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
     ),
     ONVIFSwitchEntityDescription(
         key="ir_lamp",
-        name="IR lamp",
-        icon="mdi:spotlight-beam",
+        translation_key="ir_lamp",
         turn_on_data={"IrCutFilter": "OFF"},
         turn_off_data={"IrCutFilter": "ON"},
         turn_on_fn=lambda device: device.async_set_imaging_settings,
@@ -61,8 +53,7 @@ SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
     ),
     ONVIFSwitchEntityDescription(
         key="wiper",
-        name="Wiper",
-        icon="mdi:wiper",
+        translation_key="wiper",
         turn_on_data="tt:Wiper|On",
         turn_off_data="tt:Wiper|Off",
         turn_on_fn=lambda device: device.async_run_aux_command,
@@ -75,7 +66,7 @@ SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a ONVIF switch platform."""
     device = hass.data[DOMAIN][config_entry.unique_id]

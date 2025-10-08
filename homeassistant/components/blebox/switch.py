@@ -1,30 +1,29 @@
 """BleBox switch implementation."""
+
 from datetime import timedelta
 from typing import Any
 
-from blebox_uniapi.box import Box
 import blebox_uniapi.switch
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BleBoxEntity
-from .const import DOMAIN, PRODUCT
+from . import BleBoxConfigEntry
+from .entity import BleBoxEntity
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BleBoxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox switch entity."""
-    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
     entities = [
-        BleBoxSwitchEntity(feature) for feature in product.features.get("switches", [])
+        BleBoxSwitchEntity(feature)
+        for feature in config_entry.runtime_data.features.get("switches", [])
     ]
     async_add_entities(entities, True)
 
@@ -32,10 +31,7 @@ async def async_setup_entry(
 class BleBoxSwitchEntity(BleBoxEntity[blebox_uniapi.switch.Switch], SwitchEntity):
     """Representation of a BleBox switch feature."""
 
-    def __init__(self, feature: blebox_uniapi.switch.Switch) -> None:
-        """Initialize a BleBox switch feature."""
-        super().__init__(feature)
-        self._attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     @property
     def is_on(self):

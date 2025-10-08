@@ -1,4 +1,5 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
+
 from __future__ import annotations
 
 from pynobo import nobo
@@ -9,14 +10,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_MODEL,
-    ATTR_NAME,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_MODEL, ATTR_NAME, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import ATTR_SERIAL, ATTR_ZONE_ID, DOMAIN, NOBO_MANUFACTURER
@@ -25,7 +22,7 @@ from .const import ATTR_SERIAL, ATTR_ZONE_ID, DOMAIN, NOBO_MANUFACTURER
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up any temperature sensors connected to the Nobø Ecohub."""
 
@@ -61,6 +58,7 @@ class NoboTemperatureSensor(SensorEntity):
             suggested_area = hub.zones[zone_id][ATTR_NAME]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, component[ATTR_SERIAL])},
+            serial_number=component[ATTR_SERIAL],
             name=component[ATTR_NAME],
             manufacturer=NOBO_MANUFACTURER,
             model=component[ATTR_MODEL].name,

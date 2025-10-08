@@ -1,9 +1,10 @@
 """Config validation for the Z-Wave JS integration."""
+
 from typing import Any
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 # Validates that a bitmask is provided in hex form and converts it to decimal
 # int equivalent since that's what the library uses
@@ -33,6 +34,8 @@ def boolean(value: Any) -> bool:
 
 VALUE_SCHEMA = vol.Any(
     boolean,
+    float,
+    int,
     vol.Coerce(int),
     vol.Coerce(float),
     BITMASK_SCHEMA,

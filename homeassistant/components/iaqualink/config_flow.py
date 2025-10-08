@@ -1,4 +1,5 @@
 """Config flow to configure zone component."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,27 +12,22 @@ from iaqualink.exception import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
 
 
-class AqualinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
     """Aqualink config flow."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow start."""
-        # Supporting a single account.
-        entries = self._async_current_entries()
-        if entries:
-            return self.async_abort(reason="single_instance_allowed")
-
         errors = {}
 
         if user_input is not None:
@@ -39,7 +35,9 @@ class AqualinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
 
             try:
-                async with AqualinkClient(username, password):
+                async with AqualinkClient(
+                    username, password, httpx_client=get_async_client(self.hass)
+                ):
                     pass
             except AqualinkServiceUnauthorizedException:
                 errors["base"] = "invalid_auth"

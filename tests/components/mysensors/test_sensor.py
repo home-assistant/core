@@ -1,4 +1,5 @@
 """Provide tests for mysensors sensor platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -41,6 +43,7 @@ async def test_gps_sensor(
 
     assert state
     assert state.state == "40.741894,-73.989311,12"
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 0
 
     altitude = 0
     new_coords = "40.782,-73.965"
@@ -67,6 +70,7 @@ async def test_ir_transceiver(
 
     assert state
     assert state.state == "test_code"
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 0
 
     receive_message("1;1;1;0;50;new_code\n")
     await hass.async_block_till_done()
@@ -75,6 +79,27 @@ async def test_ir_transceiver(
 
     assert state
     assert state.state == "new_code"
+
+
+async def test_battery_entity(
+    hass: HomeAssistant,
+    battery_sensor: Sensor,
+    receive_message: Callable[[str], None],
+) -> None:
+    """Test sensor with battery level reporting."""
+    battery_entity_id = "sensor.battery_sensor_1_battery"
+    state = hass.states.get(battery_entity_id)
+    assert state
+    assert state.state == "42"
+    assert ATTR_BATTERY_LEVEL not in state.attributes
+
+    receive_message("1;255;3;0;0;84\n")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(battery_entity_id)
+    assert state
+    assert state.state == "84"
+    assert ATTR_BATTERY_LEVEL not in state.attributes
 
 
 async def test_power_sensor(
@@ -92,6 +117,7 @@ async def test_power_sensor(
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 0
 
 
 async def test_energy_sensor(
@@ -109,6 +135,7 @@ async def test_energy_sensor(
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 0
 
 
 async def test_sound_sensor(
@@ -125,6 +152,7 @@ async def test_sound_sensor(
     assert state.state == "10"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.SOUND_PRESSURE
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "dB"
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 0
 
 
 async def test_distance_sensor(
@@ -142,6 +170,7 @@ async def test_distance_sensor(
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DISTANCE
     assert ATTR_ICON not in state.attributes
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "cm"
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 0
 
 
 @pytest.mark.parametrize(
@@ -174,3 +203,4 @@ async def test_temperature_sensor(
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == unit
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 0

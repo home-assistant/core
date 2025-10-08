@@ -1,4 +1,5 @@
 """Test the SFR Box sensors."""
+
 from collections.abc import Generator
 from unittest.mock import patch
 
@@ -14,7 +15,7 @@ pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.sfr_box.PLATFORMS", [Platform.SENSOR]):
         yield
@@ -45,7 +46,7 @@ async def test_sensors(
 
     # Some entities are disabled, enable them and reload before checking states
     for ent in entity_entries:
-        entity_registry.async_update_entity(ent.entity_id, **{"disabled_by": None})
+        entity_registry.async_update_entity(ent.entity_id, disabled_by=None)
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 

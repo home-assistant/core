@@ -1,4 +1,5 @@
 """Tests for the WLED button platform."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -13,7 +14,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 pytestmark = [
     pytest.mark.usefixtures("init_integration"),
-    pytest.mark.freeze_time("2021-11-04 17:37:00+01:00"),
+    pytest.mark.freeze_time("2021-11-04 17:36:59+01:00"),
 ]
 
 
@@ -57,7 +58,6 @@ async def test_button_restart(
             {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     # Ensure this didn't made the entity unavailable
     assert (state := hass.states.get("button.wled_rgb_light_restart"))

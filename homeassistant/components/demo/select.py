@@ -1,11 +1,12 @@
 """Demo platform that offers a fake select entity."""
+
 from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN
 
@@ -13,7 +14,7 @@ from . import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the demo select platform."""
     async_add_entities(
@@ -21,7 +22,6 @@ async def async_setup_entry(
             DemoSelect(
                 unique_id="speed",
                 device_name="Speed",
-                icon="mdi:speedometer",
                 current_option="ridiculous_speed",
                 options=[
                     "light_speed",
@@ -45,7 +45,6 @@ class DemoSelect(SelectEntity):
         self,
         unique_id: str,
         device_name: str,
-        icon: str,
         current_option: str | None,
         options: list[str],
         translation_key: str,
@@ -53,7 +52,6 @@ class DemoSelect(SelectEntity):
         """Initialize the Demo select entity."""
         self._attr_unique_id = unique_id
         self._attr_current_option = current_option
-        self._attr_icon = icon
         self._attr_options = options
         self._attr_translation_key = translation_key
         self._attr_device_info = DeviceInfo(

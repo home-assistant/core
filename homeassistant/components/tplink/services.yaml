@@ -1,14 +1,10 @@
 sequence_effect:
-  name: Sequence effect
-  description: Set a sequence effect
   target:
     entity:
       integration: tplink
       domain: light
   fields:
     sequence:
-      name: Sequence
-      description: List of HSV sequences (Max 16)
       example: |
         - [340, 20, 50]
         - [20, 50, 50]
@@ -17,16 +13,12 @@ sequence_effect:
       selector:
         object:
     segments:
-      name: Segments
-      description: List of Segments (0 for all)
       example: 0, 2, 4, 6, 8
       default: 0
       required: false
       selector:
         object:
     brightness:
-      name: Brightness
-      description: Initial brightness
       example: 80
       default: 100
       required: false
@@ -37,8 +29,6 @@ sequence_effect:
           max: 100
           unit_of_measurement: "%"
     duration:
-      name: Duration
-      description: Duration
       example: 0
       default: 0
       required: false
@@ -49,8 +39,6 @@ sequence_effect:
           max: 5000
           unit_of_measurement: "ms"
     repeat_times:
-      name: Repetitions
-      description: Repetitions (0 for continuous)
       example: 0
       default: 0
       required: false
@@ -60,8 +48,6 @@ sequence_effect:
           step: 1
           max: 10
     transition:
-      name: Transition
-      description: Transition
       example: 2000
       default: 0
       required: false
@@ -72,8 +58,6 @@ sequence_effect:
           max: 6000
           unit_of_measurement: "ms"
     spread:
-      name: Spread
-      description: Speed of spread
       example: 1
       default: 0
       required: false
@@ -83,8 +67,6 @@ sequence_effect:
           step: 1
           max: 16
     direction:
-      name: Direction
-      description: Direction
       example: 1
       default: 4
       required: false
@@ -94,21 +76,17 @@ sequence_effect:
           step: 1
           max: 4
 random_effect:
-  name: Random effect
-  description: Set a random effect
   target:
     entity:
       integration: tplink
       domain: light
   fields:
     init_states:
-      description: Initial HSV sequence
       example: [199, 99, 96]
       required: true
       selector:
         object:
     backgrounds:
-      description: List of HSV sequences (Max 16)
       example: |
         - [199, 89, 50]
         - [160, 50, 50]
@@ -117,14 +95,12 @@ random_effect:
       selector:
         object:
     segments:
-      description: List of segments (0 for all)
       example: 0, 2, 4, 6, 8
       default: 0
       required: false
       selector:
         object:
     brightness:
-      description: Initial brightness
       example: 90
       default: 100
       required: false
@@ -135,7 +111,6 @@ random_effect:
           max: 100
           unit_of_measurement: "%"
     duration:
-      description: Duration
       example: 0
       default: 0
       required: false
@@ -146,7 +121,6 @@ random_effect:
           max: 5000
           unit_of_measurement: "ms"
     transition:
-      description: Transition
       example: 2000
       default: 0
       required: false
@@ -157,7 +131,6 @@ random_effect:
           max: 6000
           unit_of_measurement: "ms"
     fadeoff:
-      description: Fade off
       example: 2000
       default: 0
       required: false
@@ -168,31 +141,26 @@ random_effect:
           max: 3000
           unit_of_measurement: "ms"
     hue_range:
-      description: Range of hue
       example: 340, 360
       required: false
       selector:
         object:
     saturation_range:
-      description: Range of saturation
       example: 40, 95
       required: false
       selector:
         object:
     brightness_range:
-      description: Range of brightness
       example: 90, 100
       required: false
       selector:
         object:
     transition_range:
-      description: Range of transition
       example: 2000, 6000
       required: false
       selector:
         object:
     random_seed:
-      description: Random seed
       example: 80
       default: 100
       required: false

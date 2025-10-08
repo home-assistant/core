@@ -1,4 +1,5 @@
 """Test the Tomorrow.io config flow."""
+
 from unittest.mock import patch
 
 from pytomorrowio.exceptions import (
@@ -8,7 +9,6 @@ from pytomorrowio.exceptions import (
     UnknownException,
 )
 
-from homeassistant import data_entry_flow
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
     _get_unique_id,
@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_RADIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from .const import API_KEY, MIN_CONFIG
@@ -41,7 +42,7 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -49,7 +50,7 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
         user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_NAME] == DEFAULT_NAME
     assert result["data"][CONF_API_KEY] == API_KEY
@@ -74,7 +75,7 @@ async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -82,7 +83,7 @@ async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
         user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{DEFAULT_NAME} - Home"
     assert result["data"][CONF_NAME] == f"{DEFAULT_NAME} - Home"
     assert result["data"][CONF_API_KEY] == API_KEY
@@ -108,7 +109,7 @@ async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:
         data=user_input,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -124,7 +125,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
             data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -140,7 +141,7 @@ async def test_user_flow_invalid_api(hass: HomeAssistant) -> None:
             data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
 
@@ -156,7 +157,7 @@ async def test_user_flow_rate_limited(hass: HomeAssistant) -> None:
             data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {CONF_API_KEY: "rate_limited"}
 
 
@@ -172,7 +173,7 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
             data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}
 
 
@@ -196,14 +197,14 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_TIMESTEP: 1}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"][CONF_TIMESTEP] == 1
     assert entry.options[CONF_TIMESTEP] == 1

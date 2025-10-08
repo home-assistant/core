@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "number": {
+      "effect_speed": {
+        "default": "mdi:speedometer"
+      },
+      "dual_head_ratio": {
+        "default": "mdi:floor-lamp-dual"
+      }
+    }
+  }
+}

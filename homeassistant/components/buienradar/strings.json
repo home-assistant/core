@@ -19,9 +19,9 @@
     "step": {
       "init": {
         "data": {
-          "country_code": "Country code of the country to display camera images.",
-          "delta": "Time interval in seconds between camera image updates",
-          "timeframe": "Minutes to look ahead for precipitation forecast"
+          "country_code": "Country to display camera images for.",
+          "delta": "Interval between camera image updates",
+          "timeframe": "Time to look ahead for precipitation forecast"
         }
       }
     }
@@ -38,7 +38,7 @@
         "name": "Barometer"
       },
       "barometerfcnamenl": {
-        "name": "Barometer"
+        "name": "[%key:component::buienradar::entity::sensor::barometerfcname::name%]"
       },
       "condition": {
         "name": "Condition",
@@ -84,17 +84,8 @@
       "feeltemperature": {
         "name": "Feel temperature"
       },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
       "groundtemperature": {
         "name": "Ground temperature"
-      },
-      "windspeed": {
-        "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
       },
       "windforce": {
         "name": "Wind force"
@@ -105,20 +96,11 @@
       "windazimuth": {
         "name": "Wind direction azimuth"
       },
-      "pressure": {
-        "name": "[%key:component::sensor::entity_component::pressure::name%]"
-      },
       "visibility": {
         "name": "[%key:component::weather::entity_component::_::state_attributes::visibility::name%]"
       },
       "windgust": {
         "name": "Wind gust"
-      },
-      "precipitation": {
-        "name": "[%key:component::sensor::entity_component::precipitation::name%]"
-      },
-      "irradiance": {
-        "name": "[%key:component::sensor::entity_component::irradiance::name%]"
       },
       "precipitation_forecast_average": {
         "name": "Precipitation forecast average"
@@ -446,9 +428,9 @@
           "partlycloudy-light-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-light-snow%]",
           "partlycloudy-snow": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-snow%]",
           "partlycloudy-lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::partlycloudy-lightning%]",
-          "snowy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::snowy%]",
-          "snowy-rainy": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::snowy-rainy%]",
-          "lightning": "[%key:component::buienradar::entity::sensor::conditiondetailed::state::lightning%]"
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
         }
       },
       "conditiondetailed_5d": {

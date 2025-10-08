@@ -1,4 +1,5 @@
 """Support for Homematic thermostats."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -56,9 +57,17 @@ class HMThermostat(HMDevice, ClimateEntity):
     """Representation of a Homematic thermostat."""
 
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_min_temp = 4.5
+    _attr_max_temp = 30.5
+    _attr_target_temperature_step = 0.5
+
+    _state: str
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -89,7 +98,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         return [HVACMode.HEAT, HVACMode.OFF]
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp."""
         if self._data.get("BOOST_MODE", False):
             return "boost"
@@ -106,37 +115,39 @@ class HMThermostat(HMDevice, ClimateEntity):
         return mode
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """Return a list of available preset modes."""
-        preset_modes = []
-        for mode in self._hmdevice.ACTIONNODE:
-            if mode in HM_PRESET_MAP:
-                preset_modes.append(HM_PRESET_MAP[mode])
-        return preset_modes
+        return [
+            HM_PRESET_MAP[mode]
+            for mode in self._hmdevice.ACTIONNODE
+            if mode in HM_PRESET_MAP
+        ]
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         for node in HM_HUMI_MAP:
             if node in self._data:
                 return self._data[node]
+        return None
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         for node in HM_TEMP_MAP:
             if node in self._data:
                 return self._data[node]
+        return None
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self._data.get(self._state)
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return None
+            return
 
         self._hmdevice.writeNodeData(self._state, float(temperature))
 
@@ -157,21 +168,6 @@ class HMThermostat(HMDevice, ClimateEntity):
             self._hmdevice.MODE = self._hmdevice.COMFORT_MODE
         elif preset_mode == PRESET_ECO:
             self._hmdevice.MODE = self._hmdevice.LOWERING_MODE
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return 4.5
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return 30.5
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 0.5
 
     @property
     def _hm_control_mode(self):

@@ -1,21 +1,16 @@
 """Package metadata validation."""
-import sys
+
+import tomllib
 
 from homeassistant.const import REQUIRED_PYTHON_VER, __version__
 
 from .model import Config, Integration
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
-
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate project metadata keys."""
     metadata_path = config.root / "pyproject.toml"
-    with open(metadata_path, "rb") as fp:
-        data = tomllib.load(fp)
+    data = tomllib.loads(metadata_path.read_text())
 
     try:
         if data["project"]["version"] != __version__:

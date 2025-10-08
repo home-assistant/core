@@ -1,0 +1,39 @@
+{
+  "entity": {
+    "sensor": {
+      "departure_time": {
+        "default": "mdi:clock"
+      },
+      "departure_state": {
+        "default": "mdi:clock"
+      },
+      "cancelled": {
+        "default": "mdi:alert"
+      },
+      "delayed_time": {
+        "default": "mdi:clock"
+      },
+      "planned_time": {
+        "default": "mdi:clock"
+      },
+      "estimated_time": {
+        "default": "mdi:clock"
+      },
+      "actual_time": {
+        "default": "mdi:clock"
+      },
+      "other_info": {
+        "default": "mdi:information-variant"
+      },
+      "deviation": {
+        "default": "mdi:alert"
+      },
+      "departure_time_next": {
+        "default": "mdi:clock"
+      },
+      "departure_time_next_next": {
+        "default": "mdi:clock"
+      }
+    }
+  }
+}

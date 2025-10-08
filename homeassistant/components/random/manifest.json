@@ -2,7 +2,9 @@
   "domain": "random",
   "name": "Random",
   "codeowners": ["@fabaff"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/random",
-  "iot_class": "local_polling",
+  "integration_type": "helper",
+  "iot_class": "calculated",
   "quality_scale": "internal"
 }

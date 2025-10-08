@@ -1,23 +1,26 @@
 """An abstract class for entities."""
+
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABCMeta
 import asyncio
-from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
-from dataclasses import dataclass
-from datetime import datetime, timedelta
+from collections import deque
+from collections.abc import Callable, Coroutine, Iterable, Mapping
+import dataclasses
 from enum import Enum, auto
 import functools as ft
 import logging
 import math
+from operator import attrgetter
 import sys
-from timeit import default_timer as timer
-from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, TypeVar, final
+import threading
+import time
+from types import FunctionType
+from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, final
 
+from propcache.api import cached_property
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
-from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ATTRIBUTION,
@@ -34,48 +37,67 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityCategory,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    Event,
+    HassJobType,
+    HomeAssistant,
+    ReleaseChannel,
+    callback,
+    get_hassjob_callable_job_type,
+    get_release_channel,
+)
+from homeassistant.core_config import DATA_CUSTOMIZE
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
-from homeassistant.loader import bind_hass
-from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
+from homeassistant.loader import async_suggest_report_issue, bind_hass
+from homeassistant.util import ensure_unique_string, slugify
+from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
-from . import device_registry as dr, entity_registry as er
-from .device_registry import DeviceEntryType
+from . import device_registry as dr, entity_registry as er, singleton
+from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
 from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
+from .frame import report_non_thread_safe_operation
 from .typing import UNDEFINED, StateType, UndefinedType
 
+timer = time.time
+
 if TYPE_CHECKING:
-    from .entity_platform import EntityPlatform
-
-
-_T = TypeVar("_T")
+    from .entity_platform import EntityPlatform, PlatformData
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
 DATA_ENTITY_SOURCE = "entity_info"
-SOURCE_CONFIG_ENTRY = "config_entry"
-SOURCE_PLATFORM_CONFIG = "platform_config"
 
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
+# How many times per hour we allow capabilities to be updated before logging a warning
+CAPABILITIES_UPDATE_LIMIT = 100
+
+CONTEXT_RECENT_TIME_SECONDS = 5  # Time that a context is considered recent
+
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up entity sources."""
-    hass.data[DATA_ENTITY_SOURCE] = {}
+    entity_sources(hass)
 
 
 @callback
 @bind_hass
-def entity_sources(hass: HomeAssistant) -> dict[str, dict[str, str]]:
-    """Get the entity sources."""
-    _entity_sources: dict[str, dict[str, str]] = hass.data[DATA_ENTITY_SOURCE]
-    return _entity_sources
+@singleton.singleton(DATA_ENTITY_SOURCE)
+def entity_sources(hass: HomeAssistant) -> dict[str, EntityInfo]:
+    """Get the entity sources.
+
+    Items are added to this dict by Entity.async_internal_added_to_hass and
+    removed by Entity.async_internal_will_remove_from_hass.
+    """
+    return {}
 
 
 def generate_entity_id(
@@ -150,7 +172,7 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
     First try the statemachine, then entity registry.
     """
     if state := hass.states.get(entity_id):
-        return state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        return state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)  # type: ignore[no-any-return]
 
     entity_registry = er.async_get(hass)
     if not (entry := entity_registry.async_get(entity_id)):
@@ -174,46 +196,45 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
     return entry.unit_of_measurement
 
 
-class DeviceInfo(TypedDict, total=False):
-    """Entity device information for device registry."""
-
-    configuration_url: str | None
-    connections: set[tuple[str, str]]
-    default_manufacturer: str
-    default_model: str
-    default_name: str
-    entry_type: DeviceEntryType | None
-    identifiers: set[tuple[str, str]]
-    manufacturer: str | None
-    model: str | None
-    name: str | None
-    suggested_area: str | None
-    sw_version: str | None
-    hw_version: str | None
-    via_device: tuple[str, str]
-
-
 ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
+
+
+class EntityInfo(TypedDict):
+    """Entity info."""
+
+    domain: str
+    config_entry: NotRequired[str]
+
+
+class StateInfo(TypedDict):
+    """State info."""
+
+    unrecorded_attributes: frozenset[str]
 
 
 class EntityPlatformState(Enum):
     """The platform state of an entity."""
 
-    # Not Added: Not yet added to a platform, polling updates
-    # are written to the state machine.
+    # Not Added: Not yet added to a platform, states are not written to the
+    # state machine.
     NOT_ADDED = auto()
 
-    # Added: Added to a platform, polling updates
-    # are written to the state machine.
+    # Adding: Preparing for adding to a platform, states are not written to the
+    # state machine.
+    ADDING = auto()
+
+    # Added: Added to a platform, states are written to the state machine.
     ADDED = auto()
 
-    # Removed: Removed from a platform, polling updates
-    # are not written to the state machine.
+    # Removed: Removed from a platform, states are not written to the
+    # state machine.
     REMOVED = auto()
 
 
-@dataclass(slots=True)
-class EntityDescription:
+_SENTINEL = object()
+
+
+class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     """A class that describes Home Assistant entities."""
 
     # This is the key identifier for this entity
@@ -228,10 +249,190 @@ class EntityDescription:
     has_entity_name: bool = False
     name: str | UndefinedType | None = UNDEFINED
     translation_key: str | None = None
+    translation_placeholders: Mapping[str, str] | None = None
     unit_of_measurement: str | None = None
 
 
-class Entity(ABC):
+@dataclasses.dataclass(frozen=True, slots=True)
+class CalculatedState:
+    """Container with state and attributes.
+
+    Returned by Entity._async_calculate_state.
+    """
+
+    state: str
+    # The union of all attributes, after overriding with entity registry settings
+    attributes: dict[str, Any]
+    # Capability attributes returned by the capability_attributes property
+    capability_attributes: Mapping[str, Any] | None
+
+
+class CachedProperties(type):
+    """Metaclass which invalidates cached entity properties on write to _attr_.
+
+    A class which has CachedProperties can optionally have a list of cached
+    properties, passed as cached_properties, which must be a set of strings.
+    - Each item in the cached_property set must be the name of a method decorated
+      with @cached_property
+    - For each item in the cached_property set, a property function with the
+      same name, prefixed with _attr_, will be created
+    - The property _attr_-property functions allow setting, getting and deleting
+      data, which will be stored in an attribute prefixed with __attr_
+    - The _attr_-property setter will invalidate the @cached_property by calling
+      delattr on it
+    """
+
+    def __new__(
+        mcs,
+        name: str,
+        bases: tuple[type, ...],
+        namespace: dict[Any, Any],
+        cached_properties: set[str] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Start creating a new CachedProperties.
+
+        Pop cached_properties and store it in the namespace.
+        """
+        namespace["_CachedProperties__cached_properties"] = cached_properties or set()
+        return super().__new__(mcs, name, bases, namespace, **kwargs)
+
+    def __init__(
+        cls,
+        name: str,
+        bases: tuple[type, ...],
+        namespace: dict[Any, Any],
+        **kwargs: Any,
+    ) -> None:
+        """Finish creating a new CachedProperties.
+
+        Wrap _attr_ for cached properties in property objects.
+        """
+
+        def deleter(name: str) -> Callable[[Any], None]:
+            """Create a deleter for an _attr_ property."""
+            private_attr_name = f"__attr_{name}"
+
+            def _deleter(o: Any) -> None:
+                """Delete an _attr_ property.
+
+                Does two things:
+                - Delete the __attr_ attribute
+                - Invalidate the cache of the cached property
+
+                Raises AttributeError if the __attr_ attribute does not exist
+                """
+                # Invalidate the cache of the cached property
+                o.__dict__.pop(name, None)
+                # Delete the __attr_ attribute
+                delattr(o, private_attr_name)
+
+            return _deleter
+
+        def setter(name: str) -> Callable[[Any, Any], None]:
+            """Create a setter for an _attr_ property."""
+            private_attr_name = f"__attr_{name}"
+
+            def _setter(o: Any, val: Any) -> None:
+                """Set an _attr_ property to the backing __attr attribute.
+
+                Also invalidates the corresponding cached_property by calling
+                delattr on it.
+                """
+                if (
+                    old_val := getattr(o, private_attr_name, _SENTINEL)
+                ) == val and type(old_val) is type(val):
+                    return
+                setattr(o, private_attr_name, val)
+                # Invalidate the cache of the cached property
+                o.__dict__.pop(name, None)
+
+            return _setter
+
+        def make_property(name: str) -> property:
+            """Help create a property object."""
+            return property(
+                fget=attrgetter(f"__attr_{name}"), fset=setter(name), fdel=deleter(name)
+            )
+
+        def wrap_attr(cls: CachedProperties, property_name: str) -> None:
+            """Wrap a cached property's corresponding _attr in a property.
+
+            If the class being created has an _attr class attribute, move it, and its
+            annotations, to the __attr attribute.
+            """
+            attr_name = f"_attr_{property_name}"
+            private_attr_name = f"__attr_{property_name}"
+            # Check if an _attr_ class attribute exits and move it to __attr_. We check
+            # __dict__ here because we don't care about _attr_ class attributes in parents.
+            if attr_name in cls.__dict__:
+                attr = getattr(cls, attr_name)
+                if isinstance(attr, (FunctionType, property)):
+                    raise TypeError(f"Can't override {attr_name} in subclass")
+                setattr(cls, private_attr_name, attr)
+                annotations = cls.__annotations__
+                if attr_name in annotations:
+                    annotations[private_attr_name] = annotations.pop(attr_name)
+            # Create the _attr_ property
+            setattr(cls, attr_name, make_property(property_name))
+
+        cached_properties: set[str] = namespace["_CachedProperties__cached_properties"]
+        seen_props: set[str] = set()  # Keep track of properties which have been handled
+        for property_name in cached_properties:
+            wrap_attr(cls, property_name)
+            seen_props.add(property_name)
+
+        # Look for cached properties of parent classes where this class has
+        # corresponding _attr_ class attributes and re-wrap them.
+        for parent in cls.__mro__[:0:-1]:
+            if "_CachedProperties__cached_properties" not in parent.__dict__:
+                continue
+            cached_properties = getattr(parent, "_CachedProperties__cached_properties")  # noqa: B009
+            for property_name in cached_properties:
+                if property_name in seen_props:
+                    continue
+                attr_name = f"_attr_{property_name}"
+                # Check if an _attr_ class attribute exits. We check __dict__ here because
+                # we don't care about _attr_ class attributes in parents.
+                if (attr_name) not in cls.__dict__:
+                    continue
+                wrap_attr(cls, property_name)
+                seen_props.add(property_name)
+
+
+class ABCCachedProperties(CachedProperties, ABCMeta):
+    """Add ABCMeta to CachedProperties."""
+
+
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "assumed_state",
+    "attribution",
+    "available",
+    "capability_attributes",
+    "device_class",
+    "device_info",
+    "entity_category",
+    "has_entity_name",
+    "entity_picture",
+    "entity_registry_enabled_default",
+    "entity_registry_visible_default",
+    "extra_state_attributes",
+    "force_update",
+    "icon",
+    "name",
+    "should_poll",
+    "state",
+    "supported_features",
+    "translation_key",
+    "translation_placeholders",
+    "unique_id",
+    "unit_of_measurement",
+}
+
+
+class Entity(
+    metaclass=ABCCachedProperties, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
+):
     """An abstract class for Home Assistant entities."""
 
     # SAFE TO OVERWRITE
@@ -248,12 +449,16 @@ class Entity(ABC):
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
     platform: EntityPlatform = None  # type: ignore[assignment]
+    platform_data: PlatformData = None  # type: ignore[assignment]
 
     # Entity description instance for this Entity
     entity_description: EntityDescription
 
     # If we reported if this entity was slow
     _slow_reported = False
+
+    # If we reported deprecated supported features constants
+    _deprecated_supported_features_reported = False
 
     # If we reported this entity is updated while disabled
     _disabled_reported = False
@@ -262,20 +467,30 @@ class Entity(ABC):
     # it should be using async_write_ha_state.
     _async_update_ha_state_reported = False
 
-    # If we reported this entity is implicitly using device name
-    _implicit_device_name_reported = False
-
     # If we reported this entity was added without its platform set
     _no_platform_reported = False
 
+    # If we reported the name translation placeholders do not match the name
+    _name_translation_placeholders_reported = False
+
     # Protect for multiple updates
     _update_staged = False
+
+    # _verified_state_writable is set to True if the entity has been verified
+    # to be writable. This is used to avoid repeated checks.
+    _verified_state_writable = False
 
     # Process updates in parallel
     parallel_updates: asyncio.Semaphore | None = None
 
     # Entry in the entity registry
     registry_entry: er.RegistryEntry | None = None
+
+    # If the entity is removed from the entity registry
+    _removed_from_registry: bool = False
+
+    # The device entry for this entity
+    device_entry: dr.DeviceEntry | None = None
 
     # Hold list for functions to call on remove.
     _on_remove: list[CALLBACK_TYPE] | None = None
@@ -284,17 +499,38 @@ class Entity(ABC):
 
     # Context
     _context: Context | None = None
-    _context_set: datetime | None = None
+    _context_set: float | None = None
 
     # If entity is added to an entity platform
     _platform_state = EntityPlatformState.NOT_ADDED
+
+    # Attributes to exclude from recording, only set by base components, e.g. light
+    _entity_component_unrecorded_attributes: frozenset[str] = frozenset()
+    # Additional integration specific attributes to exclude from recording, set by
+    # platforms, e.g. a derived class in hue.light
+    _unrecorded_attributes: frozenset[str] = frozenset()
+    # Union of _entity_component_unrecorded_attributes and _unrecorded_attributes,
+    # set automatically by __init_subclass__
+    __combined_unrecorded_attributes: frozenset[str] = (
+        _entity_component_unrecorded_attributes | _unrecorded_attributes
+    )
+    # Job type cache
+    _job_types: dict[str, HassJobType] | None = None
+
+    # StateInfo. Set by EntityPlatform by calling async_internal_added_to_hass
+    # While not purely typed, it makes typehinting more useful for us
+    # and removes the need for constant None checks or asserts.
+    _state_info: StateInfo = None  # type: ignore[assignment]
+
+    __capabilities_updated_at: deque[float]
+    __capabilities_updated_at_reported: bool = False
+    __remove_future: asyncio.Future[None] | None = None
 
     # Entity Properties
     _attr_assumed_state: bool = False
     _attr_attribution: str | None = None
     _attr_available: bool = True
-    _attr_capability_attributes: Mapping[str, Any] | None = None
-    _attr_context_recent_time: timedelta = timedelta(seconds=5)
+    _attr_capability_attributes: dict[str, Any] | None = None
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
@@ -302,7 +538,7 @@ class Entity(ABC):
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_entity_registry_visible_default: bool
-    _attr_extra_state_attributes: MutableMapping[str, Any]
+    _attr_extra_state_attributes: dict[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
     _attr_name: str | None
@@ -310,10 +546,32 @@ class Entity(ABC):
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
     _attr_translation_key: str | None
+    _attr_translation_placeholders: Mapping[str, str]
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
-    @property
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Initialize an Entity subclass."""
+        super().__init_subclass__(**kwargs)
+        cls.__combined_unrecorded_attributes = (
+            cls._entity_component_unrecorded_attributes | cls._unrecorded_attributes
+        )
+
+    def get_hassjob_type(self, function_name: str) -> HassJobType:
+        """Get the job type function for the given name.
+
+        This is used for entity service calls to avoid
+        figuring out the job type each time.
+        """
+        if not self._job_types:
+            self._job_types = {}
+        if function_name not in self._job_types:
+            self._job_types[function_name] = get_hassjob_callable_job_type(
+                getattr(self, function_name)
+            )
+        return self._job_types[function_name]
+
+    @cached_property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
 
@@ -321,28 +579,12 @@ class Entity(ABC):
         """
         return self._attr_should_poll
 
-    @property
+    @cached_property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._attr_unique_id
 
-    def _report_implicit_device_name(self) -> None:
-        """Report entities which use implicit device name."""
-        if self._implicit_device_name_reported:
-            return
-        report_issue = self._suggest_report_issue()
-        _LOGGER.warning(
-            (
-                "Entity %s (%s) is implicitly using device name by not setting its "
-                "name. Instead, the name should be set to None, please %s"
-            ),
-            self.entity_id,
-            type(self),
-            report_issue,
-        )
-        self._implicit_device_name_reported = True
-
-    @property
+    @cached_property
     def use_device_name(self) -> bool:
         """Return if this entity does not have its own name.
 
@@ -350,29 +592,15 @@ class Entity(ABC):
         """
         if hasattr(self, "_attr_name"):
             return not self._attr_name
-
-        if name_translation_key := self._name_translation_key:
-            if name_translation_key in self.platform.platform_translations:
-                return False
-
-        if hasattr(self, "entity_description"):
-            if not (name := self.entity_description.name):
-                return True
-            if name is UNDEFINED and not self._default_to_device_class_name():
-                # Backwards compatibility with leaving EntityDescription.name unassigned
-                # for device name.
-                # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
-                self._report_implicit_device_name()
-                return True
+        if (
+            name_translation_key := self._name_translation_key
+        ) and name_translation_key in self.platform_data.platform_translations:
             return False
-        if self.name is UNDEFINED and not self._default_to_device_class_name():
-            # Backwards compatibility with not overriding name property for device name.
-            # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
-            self._report_implicit_device_name()
-            return True
+        if hasattr(self, "entity_description"):
+            return not self.entity_description.name
         return not self.name
 
-    @property
+    @cached_property
     def has_entity_name(self) -> bool:
         """Return if the name of the entity is describing only the entity itself."""
         if hasattr(self, "_attr_has_entity_name"):
@@ -383,15 +611,15 @@ class Entity(ABC):
 
     def _device_class_name_helper(
         self,
-        component_translations: dict[str, Any],
+        component_translations: dict[str, str],
     ) -> str | None:
         """Return a translated name of the entity based on its device class."""
         if not self.has_entity_name:
             return None
         device_class_key = self.device_class or "_"
-        platform = self.platform
+        platform_domain = self.platform_data.domain
         name_translation_key = (
-            f"component.{platform.domain}.entity_component.{device_class_key}.name"
+            f"component.{platform_domain}.entity_component.{device_class_key}.name"
         )
         return component_translations.get(name_translation_key)
 
@@ -399,13 +627,13 @@ class Entity(ABC):
     def _object_id_device_class_name(self) -> str | None:
         """Return a translated name of the entity based on its device class."""
         return self._device_class_name_helper(
-            self.platform.object_id_component_translations
+            self.platform_data.object_id_component_translations
         )
 
     @cached_property
     def _device_class_name(self) -> str | None:
         """Return a translated name of the entity based on its device class."""
-        return self._device_class_name_helper(self.platform.component_translations)
+        return self._device_class_name_helper(self.platform_data.component_translations)
 
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class."""
@@ -416,16 +644,55 @@ class Entity(ABC):
         """Return translation key for entity name."""
         if self.translation_key is None:
             return None
-        platform = self.platform
+        platform_data = self.platform_data
         return (
-            f"component.{platform.platform_name}.entity.{platform.domain}"
+            f"component.{platform_data.platform_name}.entity.{platform_data.domain}"
             f".{self.translation_key}.name"
         )
+
+    @cached_property
+    def _unit_of_measurement_translation_key(self) -> str | None:
+        """Return translation key for unit of measurement."""
+        if self.translation_key is None:
+            return None
+        if self.platform_data is None:
+            raise ValueError(
+                f"Entity {type(self)} cannot have a translation key for "
+                "unit of measurement before being added to the entity platform"
+            )
+        platform_data = self.platform_data
+        return (
+            f"component.{platform_data.platform_name}.entity.{platform_data.domain}"
+            f".{self.translation_key}.unit_of_measurement"
+        )
+
+    def _substitute_name_placeholders(self, name: str) -> str:
+        """Substitute placeholders in entity name."""
+        try:
+            return name.format(**self.translation_placeholders)
+        except KeyError as err:
+            if not self._name_translation_placeholders_reported:
+                if get_release_channel() is not ReleaseChannel.STABLE:
+                    raise HomeAssistantError(f"Missing placeholder {err}") from err
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    (
+                        "Entity %s (%s) has translation placeholders '%s' which do not "
+                        "match the name '%s', please %s"
+                    ),
+                    self.entity_id,
+                    type(self),
+                    self.translation_placeholders,
+                    name,
+                    report_issue,
+                )
+                self._name_translation_placeholders_reported = True
+            return name
 
     def _name_internal(
         self,
         device_class_name: str | None,
-        platform_translations: dict[str, Any],
+        platform_translations: dict[str, str],
     ) -> str | UndefinedType | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
@@ -435,9 +702,7 @@ class Entity(ABC):
             and (name_translation_key := self._name_translation_key)
             and (name := platform_translations.get(name_translation_key))
         ):
-            if TYPE_CHECKING:
-                assert isinstance(name, str)
-            return name
+            return self._substitute_name_placeholders(name)
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
             if description_name is UNDEFINED and self._default_to_device_class_name():
@@ -453,37 +718,44 @@ class Entity(ABC):
     @property
     def suggested_object_id(self) -> str | None:
         """Return input for object id."""
-        # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
-        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
-        if self.__class__.name.fget is Entity.name.fget and self.platform:  # type: ignore[attr-defined]
+        if (
+            # Check our class has overridden the name property from Entity
+            # We need to use type.__getattribute__ to retrieve the underlying
+            # property or cached_property object instead of the property's
+            # value.
+            type.__getattribute__(self.__class__, "name")
+            is type.__getattribute__(Entity, "name")
+            # The check for self.platform_data guards against integrations not using an
+            # EntityComponent and can be removed in HA Core 2026.8
+            and self.platform_data
+        ):
             name = self._name_internal(
                 self._object_id_device_class_name,
-                self.platform.object_id_platform_translations,
+                self.platform_data.object_id_platform_translations,
             )
         else:
             name = self.name
         return None if name is UNDEFINED else name
 
-    @property
+    @cached_property
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
-        # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
-        if not self.platform:
+        # The check for self.platform_data guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2026.8
+        if not self.platform_data:
             return self._name_internal(None, {})
         return self._name_internal(
             self._device_class_name,
-            self.platform.platform_translations,
+            self.platform_data.platform_translations,
         )
 
-    @property
+    @cached_property
     def state(self) -> StateType:
         """Return the state of the entity."""
         return self._attr_state
 
-    @property
-    def capability_attributes(self) -> Mapping[str, Any] | None:
+    @cached_property
+    def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes.
 
         Attributes that explain the capabilities of an entity.
@@ -505,7 +777,7 @@ class Entity(ABC):
         """
         return None
 
-    @property
+    @cached_property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes.
 
@@ -514,16 +786,7 @@ class Entity(ABC):
         """
         return None
 
-    @property
-    def device_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes.
-
-        This method is deprecated, platform classes should implement
-        extra_state_attributes instead.
-        """
-        return None
-
-    @property
+    @cached_property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes.
 
@@ -534,7 +797,7 @@ class Entity(ABC):
             return self._attr_extra_state_attributes
         return None
 
-    @property
+    @cached_property
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes.
 
@@ -542,7 +805,7 @@ class Entity(ABC):
         """
         return self._attr_device_info
 
-    @property
+    @cached_property
     def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         if hasattr(self, "_attr_device_class"):
@@ -551,7 +814,7 @@ class Entity(ABC):
             return self.entity_description.device_class
         return None
 
-    @property
+    @cached_property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         if hasattr(self, "_attr_unit_of_measurement"):
@@ -560,7 +823,7 @@ class Entity(ABC):
             return self.entity_description.unit_of_measurement
         return None
 
-    @property
+    @cached_property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
         if hasattr(self, "_attr_icon"):
@@ -569,22 +832,22 @@ class Entity(ABC):
             return self.entity_description.icon
         return None
 
-    @property
+    @cached_property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         return self._attr_entity_picture
 
-    @property
+    @cached_property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._attr_available
 
-    @property
+    @cached_property
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return self._attr_assumed_state
 
-    @property
+    @cached_property
     def force_update(self) -> bool:
         """Return True if state updates should be forced.
 
@@ -597,17 +860,12 @@ class Entity(ABC):
             return self.entity_description.force_update
         return False
 
-    @property
+    @cached_property
     def supported_features(self) -> int | None:
         """Flag supported features."""
         return self._attr_supported_features
 
-    @property
-    def context_recent_time(self) -> timedelta:
-        """Time that a context is considered recent."""
-        return self._attr_context_recent_time
-
-    @property
+    @cached_property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added.
 
@@ -619,7 +877,7 @@ class Entity(ABC):
             return self.entity_description.entity_registry_enabled_default
         return True
 
-    @property
+    @cached_property
     def entity_registry_visible_default(self) -> bool:
         """Return if the entity should be visible when first added.
 
@@ -631,12 +889,12 @@ class Entity(ABC):
             return self.entity_description.entity_registry_visible_default
         return True
 
-    @property
+    @cached_property
     def attribution(self) -> str | None:
         """Return the attribution."""
         return self._attr_attribution
 
-    @property
+    @cached_property
     def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
@@ -645,7 +903,7 @@ class Entity(ABC):
             return self.entity_description.entity_category
         return None
 
-    @property
+    @cached_property
     def translation_key(self) -> str | None:
         """Return the translation key to translate the entity's states."""
         if hasattr(self, "_attr_translation_key"):
@@ -653,6 +911,16 @@ class Entity(ABC):
         if hasattr(self, "entity_description"):
             return self.entity_description.translation_key
         return None
+
+    @final
+    @cached_property
+    def translation_placeholders(self) -> Mapping[str, str]:
+        """Return the translation placeholders for translated entity's name."""
+        if hasattr(self, "_attr_translation_placeholders"):
+            return self._attr_translation_placeholders
+        if hasattr(self, "entity_description"):
+            return self.entity_description.translation_placeholders or {}
+        return {}
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
@@ -672,7 +940,7 @@ class Entity(ABC):
     def async_set_context(self, context: Context) -> None:
         """Set the context the entity currently operates under."""
         self._context = context
-        self._context_set = dt_util.utcnow()
+        self._context_set = time.time()
 
     async def async_update_ha_state(self, force_refresh: bool = False) -> None:
         """Update Home Assistant with current state of entity.
@@ -693,7 +961,7 @@ class Entity(ABC):
         if force_refresh:
             try:
                 await self.async_device_update()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
         elif not self._async_update_ha_state_reported:
@@ -701,7 +969,7 @@ class Entity(ABC):
             _LOGGER.warning(
                 (
                     "Entity %s (%s) is using self.async_update_ha_state(), without"
-                    " enabling force_update. Instead it should use"
+                    " enabling force_refresh. Instead it should use"
                     " self.async_write_ha_state(), please %s"
                 ),
                 self.entity_id,
@@ -713,13 +981,13 @@ class Entity(ABC):
         self._async_write_ha_state()
 
     @callback
-    def async_write_ha_state(self) -> None:
-        """Write the state to the state machine."""
+    def _async_verify_state_writable(self) -> None:
+        """Verify the entity is in a writable state."""
         if self.hass is None:
             raise RuntimeError(f"Attribute hass is None for {self}")
 
         # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
+        # EntityComponent and can be removed in HA Core 2026.8
         if self.platform is None and not self._no_platform_reported:  # type: ignore[unreachable]
             report_issue = self._suggest_report_issue()  # type: ignore[unreachable]
             _LOGGER.warning(
@@ -739,6 +1007,22 @@ class Entity(ABC):
                 f"No entity id specified for entity {self.name}"
             )
 
+        self._verified_state_writable = True
+
+    @callback
+    def _async_write_ha_state_from_call_soon_threadsafe(self) -> None:
+        """Write the state to the state machine from the event loop thread."""
+        if not self.hass or not self._verified_state_writable:
+            self._async_verify_state_writable()
+        self._async_write_ha_state()
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the state machine."""
+        if not self.hass or not self._verified_state_writable:
+            self._async_verify_state_writable()
+        if self.hass.loop_thread_id != threading.get_ident():
+            report_non_thread_safe_operation("async_write_ha_state")
         self._async_write_ha_state()
 
     def _stringify_state(self, available: bool) -> str:
@@ -747,6 +1031,9 @@ class Entity(ABC):
             return STATE_UNAVAILABLE
         if (state := self.state) is None:
             return STATE_UNKNOWN
+        if type(state) is str:
+            # fast path for strings
+            return state
         if isinstance(state, float):
             # If the entity's state is a float, limit precision according to machine
             # epsilon to make the string representation readable
@@ -763,54 +1050,47 @@ class Entity(ABC):
         if name is UNDEFINED:
             name = None
 
-        if not self.has_entity_name or not self.registry_entry:
-            return name
-
-        device_registry = dr.async_get(self.hass)
-        if not (device_id := self.registry_entry.device_id) or not (
-            device_entry := device_registry.async_get(device_id)
-        ):
+        if not self.has_entity_name or not (device_entry := self.device_entry):
             return name
 
         device_name = device_entry.name_by_user or device_entry.name
-        if self.use_device_name:
+        if name is None and self.use_device_name:
             return device_name
         return f"{device_name} {name}" if device_name else name
 
     @callback
-    def _async_write_ha_state(self) -> None:
-        """Write the state to the state machine."""
-        if self._platform_state == EntityPlatformState.REMOVED:
-            # Polling returned after the entity has already been removed
-            return
+    def _async_calculate_state(self) -> CalculatedState:
+        """Calculate state string and attribute mapping."""
+        state, attr, capabilities, _, _ = self.__async_calculate_state()
+        return CalculatedState(state, attr, capabilities)
 
-        hass = self.hass
-        entity_id = self.entity_id
+    def __async_calculate_state(
+        self,
+    ) -> tuple[str, dict[str, Any], Mapping[str, Any] | None, str | None, int | None]:
+        """Calculate state string and attribute mapping.
+
+        Returns a tuple:
+        state - the stringified state
+        attr - the attribute dictionary
+        capability_attr - a mapping with capability attributes
+        original_device_class - the device class which may be overridden
+        supported_features - the supported features
+
+        This method is called when writing the state to avoid the overhead of creating
+        a dataclass object.
+        """
         entry = self.registry_entry
 
-        if entry and entry.disabled_by:
-            if not self._disabled_reported:
-                self._disabled_reported = True
-                _LOGGER.warning(
-                    (
-                        "Entity %s is incorrectly being triggered for updates while it"
-                        " is disabled. This is a bug in the %s integration"
-                    ),
-                    entity_id,
-                    self.platform.platform_name,
-                )
-            return
-
-        start = timer()
-
-        attr = self.capability_attributes
-        attr = dict(attr) if attr else {}
+        capability_attr = self.capability_attributes
+        attr = capability_attr.copy() if capability_attr else {}
 
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
         if available:
-            attr.update(self.state_attributes or {})
-            attr.update(self.extra_state_attributes or {})
+            if state_attributes := self.state_attributes:
+                attr |= state_attributes
+            if extra_state_attributes := self.extra_state_attributes:
+                attr |= extra_state_attributes
 
         if (unit_of_measurement := self.unit_of_measurement) is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
@@ -821,8 +1101,9 @@ class Entity(ABC):
         if (attribution := self.attribution) is not None:
             attr[ATTR_ATTRIBUTION] = attribution
 
+        original_device_class = self.device_class
         if (
-            device_class := (entry and entry.device_class) or self.device_class
+            device_class := (entry and entry.device_class) or original_device_class
         ) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
@@ -840,31 +1121,121 @@ class Entity(ABC):
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        end = timer()
+        return (state, attr, capability_attr, original_device_class, supported_features)
 
-        if end - start > 0.4 and not self._slow_reported:
+    @callback
+    def _async_write_ha_state(self) -> None:
+        """Write the state to the state machine."""
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent (which has not been allowed since HA Core 2024.1)
+        if not self.platform:
+            if self._platform_state is EntityPlatformState.REMOVED:
+                # Don't write state if the entity is not added to the platform.
+                return
+        elif self._platform_state is not EntityPlatformState.ADDED:
+            if (entry := self.registry_entry) and entry.disabled_by:
+                if not self._disabled_reported:
+                    self._disabled_reported = True
+                    _LOGGER.warning(
+                        (
+                            "Entity %s is incorrectly being triggered for updates while it"
+                            " is disabled. This is a bug in the %s integration"
+                        ),
+                        self.entity_id,
+                        self.platform.platform_name,
+                    )
+            return
+
+        state_calculate_start = timer()
+        state, attr, capabilities, original_device_class, supported_features = (
+            self.__async_calculate_state()
+        )
+        time_now = timer()
+
+        if entry := self.registry_entry:
+            # Make sure capabilities in the entity registry are up to date. Capabilities
+            # include capability attributes, device class and supported features
+            supported_features = supported_features or 0
+            if (
+                capabilities != entry.capabilities
+                or original_device_class != entry.original_device_class
+                or supported_features != entry.supported_features
+            ):
+                if not self.__capabilities_updated_at_reported:
+                    # _Entity__capabilities_updated_at is because of name mangling
+                    if not (
+                        capabilities_updated_at := getattr(
+                            self, "_Entity__capabilities_updated_at", None
+                        )
+                    ):
+                        self.__capabilities_updated_at = deque(
+                            maxlen=CAPABILITIES_UPDATE_LIMIT + 1
+                        )
+                        capabilities_updated_at = self.__capabilities_updated_at
+                    capabilities_updated_at.append(time_now)
+                    while time_now - capabilities_updated_at[0] > 3600:
+                        capabilities_updated_at.popleft()
+                    if len(capabilities_updated_at) > CAPABILITIES_UPDATE_LIMIT:
+                        self.__capabilities_updated_at_reported = True
+                        report_issue = self._suggest_report_issue()
+                        _LOGGER.warning(
+                            (
+                                "Entity %s (%s) is updating its capabilities too often,"
+                                " please %s"
+                            ),
+                            self.entity_id,
+                            type(self),
+                            report_issue,
+                        )
+                entity_registry = er.async_get(self.hass)
+                self.registry_entry = entity_registry.async_update_entity(
+                    self.entity_id,
+                    capabilities=capabilities,
+                    original_device_class=original_device_class,
+                    supported_features=supported_features,
+                )
+
+        if time_now - state_calculate_start > 0.4 and not self._slow_reported:
             self._slow_reported = True
             report_issue = self._suggest_report_issue()
             _LOGGER.warning(
                 "Updating state for %s (%s) took %.3f seconds. Please %s",
-                entity_id,
+                self.entity_id,
                 type(self),
-                end - start,
+                time_now - state_calculate_start,
                 report_issue,
             )
 
-        # Overwrite properties that have been set in the config file.
-        if customize := hass.data.get(DATA_CUSTOMIZE):
-            attr.update(customize.get(entity_id))
+        try:
+            # Most of the time this will already be
+            # set and since try is near zero cost
+            # on py3.11+ its faster to assume it is
+            # set and catch the exception if it is not.
+            custom = self.hass.data[DATA_CUSTOMIZE].get(self.entity_id)
+        except KeyError:
+            pass
+        else:
+            # Overwrite properties that have been set in the config file.
+            if custom:
+                attr |= custom
 
         if (
             self._context_set is not None
-            and dt_util.utcnow() - self._context_set > self.context_recent_time
+            and time_now - self._context_set > CONTEXT_RECENT_TIME_SECONDS
         ):
             self._context = None
             self._context_set = None
 
-        hass.states.async_set(entity_id, state, attr, self.force_update, self._context)
+        # Intentionally called with positional args for performance reasons
+        self.hass.states.async_set_internal(
+            self.entity_id,
+            state,
+            attr,
+            self.force_update,
+            self._context,
+            self._state_info,
+            time_now,
+        )
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
         """Schedule an update ha state change task.
@@ -882,7 +1253,9 @@ class Entity(ABC):
                 f"Entity {self.entity_id} schedule update ha state",
             )
         else:
-            self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+            self.hass.loop.call_soon_threadsafe(
+                self._async_write_ha_state_from_call_soon_threadsafe
+            )
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh: bool = False) -> None:
@@ -900,6 +1273,7 @@ class Entity(ABC):
             self.hass.async_create_task(
                 self.async_update_ha_state(force_refresh),
                 f"Entity schedule update ha state {self.entity_id}",
+                eager_start=True,
             )
         else:
             self.async_write_ha_state()
@@ -970,16 +1344,17 @@ class Entity(ABC):
         parallel_updates: asyncio.Semaphore | None,
     ) -> None:
         """Start adding an entity to a platform."""
-        if self._platform_state == EntityPlatformState.ADDED:
+        if self._platform_state is not EntityPlatformState.NOT_ADDED:
             raise HomeAssistantError(
-                f"Entity {self.entity_id} cannot be added a second time to an entity"
+                f"Entity '{self.entity_id}' cannot be added a second time to an entity"
                 " platform"
             )
 
         self.hass = hass
         self.platform = platform
+        self.platform_data = platform.platform_data
         self.parallel_updates = parallel_updates
-        self._platform_state = EntityPlatformState.ADDED
+        self._platform_state = EntityPlatformState.ADDING
 
     def _call_on_remove_callbacks(self) -> None:
         """Call callbacks registered by async_on_remove."""
@@ -992,7 +1367,7 @@ class Entity(ABC):
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
 
-        self._platform_state = EntityPlatformState.NOT_ADDED
+        self._platform_state = EntityPlatformState.REMOVED
         self._call_on_remove_callbacks()
 
         self.hass = None  # type: ignore[assignment]
@@ -1003,8 +1378,10 @@ class Entity(ABC):
         """Finish adding an entity to a platform."""
         await self.async_internal_added_to_hass()
         await self.async_added_to_hass()
+        self._platform_state = EntityPlatformState.ADDED
         self.async_write_ha_state()
 
+    @final
     async def async_remove(self, *, force_remove: bool = False) -> None:
         """Remove entity from Home Assistant.
 
@@ -1015,12 +1392,22 @@ class Entity(ABC):
         If the entity doesn't have a non disabled entry in the entity registry,
         or if force_remove=True, its state will be removed.
         """
-        # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
-        if self.platform and self._platform_state != EntityPlatformState.ADDED:
-            raise HomeAssistantError(
-                f"Entity {self.entity_id} async_remove called twice"
-            )
+        if self.__remove_future is not None:
+            await self.__remove_future
+            return
+
+        self.__remove_future = self.hass.loop.create_future()
+        try:
+            await self.__async_remove_impl(force_remove)
+        except BaseException as ex:
+            self.__remove_future.set_exception(ex)
+            raise
+        finally:
+            self.__remove_future.set_result(None)
+
+    @final
+    async def __async_remove_impl(self, force_remove: bool) -> None:
+        """Remove entity from Home Assistant."""
 
         self._platform_state = EntityPlatformState.REMOVED
 
@@ -1034,6 +1421,17 @@ class Entity(ABC):
             not force_remove
             and self.registry_entry
             and not self.registry_entry.disabled
+            # Check if entity is still in the entity registry
+            # by checking self._removed_from_registry
+            #
+            # Because self.registry_entry is unset in a task,
+            # its possible that the entity has been removed but
+            # the task has not yet been executed.
+            #
+            # self._removed_from_registry is set to True in a
+            # callback which does not have the same issue.
+            #
+            and not self._removed_from_registry
         ):
             # Set the entity's state will to unavailable + ATTR_RESTORED: True
             self.registry_entry.write_unavailable_state(self.hass)
@@ -1064,28 +1462,30 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        info = {
+        entity_info: EntityInfo = {
             "domain": self.platform.platform_name,
-            "custom_component": "custom_components" in type(self).__module__,
         }
-
         if self.platform.config_entry:
-            info["source"] = SOURCE_CONFIG_ENTRY
-            info["config_entry"] = self.platform.config_entry.entry_id
-        else:
-            info["source"] = SOURCE_PLATFORM_CONFIG
+            entity_info["config_entry"] = self.platform.config_entry.entry_id
 
-        self.hass.data[DATA_ENTITY_SOURCE][self.entity_id] = info
+        entity_sources(self.hass)[self.entity_id] = entity_info
+
+        self._state_info = {
+            "unrecorded_attributes": self.__combined_unrecorded_attributes
+        }
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
-            assert (
-                not self.registry_entry.disabled_by
-            ), f"Entity {self.entity_id} is being added while it's disabled"
+            assert not self.registry_entry.disabled_by, (
+                f"Entity '{self.entity_id}' is being added while it's disabled"
+            )
 
             self.async_on_remove(
                 async_track_entity_registry_updated_event(
-                    self.hass, self.entity_id, self._async_registry_updated
+                    self.hass,
+                    self.entity_id,
+                    self._async_registry_updated,
+                    job_type=HassJobType.Callback,
                 )
             )
             self._async_subscribe_device_updates()
@@ -1096,12 +1496,27 @@ class Entity(ABC):
         Not to be extended by integrations.
         """
         # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
+        # EntityComponent and can be removed in HA Core 2026.8
         if self.platform:
-            self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
+            del entity_sources(self.hass)[self.entity_id]
 
-    async def _async_registry_updated(self, event: Event) -> None:
+    @callback
+    def _async_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Handle entity registry update."""
+        action = event.data["action"]
+        is_remove = action == "remove"
+        self._removed_from_registry = is_remove
+        if action == "update" or is_remove:
+            self.hass.async_create_task_internal(
+                self._async_process_registry_update_or_remove(event), eager_start=True
+            )
+
+    async def _async_process_registry_update_or_remove(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Handle entity registry update or remove."""
         data = event.data
         if data["action"] == "remove":
             await self.async_removed_from_registry()
@@ -1116,22 +1531,30 @@ class Entity(ABC):
 
         ent_reg = er.async_get(self.hass)
         old = self.registry_entry
-        self.registry_entry = ent_reg.async_get(data["entity_id"])
-        assert self.registry_entry is not None
+        registry_entry = ent_reg.async_get(data["entity_id"])
+        assert registry_entry is not None
+        self.registry_entry = registry_entry
 
-        if self.registry_entry.disabled:
+        if device_id := registry_entry.device_id:
+            self.device_entry = dr.async_get(self.hass).async_get(device_id)
+
+        if registry_entry.disabled:
             await self.async_remove()
             return
 
         assert old is not None
-        if self.registry_entry.entity_id == old.entity_id:
+        if registry_entry.entity_id == old.entity_id:
             self.async_registry_entry_updated()
             self.async_write_ha_state()
             return
 
         await self.async_remove(force_remove=True)
 
-        self.entity_id = self.registry_entry.entity_id
+        self.entity_id = registry_entry.entity_id
+
+        # Clear the remove future to handle entity added again after entity id change
+        self.__remove_future = None
+        self._platform_state = EntityPlatformState.NOT_ADDED
         await self.platform.async_add_entities([self])
 
     @callback
@@ -1143,7 +1566,9 @@ class Entity(ABC):
         self._unsub_device_updates = None
 
     @callback
-    def _async_device_registry_updated(self, event: Event) -> None:
+    def _async_device_registry_updated(
+        self, event: Event[EventDeviceRegistryUpdatedData]
+    ) -> None:
         """Handle device registry update."""
         data = event.data
 
@@ -1153,6 +1578,7 @@ class Entity(ABC):
         if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
             return
 
+        self.device_entry = dr.async_get(self.hass).async_get(data["device_id"])
         self.async_write_ha_state()
 
     @callback
@@ -1172,6 +1598,7 @@ class Entity(ABC):
             self.hass,
             device_id,
             self._async_device_registry_updated,
+            job_type=HassJobType.Callback,
         )
         if (
             not self._on_remove
@@ -1180,10 +1607,15 @@ class Entity(ABC):
             self.async_on_remove(self._async_unsubscribe_device_updates)
 
     def __repr__(self) -> str:
-        """Return the representation."""
+        """Return the representation.
+
+        If the entity is not added to a platform it's not safe to call _stringify_state.
+        """
+        if self._platform_state is not EntityPlatformState.ADDED:
+            return f"<entity unknown.unknown={STATE_UNKNOWN}>"
         return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
 
-    async def async_request_call(self, coro: Coroutine[Any, Any, _T]) -> _T:
+    async def async_request_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
         """Process request batched."""
         if self.parallel_updates:
             await self.parallel_updates.acquire()
@@ -1196,30 +1628,24 @@ class Entity(ABC):
 
     def _suggest_report_issue(self) -> str:
         """Suggest to report an issue."""
-        report_issue = ""
-        if "custom_components" in type(self).__module__:
-            report_issue = "report it to the custom integration author."
-        else:
-            report_issue = (
-                "create a bug report at "
-                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-            )
-            # The check for self.platform guards against integrations not using an
-            # EntityComponent and can be removed in HA Core 2024.1
-            if self.platform:
-                report_issue += (
-                    f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
-                )
-
-        return report_issue
+        # The check for self.platform_data guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2026.8
+        platform_name = self.platform_data.platform_name if self.platform_data else None
+        return async_suggest_report_issue(
+            self.hass, integration_domain=platform_name, module=type(self).__module__
+        )
 
 
-@dataclass(slots=True)
-class ToggleEntityDescription(EntityDescription):
+class ToggleEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes toggle entities."""
 
 
-class ToggleEntity(Entity):
+TOGGLE_ENTITY_CACHED_PROPERTIES_WITH_ATTR_ = {"is_on"}
+
+
+class ToggleEntity(
+    Entity, cached_properties=TOGGLE_ENTITY_CACHED_PROPERTIES_WITH_ATTR_
+):
     """An abstract class for entities that can be turned on and off."""
 
     entity_description: ToggleEntityDescription
@@ -1234,14 +1660,14 @@ class ToggleEntity(Entity):
             return None
         return STATE_ON if is_on else STATE_OFF
 
-    @property
+    @cached_property
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._attr_is_on
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -1249,7 +1675,7 @@ class ToggleEntity(Entity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""

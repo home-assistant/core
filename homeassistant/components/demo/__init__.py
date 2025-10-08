@@ -1,9 +1,10 @@
 """Set up the demo environment that mimics interaction with devices."""
+
 from __future__ import annotations
 
 import asyncio
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, core as ha, setup
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -12,7 +13,6 @@ from homeassistant.const import (
     Platform,
     UnitOfSoundPressure,
 )
-import homeassistant.core as ha
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -26,15 +26,18 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.CALENDAR,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DATE,
     Platform.DATETIME,
+    Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.MEDIA_PLAYER,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -45,15 +48,14 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.TIME,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.VALVE,
     Platform.WATER_HEATER,
+    Platform.WEATHER,
 ]
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.TTS,
-    Platform.MAILBOX,
-    Platform.NOTIFY,
     Platform.IMAGE_PROCESSING,
-    Platform.CALENDAR,
     Platform.DEVICE_TRACKER,
 ]
 
@@ -62,12 +64,11 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the demo environment."""
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
-            )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
         )
+    )
 
     if DOMAIN not in config:
         return True

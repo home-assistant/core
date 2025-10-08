@@ -1,4 +1,5 @@
 """Tests for Plex media_players."""
+
 from unittest.mock import patch
 
 from plexapi.exceptions import NotFound
@@ -12,10 +13,10 @@ async def test_plex_tv_clients(
     entry,
     setup_plex_server,
     requests_mock: requests_mock.Mocker,
-    player_plexweb_resources,
+    player_plexhtpc_resources,
 ) -> None:
     """Test getting Plex clients from plex.tv."""
-    requests_mock.get("/resources", text=player_plexweb_resources)
+    requests_mock.get("/resources", text=player_plexhtpc_resources)
 
     with patch("plexapi.myplex.MyPlexResource.connect", side_effect=NotFound):
         await setup_plex_server()

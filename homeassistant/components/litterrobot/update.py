@@ -1,4 +1,5 @@
 """Support for Litter-Robot updates."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -12,41 +13,43 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .entity import LitterRobotEntity, LitterRobotHub
+from .coordinator import LitterRobotConfigEntry
+from .entity import LitterRobotEntity
 
 SCAN_INTERVAL = timedelta(days=1)
 
 FIRMWARE_UPDATE_ENTITY = UpdateEntityDescription(
     key="firmware",
-    translation_key="firmware",
     device_class=UpdateDeviceClass.FIRMWARE,
 )
+RELEASE_URL = "https://www.litter-robot.com/releases.html"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LitterRobotConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot update platform."""
-    hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-    entities = [
-        RobotUpdateEntity(robot=robot, hub=hub, description=FIRMWARE_UPDATE_ENTITY)
-        for robot in hub.litter_robots()
+    coordinator = entry.runtime_data
+    entities = (
+        RobotUpdateEntity(
+            robot=robot, coordinator=coordinator, description=FIRMWARE_UPDATE_ENTITY
+        )
+        for robot in coordinator.litter_robots()
         if isinstance(robot, LitterRobot4)
-    ]
+    )
     async_add_entities(entities, True)
 
 
 class RobotUpdateEntity(LitterRobotEntity[LitterRobot4], UpdateEntity):
     """A class that describes robot update entities."""
 
+    _attr_release_url = RELEASE_URL
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )

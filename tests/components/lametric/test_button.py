@@ -1,4 +1,5 @@
 """Tests for the LaMetric button platform."""
+
 from unittest.mock import MagicMock
 
 from demetriek import LaMetricConnectionError, LaMetricError
@@ -8,7 +9,6 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -32,7 +32,6 @@ async def test_button_app_next(
     """Test the LaMetric next app button."""
     state = hass.states.get("button.frenck_s_lametric_next_app")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:arrow-right-bold"
     assert state.state == STATE_UNKNOWN
 
     entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
@@ -43,16 +42,18 @@ async def test_button_app_next(
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.configuration_url is None
+    assert device_entry.configuration_url == "https://127.0.0.1/"
     assert device_entry.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ee"),
     }
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device_entry.manufacturer == "LaMetric Inc."
-    assert device_entry.model == "LM 37X8"
+    assert device_entry.model_id == "LM 37X8"
     assert device_entry.name == "Frenck's LaMetric"
     assert device_entry.sw_version == "2.2.2"
+    assert device_entry.serial_number == "SA110405124500W00BS9"
     assert device_entry.hw_version is None
 
     await hass.services.async_call(
@@ -79,7 +80,6 @@ async def test_button_app_previous(
     """Test the LaMetric previous app button."""
     state = hass.states.get("button.frenck_s_lametric_previous_app")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:arrow-left-bold"
     assert state.state == STATE_UNKNOWN
 
     entry = entity_registry.async_get("button.frenck_s_lametric_previous_app")
@@ -90,14 +90,15 @@ async def test_button_app_previous(
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.configuration_url is None
+    assert device_entry.configuration_url == "https://127.0.0.1/"
     assert device_entry.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ee"),
     }
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device_entry.manufacturer == "LaMetric Inc."
-    assert device_entry.model == "LM 37X8"
+    assert device_entry.model_id == "LM 37X8"
     assert device_entry.name == "Frenck's LaMetric"
     assert device_entry.sw_version == "2.2.2"
     assert device_entry.hw_version is None
@@ -126,7 +127,6 @@ async def test_button_dismiss_current_notification(
     """Test the LaMetric dismiss current notification button."""
     state = hass.states.get("button.frenck_s_lametric_dismiss_current_notification")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:bell-cancel"
     assert state.state == STATE_UNKNOWN
 
     entry = entity_registry.async_get(
@@ -139,14 +139,15 @@ async def test_button_dismiss_current_notification(
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.configuration_url is None
+    assert device_entry.configuration_url == "https://127.0.0.1/"
     assert device_entry.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ee"),
     }
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device_entry.manufacturer == "LaMetric Inc."
-    assert device_entry.model == "LM 37X8"
+    assert device_entry.model_id == "LM 37X8"
     assert device_entry.name == "Frenck's LaMetric"
     assert device_entry.sw_version == "2.2.2"
     assert device_entry.hw_version is None
@@ -175,7 +176,6 @@ async def test_button_dismiss_all_notifications(
     """Test the LaMetric dismiss all notifications button."""
     state = hass.states.get("button.frenck_s_lametric_dismiss_all_notifications")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:bell-cancel"
     assert state.state == STATE_UNKNOWN
 
     entry = entity_registry.async_get(
@@ -188,14 +188,15 @@ async def test_button_dismiss_all_notifications(
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.configuration_url is None
+    assert device_entry.configuration_url == "https://127.0.0.1/"
     assert device_entry.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ee"),
     }
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device_entry.manufacturer == "LaMetric Inc."
-    assert device_entry.model == "LM 37X8"
+    assert device_entry.model_id == "LM 37X8"
     assert device_entry.name == "Frenck's LaMetric"
     assert device_entry.sw_version == "2.2.2"
     assert device_entry.hw_version is None
@@ -231,7 +232,6 @@ async def test_button_error(
             {ATTR_ENTITY_ID: "button.frenck_s_lametric_next_app"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("button.frenck_s_lametric_next_app")
     assert state
@@ -254,7 +254,6 @@ async def test_button_connection_error(
             {ATTR_ENTITY_ID: "button.frenck_s_lametric_next_app"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("button.frenck_s_lametric_next_app")
     assert state

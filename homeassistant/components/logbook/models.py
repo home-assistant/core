@@ -1,10 +1,12 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, Final, NamedTuple, cast, final
 
+from propcache.api import cached_property
 from sqlalchemy.engine.row import Row
 
 from homeassistant.components.recorder.filters import Filters
@@ -16,7 +18,7 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
-import homeassistant.util.dt as dt_util
+from homeassistant.util.event_type import EventType
 from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
 
@@ -26,7 +28,8 @@ class LogbookConfig:
     """Configuration for the logbook integration."""
 
     external_events: dict[
-        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
+        EventType[Any] | str,
+        tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]],
     ]
     sqlalchemy_filter: Filters | None = None
     entity_filter: Callable[[str], bool] | None = None
@@ -35,19 +38,6 @@ class LogbookConfig:
 class LazyEventPartialState:
     """A lazy version of core Event with limited State joined in."""
 
-    __slots__ = [
-        "row",
-        "_event_data",
-        "_event_data_cache",
-        "event_type",
-        "entity_id",
-        "state",
-        "context_id_bin",
-        "context_user_id_bin",
-        "context_parent_id_bin",
-        "data",
-    ]
-
     def __init__(
         self,
         row: Row | EventAsRow,
@@ -55,64 +45,97 @@ class LazyEventPartialState:
     ) -> None:
         """Init the lazy event."""
         self.row = row
-        self._event_data: dict[str, Any] | None = None
-        self._event_data_cache = event_data_cache
-        self.event_type: str | None = self.row.event_type
-        self.entity_id: str | None = self.row.entity_id
-        self.state = self.row.state
-        self.context_id_bin: bytes | None = self.row.context_id_bin
-        self.context_user_id_bin: bytes | None = self.row.context_user_id_bin
-        self.context_parent_id_bin: bytes | None = self.row.context_parent_id_bin
         # We need to explicitly check for the row is EventAsRow as the unhappy path
-        # to fetch row.data for Row is very expensive
-        if type(row) is EventAsRow:  # pylint: disable=unidiomatic-typecheck
+        # to fetch row[DATA_POS] for Row is very expensive
+        if type(row) is EventAsRow:
             # If its an EventAsRow we can avoid the whole
             # json decode process as we already have the data
-            self.data = row.data
+            self.data = row[DATA_POS]
             return
-        source = cast(str, self.row.event_data)
+        if TYPE_CHECKING:
+            source = cast(str, row[EVENT_DATA_POS])
+        else:
+            source = row[EVENT_DATA_POS]
         if not source:
             self.data = {}
-        elif event_data := self._event_data_cache.get(source):
+        elif event_data := event_data_cache.get(source):
             self.data = event_data
         else:
-            self.data = self._event_data_cache[source] = cast(
+            self.data = event_data_cache[source] = cast(
                 dict[str, Any], json_loads(source)
             )
 
-    @property
+    @cached_property
+    def event_type(self) -> EventType[Any] | str | None:
+        """Return the event type."""
+        return self.row[EVENT_TYPE_POS]
+
+    @cached_property
+    def entity_id(self) -> str | None:
+        """Return the entity id."""
+        return self.row[ENTITY_ID_POS]
+
+    @cached_property
+    def state(self) -> str | None:
+        """Return the state."""
+        return self.row[STATE_POS]
+
+    @cached_property
     def context_id(self) -> str | None:
         """Return the context id."""
-        return bytes_to_ulid_or_none(self.context_id_bin)
+        return bytes_to_ulid_or_none(self.row[CONTEXT_ID_BIN_POS])
 
-    @property
+    @cached_property
     def context_user_id(self) -> str | None:
         """Return the context user id."""
-        return bytes_to_uuid_hex_or_none(self.context_user_id_bin)
+        return bytes_to_uuid_hex_or_none(self.row[CONTEXT_USER_ID_BIN_POS])
 
-    @property
+    @cached_property
     def context_parent_id(self) -> str | None:
         """Return the context parent id."""
-        return bytes_to_ulid_or_none(self.context_parent_id_bin)
+        return bytes_to_ulid_or_none(self.row[CONTEXT_PARENT_ID_BIN_POS])
 
 
-@dataclass(slots=True, frozen=True)
-class EventAsRow:
-    """Convert an event to a row."""
+# Row order must match the query order in queries/common.py
+# ---------------------------------------------------------
+ROW_ID_POS: Final = 0
+EVENT_TYPE_POS: Final = 1
+EVENT_DATA_POS: Final = 2
+TIME_FIRED_TS_POS: Final = 3
+CONTEXT_ID_BIN_POS: Final = 4
+CONTEXT_USER_ID_BIN_POS: Final = 5
+CONTEXT_PARENT_ID_BIN_POS: Final = 6
+STATE_POS: Final = 7
+ENTITY_ID_POS: Final = 8
+ICON_POS: Final = 9
+CONTEXT_ONLY_POS: Final = 10
+# - For EventAsRow, additional fields are:
+DATA_POS: Final = 11
+CONTEXT_POS: Final = 12
 
-    data: dict[str, Any]
-    context: Context
-    context_id_bin: bytes
-    time_fired_ts: float
+
+@final  # Final to allow direct checking of the type instead of using isinstance
+class EventAsRow(NamedTuple):
+    """Convert an event to a row.
+
+    This much always match the order of the columns in queries/common.py
+    """
+
     row_id: int
-    event_data: str | None = None
-    entity_id: str | None = None
-    icon: str | None = None
-    context_user_id_bin: bytes | None = None
-    context_parent_id_bin: bytes | None = None
-    event_type: str | None = None
-    state: str | None = None
-    context_only: None = None
+    event_type: EventType[Any] | str | None
+    event_data: str | None
+    time_fired_ts: float
+    context_id_bin: bytes
+    context_user_id_bin: bytes | None
+    context_parent_id_bin: bytes | None
+    state: str | None
+    entity_id: str | None
+    icon: str | None
+    context_only: bool | None
+
+    # Additional fields for EventAsRow
+    data: Mapping[str, Any]
+    context: Context
 
 
 @callback
@@ -121,14 +144,19 @@ def async_event_to_row(event: Event) -> EventAsRow:
     if event.event_type != EVENT_STATE_CHANGED:
         context = event.context
         return EventAsRow(
-            data=event.data,
-            context=event.context,
+            row_id=hash(event),
             event_type=event.event_type,
+            event_data=None,
+            time_fired_ts=event.time_fired_timestamp,
             context_id_bin=ulid_to_bytes(context.id),
             context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
-            time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
-            row_id=hash(event),
+            state=None,
+            entity_id=None,
+            icon=None,
+            context_only=None,
+            data=event.data,
+            context=context,
         )
     # States are prefiltered so we never get states
     # that are missing new_state or old_state
@@ -136,14 +164,17 @@ def async_event_to_row(event: Event) -> EventAsRow:
     new_state: State = event.data["new_state"]
     context = new_state.context
     return EventAsRow(
-        data=event.data,
-        context=event.context,
-        entity_id=new_state.entity_id,
-        state=new_state.state,
+        row_id=hash(event),
+        event_type=None,
+        event_data=None,
+        time_fired_ts=new_state.last_updated_timestamp,
         context_id_bin=ulid_to_bytes(context.id),
         context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
         context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
-        time_fired_ts=dt_util.utc_to_timestamp(new_state.last_updated),
-        row_id=hash(event),
+        state=new_state.state,
+        entity_id=new_state.entity_id,
         icon=new_state.attributes.get(ATTR_ICON),
+        context_only=None,
+        data=event.data,
+        context=context,
     )

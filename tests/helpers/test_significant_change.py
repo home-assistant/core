@@ -1,4 +1,8 @@
 """Test significant change helper."""
+
+from types import MappingProxyType
+from typing import Any
+
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
@@ -8,7 +12,9 @@ from homeassistant.helpers import significant_change
 
 
 @pytest.fixture(name="checker")
-async def checker_fixture(hass):
+async def checker_fixture(
+    hass: HomeAssistant,
+) -> significant_change.SignificantlyChangedChecker:
     """Checker fixture."""
     checker = await significant_change.create_checker(hass, "test")
 
@@ -17,13 +23,15 @@ async def checker_fixture(hass):
     ):
         return abs(float(old_state) - float(new_state)) > 4
 
-    hass.data[significant_change.DATA_FUNCTIONS][
-        "test_domain"
-    ] = async_check_significant_change
+    hass.data[significant_change.DATA_FUNCTIONS]["test_domain"] = (
+        async_check_significant_change
+    )
     return checker
 
 
-async def test_signicant_change(hass: HomeAssistant, checker) -> None:
+async def test_signicant_change(
+    checker: significant_change.SignificantlyChangedChecker,
+) -> None:
     """Test initialize helper works."""
     ent_id = "test_domain.test_entity"
     attrs = {ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY}
@@ -47,7 +55,9 @@ async def test_signicant_change(hass: HomeAssistant, checker) -> None:
     assert checker.async_is_significant_change(State(ent_id, STATE_UNAVAILABLE, attrs))
 
 
-async def test_significant_change_extra(hass: HomeAssistant, checker) -> None:
+async def test_significant_change_extra(
+    checker: significant_change.SignificantlyChangedChecker,
+) -> None:
     """Test extra significant checker works."""
     ent_id = "test_domain.test_entity"
     attrs = {ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY}
@@ -60,8 +70,14 @@ async def test_significant_change_extra(hass: HomeAssistant, checker) -> None:
     assert checker.async_is_significant_change(State(ent_id, "100", attrs), extra_arg=1)
 
     def extra_significant_check(
-        hass, old_state, old_attrs, old_extra_arg, new_state, new_attrs, new_extra_arg
-    ):
+        hass: HomeAssistant,
+        old_state: str,
+        old_attrs: dict | MappingProxyType,
+        old_extra_arg: Any,
+        new_state: str,
+        new_attrs: dict | MappingProxyType,
+        new_extra_arg: Any,
+    ) -> bool | None:
         return old_extra_arg != new_extra_arg
 
     checker.extra_significant_check = extra_significant_check
@@ -72,3 +88,14 @@ async def test_significant_change_extra(hass: HomeAssistant, checker) -> None:
         State(ent_id, "200", attrs), extra_arg=1
     )
     assert checker.async_is_significant_change(State(ent_id, "200", attrs), extra_arg=2)
+
+
+async def test_check_valid_float() -> None:
+    """Test extra significant checker works."""
+    assert significant_change.check_valid_float("1")
+    assert significant_change.check_valid_float("1.0")
+    assert significant_change.check_valid_float(1)
+    assert significant_change.check_valid_float(1.0)
+    assert not significant_change.check_valid_float("")
+    assert not significant_change.check_valid_float("invalid")
+    assert not significant_change.check_valid_float("1.1.1")

@@ -1,0 +1,86 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not have actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not have actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not have entities.
+  entity-unique-id:
+    status: exempt
+    comment: Integration does not have entities.
+  has-entity-name:
+    status: exempt
+    comment: Integration does not have entities.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not have actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: Integration does not have entities.
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: exempt
+    comment: Integration does not have platforms.
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: Integration does not have devices.
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: todo
+  entity-category:
+    status: exempt
+    comment: Integration does not have entities.
+  entity-device-class:
+    status: exempt
+    comment: Integration does not have entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Integration does not have entities.
+  entity-translations:
+    status: exempt
+    comment: Integration does not have entities.
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: todo
+  strict-typing: done

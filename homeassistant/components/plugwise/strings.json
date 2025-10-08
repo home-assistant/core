@@ -1,14 +1,31 @@
 {
   "config": {
     "step": {
+      "reconfigure": {
+        "description": "Update configuration for {title}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::plugwise::config::step::user::data_description::host%]",
+          "port": "[%key:component::plugwise::config::step::user::data_description::port%]"
+        }
+      },
       "user": {
         "title": "Connect to the Smile",
         "description": "Please enter",
         "data": {
-          "password": "Smile ID",
           "host": "[%key:common::config_flow::data::ip%]",
+          "password": "Smile ID",
           "port": "[%key:common::config_flow::data::port%]",
-          "username": "Smile Username"
+          "username": "Smile username"
+        },
+        "data_description": {
+          "password": "The Smile ID printed on the label on the back of your Adam, Smile-T, or P1.",
+          "host": "The hostname or IP address of your Smile. You can find it in your router or the Plugwise app.",
+          "port": "By default your Smile uses port 80, normally you should not have to change this.",
+          "username": "Default is `smile`, or `stretch` for the legacy Stretch."
         }
       }
     },
@@ -22,7 +39,9 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "anna_with_adam": "Both Anna and Adam detected. Add your Adam instead of your Anna"
+      "anna_with_adam": "Both Anna and Adam detected. Add your Adam instead of your Anna",
+      "not_the_same_smile": "The configured Smile ID does not match the Smile ID on the requested IP address.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
@@ -45,11 +64,16 @@
       "cooling_state": {
         "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]"
       },
-      "slave_boiler_state": {
+      "secondary_boiler_state": {
         "name": "Secondary boiler state"
       },
       "plugwise_notification": {
         "name": "Plugwise notification"
+      }
+    },
+    "button": {
+      "reboot": {
+        "name": "Reboot"
       }
     },
     "climate": {
@@ -61,8 +85,8 @@
           "preset_mode": {
             "state": {
               "asleep": "Night",
-              "away": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::away%]",
-              "home": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::home%]",
+              "away": "[%key:common::state::not_home%]",
+              "home": "[%key:common::state::home%]",
               "no_frost": "Anti-frost",
               "vacation": "Vacation"
             }
@@ -76,6 +100,12 @@
     "number": {
       "maximum_boiler_temperature": {
         "name": "Maximum boiler temperature setpoint"
+      },
+      "max_dhw_temperature": {
+        "name": "Domestic hot water setpoint"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
       }
     },
     "select": {
@@ -83,9 +113,17 @@
         "name": "DHW mode",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "boost": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::boost%]",
           "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]"
+        }
+      },
+      "gateway_mode": {
+        "name": "Gateway mode",
+        "state": {
+          "away": "Pause",
+          "full": "[%key:common::state::normal%]",
+          "vacation": "Vacation"
         }
       },
       "regulation_mode": {
@@ -99,7 +137,10 @@
         }
       },
       "select_schedule": {
-        "name": "Thermostat schedule"
+        "name": "Thermostat schedule",
+        "state": {
+          "off": "[%key:common::state::off%]"
+        }
       }
     },
     "sensor": {
@@ -143,7 +184,7 @@
         "name": "Electricity consumed peak interval"
       },
       "electricity_consumed_off_peak_interval": {
-        "name": "Electricity consumed off peak interval"
+        "name": "Electricity consumed off-peak interval"
       },
       "electricity_produced_interval": {
         "name": "Electricity produced interval"
@@ -152,19 +193,19 @@
         "name": "Electricity produced peak interval"
       },
       "electricity_produced_off_peak_interval": {
-        "name": "Electricity produced off peak interval"
+        "name": "Electricity produced off-peak interval"
       },
       "electricity_consumed_point": {
         "name": "Electricity consumed point"
       },
       "electricity_consumed_off_peak_point": {
-        "name": "Electricity consumed off peak point"
+        "name": "Electricity consumed off-peak point"
       },
       "electricity_consumed_peak_point": {
         "name": "Electricity consumed peak point"
       },
       "electricity_consumed_off_peak_cumulative": {
-        "name": "Electricity consumed off peak cumulative"
+        "name": "Electricity consumed off-peak cumulative"
       },
       "electricity_consumed_peak_cumulative": {
         "name": "Electricity consumed peak cumulative"
@@ -173,13 +214,13 @@
         "name": "Electricity produced point"
       },
       "electricity_produced_off_peak_point": {
-        "name": "Electricity produced off peak point"
+        "name": "Electricity produced off-peak point"
       },
       "electricity_produced_peak_point": {
         "name": "Electricity produced peak point"
       },
       "electricity_produced_off_peak_cumulative": {
-        "name": "Electricity produced off peak cumulative"
+        "name": "Electricity produced off-peak cumulative"
       },
       "electricity_produced_peak_cumulative": {
         "name": "Electricity produced peak cumulative"
@@ -250,11 +291,31 @@
         "name": "DHW comfort mode"
       },
       "lock": {
-        "name": "[%key:component::lock::entity_component::_::name%]"
+        "name": "[%key:component::lock::title%]"
       },
       "relay": {
         "name": "Relay"
       }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "data_incomplete_or_missing": {
+      "message": "Data incomplete or missing."
+    },
+    "error_communicating_with_api": {
+      "message": "Error communicating with API: {error}."
+    },
+    "failed_to_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_xml_data": {
+      "message": "[%key:component::plugwise::config::error::response_error%]"
+    },
+    "unsupported_firmware": {
+      "message": "[%key:component::plugwise::config::error::unsupported%]"
     }
   }
 }

@@ -1,13 +1,19 @@
 """Config flows for the EnOcean integration."""
 
 from copy import deepcopy
+from typing import Any
 
 from enocean.utils import from_hex_string, to_hex_string
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_DEVICE
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from . import dongle
@@ -49,57 +55,70 @@ ENOCEAN_DEFAULT_DEVICE_NAME = "EnOcean device"
 ENOCEAN_DEVICE_TYPE_ID = "device_type_id"
 
 
-class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle the enOcean config flows."""
 
     VERSION = 1
-    MANUAL_PATH_VALUE = "Custom path"
+    MANUAL_PATH_VALUE = "manual"
 
     def __init__(self) -> None:
         """Initialize the EnOcean config flow."""
         self.dongle_path = None
         self.discovery_info = None
 
-    async def async_step_import(self, data=None) -> FlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a yaml configuration."""
-        if not await self.validate_enocean_conf(data):
+        if not await self.validate_enocean_conf(import_data):
             LOGGER.warning(
                 "Cannot import yaml configuration: %s is not a valid dongle path",
-                data[CONF_DEVICE],
+                import_data[CONF_DEVICE],
             )
             return self.async_abort(reason="invalid_dongle_path")
 
-        return self.create_enocean_entry(data)
+        return self.create_enocean_entry(import_data)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle an EnOcean config flow start."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return await self.async_step_detect()
 
-    async def async_step_detect(self, user_input=None) -> FlowResult:
+    async def async_step_detect(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Propose a list of detected dongles."""
         errors = {}
         if user_input is not None:
             if user_input[CONF_DEVICE] == self.MANUAL_PATH_VALUE:
-                return await self.async_step_manual(None)
+                return await self.async_step_manual()
             if await self.validate_enocean_conf(user_input):
                 return self.create_enocean_entry(user_input)
             errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
 
-        bridges = await self.hass.async_add_executor_job(dongle.detect)
-        if len(bridges) == 0:
+        devices = await self.hass.async_add_executor_job(dongle.detect)
+        if len(devices) == 0:
             return await self.async_step_manual(user_input)
+        devices.append(self.MANUAL_PATH_VALUE)
 
-        bridges.append(self.MANUAL_PATH_VALUE)
         return self.async_show_form(
             step_id="detect",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(bridges)}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_DEVICE): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=devices,
+                            translation_key="devices",
+                            mode=selector.SelectSelectorMode.LIST,
+                        )
+                    )
+                }
+            ),
             errors=errors,
         )
 
-    async def async_step_manual(self, user_input=None) -> FlowResult:
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Request manual USB dongle path."""
         default_value = None
         errors = {}
@@ -120,31 +139,25 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def validate_enocean_conf(self, user_input) -> bool:
         """Return True if the user_input contains a valid dongle path."""
         dongle_path = user_input[CONF_DEVICE]
-        path_is_valid = await self.hass.async_add_executor_job(
-            dongle.validate_path, dongle_path
-        )
-        return path_is_valid
+        return await self.hass.async_add_executor_job(dongle.validate_path, dongle_path)
 
     def create_enocean_entry(self, user_input):
         """Create an entry for the provided configuration."""
         return self.async_create_entry(title="EnOcean", data=user_input)
 
     @staticmethod
+    @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Create the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle an option flow for EnOcean."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Show menu displaying the options."""
         devices = self.config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
@@ -163,7 +176,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ],
         )
 
-    async def async_step_add_device(self, user_input=None) -> FlowResult:
+    async def async_step_add_device(self, user_input=None) -> ConfigFlowResult:
         """Add an EnOcean device."""
         errors: dict[str, str] = {}
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
@@ -182,9 +195,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
                 for dev in devices:
                     if dev[CONF_ENOCEAN_DEVICE_ID] == device_id:
-                        errors[
-                            CONF_ENOCEAN_DEVICE_ID
-                        ] = ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED
+                        errors[CONF_ENOCEAN_DEVICE_ID] = (
+                            ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED
+                        )
             else:
                 errors[CONF_ENOCEAN_DEVICE_ID] = ENOCEAN_ERROR_INVALID_DEVICE_ID
 
@@ -268,7 +281,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             errors=errors,
         )
 
-    async def async_step_select_device_to_edit(self, user_input=None) -> FlowResult:
+    async def async_step_select_device_to_edit(
+        self, user_input=None
+    ) -> ConfigFlowResult:
         """Select a configured EnOcean device to edit."""
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
         device_list = [
@@ -310,7 +325,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=select_device_to_edit_schema,
         )
 
-    async def async_step_edit_device(self, user_input=None, device=None) -> FlowResult:
+    async def async_step_edit_device(
+        self, user_input=None, device=None
+    ) -> ConfigFlowResult:
         """Edit an EnOcean device."""
         errors: dict[str, str] = {}
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
@@ -398,7 +415,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             errors=errors,
         )
 
-    async def async_step_delete_device(self, user_input=None) -> FlowResult:
+    async def async_step_delete_device(self, user_input=None) -> ConfigFlowResult:
         """Delete an EnOcean device."""
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
         device_list = [

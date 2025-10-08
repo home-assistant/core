@@ -1,0 +1,133 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "water_tank": {
+        "default": "mdi:water",
+        "state": {
+          "on": "mdi:water-alert",
+          "off": "mdi:water-check"
+        }
+      },
+      "brew_active": {
+        "default": "mdi:cup",
+        "state": {
+          "on": "mdi:cup-water",
+          "off": "mdi:cup-off"
+        }
+      },
+      "backflush_enabled": {
+        "default": "mdi:water-off",
+        "state": {
+          "on": "mdi:water"
+        }
+      }
+    },
+    "button": {
+      "start_backflush": {
+        "default": "mdi:water-sync"
+      }
+    },
+    "number": {
+      "coffee_temp": {
+        "default": "mdi:thermometer-water"
+      },
+      "dose": {
+        "default": "mdi:cup-water"
+      },
+      "smart_standby_time": {
+        "default": "mdi:timer"
+      },
+      "preinfusion_time": {
+        "default": "mdi:water"
+      },
+      "prebrew_time_on": {
+        "default": "mdi:water"
+      },
+      "prebrew_time_off": {
+        "default": "mdi:water-off"
+      }
+    },
+    "select": {
+      "smart_standby_mode": {
+        "default": "mdi:power",
+        "state": {
+          "poweron": "mdi:power",
+          "lastbrewing": "mdi:coffee"
+        }
+      },
+      "steam_temp_select": {
+        "default": "mdi:thermometer",
+        "state": {
+          "1": "mdi:thermometer-low",
+          "2": "mdi:thermometer",
+          "3": "mdi:thermometer-high"
+        }
+      },
+      "prebrew_infusion_select": {
+        "default": "mdi:water-pump-off",
+        "state": {
+          "disabled": "mdi:water-pump-off",
+          "prebrew": "mdi:water-pump",
+          "typeb": "mdi:water-pump"
+        }
+      }
+    },
+    "sensor": {
+      "coffee_boiler_ready_time": {
+        "default": "mdi:av-timer"
+      },
+      "last_cleaning_time": {
+        "default": "mdi:spray-bottle"
+      },
+      "steam_boiler_ready_time": {
+        "default": "mdi:av-timer"
+      },
+      "brewing_start_time": {
+        "default": "mdi:clock-start"
+      },
+      "total_coffees_made": {
+        "default": "mdi:coffee"
+      },
+      "total_flushes_done": {
+        "default": "mdi:water-pump"
+      }
+    },
+    "switch": {
+      "main": {
+        "default": "mdi:power",
+        "state": {
+          "on": "mdi:power",
+          "off": "mdi:power-off"
+        }
+      },
+      "auto_on_off": {
+        "default": "mdi:alarm",
+        "state": {
+          "on": "mdi:alarm",
+          "off": "mdi:alarm-off"
+        }
+      },
+      "smart_standby_enabled": {
+        "state": {
+          "on": "mdi:sleep",
+          "off": "mdi:sleep-off"
+        }
+      },
+      "steam_boiler": {
+        "default": "mdi:water-boiler",
+        "state": {
+          "on": "mdi:water-boiler",
+          "off": "mdi:water-boiler-off"
+        }
+      }
+    },
+    "update": {
+      "machine_firmware": {
+        "default": "mdi:cloud-download"
+      },
+      "gateway_firmware": {
+        "default": "mdi:cloud-download"
+      }
+    }
+  }
+}

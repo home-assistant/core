@@ -1,7 +1,7 @@
 """Update entities for Linn devices."""
+
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -16,8 +16,8 @@ from homeassistant.components.update import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up update entities for Reolink component."""
 
@@ -54,17 +54,13 @@ class OpenhomeUpdateEntity(UpdateEntity):
         """Initialize a Linn DS update entity."""
         self._device = device
         self._attr_unique_id = f"{device.uuid()}-update"
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self._device.uuid()),
+                (DOMAIN, device.uuid()),
             },
-            manufacturer=self._device.manufacturer(),
-            model=self._device.model_name(),
-            name=self._device.friendly_name(),
+            manufacturer=device.manufacturer(),
+            model=device.model_name(),
+            name=device.friendly_name(),
         )
 
     async def async_update(self) -> None:
@@ -97,7 +93,7 @@ class OpenhomeUpdateEntity(UpdateEntity):
         try:
             if self.latest_version:
                 await self._device.update_firmware()
-        except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError) as err:
+        except (TimeoutError, aiohttp.ClientError, UpnpError) as err:
             raise HomeAssistantError(
                 f"Error updating {self._device.device.friendly_name}: {err}"
             ) from err

@@ -1,10 +1,10 @@
 """Support for Hyperion-NG remotes."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 import functools
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from hyperion import client, const
@@ -17,24 +17,23 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
 from . import (
+    HyperionConfigEntry,
     get_hyperion_device_id,
     get_hyperion_unique_id,
     listen_for_instance_updates,
 )
 from .const import (
     CONF_EFFECT_HIDE_LIST,
-    CONF_INSTANCE_CLIENTS,
     CONF_PRIORITY,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
@@ -74,28 +73,26 @@ ICON_EFFECT = "mdi:lava-lamp"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: HyperionConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Hyperion platform from config entry."""
 
-    entry_data = hass.data[DOMAIN][config_entry.entry_id]
-    server_id = config_entry.unique_id
+    server_id = entry.unique_id
 
     @callback
     def instance_add(instance_num: int, instance_name: str) -> None:
         """Add entities for a new Hyperion instance."""
         assert server_id
-        args = (
-            server_id,
-            instance_num,
-            instance_name,
-            config_entry.options,
-            entry_data[CONF_INSTANCE_CLIENTS][instance_num],
-        )
         async_add_entities(
             [
-                HyperionLight(*args),
+                HyperionLight(
+                    server_id,
+                    instance_num,
+                    instance_name,
+                    entry.options,
+                    entry.runtime_data.instance_clients[instance_num],
+                ),
             ]
         )
 
@@ -110,12 +107,14 @@ async def async_setup_entry(
             ),
         )
 
-    listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
+    listen_for_instance_updates(hass, entry, instance_add, instance_remove)
 
 
 class HyperionLight(LightEntity):
     """A Hyperion light that acts as a client for the configured priority."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_color_mode = ColorMode.HS
     _attr_should_poll = False
     _attr_supported_color_modes = {ColorMode.HS}
@@ -126,12 +125,11 @@ class HyperionLight(LightEntity):
         server_id: str,
         instance_num: int,
         instance_name: str,
-        options: MappingProxyType[str, Any],
+        options: Mapping[str, Any],
         hyperion_client: client.HyperionClient,
     ) -> None:
         """Initialize the light."""
-        self._unique_id = self._compute_unique_id(server_id, instance_num)
-        self._name = self._compute_name(instance_name)
+        self._attr_unique_id = self._compute_unique_id(server_id, instance_num)
         self._device_id = get_hyperion_device_id(server_id, instance_num)
         self._instance_name = instance_name
         self._options = options
@@ -152,24 +150,17 @@ class HyperionLight(LightEntity):
             f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
             f"{const.KEY_CLIENT}-{const.KEY_UPDATE}": self._update_client,
         }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=HYPERION_MANUFACTURER_NAME,
+            model=HYPERION_MODEL_NAME,
+            name=self._instance_name,
+            configuration_url=self._client.remote_url,
+        )
 
     def _compute_unique_id(self, server_id: str, instance_num: int) -> str:
         """Compute a unique id for this instance."""
         return get_hyperion_unique_id(server_id, instance_num, TYPE_HYPERION_LIGHT)
-
-    def _compute_name(self, instance_name: str) -> str:
-        """Compute the name of the light."""
-        return f"{instance_name}".strip()
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Whether or not the entity is enabled by default."""
-        return True
-
-    @property
-    def name(self) -> str:
-        """Return the name of the light."""
-        return self._name
 
     @property
     def brightness(self) -> int:
@@ -203,22 +194,6 @@ class HyperionLight(LightEntity):
     def available(self) -> bool:
         """Return server availability."""
         return bool(self._client.has_loaded_state)
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id for this instance."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            manufacturer=HYPERION_MANUFACTURER_NAME,
-            model=HYPERION_MODEL_NAME,
-            name=self._instance_name,
-            configuration_url=self._client.remote_url,
-        )
 
     def _get_option(self, key: str) -> Any:
         """Get a value from the provided options."""

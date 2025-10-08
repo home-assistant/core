@@ -3,12 +3,12 @@
     "step": {
       "user": {
         "data": {
-          "phone_number": "Phone Number"
+          "phone_number": "Phone number"
         }
       },
       "one_time_password": {
         "data": {
-          "one_time_password": "One Time Password"
+          "one_time_password": "One-time password"
         }
       }
     },

@@ -1,4 +1,5 @@
 """Support for Mopeka devices."""
+
 from __future__ import annotations
 
 from mopeka_iot_ble import DeviceKey

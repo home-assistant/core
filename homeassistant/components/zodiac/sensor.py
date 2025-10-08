@@ -1,12 +1,12 @@
 """Support for tracking the zodiac sign."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import as_local, utcnow
 
 from .const import (
@@ -146,26 +146,11 @@ ZODIAC_BY_DATE = (
     ),
 )
 
-ZODIAC_ICONS = {
-    SIGN_ARIES: "mdi:zodiac-aries",
-    SIGN_TAURUS: "mdi:zodiac-taurus",
-    SIGN_GEMINI: "mdi:zodiac-gemini",
-    SIGN_CANCER: "mdi:zodiac-cancer",
-    SIGN_LEO: "mdi:zodiac-leo",
-    SIGN_VIRGO: "mdi:zodiac-virgo",
-    SIGN_LIBRA: "mdi:zodiac-libra",
-    SIGN_SCORPIO: "mdi:zodiac-scorpio",
-    SIGN_SAGITTARIUS: "mdi:zodiac-sagittarius",
-    SIGN_CAPRICORN: "mdi:zodiac-capricorn",
-    SIGN_AQUARIUS: "mdi:zodiac-aquarius",
-    SIGN_PISCES: "mdi:zodiac-pisces",
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize the entries."""
 
@@ -212,6 +197,5 @@ class ZodiacSensor(SensorEntity):
                 today.month == sign[1][1] and today.day <= sign[1][0]
             ):
                 self._attr_native_value = sign[2]
-                self._attr_icon = ZODIAC_ICONS.get(sign[2])
                 self._attr_extra_state_attributes = sign[3]
                 break

@@ -1,4 +1,5 @@
 """Support for LIFX."""
+
 from __future__ import annotations
 
 import asyncio
@@ -12,7 +13,6 @@ from aiolifx.connection import LIFXConnection
 import voluptuous as vol
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -21,16 +21,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import _LOGGER, DATA_LIFX_MANAGER, DOMAIN, TARGET_ANY
-from .coordinator import LIFXUpdateCoordinator
+from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
-from .util import async_entry_is_legacy, async_get_legacy_entry
+from .util import async_entry_is_legacy, async_get_legacy_entry, formatted_serial
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -72,7 +72,7 @@ DISCOVERY_COOLDOWN = 5
 
 async def async_legacy_migration(
     hass: HomeAssistant,
-    legacy_entry: ConfigEntry,
+    legacy_entry: LIFXConfigEntry,
     discovered_devices: Iterable[Light],
 ) -> bool:
     """Migrate config entries."""
@@ -87,7 +87,7 @@ async def async_legacy_migration(
         hass, hosts_by_serial, existing_serials, legacy_entry
     )
     if missing_discovery_count:
-        _LOGGER.info(
+        _LOGGER.debug(
             "Migration in progress, waiting to discover %s device(s)",
             missing_discovery_count,
         )
@@ -156,7 +156,6 @@ class LIFXDiscoveryManager:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LIFX component."""
-    hass.data[DOMAIN] = {}
     migrating = bool(async_get_legacy_entry(hass))
     discovery_manager = LIFXDiscoveryManager(hass, migrating)
 
@@ -186,7 +185,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool:
     """Set up LIFX from a config entry."""
     if async_entry_is_legacy(entry):
         return True
@@ -197,10 +196,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_migrate_entities_devices(hass, legacy_entry.entry_id, entry)
 
     assert entry.unique_id is not None
-    domain_data = hass.data[DOMAIN]
-    if DATA_LIFX_MANAGER not in domain_data:
+    if DATA_LIFX_MANAGER not in hass.data:
         manager = LIFXManager(hass)
-        domain_data[DATA_LIFX_MANAGER] = manager
+        hass.data[DATA_LIFX_MANAGER] = manager
         manager.async_setup()
 
     host = entry.data[CONF_HOST]
@@ -210,7 +208,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except socket.gaierror as ex:
         connection.async_stop()
         raise ConfigEntryNotReady(f"Could not resolve {host}: {ex}") from ex
-    coordinator = LIFXUpdateCoordinator(hass, connection, entry.title)
+    coordinator = LIFXUpdateCoordinator(hass, entry, connection)
     coordinator.async_setup()
     try:
         await coordinator.async_config_entry_first_refresh()
@@ -218,21 +216,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         connection.async_stop()
         raise
 
-    domain_data[entry.entry_id] = coordinator
+    serial = formatted_serial(coordinator.serial_number)
+    if serial != entry.unique_id:
+        # If the serial number of the device does not match the unique_id
+        # of the config entry, it likely means the DHCP lease has expired
+        # and the device has been assigned a new IP address. We need to
+        # wait for the next discovery to find the device at its new address
+        # and update the config entry so we do not mix up devices.
+        raise ConfigEntryNotReady(
+            f"Unexpected device found at {host}; expected {entry.unique_id}, found {serial}"
+        )
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool:
     """Unload a config entry."""
     if async_entry_is_legacy(entry):
         return True
-    domain_data = hass.data[DOMAIN]
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: LIFXUpdateCoordinator = domain_data.pop(entry.entry_id)
-        coordinator.connection.async_stop()
+        entry.runtime_data.connection.async_stop()
     # Only the DATA_LIFX_MANAGER left, remove it.
-    if len(domain_data) == 1:
-        manager: LIFXManager = domain_data.pop(DATA_LIFX_MANAGER)
+    if len(hass.config_entries.async_loaded_entries(DOMAIN)) == 0:
+        manager = hass.data.pop(DATA_LIFX_MANAGER)
         manager.async_unload()
     return unload_ok

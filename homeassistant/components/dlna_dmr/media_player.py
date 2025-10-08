@@ -1,4 +1,5 @@
 """Support for DLNA DMR (Device Media Renderer)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,7 +7,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Sequence
 import contextlib
 from datetime import datetime, timedelta
 import functools
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
@@ -19,6 +20,7 @@ from homeassistant import config_entries
 from homeassistant.components import media_source, ssdp
 from homeassistant.components.media_player import (
     ATTR_MEDIA_EXTRA,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -28,9 +30,10 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_MAC, CONF_TYPE, CONF_URL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
     CONF_BROWSE_UNFILTERED,
@@ -50,13 +53,19 @@ from .data import EventListenAddr, get_domain_data
 
 PARALLEL_UPDATES = 0
 
-_DlnaDmrEntityT = TypeVar("_DlnaDmrEntityT", bound="DlnaDmrEntity")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
+_TRANSPORT_STATE_TO_MEDIA_PLAYER_STATE = {
+    TransportState.PLAYING: MediaPlayerState.PLAYING,
+    TransportState.TRANSITIONING: MediaPlayerState.PLAYING,
+    TransportState.PAUSED_PLAYBACK: MediaPlayerState.PAUSED,
+    TransportState.PAUSED_RECORDING: MediaPlayerState.PAUSED,
+    # Unable to map this state to anything reasonable, so it's "Unknown"
+    TransportState.VENDOR_DEFINED: None,
+    None: MediaPlayerState.ON,
+}
 
 
-def catch_request_errors(
-    func: Callable[Concatenate[_DlnaDmrEntityT, _P], Awaitable[_R]]
+def catch_request_errors[_DlnaDmrEntityT: DlnaDmrEntity, **_P, _R](
+    func: Callable[Concatenate[_DlnaDmrEntityT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_DlnaDmrEntityT, _P], Coroutine[Any, Any, _R | None]]:
     """Catch UpnpError errors."""
 
@@ -83,14 +92,37 @@ def catch_request_errors(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the DlnaDmrEntity from a config entry."""
     _LOGGER.debug("media_player.async_setup_entry %s (%s)", entry.entry_id, entry.title)
 
+    udn = entry.data[CONF_DEVICE_ID]
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+
+    if (
+        (
+            existing_entity_id := ent_reg.async_get_entity_id(
+                domain=MEDIA_PLAYER_DOMAIN, platform=DOMAIN, unique_id=udn
+            )
+        )
+        and (existing_entry := ent_reg.async_get(existing_entity_id))
+        and (device_id := existing_entry.device_id)
+        and (device_entry := dev_reg.async_get(device_id))
+        and (dr.CONNECTION_UPNP, udn) not in device_entry.connections
+    ):
+        # If the existing device is missing the udn connection, add it
+        # now to ensure that when the entity gets added it is linked to
+        # the correct device.
+        dev_reg.async_update_device(
+            device_id,
+            merge_connections={(dr.CONNECTION_UPNP, udn)},
+        )
+
     # Create our own device-wrapping entity
     entity = DlnaDmrEntity(
-        udn=entry.data[CONF_DEVICE_ID],
+        udn=udn,
         device_type=entry.data[CONF_TYPE],
         name=entry.title,
         event_port=entry.options.get(CONF_LISTEN_PORT) or 0,
@@ -99,6 +131,7 @@ async def async_setup_entry(
         location=entry.data[CONF_URL],
         mac_address=entry.data.get(CONF_MAC),
         browse_unfiltered=entry.options.get(CONF_BROWSE_UNFILTERED, False),
+        config_entry=entry,
     )
 
     async_add_entities([entity])
@@ -130,6 +163,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
     # determine whether further device polling is required.
     _attr_should_poll = True
 
+    # Name of the current sound mode, not supported by DLNA
+    _attr_sound_mode = None
+
     def __init__(
         self,
         udn: str,
@@ -141,6 +177,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         location: str,
         mac_address: str | None,
         browse_unfiltered: bool,
+        config_entry: config_entries.ConfigEntry,
     ) -> None:
         """Initialize DLNA DMR entity."""
         self.udn = udn
@@ -152,25 +189,18 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self.mac_address = mac_address
         self.browse_unfiltered = browse_unfiltered
         self._device_lock = asyncio.Lock()
+        self._background_setup_task: asyncio.Task[None] | None = None
+        self._updated_registry: bool = False
+        self._config_entry = config_entry
+        self._attr_device_info = dr.DeviceInfo(connections={(dr.CONNECTION_UPNP, udn)})
+        self._attr_supported_features = self._supported_features()
 
     async def async_added_to_hass(self) -> None:
         """Handle addition."""
         # Update this entity when the associated config entry is modified
-        if self.registry_entry and self.registry_entry.config_entry_id:
-            config_entry = self.hass.config_entries.async_get_entry(
-                self.registry_entry.config_entry_id
-            )
-            assert config_entry is not None
-            self.async_on_remove(
-                config_entry.add_update_listener(self.async_config_update_listener)
-            )
-
-        # Try to connect to the last known location, but don't worry if not available
-        if not self._device:
-            try:
-                await self._device_connect(self.location)
-            except UpnpError as err:
-                _LOGGER.debug("Couldn't connect immediately: %r", err)
+        self.async_on_remove(
+            self._config_entry.add_update_listener(self.async_config_update_listener)
+        )
 
         # Get SSDP notifications for only this device
         self.async_on_remove(
@@ -191,12 +221,33 @@ class DlnaDmrEntity(MediaPlayerEntity):
             )
         )
 
+        if not self._device:
+            if self.hass.state is CoreState.running:
+                await self._async_setup()
+            else:
+                self._background_setup_task = self.hass.async_create_background_task(
+                    self._async_setup(), f"dlna_dmr {self.name} setup"
+                )
+
+    async def _async_setup(self) -> None:
+        # Try to connect to the last known location, but don't worry if not available
+        try:
+            await self._device_connect(self.location)
+        except UpnpError as err:
+            _LOGGER.debug("Couldn't connect immediately: %r", err)
+
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal."""
+        if self._background_setup_task:
+            self._background_setup_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._background_setup_task
+            self._background_setup_task = None
+
         await self._device_disconnect()
 
     async def async_ssdp_callback(
-        self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
+        self, info: SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
         """Handle notification from SSDP of device state change."""
         _LOGGER.debug(
@@ -302,6 +353,11 @@ class DlnaDmrEntity(MediaPlayerEntity):
         # Device was de/re-connected, state might have changed
         self.async_write_ha_state()
 
+    def async_write_ha_state(self) -> None:
+        """Write the state."""
+        self._attr_supported_features = self._supported_features()
+        super().async_write_ha_state()
+
     async def _device_connect(self, location: str) -> None:
         """Connect to the device now that it's available."""
         _LOGGER.debug("Connecting to device at %s", location)
@@ -349,25 +405,28 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     def _update_device_registry(self, set_mac: bool = False) -> None:
         """Update the device registry with new information about the DMR."""
-        if not self._device:
-            return  # Can't get all the required information without a connection
+        if (
+            # Can't get all the required information without a connection
+            not self._device
+            or
+            # No new information
+            (not set_mac and self._updated_registry)
+        ):
+            return
 
-        if not self.registry_entry or not self.registry_entry.config_entry_id:
-            return  # No config registry entry to link to
-
-        if self.registry_entry.device_id and not set_mac:
-            return  # No new information
-
-        connections = set()
         # Connections based on the root device's UDN, and the DMR embedded
         # device's UDN. They may be the same, if the DMR is the root device.
-        connections.add(
+        connections = {
             (
                 dr.CONNECTION_UPNP,
                 self._device.profile_device.root_device.udn,
-            )
-        )
-        connections.add((dr.CONNECTION_UPNP, self._device.udn))
+            ),
+            (dr.CONNECTION_UPNP, self._device.udn),
+            (
+                dr.CONNECTION_UPNP,
+                self.udn,
+            ),
+        }
 
         if self.mac_address:
             # Connection based on MAC address, if known
@@ -376,24 +435,27 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 (dr.CONNECTION_NETWORK_MAC, self.mac_address)
             )
 
-        # Create linked HA DeviceEntry now the information is known.
-        dev_reg = dr.async_get(self.hass)
-        device_entry = dev_reg.async_get_or_create(
-            config_entry_id=self.registry_entry.config_entry_id,
+        device_info = dr.DeviceInfo(
             connections=connections,
-            identifiers={(DOMAIN, self.unique_id)},
             default_manufacturer=self._device.manufacturer,
             default_model=self._device.model_name,
             default_name=self._device.name,
         )
+        self._attr_device_info = device_info
+
+        self._updated_registry = True
+        # Create linked HA DeviceEntry now the information is known.
+        device_entry = dr.async_get(self.hass).async_get_or_create(
+            config_entry_id=self._config_entry.entry_id, **device_info
+        )
 
         # Update entity registry to link to the device
-        ent_reg = er.async_get(self.hass)
-        ent_reg.async_get_or_create(
-            self.registry_entry.domain,
-            self.registry_entry.platform,
+        er.async_get(self.hass).async_get_or_create(
+            MEDIA_PLAYER_DOMAIN,
+            DOMAIN,
             self.unique_id,
             device_id=device_entry.id,
+            config_entry=self._config_entry,
         )
 
     async def _device_disconnect(self) -> None:
@@ -418,6 +480,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Retrieve the latest data."""
+        if self._background_setup_task:
+            await self._background_setup_task
+            self._background_setup_task = None
+
         if not self._device:
             if not self.poll_availability:
                 return
@@ -438,6 +504,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
         finally:
             self.check_available = False
 
+        # Supported features may have changed
+        self._attr_supported_features = self._supported_features()
+
     def _on_event(
         self, service: UpnpService, state_variables: Sequence[UpnpStateVariable]
     ) -> None:
@@ -452,14 +521,17 @@ class DlnaDmrEntity(MediaPlayerEntity):
             for state_variable in state_variables:
                 # Force a state refresh when player begins or pauses playback
                 # to update the position info.
-                if (
-                    state_variable.name == "TransportState"
-                    and state_variable.value
-                    in (TransportState.PLAYING, TransportState.PAUSED_PLAYBACK)
+                if state_variable.name == "TransportState" and state_variable.value in (
+                    TransportState.PLAYING,
+                    TransportState.PAUSED_PLAYBACK,
                 ):
                     force_refresh = True
+                    break
 
-        self.async_schedule_update_ha_state(force_refresh)
+        if force_refresh:
+            self.async_schedule_update_ha_state(force_refresh)
+        else:
+            self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
@@ -479,28 +551,13 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
-        if not self._device or not self.available:
+        if not self._device:
             return MediaPlayerState.OFF
-        if self._device.transport_state is None:
-            return MediaPlayerState.ON
-        if self._device.transport_state in (
-            TransportState.PLAYING,
-            TransportState.TRANSITIONING,
-        ):
-            return MediaPlayerState.PLAYING
-        if self._device.transport_state in (
-            TransportState.PAUSED_PLAYBACK,
-            TransportState.PAUSED_RECORDING,
-        ):
-            return MediaPlayerState.PAUSED
-        if self._device.transport_state == TransportState.VENDOR_DEFINED:
-            # Unable to map this state to anything reasonable, so it's "Unknown"
-            return None
+        return _TRANSPORT_STATE_TO_MEDIA_PLAYER_STATE.get(
+            self._device.transport_state, MediaPlayerState.IDLE
+        )
 
-        return MediaPlayerState.IDLE
-
-    @property
-    def supported_features(self) -> MediaPlayerEntityFeature:
+    def _supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported at this moment.
 
         Supported features may change as the device enters different states.
@@ -746,11 +803,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         _LOGGER.debug(
             "Couldn't find a suitable mode for shuffle=%s, repeat=%s", shuffle, repeat
         )
-
-    @property
-    def sound_mode(self) -> str | None:
-        """Name of the current sound mode, not supported by DLNA."""
-        return None
 
     @property
     def sound_mode_list(self) -> list[str] | None:

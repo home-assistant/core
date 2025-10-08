@@ -1,4 +1,5 @@
 """Support for Magic Home lights."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -20,8 +21,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_MINOR_VERSION, DOMAIN, SIGNAL_STATE_UPDATED
@@ -87,7 +89,9 @@ class FluxEntity(CoordinatorEntity[FluxLedUpdateCoordinator]):
             self._attr_unique_id = f"{base_unique_id}_{key}"
         else:
             self._attr_unique_id = base_unique_id
-        self._attr_device_info = _async_device_info(self._device, coordinator.entry)
+        self._attr_device_info = _async_device_info(
+            self._device, coordinator.config_entry
+        )
 
     async def _async_ensure_device_on(self) -> None:
         """Turn the device on if it needs to be turned on before a command."""

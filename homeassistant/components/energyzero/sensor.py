@@ -1,4 +1,5 @@
 """Support for EnergyZero sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,31 +13,32 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CURRENCY_EURO, PERCENTAGE, UnitOfEnergy, UnitOfVolume
+from homeassistant.const import (
+    CURRENCY_EURO,
+    PERCENTAGE,
+    UnitOfEnergy,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SERVICE_TYPE_DEVICE_NAMES
-from .coordinator import EnergyZeroData, EnergyZeroDataUpdateCoordinator
+from .coordinator import (
+    EnergyZeroConfigEntry,
+    EnergyZeroData,
+    EnergyZeroDataUpdateCoordinator,
+)
 
 
-@dataclass
-class EnergyZeroSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnergyZeroSensorEntityDescription(SensorEntityDescription):
+    """Describes an EnergyZero sensor entity."""
 
     value_fn: Callable[[EnergyZeroData], float | datetime | None]
     service_type: str
-
-
-@dataclass
-class EnergyZeroSensorEntityDescription(
-    SensorEntityDescription, EnergyZeroSensorEntityDescriptionMixin
-):
-    """Describes a Pure Energie sensor entity."""
 
 
 SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
@@ -112,8 +114,14 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         translation_key="percentage_of_max",
         service_type="today_energy",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:percent",
         value_fn=lambda data: data.energy_today.pct_of_max_price,
+    ),
+    EnergyZeroSensorEntityDescription(
+        key="hours_priced_equal_or_lower",
+        translation_key="hours_priced_equal_or_lower",
+        service_type="today_energy",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        value_fn=lambda data: data.energy_today.hours_priced_equal_or_lower,
     ),
 )
 
@@ -127,6 +135,7 @@ def get_gas_price(data: EnergyZeroData, hours: int) -> float | None:
 
     Returns:
         The gas market price value.
+
     """
     if data.gas_today is None:
         return None
@@ -136,10 +145,12 @@ def get_gas_price(data: EnergyZeroData, hours: int) -> float | None:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EnergyZeroConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EnergyZero Sensors based on a config entry."""
-    coordinator: EnergyZeroDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         EnergyZeroSensorEntity(
             coordinator=coordinator,

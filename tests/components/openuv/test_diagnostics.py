@@ -1,8 +1,10 @@
 """Test OpenUV diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import ANY
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -19,6 +21,7 @@ async def test_entry_diagnostics(
         "entry": {
             "entry_id": config_entry.entry_id,
             "version": 2,
+            "minor_version": 1,
             "domain": "openuv",
             "title": REDACTED,
             "data": {
@@ -33,12 +36,17 @@ async def test_entry_diagnostics(
             "source": "user",
             "unique_id": REDACTED,
             "disabled_by": None,
+            "created_at": ANY,
+            "modified_at": ANY,
+            "discovery_keys": {},
+            "subentries": [],
         },
         "data": {
             "protection_window": {
-                "from_time": "2018-07-30T15:17:49.750Z",
+                "is_on": False,
+                "from_time": "2018-07-30T15:17:49.750000+00:00",
                 "from_uv": 3.2509,
-                "to_time": "2018-07-30T22:47:49.750Z",
+                "to_time": "2018-07-30T22:47:49.750000+00:00",
                 "to_uv": 3.6483,
             },
             "uv": {

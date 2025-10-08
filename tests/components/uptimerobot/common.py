@@ -1,4 +1,5 @@
 """Common constants and functions for UptimeRobot tests."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -15,6 +16,7 @@ from pyuptimerobot import (
 
 from homeassistant import config_entries
 from homeassistant.components.uptimerobot.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 
@@ -66,7 +68,7 @@ STATE_UP = "up"
 
 UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY = "binary_sensor.test_monitor"
 UPTIMEROBOT_SENSOR_TEST_ENTITY = "sensor.test_monitor"
-UPTIMEROBOT_SWITCH_TEST_ENTITY = "switch.test_monitor_active"
+UPTIMEROBOT_SWITCH_TEST_ENTITY = "switch.test_monitor"
 
 
 class MockApiResponseKey(str, Enum):
@@ -78,11 +80,11 @@ class MockApiResponseKey(str, Enum):
 
 
 def mock_uptimerobot_api_response(
-    data: dict[str, Any]
-    | None
+    data: list[dict[str, Any]]
     | list[UptimeRobotMonitor]
     | UptimeRobotAccount
-    | UptimeRobotApiError = None,
+    | UptimeRobotApiError
+    | None = None,
     status: APIStatus = APIStatus.OK,
     key: MockApiResponseKey = MockApiResponseKey.MONITORS,
 ) -> UptimeRobotApiResponse:
@@ -113,8 +115,10 @@ async def setup_uptimerobot_integration(hass: HomeAssistant) -> MockConfigEntry:
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state == STATE_ON
-    assert hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY).state == STATE_UP
-    assert mock_entry.state == config_entries.ConfigEntryState.LOADED
+    assert (entity := hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY))
+    assert entity.state == STATE_ON
+    assert (entity := hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY))
+    assert entity.state == STATE_UP
+    assert mock_entry.state is ConfigEntryState.LOADED
 
     return mock_entry

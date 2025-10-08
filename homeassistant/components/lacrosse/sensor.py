@@ -1,4 +1,5 @@
 """Support for LaCrosse sensor components."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -11,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -27,7 +28,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -59,7 +60,7 @@ SENSOR_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
         vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.positive_int,
@@ -151,7 +152,7 @@ class LaCrosseSensor(SensorEntity):
         self._attr_name = name
 
         lacrosse.register_callback(
-            int(self._config["id"]), self._callback_lacrosse, None
+            int(self._config[CONF_ID]), self._callback_lacrosse, None
         )
 
     @property
@@ -209,7 +210,7 @@ class LaCrosseHumidity(LaCrosseSensor):
 
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_icon = "mdi:water-percent"
+    _attr_device_class = SensorDeviceClass.HUMIDITY
 
     @property
     def native_value(self) -> int | None:

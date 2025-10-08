@@ -1,10 +1,12 @@
 """Config flow for PoolSense integration."""
+
 import logging
+from typing import Any
 
 from poolsense import PoolSense
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers import aiohttp_client
 
@@ -13,15 +15,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PoolSenseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PoolSense."""
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize PoolSense config flow."""
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 

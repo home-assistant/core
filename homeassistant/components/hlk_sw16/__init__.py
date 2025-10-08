@@ -1,18 +1,16 @@
 """Support for HLK-SW16 relay switches."""
+
 import logging
 
 from hlk_sw16 import create_hlk_sw16_connection
+from hlk_sw16.protocol import SW16Client
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SWITCHES, Platform
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -26,9 +24,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SWITCH]
-
-DATA_DEVICE_REGISTER = "hlk_sw16_device_register"
-DATA_DEVICE_LISTENER = "hlk_sw16_device_listener"
 
 SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string})
 
@@ -55,6 +50,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+type HlkConfigEntry = ConfigEntry[SW16Client]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Component setup, do nothing."""
@@ -73,14 +70,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HlkConfigEntry) -> bool:
     """Set up the HLK-SW16 switch."""
-    hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     address = f"{host}:{port}"
-
-    hass.data[DOMAIN][entry.entry_id] = {}
 
     @callback
     def disconnected():
@@ -109,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         keep_alive_interval=DEFAULT_KEEP_ALIVE_INTERVAL,
     )
 
-    hass.data[DOMAIN][entry.entry_id][DATA_DEVICE_REGISTER] = client
+    entry.runtime_data = client
 
     # Load entities
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -119,73 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HlkConfigEntry) -> bool:
     """Unload a config entry."""
-    client = hass.data[DOMAIN][entry.entry_id].pop(DATA_DEVICE_REGISTER)
-    client.stop()
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        if hass.data[DOMAIN][entry.entry_id]:
-            hass.data[DOMAIN].pop(entry.entry_id)
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
-    return unload_ok
-
-
-class SW16Device(Entity):
-    """Representation of a HLK-SW16 device.
-
-    Contains the common logic for HLK-SW16 entities.
-    """
-
-    _attr_should_poll = False
-
-    def __init__(self, device_port, entry_id, client):
-        """Initialize the device."""
-        # HLK-SW16 specific attributes for every component type
-        self._entry_id = entry_id
-        self._device_port = device_port
-        self._is_on = None
-        self._client = client
-        self._name = device_port
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self._entry_id}_{self._device_port}"
-
-    @callback
-    def handle_event_callback(self, event):
-        """Propagate changes through ha."""
-        _LOGGER.debug("Relay %s new state callback: %r", self.unique_id, event)
-        self._is_on = event
-        self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Return a name for the device."""
-        return self._name
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return bool(self._client.is_connected)
-
-    @callback
-    def _availability_callback(self, availability):
-        """Update availability state."""
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Register update callback."""
-        self._client.register_status_callback(
-            self.handle_event_callback, self._device_port
-        )
-        self._is_on = await self._client.status(self._device_port)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"hlk_sw16_device_available_{self._entry_id}",
-                self._availability_callback,
-            )
-        )
+    entry.runtime_data.stop()
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

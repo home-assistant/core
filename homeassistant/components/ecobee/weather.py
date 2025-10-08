@@ -1,4 +1,5 @@
 """Support for displaying weather info from Ecobee API."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -12,9 +13,10 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfLength,
     UnitOfPressure,
@@ -22,10 +24,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import EcobeeConfigEntry
 from .const import (
     DOMAIN,
     ECOBEE_MODEL_TO_NAME,
@@ -36,11 +39,11 @@ from .const import (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcobeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ecobee weather platform."""
-    data = hass.data[DOMAIN]
+    data = config_entry.runtime_data
     dev = []
     for index in range(len(data.ecobee.thermostats)):
         thermostat = data.ecobee.get_thermostat(index)
@@ -56,9 +59,10 @@ class EcobeeWeather(WeatherEntity):
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_native_visibility_unit = UnitOfLength.METERS
-    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_native_wind_speed_unit = UnitOfSpeed.MILES_PER_HOUR
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
     def __init__(self, data, name, index):
         """Initialize the Ecobee weather platform."""
@@ -161,15 +165,14 @@ class EcobeeWeather(WeatherEntity):
         time = self.weather.get("timestamp", "UNKNOWN")
         return f"Ecobee weather provided by {station} at {time} UTC"
 
-    @property
-    def forecast(self):
+    def _forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
         if "forecasts" not in self.weather:
             return None
 
-        forecasts = []
+        forecasts: list[Forecast] = []
         date = dt_util.utcnow()
-        for day in range(0, 5):
+        for day in range(5):
             forecast = _process_forecast(self.weather["forecasts"][day])
             if forecast is None:
                 continue
@@ -181,11 +184,16 @@ class EcobeeWeather(WeatherEntity):
             return forecasts
         return None
 
+    async def async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self._forecast()
+
     async def async_update(self) -> None:
         """Get the latest weather data."""
         await self.data.update()
         thermostat = self.data.ecobee.get_thermostat(self._index)
         self.weather = thermostat.get("weather")
+        await self.async_update_listeners(("daily",))
 
 
 def _process_forecast(json):

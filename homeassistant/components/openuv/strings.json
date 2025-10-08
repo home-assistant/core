@@ -37,16 +37,6 @@
       }
     }
   },
-  "issues": {
-    "deprecated_service_multiple_alternate_targets": {
-      "title": "The {deprecated_service} service is being removed",
-      "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with one of these entity IDs as the target: `{alternate_targets}`."
-    },
-    "deprecated_service_single_alternate_target": {
-      "title": "The {deprecated_service} service is being removed",
-      "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with `{alternate_targets}` as the target."
-    }
-  },
   "entity": {
     "binary_sensor": {
       "protection_window": {
@@ -61,7 +51,14 @@
         "name": "Current UV index"
       },
       "current_uv_level": {
-        "name": "Current UV level"
+        "name": "Current UV level",
+        "state": {
+          "extreme": "Extreme",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "moderate": "Moderate",
+          "very_high": "[%key:common::state::very_high%]"
+        }
       },
       "max_uv_index": {
         "name": "Max UV index"

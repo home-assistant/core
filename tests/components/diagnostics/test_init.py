@@ -1,13 +1,17 @@
 """Test the Diagnostics integration."""
-from http import HTTPStatus
-from unittest.mock import AsyncMock, Mock
 
+from datetime import datetime
+from http import HTTPStatus
+from unittest.mock import AsyncMock, Mock, patch
+
+from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.system_info import async_get_system_info
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from . import _get_diagnostics_for_config_entry, _get_diagnostics_for_device
@@ -17,7 +21,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-async def mock_diagnostics_integration(hass):
+async def mock_diagnostics_integration(hass: HomeAssistant) -> None:
     """Mock a diagnostics integration."""
     hass.config.components.add("fake_integration")
     mock_platform(
@@ -78,8 +82,21 @@ async def test_websocket(
     }
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.fake_integration.issues.test_issue.title",
+            "component.fake_integration.issues.test_issue.description",
+        ]
+    ],
+)
 async def test_download_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test download diagnostics."""
     config_entry = MockConfigEntry(domain="fake_integration")
@@ -87,23 +104,126 @@ async def test_download_diagnostics(
     hass_sys_info = await async_get_system_info(hass)
     hass_sys_info["run_as_root"] = hass_sys_info["user"] == "root"
     del hass_sys_info["user"]
+    integration = await async_get_integration(hass, "fake_integration")
+    original_manifest = integration.manifest.copy()
+    original_manifest["codeowners"] = ["@test"]
 
-    assert await _get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
+    with freeze_time(datetime(2025, 7, 9, 14, 00, 00)):
+        issue_registry.async_get_or_create(
+            domain="fake_integration",
+            issue_id="test_issue",
+            breaks_in_ha_version="2023.10.0",
+            severity=ir.IssueSeverity.WARNING,
+            is_fixable=False,
+            is_persistent=True,
+            translation_key="test_issue",
+        )
+
+    with patch.object(integration, "manifest", original_manifest):
+        response = await _get_diagnostics_for_config_entry(
+            hass, hass_client, config_entry
+        )
+    assert response == {
         "home_assistant": hass_sys_info,
-        "custom_components": {},
+        "setup_times": {},
+        "custom_components": {
+            "test": {
+                "documentation": "http://example.com",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_blocked_version": {
+                "documentation": None,
+                "requirements": [],
+                "version": "1.0.0",
+            },
+            "test_embedded": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_integration_frame": {
+                "documentation": "http://example.com",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_integration_platform": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_legacy_state_translations": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_legacy_state_translations_bad_data": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_loaded_executor": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_loaded_loop": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_raises_cancelled_error": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_raises_cancelled_error_config_entry": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_with_services": {
+                "documentation": None,
+                "requirements": [],
+                "version": "1.0",
+            },
+        },
         "integration_manifest": {
-            "codeowners": [],
+            "codeowners": ["test"],
             "dependencies": [],
             "domain": "fake_integration",
+            "integration_type": "hub",
             "is_built_in": True,
+            "overwrites_built_in": False,
             "name": "fake_integration",
             "requirements": [],
         },
         "data": {"config_entry": "info"},
+        "issues": [
+            {
+                "breaks_in_ha_version": "2023.10.0",
+                "created": "2025-07-09T14:00:00+00:00",
+                "data": None,
+                "dismissed_version": None,
+                "domain": "fake_integration",
+                "is_fixable": False,
+                "is_persistent": True,
+                "issue_domain": None,
+                "issue_id": "test_issue",
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "test_issue",
+                "translation_placeholders": None,
+            },
+        ],
     }
 
-    dev_reg = async_get(hass)
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, identifiers={("test", "test")}
     )
 
@@ -111,16 +231,102 @@ async def test_download_diagnostics(
         hass, hass_client, config_entry, device
     ) == {
         "home_assistant": hass_sys_info,
-        "custom_components": {},
+        "custom_components": {
+            "test": {
+                "documentation": "http://example.com",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_blocked_version": {
+                "documentation": None,
+                "requirements": [],
+                "version": "1.0.0",
+            },
+            "test_embedded": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_integration_frame": {
+                "documentation": "http://example.com",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_integration_platform": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_legacy_state_translations": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_legacy_state_translations_bad_data": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_loaded_executor": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_loaded_loop": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_raises_cancelled_error": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_package_raises_cancelled_error_config_entry": {
+                "documentation": "http://test-package.io",
+                "requirements": [],
+                "version": "1.2.3",
+            },
+            "test_with_services": {
+                "documentation": None,
+                "requirements": [],
+                "version": "1.0",
+            },
+        },
         "integration_manifest": {
             "codeowners": [],
             "dependencies": [],
             "domain": "fake_integration",
+            "integration_type": "hub",
             "is_built_in": True,
+            "overwrites_built_in": False,
             "name": "fake_integration",
             "requirements": [],
         },
         "data": {"device": "info"},
+        "issues": [
+            {
+                "breaks_in_ha_version": "2023.10.0",
+                "created": "2025-07-09T14:00:00+00:00",
+                "data": None,
+                "dismissed_version": None,
+                "domain": "fake_integration",
+                "is_fixable": False,
+                "is_persistent": True,
+                "issue_domain": None,
+                "issue_id": "test_issue",
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "test_issue",
+                "translation_placeholders": None,
+            },
+        ],
+        "setup_times": {},
     }
 
 

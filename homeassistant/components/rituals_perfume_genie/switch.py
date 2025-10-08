@@ -1,4 +1,5 @@
 """Support for Rituals Perfume Genie switches."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -10,34 +11,27 @@ from pyrituals import Diffuser
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
-@dataclass
-class RitualsEntityDescriptionMixin:
-    """Mixin values for Rituals entities."""
+@dataclass(frozen=True, kw_only=True)
+class RitualsSwitchEntityDescription(SwitchEntityDescription):
+    """Class describing Rituals switch entities."""
 
     is_on_fn: Callable[[Diffuser], bool]
     turn_on_fn: Callable[[Diffuser], Awaitable[None]]
     turn_off_fn: Callable[[Diffuser], Awaitable[None]]
 
 
-@dataclass
-class RitualsSwitchEntityDescription(
-    SwitchEntityDescription, RitualsEntityDescriptionMixin
-):
-    """Class describing Rituals switch entities."""
-
-
 ENTITY_DESCRIPTIONS = (
     RitualsSwitchEntityDescription(
         key="is_on",
         name=None,
-        icon="mdi:fan",
+        translation_key="fan",
         is_on_fn=lambda diffuser: diffuser.is_on,
         turn_on_fn=lambda diffuser: diffuser.turn_on(),
         turn_off_fn=lambda diffuser: diffuser.turn_off(),
@@ -48,7 +42,7 @@ ENTITY_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the diffuser switch."""
     coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][

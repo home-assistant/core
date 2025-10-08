@@ -1,4 +1,6 @@
 """The tests for the Input select component."""
+
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -35,7 +37,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None, minor_version=STORAGE_VERSION_MINOR):
@@ -68,17 +70,18 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def test_config(hass: HomeAssistant) -> None:
-    """Test config."""
-    invalid_configs = [
+@pytest.mark.parametrize(
+    "invalid_config",
+    [
         None,
-        {},
         {"name with space": None},
         {"bad_initial": {"options": [1, 2], "initial": 3}},
-    ]
+    ],
+)
+async def test_config(hass: HomeAssistant, invalid_config) -> None:
+    """Test config."""
 
-    for cfg in invalid_configs:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: invalid_config})
 
 
 async def test_select_option(hass: HomeAssistant) -> None:
@@ -447,11 +450,13 @@ async def test_input_select_context(
 
 
 async def test_reload(
-    hass: HomeAssistant, hass_admin_user: MockUser, hass_read_only_user: MockUser
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
 ) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
-    ent_reg = er.async_get(hass)
 
     assert await async_setup_component(
         hass,
@@ -481,9 +486,9 @@ async def test_reload(
     assert state_3 is None
     assert state_1.state == "middle option"
     assert state_2.state == "an option"
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -526,9 +531,9 @@ async def test_reload(
     assert state_3 is not None
     assert state_2.state == "an option"
     assert state_3.state == "newer option"
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
 
 
 async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
@@ -611,18 +616,20 @@ async def test_ws_list(
 
 
 async def test_ws_delete(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
 ) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
 
@@ -634,11 +641,14 @@ async def test_ws_delete(
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
 async def test_update(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
 ) -> None:
     """Test updating options updates the state."""
 
@@ -651,11 +661,10 @@ async def test_update(
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
 
@@ -697,6 +706,7 @@ async def test_update(
 
 async def test_update_duplicates(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     hass_ws_client: WebSocketGenerator,
     storage_setup,
     caplog: pytest.LogCaptureFixture,
@@ -712,11 +722,10 @@ async def test_update_duplicates(
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
 
@@ -734,7 +743,7 @@ async def test_update_duplicates(
     )
     resp = await client.receive_json()
     assert not resp["success"]
-    assert resp["error"]["code"] == "unknown_error"
+    assert resp["error"]["code"] == "home_assistant_error"
     assert resp["error"]["message"] == "Duplicate options are not allowed"
 
     state = hass.states.get(input_entity_id)
@@ -742,18 +751,20 @@ async def test_update_duplicates(
 
 
 async def test_ws_create(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
 ) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
     input_id = "new_input"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
     client = await hass_ws_client(hass)
 
@@ -776,6 +787,7 @@ async def test_ws_create(
 
 async def test_ws_create_duplicates(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     hass_ws_client: WebSocketGenerator,
     storage_setup,
     caplog: pytest.LogCaptureFixture,
@@ -785,11 +797,10 @@ async def test_ws_create_duplicates(
 
     input_id = "new_input"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
     client = await hass_ws_client(hass)
 
@@ -804,7 +815,7 @@ async def test_ws_create_duplicates(
     )
     resp = await client.receive_json()
     assert not resp["success"]
-    assert resp["error"]["code"] == "unknown_error"
+    assert resp["error"]["code"] == "home_assistant_error"
     assert resp["error"]["message"] == "Duplicate options are not allowed"
 
     assert not hass.states.get(input_entity_id)

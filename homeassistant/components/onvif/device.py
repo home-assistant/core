@@ -1,4 +1,5 @@
 """ONVIF device abstraction."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,7 +9,7 @@ import os
 import time
 from typing import Any
 
-from httpx import RequestError
+import aiohttp
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
@@ -24,7 +25,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ABSOLUTE_MOVE,
@@ -217,12 +218,13 @@ class ONVIFDevice:
             try:
                 await device_mgmt.SetSystemDateAndTime(dt_param)
                 LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
-                return
             # Some cameras don't support setting the timezone and will throw an IndexError
             # if we try to set it. If we get an error, try again without the timezone.
             except (IndexError, Fault):
                 if idx == timezone_max_idx:
                     raise
+            else:
+                return
 
     async def async_check_date_and_time(self) -> None:
         """Warns if device and system date not synced."""
@@ -233,7 +235,7 @@ class ONVIFDevice:
         LOGGER.debug("%s: Retrieving current device date/time", self.name)
         try:
             device_time = await device_mgmt.GetSystemDateAndTime()
-        except RequestError as err:
+        except (TimeoutError, aiohttp.ClientError, Fault) as err:
             LOGGER.warning(
                 "Couldn't get device '%s' date/time. Error: %s", self.name, err
             )
@@ -249,28 +251,34 @@ class ONVIFDevice:
 
         LOGGER.debug("%s: Device time: %s", self.name, device_time)
 
-        tzone = dt_util.DEFAULT_TIME_ZONE
+        tzone = dt_util.get_default_time_zone()
         cdate = device_time.LocalDateTime
         if device_time.UTCDateTime:
             tzone = dt_util.UTC
             cdate = device_time.UTCDateTime
         elif device_time.TimeZone:
-            tzone = dt_util.get_time_zone(device_time.TimeZone.TZ) or tzone
+            tzone = await dt_util.async_get_time_zone(device_time.TimeZone.TZ) or tzone
 
         if cdate is None:
             LOGGER.warning("%s: Could not retrieve date/time on this camera", self.name)
             return
 
-        cam_date = dt.datetime(
-            cdate.Date.Year,
-            cdate.Date.Month,
-            cdate.Date.Day,
-            cdate.Time.Hour,
-            cdate.Time.Minute,
-            cdate.Time.Second,
-            0,
-            tzone,
-        )
+        try:
+            cam_date = dt.datetime(
+                cdate.Date.Year,
+                cdate.Date.Month,
+                cdate.Date.Day,
+                cdate.Time.Hour,
+                cdate.Time.Minute,
+                cdate.Time.Second,
+                0,
+                tzone,
+            )
+        except ValueError as err:
+            LOGGER.warning(
+                "%s: Could not parse date/time from camera: %s", self.name, err
+            )
+            return
 
         cam_date_utc = cam_date.astimezone(dt_util.UTC)
 
@@ -295,7 +303,7 @@ class ONVIFDevice:
         # Set Date and Time ourselves if Date and Time is set manually in the camera.
         try:
             await self.async_manually_set_date_and_time()
-        except (RequestError, TransportError, IndexError, Fault):
+        except (TimeoutError, aiohttp.ClientError, TransportError, IndexError, Fault):
             LOGGER.warning("%s: Could not sync date/time on this camera", self.name)
             self._async_log_time_out_of_sync(cam_date_utc, system_date)
 
@@ -343,7 +351,7 @@ class ONVIFDevice:
                     mac = interface.Info.HwAddress
         except Fault as fault:
             if "not implemented" not in fault.message:
-                raise fault
+                raise
 
             LOGGER.debug(
                 "Couldn't get network interfaces from ONVIF device '%s'. Error: %s",
@@ -387,8 +395,12 @@ class ONVIFDevice:
                 "WSPullPointSupport"
             )
             LOGGER.debug("%s: WSPullPointSupport: %s", self.name, pull_point_support)
+            # Even if the camera claims it does not support PullPoint, try anyway
+            # since at least some AXIS and Bosch models do. The reverse is also
+            # true where some cameras claim they support PullPoint but don't so
+            # the only way to know is to try.
             return await self.events.async_start(
-                pull_point_support is not False,
+                True,
                 self.config_entry.options.get(
                     CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
                 ),

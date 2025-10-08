@@ -1,14 +1,18 @@
 """Basic checks for HomeKit sensor."""
+
+from collections.abc import Callable
+
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import Helper, get_next_aid, setup_test_component
+from .common import Helper, setup_test_component
 
 
-def create_switch_with_spray_level(accessory):
+def create_switch_with_spray_level(accessory: Accessory) -> Service:
     """Define battery level characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
 
@@ -29,9 +33,12 @@ def create_switch_with_spray_level(accessory):
     return service
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
+) -> None:
     """Test a we can migrate a number unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     number = entity_registry.async_get_or_create(
         "number",
@@ -39,7 +46,7 @@ async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
         f"homekit-0001-aid:{aid}-sid:8-cid:9",
         suggested_object_id="testdevice_spray_quantity",
     )
-    await setup_test_component(hass, create_switch_with_spray_level)
+    await setup_test_component(hass, aid, create_switch_with_spray_level)
 
     assert (
         entity_registry.async_get(number.entity_id).unique_id
@@ -47,9 +54,13 @@ async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_read_number(hass: HomeAssistant, utcnow) -> None:
+async def test_read_number(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test a switch service that has a sensor characteristic is correctly handled."""
-    helper = await setup_test_component(hass, create_switch_with_spray_level)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_switch_with_spray_level
+    )
 
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
     spray_level = Helper(
@@ -73,9 +84,13 @@ async def test_read_number(hass: HomeAssistant, utcnow) -> None:
     assert state.state == "5"
 
 
-async def test_write_number(hass: HomeAssistant, utcnow) -> None:
+async def test_write_number(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test a switch service that has a sensor characteristic is correctly handled."""
-    helper = await setup_test_component(hass, create_switch_with_spray_level)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_switch_with_spray_level
+    )
 
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
     spray_level = Helper(

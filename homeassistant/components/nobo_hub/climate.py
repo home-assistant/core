@@ -1,4 +1,5 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -17,14 +18,10 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_NAME,
-    PRECISION_TENTHS,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_NAME, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -43,13 +40,13 @@ SUPPORT_FLAGS = (
 PRESET_MODES = [PRESET_NONE, PRESET_COMFORT, PRESET_ECO, PRESET_AWAY]
 
 MIN_TEMPERATURE = 7
-MAX_TEMPERATURE = 40
+MAX_TEMPERATURE = 30
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Nobø Ecohub platform from UI configuration."""
 
@@ -78,6 +75,8 @@ class NoboZone(ClimateEntity):
     _attr_max_temp = MAX_TEMPERATURE
     _attr_min_temp = MIN_TEMPERATURE
     _attr_precision = PRECISION_TENTHS
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
+    _attr_hvac_mode = HVACMode.AUTO
     _attr_preset_modes = PRESET_MODES
     _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -89,8 +88,6 @@ class NoboZone(ClimateEntity):
         self._id = zone_id
         self._nobo = hub
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}"
-        self._attr_hvac_mode = HVACMode.AUTO
-        self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
         self._override_type = override_type
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},

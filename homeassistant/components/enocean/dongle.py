@@ -1,4 +1,5 @@
 """Representation of an EnOcean dongle."""
+
 import glob
 import logging
 from os.path import basename, normpath
@@ -18,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 class EnOceanDongle:
     """Representation of an EnOcean dongle.
 
-    The dongle is responsible for receiving the ENOcean frames,
+    The dongle is responsible for receiving the EnOcean frames,
     creating devices if needed, and dispatching messages to platforms.
     """
 
@@ -62,7 +63,7 @@ class EnOceanDongle:
     def callback(self, packet):
         """Handle EnOcean device's callback.
 
-        This is the callback function called by python-enocan whenever there
+        This is the callback function called by python-enocean whenever there
         is an incoming packet.
         """
         if isinstance(packet, RadioPacket):
@@ -71,7 +72,7 @@ class EnOceanDongle:
 
 
 def detect():
-    """Return a list of candidate paths for USB ENOcean dongles.
+    """Return a list of candidate paths for USB EnOcean dongles.
 
     This method is currently a bit simplistic, it may need to be
     improved to support more configurations and OS.
@@ -90,7 +91,7 @@ def validate_path(path: str):
         # Creating the serial communicator will raise an exception
         # if it cannot connect
         SerialCommunicator(port=path)
-        return True
     except serial.SerialException as exception:
         _LOGGER.warning("Dongle path %s is invalid: %s", path, str(exception))
         return False
+    return True

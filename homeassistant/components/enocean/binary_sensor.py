@@ -1,4 +1,5 @@
 """Support for EnOcean binary sensors."""
+
 from __future__ import annotations
 
 from enocean.utils import from_hex_string, to_hex_string
@@ -6,21 +7,21 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .config_flow import (
-    CONF_ENOCEAN_DEVICE_TYPE_ID,
-    CONF_ENOCEAN_DEVICES,
-)
-from .device import EnOceanEntity
+from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
+from .entity import EnOceanEntity
 from .importer import (
     EnOceanPlatformConfig,
     register_platform_config_for_migration_to_config_entry,
@@ -34,7 +35,7 @@ DEFAULT_NAME = ""
 DEPENDENCIES = ["enocean"]
 EVENT_BUTTON_PRESSED = "button_pressed"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -51,14 +52,14 @@ def setup_platform(
 ) -> None:
     """Set up the Binary Sensor platform for EnOcean."""
     register_platform_config_for_migration_to_config_entry(
-        EnOceanPlatformConfig(platform=Platform.BINARY_SENSOR.value, config=config)
+        EnOceanPlatformConfig(platform=Platform.BINARY_SENSOR, config=config)
     )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])

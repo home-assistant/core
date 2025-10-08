@@ -17,6 +17,10 @@
       "is_armed_night": "{entity_name} is armed night",
       "is_armed_vacation": "{entity_name} is armed vacation"
     },
+    "extra_fields": {
+      "code": "Code",
+      "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
     "trigger_type": {
       "triggered": "{entity_name} triggered",
       "disarmed": "{entity_name} disarmed",
@@ -61,6 +65,83 @@
           }
         }
       }
+    }
+  },
+  "services": {
+    "alarm_disarm": {
+      "name": "Disarm",
+      "description": "Disarms the alarm.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "Code to disarm the alarm."
+        }
+      }
+    },
+    "alarm_arm_custom_bypass": {
+      "name": "Arm with custom bypass",
+      "description": "Arms the alarm while allowing to bypass a custom area.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "Code to arm the alarm."
+        }
+      }
+    },
+    "alarm_arm_home": {
+      "name": "Arm home",
+      "description": "Arms the alarm in the home mode.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
+        }
+      }
+    },
+    "alarm_arm_away": {
+      "name": "Arm away",
+      "description": "Arms the alarm in the away mode.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
+        }
+      }
+    },
+    "alarm_arm_night": {
+      "name": "Arm night",
+      "description": "Arms the alarm in the night mode.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
+        }
+      }
+    },
+    "alarm_arm_vacation": {
+      "name": "Arm vacation",
+      "description": "Arms the alarm in the vacation mode.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
+        }
+      }
+    },
+    "alarm_trigger": {
+      "name": "Trigger",
+      "description": "Triggers the alarm manually.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "code_arm_required": {
+      "message": "Arming requires a code but none was given for {entity_id}."
     }
   }
 }

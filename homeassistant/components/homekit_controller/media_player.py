@@ -1,4 +1,5 @@
 """Support for HomeKit Controller Televisions."""
+
 from __future__ import annotations
 
 import logging
@@ -21,7 +22,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
@@ -40,7 +41,7 @@ HK_TO_HA_STATE = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Homekit television."""
     hkid: str = config_entry.data["AccessoryPairingID"]
@@ -82,7 +83,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        features = MediaPlayerEntityFeature(0)
+        features = MediaPlayerEntityFeature.TURN_OFF | MediaPlayerEntityFeature.TURN_ON
 
         if self.service.has(CharacteristicsTypes.ACTIVE_IDENTIFIER):
             features |= MediaPlayerEntityFeature.SELECT_SOURCE
@@ -159,6 +160,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
             characteristics={CharacteristicsTypes.IDENTIFIER: active_identifier},
             parent_service=this_tv,
         )
+        assert input_source
         char = input_source[CharacteristicsTypes.CONFIGURED_NAME]
         return char.value
 
@@ -174,6 +176,14 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
             return HK_TO_HA_STATE.get(homekit_state, MediaPlayerState.ON)
 
         return MediaPlayerState.ON
+
+    async def async_turn_on(self) -> None:
+        """Turn the tv on."""
+        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: 1})
+
+    async def async_turn_off(self) -> None:
+        """Turn the tv off."""
+        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: 0})
 
     async def async_media_play(self) -> None:
         """Send play command."""

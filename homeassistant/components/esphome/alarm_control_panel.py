@@ -1,11 +1,14 @@
 """Support for ESPHome Alarm Control Panel."""
+
 from __future__ import annotations
+
+from functools import partial
 
 from aioesphomeapi import (
     AlarmControlPanelCommand,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelEntityState as ESPHomeAlarmControlPanelEntityState,
     AlarmControlPanelInfo,
-    AlarmControlPanelState,
+    AlarmControlPanelState as ESPHomeAlarmControlPanelState,
     APIIntEnum,
     EntityInfo,
 )
@@ -13,51 +16,41 @@ from aioesphomeapi import (
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_DISARMING,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
-)
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
 from .entity import (
     EsphomeEntity,
+    convert_api_error_ha_error,
     esphome_state_property,
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
 
+PARALLEL_UPDATES = 0
+
 _ESPHOME_ACP_STATE_TO_HASS_STATE: EsphomeEnumMapper[
-    AlarmControlPanelState, str
+    ESPHomeAlarmControlPanelState, AlarmControlPanelState
 ] = EsphomeEnumMapper(
     {
-        AlarmControlPanelState.DISARMED: STATE_ALARM_DISARMED,
-        AlarmControlPanelState.ARMED_HOME: STATE_ALARM_ARMED_HOME,
-        AlarmControlPanelState.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
-        AlarmControlPanelState.ARMED_NIGHT: STATE_ALARM_ARMED_NIGHT,
-        AlarmControlPanelState.ARMED_VACATION: STATE_ALARM_ARMED_VACATION,
-        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: STATE_ALARM_ARMED_CUSTOM_BYPASS,
-        AlarmControlPanelState.PENDING: STATE_ALARM_PENDING,
-        AlarmControlPanelState.ARMING: STATE_ALARM_ARMING,
-        AlarmControlPanelState.DISARMING: STATE_ALARM_DISARMING,
-        AlarmControlPanelState.TRIGGERED: STATE_ALARM_TRIGGERED,
+        ESPHomeAlarmControlPanelState.DISARMED: AlarmControlPanelState.DISARMED,
+        ESPHomeAlarmControlPanelState.ARMED_HOME: AlarmControlPanelState.ARMED_HOME,
+        ESPHomeAlarmControlPanelState.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
+        ESPHomeAlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
+        ESPHomeAlarmControlPanelState.ARMED_VACATION: AlarmControlPanelState.ARMED_VACATION,
+        ESPHomeAlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+        ESPHomeAlarmControlPanelState.PENDING: AlarmControlPanelState.PENDING,
+        ESPHomeAlarmControlPanelState.ARMING: AlarmControlPanelState.ARMING,
+        ESPHomeAlarmControlPanelState.DISARMING: AlarmControlPanelState.DISARMING,
+        ESPHomeAlarmControlPanelState.TRIGGERED: AlarmControlPanelState.TRIGGERED,
     }
 )
 
 
 class EspHomeACPFeatures(APIIntEnum):
-    """ESPHome AlarmCintolPanel feature numbers."""
+    """ESPHome AlarmControlPanel feature numbers."""
 
     ARM_HOME = 1
     ARM_AWAY = 2
@@ -67,22 +60,8 @@ class EspHomeACPFeatures(APIIntEnum):
     ARM_VACATION = 32
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome switches based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=AlarmControlPanelInfo,
-        entity_type=EsphomeAlarmControlPanel,
-        state_type=AlarmControlPanelEntityState,
-    )
-
-
 class EsphomeAlarmControlPanel(
-    EsphomeEntity[AlarmControlPanelInfo, AlarmControlPanelEntityState],
+    EsphomeEntity[AlarmControlPanelInfo, ESPHomeAlarmControlPanelEntityState],
     AlarmControlPanelEntity,
 ):
     """An Alarm Control Panel implementation for ESPHome."""
@@ -93,17 +72,17 @@ class EsphomeAlarmControlPanel(
         super()._on_static_info_update(static_info)
         static_info = self._static_info
         feature = 0
-        if self._static_info.supported_features & EspHomeACPFeatures.ARM_HOME:
+        if static_info.supported_features & EspHomeACPFeatures.ARM_HOME:
             feature |= AlarmControlPanelEntityFeature.ARM_HOME
-        if self._static_info.supported_features & EspHomeACPFeatures.ARM_AWAY:
+        if static_info.supported_features & EspHomeACPFeatures.ARM_AWAY:
             feature |= AlarmControlPanelEntityFeature.ARM_AWAY
-        if self._static_info.supported_features & EspHomeACPFeatures.ARM_NIGHT:
+        if static_info.supported_features & EspHomeACPFeatures.ARM_NIGHT:
             feature |= AlarmControlPanelEntityFeature.ARM_NIGHT
-        if self._static_info.supported_features & EspHomeACPFeatures.TRIGGER:
+        if static_info.supported_features & EspHomeACPFeatures.TRIGGER:
             feature |= AlarmControlPanelEntityFeature.TRIGGER
-        if self._static_info.supported_features & EspHomeACPFeatures.ARM_CUSTOM_BYPASS:
+        if static_info.supported_features & EspHomeACPFeatures.ARM_CUSTOM_BYPASS:
             feature |= AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
-        if self._static_info.supported_features & EspHomeACPFeatures.ARM_VACATION:
+        if static_info.supported_features & EspHomeACPFeatures.ARM_VACATION:
             feature |= AlarmControlPanelEntityFeature.ARM_VACATION
         self._attr_supported_features = AlarmControlPanelEntityFeature(feature)
         self._attr_code_format = (
@@ -113,48 +92,84 @@ class EsphomeAlarmControlPanel(
 
     @property
     @esphome_state_property
-    def state(self) -> str | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         return _ESPHOME_ACP_STATE_TO_HASS_STATE.from_esphome(self._state.state)
 
+    @convert_api_error_ha_error
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.DISARM, code
+        self._client.alarm_control_panel_command(
+            self._key,
+            AlarmControlPanelCommand.DISARM,
+            code,
+            device_id=self._static_info.device_id,
         )
 
+    @convert_api_error_ha_error
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.ARM_HOME, code
+        self._client.alarm_control_panel_command(
+            self._key,
+            AlarmControlPanelCommand.ARM_HOME,
+            code,
+            device_id=self._static_info.device_id,
         )
 
+    @convert_api_error_ha_error
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.ARM_AWAY, code
+        self._client.alarm_control_panel_command(
+            self._key,
+            AlarmControlPanelCommand.ARM_AWAY,
+            code,
+            device_id=self._static_info.device_id,
         )
 
+    @convert_api_error_ha_error
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.ARM_NIGHT, code
+        self._client.alarm_control_panel_command(
+            self._key,
+            AlarmControlPanelCommand.ARM_NIGHT,
+            code,
+            device_id=self._static_info.device_id,
         )
 
+    @convert_api_error_ha_error
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.ARM_CUSTOM_BYPASS, code
+        self._client.alarm_control_panel_command(
+            self._key,
+            AlarmControlPanelCommand.ARM_CUSTOM_BYPASS,
+            code,
+            device_id=self._static_info.device_id,
         )
 
+    @convert_api_error_ha_error
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.ARM_VACATION, code
+        self._client.alarm_control_panel_command(
+            self._key,
+            AlarmControlPanelCommand.ARM_VACATION,
+            code,
+            device_id=self._static_info.device_id,
         )
 
+    @convert_api_error_ha_error
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
-        await self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.TRIGGER, code
+        self._client.alarm_control_panel_command(
+            self._key,
+            AlarmControlPanelCommand.TRIGGER,
+            code,
+            device_id=self._static_info.device_id,
         )
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=AlarmControlPanelInfo,
+    entity_type=EsphomeAlarmControlPanel,
+    state_type=ESPHomeAlarmControlPanelEntityState,
+)

@@ -1,6 +1,6 @@
 """Support for Ebusd daemon for communication with eBUS heating systems."""
+
 import logging
-import socket
 
 import ebusdpy
 import voluptuous as vol
@@ -13,7 +13,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 
@@ -67,21 +67,20 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         ebusdpy.init(server_address)
-        hass.data[DOMAIN] = EbusdData(server_address, circuit)
-
-        sensor_config = {
-            CONF_MONITORED_CONDITIONS: monitored_conditions,
-            "client_name": name,
-            "sensor_types": SENSOR_TYPES[circuit],
-        }
-        load_platform(hass, Platform.SENSOR, DOMAIN, sensor_config, config)
-
-        hass.services.register(DOMAIN, SERVICE_EBUSD_WRITE, hass.data[DOMAIN].write)
-
-        _LOGGER.debug("Ebusd integration setup completed")
-        return True
-    except (socket.timeout, OSError):
+    except (TimeoutError, OSError):
         return False
+    hass.data[DOMAIN] = EbusdData(server_address, circuit)
+    sensor_config = {
+        CONF_MONITORED_CONDITIONS: monitored_conditions,
+        "client_name": name,
+        "sensor_types": SENSOR_TYPES[circuit],
+    }
+    load_platform(hass, Platform.SENSOR, DOMAIN, sensor_config, config)
+
+    hass.services.register(DOMAIN, SERVICE_EBUSD_WRITE, hass.data[DOMAIN].write)
+
+    _LOGGER.debug("Ebusd integration setup completed")
+    return True
 
 
 class EbusdData:
@@ -117,7 +116,11 @@ class EbusdData:
         try:
             _LOGGER.debug("Opening socket to ebusd %s", name)
             command_result = ebusdpy.write(self._address, self._circuit, name, value)
-            if command_result is not None and "done" not in command_result:
+            if (
+                command_result is not None
+                and "done" not in command_result
+                and "empty" not in command_result
+            ):
                 _LOGGER.warning("Write command failed: %s", name)
         except RuntimeError as err:
             _LOGGER.error(err)

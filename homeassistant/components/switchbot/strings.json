@@ -3,8 +3,29 @@
     "flow_title": "{name} ({address})",
     "step": {
       "user": {
+        "description": "One or more of your Bluetooth adapters is using passive scanning, which may not discover all SwitchBot devices. Would you like to sign in to your SwitchBot account to download device information and automate discovery? If you're not sure, we recommend signing in.",
+        "menu_options": {
+          "cloud_login": "Sign in to SwitchBot account",
+          "select_device": "Continue without signing in"
+        }
+      },
+      "cloud_login": {
+        "description": "Please provide your SwitchBot app username and password. This data won't be saved and is only used to retrieve device model information to automate discovery. Usernames and passwords are case-sensitive.",
         "data": {
-          "address": "Device address"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::switchbot::config::step::encrypted_auth::data_description::username%]",
+          "password": "[%key:component::switchbot::config::step::encrypted_auth::data_description::password%]"
+        }
+      },
+      "select_device": {
+        "data": {
+          "address": "MAC address"
+        },
+        "data_description": {
+          "address": "The Bluetooth MAC address of your SwitchBot device"
         }
       },
       "confirm": {
@@ -14,47 +35,63 @@
         "description": "The {name} device requires a password",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The password required for the Bot device access"
         }
       },
-      "lock_key": {
+      "encrypted_key": {
         "description": "The {name} device requires encryption key, details on how to obtain it can be found in the documentation.",
         "data": {
           "key_id": "Key ID",
           "encryption_key": "Encryption key"
+        },
+        "data_description": {
+          "key_id": "The ID of the encryption key",
+          "encryption_key": "The encryption key for the device"
         }
       },
-      "lock_auth": {
-        "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your locks encryption key. Usernames and passwords are case sensitive.",
+      "encrypted_auth": {
+        "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your device's encryption key. Usernames and passwords are case-sensitive.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "The username of your SwitchBot account",
+          "password": "The password of your SwitchBot account"
         }
       },
-      "lock_choose_method": {
-        "description": "A SwitchBot lock can be set up in Home Assistant in two different ways.\n\nYou can enter the key id and encryption key yourself, or Home Assistant can import them from your SwitchBot account.",
+      "encrypted_choose_method": {
+        "description": "An encrypted SwitchBot device can be set up in Home Assistant in two different ways.\n\nYou can enter the key ID and encryption key yourself, or Home Assistant can import them from your SwitchBot account.",
         "menu_options": {
-          "lock_auth": "SwitchBot account (recommended)",
-          "lock_key": "Enter lock encryption key manually"
+          "encrypted_auth": "SwitchBot account (recommended)",
+          "encrypted_key": "Enter encryption key manually"
         }
       }
     },
     "error": {
-      "encryption_key_invalid": "Key ID or Encryption key is invalid",
+      "encryption_key_invalid": "Key ID or encryption key is invalid",
       "auth_failed": "Authentication failed: {error_detail}"
     },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "No supported SwitchBot devices found in range; If the device is in range, ensure the scanner has active scanning enabled, as SwitchBot devices cannot be discovered with passive scans. Active scans can be disabled once the device is configured. If you need clarification on whether the device is in-range, download the diagnostics for the integration that provides your Bluetooth adapter or proxy and check if the MAC address of the SwitchBot device is present.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "switchbot_unsupported_type": "Unsupported Switchbot Type."
+      "api_error": "Error while communicating with SwitchBot API: {error_detail}",
+      "switchbot_unsupported_type": "Unsupported SwitchBot type."
     }
   },
   "options": {
     "step": {
       "init": {
         "data": {
-          "retry_count": "Retry count"
+          "retry_count": "Retry count",
+          "lock_force_nightlatch": "Force Nightlatch operation mode"
+        },
+        "data_description": {
+          "retry_count": "How many times to retry sending commands to your SwitchBot devices",
+          "lock_force_nightlatch": "Force Nightlatch operation mode even if Nightlatch is not detected"
         }
       }
     }
@@ -66,9 +103,6 @@
       },
       "door_timeout": {
         "name": "Timeout"
-      },
-      "light": {
-        "name": "[%key:component::binary_sensor::entity_component::light::name%]"
       },
       "door_unclosed_alarm": {
         "name": "Unclosed alarm"
@@ -87,17 +121,26 @@
       "wifi_signal": {
         "name": "Wi-Fi signal"
       },
-      "battery": {
-        "name": "[%key:component::sensor::entity_component::battery::name%]"
-      },
       "light_level": {
         "name": "Light level"
       },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      "aqi_quality_level": {
+        "name": "Air quality level",
+        "state": {
+          "excellent": "Excellent",
+          "good": "Good",
+          "moderate": "Moderate",
+          "unhealthy": "Unhealthy"
+        }
       },
-      "power": {
-        "name": "[%key:component::sensor::entity_component::power::name%]"
+      "water_level": {
+        "name": "Water level",
+        "state": {
+          "empty": "[%key:common::state::empty%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
       }
     },
     "cover": {
@@ -119,6 +162,22 @@
             "state": {
               "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
               "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      },
+      "evaporative_humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "high": "[%key:common::state::high%]",
+              "medium": "[%key:common::state::medium%]",
+              "low": "[%key:common::state::low%]",
+              "quiet": "Quiet",
+              "target_humidity": "Target humidity",
+              "sleep": "Sleep",
+              "auto": "[%key:common::state::auto%]",
+              "drying_filter": "Drying filter"
             }
           }
         }
@@ -153,6 +212,124 @@
           }
         }
       }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "normal": "[%key:common::state::normal%]",
+              "natural": "Natural",
+              "sleep": "Sleep",
+              "baby": "Baby"
+            }
+          }
+        }
+      },
+      "air_purifier": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "level_1": "Level 1",
+              "level_2": "Level 2",
+              "level_3": "Level 3",
+              "auto": "[%key:common::state::auto%]",
+              "pet": "Pet",
+              "sleep": "Sleep"
+            }
+          }
+        }
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "christmas": "Christmas",
+              "halloween": "Halloween",
+              "sunset": "Sunset",
+              "vitality": "Vitality",
+              "flashing": "Flashing",
+              "strobe": "Strobe",
+              "fade": "Fade",
+              "smooth": "Smooth",
+              "forest": "Forest",
+              "ocean": "Ocean",
+              "autumn": "Autumn",
+              "cool": "Cool",
+              "flow": "Flow",
+              "relax": "Relax",
+              "modern": "Modern",
+              "rose": "Rose",
+              "colorful": "Colorful",
+              "flickering": "Flickering",
+              "breathing": "Breathing",
+              "romance": "Romance",
+              "energy": "Energy",
+              "heartbeat": "Heartbeat",
+              "party": "Party",
+              "dynamic": "Dynamic",
+              "mystery": "Mystery",
+              "lightning": "Lightning",
+              "rock": "Rock",
+              "starlight": "Starlight",
+              "valentine_day": "Valentine's Day",
+              "dream": "Dream",
+              "alarm": "Alarm",
+              "fireworks": "Fireworks",
+              "waves": "Waves",
+              "rainbow": "Rainbow",
+              "game": "Game",
+              "meditation": "Meditation",
+              "starlit_sky": "Starlit Sky",
+              "sleep": "Sleep",
+              "movie": "Movie",
+              "sunrise": "Sunrise",
+              "new_year": "New Year",
+              "cherry_blossom": "Cherry Blossom"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "operation_error": {
+      "message": "An error occurred while performing the action: {error}"
+    },
+    "value_error": {
+      "message": "Switchbot device initialization failed because of incorrect configuration parameters: {error}"
+    },
+    "advertising_state_error": {
+      "message": "{address} is not advertising state"
+    },
+    "device_not_found_error": {
+      "message": "Could not find Switchbot {sensor_type} with address {address}"
     }
   }
 }

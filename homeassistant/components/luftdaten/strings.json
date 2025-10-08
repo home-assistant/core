@@ -3,10 +3,13 @@
     "step": {
       "user": {
         "data": {
-          "station_id": "Sensor ID",
+          "sensor_id": "Sensor ID",
           "show_on_map": "Show on map"
         }
       }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
@@ -16,7 +19,7 @@
   },
   "entity": {
     "sensor": {
-      "pressure_at_sealevel": { "name": "Pressure at sealevel" }
+      "pressure_at_sealevel": { "name": "Pressure at sea level" }
     }
   }
 }

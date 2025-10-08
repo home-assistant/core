@@ -1,4 +1,5 @@
 """Provide the device automations for Climate."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -71,7 +72,7 @@ async def async_get_conditions(
 
         conditions.append({**base_condition, CONF_TYPE: "is_hvac_mode"})
 
-        if supported_features & const.SUPPORT_PRESET_MODE:
+        if supported_features & const.ClimateEntityFeature.PRESET_MODE:
             conditions.append({**base_condition, CONF_TYPE: "is_preset_mode"})
 
     return conditions
@@ -92,9 +93,9 @@ def async_condition_from_config(
             return False
 
         if config[CONF_TYPE] == "is_hvac_mode":
-            return state.state == config[const.ATTR_HVAC_MODE]
+            return bool(state.state == config[const.ATTR_HVAC_MODE])
 
-        return (
+        return bool(
             state.attributes.get(const.ATTR_PRESET_MODE)
             == config[const.ATTR_PRESET_MODE]
         )

@@ -1,4 +1,5 @@
 """Services for the Plex integration."""
+
 import json
 import logging
 
@@ -6,18 +7,10 @@ from plexapi.exceptions import NotFound
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import (
-    DOMAIN,
-    PLEX_UPDATE_PLATFORMS_SIGNAL,
-    PLEX_URI_SCHEME,
-    SERVERS,
-    SERVICE_REFRESH_LIBRARY,
-    SERVICE_SCAN_CLIENTS,
-)
+from .const import DOMAIN, PLEX_URI_SCHEME, SERVERS, SERVICE_REFRESH_LIBRARY
 from .errors import MediaNotFound
 from .helpers import get_plex_data
 from .models import PlexMediaSearchResult
@@ -30,29 +23,18 @@ REFRESH_LIBRARY_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__package__)
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for the Plex component."""
 
     async def async_refresh_library_service(service_call: ServiceCall) -> None:
         await hass.async_add_executor_job(refresh_library, hass, service_call)
-
-    async def async_scan_clients_service(_: ServiceCall) -> None:
-        _LOGGER.warning(
-            "This service is deprecated in favor of the scan_clients button entity."
-            " Service calls will still work for now but the service will be removed in"
-            " a future release"
-        )
-        for server_id in get_plex_data(hass)[SERVERS]:
-            async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_REFRESH_LIBRARY,
         async_refresh_library_service,
         schema=REFRESH_LIBRARY_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_SCAN_CLIENTS, async_scan_clients_service
     )
 
 
@@ -132,6 +114,8 @@ def process_plex_payload(
     elif content_id.startswith(PLEX_URI_SCHEME):
         # Handle standard media_browser payloads
         plex_url = URL(content_id)
+        # https://github.com/pylint-dev/pylint/issues/3484
+        # pylint: disable-next=using-constant-test
         if plex_url.name:
             if len(plex_url.parts) == 2:
                 if plex_url.name == "search":
@@ -143,9 +127,9 @@ def process_plex_payload(
                 content = plex_url.path
             server_id = plex_url.host
             plex_server = get_plex_server(hass, plex_server_id=server_id)
-        else:
+        else:  # noqa: PLR5501
             # Handle legacy payloads without server_id in URL host position
-            if plex_url.host == "search":  # noqa: PLR5501
+            if plex_url.host == "search":
                 content = {}
             else:
                 content = int(plex_url.host)  # type: ignore[arg-type]
@@ -159,6 +143,11 @@ def process_plex_payload(
 
     if not plex_server:
         plex_server = get_plex_server(hass)
+
+    if isinstance(content, dict):
+        if plex_user := content.pop("username", None):
+            _LOGGER.debug("Switching to Plex user: %s", plex_user)
+            plex_server = plex_server.switch_user(plex_user)
 
     if content_type == "station":
         if not supports_playqueues:

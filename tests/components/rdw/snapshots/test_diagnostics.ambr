@@ -1,0 +1,30 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'aantal_cilinders': 3,
+    'aantal_deuren': 0,
+    'aantal_rolstoelplaatsen': 0,
+    'aantal_wielen': 4,
+    'aantal_zitplaatsen': 4,
+    'catalogusprijs': 10697,
+    'cilinderinhoud': 999,
+    'datum_eerste_toelating': '20130104',
+    'datum_tenaamstelling': '20211104',
+    'export_indicator': 'Nee',
+    'handelsbenaming': 'Citigo',
+    'inrichting': 'hatchback',
+    'jaar_laatste_registratie_tellerstand': 2021,
+    'kenteken': '11ZKZ3',
+    'massa_ledig_voertuig': 840,
+    'massa_rijklaar': 940,
+    'merk': 'Skoda',
+    'openstaande_terugroepactie_indicator': 'Nee',
+    'taxi_indicator': None,
+    'tellerstandoordeel': 'Logisch',
+    'tenaamstellen_mogelijk': 'Ja',
+    'vervaldatum_apk': '20220104',
+    'voertuigsoort': 'Personenauto',
+    'wam_verzekerd': 'Nee',
+    'zuinigheidslabel': 'A',
+  })
+# ---

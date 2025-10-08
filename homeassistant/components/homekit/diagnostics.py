@@ -1,4 +1,5 @@
 """Diagnostics support for HomeKit."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,21 +8,19 @@ from pyhap.accessory_driver import AccessoryDriver
 from pyhap.state import State
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import HomeKit
 from .accessories import HomeAccessory, HomeBridge
-from .const import DOMAIN, HOMEKIT
+from .models import HomeKitConfigEntry
 
 TO_REDACT = {"access_token", "entity_picture"}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: HomeKitConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    homekit: HomeKit = hass.data[DOMAIN][entry.entry_id][HOMEKIT]
+    homekit = entry.runtime_data.homekit
     data: dict[str, Any] = {
         "status": homekit.status,
         "config-entry": {

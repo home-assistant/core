@@ -1,7 +1,10 @@
 """Tests for the Google Assistant traits."""
+
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import ANY, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import (
@@ -11,12 +14,14 @@ from homeassistant.components import (
     camera,
     climate,
     cover,
+    event,
     fan,
     group,
     humidifier,
     input_boolean,
     input_button,
     input_select,
+    lawn_mower,
     light,
     lock,
     media_player,
@@ -26,11 +31,31 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
+    valve,
+    water_heater,
 )
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
+from homeassistant.components.camera import CameraEntityFeature
+from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.cover import CoverEntityFeature
+from homeassistant.components.fan import FanEntityFeature
 from homeassistant.components.google_assistant import const, error, helpers, trait
 from homeassistant.components.google_assistant.error import SmartHomeError
-from homeassistant.components.media_player import SERVICE_PLAY_MEDIA, MediaType
-from homeassistant.config import async_process_ha_core_config
+from homeassistant.components.humidifier import HumidifierEntityFeature
+from homeassistant.components.lawn_mower import LawnMowerEntityFeature
+from homeassistant.components.light import LightEntityFeature
+from homeassistant.components.lock import LockEntityFeature
+from homeassistant.components.media_player import (
+    SERVICE_PLAY_MEDIA,
+    MediaPlayerEntityFeature,
+    MediaType,
+)
+from homeassistant.components.vacuum import VacuumEntityFeature
+from homeassistant.components.valve import ValveEntityFeature
+from homeassistant.components.water_heater import WaterHeaterEntityFeature
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_BATTERY_LEVEL,
@@ -39,11 +64,9 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    EVENT_CALL_SERVICE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -54,13 +77,15 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
-    EVENT_CALL_SERVICE,
-    HomeAssistant,
-    State,
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
+from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
 )
-from homeassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
 
@@ -126,11 +151,11 @@ async def test_camera_stream(hass: HomeAssistant) -> None:
     )
     assert helpers.get_google_type(camera.DOMAIN, None) is not None
     assert trait.CameraStreamTrait.supported(
-        camera.DOMAIN, camera.SUPPORT_STREAM, None, None
+        camera.DOMAIN, CameraEntityFeature.STREAM, None, None
     )
 
     trt = trait.CameraStreamTrait(
-        hass, State("camera.bla", camera.STATE_IDLE, {}), BASIC_CONFIG
+        hass, State("camera.bla", camera.CameraState.IDLE, {}), BASIC_CONFIG
     )
 
     assert trt.sync_attributes() == {
@@ -168,13 +193,13 @@ async def test_onoff_group(hass: HomeAssistant) -> None:
 
     assert trt_off.query_attributes() == {"on": False}
 
-    on_calls = async_mock_service(hass, HA_DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    on_calls = async_mock_service(hass, HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON)
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "group.bla"}
 
-    off_calls = async_mock_service(hass, HA_DOMAIN, SERVICE_TURN_OFF)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    off_calls = async_mock_service(hass, HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF)
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "group.bla"}
 
@@ -197,14 +222,50 @@ async def test_onoff_input_boolean(hass: HomeAssistant) -> None:
     assert trt_off.query_attributes() == {"on": False}
 
     on_calls = async_mock_service(hass, input_boolean.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "input_boolean.bla"}
 
     off_calls = async_mock_service(hass, input_boolean.DOMAIN, SERVICE_TURN_OFF)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "input_boolean.bla"}
+
+
+@pytest.mark.freeze_time("2023-08-01T00:02:57+00:00")
+async def test_doorbell_event(hass: HomeAssistant) -> None:
+    """Test doorbell event trait support for event domain."""
+    assert trait.ObjectDetection.supported(event.DOMAIN, 0, "doorbell", None)
+
+    state = State(
+        "event.bla",
+        "2023-08-01T00:02:57+00:00",
+        attributes={"device_class": "doorbell"},
+    )
+    trt_od = trait.ObjectDetection(hass, state, BASIC_CONFIG)
+
+    assert not trt_od.sync_attributes()
+    assert trt_od.sync_options() == {"notificationSupportedByAgent": True}
+    assert not trt_od.query_attributes()
+    time_stamp = datetime.fromisoformat(state.state)
+    assert trt_od.query_notifications() == {
+        "ObjectDetection": {
+            "objects": {
+                "unclassified": 1,
+            },
+            "priority": 0,
+            "detectionTimestamp": int(time_stamp.timestamp() * 1000),
+        }
+    }
+
+    # Test that stale notifications (older than 30 s) are dropped
+    state = State(
+        "event.bla",
+        "2023-08-01T00:02:22+00:00",
+        attributes={"device_class": "doorbell"},
+    )
+    trt_od = trait.ObjectDetection(hass, state, BASIC_CONFIG)
+    assert trt_od.query_notifications() is None
 
 
 async def test_onoff_switch(hass: HomeAssistant) -> None:
@@ -228,12 +289,12 @@ async def test_onoff_switch(hass: HomeAssistant) -> None:
     assert trt_assumed.sync_attributes() == {"commandOnlyOnOff": True}
 
     on_calls = async_mock_service(hass, switch.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "switch.bla"}
 
     off_calls = async_mock_service(hass, switch.DOMAIN, SERVICE_TURN_OFF)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "switch.bla"}
 
@@ -253,12 +314,12 @@ async def test_onoff_fan(hass: HomeAssistant) -> None:
     assert trt_off.query_attributes() == {"on": False}
 
     on_calls = async_mock_service(hass, fan.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "fan.bla"}
 
     off_calls = async_mock_service(hass, fan.DOMAIN, SERVICE_TURN_OFF)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "fan.bla"}
 
@@ -279,12 +340,12 @@ async def test_onoff_light(hass: HomeAssistant) -> None:
     assert trt_off.query_attributes() == {"on": False}
 
     on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "light.bla"}
 
     off_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_OFF)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "light.bla"}
 
@@ -305,13 +366,13 @@ async def test_onoff_media_player(hass: HomeAssistant) -> None:
     assert trt_off.query_attributes() == {"on": False}
 
     on_calls = async_mock_service(hass, media_player.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "media_player.bla"}
 
     off_calls = async_mock_service(hass, media_player.DOMAIN, SERVICE_TURN_OFF)
 
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "media_player.bla"}
 
@@ -332,15 +393,44 @@ async def test_onoff_humidifier(hass: HomeAssistant) -> None:
     assert trt_off.query_attributes() == {"on": False}
 
     on_calls = async_mock_service(hass, humidifier.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "humidifier.bla"}
 
     off_calls = async_mock_service(hass, humidifier.DOMAIN, SERVICE_TURN_OFF)
 
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "humidifier.bla"}
+
+
+async def test_onoff_water_heater(hass: HomeAssistant) -> None:
+    """Test OnOff trait support for water_heater domain."""
+    assert helpers.get_google_type(water_heater.DOMAIN, None) is not None
+    assert trait.OnOffTrait.supported(
+        water_heater.DOMAIN, WaterHeaterEntityFeature.ON_OFF, None, None
+    )
+
+    trt_on = trait.OnOffTrait(hass, State("water_heater.bla", STATE_ON), BASIC_CONFIG)
+
+    assert trt_on.sync_attributes() == {}
+
+    assert trt_on.query_attributes() == {"on": True}
+
+    trt_off = trait.OnOffTrait(hass, State("water_heater.bla", STATE_OFF), BASIC_CONFIG)
+
+    assert trt_off.query_attributes() == {"on": False}
+
+    on_calls = async_mock_service(hass, water_heater.DOMAIN, SERVICE_TURN_ON)
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
+    assert len(on_calls) == 1
+    assert on_calls[0].data == {ATTR_ENTITY_ID: "water_heater.bla"}
+
+    off_calls = async_mock_service(hass, water_heater.DOMAIN, SERVICE_TURN_OFF)
+
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
+    assert len(off_calls) == 1
+    assert off_calls[0].data == {ATTR_ENTITY_ID: "water_heater.bla"}
 
 
 async def test_dock_vacuum(hass: HomeAssistant) -> None:
@@ -348,7 +438,9 @@ async def test_dock_vacuum(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.DockTrait.supported(vacuum.DOMAIN, 0, None, None)
 
-    trt = trait.DockTrait(hass, State("vacuum.bla", vacuum.STATE_IDLE), BASIC_CONFIG)
+    trt = trait.DockTrait(
+        hass, State("vacuum.bla", vacuum.VacuumActivity.IDLE), BASIC_CONFIG
+    )
 
     assert trt.sync_attributes() == {}
 
@@ -364,15 +456,15 @@ async def test_locate_vacuum(hass: HomeAssistant) -> None:
     """Test locate trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.LocatorTrait.supported(
-        vacuum.DOMAIN, vacuum.SUPPORT_LOCATE, None, None
+        vacuum.DOMAIN, VacuumEntityFeature.LOCATE, None, None
     )
 
     trt = trait.LocatorTrait(
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_IDLE,
-            {ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_LOCATE},
+            vacuum.VacuumActivity.IDLE,
+            {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.LOCATE},
         ),
         BASIC_CONFIG,
     )
@@ -395,16 +487,16 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
     """Test EnergyStorage trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.EnergyStorageTrait.supported(
-        vacuum.DOMAIN, vacuum.SUPPORT_BATTERY, None, None
+        vacuum.DOMAIN, VacuumEntityFeature.BATTERY, None, None
     )
 
     trt = trait.EnergyStorageTrait(
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_DOCKED,
+            vacuum.VacuumActivity.DOCKED,
             {
-                ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_BATTERY,
+                ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
                 ATTR_BATTERY_LEVEL: 100,
             },
         ),
@@ -428,9 +520,9 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_CLEANING,
+            vacuum.VacuumActivity.CLEANING,
             {
-                ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_BATTERY,
+                ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
                 ATTR_BATTERY_LEVEL: 20,
             },
         ),
@@ -468,8 +560,8 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_PAUSED,
-            {ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_PAUSE},
+            vacuum.VacuumActivity.PAUSED,
+            {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.PAUSE},
         ),
         BASIC_CONFIG,
     )
@@ -479,35 +571,149 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
     assert trt.query_attributes() == {"isRunning": False, "isPaused": True}
 
     start_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_START)
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": True}, {})
     assert len(start_calls) == 1
     assert start_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
     stop_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_STOP)
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": False}, {})
     assert len(stop_calls) == 1
     assert stop_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
     pause_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_PAUSE)
-    await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"pause": True}, {})
+    await trt.execute(trait.COMMAND_PAUSE_UNPAUSE, BASIC_DATA, {"pause": True}, {})
     assert len(pause_calls) == 1
     assert pause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
     unpause_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_START)
-    await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"pause": False}, {})
+    await trt.execute(trait.COMMAND_PAUSE_UNPAUSE, BASIC_DATA, {"pause": False}, {})
     assert len(unpause_calls) == 1
     assert unpause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
 
-async def test_startstop_cover(hass: HomeAssistant) -> None:
-    """Test startStop trait support for cover domain."""
-    assert helpers.get_google_type(cover.DOMAIN, None) is not None
-    assert trait.StartStopTrait.supported(cover.DOMAIN, cover.SUPPORT_STOP, None, None)
+async def test_dock_lawn_mower(hass: HomeAssistant) -> None:
+    """Test dock trait support for lawn mower domain."""
+    assert helpers.get_google_type(lawn_mower.DOMAIN, None) is not None
+    assert trait.DockTrait.supported(lawn_mower.DOMAIN, 0, None, None)
+
+    trt = trait.DockTrait(
+        hass, State("lawn_mower.bla", lawn_mower.LawnMowerActivity.MOWING), BASIC_CONFIG
+    )
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {"isDocked": False}
+
+    calls = async_mock_service(hass, lawn_mower.DOMAIN, lawn_mower.SERVICE_DOCK)
+    await trt.execute(trait.COMMAND_DOCK, BASIC_DATA, {}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "lawn_mower.bla"}
+
+
+async def test_startstop_lawn_mower(hass: HomeAssistant) -> None:
+    """Test startStop trait support for lawn mower domain."""
+    assert helpers.get_google_type(lawn_mower.DOMAIN, None) is not None
+    assert trait.StartStopTrait.supported(lawn_mower.DOMAIN, 0, None, None)
+
+    trt = trait.StartStopTrait(
+        hass,
+        State(
+            "lawn_mower.bla",
+            lawn_mower.LawnMowerActivity.PAUSED,
+            {ATTR_SUPPORTED_FEATURES: LawnMowerEntityFeature.PAUSE},
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {"pausable": True}
+
+    assert trt.query_attributes() == {"isRunning": False, "isPaused": True}
+
+    start_calls = async_mock_service(
+        hass, lawn_mower.DOMAIN, lawn_mower.SERVICE_START_MOWING
+    )
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": True}, {})
+    assert len(start_calls) == 1
+    assert start_calls[0].data == {ATTR_ENTITY_ID: "lawn_mower.bla"}
+
+    pause_calls = async_mock_service(hass, lawn_mower.DOMAIN, lawn_mower.SERVICE_PAUSE)
+    await trt.execute(trait.COMMAND_PAUSE_UNPAUSE, BASIC_DATA, {"pause": True}, {})
+    assert len(pause_calls) == 1
+    assert pause_calls[0].data == {ATTR_ENTITY_ID: "lawn_mower.bla"}
+
+    unpause_calls = async_mock_service(
+        hass, lawn_mower.DOMAIN, lawn_mower.SERVICE_START_MOWING
+    )
+    await trt.execute(trait.COMMAND_PAUSE_UNPAUSE, BASIC_DATA, {"pause": False}, {})
+    assert len(unpause_calls) == 1
+    assert unpause_calls[0].data == {ATTR_ENTITY_ID: "lawn_mower.bla"}
+
+
+@pytest.mark.parametrize(
+    (
+        "domain",
+        "state_open",
+        "state_closed",
+        "state_opening",
+        "state_closing",
+        "supported_features",
+        "service_close",
+        "service_open",
+        "service_stop",
+        "service_toggle",
+    ),
+    [
+        (
+            cover.DOMAIN,
+            cover.STATE_OPEN,
+            cover.STATE_CLOSED,
+            cover.STATE_OPENING,
+            cover.STATE_CLOSING,
+            CoverEntityFeature.STOP
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE,
+            cover.SERVICE_OPEN_COVER,
+            cover.SERVICE_CLOSE_COVER,
+            cover.SERVICE_STOP_COVER,
+            cover.SERVICE_TOGGLE,
+        ),
+        (
+            valve.DOMAIN,
+            valve.ValveState.OPEN,
+            valve.ValveState.CLOSED,
+            valve.ValveState.OPENING,
+            valve.ValveState.CLOSING,
+            ValveEntityFeature.STOP
+            | ValveEntityFeature.OPEN
+            | ValveEntityFeature.CLOSE,
+            valve.SERVICE_OPEN_VALVE,
+            valve.SERVICE_CLOSE_VALVE,
+            valve.SERVICE_STOP_VALVE,
+            cover.SERVICE_TOGGLE,
+        ),
+    ],
+)
+async def test_startstop_cover_valve(
+    hass: HomeAssistant,
+    domain: str,
+    state_open: str,
+    state_closed: str,
+    state_opening: str,
+    state_closing: str,
+    supported_features: str,
+    service_open: str,
+    service_close: str,
+    service_stop: str,
+    service_toggle: str,
+) -> None:
+    """Test startStop trait support."""
+    assert helpers.get_google_type(domain, None) is not None
+    assert trait.StartStopTrait.supported(domain, supported_features, None, None)
 
     state = State(
-        "cover.bla",
-        cover.STATE_CLOSED,
-        {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_STOP},
+        f"{domain}.bla",
+        state_closed,
+        {ATTR_SUPPORTED_FEATURES: supported_features},
     )
 
     trt = trait.StartStopTrait(
@@ -518,48 +724,138 @@ async def test_startstop_cover(hass: HomeAssistant) -> None:
 
     assert trt.sync_attributes() == {}
 
-    for state_value in (cover.STATE_CLOSING, cover.STATE_OPENING):
+    for state_value in (state_closing, state_opening):
         state.state = state_value
         assert trt.query_attributes() == {"isRunning": True}
 
-    stop_calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_STOP_COVER)
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+    stop_calls = async_mock_service(hass, domain, service_stop)
+    open_calls = async_mock_service(hass, domain, service_open)
+    close_calls = async_mock_service(hass, domain, service_close)
+    toggle_calls = async_mock_service(hass, domain, service_toggle)
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": False}, {})
     assert len(stop_calls) == 1
-    assert stop_calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert stop_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
-    for state_value in (cover.STATE_CLOSED, cover.STATE_OPEN):
+    for state_value in (state_closed, state_open):
         state.state = state_value
         assert trt.query_attributes() == {"isRunning": False}
 
-    with pytest.raises(SmartHomeError, match="Cover is already stopped"):
-        await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+    for state_value in (state_closing, state_opening):
+        state.state = state_value
+        assert trt.query_attributes() == {"isRunning": True}
 
-    with pytest.raises(SmartHomeError, match="Starting a cover is not supported"):
-        await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
+    state.state = state_open
+    with pytest.raises(
+        SmartHomeError, match=f"{domain.capitalize()} is already stopped"
+    ):
+        await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": False}, {})
 
+    # Start triggers toggle open
+    state.state = state_closed
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": True}, {})
+    assert len(open_calls) == 0
+    assert len(close_calls) == 0
+    assert len(toggle_calls) == 1
+    assert toggle_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
+    # Second start triggers toggle close
+    state.state = state_open
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": True}, {})
+    assert len(open_calls) == 0
+    assert len(close_calls) == 0
+    assert len(toggle_calls) == 2
+    assert toggle_calls[1].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
+
+    state.state = state_closed
     with pytest.raises(
         SmartHomeError,
         match="Command action.devices.commands.PauseUnpause is not supported",
     ):
-        await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"start": True}, {})
+        await trt.execute(trait.COMMAND_PAUSE_UNPAUSE, BASIC_DATA, {"start": True}, {})
 
 
-async def test_startstop_cover_assumed(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    (
+        "domain",
+        "state_open",
+        "state_closed",
+        "state_opening",
+        "state_closing",
+        "supported_features",
+        "service_close",
+        "service_open",
+        "service_stop",
+        "service_toggle",
+    ),
+    [
+        (
+            cover.DOMAIN,
+            cover.STATE_OPEN,
+            cover.STATE_CLOSED,
+            cover.STATE_OPENING,
+            cover.STATE_CLOSING,
+            CoverEntityFeature.STOP
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE,
+            cover.SERVICE_OPEN_COVER,
+            cover.SERVICE_CLOSE_COVER,
+            cover.SERVICE_STOP_COVER,
+            cover.SERVICE_TOGGLE,
+        ),
+        (
+            valve.DOMAIN,
+            valve.ValveState.OPEN,
+            valve.ValveState.CLOSED,
+            valve.ValveState.OPENING,
+            valve.ValveState.CLOSING,
+            ValveEntityFeature.STOP
+            | ValveEntityFeature.OPEN
+            | ValveEntityFeature.CLOSE,
+            valve.SERVICE_OPEN_VALVE,
+            valve.SERVICE_CLOSE_VALVE,
+            valve.SERVICE_STOP_VALVE,
+            cover.SERVICE_TOGGLE,
+        ),
+    ],
+)
+async def test_startstop_cover_valve_assumed(
+    hass: HomeAssistant,
+    domain: str,
+    state_open: str,
+    state_closed: str,
+    state_opening: str,
+    state_closing: str,
+    supported_features: str,
+    service_open: str,
+    service_close: str,
+    service_stop: str,
+    service_toggle: str,
+) -> None:
     """Test startStop trait support for cover domain of assumed state."""
     trt = trait.StartStopTrait(
         hass,
         State(
-            "cover.bla",
-            cover.STATE_CLOSED,
-            {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_STOP, ATTR_ASSUMED_STATE: True},
+            f"{domain}.bla",
+            state_closed,
+            {
+                ATTR_SUPPORTED_FEATURES: supported_features,
+                ATTR_ASSUMED_STATE: True,
+            },
         ),
         BASIC_CONFIG,
     )
 
-    stop_calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_STOP_COVER)
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+    stop_calls = async_mock_service(hass, domain, service_stop)
+    toggle_calls = async_mock_service(hass, domain, service_toggle)
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": False}, {})
     assert len(stop_calls) == 1
-    assert stop_calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert len(toggle_calls) == 0
+    assert stop_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
+
+    stop_calls.clear()
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": True}, {})
+    assert len(stop_calls) == 0
+    assert len(toggle_calls) == 1
+    assert toggle_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
 
 @pytest.mark.parametrize("supported_color_modes", [["hs"], ["rgb"], ["xy"]])
@@ -639,10 +935,10 @@ async def test_color_setting_temperature_light(hass: HomeAssistant) -> None:
             "light.bla",
             STATE_ON,
             {
-                light.ATTR_MIN_MIREDS: 200,
+                light.ATTR_MAX_COLOR_TEMP_KELVIN: 5000,
                 light.ATTR_COLOR_MODE: "color_temp",
-                light.ATTR_COLOR_TEMP: 300,
-                light.ATTR_MAX_MIREDS: 500,
+                light.ATTR_COLOR_TEMP_KELVIN: 3333,
+                light.ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
                 "supported_color_modes": ["color_temp"],
             },
         ),
@@ -675,7 +971,7 @@ async def test_color_setting_temperature_light(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: "light.bla",
-        light.ATTR_COLOR_TEMP: color.color_temperature_kelvin_to_mired(2857),
+        light.ATTR_COLOR_TEMP_KELVIN: 2857,
     }
 
 
@@ -693,9 +989,9 @@ async def test_color_light_temperature_light_bad_temp(hass: HomeAssistant) -> No
             "light.bla",
             STATE_ON,
             {
-                light.ATTR_MIN_MIREDS: 200,
-                light.ATTR_COLOR_TEMP: 0,
-                light.ATTR_MAX_MIREDS: 500,
+                light.ATTR_MAX_COLOR_TEMP_KELVIN: 5000,
+                light.ATTR_COLOR_TEMP_KELVIN: 0,
+                light.ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
             },
         ),
         BASIC_CONFIG,
@@ -707,7 +1003,9 @@ async def test_color_light_temperature_light_bad_temp(hass: HomeAssistant) -> No
 async def test_light_modes(hass: HomeAssistant) -> None:
     """Test Light Mode trait."""
     assert helpers.get_google_type(light.DOMAIN, None) is not None
-    assert trait.ModesTrait.supported(light.DOMAIN, light.SUPPORT_EFFECT, None, None)
+    assert trait.ModesTrait.supported(
+        light.DOMAIN, LightEntityFeature.EFFECT, None, None
+    )
 
     trt = trait.ModesTrait(
         hass,
@@ -753,13 +1051,13 @@ async def test_light_modes(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         params={"updateModeSettings": {"effect": "colorloop"}},
     )
 
     calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {"effect": "colorloop"}},
         {},
@@ -839,7 +1137,7 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
 
-    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+    hass.config.units = US_CUSTOMARY_SYSTEM
 
     trt = trait.TemperatureSettingTrait(
         hass,
@@ -847,7 +1145,9 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
             "climate.bla",
             climate.HVACMode.AUTO,
             {
-                ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_RANGE,
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
                 climate.ATTR_HVAC_MODES: [
                     climate.HVACMode.OFF,
                     climate.HVACMode.COOL,
@@ -888,8 +1188,6 @@ async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
 
-    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
-
     trt = trait.TemperatureSettingTrait(
         hass,
         State(
@@ -918,7 +1216,7 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
 
-    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+    hass.config.units = US_CUSTOMARY_SYSTEM
 
     trt = trait.TemperatureSettingTrait(
         hass,
@@ -928,7 +1226,9 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
             {
                 climate.ATTR_CURRENT_TEMPERATURE: 70,
                 climate.ATTR_CURRENT_HUMIDITY: 25,
-                ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_RANGE,
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
                 climate.ATTR_HVAC_MODES: [
                     STATE_OFF,
                     climate.HVACMode.COOL,
@@ -1024,7 +1324,6 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
         ATTR_ENTITY_ID: "climate.bla",
         climate.ATTR_TEMPERATURE: 75,
     }
-    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
 async def test_temperature_setting_climate_setpoint(hass: HomeAssistant) -> None:
@@ -1032,15 +1331,15 @@ async def test_temperature_setting_climate_setpoint(hass: HomeAssistant) -> None
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
 
-    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
-
     trt = trait.TemperatureSettingTrait(
         hass,
         State(
             "climate.bla",
             climate.HVACMode.COOL,
             {
-                ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE,
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
                 climate.ATTR_HVAC_MODES: [STATE_OFF, climate.HVACMode.COOL],
                 climate.ATTR_MIN_TEMP: 10,
                 climate.ATTR_MAX_TEMP: 30,
@@ -1117,8 +1416,6 @@ async def test_temperature_setting_climate_setpoint_auto(hass: HomeAssistant) ->
 
     Setpoint in auto mode.
     """
-    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
-
     trt = trait.TemperatureSettingTrait(
         hass,
         State(
@@ -1168,8 +1465,6 @@ async def test_temperature_setting_climate_setpoint_auto(hass: HomeAssistant) ->
 
 async def test_temperature_control(hass: HomeAssistant) -> None:
     """Test TemperatureControl trait support for sensor domain."""
-    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
-
     trt = trait.TemperatureControlTrait(
         hass,
         State("sensor.temp", 18),
@@ -1185,8 +1480,137 @@ async def test_temperature_control(hass: HomeAssistant) -> None:
         "temperatureAmbientCelsius": 18,
     }
     with pytest.raises(helpers.SmartHomeError) as err:
-        await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+        await trt.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert err.value.code == const.ERR_NOT_SUPPORTED
+
+
+@pytest.mark.parametrize(
+    ("unit_in", "unit_out", "temp_in", "temp_out", "current_in", "current_out"),
+    [
+        (METRIC_SYSTEM, "C", "120", 120, "130", 130),
+        (US_CUSTOMARY_SYSTEM, "F", "248", 120, "266", 130),
+    ],
+)
+async def test_temperature_control_water_heater(
+    hass: HomeAssistant,
+    unit_in: UnitSystem,
+    unit_out: str,
+    temp_in: str,
+    temp_out: float,
+    current_in: str,
+    current_out: float,
+) -> None:
+    """Test TemperatureControl trait support for water heater domain."""
+    hass.config.units = unit_in
+
+    min_temp = TemperatureConverter.convert(
+        water_heater.DEFAULT_MIN_TEMP,
+        UnitOfTemperature.CELSIUS,
+        unit_in.temperature_unit,
+    )
+    max_temp = TemperatureConverter.convert(
+        water_heater.DEFAULT_MAX_TEMP,
+        UnitOfTemperature.CELSIUS,
+        unit_in.temperature_unit,
+    )
+
+    trt = trait.TemperatureControlTrait(
+        hass,
+        State(
+            "water_heater.bla",
+            "attributes",
+            {
+                "min_temp": min_temp,
+                "max_temp": max_temp,
+                "temperature": temp_in,
+                "current_temperature": current_in,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "temperatureUnitForUX": unit_out,
+        "temperatureRange": {
+            "maxThresholdCelsius": water_heater.DEFAULT_MAX_TEMP,
+            "minThresholdCelsius": water_heater.DEFAULT_MIN_TEMP,
+        },
+    }
+    assert trt.query_attributes() == {
+        "temperatureSetpointCelsius": temp_out,
+        "temperatureAmbientCelsius": current_out,
+    }
+
+
+@pytest.mark.parametrize(
+    ("unit", "temp_init", "temp_in", "temp_out", "current_init"),
+    [
+        (METRIC_SYSTEM, "180", 220, 220, "180"),
+        (US_CUSTOMARY_SYSTEM, "356", 220, 428, "356"),
+    ],
+)
+async def test_temperature_control_water_heater_set_temperature(
+    hass: HomeAssistant,
+    unit: UnitSystem,
+    temp_init: str,
+    temp_in: float,
+    temp_out: float,
+    current_init: str,
+) -> None:
+    """Test TemperatureControl trait support for water heater domain - SetTemperature."""
+    hass.config.units = unit
+
+    min_temp = TemperatureConverter.convert(
+        40,
+        UnitOfTemperature.CELSIUS,
+        unit.temperature_unit,
+    )
+    max_temp = TemperatureConverter.convert(
+        230,
+        UnitOfTemperature.CELSIUS,
+        unit.temperature_unit,
+    )
+
+    trt = trait.TemperatureControlTrait(
+        hass,
+        State(
+            "water_heater.bla",
+            "attributes",
+            {
+                "min_temp": min_temp,
+                "max_temp": max_temp,
+                "temperature": temp_init,
+                "current_temperature": current_init,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.can_execute(trait.COMMAND_SET_TEMPERATURE, {})
+
+    calls = async_mock_service(
+        hass, water_heater.DOMAIN, water_heater.SERVICE_SET_TEMPERATURE
+    )
+
+    with pytest.raises(helpers.SmartHomeError):
+        await trt.execute(
+            trait.COMMAND_SET_TEMPERATURE,
+            BASIC_DATA,
+            {"temperature": -100},
+            {},
+        )
+
+    await trt.execute(
+        trait.COMMAND_SET_TEMPERATURE,
+        BASIC_DATA,
+        {"temperature": temp_in},
+        {},
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: "water_heater.bla",
+        ATTR_TEMPERATURE: temp_out,
+    }
 
 
 async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None:
@@ -1230,22 +1654,24 @@ async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None
 async def test_lock_unlock_lock(hass: HomeAssistant) -> None:
     """Test LockUnlock trait locking support for lock domain."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
-    assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
-    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, lock.SUPPORT_OPEN, None)
+    assert trait.LockUnlockTrait.supported(
+        lock.DOMAIN, LockEntityFeature.OPEN, None, None
+    )
+    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, LockEntityFeature.OPEN, None)
 
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_LOCKED), PIN_CONFIG
+        hass, State("lock.front_door", lock.LockState.LOCKED), PIN_CONFIG
     )
 
     assert trt.sync_attributes() == {}
 
     assert trt.query_attributes() == {"isLocked": True}
 
-    assert trt.can_execute(trait.COMMAND_LOCKUNLOCK, {"lock": True})
+    assert trt.can_execute(trait.COMMAND_LOCK_UNLOCK, {"lock": True})
 
     calls = async_mock_service(hass, lock.DOMAIN, lock.SERVICE_LOCK)
 
-    await trt.execute(trait.COMMAND_LOCKUNLOCK, PIN_DATA, {"lock": True}, {})
+    await trt.execute(trait.COMMAND_LOCK_UNLOCK, PIN_DATA, {"lock": True}, {})
 
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "lock.front_door"}
@@ -1254,11 +1680,13 @@ async def test_lock_unlock_lock(hass: HomeAssistant) -> None:
 async def test_lock_unlock_unlocking(hass: HomeAssistant) -> None:
     """Test LockUnlock trait locking support for lock domain."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
-    assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
-    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, lock.SUPPORT_OPEN, None)
+    assert trait.LockUnlockTrait.supported(
+        lock.DOMAIN, LockEntityFeature.OPEN, None, None
+    )
+    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, LockEntityFeature.OPEN, None)
 
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_UNLOCKING), PIN_CONFIG
+        hass, State("lock.front_door", lock.LockState.UNLOCKING), PIN_CONFIG
     )
 
     assert trt.sync_attributes() == {}
@@ -1269,22 +1697,24 @@ async def test_lock_unlock_unlocking(hass: HomeAssistant) -> None:
 async def test_lock_unlock_lock_jammed(hass: HomeAssistant) -> None:
     """Test LockUnlock trait locking support for lock domain that jams."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
-    assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
-    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, lock.SUPPORT_OPEN, None)
+    assert trait.LockUnlockTrait.supported(
+        lock.DOMAIN, LockEntityFeature.OPEN, None, None
+    )
+    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, LockEntityFeature.OPEN, None)
 
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_JAMMED), PIN_CONFIG
+        hass, State("lock.front_door", lock.LockState.JAMMED), PIN_CONFIG
     )
 
     assert trt.sync_attributes() == {}
 
     assert trt.query_attributes() == {"isJammed": True}
 
-    assert trt.can_execute(trait.COMMAND_LOCKUNLOCK, {"lock": True})
+    assert trt.can_execute(trait.COMMAND_LOCK_UNLOCK, {"lock": True})
 
     calls = async_mock_service(hass, lock.DOMAIN, lock.SERVICE_LOCK)
 
-    await trt.execute(trait.COMMAND_LOCKUNLOCK, PIN_DATA, {"lock": True}, {})
+    await trt.execute(trait.COMMAND_LOCK_UNLOCK, PIN_DATA, {"lock": True}, {})
 
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "lock.front_door"}
@@ -1293,23 +1723,25 @@ async def test_lock_unlock_lock_jammed(hass: HomeAssistant) -> None:
 async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
     """Test LockUnlock trait unlocking support for lock domain."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
-    assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
+    assert trait.LockUnlockTrait.supported(
+        lock.DOMAIN, LockEntityFeature.OPEN, None, None
+    )
 
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_LOCKED), PIN_CONFIG
+        hass, State("lock.front_door", lock.LockState.LOCKED), PIN_CONFIG
     )
 
     assert trt.sync_attributes() == {}
 
     assert trt.query_attributes() == {"isLocked": True}
 
-    assert trt.can_execute(trait.COMMAND_LOCKUNLOCK, {"lock": False})
+    assert trt.can_execute(trait.COMMAND_LOCK_UNLOCK, {"lock": False})
 
     calls = async_mock_service(hass, lock.DOMAIN, lock.SERVICE_UNLOCK)
 
     # No challenge data
     with pytest.raises(error.ChallengeNeeded) as err:
-        await trt.execute(trait.COMMAND_LOCKUNLOCK, PIN_DATA, {"lock": False}, {})
+        await trt.execute(trait.COMMAND_LOCK_UNLOCK, PIN_DATA, {"lock": False}, {})
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
     assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
@@ -1317,14 +1749,14 @@ async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
     # invalid pin
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
-            trait.COMMAND_LOCKUNLOCK, PIN_DATA, {"lock": False}, {"pin": 9999}
+            trait.COMMAND_LOCK_UNLOCK, PIN_DATA, {"lock": False}, {"pin": 9999}
         )
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
     assert err.value.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
 
     await trt.execute(
-        trait.COMMAND_LOCKUNLOCK, PIN_DATA, {"lock": False}, {"pin": "1234"}
+        trait.COMMAND_LOCK_UNLOCK, PIN_DATA, {"lock": False}, {"pin": "1234"}
     )
 
     assert len(calls) == 1
@@ -1332,11 +1764,11 @@ async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
 
     # Test without pin
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_LOCKED), BASIC_CONFIG
+        hass, State("lock.front_door", lock.LockState.LOCKED), BASIC_CONFIG
     )
 
     with pytest.raises(error.SmartHomeError) as err:
-        await trt.execute(trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {"lock": False}, {})
+        await trt.execute(trait.COMMAND_LOCK_UNLOCK, BASIC_DATA, {"lock": False}, {})
     assert len(calls) == 1
     assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
 
@@ -1346,7 +1778,7 @@ async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
         "should_2fa",
         return_value=False,
     ):
-        await trt.execute(trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {"lock": False}, {})
+        await trt.execute(trait.COMMAND_LOCK_UNLOCK, BASIC_DATA, {"lock": False}, {})
     assert len(calls) == 2
 
 
@@ -1360,11 +1792,11 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
-                ATTR_SUPPORTED_FEATURES: alarm_control_panel.const.SUPPORT_ALARM_ARM_HOME
-                | alarm_control_panel.const.SUPPORT_ALARM_ARM_AWAY,
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
+                | AlarmControlPanelEntityFeature.ARM_AWAY,
             },
         ),
         PIN_CONFIG,
@@ -1385,17 +1817,18 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
                     ],
                 },
             ],
-            "ordered": False,
+            "ordered": True,
         }
     }
 
     assert trt.query_attributes() == {
         "isArmed": True,
-        "currentArmLevel": STATE_ALARM_ARMED_AWAY,
+        "currentArmLevel": AlarmControlPanelState.ARMED_AWAY,
     }
 
     assert trt.can_execute(
-        trait.COMMAND_ARMDISARM, {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY}
+        trait.COMMAND_ARM_DISARM,
+        {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
     )
 
     calls = async_mock_service(
@@ -1404,20 +1837,20 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
 
     # Test with no secure_pin configured
 
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            AlarmControlPanelState.DISARMED,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        BASIC_CONFIG,
+    )
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_DISARMED,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
-            ),
-            BASIC_CONFIG,
-        )
         await trt.execute(
-            trait.COMMAND_ARMDISARM,
+            trait.COMMAND_ARM_DISARM,
             BASIC_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {},
         )
     assert len(calls) == 0
@@ -1427,7 +1860,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
@@ -1435,9 +1868,9 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
     # No challenge data
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
-            trait.COMMAND_ARMDISARM,
+            trait.COMMAND_ARM_DISARM,
             PIN_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {},
         )
     assert len(calls) == 0
@@ -1447,9 +1880,9 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
     # invalid pin
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
-            trait.COMMAND_ARMDISARM,
+            trait.COMMAND_ARM_DISARM,
             PIN_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {"pin": 9999},
         )
     assert len(calls) == 0
@@ -1458,29 +1891,29 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
 
     # correct pin
     await trt.execute(
-        trait.COMMAND_ARMDISARM,
+        trait.COMMAND_ARM_DISARM,
         PIN_DATA,
-        {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+        {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
         {"pin": "1234"},
     )
 
     assert len(calls) == 1
 
     # Test already armed
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            AlarmControlPanelState.ARMED_AWAY,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        PIN_CONFIG,
+    )
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_ARMED_AWAY,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
-            ),
-            PIN_CONFIG,
-        )
         await trt.execute(
-            trait.COMMAND_ARMDISARM,
+            trait.COMMAND_ARM_DISARM,
             PIN_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {},
         )
     assert len(calls) == 1
@@ -1491,22 +1924,22 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
         ),
         PIN_CONFIG,
     )
     await trt.execute(
-        trait.COMMAND_ARMDISARM,
+        trait.COMMAND_ARM_DISARM,
         PIN_DATA,
-        {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+        {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
         {},
     )
     assert len(calls) == 2
 
     with pytest.raises(error.SmartHomeError) as err:
         await trt.execute(
-            trait.COMMAND_ARMDISARM,
+            trait.COMMAND_ARM_DISARM,
             PIN_DATA,
             {"arm": True},
             {},
@@ -1523,11 +1956,12 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
-                ATTR_SUPPORTED_FEATURES: alarm_control_panel.const.SUPPORT_ALARM_TRIGGER
-                | alarm_control_panel.const.SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.TRIGGER
+                | AlarmControlPanelEntityFeature.ARM_HOME
+                | AlarmControlPanelEntityFeature.ARM_AWAY,
             },
         ),
         PIN_CONFIG,
@@ -1536,10 +1970,19 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         "availableArmLevels": {
             "levels": [
                 {
-                    "level_name": "armed_custom_bypass",
+                    "level_name": "armed_home",
                     "level_values": [
                         {
-                            "level_synonym": ["armed custom bypass", "custom"],
+                            "level_synonym": ["armed home", "home"],
+                            "lang": "en",
+                        }
+                    ],
+                },
+                {
+                    "level_name": "armed_away",
+                    "level_values": [
+                        {
+                            "level_synonym": ["armed away", "away"],
                             "lang": "en",
                         }
                     ],
@@ -1549,30 +1992,33 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
                     "level_values": [{"level_synonym": ["triggered"], "lang": "en"}],
                 },
             ],
-            "ordered": False,
+            "ordered": True,
         }
     }
 
-    assert trt.query_attributes() == {"isArmed": False}
+    assert trt.query_attributes() == {
+        "currentArmLevel": "armed_home",
+        "isArmed": False,
+    }
 
-    assert trt.can_execute(trait.COMMAND_ARMDISARM, {"arm": False})
+    assert trt.can_execute(trait.COMMAND_ARM_DISARM, {"arm": False})
 
     calls = async_mock_service(
         hass, alarm_control_panel.DOMAIN, alarm_control_panel.SERVICE_ALARM_DISARM
     )
 
     # Test without secure_pin configured
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            AlarmControlPanelState.ARMED_AWAY,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        BASIC_CONFIG,
+    )
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_ARMED_AWAY,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
-            ),
-            BASIC_CONFIG,
-        )
-        await trt.execute(trait.COMMAND_ARMDISARM, BASIC_DATA, {"arm": False}, {})
+        await trt.execute(trait.COMMAND_ARM_DISARM, BASIC_DATA, {"arm": False}, {})
 
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
@@ -1581,7 +2027,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
@@ -1589,7 +2035,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
 
     # No challenge data
     with pytest.raises(error.ChallengeNeeded) as err:
-        await trt.execute(trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {})
+        await trt.execute(trait.COMMAND_ARM_DISARM, PIN_DATA, {"arm": False}, {})
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
     assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
@@ -1597,7 +2043,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
     # invalid pin
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
-            trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {"pin": 9999}
+            trait.COMMAND_ARM_DISARM, PIN_DATA, {"arm": False}, {"pin": 9999}
         )
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
@@ -1605,39 +2051,40 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
 
     # correct pin
     await trt.execute(
-        trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {"pin": "1234"}
+        trait.COMMAND_ARM_DISARM, PIN_DATA, {"arm": False}, {"pin": "1234"}
     )
 
     assert len(calls) == 1
 
     # Test already disarmed
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            AlarmControlPanelState.DISARMED,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        PIN_CONFIG,
+    )
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_DISARMED,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
-            ),
-            PIN_CONFIG,
-        )
-        await trt.execute(trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {})
+        await trt.execute(trait.COMMAND_ARM_DISARM, PIN_DATA, {"arm": False}, {})
     assert len(calls) == 1
     assert err.value.code == const.ERR_ALREADY_DISARMED
 
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            AlarmControlPanelState.ARMED_AWAY,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
+        ),
+        PIN_CONFIG,
+    )
+
     # Cancel arming after already armed will require pin
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_ARMED_AWAY,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
-            ),
-            PIN_CONFIG,
-        )
         await trt.execute(
-            trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
+            trait.COMMAND_ARM_DISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
         )
     assert len(calls) == 1
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
@@ -1648,13 +2095,13 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_PENDING,
+            AlarmControlPanelState.PENDING,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
         ),
         PIN_CONFIG,
     )
     await trt.execute(
-        trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
+        trait.COMMAND_ARM_DISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
     )
     assert len(calls) == 2
 
@@ -1662,7 +2109,9 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
 async def test_fan_speed(hass: HomeAssistant) -> None:
     """Test FanSpeed trait speed control support for fan domain."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
-    assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED, None, None)
+    assert trait.FanSpeedTrait.supported(
+        fan.DOMAIN, FanEntityFeature.SET_SPEED, None, None
+    )
 
     trt = trait.FanSpeedTrait(
         hass,
@@ -1688,10 +2137,12 @@ async def test_fan_speed(hass: HomeAssistant) -> None:
         "currentFanSpeedSetting": ANY,
     }
 
-    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeedPercent": 10})
+    assert trt.can_execute(trait.COMMAND_SET_FAN_SPEED, params={"fanSpeedPercent": 10})
 
     calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_PERCENTAGE)
-    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeedPercent": 10}, {})
+    await trt.execute(
+        trait.COMMAND_SET_FAN_SPEED, BASIC_DATA, {"fanSpeedPercent": 10}, {}
+    )
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage": 10}
@@ -1700,7 +2151,9 @@ async def test_fan_speed(hass: HomeAssistant) -> None:
 async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
     """Test FanSpeed trait speed control percentage step for fan domain."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
-    assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED, None, None)
+    assert trait.FanSpeedTrait.supported(
+        fan.DOMAIN, FanEntityFeature.SET_SPEED, None, None
+    )
 
     trt = trait.FanSpeedTrait(
         hass,
@@ -1778,16 +2231,18 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
     ],
 )
 async def test_fan_speed_ordered(
-    hass,
+    hass: HomeAssistant,
     percentage: int,
     percentage_step: float,
     speed: str,
     speeds: list[list[str]],
     percentage_result: int,
-):
+) -> None:
     """Test FanSpeed trait speed control support for fan domain."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
-    assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED, None, None)
+    assert trait.FanSpeedTrait.supported(
+        fan.DOMAIN, FanEntityFeature.SET_SPEED, None, None
+    )
 
     trt = trait.FanSpeedTrait(
         hass,
@@ -1809,7 +2264,7 @@ async def test_fan_speed_ordered(
             "ordered": True,
             "speeds": [
                 {
-                    "speed_name": f"{idx+1}/{len(speeds)}",
+                    "speed_name": f"{idx + 1}/{len(speeds)}",
                     "speed_values": [{"lang": "en", "speed_synonym": x}],
                 }
                 for idx, x in enumerate(speeds)
@@ -1822,10 +2277,10 @@ async def test_fan_speed_ordered(
         "currentFanSpeedSetting": speed,
     }
 
-    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": speed})
+    assert trt.can_execute(trait.COMMAND_SET_FAN_SPEED, params={"fanSpeed": speed})
 
     calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_PERCENTAGE)
-    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeed": speed}, {})
+    await trt.execute(trait.COMMAND_SET_FAN_SPEED, BASIC_DATA, {"fanSpeed": speed}, {})
 
     assert len(calls) == 1
     assert calls[0].data == {
@@ -1858,7 +2313,7 @@ async def test_fan_reverse(
                 "percentage": 33,
                 "percentage_step": 1.0,
                 "direction": direction_state,
-                "supported_features": fan.SUPPORT_DIRECTION,
+                "supported_features": FanEntityFeature.DIRECTION,
             },
         ),
         BASIC_CONFIG,
@@ -1889,7 +2344,7 @@ async def test_climate_fan_speed(hass: HomeAssistant) -> None:
     """Test FanSpeed trait speed control support for climate domain."""
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.FanSpeedTrait.supported(
-        climate.DOMAIN, climate.SUPPORT_FAN_MODE, None, None
+        climate.DOMAIN, ClimateEntityFeature.FAN_MODE, None, None
     )
 
     trt = trait.FanSpeedTrait(
@@ -1934,10 +2389,12 @@ async def test_climate_fan_speed(hass: HomeAssistant) -> None:
         "currentFanSpeedSetting": "low",
     }
 
-    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": "medium"})
+    assert trt.can_execute(trait.COMMAND_SET_FAN_SPEED, params={"fanSpeed": "medium"})
 
     calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_SET_FAN_MODE)
-    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeed": "medium"}, {})
+    await trt.execute(
+        trait.COMMAND_SET_FAN_SPEED, BASIC_DATA, {"fanSpeed": "medium"}, {}
+    )
 
     assert len(calls) == 1
     assert calls[0].data == {
@@ -1951,7 +2408,7 @@ async def test_inputselector(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.InputSelectorTrait.supported(
         media_player.DOMAIN,
-        media_player.MediaPlayerEntityFeature.SELECT_SOURCE,
+        MediaPlayerEntityFeature.SELECT_SOURCE,
         None,
         None,
     )
@@ -1993,7 +2450,7 @@ async def test_inputselector(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_INPUT,
+        trait.COMMAND_SET_INPUT,
         params={"newInput": "media"},
     )
 
@@ -2001,7 +2458,7 @@ async def test_inputselector(hass: HomeAssistant) -> None:
         hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
     )
     await trt.execute(
-        trait.COMMAND_INPUT,
+        trait.COMMAND_SET_INPUT,
         BASIC_DATA,
         {"newInput": "media"},
         {},
@@ -2169,7 +2626,7 @@ async def test_modes_input_select(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         params={"updateModeSettings": {"option": "xyz"}},
     )
 
@@ -2177,7 +2634,7 @@ async def test_modes_input_select(hass: HomeAssistant) -> None:
         hass, input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION
     )
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {"option": "xyz"}},
         {},
@@ -2245,13 +2702,13 @@ async def test_modes_select(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         params={"updateModeSettings": {"option": "xyz"}},
     )
 
     calls = async_mock_service(hass, select.DOMAIN, select.SERVICE_SELECT_OPTION)
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {"option": "xyz"}},
         {},
@@ -2265,7 +2722,7 @@ async def test_modes_humidifier(hass: HomeAssistant) -> None:
     """Test Humidifier Mode trait."""
     assert helpers.get_google_type(humidifier.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(
-        humidifier.DOMAIN, humidifier.SUPPORT_MODES, None, None
+        humidifier.DOMAIN, HumidifierEntityFeature.MODES, None, None
     )
 
     trt = trait.ModesTrait(
@@ -2279,7 +2736,7 @@ async def test_modes_humidifier(hass: HomeAssistant) -> None:
                     humidifier.MODE_AUTO,
                     humidifier.MODE_AWAY,
                 ],
-                ATTR_SUPPORTED_FEATURES: humidifier.SUPPORT_MODES,
+                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES,
                 humidifier.ATTR_MIN_HUMIDITY: 30,
                 humidifier.ATTR_MAX_HUMIDITY: 99,
                 humidifier.ATTR_HUMIDITY: 50,
@@ -2322,12 +2779,12 @@ async def test_modes_humidifier(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES, params={"updateModeSettings": {"mode": "away"}}
+        trait.COMMAND_SET_MODES, params={"updateModeSettings": {"mode": "away"}}
     )
 
     calls = async_mock_service(hass, humidifier.DOMAIN, humidifier.SERVICE_SET_MODE)
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {"mode": "away"}},
         {},
@@ -2340,12 +2797,91 @@ async def test_modes_humidifier(hass: HomeAssistant) -> None:
     }
 
 
+async def test_modes_water_heater(hass: HomeAssistant) -> None:
+    """Test Humidifier Mode trait."""
+    assert helpers.get_google_type(water_heater.DOMAIN, None) is not None
+    assert trait.ModesTrait.supported(
+        water_heater.DOMAIN, WaterHeaterEntityFeature.OPERATION_MODE, None, None
+    )
+
+    trt = trait.ModesTrait(
+        hass,
+        State(
+            "water_heater.water_heater",
+            STATE_OFF,
+            attributes={
+                water_heater.ATTR_OPERATION_LIST: [
+                    water_heater.STATE_ECO,
+                    water_heater.STATE_HEAT_PUMP,
+                    water_heater.STATE_GAS,
+                ],
+                ATTR_SUPPORTED_FEATURES: WaterHeaterEntityFeature.OPERATION_MODE,
+                water_heater.ATTR_OPERATION_MODE: water_heater.STATE_HEAT_PUMP,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        "availableModes": [
+            {
+                "name": "operation mode",
+                "name_values": [{"name_synonym": ["operation mode"], "lang": "en"}],
+                "settings": [
+                    {
+                        "setting_name": "eco",
+                        "setting_values": [{"setting_synonym": ["eco"], "lang": "en"}],
+                    },
+                    {
+                        "setting_name": "heat_pump",
+                        "setting_values": [
+                            {"setting_synonym": ["heat_pump"], "lang": "en"}
+                        ],
+                    },
+                    {
+                        "setting_name": "gas",
+                        "setting_values": [{"setting_synonym": ["gas"], "lang": "en"}],
+                    },
+                ],
+                "ordered": False,
+            },
+        ]
+    }
+
+    assert trt.query_attributes() == {
+        "currentModeSettings": {"operation mode": "heat_pump"},
+        "on": False,
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_SET_MODES,
+        params={"updateModeSettings": {"operation mode": "gas"}},
+    )
+
+    calls = async_mock_service(
+        hass, water_heater.DOMAIN, water_heater.SERVICE_SET_OPERATION_MODE
+    )
+    await trt.execute(
+        trait.COMMAND_SET_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"operation mode": "gas"}},
+        {},
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": "water_heater.water_heater",
+        "operation_mode": "gas",
+    }
+
+
 async def test_sound_modes(hass: HomeAssistant) -> None:
     """Test Mode trait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(
         media_player.DOMAIN,
-        media_player.MediaPlayerEntityFeature.SELECT_SOUND_MODE,
+        MediaPlayerEntityFeature.SELECT_SOUND_MODE,
         None,
         None,
     )
@@ -2396,7 +2932,7 @@ async def test_sound_modes(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         params={"updateModeSettings": {"sound mode": "stereo"}},
     )
 
@@ -2404,7 +2940,7 @@ async def test_sound_modes(hass: HomeAssistant) -> None:
         hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOUND_MODE
     )
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {"sound mode": "stereo"}},
         {},
@@ -2420,7 +2956,9 @@ async def test_sound_modes(hass: HomeAssistant) -> None:
 async def test_preset_modes(hass: HomeAssistant) -> None:
     """Test Mode trait for fan preset modes."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
-    assert trait.ModesTrait.supported(fan.DOMAIN, fan.SUPPORT_PRESET_MODE, None, None)
+    assert trait.ModesTrait.supported(
+        fan.DOMAIN, FanEntityFeature.PRESET_MODE, None, None
+    )
 
     trt = trait.ModesTrait(
         hass,
@@ -2430,7 +2968,7 @@ async def test_preset_modes(hass: HomeAssistant) -> None:
             attributes={
                 fan.ATTR_PRESET_MODES: ["auto", "whoosh"],
                 fan.ATTR_PRESET_MODE: "auto",
-                ATTR_SUPPORTED_FEATURES: fan.SUPPORT_PRESET_MODE,
+                ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE,
             },
         ),
         BASIC_CONFIG,
@@ -2467,13 +3005,13 @@ async def test_preset_modes(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         params={"updateModeSettings": {"preset mode": "auto"}},
     )
 
     calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_PRESET_MODE)
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {"preset mode": "auto"}},
         {},
@@ -2501,7 +3039,7 @@ async def test_traits_unknown_domains(
 
     assert trt.supported("not_supported_domain", False, None, None) is False
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {}},
         {},
@@ -2510,21 +3048,59 @@ async def test_traits_unknown_domains(
     caplog.clear()
 
 
-async def test_openclose_cover(hass: HomeAssistant) -> None:
-    """Test OpenClose trait support for cover domain."""
-    assert helpers.get_google_type(cover.DOMAIN, None) is not None
-    assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, cover.SUPPORT_SET_POSITION, None, None
-    )
+@pytest.mark.parametrize(
+    (
+        "domain",
+        "set_position_service",
+        "close_service",
+        "open_service",
+        "set_position_feature",
+        "attr_position",
+        "attr_current_position",
+    ),
+    [
+        (
+            cover.DOMAIN,
+            cover.SERVICE_SET_COVER_POSITION,
+            cover.SERVICE_CLOSE_COVER,
+            cover.SERVICE_OPEN_COVER,
+            CoverEntityFeature.SET_POSITION,
+            cover.ATTR_POSITION,
+            cover.ATTR_CURRENT_POSITION,
+        ),
+        (
+            valve.DOMAIN,
+            valve.SERVICE_SET_VALVE_POSITION,
+            valve.SERVICE_CLOSE_VALVE,
+            valve.SERVICE_OPEN_VALVE,
+            ValveEntityFeature.SET_POSITION,
+            valve.ATTR_POSITION,
+            valve.ATTR_CURRENT_POSITION,
+        ),
+    ],
+)
+async def test_openclose_cover_valve(
+    hass: HomeAssistant,
+    domain: str,
+    set_position_service: str,
+    close_service: str,
+    open_service: str,
+    set_position_feature: int,
+    attr_position: str,
+    attr_current_position: str,
+) -> None:
+    """Test OpenClose trait support."""
+    assert helpers.get_google_type(domain, None) is not None
+    assert trait.OpenCloseTrait.supported(domain, set_position_service, None, None)
 
     trt = trait.OpenCloseTrait(
         hass,
         State(
-            "cover.bla",
-            cover.STATE_OPEN,
+            f"{domain}.bla",
+            "open",
             {
-                cover.ATTR_CURRENT_POSITION: 75,
-                ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+                attr_current_position: 75,
+                ATTR_SUPPORTED_FEATURES: set_position_feature,
             },
         ),
         BASIC_CONFIG,
@@ -2533,32 +3109,74 @@ async def test_openclose_cover(hass: HomeAssistant) -> None:
     assert trt.sync_attributes() == {}
     assert trt.query_attributes() == {"openPercent": 75}
 
-    calls_set = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
-    calls_open = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
+    calls_set = async_mock_service(hass, domain, set_position_service)
+    calls_open = async_mock_service(hass, domain, open_service)
+    calls_close = async_mock_service(hass, domain, close_service)
 
-    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 50}, {})
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 50}, {})
     await trt.execute(
-        trait.COMMAND_OPENCLOSE_RELATIVE, BASIC_DATA, {"openRelativePercent": 50}, {}
+        trait.COMMAND_OPEN_CLOSE_RELATIVE, BASIC_DATA, {"openRelativePercent": 50}, {}
     )
     assert len(calls_set) == 1
-    assert calls_set[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 50}
+    assert calls_set[0].data == {
+        ATTR_ENTITY_ID: f"{domain}.bla",
+        attr_position: 50,
+    }
+    calls_set.pop(0)
 
     assert len(calls_open) == 1
-    assert calls_open[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert calls_open[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
+    calls_open.pop(0)
+
+    assert len(calls_close) == 0
+
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 0}, {})
+    await trt.execute(
+        trait.COMMAND_OPEN_CLOSE_RELATIVE, BASIC_DATA, {"openRelativePercent": 0}, {}
+    )
+    assert len(calls_set) == 1
+    assert len(calls_close) == 1
+    assert calls_close[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
+    assert len(calls_open) == 0
 
 
-async def test_openclose_cover_unknown_state(hass: HomeAssistant) -> None:
-    """Test OpenClose trait support for cover domain with unknown state."""
-    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+@pytest.mark.parametrize(
+    ("domain", "open_service", "set_position_feature", "open_feature"),
+    [
+        (
+            cover.DOMAIN,
+            cover.SERVICE_OPEN_COVER,
+            CoverEntityFeature.SET_POSITION,
+            CoverEntityFeature.OPEN,
+        ),
+        (
+            valve.DOMAIN,
+            valve.SERVICE_OPEN_VALVE,
+            ValveEntityFeature.SET_POSITION,
+            ValveEntityFeature.OPEN,
+        ),
+    ],
+)
+async def test_openclose_cover_valve_unknown_state(
+    hass: HomeAssistant,
+    open_service: str,
+    domain: str,
+    set_position_feature: int,
+    open_feature: int,
+) -> None:
+    """Test OpenClose trait support with unknown state."""
+    assert helpers.get_google_type(domain, None) is not None
     assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, cover.SUPPORT_SET_POSITION, None, None
+        cover.DOMAIN, set_position_feature, None, None
     )
 
     # No state
     trt = trait.OpenCloseTrait(
         hass,
         State(
-            "cover.bla", STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN}
+            f"{domain}.bla",
+            STATE_UNKNOWN,
+            {ATTR_SUPPORTED_FEATURES: open_feature},
         ),
         BASIC_CONFIG,
     )
@@ -2568,30 +3186,51 @@ async def test_openclose_cover_unknown_state(hass: HomeAssistant) -> None:
     with pytest.raises(helpers.SmartHomeError):
         trt.query_attributes()
 
-    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
-    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 100}, {})
+    calls = async_mock_service(hass, domain, open_service)
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 100}, {})
     assert len(calls) == 1
-    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
     with pytest.raises(helpers.SmartHomeError):
         trt.query_attributes()
 
 
-async def test_openclose_cover_assumed_state(hass: HomeAssistant) -> None:
-    """Test OpenClose trait support for cover domain."""
-    assert helpers.get_google_type(cover.DOMAIN, None) is not None
-    assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, cover.SUPPORT_SET_POSITION, None, None
-    )
+@pytest.mark.parametrize(
+    ("domain", "set_position_service", "set_position_feature", "state_open"),
+    [
+        (
+            cover.DOMAIN,
+            cover.SERVICE_SET_COVER_POSITION,
+            CoverEntityFeature.SET_POSITION,
+            cover.STATE_OPEN,
+        ),
+        (
+            valve.DOMAIN,
+            valve.SERVICE_SET_VALVE_POSITION,
+            ValveEntityFeature.SET_POSITION,
+            valve.ValveState.OPEN,
+        ),
+    ],
+)
+async def test_openclose_cover_valve_assumed_state(
+    hass: HomeAssistant,
+    domain: str,
+    set_position_service: str,
+    set_position_feature: int,
+    state_open: str,
+) -> None:
+    """Test OpenClose trait support."""
+    assert helpers.get_google_type(domain, None) is not None
+    assert trait.OpenCloseTrait.supported(domain, set_position_feature, None, None)
 
     trt = trait.OpenCloseTrait(
         hass,
         State(
-            "cover.bla",
-            cover.STATE_OPEN,
+            f"{domain}.bla",
+            state_open,
             {
                 ATTR_ASSUMED_STATE: True,
-                ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+                ATTR_SUPPORTED_FEATURES: set_position_feature,
             },
         ),
         BASIC_CONFIG,
@@ -2601,20 +3240,37 @@ async def test_openclose_cover_assumed_state(hass: HomeAssistant) -> None:
 
     assert trt.query_attributes() == {}
 
-    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
-    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 40}, {})
+    calls = async_mock_service(hass, domain, set_position_service)
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 40}, {})
     assert len(calls) == 1
-    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 40}
+    assert calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla", cover.ATTR_POSITION: 40}
 
 
-async def test_openclose_cover_query_only(hass: HomeAssistant) -> None:
-    """Test OpenClose trait support for cover domain."""
-    assert helpers.get_google_type(cover.DOMAIN, None) is not None
-    assert trait.OpenCloseTrait.supported(cover.DOMAIN, 0, None, None)
+@pytest.mark.parametrize(
+    ("domain", "state_open"),
+    [
+        (
+            cover.DOMAIN,
+            cover.STATE_OPEN,
+        ),
+        (
+            valve.DOMAIN,
+            valve.ValveState.OPEN,
+        ),
+    ],
+)
+async def test_openclose_cover_valve_query_only(
+    hass: HomeAssistant,
+    domain: str,
+    state_open: str,
+) -> None:
+    """Test OpenClose trait support."""
+    assert helpers.get_google_type(domain, None) is not None
+    assert trait.OpenCloseTrait.supported(domain, 0, None, None)
 
     state = State(
-        "cover.bla",
-        cover.STATE_OPEN,
+        f"{domain}.bla",
+        state_open,
     )
 
     trt = trait.OpenCloseTrait(
@@ -2630,18 +3286,57 @@ async def test_openclose_cover_query_only(hass: HomeAssistant) -> None:
     assert trt.query_attributes() == {"openPercent": 100}
 
 
-async def test_openclose_cover_no_position(hass: HomeAssistant) -> None:
-    """Test OpenClose trait support for cover domain."""
-    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+@pytest.mark.parametrize(
+    (
+        "domain",
+        "state_open",
+        "state_closed",
+        "supported_features",
+        "open_service",
+        "close_service",
+    ),
+    [
+        (
+            cover.DOMAIN,
+            cover.STATE_OPEN,
+            cover.STATE_CLOSED,
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
+            cover.SERVICE_OPEN_COVER,
+            cover.SERVICE_CLOSE_COVER,
+        ),
+        (
+            valve.DOMAIN,
+            valve.ValveState.OPEN,
+            valve.ValveState.CLOSED,
+            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE,
+            valve.SERVICE_OPEN_VALVE,
+            valve.SERVICE_CLOSE_VALVE,
+        ),
+    ],
+)
+async def test_openclose_cover_valve_no_position(
+    hass: HomeAssistant,
+    domain: str,
+    state_open: str,
+    state_closed: str,
+    supported_features: int,
+    open_service: str,
+    close_service: str,
+) -> None:
+    """Test OpenClose trait support."""
+    assert helpers.get_google_type(domain, None) is not None
     assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE, None, None
+        domain,
+        supported_features,
+        None,
+        None,
     )
 
     state = State(
-        "cover.bla",
-        cover.STATE_OPEN,
+        f"{domain}.bla",
+        state_open,
         {
-            ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE,
+            ATTR_SUPPORTED_FEATURES: supported_features,
         },
     )
 
@@ -2654,51 +3349,51 @@ async def test_openclose_cover_no_position(hass: HomeAssistant) -> None:
     assert trt.sync_attributes() == {"discreteOnlyOpenClose": True}
     assert trt.query_attributes() == {"openPercent": 100}
 
-    state.state = cover.STATE_CLOSED
+    state.state = state_closed
 
     assert trt.sync_attributes() == {"discreteOnlyOpenClose": True}
     assert trt.query_attributes() == {"openPercent": 0}
 
-    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
-    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 0}, {})
+    calls = async_mock_service(hass, domain, close_service)
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 0}, {})
     assert len(calls) == 1
-    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
-    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
-    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 100}, {})
+    calls = async_mock_service(hass, domain, open_service)
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 100}, {})
     assert len(calls) == 1
-    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
     with pytest.raises(
         SmartHomeError, match=r"Current position not know for relative command"
     ):
         await trt.execute(
-            trait.COMMAND_OPENCLOSE_RELATIVE,
+            trait.COMMAND_OPEN_CLOSE_RELATIVE,
             BASIC_DATA,
             {"openRelativePercent": 100},
             {},
         )
 
     with pytest.raises(SmartHomeError, match=r"No support for partial open close"):
-        await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 50}, {})
+        await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 50}, {})
 
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         cover.CoverDeviceClass.DOOR,
         cover.CoverDeviceClass.GARAGE,
         cover.CoverDeviceClass.GATE,
-    ),
+    ],
 )
 async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, device_class) is not None
     assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, cover.SUPPORT_SET_POSITION, device_class, None
+        cover.DOMAIN, CoverEntityFeature.SET_POSITION, device_class, None
     )
     assert trait.OpenCloseTrait.might_2fa(
-        cover.DOMAIN, cover.SUPPORT_SET_POSITION, device_class
+        cover.DOMAIN, CoverEntityFeature.SET_POSITION, device_class
     )
 
     trt = trait.OpenCloseTrait(
@@ -2708,7 +3403,7 @@ async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None
             cover.STATE_OPEN,
             {
                 ATTR_DEVICE_CLASS: device_class,
-                ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+                ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
                 cover.ATTR_CURRENT_POSITION: 75,
             },
         ),
@@ -2723,7 +3418,7 @@ async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None
 
     # No challenge data
     with pytest.raises(error.ChallengeNeeded) as err:
-        await trt.execute(trait.COMMAND_OPENCLOSE, PIN_DATA, {"openPercent": 50}, {})
+        await trt.execute(trait.COMMAND_OPEN_CLOSE, PIN_DATA, {"openPercent": 50}, {})
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
     assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
@@ -2731,33 +3426,33 @@ async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None
     # invalid pin
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
-            trait.COMMAND_OPENCLOSE, PIN_DATA, {"openPercent": 50}, {"pin": "9999"}
+            trait.COMMAND_OPEN_CLOSE, PIN_DATA, {"openPercent": 50}, {"pin": "9999"}
         )
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
     assert err.value.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
 
     await trt.execute(
-        trait.COMMAND_OPENCLOSE, PIN_DATA, {"openPercent": 50}, {"pin": "1234"}
+        trait.COMMAND_OPEN_CLOSE, PIN_DATA, {"openPercent": 50}, {"pin": "1234"}
     )
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 50}
 
     # no challenge on close
-    await trt.execute(trait.COMMAND_OPENCLOSE, PIN_DATA, {"openPercent": 0}, {})
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, PIN_DATA, {"openPercent": 0}, {})
     assert len(calls_close) == 1
     assert calls_close[0].data == {ATTR_ENTITY_ID: "cover.bla"}
 
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         binary_sensor.BinarySensorDeviceClass.DOOR,
         binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
         binary_sensor.BinarySensorDeviceClass.LOCK,
         binary_sensor.BinarySensorDeviceClass.OPENING,
         binary_sensor.BinarySensorDeviceClass.WINDOW,
-    ),
+    ],
 )
 async def test_openclose_binary_sensor(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for binary_sensor domain."""
@@ -2796,7 +3491,7 @@ async def test_volume_media_player(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.VolumeTrait.supported(
         media_player.DOMAIN,
-        media_player.MediaPlayerEntityFeature.VOLUME_SET,
+        MediaPlayerEntityFeature.VOLUME_SET,
         None,
         None,
     )
@@ -2807,7 +3502,7 @@ async def test_volume_media_player(hass: HomeAssistant) -> None:
             "media_player.bla",
             media_player.STATE_PLAYING,
             {
-                ATTR_SUPPORTED_FEATURES: media_player.MediaPlayerEntityFeature.VOLUME_SET,
+                ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.VOLUME_SET,
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.3,
             },
         ),
@@ -2850,7 +3545,7 @@ async def test_volume_media_player_relative(hass: HomeAssistant) -> None:
     """Test volume trait support for relative-volume-only media players."""
     assert trait.VolumeTrait.supported(
         media_player.DOMAIN,
-        media_player.MediaPlayerEntityFeature.VOLUME_STEP,
+        MediaPlayerEntityFeature.VOLUME_STEP,
         None,
         None,
     )
@@ -2861,7 +3556,7 @@ async def test_volume_media_player_relative(hass: HomeAssistant) -> None:
             media_player.STATE_PLAYING,
             {
                 ATTR_ASSUMED_STATE: True,
-                ATTR_SUPPORTED_FEATURES: media_player.MediaPlayerEntityFeature.VOLUME_STEP,
+                ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.VOLUME_STEP,
             },
         ),
         BASIC_CONFIG,
@@ -2918,8 +3613,7 @@ async def test_media_player_mute(hass: HomeAssistant) -> None:
     """Test volume trait support for muting."""
     assert trait.VolumeTrait.supported(
         media_player.DOMAIN,
-        media_player.MediaPlayerEntityFeature.VOLUME_STEP
-        | media_player.MediaPlayerEntityFeature.VOLUME_MUTE,
+        MediaPlayerEntityFeature.VOLUME_STEP | MediaPlayerEntityFeature.VOLUME_MUTE,
         None,
         None,
     )
@@ -2930,8 +3624,8 @@ async def test_media_player_mute(hass: HomeAssistant) -> None:
             media_player.STATE_PLAYING,
             {
                 ATTR_SUPPORTED_FEATURES: (
-                    media_player.MediaPlayerEntityFeature.VOLUME_STEP
-                    | media_player.MediaPlayerEntityFeature.VOLUME_MUTE
+                    MediaPlayerEntityFeature.VOLUME_STEP
+                    | MediaPlayerEntityFeature.VOLUME_MUTE
                 ),
                 media_player.ATTR_MEDIA_VOLUME_MUTED: False,
             },
@@ -2995,17 +3689,17 @@ async def test_temperature_control_sensor(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("unit_in", "unit_out", "state", "ambient"),
     [
-        (UnitOfTemperature.FAHRENHEIT, "F", "70", 21.1),
-        (UnitOfTemperature.CELSIUS, "C", "21.1", 21.1),
-        (UnitOfTemperature.FAHRENHEIT, "F", "unavailable", None),
-        (UnitOfTemperature.FAHRENHEIT, "F", "unknown", None),
+        (US_CUSTOMARY_SYSTEM, "F", "70", 21.1),
+        (METRIC_SYSTEM, "C", "21.1", 21.1),
+        (US_CUSTOMARY_SYSTEM, "F", "unavailable", None),
+        (US_CUSTOMARY_SYSTEM, "F", "unknown", None),
     ],
 )
 async def test_temperature_control_sensor_data(
-    hass: HomeAssistant, unit_in, unit_out, state, ambient
+    hass: HomeAssistant, unit_in: UnitSystem, unit_out, state, ambient
 ) -> None:
     """Test TemperatureControl trait support for temperature sensor."""
-    hass.config.units.temperature_unit = unit_in
+    hass.config.units = unit_in
 
     trt = trait.TemperatureControlTrait(
         hass,
@@ -3030,7 +3724,6 @@ async def test_temperature_control_sensor_data(
         }
     else:
         assert trt.query_attributes() == {}
-    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
 async def test_humidity_setting_sensor(hass: HomeAssistant) -> None:
@@ -3069,11 +3762,13 @@ async def test_humidity_setting_sensor_data(
         assert trt.query_attributes() == {}
 
     with pytest.raises(helpers.SmartHomeError) as err:
-        await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+        await trt.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert err.value.code == const.ERR_NOT_SUPPORTED
 
 
-async def test_transport_control(hass: HomeAssistant) -> None:
+async def test_transport_control(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test the TransportControlTrait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
 
@@ -3082,7 +3777,7 @@ async def test_transport_control(hass: HomeAssistant) -> None:
             media_player.DOMAIN, feature, None, None
         )
 
-    now = datetime(2020, 1, 1)
+    now = datetime(2020, 1, 1, tzinfo=dt_util.UTC)
 
     trt = trait.TransportControlTrait(
         hass,
@@ -3095,8 +3790,8 @@ async def test_transport_control(hass: HomeAssistant) -> None:
                 media_player.ATTR_MEDIA_POSITION_UPDATED_AT: now
                 - timedelta(seconds=10),
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.5,
-                ATTR_SUPPORTED_FEATURES: media_player.MediaPlayerEntityFeature.PLAY
-                | media_player.MediaPlayerEntityFeature.STOP,
+                ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.STOP,
             },
         ),
         BASIC_CONFIG,
@@ -3113,13 +3808,13 @@ async def test_transport_control(hass: HomeAssistant) -> None:
     )
 
     # Patch to avoid time ticking over during the command failing the test
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await trt.execute(
-            trait.COMMAND_MEDIA_SEEK_RELATIVE,
-            BASIC_DATA,
-            {"relativePositionMs": 10000},
-            {},
-        )
+    freezer.move_to(now)
+    await trt.execute(
+        trait.COMMAND_MEDIA_SEEK_RELATIVE,
+        BASIC_DATA,
+        {"relativePositionMs": 10000},
+        {},
+    )
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: "media_player.bla",
@@ -3194,7 +3889,7 @@ async def test_transport_control(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     "state",
-    (
+    [
         STATE_OFF,
         STATE_IDLE,
         STATE_PLAYING,
@@ -3203,14 +3898,14 @@ async def test_transport_control(hass: HomeAssistant) -> None:
         STATE_STANDBY,
         STATE_UNAVAILABLE,
         STATE_UNKNOWN,
-    ),
+    ],
 )
 async def test_media_state(hass: HomeAssistant, state) -> None:
     """Test the MediaStateTrait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
 
     assert trait.TransportControlTrait.supported(
-        media_player.DOMAIN, media_player.MediaPlayerEntityFeature.PLAY, None, None
+        media_player.DOMAIN, MediaPlayerEntityFeature.PLAY, None, None
     )
 
     trt = trait.MediaStateTrait(
@@ -3222,8 +3917,8 @@ async def test_media_state(hass: HomeAssistant, state) -> None:
                 media_player.ATTR_MEDIA_POSITION: 100,
                 media_player.ATTR_MEDIA_DURATION: 200,
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.5,
-                ATTR_SUPPORTED_FEATURES: media_player.MediaPlayerEntityFeature.PLAY
-                | media_player.MediaPlayerEntityFeature.STOP,
+                ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.STOP,
             },
         ),
         BASIC_CONFIG,
@@ -3244,14 +3939,14 @@ async def test_channel(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.ChannelTrait.supported(
         media_player.DOMAIN,
-        media_player.MediaPlayerEntityFeature.PLAY_MEDIA,
+        MediaPlayerEntityFeature.PLAY_MEDIA,
         media_player.MediaPlayerDeviceClass.TV,
         None,
     )
     assert (
         trait.ChannelTrait.supported(
             media_player.DOMAIN,
-            media_player.MediaPlayerEntityFeature.PLAY_MEDIA,
+            MediaPlayerEntityFeature.PLAY_MEDIA,
             None,
             None,
         )
@@ -3305,16 +4000,15 @@ async def test_air_quality_description_for_aqi(hass: HomeAssistant) -> None:
         BASIC_CONFIG,
     )
 
-    assert trt._air_quality_description_for_aqi("0") == "healthy"
-    assert trt._air_quality_description_for_aqi("75") == "moderate"
+    assert trt._air_quality_description_for_aqi(0) == "healthy"
+    assert trt._air_quality_description_for_aqi(75) == "moderate"
     assert (
-        trt._air_quality_description_for_aqi("125") == "unhealthy for sensitive groups"
+        trt._air_quality_description_for_aqi(125.0) == "unhealthy for sensitive groups"
     )
-    assert trt._air_quality_description_for_aqi("175") == "unhealthy"
-    assert trt._air_quality_description_for_aqi("250") == "very unhealthy"
-    assert trt._air_quality_description_for_aqi("350") == "hazardous"
-    assert trt._air_quality_description_for_aqi("-1") == "unknown"
-    assert trt._air_quality_description_for_aqi("non-numeric") == "unknown"
+    assert trt._air_quality_description_for_aqi(175) == "unhealthy"
+    assert trt._air_quality_description_for_aqi(250) == "very unhealthy"
+    assert trt._air_quality_description_for_aqi(350) == "hazardous"
+    assert trt._air_quality_description_for_aqi(-1) == "unknown"
 
 
 async def test_null_device_class(hass: HomeAssistant) -> None:
@@ -3335,7 +4029,19 @@ async def test_null_device_class(hass: HomeAssistant) -> None:
     assert trt.query_attributes() == {}
 
 
-async def test_sensorstate(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("value", "published", "aqi"),
+    [
+        (100.0, 100.0, "moderate"),
+        (10.0, 10.0, "healthy"),
+        (0, 0.0, "healthy"),
+        ("", None, "unknown"),
+        ("unknown", None, "unknown"),
+    ],
+)
+async def test_sensorstate(
+    hass: HomeAssistant, value: Any, published: Any, aqi: Any
+) -> None:
     """Test SensorState trait support for sensor domain."""
     sensor_types = {
         sensor.SensorDeviceClass.AQI: ("AirQuality", "AQI"),
@@ -3349,7 +4055,7 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
         ),
     }
 
-    for sensor_type in sensor_types:
+    for sensor_type, item in sensor_types.items():
         assert helpers.get_google_type(sensor.DOMAIN, None) is not None
         assert trait.SensorStateTrait.supported(sensor.DOMAIN, None, sensor_type, None)
 
@@ -3357,7 +4063,7 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
             hass,
             State(
                 "sensor.test",
-                100.0,
+                value,
                 {
                     "device_class": sensor_type,
                 },
@@ -3365,8 +4071,8 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
             BASIC_CONFIG,
         )
 
-        name = sensor_types[sensor_type][0]
-        unit = sensor_types[sensor_type][1]
+        name = item[0]
+        unit = item[1]
 
         if sensor_type == sensor.SensorDeviceClass.AQI:
             assert trt.sync_attributes() == {
@@ -3403,22 +4109,107 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
                 "currentSensorStateData": [
                     {
                         "name": name,
-                        "currentSensorState": trt._air_quality_description_for_aqi(
-                            trt.state.state
-                        ),
-                        "rawValue": trt.state.state,
+                        "currentSensorState": aqi,
+                        "rawValue": published,
                     },
                 ]
             }
         else:
             assert trt.query_attributes() == {
-                "currentSensorStateData": [{"name": name, "rawValue": trt.state.state}]
+                "currentSensorStateData": [{"name": name, "rawValue": published}]
             }
 
     assert helpers.get_google_type(sensor.DOMAIN, None) is not None
     assert (
         trait.SensorStateTrait.supported(
             sensor.DOMAIN, None, sensor.SensorDeviceClass.MONETARY, None
+        )
+        is False
+    )
+
+
+@pytest.mark.parametrize(
+    ("state", "identifier"),
+    [
+        (STATE_ON, 0),
+        (STATE_OFF, 1),
+        (STATE_UNKNOWN, 2),
+    ],
+)
+@pytest.mark.parametrize(
+    ("device_class", "name", "states"),
+    [
+        (
+            binary_sensor.BinarySensorDeviceClass.CO,
+            "CarbonMonoxideLevel",
+            ["carbon monoxide detected", "no carbon monoxide detected", "unknown"],
+        ),
+        (
+            binary_sensor.BinarySensorDeviceClass.SMOKE,
+            "SmokeLevel",
+            ["smoke detected", "no smoke detected", "unknown"],
+        ),
+        (
+            binary_sensor.BinarySensorDeviceClass.MOISTURE,
+            "WaterLeak",
+            ["leak", "no leak", "unknown"],
+        ),
+    ],
+)
+async def test_binary_sensorstate(
+    hass: HomeAssistant,
+    state: str,
+    identifier: int,
+    device_class: binary_sensor.BinarySensorDeviceClass,
+    name: str,
+    states: list[str],
+) -> None:
+    """Test SensorState trait support for binary sensor domain."""
+
+    assert helpers.get_google_type(binary_sensor.DOMAIN, None) is not None
+    assert trait.SensorStateTrait.supported(
+        binary_sensor.DOMAIN, None, device_class, None
+    )
+
+    trt = trait.SensorStateTrait(
+        hass,
+        State(
+            "binary_sensor.test",
+            state,
+            {
+                "device_class": device_class,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "sensorStatesSupported": [
+            {
+                "name": name,
+                "descriptiveCapabilities": {
+                    "availableStates": states,
+                },
+            }
+        ]
+    }
+    assert trt.query_attributes() == {
+        "currentSensorStateData": [
+            {
+                "name": name,
+                "currentSensorState": states[identifier],
+                "rawValue": None,
+            },
+        ]
+    }
+
+    assert helpers.get_google_type(binary_sensor.DOMAIN, None) is not None
+    assert (
+        trait.SensorStateTrait.supported(
+            binary_sensor.DOMAIN,
+            None,
+            binary_sensor.BinarySensorDeviceClass.TAMPER,
+            None,
         )
         is False
     )

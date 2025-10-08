@@ -40,6 +40,15 @@ def config_data():
 
 
 @pytest.fixture
+def another_config_data():
+    """Provide configuration data for tests."""
+    return {
+        CONF_USERNAME: "user2",
+        CONF_PASSWORD: "fake2",
+    }
+
+
+@pytest.fixture
 def config_options():
     """Provide configuratio options for test."""
     return {CONF_COOL_AWAY_TEMPERATURE: 12, CONF_HEAT_AWAY_TEMPERATURE: 22}
@@ -56,6 +65,16 @@ def config_entry(config_data, config_options):
 
 
 @pytest.fixture
+def config_entry2(another_config_data, config_options):
+    """Create a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=another_config_data,
+        options=config_options,
+    )
+
+
+@pytest.fixture
 def device():
     """Mock a somecomfort.Device."""
     mock_device = create_autospec(aiosomecomfort.device.Device, instance=True)
@@ -67,6 +86,7 @@ def device():
     mock_device.system_mode = "off"
     mock_device.name = "device1"
     mock_device.current_temperature = CURRENTTEMPERATURE
+    mock_device.temperature_unit = "C"
     mock_device.mac_address = "macaddress1"
     mock_device.outdoor_temperature = None
     mock_device.outdoor_humidity = None
@@ -107,6 +127,17 @@ def device():
     mock_device.refresh = AsyncMock()
     mock_device.heat_away_temp = HEATAWAY
     mock_device.cool_away_temp = COOLAWAY
+    mock_device.has_humidifier = False
+    mock_device.has_dehumidifier = False
+    mock_device.humidifier_upper_limit = 60
+    mock_device.humidifier_lower_limit = 10
+    mock_device.humidifier_setpoint = 20
+    mock_device.dehumidifier_mode = 1
+    mock_device.dehumidifier_upper_limit = 55
+    mock_device.dehumidifier_lower_limit = 15
+    mock_device.dehumidifier_setpoint = 30
+    mock_device.dehumidifier_mode = 1
+    mock_device.raw_dr_data = {"CoolSetpLimit": None, "HeatSetpLimit": None}
 
     return mock_device
 
@@ -121,12 +152,35 @@ def device_with_outdoor_sensor():
         "hasFan": False,
     }
     mock_device.system_mode = "off"
-    mock_device.name = "device1"
+    mock_device.name = "device3"
     mock_device.current_temperature = CURRENTTEMPERATURE
     mock_device.mac_address = "macaddress1"
     mock_device.temperature_unit = "C"
     mock_device.outdoor_temperature = OUTDOORTEMP
     mock_device.outdoor_humidity = OUTDOORHUMIDITY
+    mock_device.has_humidifier = False
+    mock_device.has_dehumidifier = False
+    mock_device.raw_ui_data = {
+        "SwitchOffAllowed": True,
+        "SwitchAutoAllowed": True,
+        "SwitchCoolAllowed": True,
+        "SwitchHeatAllowed": True,
+        "SwitchEmergencyHeatAllowed": True,
+        "HeatUpperSetptLimit": HEATUPPERSETPOINTLIMIT,
+        "HeatLowerSetptLimit": HEATLOWERSETPOINTLIMIT,
+        "CoolUpperSetptLimit": COOLUPPERSETPOINTLIMIT,
+        "CoolLowerSetptLimit": COOLLOWERSETPOINTLIMIT,
+        "HeatNextPeriod": NEXTHEATPERIOD,
+        "CoolNextPeriod": NEXTCOOLPERIOD,
+    }
+    mock_device.raw_fan_data = {
+        "fanModeOnAllowed": True,
+        "fanModeAutoAllowed": True,
+        "fanModeCirculateAllowed": True,
+    }
+
+    mock_device.raw_dr_data = {"CoolSetpLimit": None, "HeatSetpLimit": None}
+
     return mock_device
 
 
@@ -145,6 +199,36 @@ def another_device():
     mock_device.mac_address = "macaddress1"
     mock_device.outdoor_temperature = None
     mock_device.outdoor_humidity = None
+    mock_device.has_humidifier = False
+    mock_device.has_dehumidifier = False
+    mock_device.humidifier_upper_limit = 60
+    mock_device.humidifier_lower_limit = 10
+    mock_device.humidifier_setpoint = 20
+    mock_device.dehumidifier_mode = 1
+    mock_device.dehumidifier_upper_limit = 55
+    mock_device.dehumidifier_lower_limit = 15
+    mock_device.dehumidifier_setpoint = 30
+    mock_device.dehumidifier_mode = 1
+    mock_device.raw_ui_data = {
+        "SwitchOffAllowed": True,
+        "SwitchAutoAllowed": True,
+        "SwitchCoolAllowed": True,
+        "SwitchHeatAllowed": True,
+        "SwitchEmergencyHeatAllowed": True,
+        "HeatUpperSetptLimit": HEATUPPERSETPOINTLIMIT,
+        "HeatLowerSetptLimit": HEATLOWERSETPOINTLIMIT,
+        "CoolUpperSetptLimit": COOLUPPERSETPOINTLIMIT,
+        "CoolLowerSetptLimit": COOLLOWERSETPOINTLIMIT,
+        "HeatNextPeriod": NEXTHEATPERIOD,
+        "CoolNextPeriod": NEXTCOOLPERIOD,
+    }
+    mock_device.raw_fan_data = {
+        "fanModeOnAllowed": True,
+        "fanModeAutoAllowed": True,
+        "fanModeCirculateAllowed": True,
+    }
+
+    mock_device.raw_dr_data = {"CoolSetpLimit": None, "HeatSetpLimit": None}
     return mock_device
 
 

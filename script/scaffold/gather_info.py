@@ -1,4 +1,5 @@
 """Gather info for scaffolding."""
+
 import json
 
 from homeassistant.util import slugify
@@ -92,7 +93,7 @@ def gather_new_integration(determine_auth: bool) -> Info:
             "prompt": (
                 f"""How will your integration gather data?
 
-Valid values are {', '.join(SUPPORTED_IOT_CLASSES)}
+Valid values are {", ".join(SUPPORTED_IOT_CLASSES)}
 
 More info @ https://developers.home-assistant.io/docs/creating_integration_manifest#iot-class
 """

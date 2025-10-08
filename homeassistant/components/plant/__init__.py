@@ -1,4 +1,9 @@
-"""Support for monitoring plants."""
+"""Support for monitoring plants.
+
+DEVELOPMENT OF THE PLANT INTEGRATION IS FROZEN
+PENDING A DESIGN EVALUATION.
+"""
+
 from collections import deque
 from contextlib import suppress
 from datetime import datetime, timedelta
@@ -9,7 +14,6 @@ import voluptuous as vol
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    CONDUCTIVITY,
     CONF_SENSORS,
     LIGHT_LUX,
     PERCENTAGE,
@@ -17,11 +21,18 @@ from homeassistant.const import (
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfConductivity,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
@@ -121,6 +132,9 @@ class Plant(Entity):
 
     It also checks the measurements against
     configurable min and max values.
+
+    DEVELOPMENT OF THE PLANT INTEGRATION IS FROZEN
+    PENDING A DESIGN EVALUATION.
     """
 
     _attr_should_poll = False
@@ -141,7 +155,7 @@ class Plant(Entity):
             "max": CONF_MAX_MOISTURE,
         },
         READING_CONDUCTIVITY: {
-            ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS_PER_CM,
             "min": CONF_MIN_CONDUCTIVITY,
             "max": CONF_MAX_CONDUCTIVITY,
         },
@@ -176,15 +190,16 @@ class Plant(Entity):
         self._brightness_history = DailyHistory(self._conf_check_days)
 
     @callback
-    def _state_changed_event(self, event):
+    def _state_changed_event(self, event: Event[EventStateChangedData]) -> None:
         """Sensor state change event."""
-        self.state_changed(event.data.get("entity_id"), event.data.get("new_state"))
+        self.state_changed(event.data["entity_id"], event.data["new_state"])
 
     @callback
-    def state_changed(self, entity_id, new_state):
+    def state_changed(self, entity_id: str, new_state: State | None) -> None:
         """Update the sensor status."""
         if new_state is None:
             return
+        value: str | float
         value = new_state.state
         _LOGGER.debug("Received callback from %s with value %s", entity_id, value)
         if value == STATE_UNKNOWN:
@@ -260,6 +275,7 @@ class Plant(Entity):
             min_value = self._config[params["min"]]
             if value < min_value:
                 return f"{sensor_name} low"
+        return None
 
     def _check_max(self, sensor_name, value, params):
         """If configured, check the value against the defined maximum value."""
@@ -354,6 +370,9 @@ class DailyHistory:
     """Stores one measurement per day for a maximum number of days.
 
     At the moment only the maximum value per day is kept.
+
+    DEVELOPMENT OF THE PLANT INTEGRATION IS FROZEN
+    PENDING A DESIGN EVALUATION.
     """
 
     def __init__(self, max_length):

@@ -1,8 +1,9 @@
 """Platform for climate integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW, AtaDevice, AtwDevice
 import pymelcloud.ata_device as ata
@@ -20,15 +21,15 @@ from homeassistant.components.climate import (
     DEFAULT_MIN_TEMP,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MelCloudDevice
+from . import MelCloudConfigEntry, MelCloudDevice
 from .const import (
     ATTR_STATUS,
     ATTR_VANE_HORIZONTAL,
@@ -36,7 +37,6 @@ from .const import (
     ATTR_VANE_VERTICAL,
     ATTR_VANE_VERTICAL_POSITIONS,
     CONF_POSITION,
-    DOMAIN,
     SERVICE_SET_VANE_HORIZONTAL,
     SERVICE_SET_VANE_VERTICAL,
 )
@@ -55,17 +55,31 @@ ATA_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATA_HVAC_MODE_LOOKUP.items()}
 
 
 ATW_ZONE_HVAC_MODE_LOOKUP = {
-    atw.ZONE_OPERATION_MODE_HEAT: HVACMode.HEAT,
-    atw.ZONE_OPERATION_MODE_COOL: HVACMode.COOL,
+    atw.ZONE_STATUS_HEAT: HVACMode.HEAT,
+    atw.ZONE_STATUS_COOL: HVACMode.COOL,
 }
 ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATW_ZONE_HVAC_MODE_LOOKUP.items()}
 
+ATW_ZONE_HVAC_ACTION_LOOKUP = {
+    atw.STATUS_IDLE: HVACAction.IDLE,
+    atw.STATUS_HEAT_ZONES: HVACAction.HEATING,
+    atw.STATUS_COOL: HVACAction.COOLING,
+    atw.STATUS_STANDBY: HVACAction.IDLE,
+    # Heating water tank, so the zone is idle
+    atw.STATUS_HEAT_WATER: HVACAction.IDLE,
+    atw.STATUS_LEGIONELLA: HVACAction.IDLE,
+    # Heat pump cannot heat in this mode, but will be ready soon
+    atw.STATUS_DEFROST: HVACAction.PREHEATING,
+}
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: MelCloudConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MelCloud device climate based on config_entry."""
-    mel_devices = hass.data[DOMAIN][entry.entry_id]
+    mel_devices = entry.runtime_data
     entities: list[AtaDeviceClimate | AtwDeviceZoneClimate] = [
         AtaDeviceClimate(mel_device, mel_device.device)
         for mel_device in mel_devices[DEVICE_TYPE_ATA]
@@ -99,6 +113,8 @@ class MelCloudClimate(ClimateEntity):
     """Base climate device."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device: MelCloudDevice) -> None:
         """Initialize the climate."""
@@ -108,11 +124,6 @@ class MelCloudClimate(ClimateEntity):
     async def async_update(self) -> None:
         """Update state from MELCloud."""
         await self.api.async_update()
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self.api.device_info
 
     @property
     def target_temperature_step(self) -> float | None:
@@ -127,6 +138,8 @@ class AtaDeviceClimate(MelCloudClimate):
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     def __init__(self, device: MelCloudDevice, ata_device: AtaDevice) -> None:
@@ -134,8 +147,16 @@ class AtaDeviceClimate(MelCloudClimate):
         super().__init__(device)
         self._device = ata_device
 
-        self._attr_name = device.name
         self._attr_unique_id = f"{self.api.device.serial}-{self.api.device.mac}"
+        self._attr_device_info = self.api.device_info
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # We can only check for vane_horizontal once we fetch the device data from the cloud
+        if self._device.vane_horizontal:
+            self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -213,7 +234,7 @@ class AtaDeviceClimate(MelCloudClimate):
         set_dict: dict[str, Any] = {}
         if ATTR_HVAC_MODE in kwargs:
             self._apply_set_hvac_mode(
-                kwargs.get(ATTR_HVAC_MODE, self.hvac_mode), set_dict
+                cast(HVACMode, kwargs.get(ATTR_HVAC_MODE, self.hvac_mode)), set_dict
             )
 
         if ATTR_TEMPERATURE in kwargs:
@@ -259,14 +280,28 @@ class AtaDeviceClimate(MelCloudClimate):
         """Return vertical vane position or mode."""
         return self._device.vane_vertical
 
+    @property
+    def swing_horizontal_mode(self) -> str | None:
+        """Return horizontal vane position or mode."""
+        return self._device.vane_horizontal
+
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set vertical vane position or mode."""
         await self.async_set_vane_vertical(swing_mode)
+
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set horizontal vane position or mode."""
+        await self.async_set_vane_horizontal(swing_horizontal_mode)
 
     @property
     def swing_modes(self) -> list[str] | None:
         """Return a list of available vertical vane positions and modes."""
         return self._device.vane_vertical_positions
+
+    @property
+    def swing_horizontal_modes(self) -> list[str] | None:
+        """Return a list of available horizontal vane positions and modes."""
+        return self._device.vane_horizontal_positions
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
@@ -310,18 +345,17 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         self._device = atw_device
         self._zone = atw_zone
 
-        self._attr_name = f"{device.name} {self._zone.name}"
         self._attr_unique_id = f"{self.api.device.serial}-{atw_zone.zone_index}"
+        self._attr_device_info = self.api.zone_device_info(atw_zone)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes with device specific additions."""
-        data = {
+        return {
             ATTR_STATUS: ATW_ZONE_HVAC_MODE_LOOKUP.get(
                 self._zone.status, self._zone.status
             )
         }
-        return data
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -355,6 +389,13 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         return [self.hvac_mode]
 
     @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current running hvac operation."""
+        if not self._device.power:
+            return HVACAction.OFF
+        return ATW_ZONE_HVAC_ACTION_LOOKUP.get(self._device.status)
+
+    @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._zone.room_temperature
@@ -367,5 +408,5 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self._zone.set_target_temperature(
-            kwargs.get("temperature", self.target_temperature)
+            kwargs.get(ATTR_TEMPERATURE, self.target_temperature)
         )

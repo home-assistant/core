@@ -1,19 +1,21 @@
 """DataUpdateCoordinator for the Forecast.Solar integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 
-from forecast_solar import Estimate, ForecastSolar
+from forecast_solar import Estimate, ForecastSolar, ForecastSolarConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_AZIMUTH,
-    CONF_DAMPING,
+    CONF_DAMPING_EVENING,
+    CONF_DAMPING_MORNING,
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
@@ -21,15 +23,16 @@ from .const import (
     LOGGER,
 )
 
+type ForecastSolarConfigEntry = ConfigEntry[ForecastSolarDataUpdateCoordinator]
+
 
 class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
     """The Forecast.Solar Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: ForecastSolarConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ForecastSolarConfigEntry) -> None:
         """Initialize the Forecast.Solar coordinator."""
-        self.config_entry = entry
 
         # Our option flow may cause it to be an empty string,
         # this if statement is here to catch that.
@@ -48,7 +51,8 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             declination=entry.options[CONF_DECLINATION],
             azimuth=(entry.options[CONF_AZIMUTH] - 180),
             kwp=(entry.options[CONF_MODULES_POWER] / 1000),
-            damping=entry.options.get(CONF_DAMPING, 0),
+            damping_morning=entry.options.get(CONF_DAMPING_MORNING, 0.0),
+            damping_evening=entry.options.get(CONF_DAMPING_EVENING, 0.0),
             inverter=inverter_size,
         )
 
@@ -58,8 +62,17 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         if api_key is not None:
             update_interval = timedelta(minutes=30)
 
-        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=update_interval,
+        )
 
     async def _async_update_data(self) -> Estimate:
         """Fetch Forecast.Solar estimates."""
-        return await self.forecast.estimate()
+        try:
+            return await self.forecast.estimate()
+        except ForecastSolarConnectionError as error:
+            raise UpdateFailed(error) from error

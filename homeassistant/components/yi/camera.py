@@ -1,4 +1,5 @@
 """Support for Xiaomi Cameras (HiSilicon Hi3518e V200)."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,10 @@ from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
+    Camera,
+)
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import (
     CONF_HOST,
@@ -36,7 +40,7 @@ DEFAULT_ARGUMENTS = "-pred 1"
 
 CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
@@ -62,35 +66,21 @@ async def async_setup_platform(
 class YiCamera(Camera):
     """Define an implementation of a Yi Camera."""
 
-    def __init__(self, hass, config):
+    _attr_brand = DEFAULT_BRAND
+
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Initialize."""
         super().__init__()
         self._extra_arguments = config.get(CONF_FFMPEG_ARGUMENTS)
-        self._last_image = None
+        self._last_image: bytes | None = None
         self._last_url = None
         self._manager = get_ffmpeg_manager(hass)
-        self._name = config[CONF_NAME]
-        self._is_on = True
+        self._attr_name = config[CONF_NAME]
         self.host = config[CONF_HOST]
         self.port = config[CONF_PORT]
         self.path = config[CONF_PATH]
         self.user = config[CONF_USERNAME]
         self.passwd = config[CONF_PASSWORD]
-
-    @property
-    def brand(self):
-        """Camera brand."""
-        return DEFAULT_BRAND
-
-    @property
-    def is_on(self):
-        """Determine whether the camera is on."""
-        return self._is_on
-
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
 
     async def _get_latest_video_url(self):
         """Retrieve the latest video file from the customized Yi FTP server."""
@@ -118,14 +108,14 @@ class YiCamera(Camera):
                 return None
 
             await ftp.quit()
-            self._is_on = True
+            self._attr_is_on = True
             return (
                 f"ftp://{self.user}:{self.passwd}@{self.host}:"
                 f"{self.port}{self.path}/{latest_dir}/{videos[-1]}"
             )
         except (ConnectionRefusedError, StatusCodeError) as err:
             _LOGGER.error("Error while fetching video: %s", err)
-            self._is_on = False
+            self._attr_is_on = False
             return None
 
     async def async_camera_image(
@@ -147,8 +137,8 @@ class YiCamera(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        if not self._is_on:
-            return
+        if not self._attr_is_on:
+            return None
 
         stream = CameraMjpeg(self._manager.binary)
         await stream.open_camera(self._last_url, extra_cmd=self._extra_arguments)

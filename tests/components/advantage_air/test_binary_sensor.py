@@ -1,42 +1,26 @@
 """Test the Advantage Air Binary Sensor Platform."""
-from datetime import timedelta
 
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
+
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import (
-    TEST_SET_RESPONSE,
-    TEST_SET_URL,
-    TEST_SYSTEM_DATA,
-    TEST_SYSTEM_URL,
-    add_mock_config,
-)
+from . import add_mock_config
 
 from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_binary_sensor_async_setup_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_get: AsyncMock,
 ) -> None:
     """Test binary sensor setup."""
 
-    aioclient_mock.get(
-        TEST_SYSTEM_URL,
-        text=TEST_SYSTEM_DATA,
-    )
-    aioclient_mock.get(
-        TEST_SET_URL,
-        text=TEST_SET_RESPONSE,
-    )
     await add_mock_config(hass)
-
-    registry = er.async_get(hass)
-
-    assert len(aioclient_mock.mock_calls) == 1
 
     # Test First Air Filter
     entity_id = "binary_sensor.myzone_filter"
@@ -44,7 +28,7 @@ async def test_binary_sensor_async_setup_entry(
     assert state
     assert state.state == STATE_OFF
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-filter"
 
@@ -54,7 +38,7 @@ async def test_binary_sensor_async_setup_entry(
     assert state
     assert state.state == STATE_ON
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac2-filter"
 
@@ -64,7 +48,7 @@ async def test_binary_sensor_async_setup_entry(
     assert state
     assert state.state == STATE_ON
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z01-motion"
 
@@ -74,7 +58,7 @@ async def test_binary_sensor_async_setup_entry(
     assert state
     assert state.state == STATE_OFF
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z02-motion"
 
@@ -83,20 +67,21 @@ async def test_binary_sensor_async_setup_entry(
 
     assert not hass.states.get(entity_id)
 
-    registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-    await hass.async_block_till_done()
+    mock_get.reset_mock()
 
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.config_entries.RELOAD_AFTER_UPDATE_DELAY", 1):
+        entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+        await hass.async_block_till_done()
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert len(mock_get.mock_calls) == 1
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z01-myzone"
 
@@ -105,19 +90,20 @@ async def test_binary_sensor_async_setup_entry(
 
     assert not hass.states.get(entity_id)
 
-    registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-    await hass.async_block_till_done()
+    mock_get.reset_mock()
 
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.config_entries.RELOAD_AFTER_UPDATE_DELAY", 1):
+        entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+        await hass.async_block_till_done()
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert len(mock_get.mock_calls) == 1
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z02-myzone"

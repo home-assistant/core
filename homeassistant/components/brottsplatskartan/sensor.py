@@ -1,69 +1,29 @@
 """Sensor platform for Brottsplatskartan information."""
+
 from __future__ import annotations
 
 from collections import defaultdict
 from datetime import timedelta
+from typing import Literal
 
 from brottsplatskartan import ATTRIBUTION, BrottsplatsKartan
-import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    SensorEntity,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import AREAS, CONF_APP_ID, CONF_AREA, DEFAULT_NAME, DOMAIN, LOGGER
+from .const import CONF_APP_ID, CONF_AREA, DOMAIN, LOGGER
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
-    {
-        vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_AREA, default=[]): vol.All(cv.ensure_list, [vol.In(AREAS)]),
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Brottsplatskartan platform."""
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.11.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Brottsplatskartan sensor entry."""
 
@@ -73,9 +33,11 @@ async def async_setup_entry(
     app = entry.data[CONF_APP_ID]
     name = entry.title
 
-    bpk = BrottsplatsKartan(app=app, area=area, latitude=latitude, longitude=longitude)
+    bpk = BrottsplatsKartan(
+        app=app, areas=[area] if area else None, latitude=latitude, longitude=longitude
+    )
 
-    async_add_entities([BrottsplatskartanSensor(bpk, name, entry.entry_id)], True)
+    async_add_entities([BrottsplatskartanSensor(bpk, name, entry.entry_id, area)], True)
 
 
 class BrottsplatskartanSensor(SensorEntity):
@@ -85,9 +47,12 @@ class BrottsplatskartanSensor(SensorEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, bpk: BrottsplatsKartan, name: str, entry_id: str) -> None:
+    def __init__(
+        self, bpk: BrottsplatsKartan, name: str, entry_id: str, area: str | None
+    ) -> None:
         """Initialize the Brottsplatskartan sensor."""
         self._brottsplatskartan = bpk
+        self._area = area
         self._attr_unique_id = entry_id
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -100,11 +65,18 @@ class BrottsplatskartanSensor(SensorEntity):
         """Update device state."""
 
         incident_counts: defaultdict[str, int] = defaultdict(int)
-        incidents = self._brottsplatskartan.get_incidents()
+        get_incidents: dict[str, list] | Literal[False] = (
+            self._brottsplatskartan.get_incidents()
+        )
 
-        if incidents is False:
+        if get_incidents is False:
             LOGGER.debug("Problems fetching incidents")
             return
+
+        if self._area:
+            incidents = get_incidents.get(self._area) or []
+        else:
+            incidents = get_incidents.get("latlng") or []
 
         for incident in incidents:
             if (incident_type := incident.get("title_type")) is not None:

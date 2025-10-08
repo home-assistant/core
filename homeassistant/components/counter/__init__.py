@@ -1,9 +1,10 @@
 """Component to count within automations."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any, Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -15,13 +16,11 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import collection
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,13 +43,12 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SERVICE_DECREMENT = "decrement"
 SERVICE_INCREMENT = "increment"
 SERVICE_RESET = "reset"
-SERVICE_CONFIGURE = "configure"
 SERVICE_SET_VALUE = "set_value"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-STORAGE_FIELDS = {
+STORAGE_FIELDS: VolDictType = {
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.positive_int,
     vol.Required(CONF_NAME): vol.All(cv.string, vol.Length(min=1)),
@@ -61,7 +59,7 @@ STORAGE_FIELDS = {
 }
 
 
-def _none_to_empty_dict(value):
+def _none_to_empty_dict[_T](value: _T | None) -> _T | dict[str, Any]:
     if value is None:
         return {}
     return value
@@ -123,24 +121,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
-    component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
-    component.async_register_entity_service(SERVICE_RESET, {}, "async_reset")
+    component.async_register_entity_service(SERVICE_INCREMENT, None, "async_increment")
+    component.async_register_entity_service(SERVICE_DECREMENT, None, "async_decrement")
+    component.async_register_entity_service(SERVICE_RESET, None, "async_reset")
     component.async_register_entity_service(
         SERVICE_SET_VALUE,
         {vol.Required(VALUE): cv.positive_int},
         "async_set_value",
-    )
-    component.async_register_entity_service(
-        SERVICE_CONFIGURE,
-        {
-            vol.Optional(ATTR_MINIMUM): vol.Any(None, vol.Coerce(int)),
-            vol.Optional(ATTR_MAXIMUM): vol.Any(None, vol.Coerce(int)),
-            vol.Optional(ATTR_STEP): cv.positive_int,
-            vol.Optional(ATTR_INITIAL): cv.positive_int,
-            vol.Optional(VALUE): cv.positive_int,
-        },
-        "async_configure",
     )
 
     return True
@@ -153,12 +140,12 @@ class CounterStorageCollection(collection.DictStorageCollection):
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        return self.CREATE_UPDATE_SCHEMA(data)
+        return self.CREATE_UPDATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_NAME]
+        return info[CONF_NAME]  # type: ignore[no-any-return]
 
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
@@ -224,9 +211,9 @@ class Counter(collection.CollectionEntity, RestoreEntity):
     @property
     def unique_id(self) -> str | None:
         """Return unique id of the entity."""
-        return self._config[CONF_ID]
+        return self._config[CONF_ID]  # type: ignore[no-any-return]
 
-    def compute_next_state(self, state) -> int:
+    def compute_next_state(self, state: int | None) -> int | None:
         """Keep the state within the range of min/max values."""
         if self._config[CONF_MINIMUM] is not None:
             state = max(self._config[CONF_MINIMUM], state)
@@ -283,25 +270,6 @@ class Counter(collection.CollectionEntity, RestoreEntity):
             )
 
         self._state = value
-        self.async_write_ha_state()
-
-    @callback
-    def async_configure(self, **kwargs) -> None:
-        """Change the counter's settings with a service."""
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            "deprecated_configure_service",
-            breaks_in_ha_version="2023.12.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_configure_service",
-        )
-
-        new_state = kwargs.pop(VALUE, self._state)
-        self._config = {**self._config, **kwargs}
-        self._state = self.compute_next_state(new_state)
         self.async_write_ha_state()
 
     async def async_update_config(self, config: ConfigType) -> None:

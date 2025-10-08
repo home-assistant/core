@@ -1,4 +1,5 @@
 """Test the FreeDNS component."""
+
 import pytest
 
 from homeassistant.components import freedns
@@ -15,7 +16,9 @@ UPDATE_URL = freedns.UPDATE_URL
 
 
 @pytest.fixture
-def setup_freedns(hass, aioclient_mock):
+async def setup_freedns(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Fixture that sets up FreeDNS."""
     params = {}
     params[ACCESS_TOKEN] = ""
@@ -23,17 +26,15 @@ def setup_freedns(hass, aioclient_mock):
         UPDATE_URL, params=params, text="Successfully updated 1 domains."
     )
 
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            freedns.DOMAIN,
-            {
-                freedns.DOMAIN: {
-                    "access_token": ACCESS_TOKEN,
-                    "scan_interval": UPDATE_INTERVAL,
-                }
-            },
-        )
+    await async_setup_component(
+        hass,
+        freedns.DOMAIN,
+        {
+            freedns.DOMAIN: {
+                "access_token": ACCESS_TOKEN,
+                "scan_interval": UPDATE_INTERVAL,
+            }
+        },
     )
 
 

@@ -1,4 +1,5 @@
 """Media Player component to integrate TVs exposing the Joint Space API."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -15,16 +16,14 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LOGGER as _LOGGER, PhilipsTVDataUpdateCoordinator
-from .const import DOMAIN
+from . import LOGGER as _LOGGER
+from .coordinator import PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
+from .entity import PhilipsJsEntity
 from .helpers import async_get_turn_on_trigger
 
 SUPPORT_PHILIPS_JS = (
@@ -49,11 +48,11 @@ def _inverted(data):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: PhilipsTVConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the configuration entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     async_add_entities(
         [
             PhilipsTVMediaPlayer(
@@ -63,13 +62,10 @@ async def async_setup_entry(
     )
 
 
-class PhilipsTVMediaPlayer(
-    CoordinatorEntity[PhilipsTVDataUpdateCoordinator], MediaPlayerEntity
-):
+class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(
@@ -80,15 +76,6 @@ class PhilipsTVMediaPlayer(
         self._tv = coordinator.api
         self._sources: dict[str, str] = {}
         self._attr_unique_id = coordinator.unique_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, coordinator.unique_id),
-            },
-            manufacturer="Philips",
-            model=coordinator.system.get("model"),
-            sw_version=coordinator.system.get("softwareversion"),
-            name=coordinator.system["name"],
-        )
         self._attr_state = MediaPlayerState.OFF
 
         self._turn_on = PluggableAction(self.async_write_ha_state)

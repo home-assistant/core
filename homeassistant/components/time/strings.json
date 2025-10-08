@@ -4,5 +4,17 @@
     "_": {
       "name": "[%key:component::time::title%]"
     }
+  },
+  "services": {
+    "set_value": {
+      "name": "Set Time",
+      "description": "Sets the time.",
+      "fields": {
+        "time": {
+          "name": "Time",
+          "description": "The time to set."
+        }
+      }
+    }
   }
 }

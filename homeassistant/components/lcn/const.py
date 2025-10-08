@@ -1,4 +1,5 @@
 """Constants for the LCN component."""
+
 from itertools import product
 
 from homeassistant.const import Platform
@@ -14,16 +15,14 @@ PLATFORMS = [
 ]
 
 DOMAIN = "lcn"
-DATA_LCN = "lcn"
 DEFAULT_NAME = "pchk"
 
-CONNECTION = "connection"
 CONF_HARDWARE_SERIAL = "hardware_serial"
 CONF_SOFTWARE_SERIAL = "software_serial"
 CONF_HARDWARE_TYPE = "hardware_type"
-CONF_RESOURCE = "resource"
 CONF_DOMAIN_DATA = "domain_data"
 
+CONF_ACKNOWLEDGE = "acknowledge"
 CONF_CONNECTIONS = "connections"
 CONF_SK_NUM_TRIES = "sk_num_tries"
 CONF_OUTPUT = "output"
@@ -32,6 +31,7 @@ CONF_DIMMABLE = "dimmable"
 CONF_TRANSITION = "transition"
 CONF_MOTOR = "motor"
 CONF_LOCKABLE = "lockable"
+CONF_TARGET_VALUE_LOCKED = "target_value_locked"
 CONF_VARIABLE = "variable"
 CONF_VALUE = "value"
 CONF_RELVARREF = "value_reference"
@@ -40,6 +40,7 @@ CONF_LED = "led"
 CONF_KEYS = "keys"
 CONF_TIME = "time"
 CONF_TIME_UNIT = "time_unit"
+CONF_LOCK_TIME = "lock_time"
 CONF_TABLE = "table"
 CONF_ROW = "row"
 CONF_TEXT = "text"
@@ -51,6 +52,7 @@ CONF_SCENES = "scenes"
 CONF_REGISTER = "register"
 CONF_OUTPUTS = "outputs"
 CONF_REVERSE_TIME = "reverse_time"
+CONF_POSITIONING_MODE = "positioning_mode"
 
 DIM_MODES = ["STEPS50", "STEPS200"]
 
@@ -230,4 +232,6 @@ TIME_UNITS = [
     "D",
 ]
 
-MOTOR_REVERSE_TIME = ["RT70", "RT600", "RT1200"]
+MOTOR_REVERSE_TIMES = ["RT70", "RT600", "RT1200"]
+
+MOTOR_POSITIONING_MODES = ["NONE", "BS4", "MODULE"]

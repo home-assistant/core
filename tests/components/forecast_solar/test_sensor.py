@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the Forecast.Solar integration."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -26,12 +27,12 @@ from tests.common import MockConfigEntry
 
 async def test_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Forecast.Solar sensors."""
     entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     state = hass.states.get("sensor.energy_production_today")
     entry = entity_registry.async_get("sensor.energy_production_today")
@@ -166,18 +167,19 @@ async def test_sensors(
 
 @pytest.mark.parametrize(
     "entity_id",
-    (
+    [
         "sensor.power_production_next_12hours",
         "sensor.power_production_next_24hours",
         "sensor.power_production_next_hour",
-    ),
+    ],
 )
 async def test_disabled_by_default(
-    hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    entity_id: str,
 ) -> None:
     """Test the Forecast.Solar sensors that are disabled by default."""
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get(entity_id)
     assert state is None
 
@@ -192,23 +194,24 @@ async def test_disabled_by_default(
     [
         (
             "power_production_next_12hours",
-            "Estimated power production - next 12 hours",
+            "Estimated power production - in 12 hours",
             "600000",
         ),
         (
             "power_production_next_24hours",
-            "Estimated power production - next 24 hours",
+            "Estimated power production - in 24 hours",
             "700000",
         ),
         (
             "power_production_next_hour",
-            "Estimated power production - next hour",
+            "Estimated power production - in 1 hour",
             "400000",
         ),
     ],
 )
 async def test_enabling_disable_by_default(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_forecast_solar: MagicMock,
     key: str,
@@ -218,7 +221,6 @@ async def test_enabling_disable_by_default(
     """Test the Forecast.Solar sensors that are disabled by default."""
     entry_id = mock_config_entry.entry_id
     entity_id = f"{SENSOR_DOMAIN}.{key}"
-    entity_registry = er.async_get(hass)
 
     # Pre-create registry entry for disabled by default sensor
     entity_registry.async_get_or_create(

@@ -5,6 +5,7 @@ be stable between reboots and upgrades.
 
 This module generates and stores them in a HA storage.
 """
+
 from __future__ import annotations
 
 from uuid import UUID
@@ -36,7 +37,7 @@ class IIDStorage(Store):
         old_major_version: int,
         old_minor_version: int,
         old_data: dict,
-    ):
+    ) -> dict:
         """Migrate to the new version."""
         if old_major_version == 1:
             # Convert v1 to v2 format which uses a unique iid set per accessory
@@ -101,8 +102,8 @@ class AccessoryIIDStorage:
         char_hap_type: str | None = uuid_to_hap_type(char_uuid) if char_uuid else None
         # Allocation key must be a string since we are saving it to JSON
         allocation_key = (
-            f'{service_hap_type}_{service_unique_id or ""}_'
-            f'{char_hap_type or ""}_{char_unique_id or ""}'
+            f"{service_hap_type}_{service_unique_id or ''}_"
+            f"{char_hap_type or ''}_{char_unique_id or ''}"
         )
         # AID must be a string since JSON keys cannot be int
         aid_str = str(aid)

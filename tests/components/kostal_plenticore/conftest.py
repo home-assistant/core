@@ -1,4 +1,5 @@
 """Fixtures for Kostal Plenticore tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -7,9 +8,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pykoplenti import MeData, VersionData
 import pytest
 
-from homeassistant.components.kostal_plenticore.helper import Plenticore
+from homeassistant.components.kostal_plenticore.coordinator import Plenticore
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from tests.common import MockConfigEntry
 
@@ -26,7 +27,22 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_plenticore() -> Generator[Plenticore, None, None]:
+def mock_installer_config_entry() -> MockConfigEntry:
+    """Return a mocked ConfigEntry for testing with installer login."""
+    return MockConfigEntry(
+        entry_id="2ab8dd92a62787ddfe213a67e09406bd",
+        title="scb",
+        domain="kostal_plenticore",
+        data={
+            "host": "192.168.1.2",
+            "password": "secret_password",
+            "service_code": "12345",
+        },
+    )
+
+
+@pytest.fixture
+def mock_plenticore() -> Generator[Plenticore]:
     """Set up a Plenticore mock with some default values."""
     with patch(
         "homeassistant.components.kostal_plenticore.Plenticore", autospec=True
@@ -49,24 +65,20 @@ def mock_plenticore() -> Generator[Plenticore, None, None]:
 
         plenticore.client.get_version = AsyncMock()
         plenticore.client.get_version.return_value = VersionData(
-            {
-                "api_version": "0.2.0",
-                "hostname": "scb",
-                "name": "PUCK RESTful API",
-                "sw_version": "01.16.05025",
-            }
+            api_version="0.2.0",
+            hostname="scb",
+            name="PUCK RESTful API",
+            sw_version="01.16.05025",
         )
 
         plenticore.client.get_me = AsyncMock()
         plenticore.client.get_me.return_value = MeData(
-            {
-                "locked": False,
-                "active": True,
-                "authenticated": True,
-                "permissions": [],
-                "anonymous": False,
-                "role": "USER",
-            }
+            locked=False,
+            active=True,
+            authenticated=True,
+            permissions=[],
+            anonymous=False,
+            role="USER",
         )
 
         plenticore.client.get_process_data = AsyncMock()

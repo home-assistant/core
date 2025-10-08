@@ -1,14 +1,16 @@
 """The QNAP QSW coordinator."""
+
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
 from aioqsw.exceptions import QswError
 from aioqsw.localapi import QnapQswApi
-import async_timeout
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -23,20 +25,25 @@ _LOGGER = logging.getLogger(__name__)
 class QswDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the QNAP QSW device."""
 
-    def __init__(self, hass: HomeAssistant, qsw: QnapQswApi) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, qsw: QnapQswApi
+    ) -> None:
         """Initialize."""
         self.qsw = qsw
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=DATA_SCAN_INTERVAL,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
-        async with async_timeout.timeout(QSW_TIMEOUT_SEC):
+        async with asyncio.timeout(QSW_TIMEOUT_SEC):
             try:
                 await self.qsw.update()
             except QswError as error:
@@ -47,20 +54,25 @@ class QswDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class QswFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching firmware data from the QNAP QSW device."""
 
-    def __init__(self, hass: HomeAssistant, qsw: QnapQswApi) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, qsw: QnapQswApi
+    ) -> None:
         """Initialize."""
         self.qsw = qsw
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=FW_SCAN_INTERVAL,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update firmware data via library."""
-        async with async_timeout.timeout(QSW_TIMEOUT_SEC):
+        async with asyncio.timeout(QSW_TIMEOUT_SEC):
             try:
                 await self.qsw.check_firmware()
             except QswError as error:

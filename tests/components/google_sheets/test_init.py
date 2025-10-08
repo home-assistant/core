@@ -14,10 +14,10 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.google_sheets import DOMAIN
+from homeassistant.components.google_sheets.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -25,7 +25,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_SHEET_ID = "google-sheet-it"
 
-ComponentSetup = Callable[[], Awaitable[None]]
+type ComponentSetup = Callable[[], Awaitable[None]]
 
 
 @pytest.fixture(name="scopes")
@@ -95,7 +95,6 @@ async def test_setup_success(
 
     assert not hass.data.get(DOMAIN)
     assert entries[0].state is ConfigEntryState.NOT_LOADED
-    assert not hass.services.async_services().get(DOMAIN, {})
 
 
 @pytest.mark.parametrize(
@@ -200,7 +199,7 @@ async def test_append_sheet(
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
 
-    with patch("homeassistant.components.google_sheets.Client") as mock_client:
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -208,6 +207,32 @@ async def test_append_sheet(
                 "config_entry": config_entry.entry_id,
                 "worksheet": "Sheet1",
                 "data": {"foo": "bar"},
+            },
+            blocking=True,
+        )
+    assert len(mock_client.mock_calls) == 8
+
+
+async def test_append_sheet_multiple_rows(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test service call appending to a sheet."""
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        await hass.services.async_call(
+            DOMAIN,
+            "append_sheet",
+            {
+                "config_entry": config_entry.entry_id,
+                "worksheet": "Sheet1",
+                "data": [{"foo": "bar"}, {"foo": "bar2"}],
             },
             blocking=True,
         )
@@ -229,9 +254,12 @@ async def test_append_sheet_api_error(
     response = Response()
     response.status_code = 503
 
-    with pytest.raises(HomeAssistantError), patch(
-        "homeassistant.components.google_sheets.Client.request",
-        side_effect=APIError(response),
+    with (
+        pytest.raises(HomeAssistantError),
+        patch(
+            "homeassistant.components.google_sheets.services.Client.request",
+            side_effect=APIError(response),
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -291,29 +319,12 @@ async def test_append_sheet_invalid_config_entry(
     await hass.async_block_till_done()
     assert config_entry2.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ValueError, match="Config entry not loaded"):
+    with pytest.raises(ValueError, match="Invalid config entry"):
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
             {
                 "config_entry": config_entry2.entry_id,
-                "worksheet": "Sheet1",
-                "data": {"foo": "bar"},
-            },
-            blocking=True,
-        )
-
-    # Unloading the other config entry will de-register the service
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-    with pytest.raises(ServiceNotFound):
-        await hass.services.async_call(
-            DOMAIN,
-            "append_sheet",
-            {
-                "config_entry": config_entry.entry_id,
                 "worksheet": "Sheet1",
                 "data": {"foo": "bar"},
             },

@@ -1,0 +1,21 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:button-pointer"
+    },
+    "restart": {
+      "default": "mdi:restart"
+    },
+    "identify": {
+      "default": "mdi:crosshairs-question"
+    },
+    "update": {
+      "default": "mdi:package-up"
+    }
+  },
+  "services": {
+    "press": {
+      "service": "mdi:gesture-tap-button"
+    }
+  }
+}

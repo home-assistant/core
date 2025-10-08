@@ -1,0 +1,46 @@
+{
+  "entity": {
+    "climate": {
+      "overkiz": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:thermostat-auto",
+              "comfort-1": "mdi:thermometer",
+              "comfort-2": "mdi:thermometer-low",
+              "drying": "mdi:hair-dryer",
+              "frost_protection": "mdi:snowflake",
+              "prog": "mdi:clock-outline",
+              "external": "mdi:remote"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "open_closed_pedestrian": {
+        "default": "mdi:content-save-cog"
+      },
+      "open_closed_partial": {
+        "default": "mdi:content-save-cog"
+      },
+      "memorized_simple_volume": {
+        "default": "mdi:volume-medium",
+        "state": {
+          "highest": "mdi:volume-high",
+          "standard": "mdi:volume-medium"
+        }
+      },
+      "operating_mode": {
+        "default": "mdi:sun-snowflake",
+        "state": {
+          "heating": "mdi:heat-wave",
+          "cooling": "mdi:snowflake"
+        }
+      },
+      "active_zones": {
+        "default": "mdi:shield-lock"
+      }
+    }
+  }
+}

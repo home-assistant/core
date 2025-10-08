@@ -1,25 +1,26 @@
 """Light platform for Advantage Air integration."""
+
 from typing import Any
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ADVANTAGE_AIR_STATE_ON, DOMAIN as ADVANTAGE_AIR_DOMAIN
+from . import AdvantageAirDataConfigEntry
+from .const import ADVANTAGE_AIR_STATE_ON, DOMAIN
 from .entity import AdvantageAirEntity, AdvantageAirThingEntity
 from .models import AdvantageAirData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AdvantageAirDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir light platform."""
 
-    instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    instance = config_entry.runtime_data
 
     entities: list[LightEntity] = []
     if my_lights := instance.coordinator.data.get("myLights"):
@@ -40,6 +41,7 @@ async def async_setup_entry(
 class AdvantageAirLight(AdvantageAirEntity, LightEntity):
     """Representation of Advantage Air Light."""
 
+    _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_name = None
 
@@ -50,8 +52,8 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
         self._id: str = light["id"]
         self._attr_unique_id += f"-{self._id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(ADVANTAGE_AIR_DOMAIN, self._attr_unique_id)},
-            via_device=(ADVANTAGE_AIR_DOMAIN, self.coordinator.data["system"]["rid"]),
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
             manufacturer="Advantage Air",
             model=light.get("moduleType"),
             name=light["name"],
@@ -82,7 +84,8 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
 class AdvantageAirLightDimmable(AdvantageAirLight):
     """Representation of Advantage Air Dimmable Light."""
 
-    _attr_supported_color_modes = {ColorMode.ONOFF, ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(self, instance: AdvantageAirData, light: dict[str, Any]) -> None:
         """Initialize an Advantage Air Dimmable Light."""
@@ -106,13 +109,15 @@ class AdvantageAirLightDimmable(AdvantageAirLight):
 class AdvantageAirThingLight(AdvantageAirThingEntity, LightEntity):
     """Representation of Advantage Air Light controlled by myThings."""
 
+    _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
 
 class AdvantageAirThingLightDimmable(AdvantageAirThingEntity, LightEntity):
     """Representation of Advantage Air Dimmable Light controlled by myThings."""
 
-    _attr_supported_color_modes = {ColorMode.ONOFF, ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
     def brightness(self) -> int:

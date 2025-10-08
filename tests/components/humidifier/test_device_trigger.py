@@ -1,11 +1,12 @@
 """The tests for Humidifier device triggers."""
+
 import datetime
 
 import pytest
 from pytest_unordered import unordered
 import voluptuous_serialize
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_trigger
 from homeassistant.const import (
@@ -15,7 +16,7 @@ from homeassistant.const import (
     STATE_ON,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -23,25 +24,18 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_get_device_automations,
-    async_mock_service,
 )
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_triggers(
@@ -102,12 +96,12 @@ async def test_get_triggers(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_triggers_hidden_auxiliary(
     hass: HomeAssistant,
@@ -162,10 +156,21 @@ async def test_get_triggers_hidden_auxiliary(
 
 
 async def test_if_fires_on_state_change(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     hass.states.async_set(
         entry.entity_id,
@@ -188,7 +193,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "target_humidity_changed",
                         "below": 20,
@@ -202,7 +207,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "target_humidity_changed",
                         "above": 30,
@@ -216,7 +221,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "target_humidity_changed",
                         "above": 30,
@@ -231,7 +236,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "current_humidity_changed",
                         "below": 30,
@@ -245,7 +250,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "current_humidity_changed",
                         "above": 40,
@@ -259,7 +264,7 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "current_humidity_changed",
                         "above": 40,
@@ -274,22 +279,19 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turned_on",
                     },
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_on {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_on {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -298,22 +300,19 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turned_off",
                     },
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -322,22 +321,19 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "changed_states",
                     },
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_on_or_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_on_or_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -353,8 +349,8 @@ async def test_if_fires_on_state_change(
         {const.ATTR_HUMIDITY: 7, const.ATTR_CURRENT_HUMIDITY: 35},
     )
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "target_humidity_changed_below"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "target_humidity_changed_below"
 
     # Fake that the current humidity is changing
     hass.states.async_set(
@@ -363,8 +359,8 @@ async def test_if_fires_on_state_change(
         {const.ATTR_HUMIDITY: 7, const.ATTR_CURRENT_HUMIDITY: 18},
     )
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "current_humidity_changed_below"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "current_humidity_changed_below"
 
     # Fake that the humidity target is changing
     hass.states.async_set(
@@ -373,8 +369,8 @@ async def test_if_fires_on_state_change(
         {const.ATTR_HUMIDITY: 37, const.ATTR_CURRENT_HUMIDITY: 18},
     )
     await hass.async_block_till_done()
-    assert len(calls) == 3
-    assert calls[2].data["some"] == "target_humidity_changed_above"
+    assert len(service_calls) == 3
+    assert service_calls[2].data["some"] == "target_humidity_changed_above"
 
     # Fake that the current humidity is changing
     hass.states.async_set(
@@ -383,14 +379,14 @@ async def test_if_fires_on_state_change(
         {const.ATTR_HUMIDITY: 37, const.ATTR_CURRENT_HUMIDITY: 41},
     )
     await hass.async_block_till_done()
-    assert len(calls) == 4
-    assert calls[3].data["some"] == "current_humidity_changed_above"
+    assert len(service_calls) == 4
+    assert service_calls[3].data["some"] == "current_humidity_changed_above"
 
     # Wait 6 minutes
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=6))
     await hass.async_block_till_done()
-    assert len(calls) == 6
-    assert {calls[4].data["some"], calls[5].data["some"]} == {
+    assert len(service_calls) == 6
+    assert {service_calls[4].data["some"], service_calls[5].data["some"]} == {
         "current_humidity_changed_above_for",
         "target_humidity_changed_above_for",
     }
@@ -402,8 +398,8 @@ async def test_if_fires_on_state_change(
         {const.ATTR_HUMIDITY: 37, const.ATTR_CURRENT_HUMIDITY: 41},
     )
     await hass.async_block_till_done()
-    assert len(calls) == 8
-    assert {calls[6].data["some"], calls[7].data["some"]} == {
+    assert len(service_calls) == 8
+    assert {service_calls[6].data["some"], service_calls[7].data["some"]} == {
         "turn_off device - humidifier.test_5678 - on - off - None",
         "turn_on_or_off device - humidifier.test_5678 - on - off - None",
     }
@@ -415,18 +411,29 @@ async def test_if_fires_on_state_change(
         {const.ATTR_HUMIDITY: 37, const.ATTR_CURRENT_HUMIDITY: 41},
     )
     await hass.async_block_till_done()
-    assert len(calls) == 10
-    assert {calls[8].data["some"], calls[9].data["some"]} == {
+    assert len(service_calls) == 10
+    assert {service_calls[8].data["some"], service_calls[9].data["some"]} == {
         "turn_on device - humidifier.test_5678 - off - on - None",
         "turn_on_or_off device - humidifier.test_5678 - off - on - None",
     }
 
 
 async def test_if_fires_on_state_change_legacy(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     hass.states.async_set(
         entry.entity_id,
@@ -448,7 +455,7 @@ async def test_if_fires_on_state_change_legacy(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.entity_id,
                         "type": "target_humidity_changed",
                         "below": 20,
@@ -465,12 +472,14 @@ async def test_if_fires_on_state_change_legacy(
     # Fake that the humidity is changing
     hass.states.async_set(entry.entity_id, STATE_ON, {const.ATTR_HUMIDITY: 7})
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "target_humidity_changed_below"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "target_humidity_changed_below"
 
 
 async def test_invalid_config(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
@@ -514,7 +523,7 @@ async def test_invalid_config(
     hass.states.async_set(entry.entity_id, STATE_ON, {const.ATTR_HUMIDITY: 7})
     await hass.async_block_till_done()
     # Should not trigger for invalid config
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
 
 async def test_get_trigger_capabilities_on(hass: HomeAssistant) -> None:
@@ -534,7 +543,14 @@ async def test_get_trigger_capabilities_on(hass: HomeAssistant) -> None:
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "for", "optional": True, "type": "positive_time_period_dict"}]
+    ) == [
+        {
+            "name": "for",
+            "optional": True,
+            "required": False,
+            "type": "positive_time_period_dict",
+        }
+    ]
 
 
 async def test_get_trigger_capabilities_off(hass: HomeAssistant) -> None:
@@ -554,7 +570,14 @@ async def test_get_trigger_capabilities_off(hass: HomeAssistant) -> None:
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "for", "optional": True, "type": "positive_time_period_dict"}]
+    ) == [
+        {
+            "name": "for",
+            "optional": True,
+            "required": False,
+            "type": "positive_time_period_dict",
+        }
+    ]
 
 
 async def test_get_trigger_capabilities_humidity(hass: HomeAssistant) -> None:
@@ -579,13 +602,20 @@ async def test_get_trigger_capabilities_humidity(hass: HomeAssistant) -> None:
             "description": {"suffix": "%"},
             "name": "above",
             "optional": True,
+            "required": False,
             "type": "integer",
         },
         {
             "description": {"suffix": "%"},
             "name": "below",
             "optional": True,
+            "required": False,
             "type": "integer",
         },
-        {"name": "for", "optional": True, "type": "positive_time_period_dict"},
+        {
+            "name": "for",
+            "optional": True,
+            "required": False,
+            "type": "positive_time_period_dict",
+        },
     ]

@@ -1,6 +1,7 @@
 """The tests for the webhook automation trigger."""
+
 from ipaddress import ip_address
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -16,7 +17,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture(autouse=True)
-async def setup_http(hass):
+async def setup_http(hass: HomeAssistant) -> None:
     """Set up http."""
     assert await async_setup_component(hass, "http", {})
     assert await async_setup_component(hass, "webhook", {})
@@ -68,6 +69,9 @@ async def test_webhook_post(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test triggering with a POST webhook."""
+    # Set up fake cloud
+    hass.config.components.add("cloud")
+
     events = []
 
     @callback
@@ -114,6 +118,16 @@ async def test_webhook_post(
     await hass.async_block_till_done()
     assert len(events) == 1
 
+    # Request from Home Assistant Cloud remote UI
+    with patch(
+        "hass_nabucasa.remote.is_cloud_request", Mock(get=Mock(return_value=True))
+    ):
+        await client.post("/api/webhook/post_webhook", data={"hello": "world"})
+
+    # No hook received
+    await hass.async_block_till_done()
+    assert len(events) == 1
+
 
 async def test_webhook_allowed_methods_internet(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
@@ -137,11 +151,10 @@ async def test_webhook_allowed_methods_internet(
                     "platform": "webhook",
                     "webhook_id": "post_webhook",
                     "allowed_methods": "PUT",
-                    # Enable after 2023.11.0: "local_only": False,
+                    "local_only": False,
                 },
                 "action": {
                     "event": "test_success",
-                    "event_data_template": {"hello": "yo {{ trigger.data.hello }}"},
                 },
             }
         },
@@ -150,7 +163,7 @@ async def test_webhook_allowed_methods_internet(
 
     client = await hass_client_no_auth()
 
-    await client.post("/api/webhook/post_webhook", data={"hello": "world"})
+    await client.post("/api/webhook/post_webhook")
     await hass.async_block_till_done()
 
     assert len(events) == 0
@@ -160,7 +173,7 @@ async def test_webhook_allowed_methods_internet(
         "homeassistant.components.webhook.ip_address",
         return_value=ip_address("123.123.123.123"),
     ):
-        await client.put("/api/webhook/post_webhook", data={"hello": "world"})
+        await client.put("/api/webhook/post_webhook")
     await hass.async_block_till_done()
     assert len(events) == 1
 
@@ -320,3 +333,47 @@ async def test_webhook_reload(
 
     assert len(events) == 2
     assert events[1].data["hello"] == "yo2 world"
+
+
+async def test_webhook_template(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test triggering with a template webhook."""
+    # Set up fake cloud
+    hass.config.components.add("cloud")
+
+    events = []
+
+    @callback
+    def store_event(event):
+        """Help store events."""
+        events.append(event)
+
+    hass.bus.async_listen("test_success", store_event)
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "webhook",
+                    "webhook_id": "webhook-{{ sqrt(9)|round }}",
+                    "local_only": True,
+                },
+                "action": {
+                    "event": "test_success",
+                    "event_data_template": {"hello": "yo {{ trigger.data.hello }}"},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    await client.post("/api/webhook/webhook-3", data={"hello": "world"})
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["hello"] == "yo world"

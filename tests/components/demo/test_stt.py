@@ -1,10 +1,11 @@
 """The tests for the demo stt component."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.demo import DOMAIN as DEMO_DOMAIN
+from homeassistant.components.demo import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -25,7 +26,7 @@ async def stt_only(hass: HomeAssistant) -> None:
 @pytest.fixture(autouse=True)
 async def setup_config_entry(hass: HomeAssistant, stt_only) -> None:
     """Set up demo component from config entry."""
-    config_entry = MockConfigEntry(domain=DEMO_DOMAIN)
+    config_entry = MockConfigEntry(domain=DOMAIN)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

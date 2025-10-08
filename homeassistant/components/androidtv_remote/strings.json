@@ -6,21 +6,36 @@
         "description": "Enter the IP address of the Android TV you want to add to Home Assistant. It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Android TV device."
+        }
+      },
+      "reconfigure": {
+        "description": "Update the IP address of this previously configured Android TV device.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Android TV device."
         }
       },
       "zeroconf_confirm": {
         "title": "Discovered Android TV",
-        "description": "Do you want to add the Android TV ({name}) to Home Assistant?  It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
+        "description": "Do you want to add the Android TV ({name}) to Home Assistant? It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
       },
       "pair": {
         "description": "Enter the pairing code displayed on the Android TV ({name}).",
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
+        },
+        "data_description": {
+          "pin": "Pairing code displayed on the Android TV device."
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "You need to pair again with the Android TV ({name})."
+        "description": "You need to pair again with the Android TV ({name}). It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
       }
     },
     "error": {
@@ -32,7 +47,57 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "apps": "Configure applications list",
+          "enable_ime": "Enable IME"
+        },
+        "data_description": {
+          "apps": "Here you can define the list of applications, specify names and icons that will be displayed in the UI.",
+          "enable_ime": "Enable this option to be able to get the current app name and send text as keyboard input. Disable it for devices that show 'Use keyboard on mobile device screen' instead of the on-screen keyboard."
+        }
+      },
+      "apps": {
+        "title": "Configure Android apps",
+        "description": "Configure application ID {app_id}",
+        "data": {
+          "app_name": "Application name",
+          "app_id": "Application ID",
+          "app_icon": "Application icon",
+          "app_delete": "Check to delete this application"
+        },
+        "data_description": {
+          "app_name": "Name of the application as you would like it to be displayed in Home Assistant.",
+          "app_id": "E.g. com.plexapp.android for https://play.google.com/store/apps/details?id=com.plexapp.android",
+          "app_icon": "Image URL. From the Play Store app page, right click on the icon and select 'Copy image address' and then paste it here. Alternatively, download the image, upload it under /config/www/ and use the URL /local/filename",
+          "app_delete": "Check this box to delete the application from the list."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "connection_closed": {
+      "message": "Connection to the Android TV device is closed"
+    },
+    "invalid_channel": {
+      "message": "Channel must be numeric: {media_id}"
+    },
+    "invalid_media_type": {
+      "message": "Invalid media type: {media_type}"
+    }
+  },
+  "selector": {
+    "apps": {
+      "options": {
+        "add_new": "Add new"
+      }
     }
   }
 }

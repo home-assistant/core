@@ -1,4 +1,5 @@
 """Support for UV data from openuv.io."""
+
 from __future__ import annotations
 
 import asyncio
@@ -16,10 +17,8 @@ from homeassistant.const import (
     CONF_SENSORS,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_FROM_WINDOW,
@@ -31,7 +30,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-from .coordinator import OpenUvCoordinator
+from .coordinator import OpenUvCoordinator, OpenUvProtectionWindowCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -55,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await client.uv_protection_window(low=low, high=high)
 
     coordinators: dict[str, OpenUvCoordinator] = {
-        coordinator_name: OpenUvCoordinator(
+        coordinator_name: coordinator_cls(
             hass,
             entry=entry,
             name=coordinator_name,
@@ -63,9 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             longitude=client.longitude,
             update_method=update_method,
         )
-        for coordinator_name, update_method in (
-            (DATA_UV, client.uv_index),
-            (DATA_PROTECTION_WINDOW, async_update_protection_data),
+        for coordinator_cls, coordinator_name, update_method in (
+            (OpenUvCoordinator, DATA_UV, client.uv_index),
+            (
+                OpenUvProtectionWindowCoordinator,
+                DATA_PROTECTION_WINDOW,
+                async_update_protection_data,
+            ),
         )
     }
 
@@ -103,42 +106,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if version == 1:
         data.pop(CONF_BINARY_SENSORS, None)
         data.pop(CONF_SENSORS, None)
-        version = entry.version = 2
-        hass.config_entries.async_update_entry(entry, data=data)
+        version = 2
+        hass.config_entries.async_update_entry(entry, data=data, version=2)
         LOGGER.debug("Migration to version %s successful", version)
 
     return True
-
-
-class OpenUvEntity(CoordinatorEntity):
-    """Define a generic OpenUV entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self, coordinator: OpenUvCoordinator, description: EntityDescription
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-
-        self._attr_extra_state_attributes = {}
-        self._attr_unique_id = (
-            f"{coordinator.latitude}_{coordinator.longitude}_{description.key}"
-        )
-        self.entity_description = description
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Respond to a DataUpdateCoordinator update."""
-        self._update_from_latest_data()
-        self.async_write_ha_state()
-
-    @callback
-    def _update_from_latest_data(self) -> None:
-        """Update the entity from the latest data."""
-        raise NotImplementedError
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self._update_from_latest_data()

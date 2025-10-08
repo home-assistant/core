@@ -1,19 +1,33 @@
 {
+  "common": {
+    "data_description_api_key": "The tankerkoenig API key to be used.",
+    "data_description_location": "Pick the location where to search for gas stations.",
+    "data_description_name": "The name of the particular region to be added.",
+    "data_description_radius": "The radius in kilometers to search for gas stations around the selected location.",
+    "data_description_stations": "Select the stations you want to add to Home Assistant."
+  },
   "config": {
     "step": {
       "user": {
         "data": {
           "name": "Region name",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "fuel_types": "Fuel types",
           "location": "[%key:common::config_flow::data::location%]",
-          "stations": "Additional fuel stations",
           "radius": "Search radius"
+        },
+        "data_description": {
+          "name": "[%key:component::tankerkoenig::common::data_description_name%]",
+          "api_key": "[%key:component::tankerkoenig::common::data_description_api_key%]",
+          "location": "[%key:component::tankerkoenig::common::data_description_location%]",
+          "radius": "[%key:component::tankerkoenig::common::data_description_radius%]"
         }
       },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::tankerkoenig::common::data_description_api_key%]"
         }
       },
       "select_station": {
@@ -21,6 +35,9 @@
         "description": "Found {stations_count} stations in radius",
         "data": {
           "stations": "Stations"
+        },
+        "data_description": {
+          "stations": "[%key:component::tankerkoenig::common::data_description_stations%]"
         }
       }
     },
@@ -38,10 +55,141 @@
       "init": {
         "title": "Tankerkoenig options",
         "data": {
-          "stations": "Stations",
+          "stations": "[%key:component::tankerkoenig::config::step::select_station::data::stations%]",
           "show_on_map": "Show stations on map"
+        },
+        "data_description": {
+          "stations": "[%key:component::tankerkoenig::common::data_description_stations%]",
+          "show_on_map": "Whether to show the station sensors on the map or not."
         }
       }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status",
+        "state_attributes": {
+          "latitude": {
+            "name": "[%key:common::config_flow::data::latitude%]"
+          },
+          "longitude": {
+            "name": "[%key:common::config_flow::data::longitude%]"
+          }
+        }
+      }
+    },
+    "sensor": {
+      "e5": {
+        "name": "Super",
+        "state_attributes": {
+          "brand": {
+            "name": "Brand"
+          },
+          "fuel_type": {
+            "name": "Fuel type"
+          },
+          "station_name": {
+            "name": "Station name"
+          },
+          "street": {
+            "name": "Street"
+          },
+          "house_number": {
+            "name": "House number"
+          },
+          "postcode": {
+            "name": "Postal code"
+          },
+          "city": {
+            "name": "City"
+          },
+          "latitude": {
+            "name": "[%key:common::config_flow::data::latitude%]"
+          },
+          "longitude": {
+            "name": "[%key:common::config_flow::data::longitude%]"
+          }
+        }
+      },
+      "e10": {
+        "name": "Super E10",
+        "state_attributes": {
+          "brand": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::brand::name%]"
+          },
+          "fuel_type": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::fuel_type::name%]"
+          },
+          "station_name": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::station_name::name%]"
+          },
+          "street": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::street::name%]"
+          },
+          "house_number": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::house_number::name%]"
+          },
+          "postcode": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::postcode::name%]"
+          },
+          "city": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::city::name%]"
+          },
+          "latitude": {
+            "name": "[%key:common::config_flow::data::latitude%]"
+          },
+          "longitude": {
+            "name": "[%key:common::config_flow::data::longitude%]"
+          }
+        }
+      },
+      "diesel": {
+        "name": "Diesel",
+        "state_attributes": {
+          "brand": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::brand::name%]"
+          },
+          "fuel_type": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::fuel_type::name%]"
+          },
+          "station_name": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::station_name::name%]"
+          },
+          "street": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::street::name%]"
+          },
+          "house_number": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::house_number::name%]"
+          },
+          "postcode": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::postcode::name%]"
+          },
+          "city": {
+            "name": "[%key:component::tankerkoenig::entity::sensor::e5::state_attributes::city::name%]"
+          },
+          "latitude": {
+            "name": "[%key:common::config_flow::data::latitude%]"
+          },
+          "longitude": {
+            "name": "[%key:common::config_flow::data::longitude%]"
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "rate_limit_reached": {
+      "message": "You have reached the rate limit for the Tankerkoenig API. Please try to increase the poll interval and reduce the requests."
+    },
+    "invalid_api_key": {
+      "message": "The provided API key is invalid. Please check your API key."
+    },
+    "station_update_failed": {
+      "message": "Failed to update station data for station(s) {station_ids}. Please check your network connection."
     }
   }
 }

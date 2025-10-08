@@ -2,24 +2,61 @@
   "config": {
     "step": {
       "user": {
-        "description": "To identify the desired region, the warncell ID / name is required.",
+        "description": "To identify the desired region, either the warncell ID / name or device tracker is required. The provided device tracker has to contain the attributes 'Latitude' and 'Longitude'.",
         "data": {
-          "region_identifier": "Warncell ID or name"
+          "region_identifier": "Warncell ID or name",
+          "region_device_tracker": "Device tracker entity"
         }
       }
     },
     "error": {
-      "invalid_identifier": "The specified region identifier is invalid."
+      "no_identifier": "Either the region identifier or device tracker is required.",
+      "ambiguous_identifier": "The region identifier and device tracker can not be specified together.",
+      "invalid_identifier": "The specified region identifier / device tracker is invalid.",
+      "entity_not_found": "The specified device tracker entity was not found.",
+      "attribute_not_found": "The required attributes 'Latitude' and 'Longitude' were not found in the specified device tracker."
     },
     "abort": {
-      "already_configured": "Warncell ID / name is already configured.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_identifier": "[%key:component::dwd_weather_warnings::config::error::invalid_identifier%]"
     }
   },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Deutscher Wetterdienst (DWD) Weather Warnings YAML configuration is being removed",
-      "description": "Configuring Deutscher Wetterdienst (DWD) Weather Warnings using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Deutscher Wetterdienst (DWD) Weather Warnings YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+  "entity": {
+    "sensor": {
+      "current_warning_level": {
+        "name": "Current warning level",
+        "state_attributes": {
+          "region_name": {
+            "name": "Region name"
+          },
+          "region_id": {
+            "name": "Region ID"
+          },
+          "last_update": {
+            "name": "Last update"
+          },
+          "warning_count": {
+            "name": "Warning count"
+          }
+        }
+      },
+      "advance_warning_level": {
+        "name": "Advance warning level",
+        "state_attributes": {
+          "region_name": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::region_name::name%]"
+          },
+          "region_id": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::region_id::name%]"
+          },
+          "last_update": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::last_update::name%]"
+          },
+          "warning_count": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::warning_count::name%]"
+          }
+        }
+      }
     }
   }
 }

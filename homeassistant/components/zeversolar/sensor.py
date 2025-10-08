@@ -1,4 +1,5 @@
 """Support for the Zeversolar platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -15,32 +16,24 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import ZeversolarCoordinator
 from .entity import ZeversolarEntity
 
 
-@dataclass
-class ZeversolarEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class ZeversolarEntityDescription(SensorEntityDescription):
+    """Describes Zeversolar sensor entity."""
 
     value_fn: Callable[[zeversolar.ZeverSolarData], zeversolar.kWh | zeversolar.Watt]
-
-
-@dataclass
-class ZeversolarEntityDescription(
-    SensorEntityDescription, ZeversolarEntityDescriptionMixin
-):
-    """Describes Zeversolar sensor entity."""
 
 
 SENSOR_TYPES = (
     ZeversolarEntityDescription(
         key="pac",
-        name="Current power",
-        icon="mdi:solar-power-variant",
+        translation_key="pac",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -49,8 +42,7 @@ SENSOR_TYPES = (
     ),
     ZeversolarEntityDescription(
         key="energy_today",
-        name="Energy today",
-        icon="mdi:home-battery",
+        translation_key="energy_today",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -60,7 +52,9 @@ SENSOR_TYPES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Zeversolar sensor."""
     coordinator: ZeversolarCoordinator = hass.data[DOMAIN][entry.entry_id]

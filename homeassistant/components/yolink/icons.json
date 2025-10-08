@@ -1,0 +1,51 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "water_running": {
+        "default": "mdi:waves-arrow-right"
+      }
+    },
+    "number": {
+      "config_volume": {
+        "default": "mdi:volume-high"
+      }
+    },
+    "sensor": {
+      "power_failure_alarm": {
+        "default": "mdi:flash"
+      },
+      "power_failure_alarm_mute": {
+        "default": "mdi:volume-mute"
+      },
+      "power_failure_alarm_volume": {
+        "default": "mdi:volume-high"
+      },
+      "power_failure_alarm_beep": {
+        "default": "mdi:bullhorn"
+      },
+      "water_meter_reading": {
+        "default": "mdi:gauge"
+      }
+    },
+    "select": {
+      "sprinkler_mode": {
+        "default": "mdi:auto-mode"
+      }
+    },
+    "switch": {
+      "manipulator_state": {
+        "default": "mdi:pipe"
+      }
+    },
+    "valve": {
+      "sprinkler_valve": {
+        "default": "mdi:sprinkler-variant"
+      }
+    }
+  },
+  "services": {
+    "play_on_speaker_hub": {
+      "service": "mdi:speaker"
+    }
+  }
+}

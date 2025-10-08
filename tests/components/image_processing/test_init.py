@@ -1,10 +1,11 @@
 """The tests for the image_processing component."""
+
+from collections.abc import Callable
 from unittest.mock import PropertyMock, patch
 
 import pytest
 
-import homeassistant.components.http as http
-import homeassistant.components.image_processing as ip
+from homeassistant.components import http, image_processing as ip
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -23,23 +24,28 @@ async def setup_homeassistant(hass: HomeAssistant):
 
 
 @pytest.fixture
-def aiohttp_unused_port(event_loop, aiohttp_unused_port, socket_enabled):
+def aiohttp_unused_port_factory(
+    unused_tcp_port_factory: Callable[[], int],
+    socket_enabled: None,
+) -> Callable[[], int]:
     """Return aiohttp_unused_port and allow opening sockets."""
-    return aiohttp_unused_port
+    return unused_tcp_port_factory
 
 
-def get_url(hass):
+def get_url(hass: HomeAssistant) -> str:
     """Return camera url."""
     state = hass.states.get("camera.demo_camera")
     return f"{hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
 
-async def setup_image_processing(hass, aiohttp_unused_port):
+async def setup_image_processing(
+    hass: HomeAssistant, aiohttp_unused_port_factory: Callable[[], int]
+) -> None:
     """Set up things to be run when tests are started."""
     await async_setup_component(
         hass,
         http.DOMAIN,
-        {http.DOMAIN: {http.CONF_SERVER_PORT: aiohttp_unused_port()}},
+        {http.DOMAIN: {http.CONF_SERVER_PORT: aiohttp_unused_port_factory()}},
     )
 
     config = {ip.DOMAIN: {"platform": "test"}, "camera": {"platform": "demo"}}
@@ -48,7 +54,7 @@ async def setup_image_processing(hass, aiohttp_unused_port):
     await hass.async_block_till_done()
 
 
-async def setup_image_processing_face(hass):
+async def setup_image_processing_face(hass: HomeAssistant) -> None:
     """Set up things to be run when tests are started."""
     config = {ip.DOMAIN: {"platform": "demo"}, "camera": {"platform": "demo"}}
 
@@ -82,14 +88,14 @@ async def test_setup_component_with_service(hass: HomeAssistant) -> None:
     "homeassistant.components.demo.camera.Path.read_bytes",
     return_value=b"Test",
 )
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_get_image_from_camera(
     mock_camera_read,
     hass: HomeAssistant,
-    aiohttp_unused_port,
-    enable_custom_integrations: None,
+    aiohttp_unused_port_factory: Callable[[], int],
 ) -> None:
     """Grab an image from camera entity."""
-    await setup_image_processing(hass, aiohttp_unused_port)
+    await setup_image_processing(hass, aiohttp_unused_port_factory)
 
     common.async_scan(hass, entity_id="image_processing.test")
     await hass.async_block_till_done()
@@ -102,17 +108,17 @@ async def test_get_image_from_camera(
 
 
 @patch(
-    "homeassistant.components.camera.async_get_image",
+    "homeassistant.components.image_processing.async_get_image",
     side_effect=HomeAssistantError(),
 )
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_get_image_without_exists_camera(
     mock_image,
     hass: HomeAssistant,
-    aiohttp_unused_port,
-    enable_custom_integrations: None,
+    aiohttp_unused_port_factory: Callable[[], int],
 ) -> None:
     """Try to get image without exists camera."""
-    await setup_image_processing(hass, aiohttp_unused_port)
+    await setup_image_processing(hass, aiohttp_unused_port_factory)
 
     hass.states.async_remove("camera.demo_camera")
 
@@ -179,3 +185,22 @@ async def test_face_event_call_no_confidence(
     assert event_data[0]["confidence"] == 98.34
     assert event_data[0]["gender"] == "male"
     assert event_data[0]["entity_id"] == "image_processing.demo_face"
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_update_missing_camera(
+    hass: HomeAssistant,
+    aiohttp_unused_port_factory: Callable[[], int],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test when entity does not set camera."""
+    await setup_image_processing(hass, aiohttp_unused_port_factory)
+
+    with patch(
+        "custom_components.test.image_processing.TestImageProcessing.camera_entity",
+        new_callable=PropertyMock(return_value=None),
+    ):
+        common.async_scan(hass, entity_id="image_processing.test")
+        await hass.async_block_till_done()
+
+    assert "No camera entity id was set by the image processing entity" in caplog.text

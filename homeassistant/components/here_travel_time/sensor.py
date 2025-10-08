@@ -1,4 +1,5 @@
 """Support for HERE travel time sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -11,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -22,10 +22,8 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -41,11 +39,12 @@ from .const import (
     ICONS,
 )
 from .coordinator import (
+    HereConfigEntry,
     HERERoutingDataUpdateCoordinator,
     HERETransitDataUpdateCoordinator,
 )
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=30)
 
 
 def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]:
@@ -56,14 +55,18 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTime.MINUTES,
+            device_class=SensorDeviceClass.DURATION,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            suggested_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         SensorEntityDescription(
             translation_key="duration_in_traffic",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION_IN_TRAFFIC,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTime.MINUTES,
+            device_class=SensorDeviceClass.DURATION,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            suggested_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         SensorEntityDescription(
             translation_key="distance",
@@ -78,25 +81,24 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: HereConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add HERE travel time entities from a config_entry."""
 
     entry_id = config_entry.entry_id
     name = config_entry.data[CONF_NAME]
-    coordinator = hass.data[DOMAIN][entry_id]
+    coordinator = config_entry.runtime_data
 
-    sensors: list[HERETravelTimeSensor] = []
-    for sensor_description in sensor_descriptions(config_entry.data[CONF_MODE]):
-        sensors.append(
-            HERETravelTimeSensor(
-                entry_id,
-                name,
-                sensor_description,
-                coordinator,
-            )
+    sensors: list[HERETravelTimeSensor] = [
+        HERETravelTimeSensor(
+            entry_id,
+            name,
+            sensor_description,
+            coordinator,
         )
+        for sensor_description in sensor_descriptions(config_entry.data[CONF_MODE])
+    ]
     sensors.append(OriginSensor(entry_id, name, coordinator))
     sensors.append(DestinationSensor(entry_id, name, coordinator))
     async_add_entities(sensors)
@@ -141,11 +143,6 @@ class HERETravelTimeSensor(
         await self._async_restore_state()
         await super().async_added_to_hass()
 
-        async def _update_at_start(_: HomeAssistant) -> None:
-            await self.async_update()
-
-        self.async_on_remove(async_at_started(self.hass, _update_at_start))
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -171,7 +168,8 @@ class OriginSensor(HERETravelTimeSensor):
         self,
         unique_id_prefix: str,
         name: str,
-        coordinator: HERERoutingDataUpdateCoordinator,
+        coordinator: HERERoutingDataUpdateCoordinator
+        | HERETransitDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         sensor_description = SensorEntityDescription(
@@ -199,7 +197,8 @@ class DestinationSensor(HERETravelTimeSensor):
         self,
         unique_id_prefix: str,
         name: str,
-        coordinator: HERERoutingDataUpdateCoordinator,
+        coordinator: HERERoutingDataUpdateCoordinator
+        | HERETransitDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         sensor_description = SensorEntityDescription(

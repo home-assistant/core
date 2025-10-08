@@ -1,4 +1,5 @@
 """Support for EnOcean switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,19 +7,22 @@ from typing import Any
 from enocean.utils import from_hex_string, to_hex_string
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .config_flow import (
-    CONF_ENOCEAN_DEVICE_TYPE_ID,
-    CONF_ENOCEAN_DEVICES,
-)
-from .device import EnOceanEntity
+from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
+from .entity import EnOceanEntity
 from .importer import (
     EnOceanPlatformConfig,
     register_platform_config_for_migration_to_config_entry,
@@ -31,7 +35,7 @@ from .supported_device_type import (
 CONF_CHANNEL = "channel"
 DEFAULT_NAME = ""
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -48,14 +52,14 @@ async def async_setup_platform(
 ) -> None:
     """Set up the EnOcean switch platform."""
     register_platform_config_for_migration_to_config_entry(
-        EnOceanPlatformConfig(platform=Platform.SWITCH.value, config=config)
+        EnOceanPlatformConfig(platform=Platform.SWITCH, config=config)
     )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     devices = entry.options.get(CONF_ENOCEAN_DEVICES, [])
@@ -72,7 +76,7 @@ async def async_setup_entry(
             num_switches = 0
             eep_type = int(eep[6:8], 16)
 
-            if eep_type in range(0x00, 0x10):
+            if eep_type in range(0x10):
                 num_switches = 1
             elif eep_type in range(0x10, 0x13):
                 num_switches = 2
@@ -94,16 +98,16 @@ async def async_setup_entry(
                     ),
                 )
             else:
-                for channel in range(0, num_switches):
-                    switches.append(
-                        EnOceanSwitch(
-                            dev_id=device_id,
-                            dev_name=device["name"],
-                            channel=channel,
-                            dev_type=device_type,
-                            name="Switch " + str(channel + 1),
-                        ),
+                switches = [
+                    EnOceanSwitch(
+                        dev_id=device_id,
+                        dev_name=device["name"],
+                        channel=channel,
+                        dev_type=device_type,
+                        name="Switch " + str(channel + 1),
                     )
+                    for channel in range(num_switches)
+                ]
             async_add_entities(switches)
 
 
@@ -121,8 +125,6 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         """Initialize the EnOcean switch device."""
         super().__init__(dev_id, dev_name, dev_type, name)
         self._light = None
-        self._on_state = False
-        self._on_state2 = False
         self.channel = channel
         self._attr_unique_id = (
             f"{to_hex_string(dev_id).upper()}-{Platform.SWITCH.value}-{channel}"
@@ -131,7 +133,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return whether the switch is on or off."""
-        return self._on_state
+        return self._attr_is_on
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
@@ -143,7 +145,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
             optional=optional,
             packet_type=0x01,
         )
-        self._on_state = True
+        self._attr_is_on = True
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
@@ -155,7 +157,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
             optional=optional,
             packet_type=0x01,
         )
-        self._on_state = False
+        self._attr_is_on = False
 
     def value_changed(self, packet):
         """Update the internal state of the switch."""
@@ -167,7 +169,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
                 divisor = packet.parsed["DIV"]["raw_value"]
                 watts = raw_val / (10**divisor)
                 if watts > 1:
-                    self._on_state = True
+                    self._attr_is_on = True
                     self.schedule_update_ha_state()
         elif packet.data[0] == 0xD2:
             # actuator status telegram
@@ -176,5 +178,5 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
                 channel = packet.parsed["IO"]["raw_value"]
                 output = packet.parsed["OV"]["raw_value"]
                 if channel == self.channel:
-                    self._on_state = output > 0
+                    self._attr_is_on = output > 0
                     self.schedule_update_ha_state()

@@ -1,4 +1,5 @@
 """Statistics duplication repairs."""
+
 from __future__ import annotations
 
 import json
@@ -16,7 +17,7 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.util import dt as dt_util
 
-from ...const import SQLITE_MAX_BIND_VARS
+from ...const import DEFAULT_MAX_BIND_VARS
 from ...db_schema import Statistics, StatisticsBase, StatisticsMeta, StatisticsShortTerm
 from ...util import database_job_retry_wrapper, execute
 
@@ -37,8 +38,6 @@ def _find_duplicates(
             literal_column("1").label("is_duplicate"),
         )
         .group_by(table.metadata_id, table.start)
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
         .having(func.count() > 1)
         .subquery()
     )
@@ -62,7 +61,7 @@ def _find_duplicates(
         )
         .filter(subquery.c.is_duplicate == 1)
         .order_by(table.metadata_id, table.start, table.id.desc())
-        .limit(1000 * SQLITE_MAX_BIND_VARS)
+        .limit(1000 * DEFAULT_MAX_BIND_VARS)
     )
     duplicates = execute(query)
     original_as_dict = {}
@@ -126,10 +125,10 @@ def _delete_duplicates_from_table(
         if not duplicate_ids:
             break
         all_non_identical_duplicates.extend(non_identical_duplicates)
-        for i in range(0, len(duplicate_ids), SQLITE_MAX_BIND_VARS):
+        for i in range(0, len(duplicate_ids), DEFAULT_MAX_BIND_VARS):
             deleted_rows = (
                 session.query(table)
-                .filter(table.id.in_(duplicate_ids[i : i + SQLITE_MAX_BIND_VARS]))
+                .filter(table.id.in_(duplicate_ids[i : i + DEFAULT_MAX_BIND_VARS]))
                 .delete(synchronize_session=False)
             )
             total_deleted_rows += deleted_rows
@@ -195,8 +194,6 @@ def _find_statistics_meta_duplicates(session: Session) -> list[int]:
             literal_column("1").label("is_duplicate"),
         )
         .group_by(StatisticsMeta.statistic_id)
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
         .having(func.count() > 1)
         .subquery()
     )
@@ -208,7 +205,7 @@ def _find_statistics_meta_duplicates(session: Session) -> list[int]:
         )
         .filter(subquery.c.is_duplicate == 1)
         .order_by(StatisticsMeta.statistic_id, StatisticsMeta.id.desc())
-        .limit(1000 * SQLITE_MAX_BIND_VARS)
+        .limit(1000 * DEFAULT_MAX_BIND_VARS)
     )
     duplicates = execute(query)
     statistic_id = None
@@ -233,11 +230,11 @@ def _delete_statistics_meta_duplicates(session: Session) -> int:
         duplicate_ids = _find_statistics_meta_duplicates(session)
         if not duplicate_ids:
             break
-        for i in range(0, len(duplicate_ids), SQLITE_MAX_BIND_VARS):
+        for i in range(0, len(duplicate_ids), DEFAULT_MAX_BIND_VARS):
             deleted_rows = (
                 session.query(StatisticsMeta)
                 .filter(
-                    StatisticsMeta.id.in_(duplicate_ids[i : i + SQLITE_MAX_BIND_VARS])
+                    StatisticsMeta.id.in_(duplicate_ids[i : i + DEFAULT_MAX_BIND_VARS])
                 )
                 .delete(synchronize_session=False)
             )
@@ -250,12 +247,11 @@ def delete_statistics_meta_duplicates(instance: Recorder, session: Session) -> N
     """Identify and delete duplicated statistics_meta.
 
     This is used when migrating from schema version 28 to schema version 29.
+    Note: If this needs to be called during live schema migration it needs to
+    be modified to reload the statistics_meta_manager.
     """
     deleted_statistics_rows = _delete_statistics_meta_duplicates(session)
     if deleted_statistics_rows:
-        statistics_meta_manager = instance.statistics_meta_manager
-        statistics_meta_manager.reset()
-        statistics_meta_manager.load(session)
         _LOGGER.info(
             "Deleted %s duplicated statistics_meta rows", deleted_statistics_rows
         )

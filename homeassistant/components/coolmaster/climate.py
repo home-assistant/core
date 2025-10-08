@@ -1,4 +1,5 @@
 """CoolMasterNet platform to control of CoolMasterNet Climate Devices."""
+
 from __future__ import annotations
 
 import logging
@@ -11,13 +12,13 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SUPPORTED_MODES, DATA_COORDINATOR, DATA_INFO, DOMAIN
+from .const import CONF_SUPPORTED_MODES
+from .coordinator import CoolmasterConfigEntry, CoolmasterDataUpdateCoordinator
 from .entity import CoolmasterEntity
 
 CM_TO_HA_STATE = {
@@ -37,15 +38,16 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: CoolmasterConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CoolMasterNet climate platform."""
-    info = hass.data[DOMAIN][config_entry.entry_id][DATA_INFO]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
-    supported_modes = config_entry.data.get(CONF_SUPPORTED_MODES)
+    coordinator = config_entry.runtime_data
+    supported_modes: list[str] = config_entry.data[CONF_SUPPORTED_MODES]
     async_add_entities(
-        CoolmasterClimate(coordinator, unit_id, info, supported_modes)
+        CoolmasterClimate(
+            coordinator, unit_id, [HVACMode(mode) for mode in supported_modes]
+        )
         for unit_id in coordinator.data
     )
 
@@ -55,21 +57,25 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
 
     _attr_name = None
 
-    def __init__(self, coordinator, unit_id, info, supported_modes):
+    def __init__(
+        self,
+        coordinator: CoolmasterDataUpdateCoordinator,
+        unit_id: str,
+        supported_modes: list[HVACMode],
+    ) -> None:
         """Initialize the climate device."""
-        super().__init__(coordinator, unit_id, info)
-        self._hvac_modes = supported_modes
-
-    @property
-    def unique_id(self):
-        """Return unique ID for this device."""
-        return self._unit_id
+        super().__init__(coordinator, unit_id)
+        self._attr_hvac_modes = supported_modes
+        self._attr_unique_id = unit_id
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         if self.swing_mode:
             supported_features |= ClimateEntityFeature.SWING_MODE
@@ -101,11 +107,6 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
             return HVACMode.OFF
 
         return CM_TO_HA_STATE[mode]
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return self._hvac_modes
 
     @property
     def fan_mode(self):

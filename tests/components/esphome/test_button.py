@@ -1,14 +1,10 @@
 """Test ESPHome buttones."""
 
-
 from unittest.mock import call
 
 from aioesphomeapi import APIClient, ButtonInfo
 
-from homeassistant.components.button import (
-    DOMAIN as BUTTON_DOMAIN,
-    SERVICE_PRESS,
-)
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
@@ -22,7 +18,6 @@ async def test_button_generic_entity(
             object_id="mybutton",
             key=1,
             name="my button",
-            unique_id="my_button",
         )
     ]
     states = []
@@ -43,7 +38,7 @@ async def test_button_generic_entity(
         {ATTR_ENTITY_ID: "button.test_my_button"},
         blocking=True,
     )
-    mock_client.button_command.assert_has_calls([call(1)])
+    mock_client.button_command.assert_has_calls([call(1, device_id=0)])
     state = hass.states.get("button.test_my_button")
     assert state is not None
     assert state.state != STATE_UNKNOWN
