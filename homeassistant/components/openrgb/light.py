@@ -100,14 +100,19 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         )
 
         modes = [mode.name for mode in self.device.modes]
-        # Prefer Static mode over Direct
-        self._preferred_no_effect_mode = (
-            OpenRGBMode.STATIC
-            if OpenRGBMode.STATIC in modes
-            else OpenRGBMode.CUSTOM
-            if OpenRGBMode.CUSTOM in modes
-            else OpenRGBMode.DIRECT
-        )
+
+        if self.device.metadata.description == "ASRock Polychrome USB Device":
+            # https://gitlab.com/CalcProgrammer1/OpenRGB/-/issues/5145
+            self._preferred_no_effect_mode = OpenRGBMode.STATIC
+        else:
+            # https://gitlab.com/CalcProgrammer1/OpenRGB/-/blob/c71cc4f18a54f83d388165ef2ab4c4ad3e980b89/RGBController/RGBController.cpp#L2075-2081
+            self._preferred_no_effect_mode = (
+                OpenRGBMode.DIRECT
+                if OpenRGBMode.DIRECT in modes
+                else OpenRGBMode.CUSTOM
+                if OpenRGBMode.CUSTOM in modes
+                else OpenRGBMode.STATIC
+            )
         # Determine if the device supports being turned off through modes
         self._supports_off_mode = OpenRGBMode.OFF in modes
         # Determine which modes supports color

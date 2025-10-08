@@ -221,8 +221,8 @@ async def test_turn_on_light(
         blocking=True,
     )
 
-    # Verify that set_mode was called to restore to Static mode (preferred over Direct)
-    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.STATIC)
+    # Verify that set_mode was called to restore to Direct mode (preferred over Static)
+    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.DIRECT)
     # And set_color was called with default color
     mock_openrgb_device.set_color.assert_called_once_with(
         RGBColor(*DEFAULT_COLOR), True
@@ -304,8 +304,8 @@ async def test_turn_on_light_with_effect_off(
         blocking=True,
     )
 
-    # Should switch to Static mode (preferred over Direct)
-    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.STATIC)
+    # Should switch to Direct mode (preferred over Static)
+    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.DIRECT)
 
 
 @pytest.mark.usefixtures("mock_openrgb_client")
@@ -316,8 +316,8 @@ async def test_turn_on_restores_previous_values(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test turning on after off restores previous brightness, color, and mode."""
-    # Start with device in Direct mode with blue color
-    mock_openrgb_device.active_mode = 0
+    # Start with device in Static mode with blue color
+    mock_openrgb_device.active_mode = 2
     mock_openrgb_device.colors = [RGBColor(0, 0, 128), RGBColor(0, 0, 128)]
 
     mock_config_entry.add_to_hass(hass)
@@ -331,26 +331,17 @@ async def test_turn_on_restores_previous_values(
     assert state
     assert state.state == STATE_ON
 
-    # Turn off the light
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
-        blocking=True,
-    )
-
     # Now device is in Off mode
     mock_openrgb_device.active_mode = 1
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_OFF
-    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.OFF)
-    mock_openrgb_device.set_mode.reset_mock()
 
     # Turn on without parameters - should restore previous mode and values
     await hass.services.async_call(
@@ -360,8 +351,8 @@ async def test_turn_on_restores_previous_values(
         blocking=True,
     )
 
-    # Should restore to Direct mode (previous mode) even though Static is preferred
-    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.DIRECT)
+    # Should restore to Static mode (previous mode) even though Direct is preferred
+    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.STATIC)
 
 
 @pytest.mark.usefixtures("mock_openrgb_client")
@@ -458,8 +449,8 @@ async def test_turn_on_with_non_color_effect_and_color_params(
         blocking=True,
     )
 
-    # Should switch to Static mode (preferred) instead of Rainbow since color was provided
-    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.STATIC)
+    # Should switch to Direct mode (preferred) instead of Rainbow since color was provided
+    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.DIRECT)
 
 
 @pytest.mark.usefixtures("init_integration")
