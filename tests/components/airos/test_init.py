@@ -177,13 +177,46 @@ async def test_uid_migrate_entry(
     updated_entity_entry = entity_registry.async_get(original_entity_id)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.version == 1
-    assert entry.minor_version == 3
+    assert entry.version == 2
+    assert entry.minor_version == 0
     assert (
         entity_registry.async_get_entity_id(BINARY_SENSOR_DOMAIN, DOMAIN, old_unique_id)
         is None
     )
     assert updated_entity_entry.unique_id == new_unique_id
+
+
+async def test_uid_migrate_entry_fail(
+    hass: HomeAssistant,
+    mock_airos_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test migrate entry unique id failure for mac address unknown."""
+    MOCK_ID = "device_id_12345"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=MOCK_CONFIG_V1_2,
+        entry_id="1",
+        unique_id=MOCK_ID,
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_ID)},
+    )
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.version == 1
+    assert entry.minor_version == 2
 
 
 async def test_migrate_future_return(

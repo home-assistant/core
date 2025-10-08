@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
 async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
     """Migrate old config entry."""
 
-    if entry.version > 1:
+    if entry.version > 2:
         # This means the user has downgraded from a future version
         return False
 
@@ -79,7 +79,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
         )
 
     # As v6 has no device_id use mac_address in binary_sensor
-    if entry.version == 1 and entry.minor_version == 2:
+    if entry.version == 1:
         device_registry = dr.async_get(hass)
         device_entries = dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
@@ -98,13 +98,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
                 mac_address = dr.format_mac(value)
                 break
 
-        if not mac_address:  # pragma: no cover
+        if not mac_address:
             _LOGGER.error(
                 "No MAC address found for device %s, unable to migrate binary_sensors appropriately. Please remove and re-add the integration to avoid duplicate entities",
                 device_entry.name,
             )
-            hass.config_entries.async_update_entry(entry, minor_version=3)
-            return True
+            return False
 
         @callback
         def update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
@@ -126,7 +125,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
 
         await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-        hass.config_entries.async_update_entry(entry, minor_version=3)
+        hass.config_entries.async_update_entry(entry, version=2, minor_version=0)
 
     return True
 

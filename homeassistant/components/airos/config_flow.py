@@ -57,8 +57,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ubiquiti airOS."""
 
-    VERSION = 1
-    MINOR_VERSION = 3
+    VERSION = 2
+    MINOR_VERSION = 0
 
     def __init__(self) -> None:
         """Initialize the config flow."""
