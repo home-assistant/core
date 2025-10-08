@@ -60,11 +60,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
 async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
     """Migrate old config entry."""
 
+    # This means the user has downgraded from a future version
     if entry.version > 2:
-        # This means the user has downgraded from a future version
         return False
 
+    # 1.1 Migrate config_entry to add advanced ssl settings
     if entry.version == 1 and entry.minor_version == 1:
+        new_minor_version = 2
         new_data = {**entry.data}
         advanced_data = {
             CONF_SSL: DEFAULT_SSL,
@@ -75,20 +77,24 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
         hass.config_entries.async_update_entry(
             entry,
             data=new_data,
-            minor_version=2,
+            minor_version=new_minor_version,
         )
 
-    # As v6 has no device_id use mac_address in binary_sensor
+    # 2.1 Migrate binary_sensor entity unique_id from device_id to mac_address
     if entry.version == 1:
+        new_version = 2
+        new_minor_version = 1
         device_registry = dr.async_get(hass)
         device_entries = dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
         )
 
+        # Skip if no device entries found
         if not device_entries:
-            _LOGGER.debug("Nothing in device registry, assuming migration succeeded")
-            hass.config_entries.async_update_entry(entry, minor_version=3)
-            return True  # Nothing to migrate, complete version bump
+            hass.config_entries.async_update_entry(
+                entry, version=new_version, minor_version=new_minor_version
+            )
+            return True
 
         device_entry = device_entries[0]
         mac_address = None
@@ -99,10 +105,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
                 break
 
         if not mac_address:
-            _LOGGER.error(
-                "No MAC address found for device %s, unable to migrate binary_sensors appropriately. Please remove and re-add the integration to avoid duplicate entities",
-                device_entry.name,
-            )
             return False
 
         @callback
@@ -125,7 +127,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
 
         await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-        hass.config_entries.async_update_entry(entry, version=2, minor_version=3)
+        hass.config_entries.async_update_entry(
+            entry, version=new_version, minor_version=new_minor_version
+        )
 
     return True
 

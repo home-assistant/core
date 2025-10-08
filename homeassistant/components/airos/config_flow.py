@@ -58,7 +58,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ubiquiti airOS."""
 
     VERSION = 2
-    MINOR_VERSION = 3
+    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""

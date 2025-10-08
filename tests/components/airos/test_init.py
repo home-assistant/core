@@ -128,8 +128,8 @@ async def test_ssl_migrate_entry(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.version == 1
-    assert entry.minor_version >= 2
+    assert entry.version == 2
+    assert entry.minor_version == 1
     assert entry.data == MOCK_CONFIG_V1_2
 
 
@@ -178,7 +178,7 @@ async def test_uid_migrate_entry(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.minor_version == 1
     assert (
         entity_registry.async_get_entity_id(BINARY_SENSOR_DOMAIN, DOMAIN, old_unique_id)
         is None
