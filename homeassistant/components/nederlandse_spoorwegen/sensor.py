@@ -128,10 +128,13 @@ async def async_setup_entry(
                     subentry.data[CONF_NAME],
                     subentry.data[CONF_FROM],
                     subentry.data[CONF_TO],
+                    subentry.subentry_id,
                     subentry.data.get(CONF_VIA),
-                    parse_time(subentry.data[CONF_TIME])
-                    if CONF_TIME in subentry.data
-                    else None,
+                    (
+                        parse_time(subentry.data[CONF_TIME])
+                        if CONF_TIME in subentry.data
+                        else None
+                    ),
                 )
             ],
             config_subentry_id=subentry.subentry_id,
@@ -151,6 +154,7 @@ class NSDepartureSensor(SensorEntity):
         name: str,
         departure: str,
         heading: str,
+        subentry_id: str,
         via: str | None,
         time: dt.time | None,
     ) -> None:
@@ -165,6 +169,7 @@ class NSDepartureSensor(SensorEntity):
         self._trips: list[Trip] | None = None
         self._first_trip: Trip | None = None
         self._next_trip: Trip | None = None
+        self._attr_unique_id = f"{subentry_id}-actual_departure"
 
     @property
     def name(self) -> str:
