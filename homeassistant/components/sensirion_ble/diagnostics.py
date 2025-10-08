@@ -6,12 +6,10 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_UNIQUE_ID
+from homeassistant.const import CONF_TITLE, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-
-CONF_TITLE = "title"
 
 TO_REDACT = {
     CONF_TITLE,
