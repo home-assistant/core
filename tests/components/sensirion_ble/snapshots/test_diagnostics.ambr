@@ -2,8 +2,10 @@
 # name: test_diagnostics
   dict({
     'coordinator_data': dict({
+      'address': '01:03:05:07:09:11',
       'available': True,
       'last_update_success': True,
+      'mode': 'BluetoothScanningMode.ACTIVE',
     }),
     'entry': dict({
       'data': dict({
@@ -19,6 +21,31 @@
       'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
       'version': 1,
+    }),
+    'processor_data': dict({
+      'devices': dict({
+        None: dict({
+          'identifiers': set({
+            tuple([
+              'sensirion_ble',
+              '84E3',
+            ]),
+          }),
+          'manufacturer': 'Sensirion',
+          'model': 'MyCO2',
+          'name': 'MyCO2 84E3',
+        }),
+      }),
+      'entity_data': dict({
+        PassiveBluetoothEntityKey(key='carbon_dioxide', device_id=None): 724,
+        PassiveBluetoothEntityKey(key='humidity', device_id=None): 27.8,
+        PassiveBluetoothEntityKey(key='temperature', device_id=None): 20.1,
+      }),
+      'entity_names': dict({
+        PassiveBluetoothEntityKey(key='carbon_dioxide', device_id=None): 'Carbon dioxide',
+        PassiveBluetoothEntityKey(key='humidity', device_id=None): 'Humidity',
+        PassiveBluetoothEntityKey(key='temperature', device_id=None): 'Temperature',
+      }),
     }),
   })
 # ---
