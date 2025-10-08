@@ -288,4 +288,4 @@ async def test_migrate_statistics_meta(
             "unit_of_measurement": "ppm",
         },
     }
-    assert post_migration_metadata_api == pre_migration_metadata_api
+    assert post_migration_metadata_api == unordered(pre_migration_metadata_api)
