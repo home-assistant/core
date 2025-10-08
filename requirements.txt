@@ -5,7 +5,7 @@
 # Home Assistant Core
 aiodns==3.5.0
 aiohasupervisor==0.3.3
-aiohttp==3.12.15
+aiohttp==3.13.0
 aiohttp_cors==0.8.1
 aiohttp-fast-zlib==0.3.0
 aiohttp-asyncmdnsresolver==0.1.1
@@ -13,7 +13,7 @@ aiozoneinfo==0.2.3
 annotatedyaml==1.0.2
 astral==2.2
 async-interrupt==1.2.2
-attrs==25.3.0
+attrs==25.4.0
 atomicwrites-homeassistant==1.4.1
 audioop-lts==0.2.1
 awesomeversion==25.5.0
@@ -50,6 +50,6 @@ uv==0.8.9
 voluptuous==0.15.2
 voluptuous-serialize==2.7.0
 voluptuous-openapi==0.1.0
-yarl==1.20.1
+yarl==1.22.0
 webrtc-models==0.3.0
 zeroconf==0.148.0
