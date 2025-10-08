@@ -28,7 +28,7 @@ DIM_RANGE = vol.All(vol.Coerce(int), vol.Range(min=120, max=700))
 SUPPORTED_COUNTRY_CODES = ["NL", "BE"]
 
 
-async def async_setup_entry(
+def async_setup_entry(
     hass: HomeAssistant,
     entry: BuienRadarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
