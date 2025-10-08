@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
 
 from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, WorkArea
@@ -37,23 +37,42 @@ ERROR_STATES = [
 ]
 
 
-@callback
-def _work_area_translation_key(work_area_id: int, key: str) -> str:
-    """Return the translation key."""
-    if work_area_id == 0:
-        return f"my_lawn_{key}"
-    return f"work_area_{key}"
+_Entity = TypeVar("_Entity", bound="AutomowerBaseEntity")
+_P = ParamSpec("_P")
 
 
-type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]]
+@overload
+def handle_sending_exception(
+    _func: Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, Any]],
+) -> Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, None]]: ...
 
 
-def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
+@overload
+def handle_sending_exception(
+    *,
     poll_after_sending: bool = False,
-) -> Callable[[_FuncType[_Entity, _P, Any]], _FuncType[_Entity, _P, None]]:
+) -> Callable[
+    [Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, Any]]],
+    Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, None]],
+]: ...
+
+
+def handle_sending_exception(
+    _func: Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, Any]] | None = None,
+    *,
+    poll_after_sending: bool = False,
+) -> (
+    Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, None]]
+    | Callable[
+        [Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, Any]]],
+        Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, None]],
+    ]
+):
     """Handle exceptions while sending a command and optionally refresh coordinator."""
 
-    def decorator(func: _FuncType[_Entity, _P, Any]) -> _FuncType[_Entity, _P, None]:
+    def decorator(
+        func: Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, Any]],
+    ) -> Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, None]]:
         @functools.wraps(func)
         async def wrapper(self: _Entity, *args: _P.args, **kwargs: _P.kwargs) -> None:
             try:
@@ -73,7 +92,20 @@ def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
 
         return wrapper
 
-    return decorator
+    if _func is None:
+        # Aufruf mit Klammern: @handle_sending_exception(...)
+        return decorator
+
+    # Aufruf ohne Klammern: @handle_sending_exception
+    return decorator(_func)
+
+
+@callback
+def _work_area_translation_key(work_area_id: int, key: str) -> str:
+    """Return the translation key."""
+    if work_area_id == 0:
+        return f"my_lawn_{key}"
+    return f"work_area_{key}"
 
 
 class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
