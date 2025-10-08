@@ -121,6 +121,7 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key=ATTR_API_CLOUDS,
@@ -158,6 +159,7 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key=ATTR_API_CONDITION,
@@ -227,7 +229,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up OpenWeatherMap sensor entities based on a config entry."""
     domain_data = config_entry.runtime_data
-    name = domain_data.name
     unique_id = config_entry.unique_id
     assert unique_id is not None
     coordinator = domain_data.coordinator
@@ -242,7 +243,6 @@ async def async_setup_entry(
     elif domain_data.mode == OWM_MODE_AIRPOLLUTION:
         async_add_entities(
             OpenWeatherMapSensor(
-                name,
                 unique_id,
                 description,
                 coordinator,
@@ -252,7 +252,6 @@ async def async_setup_entry(
     else:
         async_add_entities(
             OpenWeatherMapSensor(
-                name,
                 unique_id,
                 description,
                 coordinator,
@@ -270,7 +269,6 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
 
     def __init__(
         self,
-        name: str,
         unique_id: str,
         description: SensorEntityDescription,
         coordinator: OWMUpdateCoordinator,
@@ -284,7 +282,6 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
-            name=name,
         )
 
     @property
