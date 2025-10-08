@@ -389,7 +389,7 @@ async def _insert_wrong_wind_direction_statistics(hass: HomeAssistant) -> None:
         "source": RECORDER_DOMAIN,
         "name": None,
         "statistic_id": "sensor.statistics_issues_issue_5",
-        "unit_class": TemperatureConverter.UNIT_CLASS,
+        "unit_class": None,
         "unit_of_measurement": DEGREE,
         "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
