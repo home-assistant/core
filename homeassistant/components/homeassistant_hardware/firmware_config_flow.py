@@ -39,6 +39,7 @@ from .util import (
     FirmwareInfo,
     OwningAddon,
     OwningIntegration,
+    ResetTarget,
     async_flash_silabs_firmware,
     get_otbr_addon_manager,
     guess_firmware_info,
@@ -79,6 +80,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     """Base flow to install firmware."""
 
     ZIGBEE_BAUDRATE = 115200  # Default, subclasses may override
+    BOOTLOADER_RESET_METHODS: list[ResetTarget] = []  # Default, subclasses may override
+
     _picked_firmware_type: PickedFirmwareType
     _zigbee_flow_strategy: ZigbeeFlowStrategy = ZigbeeFlowStrategy.RECOMMENDED
 
@@ -155,34 +158,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             description_placeholders=self._get_translation_placeholders(),
         )
 
-    async def _probe_firmware_info(
-        self,
-        probe_methods: tuple[ApplicationType, ...] = (
-            # We probe in order of frequency: Zigbee, Thread, then multi-PAN
-            ApplicationType.GECKO_BOOTLOADER,
-            ApplicationType.EZSP,
-            ApplicationType.SPINEL,
-            ApplicationType.CPC,
-        ),
-    ) -> bool:
-        """Probe the firmware currently on the device."""
-        assert self._device is not None
-
-        self._probed_firmware_info = await probe_silabs_firmware_info(
-            self._device,
-            probe_methods=probe_methods,
-        )
-
-        return (
-            self._probed_firmware_info is not None
-            and self._probed_firmware_info.firmware_type
-            in (
-                ApplicationType.EZSP,
-                ApplicationType.SPINEL,
-                ApplicationType.CPC,
-            )
-        )
-
     async def _install_firmware_step(
         self,
         fw_update_url: str,
@@ -236,12 +211,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         expected_installed_firmware_type: ApplicationType,
     ) -> None:
         """Install firmware."""
-        if not await self._probe_firmware_info():
-            raise AbortFlow(
-                reason="unsupported_firmware",
-                description_placeholders=self._get_translation_placeholders(),
-            )
-
         assert self._device is not None
 
         # Keep track of the firmware we're working with, for error messages
@@ -250,6 +219,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         # Installing new firmware is only truly required if the wrong type is
         # installed: upgrading to the latest release of the current firmware type
         # isn't strictly necessary for functionality.
+        self._probed_firmware_info = await probe_silabs_firmware_info(self._device)
+
         firmware_install_required = self._probed_firmware_info is None or (
             self._probed_firmware_info.firmware_type != expected_installed_firmware_type
         )
@@ -301,12 +272,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             # Otherwise, fail
             raise AbortFlow(reason="firmware_download_failed") from err
 
-        await async_flash_silabs_firmware(
+        self._probed_firmware_info = await async_flash_silabs_firmware(
             hass=self.hass,
             device=self._device,
             fw_data=fw_data,
             expected_installed_firmware_type=expected_installed_firmware_type,
-            bootloader_reset_type=None,
+            bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
             progress_callback=lambda offset, total: self.async_update_progress(
                 offset / total
             ),
@@ -314,15 +285,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
     async def _configure_and_start_otbr_addon(self) -> None:
         """Configure and start the OTBR addon."""
-
-        # Before we start the addon, confirm that the correct firmware is running
-        # and populate `self._probed_firmware_info` with the correct information
-        if not await self._probe_firmware_info(probe_methods=(ApplicationType.SPINEL,)):
-            raise AbortFlow(
-                "unsupported_firmware",
-                description_placeholders=self._get_translation_placeholders(),
-            )
-
         otbr_manager = get_otbr_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(otbr_manager)
 
@@ -444,12 +406,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         if self._picked_firmware_type == PickedFirmwareType.ZIGBEE:
             return await self.async_step_install_zigbee_firmware()
 
-        return await self.async_step_prepare_thread_installation()
+        return await self.async_step_install_thread_firmware()
 
-    async def async_step_prepare_thread_installation(
+    async def async_step_finish_thread_installation(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Prepare for Thread installation by stopping the OTBR addon if needed."""
+        """Finish Thread installation by starting the OTBR addon."""
         if not is_hassio(self.hass):
             return self.async_abort(
                 reason="not_hassio_thread",
@@ -459,21 +421,11 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         otbr_manager = get_otbr_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(otbr_manager)
 
-        if addon_info.state == AddonState.RUNNING:
-            # Stop the addon before continuing to flash firmware
-            await otbr_manager.async_stop_addon()
-
-        return await self.async_step_install_thread_firmware()
-
-    async def async_step_finish_thread_installation(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Finish Thread installation by starting the OTBR addon."""
-        otbr_manager = get_otbr_addon_manager(self.hass)
-        addon_info = await self._async_get_addon_info(otbr_manager)
-
         if addon_info.state == AddonState.NOT_INSTALLED:
             return await self.async_step_install_otbr_addon()
+
+        if addon_info.state == AddonState.RUNNING:
+            await otbr_manager.async_stop_addon()
 
         return await self.async_step_start_otbr_addon()
 
@@ -510,12 +462,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Continue Zigbee setup."""
         assert self._device is not None
         assert self._hardware_name is not None
-
-        if not await self._probe_firmware_info(probe_methods=(ApplicationType.EZSP,)):
-            return self.async_abort(
-                reason="unsupported_firmware",
-                description_placeholders=self._get_translation_placeholders(),
-            )
 
         if self._zigbee_integration == ZigbeeIntegration.OTHER:
             return self._async_flow_finished()
