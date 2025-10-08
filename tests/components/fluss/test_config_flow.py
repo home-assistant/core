@@ -10,7 +10,6 @@ from fluss_api import (
     FlussApiClientCommunicationError,
 )
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.fluss.config_flow import STEP_USER_DATA_SCHEMA
 from homeassistant.components.fluss.const import DOMAIN

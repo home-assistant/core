@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 from fluss_api import FlussApiClient
 import pytest
 
-from homeassistant.components.fluss.coordinator import FlussDataUpdateCoordinator
-from homeassistant.config_entries import ConfigEntry, MockConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -29,10 +28,11 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_api_client() -> MagicMock:
     """Mock Fluss API client."""
     client = MagicMock(spec=FlussApiClient)
-    client.async_get_devices = MagicMock(return_value={"devices": [{"deviceId": "1", "deviceName": "Test Device"}]})
+    client.async_get_devices = MagicMock(
+        return_value={"devices": [{"deviceId": "1", "deviceName": "Test Device"}]}
+    )
     client.async_trigger_device = MagicMock()
     return client
-
 
 
 @pytest.fixture
