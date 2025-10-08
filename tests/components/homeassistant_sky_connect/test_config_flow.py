@@ -10,6 +10,9 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
 )
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_notify_firmware_info,
+)
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     CONF_DISABLE_MULTI_PAN,
     get_flasher_addon_manager,
@@ -426,3 +429,47 @@ async def test_options_flow_multipan_uninstall(
 
     # We've reverted the firmware back to Zigbee
     assert config_entry.data["firmware"] == "ezsp"
+
+
+@pytest.mark.parametrize(
+    ("usb_data", "model"),
+    [
+        (USB_DATA_SKY, "Home Assistant SkyConnect"),
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
+async def test_firmware_callback_auto_creates_entry(
+    usb_data: UsbServiceInfo,
+    model: str,
+    hass: HomeAssistant,
+) -> None:
+    """Test that firmware callback auto-creates config entry when another integration takes over."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=usb_data
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "pick_firmware"
+
+    # Simulate another integration (e.g., ZHA) broadcasting firmware info
+    # using the public API
+    firmware_info = FirmwareInfo(
+        device=usb_data.device,
+        firmware_type=ApplicationType.EZSP,
+        firmware_version="7.4.4.0",
+        owners=[],
+        source="zha",
+    )
+
+    # Broadcast the firmware info using the public API
+    await async_notify_firmware_info(hass, "zha", firmware_info)
+
+    # Wait for the callback task to complete
+    await hass.async_block_till_done()
+
+    # Verify the config entry was auto-created
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data["device"] == usb_data.device
+    assert entries[0].data["firmware"] == ApplicationType.EZSP.value
+    assert entries[0].data["firmware_version"] == "7.4.4.0"
