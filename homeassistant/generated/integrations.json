@@ -7922,6 +7922,10 @@
       "integration_type": "helper",
       "config_flow": false
     },
+    "input_weekday": {
+      "integration_type": "helper",
+      "config_flow": false
+    },
     "integration": {
       "integration_type": "helper",
       "config_flow": true,
@@ -8021,6 +8025,7 @@
     "input_number",
     "input_select",
     "input_text",
+    "input_weekday",
     "integration",
     "irm_kmi",
     "islamic_prayer_times",

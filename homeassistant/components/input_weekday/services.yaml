@@ -1,0 +1,115 @@
+set_weekdays:
+  target:
+    entity:
+      domain: input_weekday
+  fields:
+    weekdays:
+      required: true
+      example: '["mon", "wed", "fri"]'
+      selector:
+        select:
+          multiple: true
+          mode: list
+          options:
+            - value: mon
+              label: Monday
+            - value: tue
+              label: Tuesday
+            - value: wed
+              label: Wednesday
+            - value: thu
+              label: Thursday
+            - value: fri
+              label: Friday
+            - value: sat
+              label: Saturday
+            - value: sun
+              label: Sunday
+
+add_weekday:
+  target:
+    entity:
+      domain: input_weekday
+  fields:
+    weekday:
+      required: true
+      example: mon
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - value: mon
+              label: Monday
+            - value: tue
+              label: Tuesday
+            - value: wed
+              label: Wednesday
+            - value: thu
+              label: Thursday
+            - value: fri
+              label: Friday
+            - value: sat
+              label: Saturday
+            - value: sun
+              label: Sunday
+
+remove_weekday:
+  target:
+    entity:
+      domain: input_weekday
+  fields:
+    weekday:
+      required: true
+      example: mon
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - value: mon
+              label: Monday
+            - value: tue
+              label: Tuesday
+            - value: wed
+              label: Wednesday
+            - value: thu
+              label: Thursday
+            - value: fri
+              label: Friday
+            - value: sat
+              label: Saturday
+            - value: sun
+              label: Sunday
+
+toggle_weekday:
+  target:
+    entity:
+      domain: input_weekday
+  fields:
+    weekday:
+      required: true
+      example: mon
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - value: mon
+              label: Monday
+            - value: tue
+              label: Tuesday
+            - value: wed
+              label: Wednesday
+            - value: thu
+              label: Thursday
+            - value: fri
+              label: Friday
+            - value: sat
+              label: Saturday
+            - value: sun
+              label: Sunday
+
+clear:
+  target:
+    entity:
+      domain: input_weekday
+
+reload:

@@ -753,6 +753,8 @@ build.json @home-assistant/supervisor
 /tests/components/input_select/ @home-assistant/core
 /homeassistant/components/input_text/ @home-assistant/core
 /tests/components/input_text/ @home-assistant/core
+/homeassistant/components/input_weekday/ @home-assistant/core
+/tests/components/input_weekday/ @home-assistant/core
 /homeassistant/components/insteon/ @teharris1
 /tests/components/insteon/ @teharris1
 /homeassistant/components/integration/ @dgomes

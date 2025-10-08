@@ -1,0 +1,29 @@
+{
+  "entity": {
+    "input_weekday": {
+      "default": {
+        "default": "mdi:calendar-week"
+      }
+    }
+  },
+  "services": {
+    "set_weekdays": {
+      "service": "mdi:calendar-edit"
+    },
+    "add_weekday": {
+      "service": "mdi:calendar-plus"
+    },
+    "remove_weekday": {
+      "service": "mdi:calendar-minus"
+    },
+    "toggle_weekday": {
+      "service": "mdi:calendar-check"
+    },
+    "clear": {
+      "service": "mdi:calendar-remove"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    }
+  }
+}

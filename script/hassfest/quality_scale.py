@@ -2214,6 +2214,7 @@ NO_QUALITY_SCALE = [
     "input_number",
     "input_select",
     "input_text",
+    "input_weekday",
     "intent_script",
     "intent",
     "logbook",
