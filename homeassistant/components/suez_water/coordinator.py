@@ -241,7 +241,6 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
     ) -> StatisticMetaData:
         """Build statistics metadata for requested configuration."""
         return StatisticMetaData(
-            has_mean=False,
             mean_type=StatisticMeanType.NONE,
             has_sum=True,
             name=f"Suez water {name} {self._counter_id}",
