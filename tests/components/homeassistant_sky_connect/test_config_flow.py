@@ -451,25 +451,32 @@ async def test_firmware_callback_auto_creates_entry(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "pick_firmware"
 
-    # Simulate another integration (e.g., ZHA) broadcasting firmware info
-    # using the public API
-    firmware_info = FirmwareInfo(
-        device=usb_data.device,
-        firmware_type=ApplicationType.EZSP,
-        firmware_version="7.4.4.0",
-        owners=[],
-        source="zha",
+    # ZHA notifies the hardware integration of firmware info
+    await async_notify_firmware_info(
+        hass,
+        "zha",
+        FirmwareInfo(
+            device=usb_data.device,
+            firmware_type=ApplicationType.EZSP,
+            firmware_version="7.4.4.0",
+            owners=[],
+            source="zha",
+        ),
     )
 
-    # Broadcast the firmware info using the public API
-    await async_notify_firmware_info(hass, "zha", firmware_info)
-
-    # Wait for the callback task to complete
     await hass.async_block_till_done()
 
-    # Verify the config entry was auto-created
+    # The config entry was auto-created
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data["device"] == usb_data.device
-    assert entries[0].data["firmware"] == ApplicationType.EZSP.value
-    assert entries[0].data["firmware_version"] == "7.4.4.0"
+    assert entries[0].data == {
+        "device": usb_data.device,
+        "firmware": ApplicationType.EZSP.value,
+        "firmware_version": "7.4.4.0",
+        "vid": usb_data.vid,
+        "pid": usb_data.pid,
+        "serial_number": usb_data.serial_number,
+        "manufacturer": usb_data.manufacturer,
+        "description": usb_data.description,
+        "product": usb_data.description,
+    }

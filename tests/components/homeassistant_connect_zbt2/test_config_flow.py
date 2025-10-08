@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
-
-from homeassistant.components.homeassistant_hardware.helpers import (
-    async_notify_firmware_info,
-)
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
+)
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_notify_firmware_info,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
@@ -390,35 +389,38 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
 
 async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None:
     """Test that firmware callback auto-creates config entry when another integration takes over."""
-    usb_data = USB_DATA_ZBT2
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "usb"}, data=USB_DATA_ZBT2
     )
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "pick_firmware"
-    flow_id = result["flow_id"]
 
-    # Simulate another integration (e.g., ZHA) broadcasting firmware info
-    # using the public API
-    firmware_info = FirmwareInfo(
-        device=USB_DATA_ZBT2.device,
-        firmware_type=ApplicationType.EZSP,
-        firmware_version="7.4.4.0",
-        owners=[],
-        source="zha",
+    # ZHA notifies the hardware integration of firmware info
+    await async_notify_firmware_info(
+        hass,
+        "zha",
+        FirmwareInfo(
+            device=USB_DATA_ZBT2.device,
+            firmware_type=ApplicationType.EZSP,
+            firmware_version="7.4.4.0",
+            owners=[],
+            source="zha",
+        ),
     )
 
-    # Broadcast the firmware info using the public API
-    await async_notify_firmware_info(hass, "zha", firmware_info)
-
-    # Wait for the callback task to complete
     await hass.async_block_till_done()
 
-    # Verify the config entry was auto-created
+    # The config entry was auto-created
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data["device"] == USB_DATA_ZBT2.device
-    assert entries[0].data["firmware"] == ApplicationType.EZSP.value
-    assert entries[0].data["firmware_version"] == "7.4.4.0"
+    assert entries[0].data == {
+        "device": USB_DATA_ZBT2.device,
+        "firmware": ApplicationType.EZSP.value,
+        "firmware_version": "7.4.4.0",
+        "vid": USB_DATA_ZBT2.vid,
+        "pid": USB_DATA_ZBT2.pid,
+        "serial_number": USB_DATA_ZBT2.serial_number,
+        "manufacturer": USB_DATA_ZBT2.manufacturer,
+        "product": USB_DATA_ZBT2.description,
+    }
