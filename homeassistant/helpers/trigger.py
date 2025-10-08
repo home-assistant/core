@@ -260,11 +260,11 @@ class TriggerConfig:
 class TriggerActionType(Protocol):
     """Protocol type for trigger action callback."""
 
-    async def __call__(
+    def __call__(
         self,
         run_variables: dict[str, Any],
         context: Context | None = None,
-    ) -> Any:
+    ) -> Coroutine[Any, Any, Any] | Any:
         """Define action callback type."""
 
 
@@ -444,8 +444,8 @@ async def async_validate_trigger_config(
 
 
 def _trigger_action_wrapper(
-    hass: HomeAssistant, action: Callable, conf: ConfigType
-) -> Callable:
+    hass: HomeAssistant, action: TriggerActionType, conf: ConfigType
+) -> TriggerActionType:
     """Wrap trigger action with extra vars if configured.
 
     If action is a coroutine function, a coroutine function will be returned.
@@ -477,7 +477,7 @@ def _trigger_action_wrapper(
     else:
 
         @functools.wraps(action)
-        async def with_vars(
+        def with_vars(
             run_variables: dict[str, Any], context: Context | None = None
         ) -> Any:
             """Wrap action with extra vars."""
