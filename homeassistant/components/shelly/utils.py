@@ -388,11 +388,6 @@ def get_shelly_model_name(
     return cast(str, MODEL_NAMES.get(model))
 
 
-def get_rpc_component_role(config: dict[str, Any], key: str) -> str:
-    """Get RPC component role from device config."""
-    return config[key].get("role", "") if key in config else ""
-
-
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     """Get name based on device and channel name."""
     if BLU_TRV_IDENTIFIER in key:
@@ -406,7 +401,7 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
 
     if key in device.config and key != "em:0":
         # workaround for Pro 3EM, we don't want to get name for em:0
-        role = get_rpc_component_role(device.config, key)
+        role = get_rpc_role_by_key(device.config, key)
         if role.startswith("zone"):
             # workaround for Irrigation controller, we don't want to get names for zones
             return None
@@ -429,7 +424,7 @@ def get_rpc_sub_device_name(
     """Get name based on device and channel name."""
     if key in device.config and key != "em:0":
         # workaround for Pro 3EM, we don't want to get name for em:0
-        role = get_rpc_component_role(device.config, key)
+        role = get_rpc_role_by_key(device.config, key)
         if role.startswith("zone"):
             # workaround for Irrigation controller, name stored in "service:0"
             zone_id = int(role[4:])
@@ -834,7 +829,11 @@ def get_rpc_device_info(
             configuration_url=configuration_url,
         )
 
-    is_zone_component = get_rpc_component_role(device.config, key).startswith("zone")
+    is_zone_component = (
+        get_rpc_role_by_key(device.config, key).startswith("zone")
+        if key in device.config
+        else False
+    )
     if (
         (
             component not in (*All_LIGHT_TYPES, "cover", "em1", "switch")
