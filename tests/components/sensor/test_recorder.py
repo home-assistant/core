@@ -5969,6 +5969,7 @@ async def test_validate_statistics_other_domain(
         "name": None,
         "source": RECORDER_DOMAIN,
         "statistic_id": "number.test",
+        "unit_class": None,
         "unit_of_measurement": None,
     }
     statistics: StatisticData = {

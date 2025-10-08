@@ -840,6 +840,10 @@ async def test_statistics_duplicated(
         caplog.clear()
 
 
+# Integration frame mocked because of deprecation warnings about missing
+# unit_class, can be removed in HA Core 2025.11
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
 @pytest.mark.parametrize("last_reset_str", ["2022-01-01T00:00:00+02:00", None])
 @pytest.mark.parametrize(
     ("external_metadata_extra"),
@@ -1130,6 +1134,7 @@ async def test_external_statistics_errors(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -1218,6 +1223,7 @@ async def test_import_statistics_errors(
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -1348,6 +1354,7 @@ async def test_daily_statistics_sum(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -1529,6 +1536,7 @@ async def test_multiple_daily_statistics_sum(
         "name": "Total imported energy 1",
         "source": "test",
         "statistic_id": "test:total_energy_import2",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_metadata2 = {
@@ -1537,6 +1545,7 @@ async def test_multiple_daily_statistics_sum(
         "name": "Total imported energy 2",
         "source": "test",
         "statistic_id": "test:total_energy_import1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -1727,6 +1736,7 @@ async def test_weekly_statistics_mean(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -1873,6 +1883,7 @@ async def test_weekly_statistics_sum(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -2054,6 +2065,7 @@ async def test_monthly_statistics_sum(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -2383,6 +2395,7 @@ async def test_change(
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -2719,6 +2732,7 @@ async def test_change_multiple(
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_metadata2 = {
@@ -2727,6 +2741,7 @@ async def test_change_multiple(
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import2",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     async_import_statistics(hass, external_metadata1, external_statistics)
@@ -3108,6 +3123,7 @@ async def test_change_with_none(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -3662,6 +3678,7 @@ async def test_get_statistics_service(
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_metadata2 = {
@@ -3670,6 +3687,7 @@ async def test_get_statistics_service(
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import2",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     async_import_statistics(hass, external_metadata1, external_statistics)

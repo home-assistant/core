@@ -4672,6 +4672,7 @@ async def test_import_statistics_with_last_reset(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
