@@ -309,11 +309,11 @@ class TriggerActionPayloadBuilder(Protocol):
 class TriggerAction(Protocol):
     """Protocol type for trigger action callback."""
 
-    async def __call__(
+    def __call__(
         self,
         run_variables: dict[str, Any],
         context: Context | None = None,
-    ) -> Any:
+    ) -> Coroutine[Any, Any, Any] | Any:
         """Define action callback type."""
 
 
@@ -357,7 +357,7 @@ class PluggableActionsEntry:
     actions: dict[
         object,
         tuple[
-            HassJob[[dict[str, Any], Context | None], Coroutine[Any, Any, None]],
+            HassJob[[dict[str, Any], Context | None], Coroutine[Any, Any, None] | Any],
             dict[str, Any],
         ],
     ] = field(default_factory=dict)
@@ -540,7 +540,7 @@ def _trigger_action_wrapper(
     else:
 
         @functools.wraps(action)
-        async def with_vars(
+        def with_vars(
             run_variables: dict[str, Any], context: Context | None = None
         ) -> Any:
             """Wrap action with extra vars."""
