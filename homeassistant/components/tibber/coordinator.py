@@ -71,27 +71,27 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
     async def _insert_statistics(self) -> None:
         """Insert Tibber statistics."""
         for home in self._tibber_connection.get_homes():
-            sensors: list[tuple[str, bool, str, str | None]] = []
+            sensors: list[tuple[str, bool, str | None, str]] = []
             if home.hourly_consumption_data:
                 sensors.append(
                     (
                         "consumption",
                         False,
-                        UnitOfEnergy.KILO_WATT_HOUR,
                         EnergyConverter.UNIT_CLASS,
+                        UnitOfEnergy.KILO_WATT_HOUR,
                     )
                 )
-                sensors.append(("totalCost", False, home.currency, None))
+                sensors.append(("totalCost", False, None, home.currency))
             if home.hourly_production_data:
                 sensors.append(
                     (
                         "production",
                         True,
-                        UnitOfEnergy.KILO_WATT_HOUR,
                         EnergyConverter.UNIT_CLASS,
+                        UnitOfEnergy.KILO_WATT_HOUR,
                     )
                 )
-                sensors.append(("profit", True, home.currency, None))
+                sensors.append(("profit", True, None, home.currency))
 
             for sensor_type, is_production, unit_class, unit in sensors:
                 statistic_id = (
