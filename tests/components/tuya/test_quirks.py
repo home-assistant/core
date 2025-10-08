@@ -45,11 +45,12 @@ def _validate_quirk_platform(
     definitions: list[BaseTuyaDefinition] = getattr(quirk, f"{platform}_definitions")
     for definition in definitions:
         # Validate entity translations exist in strings.json.
-        full_key = f"entity.{platform}.{definition.translation_key}.name"
-        assert definition.translation_string == strings.get(full_key), (
-            f"Incorrect or missing translation string for {full_key} in "
-            "homeassistant/components/tuya/strings.json"
-        )
+        if definition.translation_key:
+            full_key = f"entity.{platform}.{definition.translation_key}.name"
+            assert definition.translation_string == strings.get(full_key), (
+                f"Incorrect or missing translation string for {full_key} in "
+                "homeassistant/components/tuya/strings.json"
+            )
         # Validate entity state translations exist in strings.json.
         if state_translations := definition.state_translations:
             for state, state_translation in state_translations.items():

@@ -31,6 +31,32 @@ class TuyaEntityCategory(StrEnum):
     DIAGNOSTIC = "diagnostic"
 
 
+class TuyaClimateHVACMode(StrEnum):
+    """HVAC mode for climate devices."""
+
+    # All activity disabled / Device is off/standby
+    OFF = "off"
+
+    # Heating
+    HEAT = "heat"
+
+    # Cooling
+    COOL = "cool"
+
+    # The device supports heating/cooling to a range
+    HEAT_COOL = "heat_cool"
+
+    # The temperature is set based on a schedule, learned behavior, AI or some
+    # other related mechanism. User is not able to adjust the temperature
+    AUTO = "auto"
+
+    # Device is in Dry/Humidity mode
+    DRY = "dry"
+
+    # Only the fan is on, not fan and another mode like cool
+    FAN_ONLY = "fan_only"
+
+
 class TuyaCoverDeviceClass(StrEnum):
     """Device class for cover."""
 

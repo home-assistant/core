@@ -3,29 +3,25 @@
 from __future__ import annotations
 
 from .device_quirk import (
+    TuyaClimateDefinition,
     TuyaCoverDefinition,
     TuyaDeviceQuirk,
     TuyaSelectDefinition,
     TuyaSensorDefinition,
+    TuyaSwitchDefinition,
 )
-from .homeassistant import (
-    TuyaCoverDeviceClass,
-    TuyaEntityCategory,
-    TuyaSensorDeviceClass,
-    parse_enum,
-)
+from .homeassistant import parse_enum
 from .registry import QuirksRegistry
 
 __all__ = [
     "TUYA_QUIRKS_REGISTRY",
     "QuirksRegistry",
+    "TuyaClimateDefinition",
     "TuyaCoverDefinition",
-    "TuyaCoverDeviceClass",
     "TuyaDeviceQuirk",
-    "TuyaEntityCategory",
     "TuyaSelectDefinition",
     "TuyaSensorDefinition",
-    "TuyaSensorDeviceClass",
+    "TuyaSwitchDefinition",
     "parse_enum",
 ]
 

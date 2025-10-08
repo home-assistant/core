@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from ..xternal_tuya_quirks import (
-    TUYA_QUIRKS_REGISTRY,
-    TuyaCoverDeviceClass,
-    TuyaDeviceQuirk,
-    TuyaEntityCategory,
-)
+from ..const import DPCode
+from ..xternal_tuya_quirks import TUYA_QUIRKS_REGISTRY, TuyaDeviceQuirk
+from ..xternal_tuya_quirks.homeassistant import TuyaCoverDeviceClass, TuyaEntityCategory
 
 (
     # This model has percent_state and percent_control but percent_state never
@@ -15,16 +12,16 @@ from ..xternal_tuya_quirks import (
     TuyaDeviceQuirk()
     .applies_to(category="cl", product_id="g1cp07dsqnbdbbki")
     .add_cover(
-        key="control",
+        key=DPCode.CONTROL,
         translation_key="curtain",
         translation_string="[%key:component::cover::entity_component::curtain::name%]",
-        current_state_dp_code="control",
-        current_position_dp_code="percent_control",
-        set_position_dp_code="percent_control",
+        current_state_dp_code=DPCode.CONTROL,
+        current_position_dp_code=DPCode.PERCENT_CONTROL,
+        set_position_dp_code=DPCode.PERCENT_CONTROL,
         device_class=TuyaCoverDeviceClass.CURTAIN,
     )
     .add_select(
-        key="control_back_mode",
+        key=DPCode.CONTROL_BACK_MODE,
         translation_key="curtain_motor_mode",
         translation_string="Motor mode",
         entity_category=TuyaEntityCategory.CONFIG,
@@ -38,21 +35,21 @@ from ..xternal_tuya_quirks import (
     TuyaDeviceQuirk()
     .applies_to(category="cl", product_id="lfkr93x0ukp5gaia")
     .add_cover(
-        key="control",
+        key=DPCode.CONTROL,
         translation_key="curtain",
         translation_string="[%key:component::cover::entity_component::curtain::name%]",
-        current_state_dp_code="control",
+        current_state_dp_code=DPCode.CONTROL,
         device_class=TuyaCoverDeviceClass.CURTAIN,
     )
     .add_select(
-        key="control_back_mode",
+        key=DPCode.CONTROL_BACK_MODE,
         translation_key="curtain_motor_mode",
         translation_string="Motor mode",
         entity_category=TuyaEntityCategory.CONFIG,
         state_translations={"forward": "Forward", "back": "Back"},
     )
     .add_sensor(
-        key="time_total",
+        key=DPCode.TIME_TOTAL,
         translation_key="last_operation_duration",
         translation_string="Last operation duration",
         entity_category=TuyaEntityCategory.DIAGNOSTIC,
