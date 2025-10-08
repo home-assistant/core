@@ -90,7 +90,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
                     await gateway.connect()
                     devices = await gateway.discover_devices()
                     await gateway.disconnect()
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         "Found %d devices on gateway %s",
                         len(devices),
                         selected_gateway["gw_sn"],
