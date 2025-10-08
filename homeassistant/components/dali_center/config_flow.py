@@ -5,39 +5,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from PySrDaliGateway import DaliGateway, DeviceType
 from PySrDaliGateway.discovery import DaliGatewayDiscovery
 from PySrDaliGateway.exceptions import DaliGatewayError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect."""
-    try:
-        gateway = DaliGateway(data["gateway"])
-        await gateway.connect()
-        gateway_info = gateway.to_dict()
-        await gateway.disconnect()
-
-    except DaliGatewayError as err:
-        _LOGGER.error("Failed to connect to gateway: %s", err)
-        raise CannotConnect from err
-    except Exception as err:
-        _LOGGER.exception("Unexpected error validating gateway")
-        raise CannotConnect from err
-
-    return {
-        "title": gateway.name,
-        "gateway_info": gateway_info,
-    }
 
 
 class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -48,8 +24,6 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_gateways: list[Any] = []
-        self._selected_gateway: dict[str, Any] | None = None
-        self._discovered_devices: list[DeviceType] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -77,40 +51,23 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if selected_gateway:
-                try:
-                    info = await validate_input(
-                        self.hass, {"gateway": selected_gateway}
-                    )
-                    await self.async_set_unique_id(selected_gateway["gw_sn"])
-                    self._abort_if_unique_id_configured()
+                await self.async_set_unique_id(selected_gateway["gw_sn"])
+                self._abort_if_unique_id_configured()
 
-                    # Discover devices automatically
-                    devices = []
-                    gateway = DaliGateway(selected_gateway)
-                    await gateway.connect()
-                    devices = await gateway.discover_devices()
-                    await gateway.disconnect()
-                    _LOGGER.debug(
-                        "Found %d devices on gateway %s",
-                        len(devices),
-                        selected_gateway["gw_sn"],
-                    )
+                title = (
+                    selected_gateway.get("gw_name")
+                    or selected_gateway.get("name")
+                    or selected_gateway["gw_sn"]
+                )
 
-                    return self.async_create_entry(
-                        title=info["title"],
-                        data={
-                            "sn": selected_gateway["gw_sn"],
-                            "gateway": selected_gateway,
-                            "devices": devices,
-                        },
-                    )
-                except CannotConnect:
-                    errors["base"] = "cannot_connect"
-                except Exception:
-                    _LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
-            else:
-                errors["base"] = "device_not_found"
+                return self.async_create_entry(
+                    title=title,
+                    data={
+                        "sn": selected_gateway["gw_sn"],
+                        "gateway": selected_gateway,
+                    },
+                )
+            errors["base"] = "device_not_found"
 
         if not self._discovered_gateways or errors:
             try:
@@ -152,7 +109,3 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""

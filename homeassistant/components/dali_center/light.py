@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from propcache.api import cached_property
-from PySrDaliGateway import DaliGateway, Device
+from PySrDaliGateway import Device
 from PySrDaliGateway.helper import is_light_device
 from PySrDaliGateway.types import LightStatus
 
@@ -38,8 +38,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Dali Center light entities from config entry."""
-    gateway: DaliGateway = entry.runtime_data.gateway
-    devices = [Device(gateway, device) for device in entry.data.get("devices", [])]
+    runtime_data = entry.runtime_data
+    gateway = runtime_data.gateway
+    devices = [Device(gateway, device) for device in runtime_data.device_data_list]
 
     def _on_light_status(dev_id: str, status: LightStatus) -> None:
         signal = f"dali_center_update_{dev_id}"

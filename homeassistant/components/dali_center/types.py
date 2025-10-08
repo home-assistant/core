@@ -13,6 +13,7 @@ class DaliCenterData:
     """Runtime data for the Dali Center integration."""
 
     gateway: DaliGateway
+    device_data_list: list[DeviceType]
 
 
 class ConfigData(TypedDict, total=False):
@@ -20,7 +21,6 @@ class ConfigData(TypedDict, total=False):
 
     sn: str  # Gateway serial number
     gateway: DaliGatewayType  # Gateway object
-    devices: list[DeviceType]  # Device list
 
 
 type DaliCenterConfigEntry = ConfigEntry[DaliCenterData]

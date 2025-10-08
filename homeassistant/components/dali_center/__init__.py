@@ -34,6 +34,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
 
     _LOGGER.info("Successfully connected to gateway %s", gw_sn)
 
+    try:
+        device_data_list = await gateway.discover_devices()
+    except DaliGatewayError as exc:
+        raise ConfigEntryNotReady(
+            "Unable to discover devices from the gateway"
+        ) from exc
+
+    _LOGGER.debug("Discovered %d devices on gateway %s", len(device_data_list), gw_sn)
+
     dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -44,7 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
         serial_number=gw_sn,
     )
 
-    entry.runtime_data = DaliCenterData(gateway=gateway)
+    entry.runtime_data = DaliCenterData(
+        gateway=gateway,
+        device_data_list=device_data_list,
+    )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     return True
