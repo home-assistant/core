@@ -15,7 +15,6 @@ from homeassistant.helpers import entity_registry as er
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
     fake_post_request,
-    selected_platforms,
     simulate_webhook,
     snapshot_platform_entities,
 )
@@ -117,7 +116,7 @@ async def test_process_rf_strength(rf_strength: int, expected: str) -> None:
     assert sensor.process_rf_strength_string(rf_strength) == expected
 
 
-async def test_doortag_setup_and_services(
+async def test_doortag_setup_and_webhook(
     hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test camera doortag setup and services."""
@@ -162,11 +161,11 @@ async def test_doortag_setup_and_services(
     _home_id = "91763b24c43d3e344f424e8b"
     _camera_id_indoor = "12:34:56:00:f1:62"
     _camera_entity_indoor = "camera.hall"
-    _doortag_id = "12:34:56:00:86:99"
+    _doortag_entity_id = "12:34:56:00:86:99"
     _doortag_entity = "window_hall"
     _doortag_entity_status = f"binary_sensor.{_doortag_entity}_window"
     _doortag_entity_reachability = f"binary_sensor.{_doortag_entity}_reachability"
-    _doortag_entity_battery = f"sensor.{_doortag_entity}_battery_level"
+    _doortag_entity_battery = f"sensor.{_doortag_entity}_battery"
     _doortag_entity_rf_status = f"sensor.{_doortag_entity}_rf_status"
 
     # Check entity creation
@@ -176,14 +175,12 @@ async def test_doortag_setup_and_services(
     assert hass.states.get(_doortag_entity_reachability) is None
     assert hass.states.get(_doortag_entity_rf_status) is None
 
-    # Check initial state
+    # Check initial state - yet not loaded from fixtures
+    # (otherwise battery would be 90 and state would be unknown)
     assert hass.states.get(_doortag_entity_status).state == "unavailable"
-    assert hass.states.get(_doortag_entity_battery).state == "100"
+    assert hass.states.get(_doortag_entity_battery).state == "unavailable"
 
-    assert hass.states.get(_doortag_entity_reachability) == "unavailable"
-    assert hass.states.get(_doortag_entity_rf_status).state == "Full"
-
-    # Fake camera reconnect
+    # Fake camera connection
     response = {
         "user_id": "1234567890",
         "event_type": "connection",
@@ -197,22 +194,38 @@ async def test_doortag_setup_and_services(
     await hass.async_block_till_done()
 
     assert hass.states.get(_camera_entity_indoor).state == "streaming"
-    assert not hass.states.get(_doortag_entity_status).state
+
+    # Fake module connect
+    response = {
+        "user_id": "1234567890",
+        "event_type": "module_connect",
+        "event_id": "1234567890",
+        "camera_id": _camera_id_indoor,
+        "device_id": _camera_id_indoor,
+        "home_id": _home_id,
+        "push_type": "NACamera-module_connect",
+        "module_id": _doortag_entity_id,
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+
+    # Check if became available (this indicated as unknown state, not as unavailable)
+    assert hass.states.get(_doortag_entity_status).state == "unknown"
 
     # Trigger open change with erroneous webhook data
     response = {
-        "event_type": "light_modetag_big_move",
-        "module_id": _doortag_id,
-        "device_id": _camera_id_indoor,
+        "event_type": "tag_big_move",
+        "module_id": _doortag_entity_id,
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    assert not hass.states.get(_doortag_entity_status).state
+    # State should not change
+    assert hass.states.get(_doortag_entity_status).state == "unknown"
 
     # Trigger open change
     response = {
         "event_type": "tag_big_move",
-        "module_id": _doortag_id,
+        "module_id": _doortag_entity_id,
         "device_id": _camera_id_indoor,
         "camera_id": _camera_id_indoor,
         "home_id": _home_id,
@@ -222,8 +235,25 @@ async def test_doortag_setup_and_services(
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    assert hass.states.get(_camera_entity_indoor).state == "streaming"
-    assert hass.states.get(_doortag_entity_status).state
+    # State should not change to open (as it was not closed before)
+    assert hass.states.get(_doortag_entity_status).state == "unknown"
+
+    # Fake module disconnect
+    response = {
+        "user_id": "1234567890",
+        "event_type": "module_disconnect",
+        "event_id": "1234567890",
+        "camera_id": _camera_id_indoor,
+        "device_id": _camera_id_indoor,
+        "home_id": _home_id,
+        "push_type": "NACamera-module_disconnect",
+        "module_id": _doortag_entity_id,
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+
+    # Check if became unavailable
+    assert hass.states.get(_doortag_entity_status).state == "unavailable"
 
 
 async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> None:
@@ -279,16 +309,48 @@ async def test_doortag_setup(
     hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test setup."""
-    with selected_platforms(["binary_sensor", "sensor"]):
+    fake_post_hits = 0
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Fake error during requesting backend data."""
+        nonlocal fake_post_hits
+        fake_post_hits += 1
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch(
+            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            ["camera", "binary_sensor", "sensor"],
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook_generate_url",
+        ) as mock_webhook,
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        mock_webhook.return_value = "https://example.com"
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+
+    # Fake webhook activation
+    await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
+    await hass.async_block_till_done()
 
     # Define the mock home_id, camera_id and doortag_id for the test
     _doortag_entity = "window_hall"
     _doortag_entity_status = f"binary_sensor.{_doortag_entity}_window"
     _doortag_entity_reachability = f"binary_sensor.{_doortag_entity}_reachability"
-    _doortag_entity_battery = f"sensor.{_doortag_entity}_battery_level"
+    _doortag_entity_battery = f"sensor.{_doortag_entity}_battery"
     _doortag_entity_rf_status = f"sensor.{_doortag_entity}_rf_status"
 
     # Check entity creation
@@ -298,32 +360,120 @@ async def test_doortag_setup(
     assert hass.states.get(_doortag_entity_reachability) is None
     assert hass.states.get(_doortag_entity_rf_status) is None
 
-    # Check initial state
+    # Check initial state - yet not loaded from fixtures
+    # (otherwise battery would be 90 and state would be unknown)
     assert hass.states.get(_doortag_entity_status).state == "unavailable"
-    assert hass.states.get(_doortag_entity_battery).state == "100"
-
-    assert hass.states.get(_doortag_entity_reachability) == "unavailable"
-    assert hass.states.get(_doortag_entity_rf_status).state == "Full"
+    assert hass.states.get(_doortag_entity_battery).state == "unavailable"
 
 
-async def test_doortag_battery_sensor(
+async def test_camera_disconnects_doortag(
     hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
-    """Test doortag device battery sensor."""
-    with selected_platforms([Platform.SENSOR, Platform.BINARY_SENSOR, Platform.CAMERA]):
+    """Test camera disconnection that disconnects doortag too."""
+    fake_post_hits = 0
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Fake error during requesting backend data."""
+        nonlocal fake_post_hits
+        fake_post_hits += 1
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch(
+            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            ["camera", "binary_sensor", "sensor"],
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook_generate_url",
+        ) as mock_webhook,
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        mock_webhook.return_value = "https://example.com"
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
-    component = hass.data.get(Platform.SENSOR)
-    _doortag_entity_prefix = "sensor.window_hall_"
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+
+    # Fake webhook activation
+    await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
+    await hass.async_block_till_done()
+
+    # Define the mock home_id, camera_id and doortag_id for the test
+    _home_id = "91763b24c43d3e344f424e8b"
+    _camera_id_indoor = "12:34:56:00:f1:62"
+    _camera_entity_indoor = "camera.hall"
     _doortag_entity_id = "12:34:56:00:86:99"
-    _doortag_battery_entity = component.get_entity(f"{_doortag_entity_prefix}battery")
+    _doortag_entity = "window_hall"
+    _doortag_entity_status = f"binary_sensor.{_doortag_entity}_window"
+    _doortag_entity_reachability = f"binary_sensor.{_doortag_entity}_reachability"
+    _doortag_entity_battery = f"sensor.{_doortag_entity}_battery"
+    _doortag_entity_rf_status = f"sensor.{_doortag_entity}_rf_status"
 
-    assert _doortag_battery_entity is not None
+    # Check entity creation
+    assert hass.states.get(_doortag_entity_status) is not None
+    assert hass.states.get(_doortag_entity_battery) is not None
+    # Check non-creation of other entities
+    assert hass.states.get(_doortag_entity_reachability) is None
+    assert hass.states.get(_doortag_entity_rf_status) is None
 
-    # setattr(mock_auth.home.modules[_doortag_entity_id], "battery_state", "high")
-    # _doortag_battery_entity.async_update_callback()
-    # await hass.async_block_till_done()
+    # Check initial state - yet not loaded from fixtures
+    # (otherwise battery would be 90 and state would be unknown)
+    assert hass.states.get(_doortag_entity_status).state == "unavailable"
+    assert hass.states.get(_doortag_entity_battery).state == "unavailable"
 
-    assert hass.states.get(f"{_doortag_entity_prefix}battery").state == "90"
+    # Fake camera connection
+    response = {
+        "user_id": "1234567890",
+        "event_type": "connection",
+        "event_id": "1234567890",
+        "camera_id": _camera_id_indoor,
+        "device_id": _camera_id_indoor,
+        "home_id": _home_id,
+        "push_type": "NACamera-connection",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_camera_entity_indoor).state == "streaming"
+
+    # Fake module reconnect
+    response = {
+        "user_id": "1234567890",
+        "event_type": "module_connect",
+        "event_id": "1234567890",
+        "camera_id": _camera_id_indoor,
+        "device_id": _camera_id_indoor,
+        "home_id": _home_id,
+        "push_type": "NACamera-module_connect",
+        "module_id": _doortag_entity_id,
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+
+    # Check if became available (this indicated as unknown state, not as unavailable)
+    assert hass.states.get(_doortag_entity_status).state == "unknown"
+
+    # Fake camera disconnection that should disconnect doortag too
+    response = {
+        "user_id": "1234567890",
+        "event_type": "disconnection",
+        "event_id": "1234567890",
+        "camera_id": _camera_id_indoor,
+        "device_id": _camera_id_indoor,
+        "home_id": _home_id,
+        "push_type": "NACamera-disconnection",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_camera_entity_indoor).state == "idle"
+    assert hass.states.get(_doortag_entity_status).state == "unavailable"
