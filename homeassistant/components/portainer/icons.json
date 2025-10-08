@@ -3,9 +3,6 @@
     "sensor": {
       "image": {
         "default": "mdi:docker"
-      },
-      "status": {
-        "default": "mdi:information-outline"
       }
     },
     "switch": {
