@@ -1,5 +1,6 @@
 """Volvo diagnostics."""
 
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY
@@ -29,34 +30,16 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     context = entry.runtime_data.interval_coordinators[0].context
+    data: dict[str, dict] = {}
+
+    for coordinator in entry.runtime_data.interval_coordinators:
+        data[coordinator.name] = {
+            key: async_redact_data(asdict(value), _TO_REDACT_DATA) if value else None
+            for key, value in coordinator.data.items()
+        }
 
     return {
         "entry_data": async_redact_data(entry.data, _TO_REDACT_ENTRY),
-        "vehicle": async_redact_data(_to_dict(context.vehicle), _TO_REDACT_DATA),
-        **{
-            coordinator.name: async_redact_data(
-                _to_dict(coordinator.data), _TO_REDACT_DATA
-            )
-            for coordinator in entry.runtime_data.interval_coordinators
-        },
+        "vehicle": async_redact_data(asdict(context.vehicle), _TO_REDACT_DATA),
+        **data,
     }
-
-
-def _to_dict(obj: Any) -> Any:
-    if isinstance(obj, dict):
-        data = {}
-        for k, v in obj.items():
-            data[k] = _to_dict(v)
-        return data
-
-    if hasattr(obj, "__iter__") and not isinstance(obj, str):
-        return [_to_dict(v) for v in obj]
-
-    if hasattr(obj, "__dict__"):
-        return {
-            key: _to_dict(value)
-            for key, value in obj.__dict__.items()
-            if not callable(value) and not key.startswith("_")
-        }
-
-    return obj
