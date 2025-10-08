@@ -39,9 +39,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Dali Center light entities from config entry."""
     gateway: DaliGateway = entry.runtime_data.gateway
-    devices: list[Device] = [
-        Device(gateway, device) for device in entry.data.get("devices", [])
-    ]
+    devices = [Device(gateway, device) for device in entry.data.get("devices", [])]
 
     def _on_light_status(dev_id: str, status: LightStatus) -> None:
         signal = f"dali_center_update_{dev_id}"
@@ -73,7 +71,7 @@ class DaliCenterLight(LightEntity):
         """Initialize the light entity."""
 
         self._light = light
-        self._attr_name = "Light"
+        self._attr_name = None
         self._attr_unique_id = light.unique_id
         self._attr_available = light.status == "online"
         self._attr_is_on: bool | None = None
