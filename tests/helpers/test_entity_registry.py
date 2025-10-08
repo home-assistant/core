@@ -2908,7 +2908,7 @@ async def test_hidden_by_str_not_allowed(entity_registry: er.EntityRegistry) -> 
 
 
 async def test_unique_id_non_string(entity_registry: er.EntityRegistry) -> None:
-    """Test unique_id which is not hashable."""
+    """Test unique_id which is not a string."""
     with pytest.raises(TypeError):
         entity_registry.async_get_or_create("light", "hue", ["not", "valid"])
 
