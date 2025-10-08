@@ -178,8 +178,9 @@ def test_converters_align_with_sensor() -> None:
         assert any(c for c in UNIT_CONVERTERS.values() if unit_class == c.UNIT_CLASS)
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_statistics_during_period(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistics_during_period."""
     now = get_start_time(dt_util.utcnow())
@@ -1067,8 +1068,9 @@ async def test_statistic_during_period_circular_mean(
 
 
 @pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("recorder_mock")
 async def test_statistic_during_period_hole(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistic_during_period when there are holes in the data."""
     now = dt_util.utcnow()
@@ -1377,8 +1379,8 @@ async def test_statistic_during_period_hole_circular_mean(
         datetime.datetime(2022, 10, 21, 7, 31, tzinfo=datetime.UTC),
     ],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_statistic_during_period_partial_overlap(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
@@ -1774,8 +1776,8 @@ async def test_statistic_during_period_partial_overlap(
         ),
     ],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_statistic_during_period_calendar(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     calendar_period,
@@ -1830,8 +1832,8 @@ async def test_statistic_during_period_calendar(
         (VOLUME_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "ft³"}, 353.14666),
     ],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_statistics_during_period_unit_conversion(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     attributes,
@@ -1917,8 +1919,8 @@ async def test_statistics_during_period_unit_conversion(
         (VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL, 10, 10, {"volume": "ft³"}, 353.147),
     ],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_sum_statistics_during_period_unit_conversion(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     attributes,
@@ -2007,8 +2009,8 @@ async def test_sum_statistics_during_period_unit_conversion(
         {"volume": "kWh"},
     ],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_statistics_during_period_invalid_unit_conversion(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     custom_units,
@@ -2049,8 +2051,9 @@ async def test_statistics_during_period_invalid_unit_conversion(
     assert response["error"]["code"] == "invalid_format"
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_statistics_during_period_in_the_past(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistics_during_period in the past."""
     await hass.config.async_set_time_zone("UTC")
@@ -2161,8 +2164,9 @@ async def test_statistics_during_period_in_the_past(
     assert response["result"] == {}
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_statistics_during_period_bad_start_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test statistics_during_period."""
     client = await hass_ws_client()
@@ -2179,8 +2183,9 @@ async def test_statistics_during_period_bad_start_time(
     assert response["error"]["code"] == "invalid_start_time"
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_statistics_during_period_bad_end_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test statistics_during_period."""
     now = dt_util.utcnow()
@@ -2200,8 +2205,9 @@ async def test_statistics_during_period_bad_end_time(
     assert response["error"]["code"] == "invalid_end_time"
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_statistics_during_period_no_statistic_ids(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test statistics_during_period without passing statistic_ids."""
     now = dt_util.utcnow()
@@ -2220,8 +2226,9 @@ async def test_statistics_during_period_no_statistic_ids(
     assert response["error"]["code"] == "invalid_format"
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_statistics_during_period_empty_statistic_ids(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test statistics_during_period with passing an empty list of statistic_ids."""
     now = dt_util.utcnow()
@@ -2300,8 +2307,8 @@ async def test_statistics_during_period_empty_statistic_ids(
         (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL, "ft³", "ft³", "volume"),
     ],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_list_statistic_ids(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     units,
@@ -2478,8 +2485,8 @@ async def test_list_statistic_ids(
         ),
     ],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_list_statistic_ids_unit_change(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     attributes,
@@ -2551,9 +2558,8 @@ async def test_list_statistic_ids_unit_change(
     ]
 
 
-async def test_validate_statistics(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
-) -> None:
+@pytest.mark.usefixtures("recorder_mock")
+async def test_validate_statistics(hass_ws_client: WebSocketGenerator) -> None:
     """Test validate_statistics can be called."""
 
     async def assert_validation_result(client, expected_result):
@@ -2567,9 +2573,8 @@ async def test_validate_statistics(
     await assert_validation_result(client, {})
 
 
-async def test_update_statistics_issues(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
-) -> None:
+@pytest.mark.usefixtures("recorder_mock")
+async def test_update_statistics_issues(hass_ws_client: WebSocketGenerator) -> None:
     """Test update_statistics_issues can be called."""
 
     client = await hass_ws_client()
@@ -2579,8 +2584,9 @@ async def test_update_statistics_issues(
     assert response["result"] is None
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_clear_statistics(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test removing statistics."""
     now = get_start_time(dt_util.utcnow())
@@ -2699,9 +2705,8 @@ async def test_clear_statistics(
     assert response["result"] == {"sensor.test2": expected_response["sensor.test2"]}
 
 
-async def test_clear_statistics_time_out(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
-) -> None:
+@pytest.mark.usefixtures("recorder_mock")
+async def test_clear_statistics_time_out(hass_ws_client: WebSocketGenerator) -> None:
     """Test removing statistics with time-out error."""
     client = await hass_ws_client()
 
@@ -2727,8 +2732,8 @@ async def test_clear_statistics_time_out(
     ("new_unit", "new_unit_class", "new_display_unit"),
     [("dogs", None, "dogs"), (None, "unitless", None), ("W", "power", "kW")],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_update_statistics_metadata(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     new_unit,
@@ -2825,8 +2830,9 @@ async def test_update_statistics_metadata(
     }
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_update_statistics_metadata_time_out(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test update statistics metadata with time-out error."""
     client = await hass_ws_client()
@@ -2850,8 +2856,9 @@ async def test_update_statistics_metadata_time_out(
     }
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_change_statistics_unit(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test change unit of recorded statistics."""
     now = get_start_time(dt_util.utcnow())
@@ -2997,8 +3004,8 @@ async def test_change_statistics_unit(
     ]
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_change_statistics_unit_errors(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -3109,8 +3116,9 @@ async def test_change_statistics_unit_errors(
     await assert_statistics(expected_statistics)
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_recorder_info(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test getting recorder status."""
     client = await hass_ws_client()
@@ -3323,8 +3331,8 @@ async def test_backup_start_no_recorder(
         (METRIC_SYSTEM, VOLUME_SENSOR_M3_ATTRIBUTES, "m³", "volume"),
     ],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_get_statistics_metadata(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     units,
