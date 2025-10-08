@@ -8,10 +8,13 @@ from contextlib import asynccontextmanager
 import logging
 from typing import TYPE_CHECKING, Protocol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
+from homeassistant.helpers import discovery_flow
 
 from . import DATA_COMPONENT
+from .const import SKYCONNECT_DOMAIN, ZBT2_DOMAIN
+from .util import FirmwareInfo
 
 if TYPE_CHECKING:
     from .util import FirmwareInfo
@@ -101,6 +104,32 @@ class HardwareInfoDispatcher:
                 _LOGGER.exception(
                     "Error while notifying firmware info listener %s", callback
                 )
+
+        await self._async_trigger_hardware_discovery(firmware_info)
+
+    async def _async_trigger_hardware_discovery(
+        self, firmware_info: FirmwareInfo
+    ) -> None:
+        """Trigger hardware integration config flows from firmware info.
+
+        Triggers import flows for all hardware integrations and lets each one
+        validate whether it should handle the device.
+        """
+        hardware_domains = [SKYCONNECT_DOMAIN, ZBT2_DOMAIN]
+
+        for hardware_domain in hardware_domains:
+            _LOGGER.debug(
+                "Triggering %s import flow for device %s",
+                hardware_domain,
+                firmware_info.device,
+            )
+
+            discovery_flow.async_create_flow(
+                self.hass,
+                hardware_domain,
+                context={"source": SOURCE_IMPORT},
+                data=firmware_info,
+            )
 
     async def iter_firmware_info(self) -> AsyncIterator[FirmwareInfo]:
         """Iterate over all firmware information for all hardware."""

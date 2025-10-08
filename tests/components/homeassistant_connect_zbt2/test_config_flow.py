@@ -17,6 +17,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
 )
+from homeassistant.components.usb import USBDevice
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -388,7 +389,7 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
 
 
 async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None:
-    """Test that firmware callback auto-creates config entry when another integration takes over."""
+    """Test that firmware notification triggers import flow that auto-creates config entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "usb"}, data=USB_DATA_ZBT2
     )
@@ -396,20 +397,32 @@ async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "pick_firmware"
 
-    # ZHA notifies the hardware integration of firmware info
-    await async_notify_firmware_info(
-        hass,
-        "zha",
-        FirmwareInfo(
-            device=USB_DATA_ZBT2.device,
-            firmware_type=ApplicationType.EZSP,
-            firmware_version="7.4.4.0",
-            owners=[],
-            source="zha",
-        ),
+    usb_device = USBDevice(
+        device=USB_DATA_ZBT2.device,
+        vid=USB_DATA_ZBT2.vid,
+        pid=USB_DATA_ZBT2.pid,
+        serial_number=USB_DATA_ZBT2.serial_number,
+        manufacturer=USB_DATA_ZBT2.manufacturer,
+        description=USB_DATA_ZBT2.description,
     )
 
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.homeassistant_connect_zbt2.config_flow.usb_device_from_path",
+        return_value=usb_device,
+    ):
+        await async_notify_firmware_info(
+            hass,
+            "zha",
+            FirmwareInfo(
+                device=USB_DATA_ZBT2.device,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version="7.4.4.0",
+                owners=[],
+                source="zha",
+            ),
+        )
+
+        await hass.async_block_till_done()
 
     # The config entry was auto-created
     entries = hass.config_entries.async_entries(DOMAIN)

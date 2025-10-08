@@ -43,6 +43,7 @@ from .const import DOMAIN
 from .models import USBDevice
 from .utils import (
     scan_serial_ports,
+    usb_device_from_path,  # noqa: F401
     usb_device_from_port,  # noqa: F401
 )
 

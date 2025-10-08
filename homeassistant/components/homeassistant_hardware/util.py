@@ -18,10 +18,12 @@ from universal_silabs_flasher.firmware import parse_firmware_image
 from universal_silabs_flasher.flasher import Flasher
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.usb import USBDevice
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.singleton import singleton
 
 from . import DATA_COMPONENT
@@ -408,3 +410,25 @@ async def async_flash_silabs_firmware(
             raise HomeAssistantError("Failed to probe the firmware after flashing")
 
         return probed_firmware_info
+
+
+def usb_unique_id_from_service_info(usb_info: UsbServiceInfo) -> str:
+    """Generate a unique ID from USB service info."""
+    return (
+        f"{usb_info.vid}:{usb_info.pid}_"
+        f"{usb_info.serial_number}_"
+        f"{usb_info.manufacturer}_"
+        f"{usb_info.description}"
+    )
+
+
+def usb_service_info_from_device(usb_device: USBDevice) -> UsbServiceInfo:
+    """Convert a USBDevice to UsbServiceInfo."""
+    return UsbServiceInfo(
+        device=usb_device.device,
+        vid=usb_device.vid,
+        pid=usb_device.pid,
+        serial_number=usb_device.serial_number,
+        manufacturer=usb_device.manufacturer,
+        description=usb_device.description,
+    )

@@ -23,6 +23,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
 )
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
+from homeassistant.components.usb import USBDevice
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -443,7 +444,7 @@ async def test_firmware_callback_auto_creates_entry(
     model: str,
     hass: HomeAssistant,
 ) -> None:
-    """Test that firmware callback auto-creates config entry when another integration takes over."""
+    """Test that firmware notification triggers import flow that auto-creates config entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
@@ -451,20 +452,32 @@ async def test_firmware_callback_auto_creates_entry(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "pick_firmware"
 
-    # ZHA notifies the hardware integration of firmware info
-    await async_notify_firmware_info(
-        hass,
-        "zha",
-        FirmwareInfo(
-            device=usb_data.device,
-            firmware_type=ApplicationType.EZSP,
-            firmware_version="7.4.4.0",
-            owners=[],
-            source="zha",
-        ),
+    usb_device = USBDevice(
+        device=usb_data.device,
+        vid=usb_data.vid,
+        pid=usb_data.pid,
+        serial_number=usb_data.serial_number,
+        manufacturer=usb_data.manufacturer,
+        description=usb_data.description,
     )
 
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.config_flow.usb_device_from_path",
+        return_value=usb_device,
+    ):
+        await async_notify_firmware_info(
+            hass,
+            "zha",
+            FirmwareInfo(
+                device=usb_data.device,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version="7.4.4.0",
+                owners=[],
+                source="zha",
+            ),
+        )
+
+        await hass.async_block_till_done()
 
     # The config entry was auto-created
     entries = hass.config_entries.async_entries(DOMAIN)
