@@ -178,7 +178,7 @@ async def test_uid_migrate_entry(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 2
-    assert entry.minor_version == 0
+    assert entry.minor_version == 3
     assert (
         entity_registry.async_get_entity_id(BINARY_SENSOR_DOMAIN, DOMAIN, old_unique_id)
         is None

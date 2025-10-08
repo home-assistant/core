@@ -125,7 +125,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
 
         await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-        hass.config_entries.async_update_entry(entry, version=2, minor_version=0)
+        hass.config_entries.async_update_entry(entry, version=2, minor_version=3)
 
     return True
 
