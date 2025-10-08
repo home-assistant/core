@@ -873,10 +873,10 @@ async def test_options(
         ),
         (
             "sensor",
-            "{{ float(states('sensor.one'), default='') + float(states('sensor.two'), default='') }}",
+            "{{ float(states('sensor.one'), 0.0) + float(states('sensor.two'), 0.0) }}",
             {},
             {"one": "30.0", "two": "20.0"},
-            ["", "50.0"],
+            ["0.0", "30.0", "50.0"],
             [{}, {}],
             [["one", "two"], ["one", "two"]],
         ),
@@ -1206,7 +1206,7 @@ async def test_config_flow_preview_template_startup_error(
             "{{ float(states('sensor.one')) > 30 and undefined_function() }}",
             [{"one": "30.0", "two": "20.0"}, {"one": "35.0", "two": "20.0"}],
             ["False"],
-            ["'undefined_function' is undefined"],
+            ["UndefinedError: 'undefined_function' is undefined"],
         ),
     ],
 )
@@ -1745,7 +1745,7 @@ async def test_options_flow_change_device(
 
 
 @pytest.mark.parametrize(
-    ("step_id", "user_input", "template_with_errors_count"),
+    ("step_id", "user_input"),
     [
         (
             "light",
@@ -1757,7 +1757,6 @@ async def test_options_flow_change_device(
                 "turn_off": [],
                 "set_level": [],
             },
-            2,
         ),
         (
             "sensor",
@@ -1765,7 +1764,6 @@ async def test_options_flow_change_device(
                 "name": "",
                 "state": "{{ state() }}",
             },
-            1,
         ),
         (
             "light",
@@ -1777,7 +1775,6 @@ async def test_options_flow_change_device(
                 "turn_off": [],
                 "set_level": [],
             },
-            1,
         ),
     ],
 )
@@ -1786,10 +1783,8 @@ async def test_preview_error(
     hass_ws_client: WebSocketGenerator,
     step_id: str,
     user_input: dict,
-    template_with_errors_count: int,
 ) -> None:
     """Test preview will error if any template errors."""
-
     client = await hass_ws_client(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -1821,12 +1816,9 @@ async def test_preview_error(
     assert msg["success"]
     assert msg["result"] is None
 
-    for _ in range(template_with_errors_count):
-        # Each template with an error will produce 3 errors
-        for _ in range(3):
-            msg = await client.receive_json()
-            assert "error" in msg["event"]
+    # Test for a single error and no preview
+    msg = await client.receive_json()
+    assert "error" in msg["event"]
 
-    # Test to make sure a preview is not created.
     with pytest.raises(TimeoutError):
         await client.receive_json(timeout=0.01)

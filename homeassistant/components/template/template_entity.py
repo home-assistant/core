@@ -352,6 +352,7 @@ class TemplateEntity(AbstractTemplateEntity):
             return
 
         if errors:
+            self._preview_callback(None, None, None, str(errors[-1]))
             return
 
         try:
@@ -451,13 +452,13 @@ class TemplateEntity(AbstractTemplateEntity):
     ) -> CALLBACK_TYPE:
         """Render a preview."""
 
-        def log_template_error(level: int, msg: str) -> None:
-            preview_callback(None, None, None, msg)
+        def suppress_preview_errors(level: int, msg: str) -> None:
+            pass
 
         self._preview_callback = preview_callback
         self._async_setup_templates()
         try:
-            self._async_template_startup(None, log_template_error)
+            self._async_template_startup(None, suppress_preview_errors)
         except Exception as err:  # noqa: BLE001
             preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks
