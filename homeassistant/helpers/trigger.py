@@ -309,11 +309,9 @@ class TriggerActionPayloadBuilder(Protocol):
 class TriggerAction(Protocol):
     """Protocol type for trigger action callback."""
 
-    def __call__(
-        self,
-        run_variables: dict[str, Any],
-        context: Context | None = None,
-    ) -> Coroutine[Any, Any, Any] | Any:
+    async def __call__(
+        self, run_variables: dict[str, Any], context: Context | None = None
+    ) -> Any:
         """Define action callback type."""
 
 
