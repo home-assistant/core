@@ -157,21 +157,18 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
         key="input|input",
         name="Input",
         device_class=BinarySensorDeviceClass.POWER,
-        entity_registry_enabled_default=False,
         removal_condition=is_block_momentary_input,
     ),
     ("relay", "input"): BlockBinarySensorDescription(
         key="relay|input",
         name="Input",
         device_class=BinarySensorDeviceClass.POWER,
-        entity_registry_enabled_default=False,
         removal_condition=is_block_momentary_input,
     ),
     ("device", "input"): BlockBinarySensorDescription(
         key="device|input",
         name="Input",
         device_class=BinarySensorDeviceClass.POWER,
-        entity_registry_enabled_default=False,
         removal_condition=is_block_momentary_input,
     ),
     ("sensor", "extInput"): BlockBinarySensorDescription(
@@ -201,7 +198,6 @@ RPC_SENSORS: Final = {
         key="input",
         sub_key="state",
         device_class=BinarySensorDeviceClass.POWER,
-        entity_registry_enabled_default=False,
         removal_condition=is_rpc_momentary_input,
     ),
     "cloud": RpcBinarySensorDescription(
