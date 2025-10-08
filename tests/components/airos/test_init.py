@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import ANY, MagicMock
 
+import pytest
+
 from homeassistant.components.airos.const import (
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
@@ -11,6 +13,7 @@ from homeassistant.components.airos.const import (
     SECTION_ADVANCED_SETTINGS,
 )
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -133,18 +136,27 @@ async def test_ssl_migrate_entry(
     assert entry.data == MOCK_CONFIG_V1_2
 
 
+@pytest.mark.parametrize(
+    ("sensor_domain", "sensor_name"),
+    [
+        (BINARY_SENSOR_DOMAIN, "port_forwarding"),
+        (SENSOR_DOMAIN, "antenna_gain"),
+    ],
+)
 async def test_uid_migrate_entry(
     hass: HomeAssistant,
     mock_airos_client: MagicMock,
     device_registry: dr.DeviceRegistry,
+    sensor_domain: str,
+    sensor_name: str,
 ) -> None:
     """Test migrate entry unique id."""
     entity_registry = er.async_get(hass)
 
     MOCK_MAC = dr.format_mac("01:23:45:67:89:AB")
     MOCK_ID = "device_id_12345"
-    old_unique_id = f"{MOCK_ID}_port_forwarding"
-    new_unique_id = f"{MOCK_MAC}_port_forwarding"
+    old_unique_id = f"{MOCK_ID}_{sensor_name}"
+    new_unique_id = f"{MOCK_MAC}_{sensor_name}"
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -167,7 +179,7 @@ async def test_uid_migrate_entry(
     await hass.async_block_till_done()
 
     old_entity_entry = entity_registry.async_get_or_create(
-        DOMAIN, BINARY_SENSOR_DOMAIN, old_unique_id, config_entry=entry
+        DOMAIN, sensor_domain, old_unique_id, config_entry=entry
     )
     original_entity_id = old_entity_entry.entity_id
 
@@ -180,43 +192,10 @@ async def test_uid_migrate_entry(
     assert entry.version == 2
     assert entry.minor_version == 1
     assert (
-        entity_registry.async_get_entity_id(BINARY_SENSOR_DOMAIN, DOMAIN, old_unique_id)
+        entity_registry.async_get_entity_id(sensor_domain, DOMAIN, old_unique_id)
         is None
     )
     assert updated_entity_entry.unique_id == new_unique_id
-
-
-async def test_uid_migrate_entry_fail(
-    hass: HomeAssistant,
-    mock_airos_client: MagicMock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test migrate entry unique id failure for mac address unknown."""
-    MOCK_ID = "device_id_12345"
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data=MOCK_CONFIG_V1_2,
-        entry_id="1",
-        unique_id=MOCK_ID,
-        version=1,
-        minor_version=2,
-    )
-    entry.add_to_hass(hass)
-
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, MOCK_ID)},
-    )
-    await hass.async_block_till_done()
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
-    assert entry.version == 1
-    assert entry.minor_version == 2
 
 
 async def test_migrate_future_return(

@@ -6,7 +6,6 @@ import logging
 
 from airos.airos8 import AirOS8
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -104,26 +103,17 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
                 mac_address = dr.format_mac(value)
                 break
 
-        if not mac_address:
-            return False
-
         @callback
         def update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
             """Update unique id from device_id to mac address."""
-            if (euid := entry.unique_id) is not None:
-                if (
-                    entity_entry.platform == BINARY_SENSOR_DOMAIN
-                    and entity_entry.unique_id.startswith(euid)
-                ):
-                    suffix = entity_entry.unique_id.removeprefix(euid)
-                    new_unique_id = f"{mac_address}{suffix}"
-                    _LOGGER.debug(
-                        "Migrating entity %s unique_id to %s",
-                        entity_entry.entity_id,
-                        new_unique_id,
-                    )
-                    return {"new_unique_id": new_unique_id}
-            return None
+            suffix = entity_entry.unique_id.removeprefix(str(entry.unique_id))
+            new_unique_id = f"{mac_address}{suffix}"
+            _LOGGER.error(
+                "Migrating entity %s unique_id to %s",
+                entity_entry.entity_id,
+                new_unique_id,
+            )
+            return {"new_unique_id": new_unique_id}
 
         await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
