@@ -1709,8 +1709,8 @@ build.json @home-assistant/supervisor
 /tests/components/vallox/ @andre-richter @slovdahl @viiru- @yozik04
 /homeassistant/components/valve/ @home-assistant/core
 /tests/components/valve/ @home-assistant/core
-/homeassistant/components/vegehub/ @ghowevege
-/tests/components/vegehub/ @ghowevege
+/homeassistant/components/vegehub/ @thulrus @vegetronix
+/tests/components/vegehub/ @thulrus @vegetronix
 /homeassistant/components/velbus/ @Cereal2nd @brefra
 /tests/components/velbus/ @Cereal2nd @brefra
 /homeassistant/components/velux/ @Julius2342 @DeerMaximum @pawlizio @wollew

@@ -1,7 +1,7 @@
 {
   "domain": "vegehub",
   "name": "Vegetronix VegeHub",
-  "codeowners": ["@ghowevege"],
+  "codeowners": ["@thulrus", "@vegetronix"],
   "config_flow": true,
   "dependencies": ["http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/vegehub",
