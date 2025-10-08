@@ -11,7 +11,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, MANUFACTURER
 from .types import DaliCenterConfigEntry, DaliCenterData
@@ -34,12 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
         ) from exc
 
     _LOGGER.info("Successfully connected to gateway %s", gw_sn)
-
-    def on_online_status(dev_id: str, available: bool) -> None:
-        signal = f"dali_center_update_available_{dev_id}"
-        hass.add_job(async_dispatcher_send, hass, signal, available)
-
-    gateway.on_online_status = on_online_status
 
     dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(
