@@ -27,11 +27,15 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     CONF_BROWSE_LIMIT,
+    CONF_FLOW_TYPE,
     CONF_HTTPS,
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
@@ -45,26 +49,23 @@ _LOGGER = logging.getLogger(__name__)
 TIMEOUT = 5
 
 
-def _base_schema(
-    discovery_info: dict[str, Any] | None = None,
-) -> vol.Schema:
-    """Generate base schema."""
-    base_schema: dict[Any, Any] = {}
-    if not discovery_info or CONF_HOST not in discovery_info:
-        base_schema.update({vol.Required(CONF_HOST): str})
+FULL_EDIT_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): str,
+        vol.Optional(CONF_HTTPS, default=False): bool,
+    }
+)
 
-    if not discovery_info or CONF_PORT not in discovery_info:
-        base_schema.update({vol.Required(CONF_PORT, default=DEFAULT_PORT): int})
-
-    base_schema.update(
-        {
-            vol.Optional(CONF_USERNAME): str,
-            vol.Optional(CONF_PASSWORD): str,
-            vol.Optional(CONF_HTTPS, default=False): bool,
-        }
-    )
-
-    return vol.Schema(base_schema)
+SHORT_EDIT_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): str,
+        vol.Optional(CONF_HTTPS, default=False): bool,
+    }
+)
 
 
 class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -74,9 +75,9 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize an instance of the squeezebox config flow."""
-        self.data_schema = _base_schema()
-        self.discovery_info: dict[str, Any] | None = {}
         self.discovery_task: asyncio.Task | None = None
+        self.discovered_servers: list[dict[str, Any]] | None = []
+        self.chosen_server: dict[str, Any] | None = {}
 
     @staticmethod
     @callback
@@ -89,6 +90,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Discover an unconfigured LMS server."""
         _discovery_event = asyncio.Event()
         _discovery_task: asyncio.Task | None = None
+        _discovery_info: dict[str, Any] | None = {}
 
         def _discovery_callback(server: Server) -> None:
             if server.uuid:
@@ -96,17 +98,19 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 for entry in self._async_current_entries():
                     if entry.unique_id == server.uuid:
                         return
-                self.discovery_info = {
+                _discovery_info = {
                     CONF_HOST: server.host,
                     CONF_PORT: int(server.port),
                     "uuid": server.uuid,
                 }
+
                 _LOGGER.debug(
                     "Discovered server: %s, creating discovery_info %s",
                     server,
-                    self.discovery_info,
+                    _discovery_info,
                 )
-                _discovery_event.set()
+                if _discovery_info not in self.discovered_servers:
+                    self.discovered_servers.append(_discovery_info)
 
         _discovery_task = self.hass.async_create_task(
             async_discover(_discovery_callback)
@@ -115,12 +119,11 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             async with asyncio.timeout(TIMEOUT):
                 await _discovery_event.wait()
-                _discovery_task.cancel()
-                # update with suggested values from discovery
-                self.data_schema = _base_schema(self.discovery_info)
+
         except TimeoutError:
+            _LOGGER.debug("Discovered Servers %s", self.discovered_servers)
+        finally:
             _discovery_task.cancel()
-            self.discovery_info = {}
 
     async def _validate_input(self, data: dict[str, Any]) -> str | None:
         """Validate the user input allows us to connect.
@@ -133,7 +136,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             data[CONF_PORT],
             data.get(CONF_USERNAME),
             data.get(CONF_PASSWORD),
-            https=data[CONF_HTTPS],
+            https=data.get(CONF_HTTPS, False),
         )
 
         try:
@@ -156,22 +159,48 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose manual or discover flow."""
+        _options: list = []
+        _discovered_title = "Discovered LMS: "
+        _chosen_host: str
 
-        return self.async_show_menu(
+        if user_input:
+            if user_input[CONF_FLOW_TYPE] != "Manual":
+                _chosen_host = user_input[CONF_FLOW_TYPE].removeprefix(
+                    _discovered_title
+                )
+                for _server in self.discovered_servers:
+                    if _chosen_host == _server[CONF_HOST]:
+                        self.chosen_server[CONF_HOST] = _chosen_host
+                        self.chosen_server[CONF_PORT] = _server[CONF_PORT]
+                        self.chosen_server[CONF_HTTPS] = False
+                return await self.async_step_edit_discovered()
+            return await self.async_step_edit()
+
+        _options.extend(
+            _discovered_title + _server[CONF_HOST]
+            for _server in self.discovered_servers
+        )
+
+        _options.append("Manual")
+
+        return self.async_show_form(
             step_id="flow_type",
-            description_placeholders={"host": self.discovery_info[CONF_HOST]},
-            menu_options=["edit_discovered", "edit"],
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_FLOW_TYPE): SelectSelector(
+                        SelectSelectorConfig(
+                            mode=SelectSelectorMode.LIST,
+                            options=_options,
+                        )
+                    ),
+                }
+            ),
         )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-
-        if user_input and CONF_HOST in user_input:
-            # update with host provided by user
-            self.data_schema = _base_schema(user_input)
-            return await self.async_step_edit()
 
         if not self.discovery_task:
             self.discovery_task = self.hass.async_create_task(self._discover())
@@ -182,15 +211,15 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             # Sleep to allow task cancellation to complete
             await asyncio.sleep(0.1)
             return self.async_show_progress_done(
-                next_step_id="flow_type" if self.discovery_info else "edit"
+                next_step_id="flow_type" if self.discovered_servers else "edit"
             )
 
         return self.async_show_progress(
             step_id="user",
             progress_action="discover",
             description_placeholders={
-                "status": "Attempting to discover a new LMS server",
-                "hint": "This may take upto 5 seconds.",
+                "status": "Attempting to discover new LMS servers",
+                "hint": "This will take about 5 seconds.",
             },
             progress_task=self.discovery_task,
         )
@@ -209,16 +238,14 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             errors["base"] = error
 
-        # self.discovery_info = None
-        self.data_schema = _base_schema()
         return self.async_show_form(
             step_id="edit",
             description_placeholders={
                 "desc": "No new LMS was discovered.  Please enter connection information manually."
-                if not self.discovery_info
+                if not self.discovered_servers
                 else ""
             },
-            data_schema=self.data_schema,
+            data_schema=FULL_EDIT_SCHEMA,
             errors=errors,
         )
 
@@ -227,21 +254,15 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Edit a discovered or manually inputted server."""
 
-        _server_data = {
-            CONF_HOST: self.discovery_info[CONF_HOST],
-            CONF_PORT: self.discovery_info[CONF_PORT],
-            CONF_HTTPS: False,
-        }
-
-        if not (await self._validate_input(_server_data)):
+        if not (await self._validate_input(self.chosen_server)):
             # Attempt to connect with default data successful
             return self.async_create_entry(
-                title=_server_data[CONF_HOST], data=_server_data
+                title=self.chosen_server[CONF_HOST], data=self.chosen_server
             )
         errors = {}
         if user_input:
-            user_input[CONF_HOST] = self.discovery_info[CONF_HOST]
-            user_input[CONF_PORT] = self.discovery_info[CONF_PORT]
+            user_input[CONF_HOST] = self.chosen_server[CONF_HOST]
+            user_input[CONF_PORT] = self.chosen_server[CONF_PORT]
             error = await self._validate_input(user_input)
             if not error:
                 return self.async_create_entry(
@@ -252,9 +273,33 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="edit_discovered",
             description_placeholders={
-                "desc": f"LMS Host: {self.discovery_info[CONF_HOST]}, Port: {self.discovery_info[CONF_PORT]}"
+                "desc": f"LMS Host: {self.chosen_server[CONF_HOST]}, Port: {self.chosen_server[CONF_PORT]}"
             },
-            data_schema=self.data_schema,
+            data_schema=SHORT_EDIT_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_edit_integration_discovered(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Edit a discovered or manually inputted server."""
+
+        errors = {}
+        if user_input:
+            user_input[CONF_HOST] = self.chosen_server[CONF_HOST]
+            user_input[CONF_PORT] = self.chosen_server[CONF_PORT]
+            error = await self._validate_input(user_input)
+            if not error:
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
+                )
+            errors["base"] = error
+        return self.async_show_form(
+            step_id="edit_integration_discovered",
+            description_placeholders={
+                "desc": f"LMS Host: {self.chosen_server[CONF_HOST]}, Port: {self.chosen_server[CONF_PORT]}"
+            },
+            data_schema=SHORT_EDIT_SCHEMA,
             errors=errors,
         )
 
@@ -273,14 +318,11 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             if error:
                 await self._async_handle_discovery_without_unique_id()
 
-        # update schema with suggested values from discovery
-        self.data_schema = _base_schema(_discovery_info)
-
         self.context.update(
             {"title_placeholders": {"host": _discovery_info[CONF_HOST]}}
         )
-
-        return await self.async_step_edit()
+        self.chosen_server = _discovery_info
+        return await self.async_step_edit_integration_discovered()
 
     async def async_step_dhcp(
         self, _discovery_info: DhcpServiceInfo

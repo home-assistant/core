@@ -8,12 +8,11 @@
     "flow_title": "{host}",
     "step": {
       "flow_type": {
-        "description": "New LMS discovered at {host}",
-        "title": "Lyrion Music Server",
-        "menu_options": {
-          "edit": "Manually enter details of LMS",
-          "edit_discovered": "Configure discovered LMS"
-        }
+        "data": {
+          "flow_type": "Configured discovered LMS or add manually?"
+        },
+        "description": "Setup can configure a discovered LMS, or you can enter new details manually",
+        "title": "Lyrion Music Server"
       },
       "edit": {
         "title": "Edit connection information",
@@ -34,7 +33,21 @@
         }
       },
       "edit_discovered": {
-        "title": "Edit connection information",
+        "title": "Edit additional connection information",
+        "description": "{desc}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "https": "Connect over HTTPS (requires reverse proxy)"
+        },
+        "data_description": {
+          "username": "The username from LMS Advanced Security (if defined).",
+          "password": "The password from LMS Advanced Security (if defined).",
+          "https": "Connect to the LMS over HTTPS (requires reverse proxy)."
+        }
+      },
+      "edit_integration_discovered": {
+        "title": "Edit additional connection information",
         "description": "{desc}",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
@@ -56,7 +69,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_server_found": "No LMS found."
+      "no_server_found": "No LMS found.",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     }
   },
   "services": {
