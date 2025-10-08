@@ -420,7 +420,7 @@ async def ws_update_statistics_metadata(
         _LOGGER.warning(
             "WS command recorder/update_statistics_metadata called without "
             "specifying unit_class in metadata, this is deprecated and will "
-            "stop working in HA Core 2026.10"
+            "stop working in HA Core 2026.11"
         )
 
     async_update_statistics_metadata(
@@ -578,7 +578,7 @@ def ws_import_statistics(
         _LOGGER.warning(
             "WS command recorder/import_statistics called without specifying "
             "unit_class in metadata, this is deprecated and will stop working "
-            "in HA Core 2026.10"
+            "in HA Core 2026.11"
         )
     stats = msg["stats"]
 
