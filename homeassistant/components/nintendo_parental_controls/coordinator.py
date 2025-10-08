@@ -1,4 +1,4 @@
-"""Nintendo Parental Controls data coordinator."""
+"""Nintendo parental controls data coordinator."""
 
 from __future__ import annotations
 

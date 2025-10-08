@@ -1,4 +1,4 @@
-"""Constants for the Nintendo Parental Controls test suite."""
+"""Constants for the Nintendo parental controls test suite."""
 
 ACCOUNT_ID = "aabbccddee112233"
 API_TOKEN = "valid_token"

@@ -1,4 +1,4 @@
-"""Sensor platform for Nintendo Parental."""
+"""Sensor platform for Nintendo parental controls."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ PARALLEL_UPDATES = 0
 
 
 class NintendoParentalControlsSensor(StrEnum):
-    """Store keys for Nintendo Parental sensors."""
+    """Store keys for Nintendo parental controls sensors."""
 
     PLAYING_TIME = "playing_time"
     TIME_REMAINING = "time_remaining"
@@ -32,7 +32,7 @@ class NintendoParentalControlsSensor(StrEnum):
 
 @dataclass(kw_only=True, frozen=True)
 class NintendoParentalControlsSensorEntityDescription(SensorEntityDescription):
-    """Description for Nintendo Parental sensor entities."""
+    """Description for Nintendo parental controls sensor entities."""
 
     value_fn: Callable[[Device], int | float | None]
 
