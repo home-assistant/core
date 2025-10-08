@@ -241,7 +241,7 @@ async def test_fix_unique_id_duplicate(
         (
             SERIAL_NUMBER,
             SERIAL_NUMBER,
-            SERIAL_NUMBER,
+            str(SERIAL_NUMBER),
             str(SERIAL_NUMBER),
             MAC_ADDRESS_UNIQUE_ID,
             MAC_ADDRESS_UNIQUE_ID,
@@ -257,7 +257,7 @@ async def test_fix_unique_id_duplicate(
         (
             SERIAL_NUMBER,
             SERIAL_NUMBER,
-            SERIAL_NUMBER,
+            str(SERIAL_NUMBER),
             SERIAL_NUMBER,
             MAC_ADDRESS_UNIQUE_ID,
             MAC_ADDRESS_UNIQUE_ID,

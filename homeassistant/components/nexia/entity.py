@@ -36,7 +36,7 @@ class NexiaEntity(CoordinatorEntity[NexiaDataUpdateCoordinator]):
     def __init__(self, coordinator: NexiaDataUpdateCoordinator, unique_id: str) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = str(unique_id)
 
 
 class NexiaThermostatEntity(NexiaEntity):

@@ -1,7 +1,6 @@
 """The Hunter Douglas PowerView integration."""
 
 import logging
-from typing import TYPE_CHECKING
 
 from aiopvapi.resources.model import PowerviewData
 from aiopvapi.rooms import Rooms
@@ -11,7 +10,7 @@ from aiopvapi.shades import Shades
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, HUB_EXCEPTIONS, MANUFACTURER
 from .coordinator import PowerviewShadeUpdateCoordinator
@@ -138,7 +137,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) 
         if entry.minor_version == 1:
             if entry.unique_id is None:
                 await _async_add_missing_entry_unique_id(hass, entry)
-            await _migrate_unique_ids(hass, entry)
             hass.config_entries.async_update_entry(entry, minor_version=2)
 
     _LOGGER.debug("Migrated to version %s.%s", entry.version, entry.minor_version)
@@ -156,29 +154,3 @@ async def _async_add_missing_entry_unique_id(
     hass.config_entries.async_update_entry(
         entry, unique_id=api.device_info.serial_number
     )
-
-
-async def _migrate_unique_ids(hass: HomeAssistant, entry: PowerviewConfigEntry) -> None:
-    """Migrate int based unique ids to str."""
-    entity_registry = er.async_get(hass)
-    registry_entries = er.async_entries_for_config_entry(
-        entity_registry, entry.entry_id
-    )
-    if TYPE_CHECKING:
-        assert entry.unique_id
-    for reg_entry in registry_entries:
-        if isinstance(reg_entry.unique_id, int) or (
-            isinstance(reg_entry.unique_id, str)
-            and not reg_entry.unique_id.startswith(entry.unique_id)
-        ):
-            _LOGGER.debug(
-                "Migrating %s: %s to %s_%s",
-                reg_entry.entity_id,
-                reg_entry.unique_id,
-                entry.unique_id,
-                reg_entry.unique_id,
-            )
-            entity_registry.async_update_entity(
-                reg_entry.entity_id,
-                new_unique_id=f"{entry.unique_id}_{reg_entry.unique_id}",
-            )

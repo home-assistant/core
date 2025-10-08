@@ -9,7 +9,6 @@ from ring_doorbell import AuthenticationError, Ring, RingError, RingTimeout
 from homeassistant.components import ring
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.ring import DOMAIN
 from homeassistant.components.ring.const import (
     CONF_CONFIG_ENTRY_MINOR_VERSION,
@@ -280,107 +279,6 @@ async def test_error_on_device_update(
         refresh_spy.assert_called()
         assert coordinator.last_exception.__cause__ == error2
         assert log_msg not in caplog.text
-
-
-@pytest.mark.parametrize(
-    ("domain", "old_unique_id", "new_unique_id"),
-    [
-        pytest.param(LIGHT_DOMAIN, 123456, "123456", id="Light integer"),
-        pytest.param(
-            CAMERA_DOMAIN,
-            654321,
-            "654321-last_recording",
-            id="Camera integer",
-        ),
-    ],
-)
-async def test_update_unique_id(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
-    mock_ring_client,
-    domain: str,
-    old_unique_id: int | str,
-    new_unique_id: str,
-) -> None:
-    """Test unique_id update of integration."""
-    entry = MockConfigEntry(
-        title="Ring",
-        domain=DOMAIN,
-        data={
-            CONF_USERNAME: "foo@bar.com",
-            "token": {"access_token": "mock-token"},
-        },
-        unique_id="foo@bar.com",
-        minor_version=1,
-    )
-    entry.add_to_hass(hass)
-
-    entity = entity_registry.async_get_or_create(
-        domain=domain,
-        platform=DOMAIN,
-        unique_id=old_unique_id,
-        config_entry=entry,
-    )
-    assert entity.unique_id == old_unique_id
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_migrated = entity_registry.async_get(entity.entity_id)
-    assert entity_migrated
-    assert entity_migrated.unique_id == new_unique_id
-    assert (f"Fixing non string unique id {old_unique_id}") in caplog.text
-    assert entry.minor_version == CONF_CONFIG_ENTRY_MINOR_VERSION
-
-
-async def test_update_unique_id_existing(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
-    mock_ring_client,
-) -> None:
-    """Test unique_id update of integration."""
-    old_unique_id = 123456
-    entry = MockConfigEntry(
-        title="Ring",
-        domain=DOMAIN,
-        data={
-            CONF_USERNAME: "foo@bar.com",
-            "token": {"access_token": "mock-token"},
-        },
-        unique_id="foo@bar.com",
-        minor_version=1,
-    )
-    entry.add_to_hass(hass)
-
-    entity = entity_registry.async_get_or_create(
-        domain=CAMERA_DOMAIN,
-        platform=DOMAIN,
-        unique_id=old_unique_id,
-        config_entry=entry,
-    )
-    entity_existing = entity_registry.async_get_or_create(
-        domain=CAMERA_DOMAIN,
-        platform=DOMAIN,
-        unique_id=str(old_unique_id),
-        config_entry=entry,
-    )
-    assert entity.unique_id == old_unique_id
-    assert entity_existing.unique_id == str(old_unique_id)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_not_migrated = entity_registry.async_get(entity.entity_id)
-    entity_existing = entity_registry.async_get(entity_existing.entity_id)
-    assert entity_not_migrated
-    assert entity_existing
-    assert entity_not_migrated.unique_id == old_unique_id
-    assert (
-        f"Cannot migrate to unique_id '{old_unique_id}', "
-        f"already exists for '{entity_existing.entity_id}', "
-        "You may have to delete unavailable ring entities"
-    ) in caplog.text
-    assert entry.minor_version == CONF_CONFIG_ENTRY_MINOR_VERSION
 
 
 async def test_update_unique_id_camera_update(
