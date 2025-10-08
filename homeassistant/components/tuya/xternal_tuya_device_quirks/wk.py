@@ -10,7 +10,6 @@ from ..const import DPCode
 from ..models import EnumTypeData, IntegerTypeData
 from ..xternal_tuya_quirks import TUYA_QUIRKS_REGISTRY, TuyaDeviceQuirk
 from ..xternal_tuya_quirks.climate import CommonClimateType
-from ..xternal_tuya_quirks.sensor import CommonSensorType
 from ..xternal_tuya_quirks.switch import CommonSwitchType
 from ..xternal_tuya_quirks.utils import scale_value, scale_value_back
 
@@ -46,11 +45,6 @@ def _scale_value_back_force_scale_1(
         current_temperature_state_conversion=_scale_value_force_scale_1,
         target_temperature_state_conversion=_scale_value_force_scale_1,
         target_temperature_command_conversion=_scale_value_back_force_scale_1,
-    )
-    .add_common_sensor(
-        key=DPCode.UPPER_TEMP,
-        common_type=CommonSensorType.TEMPERATURE,
-        state_conversion=_scale_value_force_scale_1,
     )
     .add_common_switch(
         key=DPCode.CHILD_LOCK,

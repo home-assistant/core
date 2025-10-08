@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import inspect
 import pathlib
-from typing import TYPE_CHECKING, Any, Self
-
-from tuya_sharing import CustomerDevice
+from typing import TYPE_CHECKING, Self
 
 from ..const import DPCode
-from ..models import EnumTypeData, IntegerTypeData, StateConversionFunction
+from ..models import StateConversionFunction
 from .climate import CommonClimateType, TuyaClimateDefinition
 from .cover import CommonCoverType, TuyaCoverDefinition
 from .select import CommonSelectType, TuyaSelectDefinition
@@ -123,17 +120,12 @@ class TuyaDeviceQuirk:
         *,
         key: DPCode,
         common_type: CommonSensorType,
-        state_conversion: Callable[
-            [CustomerDevice, EnumTypeData | IntegerTypeData | None, Any], Any
-        ]
-        | None = None,
     ) -> Self:
         """Add sensor definition."""
         self.sensor_definitions.append(
             TuyaSensorDefinition(
                 key=key,
                 common_type=common_type,
-                state_conversion=state_conversion,
             )
         )
         return self
