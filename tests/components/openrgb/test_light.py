@@ -37,7 +37,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -615,6 +615,26 @@ async def test_turn_on_light_with_mode_exceptions(
             {
                 ATTR_ENTITY_ID: "light.ene_dram",
                 ATTR_EFFECT: "Rainbow",
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_light_with_unsupported_effect(
+    hass: HomeAssistant,
+) -> None:
+    """Test turning on the light with an invalid effect."""
+    with pytest.raises(
+        ServiceValidationError,
+        match="Effect `InvalidEffect` is not supported by ENE DRAM",
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.ene_dram",
+                ATTR_EFFECT: "InvalidEffect",
             },
             blocking=True,
         )

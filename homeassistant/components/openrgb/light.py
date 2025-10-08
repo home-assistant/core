@@ -17,7 +17,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -280,6 +280,15 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         mode = None
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
+            if self._attr_effect_list is None or effect not in self._attr_effect_list:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="unsupported_effect",
+                    translation_placeholders={
+                        "effect": effect,
+                        "device_name": self.device.name,
+                    },
+                )
             mode = self._preferred_no_effect_mode if effect == EFFECT_OFF else effect
         elif self._mode is None:
             # Restore previous mode when turning on from Off mode

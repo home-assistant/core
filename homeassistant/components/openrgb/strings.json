@@ -30,6 +30,9 @@
     },
     "openrgb_error": {
       "message": "An OpenRGB error occurred: {error}"
+    },
+    "unsupported_effect": {
+      "message": "Effect `{effect}` is not supported by {device_name}"
     }
   }
 }
