@@ -323,6 +323,11 @@ class StatisticsRow(BaseStatisticsRow, total=False):
 def _get_unit_converter(
     unit_class: str | None, from_unit: str | None
 ) -> type[BaseUnitConverter] | None:
+    """Return the unit converter for the given unit class and unit.
+
+    The unit converter is determined from the unit class and unit if the unit class
+    and unit match, otherwise from the unit.
+    """
     if (
         conv := UNIT_CLASS_TO_UNIT_CONVERTER.get(unit_class)
     ) is not None and from_unit in conv.VALID_UNITS:

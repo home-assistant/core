@@ -247,8 +247,8 @@ def _get_unit_class(
 ) -> str | None:
     """Return the unit class for the given device class and unit.
 
-    The unit class is determined from the unit if possible, otherwise from the
-    device class and unit.
+    The unit class is determined from the device class and unit if possible,
+    otherwise from the unit.
     """
     if (
         device_class
