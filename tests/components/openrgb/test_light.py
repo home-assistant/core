@@ -159,7 +159,7 @@ async def test_light_with_non_color_mode(
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == LightEntityFeature.EFFECT
-    assert state.attributes.get(ATTR_EFFECT) == "Rainbow"
+    assert state.attributes.get(ATTR_EFFECT) == "rainbow"
     assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.ONOFF
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.ONOFF]
     assert state.attributes.get(ATTR_RGB_COLOR) is None
@@ -177,7 +177,8 @@ async def test_light_with_no_effects(
     mock_openrgb_device.modes = [
         mode
         for mode in mock_openrgb_device.modes
-        if mode.name in {OpenRGBMode.OFF, OpenRGBMode.DIRECT, OpenRGBMode.STATIC}
+        if mode.name.lower()
+        in {OpenRGBMode.OFF, OpenRGBMode.DIRECT, OpenRGBMode.STATIC}
     ]
 
     mock_config_entry.add_to_hass(hass)
@@ -320,12 +321,12 @@ async def test_turn_on_light_with_effect(
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: "light.ene_dram",
-            ATTR_EFFECT: "Rainbow",
+            ATTR_EFFECT: "rainbow",
         },
         blocking=True,
     )
 
-    mock_openrgb_device.set_mode.assert_called_once_with("Rainbow")
+    mock_openrgb_device.set_mode.assert_called_once_with("rainbow")
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -437,7 +438,7 @@ async def test_previous_values_updated_on_refresh(
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_RGB_COLOR) == (0, 255, 0)  # Green
     assert state.attributes.get(ATTR_BRIGHTNESS) == 128  # 50% brightness
-    assert state.attributes.get(ATTR_EFFECT) == "Breathing"
+    assert state.attributes.get(ATTR_EFFECT) == "breathing"
 
     # Simulate external change to Off mode
     mock_openrgb_device.active_mode = 1
@@ -460,7 +461,7 @@ async def test_previous_values_updated_on_refresh(
         blocking=True,
     )
 
-    mock_openrgb_device.set_mode.assert_called_once_with("Breathing")
+    mock_openrgb_device.set_mode.assert_called_once_with("breathing")
     mock_openrgb_device.set_color.assert_called_once_with(RGBColor(0, 128, 0), True)
 
 
@@ -485,7 +486,7 @@ async def test_turn_on_restores_rainbow_after_off(
     state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_EFFECT) == "Rainbow"
+    assert state.attributes.get(ATTR_EFFECT) == "rainbow"
 
     # Turn off the light by switching to Off mode
     mock_openrgb_device.active_mode = 1
@@ -509,7 +510,7 @@ async def test_turn_on_restores_rainbow_after_off(
     )
 
     # Should restore to Rainbow mode (previous mode)
-    mock_openrgb_device.set_mode.assert_called_once_with("Rainbow")
+    mock_openrgb_device.set_mode.assert_called_once_with("rainbow")
     # set_color should NOT be called since Rainbow doesn't support colors
     mock_openrgb_device.set_color.assert_not_called()
 
@@ -535,7 +536,7 @@ async def test_turn_on_restores_rainbow_after_off_by_color(
     state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_EFFECT) == "Rainbow"
+    assert state.attributes.get(ATTR_EFFECT) == "rainbow"
 
     # Turn off the light by setting all LEDs to black in Direct mode
     mock_openrgb_device.active_mode = 0  # Direct mode
@@ -560,7 +561,7 @@ async def test_turn_on_restores_rainbow_after_off_by_color(
     )
 
     # Should restore to Rainbow mode (previous mode), not Direct
-    mock_openrgb_device.set_mode.assert_called_once_with("Rainbow")
+    mock_openrgb_device.set_mode.assert_called_once_with("rainbow")
     # set_color should NOT be called since Rainbow doesn't support colors
     mock_openrgb_device.set_color.assert_not_called()
 
@@ -593,7 +594,7 @@ async def test_turn_off_light_without_off_mode(
     mock_openrgb_device.modes = [
         mode_data
         for mode_data in mock_openrgb_device.modes
-        if mode_data.name != OpenRGBMode.OFF
+        if mode_data.name.lower() != OpenRGBMode.OFF
     ]
 
     mock_config_entry.add_to_hass(hass)
@@ -664,7 +665,7 @@ async def test_turn_on_light_with_mode_exceptions(
             SERVICE_TURN_ON,
             {
                 ATTR_ENTITY_ID: "light.ene_dram",
-                ATTR_EFFECT: "Rainbow",
+                ATTR_EFFECT: "rainbow",
             },
             blocking=True,
         )
@@ -697,14 +698,14 @@ async def test_turn_on_light_with_color_and_non_color_effect(
     """Test turning on the light with color/brightness and a non-color effect."""
     with pytest.raises(
         ServiceValidationError,
-        match="Effect `Rainbow` does not support color control on ENE DRAM",
+        match="Effect `rainbow` does not support color control on ENE DRAM",
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {
                 ATTR_ENTITY_ID: "light.ene_dram",
-                ATTR_EFFECT: "Rainbow",
+                ATTR_EFFECT: "rainbow",
                 ATTR_RGB_COLOR: (255, 0, 0),
             },
             blocking=True,
@@ -718,14 +719,14 @@ async def test_turn_on_light_with_brightness_and_non_color_effect(
     """Test turning on the light with brightness and a non-color effect."""
     with pytest.raises(
         ServiceValidationError,
-        match="Effect `Rainbow` does not support color control on ENE DRAM",
+        match="Effect `rainbow` does not support color control on ENE DRAM",
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {
                 ATTR_ENTITY_ID: "light.ene_dram",
-                ATTR_EFFECT: "Rainbow",
+                ATTR_EFFECT: "rainbow",
                 ATTR_BRIGHTNESS: 128,
             },
             blocking=True,

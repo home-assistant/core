@@ -24,6 +24,35 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "entity": {
+    "light": {
+      "openrgb_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "breathing": "Breathing",
+              "chase": "Chase",
+              "chase_fade": "Chase fade",
+              "cram": "Cram",
+              "flashing": "Flashing",
+              "music": "Music",
+              "neon": "Neon",
+              "rainbow": "Rainbow",
+              "random": "Random",
+              "random_flicker": "Random flicker",
+              "scan": "Scan",
+              "spectrum_cycle": "Spectrum cycle",
+              "spring": "Spring",
+              "stack": "Stack",
+              "strobe": "Strobe",
+              "water": "Water",
+              "wave": "Wave"
+            }
+          }
+        }
+      }
+    }
+  },
   "exceptions": {
     "communication_error": {
       "message": "Failed to communicate with OpenRGB SDK server {server_address}: {error}"
