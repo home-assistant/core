@@ -228,8 +228,17 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # it to define min, max & step temperatures
         if self._set_temperature:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-            self._attr_max_temp = self._set_temperature.max_scaled
-            self._attr_min_temp = self._set_temperature.min_scaled
+            if convert := self.entity_description.target_temperature_state_conversion:
+                self._attr_max_temp = convert(
+                    self.device, self._set_temperature, self._set_temperature.max
+                )
+                self._attr_min_temp = convert(
+                    self.device, self._set_temperature, self._set_temperature.min
+                )
+            else:
+                self._attr_max_temp = self._set_temperature.max_scaled
+                self._attr_min_temp = self._set_temperature.min_scaled
+
             self._attr_target_temperature_step = self._set_temperature.step_scaled
 
         # Determine HVAC modes
