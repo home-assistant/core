@@ -581,7 +581,9 @@ async def _async_attach_trigger_cls(
         return payload
 
     # Wrap sync action so that it is always async.
-    # This should be removed when sync actions are no longer supported.
+    # This simplifies the Trigger action runner interface by always returning a coroutine,
+    # removing the need for integrations to check for the return type when awaiting the action.
+    # This can be removed when sync actions are no longer supported.
     match get_hassjob_callable_job_type(action):
         case HassJobType.Executor:
             original_action = action
