@@ -316,16 +316,23 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         options = self.options
         errors: dict[str, str] = {}
 
-        step_schema: VolDictType = {
-            vol.Optional(
-                CONF_CODE_INTERPRETER,
-                default=RECOMMENDED_CODE_INTERPRETER,
-            ): bool,
-        }
+        step_schema: VolDictType = {}
 
         model = options[CONF_CHAT_MODEL]
 
-        if model.startswith(("o", "gpt-5")):
+        if not model.startswith(("gpt-5-pro", "gpt-5-codex")):
+            step_schema.update(
+                {
+                    vol.Optional(
+                        CONF_CODE_INTERPRETER,
+                        default=RECOMMENDED_CODE_INTERPRETER,
+                    ): bool,
+                }
+            )
+        elif CONF_CODE_INTERPRETER in options:
+            options.pop(CONF_CODE_INTERPRETER)
+
+        if model.startswith(("o", "gpt-5")) and not model.startswith("gpt-5-pro"):
             step_schema.update(
                 {
                     vol.Optional(
