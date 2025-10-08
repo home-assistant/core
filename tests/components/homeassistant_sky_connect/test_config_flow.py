@@ -482,4 +482,4 @@ async def test_firmware_callback_auto_creates_entry(
     }
 
     # The discovery flow is gone
-    assert not hass.config_entries.flow.async_progress_by_domain(DOMAIN)
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
