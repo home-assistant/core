@@ -6,7 +6,7 @@ import asyncio
 from typing import Any
 
 from openrgb.orgb import Device
-from openrgb.utils import ModeData, RGBColor
+from openrgb.utils import ModeColors, ModeData, RGBColor
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -411,4 +411,4 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
 
 def check_if_mode_supports_color(mode: ModeData) -> bool:
     """Return True if the mode supports colors."""
-    return mode.color_mode == 1
+    return mode.color_mode == ModeColors.PER_LED
