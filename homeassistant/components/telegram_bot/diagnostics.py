@@ -6,12 +6,14 @@ from typing import Any
 
 from yarl import URL
 
-from homeassistant.components.diagnostics import REDACTED
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from . import TelegramBotConfigEntry
 from .const import CONF_CHAT_ID
+
+TO_REDACT = [CONF_API_KEY, CONF_CHAT_ID]
 
 
 async def async_get_config_entry_diagnostics(
@@ -19,21 +21,16 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    data = dict(config_entry.data)
-    data[CONF_API_KEY] = REDACTED
-
+    data = async_redact_data(config_entry.data, TO_REDACT)
     if config_entry.data.get(CONF_URL):
         url = URL(config_entry.data[CONF_URL])
         data[CONF_URL] = url.with_host(REDACTED).human_repr()
 
-    subentries = []
-    for subentry in config_entry.subentries.values():
-        subentry_data = dict(subentry.data)
-        subentry_data[CONF_CHAT_ID] = REDACTED
-        subentries.append(subentry_data)
-
     return {
         "data": data,
-        "options": dict(config_entry.options),
-        "subentries": subentries,
+        "options": async_redact_data(config_entry.options, TO_REDACT),
+        "subentries": [
+            async_redact_data(subentry.data, TO_REDACT)
+            for subentry in config_entry.subentries.values()
+        ],
     }
