@@ -301,8 +301,10 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
                     },
                 )
             mode = self._preferred_no_effect_mode if effect == EFFECT_OFF else effect
-        elif self._mode is None:
-            # Restore previous mode when turning on from Off mode
+        elif self._mode is None or (
+            self._attr_rgb_color is None and self._attr_brightness is None
+        ):
+            # Restore previous mode when turning on from Off mode or black color
             mode = self._previous_mode or self._preferred_no_effect_mode
 
         # Check if current or new mode supports colors
