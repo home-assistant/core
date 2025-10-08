@@ -35,8 +35,7 @@ def _scale_value_back_force_scale_1(
 
 
 (
-    # This model has percent_state and percent_control but percent_state never
-    # gets updated - force percent_control instead
+    # This model has invalid scale 0 for temperature dps - force scale 1
     TuyaDeviceQuirk()
     .applies_to(category="wk", product_id="IAYz2WK1th0cMLmL")
     .add_common_climate(
