@@ -76,10 +76,6 @@ DEFAULT_STATISTICS = {
     SensorStateClass.TOTAL_INCREASING: _StatisticsConfig({"sum"}),
 }
 
-DEVICE_CLASS_TO_UNIT_CLASS = {
-    device_class: conv.UNIT_CLASS for device_class, conv in UNIT_CONVERTERS.items()
-}
-
 EQUIVALENT_UNITS = {
     "BTU/(h×ft²)": UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT,
     "dBa": UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
