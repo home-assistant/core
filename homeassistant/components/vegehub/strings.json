@@ -36,6 +36,12 @@
       "analog_sensor": {
         "name": "Input {index}"
       },
+      "vh400_sensor": {
+        "name": "Input {index} (moisture)"
+      },
+      "therm200_sensor": {
+        "name": "Input {index} (temperature)"
+      },
       "battery_volts": {
         "name": "Battery voltage"
       }
