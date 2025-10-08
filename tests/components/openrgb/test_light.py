@@ -486,35 +486,6 @@ async def test_turn_on_restores_rainbow_after_off(
     mock_openrgb_device.set_color.assert_not_called()
 
 
-@pytest.mark.usefixtures("mock_openrgb_client")
-async def test_turn_on_with_non_color_effect_and_color_params(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_openrgb_device: MagicMock,
-) -> None:
-    """Test turning on with a non-color effect but providing color/brightness."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    # Try to set Rainbow effect (doesn't support color) with RGB color parameter
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: "light.ene_dram",
-            ATTR_EFFECT: "Rainbow",
-            ATTR_RGB_COLOR: (255, 255, 0),  # Yellow
-        },
-        blocking=True,
-    )
-
-    # Should switch to Direct mode (preferred) instead of Rainbow since color was provided
-    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.DIRECT)
-
-
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_off_light(
     hass: HomeAssistant,
@@ -635,6 +606,48 @@ async def test_turn_on_light_with_unsupported_effect(
             {
                 ATTR_ENTITY_ID: "light.ene_dram",
                 ATTR_EFFECT: "InvalidEffect",
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_light_with_color_and_non_color_effect(
+    hass: HomeAssistant,
+) -> None:
+    """Test turning on the light with color/brightness and a non-color effect."""
+    with pytest.raises(
+        ServiceValidationError,
+        match="Effect `Rainbow` does not support color control on ENE DRAM",
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.ene_dram",
+                ATTR_EFFECT: "Rainbow",
+                ATTR_RGB_COLOR: (255, 0, 0),
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_light_with_brightness_and_non_color_effect(
+    hass: HomeAssistant,
+) -> None:
+    """Test turning on the light with brightness and a non-color effect."""
+    with pytest.raises(
+        ServiceValidationError,
+        match="Effect `Rainbow` does not support color control on ENE DRAM",
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.ene_dram",
+                ATTR_EFFECT: "Rainbow",
+                ATTR_BRIGHTNESS: 128,
             },
             blocking=True,
         )

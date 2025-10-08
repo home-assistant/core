@@ -301,18 +301,27 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         else:
             mode_supports_color = mode in self._supports_color_modes
 
+        color_or_brightness_requested = (
+            ATTR_RGB_COLOR in kwargs or ATTR_BRIGHTNESS in kwargs
+        )
+        if color_or_brightness_requested and not mode_supports_color:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="effect_no_color_support",
+                translation_placeholders={
+                    "effect": mode or self._mode or "",
+                    "device_name": self.device.name,
+                },
+            )
+
         # Apply color even if switching from Off mode to a color-capable mode
         # because there is no guarantee that the device won't go back to black
-        need_to_apply_color = (
-            ATTR_RGB_COLOR in kwargs
-            or ATTR_BRIGHTNESS in kwargs
-            or (
-                mode_supports_color
-                and (self._attr_brightness is None or self._attr_rgb_color is None)
-            )
+        need_to_apply_color = color_or_brightness_requested or (
+            mode_supports_color
+            and (self._attr_brightness is None or self._attr_rgb_color is None)
         )
 
-        # If color/brightness parameters require color support but mode doesn't support it,
+        # If color/brightness restoration require color support but mode doesn't support it,
         # switch to a color-capable mode
         if need_to_apply_color and not mode_supports_color:
             mode = self._preferred_no_effect_mode

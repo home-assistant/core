@@ -33,6 +33,9 @@
     },
     "unsupported_effect": {
       "message": "Effect `{effect}` is not supported by {device_name}"
+    },
+    "effect_no_color_support": {
+      "message": "Effect `{effect}` does not support color control on {device_name}"
     }
   }
 }
