@@ -477,7 +477,7 @@ def _trigger_action_wrapper(
     else:
 
         @functools.wraps(action)
-        async def with_vars(
+        def with_vars(
             run_variables: dict[str, Any], context: Context | None = None
         ) -> Any:
             """Wrap action with extra vars."""
