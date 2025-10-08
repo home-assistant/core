@@ -1,9 +1,11 @@
-"""Common cover quirks for Tuya devices."""
+"""Common select quirks for Tuya devices."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+
+from ..const import DPCode
 
 
 class CommonSelectType(StrEnum):
@@ -16,8 +18,6 @@ class CommonSelectType(StrEnum):
 class TuyaSelectDefinition:
     """Definition for a select entity."""
 
-    key: str
+    key: DPCode
 
     common_type: CommonSelectType
-
-    dp_code: str

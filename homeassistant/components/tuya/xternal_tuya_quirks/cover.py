@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from ..const import DPCode
+
 
 class CommonCoverType(StrEnum):
     """Common cover types."""
@@ -20,7 +22,7 @@ class TuyaCoverDefinition:
 
     common_type: CommonCoverType
 
-    current_position_dp_code: str | None = None
-    current_state_dp_code: str | None = None
-    set_position_dp_code: str | None = None
-    set_state_dp_code: str
+    current_position_dp_code: DPCode | None = None
+    current_state_dp_code: DPCode | None = None
+    set_position_dp_code: DPCode | None = None
+    set_state_dp_code: DPCode

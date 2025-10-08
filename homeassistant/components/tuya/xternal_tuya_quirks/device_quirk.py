@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import inspect
 import pathlib
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Self
 
+from tuya_sharing import CustomerDevice
+
+from ..const import DPCode
+from ..models import EnumTypeData, IntegerTypeData
+from .climate import CommonClimateType, TuyaClimateDefinition
 from .cover import CommonCoverType, TuyaCoverDefinition
 from .select import CommonSelectType, TuyaSelectDefinition
 from .sensor import CommonSensorType, TuyaSensorDefinition
+from .switch import CommonSwitchType, TuyaSwitchDefinition
 
 if TYPE_CHECKING:
     from .registry import QuirksRegistry
@@ -18,16 +25,20 @@ class TuyaDeviceQuirk:
     """Quirk for Tuya device."""
 
     _applies_to: list[tuple[str, str]]
+    climate_definitions: list[TuyaClimateDefinition]
     cover_definitions: list[TuyaCoverDefinition]
     select_definitions: list[TuyaSelectDefinition]
     sensor_definitions: list[TuyaSensorDefinition]
+    switch_definitions: list[TuyaSwitchDefinition]
 
     def __init__(self) -> None:
         """Initialize the quirk."""
         self._applies_to = []
+        self.climate_definitions = []
         self.cover_definitions = []
         self.select_definitions = []
         self.sensor_definitions = []
+        self.switch_definitions = []
 
         current_frame = inspect.currentframe()
         if TYPE_CHECKING:
@@ -48,15 +59,36 @@ class TuyaDeviceQuirk:
         for category, product_id in self._applies_to:
             registry.register(category, product_id, self)
 
-    def add_common_cover(
+    def add_common_climate(
         self,
         *,
         key: str,
+        common_type: CommonClimateType,
+        current_temperature_dp_code: DPCode | None = None,
+        set_temperature_dp_code: DPCode | None = None,
+        switch_dp_code: DPCode | None = None,
+    ) -> Self:
+        """Add climate definition."""
+        self.climate_definitions.append(
+            TuyaClimateDefinition(
+                key=key,
+                common_type=common_type,
+                switch_dp_code=switch_dp_code,
+                current_temperature_dp_code=current_temperature_dp_code,
+                set_temperature_dp_code=set_temperature_dp_code,
+            )
+        )
+        return self
+
+    def add_common_cover(
+        self,
+        *,
+        key: DPCode,
         common_type: CommonCoverType,
-        current_position_dp_code: str | None = None,
-        current_state_dp_code: str | None = None,
-        set_position_dp_code: str | None = None,
-        set_state_dp_code: str | None = None,
+        current_position_dp_code: DPCode | None = None,
+        current_state_dp_code: DPCode | None = None,
+        set_position_dp_code: DPCode | None = None,
+        set_state_dp_code: DPCode | None = None,
     ) -> Self:
         """Add cover definition."""
         self.cover_definitions.append(
@@ -74,16 +106,14 @@ class TuyaDeviceQuirk:
     def add_common_select(
         self,
         *,
-        key: str,
+        key: DPCode,
         common_type: CommonSelectType,
-        dp_code: str | None = None,
     ) -> Self:
         """Add select definition."""
         self.select_definitions.append(
             TuyaSelectDefinition(
                 key=key,
                 common_type=common_type,
-                dp_code=dp_code or key,
             )
         )
         return self
@@ -91,16 +121,34 @@ class TuyaDeviceQuirk:
     def add_common_sensor(
         self,
         *,
-        key: str,
+        key: DPCode,
         common_type: CommonSensorType,
-        dp_code: str | None = None,
+        state_conversion: Callable[
+            [CustomerDevice, EnumTypeData | IntegerTypeData | None, Any], Any
+        ]
+        | None = None,
     ) -> Self:
         """Add sensor definition."""
         self.sensor_definitions.append(
             TuyaSensorDefinition(
                 key=key,
                 common_type=common_type,
-                dp_code=dp_code or key,
+                state_conversion=state_conversion,
+            )
+        )
+        return self
+
+    def add_common_switch(
+        self,
+        *,
+        key: DPCode,
+        common_type: CommonSwitchType,
+    ) -> Self:
+        """Add switch definition."""
+        self.switch_definitions.append(
+            TuyaSwitchDefinition(
+                key=key,
+                common_type=common_type,
             )
         )
         return self

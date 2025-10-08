@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -356,11 +358,9 @@ COMMON_SELECT_DEFINITIONS: dict[CommonSelectType, SelectEntityDescription] = {
 def _create_quirk_description(
     definition: TuyaSelectDefinition,
 ) -> SelectEntityDescription:
-    common_definition = COMMON_SELECT_DEFINITIONS[definition.common_type]
-    return SelectEntityDescription(
+    return replace(
+        COMMON_SELECT_DEFINITIONS[definition.common_type],
         key=DPCode(definition.key),
-        translation_key=common_definition.translation_key,
-        entity_category=common_definition.entity_category,
     )
 
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
@@ -73,7 +73,12 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
 
     complex_type: type[ComplexValue] | None = None
     subkey: str | None = None
-    state_conversion: Callable[[Any], StateType] | None = None
+    state_conversion: (
+        Callable[
+            [CustomerDevice, EnumTypeData | IntegerTypeData | None, Any], StateType
+        ]
+        | None
+    ) = None
 
 
 # Commonly used battery sensors, that are reused in the sensors down below.
@@ -960,7 +965,9 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="wind_direction",
             device_class=SensorDeviceClass.WIND_DIRECTION,
             state_class=SensorStateClass.MEASUREMENT,
-            state_conversion=lambda state: _WIND_DIRECTIONS.get(str(state)),
+            state_conversion=lambda _device, _dptype, state: _WIND_DIRECTIONS.get(
+                str(state)
+            ),
         ),
         TuyaSensorEntityDescription(
             key=DPCode.DEW_POINT_TEMP,
@@ -1627,23 +1634,27 @@ SENSORS[DeviceCategory.DGHSXJ] = SENSORS[DeviceCategory.SP]
 SENSORS[DeviceCategory.PC] = SENSORS[DeviceCategory.KG]
 
 COMMON_SENSOR_DEFINITIONS: dict[CommonSensorType, TuyaSensorEntityDescription] = {
+    CommonSensorType.TEMPERATURE: TuyaSensorEntityDescription(
+        key="tbc",
+        translation_key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     CommonSensorType.TIME_TOTAL: TuyaSensorEntityDescription(
         key="tbc",
         translation_key="last_operation_duration",
         entity_category=EntityCategory.DIAGNOSTIC,
-    )
+    ),
 }
 
 
 def _create_quirk_description(
     definition: TuyaSensorDefinition,
 ) -> TuyaSensorEntityDescription:
-    common_definition = COMMON_SENSOR_DEFINITIONS[definition.common_type]
-    return TuyaSensorEntityDescription(
+    return replace(
+        COMMON_SENSOR_DEFINITIONS[definition.common_type],
         key=DPCode(definition.key),
-        translation_key=common_definition.translation_key,
-        device_class=common_definition.device_class,
-        entity_category=common_definition.entity_category,
+        state_conversion=definition.state_conversion,
     )
 
 
@@ -1782,7 +1793,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
         # Convert value, if required
         if (convert := self.entity_description.state_conversion) is not None:
-            return convert(value)
+            return convert(self.device, self._type_data, value)
 
         # Scale integer/float value
         if isinstance(self._type_data, IntegerTypeData):

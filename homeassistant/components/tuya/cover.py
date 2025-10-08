@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 
 from tuya_sharing import CustomerDevice, Manager
@@ -24,7 +24,7 @@ from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import EnumTypeData, IntegerTypeData
 from .util import get_dpcode
-from .xternal_tuya_quirks import TUYA_QUIRKS_REGISTRY, parse_enum
+from .xternal_tuya_quirks import TUYA_QUIRKS_REGISTRY
 from .xternal_tuya_quirks.cover import CommonCoverType, TuyaCoverDefinition
 
 
@@ -156,14 +156,12 @@ COMMON_COVER_DEFINITIONS: dict[CommonCoverType, TuyaCoverEntityDescription] = {
 def _create_quirk_description(
     definition: TuyaCoverDefinition,
 ) -> TuyaCoverEntityDescription:
-    common_definition = COMMON_COVER_DEFINITIONS[definition.common_type]
-    return TuyaCoverEntityDescription(
+    return replace(
+        COMMON_COVER_DEFINITIONS[definition.common_type],
         key=definition.key,
-        device_class=common_definition.device_class,
-        translation_key=common_definition.translation_key,
-        current_state=parse_enum(DPCode, definition.current_state_dp_code),
-        current_position=parse_enum(DPCode, definition.current_position_dp_code),
-        set_position=parse_enum(DPCode, definition.set_position_dp_code),
+        current_state=definition.current_state_dp_code,
+        current_position=definition.current_position_dp_code,
+        set_position=definition.set_position_dp_code,
     )
 
 
