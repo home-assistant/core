@@ -338,14 +338,20 @@ class TemplateEntity(AbstractTemplateEntity):
                 )
             return
 
+        errors = []
         for update in updates:
             for template_attr in self._template_attrs[update.template]:
                 template_attr.handle_result(
                     event, update.template, update.last_result, update.result
                 )
+                if isinstance(update.result, TemplateError):
+                    errors.append(update.result)
 
         if not self._preview_callback:
             self.async_write_ha_state()
+            return
+
+        if errors:
             return
 
         try:
