@@ -24,6 +24,7 @@ from homeassistant.components.zha.const import (
     DOMAIN,
 )
 from homeassistant.components.zha.helpers import get_zha_data, get_zha_gateway
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     MAJOR_VERSION,
@@ -317,26 +318,6 @@ async def test_timezone_update(
     assert gateway.config.local_timezone == zoneinfo.ZoneInfo("America/New_York")
 
 
-async def test_setup_firmware_update_in_progress(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test that ZHA setup is blocked when firmware update is in progress."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
-
-    config_entry.add_to_hass(hass)
-    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-
-    # Register a firmware update in progress for the device
-    async_register_firmware_update_in_progress(hass, device_path, "skyconnect")
-
-    # ZHA setup should fail and the config entry should be in retry state
-    await hass.config_entries.async_setup(config_entry.entry_id)
-
-    # Verify the config entry is not loaded and is in setup retry state
-    assert config_entry.state.name == "SETUP_RETRY"
-
-
 async def test_setup_no_firmware_update_in_progress(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -348,11 +329,22 @@ async def test_setup_no_firmware_update_in_progress(
     config_entry.add_to_hass(hass)
     device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
 
-    # Verify no firmware update is in progress
     assert not async_is_firmware_update_in_progress(hass, device_path)
-
-    # ZHA setup should proceed normally
     await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
 
-    # Verify the config entry is loaded
-    assert config_entry.state.name == "LOADED"
+
+async def test_setup_firmware_update_in_progress(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that ZHA setup is blocked when firmware update is in progress."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
+    config_entry.add_to_hass(hass)
+    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+    async_register_firmware_update_in_progress(hass, device_path, "skyconnect")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
