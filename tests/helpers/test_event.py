@@ -22,7 +22,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.event import (
@@ -4975,43 +4975,25 @@ async def test_async_track_state_report_change_event(hass: HomeAssistant) -> Non
     }
 
 
-async def test_async_track_template_no_hass_deprecated(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test async_track_template with a template without hass is deprecated."""
-    message = (
-        "Detected code that calls async_track_template_result with template without "
-        "hass. This will stop working in Home Assistant 2025.10, please "
-        "report this issue"
-    )
+async def test_async_track_template_no_hass_fails(hass: HomeAssistant) -> None:
+    """Test async_track_template with a template without hass now fails."""
+    message = "Calls async_track_template_result with template without hass"
 
-    async_track_template(hass, Template("blah"), lambda x, y, z: None)
-    assert message in caplog.text
-    caplog.clear()
+    with pytest.raises(HomeAssistantError, match=message):
+        async_track_template(hass, Template("blah"), lambda x, y, z: None)
 
     async_track_template(hass, Template("blah", hass), lambda x, y, z: None)
-    assert message not in caplog.text
-    caplog.clear()
 
 
-async def test_async_track_template_result_no_hass_deprecated(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test async_track_template_result with a template without hass is deprecated."""
-    message = (
-        "Detected code that calls async_track_template_result with template without "
-        "hass. This will stop working in Home Assistant 2025.10, please "
-        "report this issue"
-    )
+async def test_async_track_template_result_no_hass_fails(hass: HomeAssistant) -> None:
+    """Test async_track_template_result with a template without hass now fails."""
+    message = "Calls async_track_template_result with template without hass"
 
-    async_track_template_result(
-        hass, [TrackTemplate(Template("blah"), None)], lambda x, y, z: None
-    )
-    assert message in caplog.text
-    caplog.clear()
+    with pytest.raises(HomeAssistantError, match=message):
+        async_track_template_result(
+            hass, [TrackTemplate(Template("blah"), None)], lambda x, y, z: None
+        )
 
     async_track_template_result(
         hass, [TrackTemplate(Template("blah", hass), None)], lambda x, y, z: None
     )
-    assert message not in caplog.text
-    caplog.clear()
