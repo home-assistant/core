@@ -29,6 +29,7 @@ from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     async_import_statistics,
     async_list_statistic_ids,
+    async_update_statistics_metadata,
     get_last_short_term_statistics,
     get_last_statistics,
     get_latest_short_term_statistics_with_session,
@@ -48,6 +49,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
@@ -62,6 +64,12 @@ from .common import (
 from tests.common import MockPlatform, MockUser, mock_platform
 from tests.typing import RecorderInstanceContextManager, WebSocketGenerator
 from tests.util.test_unit_conversion import _ALL_CONVERTERS
+
+POWER_SENSOR_KW_ATTRIBUTES = {
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit_of_measurement": "kW",
+}
 
 
 @pytest.fixture
@@ -1285,6 +1293,213 @@ async def test_import_statistics_errors(
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
+
+
+# Integration frame mocked because of deprecation warnings about missing
+# unit_class, can be removed in HA Core 2025.11
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+@pytest.mark.parametrize(
+    (
+        "requested_new_unit",
+        "update_statistics_extra",
+        "new_unit",
+        "new_unit_class",
+        "new_display_unit",
+    ),
+    [
+        ("dogs", {}, "dogs", None, "dogs"),
+        ("dogs", {"new_unit_class": None}, "dogs", None, "dogs"),
+        (None, {}, None, "unitless", None),
+        (None, {"new_unit_class": "unitless"}, None, "unitless", None),
+        ("W", {}, "W", "power", "kW"),
+        ("W", {"new_unit_class": "power"}, "W", "power", "kW"),
+        # Note: Display unit is guessed even if unit_class is None
+        ("W", {"new_unit_class": None}, "W", None, "kW"),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_update_statistics_metadata(
+    hass: HomeAssistant,
+    requested_new_unit,
+    update_statistics_extra,
+    new_unit,
+    new_unit_class,
+    new_display_unit,
+) -> None:
+    """Test removing statistics."""
+    now = get_start_time(dt_util.utcnow())
+
+    units = METRIC_SYSTEM
+    attributes = POWER_SENSOR_KW_ATTRIBUTES | {"device_class": None}
+    state = 10
+
+    hass.config.units = units
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, period="hourly", start=now)
+    await async_recorder_block_till_done(hass)
+
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
+            "has_mean": True,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": "kW",
+            "unit_class": "power",
+        }
+    ]
+
+    async_update_statistics_metadata(
+        hass,
+        "sensor.test",
+        new_unit_of_measurement=requested_new_unit,
+        **update_statistics_extra,
+    )
+    await async_recorder_block_till_done(hass)
+
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": new_display_unit,
+            "has_mean": True,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": new_unit,
+            "unit_class": new_unit_class,
+        }
+    ]
+
+    assert statistics_during_period(
+        hass,
+        now,
+        period="5minute",
+        statistic_ids={"sensor.test"},
+        units={"power": "W"},
+    ) == {
+        "sensor.test": [
+            {
+                "end": (now + timedelta(minutes=5)).timestamp(),
+                "last_reset": None,
+                "max": 10.0,
+                "mean": 10.0,
+                "min": 10.0,
+                "start": now.timestamp(),
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    (
+        "requested_new_unit",
+        "update_statistics_extra",
+        "error_message",
+    ),
+    [
+        ("dogs", {"new_unit_class": "cats"}, "Unsupported unit_class: 'cats'"),
+        (
+            "dogs",
+            {"new_unit_class": "power"},
+            "Unsupported unit_of_measurement 'dogs' for unit_class 'power'",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_update_statistics_metadata_error(
+    hass: HomeAssistant,
+    requested_new_unit,
+    update_statistics_extra,
+    error_message,
+) -> None:
+    """Test removing statistics."""
+    now = get_start_time(dt_util.utcnow())
+
+    units = METRIC_SYSTEM
+    attributes = POWER_SENSOR_KW_ATTRIBUTES | {"device_class": None}
+    state = 10
+
+    hass.config.units = units
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, period="hourly", start=now)
+    await async_recorder_block_till_done(hass)
+
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
+            "has_mean": True,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": "kW",
+            "unit_class": "power",
+        }
+    ]
+
+    with pytest.raises(HomeAssistantError, match=error_message):
+        async_update_statistics_metadata(
+            hass,
+            "sensor.test",
+            new_unit_of_measurement=requested_new_unit,
+            **update_statistics_extra,
+        )
+    await async_recorder_block_till_done(hass)
+
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
+            "has_mean": True,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": "kW",
+            "unit_class": "power",
+        }
+    ]
+
+    assert statistics_during_period(
+        hass,
+        now,
+        period="5minute",
+        statistic_ids={"sensor.test"},
+        units={"power": "W"},
+    ) == {
+        "sensor.test": [
+            {
+                "end": (now + timedelta(minutes=5)).timestamp(),
+                "last_reset": None,
+                "max": 10000.0,
+                "mean": 10000.0,
+                "min": 10000.0,
+                "start": now.timestamp(),
+            }
+        ],
+    }
 
 
 @pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
