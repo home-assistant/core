@@ -3238,7 +3238,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_platform_setup_and_discovery[switch.elivco_kitchen_socket_child_lock-entry]
@@ -5417,6 +5417,54 @@
     'state': 'off',
   })
 # ---
+# name: test_platform_setup_and_discovery[switch.klarta_humea_sleep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.klarta_humea_sleep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep',
+    'unique_id': 'tuya.btpss2f6kwfi294rqsjsleep',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.klarta_humea_sleep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'KLARTA HUMEA Sleep',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.klarta_humea_sleep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[switch.lave_linge_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6966,6 +7014,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.salon_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.salon_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': 'tuya.gm0whbftkwchild_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.salon_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Salon Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.salon_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_platform_setup_and_discovery[switch.sapphire_socket-entry]
