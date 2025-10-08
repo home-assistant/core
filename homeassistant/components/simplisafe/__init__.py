@@ -476,7 +476,6 @@ class SimpliSafe:
         try:
             await self._api.websocket.async_connect()
             await self._api.websocket.async_listen()
-            self._websocket_reconnect_retries = 0
         except asyncio.CancelledError:
             LOGGER.debug("Request to cancel websocket loop received")
             raise
@@ -484,6 +483,8 @@ class SimpliSafe:
             LOGGER.error("Failed to connect to websocket: %s", err)
         except Exception as err:  # noqa: BLE001
             LOGGER.error("Unknown exception while connecting to websocket: %s", err)
+        else:
+            self._websocket_reconnect_retries = 0
 
         if self._websocket_reconnect_retries >= WEBSOCKET_RECONNECT_RETRIES:
             LOGGER.error("Max websocket connection retries exceeded")
