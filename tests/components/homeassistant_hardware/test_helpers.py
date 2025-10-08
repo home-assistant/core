@@ -1,5 +1,6 @@
 """Test hardware helpers."""
 
+from collections.abc import Callable
 import logging
 from unittest.mock import AsyncMock, MagicMock, Mock, call
 
@@ -257,3 +258,42 @@ async def test_firmware_update_context_manager(hass: HomeAssistant) -> None:
 
     # Should be cleaned up after first context
     assert not async_is_firmware_update_in_progress(hass, device_path)
+
+
+async def test_dispatcher_callback_self_unregister(hass: HomeAssistant) -> None:
+    """Test callbacks can unregister themselves during notification."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
+    called_callbacks = []
+    unregister_funcs = {}
+
+    def create_self_unregistering_callback(name: str) -> Callable[[FirmwareInfo], None]:
+        def callback(firmware_info: FirmwareInfo) -> None:
+            called_callbacks.append(name)
+            unregister_funcs[name]()
+
+        return callback
+
+    callback1 = create_self_unregistering_callback("callback1")
+    callback2 = create_self_unregistering_callback("callback2")
+    callback3 = create_self_unregistering_callback("callback3")
+
+    # Register all three callbacks and store their unregister functions
+    unregister_funcs["callback1"] = async_register_firmware_info_callback(
+        hass, "/dev/serial/by-id/device1", callback1
+    )
+    unregister_funcs["callback2"] = async_register_firmware_info_callback(
+        hass, "/dev/serial/by-id/device1", callback2
+    )
+    unregister_funcs["callback3"] = async_register_firmware_info_callback(
+        hass, "/dev/serial/by-id/device1", callback3
+    )
+
+    # All callbacks should be called and unregister themselves
+    await async_notify_firmware_info(hass, "zha", firmware_info=FIRMWARE_INFO_EZSP)
+    assert set(called_callbacks) == {"callback1", "callback2", "callback3"}
+
+    # No callbacks should be called since they all unregistered
+    called_callbacks.clear()
+    await async_notify_firmware_info(hass, "zha", firmware_info=FIRMWARE_INFO_EZSP)
+    assert not called_callbacks

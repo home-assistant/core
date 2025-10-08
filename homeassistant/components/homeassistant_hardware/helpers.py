@@ -94,7 +94,7 @@ class HardwareInfoDispatcher:
             "Received firmware info notification from %r: %s", domain, firmware_info
         )
 
-        for callback in self._notification_callbacks.get(firmware_info.device, []):
+        for callback in list(self._notification_callbacks[firmware_info.device]):
             try:
                 callback(firmware_info)
             except Exception:
