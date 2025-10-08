@@ -35,6 +35,7 @@ import voluptuous as vol
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -899,9 +900,20 @@ def async_update_statistics_metadata(
     new_unit_class: str | None | UndefinedType = UNDEFINED,
     new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     on_done: Callable[[], None] | None = None,
+    _called_from_ws_api: bool = False,
 ) -> None:
     """Update statistics metadata for a statistic_id."""
     if new_unit_of_measurement is not UNDEFINED and new_unit_class is UNDEFINED:
+        if not _called_from_ws_api:
+            report_usage(
+                (
+                    "doesn't specify unit_class when calling "
+                    "async_update_statistics_metadata"
+                ),
+                breaks_in_ha_version="2026.11",
+                exclude_integrations={DOMAIN},
+            )
+
         unit = new_unit_of_measurement
         if unit in STATISTIC_UNIT_TO_UNIT_CONVERTER:
             new_unit_class = STATISTIC_UNIT_TO_UNIT_CONVERTER[unit].UNIT_CLASS
@@ -2632,6 +2644,8 @@ def async_import_statistics(
     hass: HomeAssistant,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
+    *,
+    _called_from_ws_api: bool = False,
 ) -> None:
     """Import hourly statistics from an internal source.
 
@@ -2644,6 +2658,13 @@ def async_import_statistics(
     if not metadata["source"] or metadata["source"] != DOMAIN:
         raise HomeAssistantError("Invalid source")
 
+    if "unit_class" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
+        report_usage(  # type: ignore[unreachable]
+            "doesn't specify unit_class when calling async_import_statistics",
+            breaks_in_ha_version="2026.11",
+            exclude_integrations={DOMAIN},
+        )
+
     _async_import_statistics(hass, metadata, statistics)
 
 
@@ -2652,6 +2673,8 @@ def async_add_external_statistics(
     hass: HomeAssistant,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
+    *,
+    _called_from_ws_api: bool = False,
 ) -> None:
     """Add hourly statistics from an external source.
 
@@ -2665,6 +2688,13 @@ def async_add_external_statistics(
     domain, _object_id = split_statistic_id(metadata["statistic_id"])
     if not metadata["source"] or metadata["source"] != domain:
         raise HomeAssistantError("Invalid source")
+
+    if "unit_class" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
+        report_usage(  # type: ignore[unreachable]
+            "doesn't specify unit_class when calling async_add_external_statistics",
+            breaks_in_ha_version="2026.11",
+            exclude_integrations={DOMAIN},
+        )
 
     _async_import_statistics(hass, metadata, statistics)
 

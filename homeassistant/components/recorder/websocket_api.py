@@ -429,6 +429,7 @@ async def ws_update_statistics_metadata(
         new_unit_class=msg.get("unit_class", UNDEFINED),
         new_unit_of_measurement=msg["unit_of_measurement"],
         on_done=update_statistics_metadata_done,
+        _called_from_ws_api=True,
     )
     try:
         async with asyncio.timeout(UPDATE_STATISTICS_METADATA_TIME_OUT):
@@ -582,7 +583,7 @@ def ws_import_statistics(
     stats = msg["stats"]
 
     if valid_entity_id(metadata["statistic_id"]):
-        async_import_statistics(hass, metadata, stats)
+        async_import_statistics(hass, metadata, stats, _called_from_ws_api=True)
     else:
-        async_add_external_statistics(hass, metadata, stats)
+        async_add_external_statistics(hass, metadata, stats, _called_from_ws_api=True)
     connection.send_result(msg["id"])
