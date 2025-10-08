@@ -102,7 +102,11 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         modes = [mode.name for mode in self.device.modes]
         # Prefer Static mode over Direct
         self._preferred_no_effect_mode = (
-            OpenRGBMode.STATIC if OpenRGBMode.STATIC in modes else OpenRGBMode.DIRECT
+            OpenRGBMode.STATIC
+            if OpenRGBMode.STATIC in modes
+            else OpenRGBMode.CUSTOM
+            if OpenRGBMode.CUSTOM in modes
+            else OpenRGBMode.DIRECT
         )
         # Determine if the device supports being turned off through modes
         self._supports_off_mode = OpenRGBMode.OFF in modes
