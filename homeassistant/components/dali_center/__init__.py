@@ -23,17 +23,17 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> bool:
     """Set up Dali Center from a config entry."""
 
-    gateway: DaliGateway = DaliGateway(entry.data["gateway"])
+    gateway = DaliGateway(entry.data["gateway"])
     gw_sn = gateway.gw_sn
 
     try:
         await gateway.connect()
-        _LOGGER.info("Successfully connected to gateway %s", gw_sn)
     except DaliGatewayError as exc:
-        _LOGGER.exception("Error connecting to gateway %s", gw_sn)
         raise ConfigEntryNotReady(
             "You can try to delete the gateway and add it again"
         ) from exc
+
+    _LOGGER.info("Successfully connected to gateway %s", gw_sn)
 
     def on_online_status(dev_id: str, available: bool) -> None:
         signal = f"dali_center_update_available_{dev_id}"
@@ -54,7 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     entry.runtime_data = DaliCenterData(gateway=gateway)
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    _LOGGER.info("DALI Center gateway %s setup completed successfully", gw_sn)
     return True
 
 
