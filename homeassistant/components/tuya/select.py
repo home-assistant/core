@@ -356,7 +356,7 @@ COMMON_SELECT_DEFINITIONS: dict[CommonSelectType, SelectEntityDescription] = {
 def _create_quirk_description(
     definition: TuyaSelectDefinition,
 ) -> SelectEntityDescription:
-    common_definition = COMMON_SELECT_DEFINITIONS[definition.select_type]
+    common_definition = COMMON_SELECT_DEFINITIONS[definition.common_type]
     return SelectEntityDescription(
         key=DPCode(definition.key),
         translation_key=common_definition.translation_key,

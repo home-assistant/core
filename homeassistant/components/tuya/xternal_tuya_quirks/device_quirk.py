@@ -48,11 +48,11 @@ class TuyaDeviceQuirk:
         for category, product_id in self._applies_to:
             registry.register(category, product_id, self)
 
-    def add_cover(
+    def add_common_cover(
         self,
         *,
         key: str,
-        cover_type: CommonCoverType,
+        common_type: CommonCoverType,
         current_position_dp_code: str | None = None,
         current_state_dp_code: str | None = None,
         set_position_dp_code: str | None = None,
@@ -62,7 +62,7 @@ class TuyaDeviceQuirk:
         self.cover_definitions.append(
             TuyaCoverDefinition(
                 key=key,
-                cover_type=cover_type,
+                common_type=common_type,
                 current_position_dp_code=current_position_dp_code,
                 current_state_dp_code=current_state_dp_code,
                 set_position_dp_code=set_position_dp_code,
@@ -71,35 +71,35 @@ class TuyaDeviceQuirk:
         )
         return self
 
-    def add_select(
+    def add_common_select(
         self,
         *,
         key: str,
-        select_type: CommonSelectType,
+        common_type: CommonSelectType,
         dp_code: str | None = None,
     ) -> Self:
         """Add select definition."""
         self.select_definitions.append(
             TuyaSelectDefinition(
                 key=key,
-                select_type=select_type,
+                common_type=common_type,
                 dp_code=dp_code or key,
             )
         )
         return self
 
-    def add_sensor(
+    def add_common_sensor(
         self,
         *,
         key: str,
-        sensor_type: CommonSensorType,
+        common_type: CommonSensorType,
         dp_code: str | None = None,
     ) -> Self:
         """Add sensor definition."""
         self.sensor_definitions.append(
             TuyaSensorDefinition(
                 key=key,
-                sensor_type=sensor_type,
+                common_type=common_type,
                 dp_code=dp_code or key,
             )
         )

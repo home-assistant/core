@@ -156,7 +156,7 @@ COMMON_COVER_DEFINITIONS: dict[CommonCoverType, TuyaCoverEntityDescription] = {
 def _create_quirk_description(
     definition: TuyaCoverDefinition,
 ) -> TuyaCoverEntityDescription:
-    common_definition = COMMON_COVER_DEFINITIONS[definition.cover_type]
+    common_definition = COMMON_COVER_DEFINITIONS[definition.common_type]
     return TuyaCoverEntityDescription(
         key=definition.key,
         device_class=common_definition.device_class,

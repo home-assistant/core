@@ -1638,7 +1638,7 @@ COMMON_SENSOR_DEFINITIONS: dict[CommonSensorType, TuyaSensorEntityDescription] =
 def _create_quirk_description(
     definition: TuyaSensorDefinition,
 ) -> TuyaSensorEntityDescription:
-    common_definition = COMMON_SENSOR_DEFINITIONS[definition.sensor_type]
+    common_definition = COMMON_SENSOR_DEFINITIONS[definition.common_type]
     return TuyaSensorEntityDescription(
         key=DPCode(definition.key),
         translation_key=common_definition.translation_key,
