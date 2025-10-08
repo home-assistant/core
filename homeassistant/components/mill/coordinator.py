@@ -21,6 +21,7 @@ from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util.unit_conversion import EnergyConverter
 
 from .const import DOMAIN
 
@@ -152,6 +153,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
                 name=f"{heater.name}",
                 source=DOMAIN,
                 statistic_id=statistic_id,
+                unit_class=EnergyConverter.UNIT_CLASS,
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             )
             async_add_external_statistics(self.hass, metadata, statistics)

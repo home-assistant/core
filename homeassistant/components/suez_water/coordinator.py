@@ -25,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_conversion import VolumeConverter
 
 from .const import CONF_COUNTER_ID, DATA_REFRESH_INTERVAL, DOMAIN
 
@@ -211,7 +212,10 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
     ) -> None:
         """Persist given statistics in recorder."""
         consumption_metadata = self._get_statistics_metadata(
-            id=self._water_statistic_id, name="Consumption", unit=UnitOfVolume.LITERS
+            id=self._water_statistic_id,
+            name="Consumption",
+            unit=UnitOfVolume.LITERS,
+            unit_class=VolumeConverter.UNIT_CLASS,
         )
 
         _LOGGER.debug(
@@ -230,14 +234,17 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
                 self._cost_statistic_id,
             )
             cost_metadata = self._get_statistics_metadata(
-                id=self._cost_statistic_id, name="Cost", unit=CURRENCY_EURO
+                id=self._cost_statistic_id,
+                name="Cost",
+                unit=CURRENCY_EURO,
+                unit_class=None,
             )
             async_add_external_statistics(self.hass, cost_metadata, cost_statistics)
 
         _LOGGER.debug("Updated statistics for %s", self._water_statistic_id)
 
     def _get_statistics_metadata(
-        self, id: str, name: str, unit: str
+        self, id: str, name: str, unit: str, unit_class: str | None
     ) -> StatisticMetaData:
         """Build statistics metadata for requested configuration."""
         return StatisticMetaData(
@@ -247,6 +254,7 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
             name=f"Suez water {name} {self._counter_id}",
             source=DOMAIN,
             statistic_id=id,
+            unit_class=unit_class,
             unit_of_measurement=unit,
         )
 
