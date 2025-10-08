@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, MANUFACTURER
+from .const import CONF_GATEWAY_DATA, DOMAIN, MANUFACTURER
 from .types import DaliCenterConfigEntry, DaliCenterData
 
 _PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> bool:
     """Set up Dali Center from a config entry."""
 
-    gateway = DaliGateway(entry.data["gateway"])
+    gateway = DaliGateway(entry.data[CONF_GATEWAY_DATA])
     gw_sn = gateway.gw_sn
 
     try:

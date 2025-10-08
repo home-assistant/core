@@ -5,13 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from PySrDaliGateway import DaliGatewayType
 from PySrDaliGateway.discovery import DaliGatewayDiscovery
 from PySrDaliGateway.exceptions import DaliGatewayError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
-from .const import DOMAIN
+from .const import CONF_GATEWAY_DATA, CONF_GATEWAY_SN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_gateways: list[Any] = []
+        self._discovered_gateways: list[DaliGatewayType] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -45,7 +46,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if discovery_info is not None and "selected_gateway" in discovery_info:
             selected_sn = discovery_info["selected_gateway"]
-            selected_gateway = next(
+            selected_gateway: DaliGatewayType | None = next(
                 (gw for gw in self._discovered_gateways if gw["gw_sn"] == selected_sn),
                 None,
             )
@@ -54,17 +55,13 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(selected_gateway["gw_sn"])
                 self._abort_if_unique_id_configured()
 
-                title = (
-                    selected_gateway.get("gw_name")
-                    or selected_gateway.get("name")
-                    or selected_gateway["gw_sn"]
-                )
+                title = selected_gateway["name"]
 
                 return self.async_create_entry(
                     title=title,
                     data={
-                        "sn": selected_gateway["gw_sn"],
-                        "gateway": selected_gateway,
+                        CONF_GATEWAY_SN: selected_gateway["gw_sn"],
+                        CONF_GATEWAY_DATA: selected_gateway,
                     },
                 )
             errors["base"] = "device_not_found"
@@ -76,7 +73,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
                 discovered = await discovery.discover_gateways()
 
                 configured_gateways = {
-                    entry.data["sn"]
+                    entry.data[CONF_GATEWAY_SN]
                     for entry in self.hass.config_entries.async_entries(DOMAIN)
                 }
 
