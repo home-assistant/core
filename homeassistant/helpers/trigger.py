@@ -264,7 +264,7 @@ class TriggerActionType(Protocol):
         self,
         run_variables: dict[str, Any],
         context: Context | None = None,
-    ) -> Any:
+    ) -> Coroutine[Any, Any, Any] | Any:
         """Define action callback type."""
 
 
@@ -294,7 +294,7 @@ class PluggableActionsEntry:
     actions: dict[
         object,
         tuple[
-            HassJob[[dict[str, Any], Context | None], Coroutine[Any, Any, None]],
+            HassJob[[dict[str, Any], Context | None], Coroutine[Any, Any, None] | Any],
             dict[str, Any],
         ],
     ] = field(default_factory=dict)
