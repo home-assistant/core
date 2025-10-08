@@ -425,6 +425,68 @@ async def test_previous_values_updated_on_refresh(
 
 
 @pytest.mark.usefixtures("mock_openrgb_client")
+async def test_turn_on_restores_rainbow_after_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_device: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test turning on after off restores Rainbow effect (non-color mode)."""
+    # Start with device in Rainbow mode (doesn't support colors)
+    mock_openrgb_device.active_mode = 6
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Verify initial state - Rainbow mode active
+    state = hass.states.get("light.ene_dram")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_EFFECT) == "Rainbow"
+
+    # Turn off the light
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.ene_dram"},
+        blocking=True,
+    )
+
+    # Verify set_mode was called with Off
+    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.OFF)
+    mock_openrgb_device.set_mode.reset_mock()
+
+    # Now device is in Off mode
+    mock_openrgb_device.active_mode = 1
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Verify light is off
+    state = hass.states.get("light.ene_dram")
+    assert state
+    assert state.state == STATE_OFF
+
+    # Turn on without parameters - should restore Rainbow mode
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.ene_dram"},
+        blocking=True,
+    )
+
+    # Should restore to Rainbow mode (previous mode)
+    mock_openrgb_device.set_mode.assert_called_once_with("Rainbow")
+    # set_color should NOT be called since Rainbow doesn't support colors
+    mock_openrgb_device.set_color.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_turn_on_with_non_color_effect_and_color_params(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

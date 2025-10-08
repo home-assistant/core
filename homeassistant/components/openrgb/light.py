@@ -187,9 +187,9 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
 
         self._attr_rgb_color = rgb_color
         self._attr_brightness = brightness
-        if not self._supports_effects:
+        if not self._supports_effects or mode is None:
             self._attr_effect = None
-        elif mode is None or mode in EFFECT_OFF_OPENRGB_MODES:
+        elif mode in EFFECT_OFF_OPENRGB_MODES:
             self._attr_effect = EFFECT_OFF
         else:
             self._attr_effect = mode
@@ -297,8 +297,10 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         need_to_apply_color = (
             ATTR_RGB_COLOR in kwargs
             or ATTR_BRIGHTNESS in kwargs
-            or self._attr_brightness is None
-            or self._attr_rgb_color is None
+            or (
+                mode_supports_color
+                and (self._attr_brightness is None or self._attr_rgb_color is None)
+            )
         )
 
         # If color/brightness parameters require color support but mode doesn't support it,
