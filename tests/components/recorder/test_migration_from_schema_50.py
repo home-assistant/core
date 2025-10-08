@@ -6,6 +6,7 @@ import threading
 from unittest.mock import patch
 
 import pytest
+from pytest_unordered import unordered
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
 
@@ -94,11 +95,11 @@ def db_schema_50():
 
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
-async def test_migrate_events_context_ids(
+async def test_migrate_statistics_meta(
     async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test we can migrate old uuid context ids and ulid context ids to binary format."""
+    """Test migration of metadata adding unit_class."""
     importlib.import_module(SCHEMA_MODULE_50)
     old_db_schema = sys.modules[SCHEMA_MODULE_50]
 
@@ -215,41 +216,43 @@ async def test_migrate_events_context_ids(
                 await hass.async_stop()
                 await hass.async_block_till_done()
 
-    assert pre_migration_metadata_api == [
-        {
-            "display_unit_of_measurement": "kWh",
-            "has_mean": False,
-            "has_sum": True,
-            "mean_type": StatisticMeanType.NONE,
-            "name": "Test 1",
-            "source": "recorder",
-            "statistic_id": "sensor.test1",
-            "statistics_unit_of_measurement": "kWh",
-            "unit_class": "energy",
-        },
-        {
-            "display_unit_of_measurement": "cats",
-            "has_mean": False,
-            "has_sum": True,
-            "mean_type": StatisticMeanType.NONE,
-            "name": "Test 2",
-            "source": "recorder",
-            "statistic_id": "sensor.test2",
-            "statistics_unit_of_measurement": "cats",
-            "unit_class": None,
-        },
-        {
-            "display_unit_of_measurement": "ppm",
-            "has_mean": False,
-            "has_sum": True,
-            "mean_type": StatisticMeanType.NONE,
-            "name": "Test 3",
-            "source": "recorder",
-            "statistic_id": "sensor.test3",
-            "statistics_unit_of_measurement": "ppm",
-            "unit_class": "unitless",
-        },
-    ]
+    assert pre_migration_metadata_api == unordered(
+        [
+            {
+                "display_unit_of_measurement": "kWh",
+                "has_mean": False,
+                "has_sum": True,
+                "mean_type": StatisticMeanType.NONE,
+                "name": "Test 1",
+                "source": "recorder",
+                "statistic_id": "sensor.test1",
+                "statistics_unit_of_measurement": "kWh",
+                "unit_class": "energy",
+            },
+            {
+                "display_unit_of_measurement": "cats",
+                "has_mean": False,
+                "has_sum": True,
+                "mean_type": StatisticMeanType.NONE,
+                "name": "Test 2",
+                "source": "recorder",
+                "statistic_id": "sensor.test2",
+                "statistics_unit_of_measurement": "cats",
+                "unit_class": None,
+            },
+            {
+                "display_unit_of_measurement": "ppm",
+                "has_mean": False,
+                "has_sum": True,
+                "mean_type": StatisticMeanType.NONE,
+                "name": "Test 3",
+                "source": "recorder",
+                "statistic_id": "sensor.test3",
+                "statistics_unit_of_measurement": "ppm",
+                "unit_class": "unitless",
+            },
+        ]
+    )
     assert post_migration_metadata_db == {
         "sensor.test1": {
             "has_mean": None,
