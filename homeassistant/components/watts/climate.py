@@ -104,21 +104,21 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
             _LOGGER.debug(
                 "Successfully set temperature to %s for %s",
                 temperature,
-                self._attr_name,
+                self.device_id,
             )
 
             await asyncio.sleep(UPDATE_DELAY_AFTER_COMMAND)
             await self.coordinator.async_refresh_device(self.device_id)
 
         except RuntimeError as err:
-            _LOGGER.error("Error setting temperature for %s: %s", self._attr_name, err)
+            _LOGGER.error("Error setting temperature for %s: %s", self.device_id, err)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
         mode = HVAC_MODE_TO_THERMOSTAT.get(hvac_mode)
         if mode is None:
-            _LOGGER.error("Unsupported HVAC mode %s for %s", hvac_mode, self._attr_name)
+            _LOGGER.error("Unsupported HVAC mode %s for %s", hvac_mode, self.device_id)
             return
 
         try:
@@ -127,11 +127,11 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
                 "Successfully set HVAC mode to %s (ThermostatMode.%s) for %s",
                 hvac_mode,
                 mode.name,
-                self._attr_name,
+                self.device_id,
             )
 
             await asyncio.sleep(UPDATE_DELAY_AFTER_COMMAND)
             await self.coordinator.async_refresh_device(self.device_id)
 
         except (ValueError, RuntimeError) as err:
-            _LOGGER.error("Error setting HVAC mode for %s: %s", self._attr_name, err)
+            _LOGGER.error("Error setting HVAC mode for %s: %s", self.device_id, err)
