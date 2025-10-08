@@ -89,9 +89,10 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import json as json_util
 from homeassistant.util.file import write_utf8_file
 
-from tests.common import MockConfigEntry, async_capture_events
+from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
 from tests.typing import ClientSessionGenerator
 
 
@@ -480,17 +481,22 @@ async def test_webhook_endpoint_generates_telegram_attachment_event(
     hass: HomeAssistant,
     webhook_platform,
     hass_client: ClientSessionGenerator,
-    update_message_attachment,
     mock_generate_secret_token,
 ) -> None:
     """POST to the configured webhook endpoint and assert fired `telegram_attachment` event."""
     client = await hass_client()
     events = async_capture_events(hass, "telegram_attachment")
+    update_message_attachment = await async_load_fixture(
+        hass, "update_message_attachment.json", DOMAIN
+    )
 
     response = await client.post(
         f"{TELEGRAM_WEBHOOK_URL}_123456",
-        json=update_message_attachment,
-        headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
+        data=update_message_attachment,
+        headers={
+            "X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token,
+            "Content-Type": "application/json",
+        },
     )
     assert response.status == 200
     assert (await response.read()).decode("utf-8") == ""
@@ -501,7 +507,9 @@ async def test_webhook_endpoint_generates_telegram_attachment_event(
     assert len(events) == 1
     assert (
         events[0].data["file_id"]
-        == update_message_attachment["message"]["photo"][-1]["file_id"]
+        == json_util.json_loads(update_message_attachment)["message"]["photo"][-1][
+            "file_id"
+        ]
     )
     assert isinstance(events[0].context, Context)
 
