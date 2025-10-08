@@ -98,13 +98,6 @@ def test_current_temperature(mock_thermostat_device) -> None:
     assert climate_entity.current_temperature == 20.5
 
 
-def test_current_temperature_device_not_found(mock_thermostat_device) -> None:
-    """Test current temperature when device is not found."""
-    coordinator = create_coordinator()
-    climate_entity = WattsVisionClimate(coordinator, mock_thermostat_device)
-    assert climate_entity.current_temperature is None
-
-
 def test_target_temperature(mock_thermostat_device) -> None:
     """Test target temperature property."""
     coordinator = create_coordinator(
@@ -112,13 +105,6 @@ def test_target_temperature(mock_thermostat_device) -> None:
     )
     climate_entity = WattsVisionClimate(coordinator, mock_thermostat_device)
     assert climate_entity.target_temperature == 22.0
-
-
-def test_target_temperature_device_not_found(mock_thermostat_device) -> None:
-    """Test target temperature when device is not found."""
-    coordinator = create_coordinator()
-    climate_entity = WattsVisionClimate(coordinator, mock_thermostat_device)
-    assert climate_entity.target_temperature is None
 
 
 def test_hvac_mode_comfort(mock_thermostat_device) -> None:
@@ -170,13 +156,6 @@ def test_hvac_mode_unknown(mock_thermostat_device) -> None:
     assert climate_entity.hvac_mode is None
 
 
-def test_hvac_mode_device_not_found(mock_thermostat_device) -> None:
-    """Test HVAC mode when device is not found."""
-    coordinator = create_coordinator()
-    climate_entity = WattsVisionClimate(coordinator, mock_thermostat_device)
-    assert climate_entity.hvac_mode is None
-
-
 async def test_async_request_refresh(mock_thermostat_device) -> None:
     """Test async_request_refresh method."""
     coordinator = create_coordinator(
@@ -206,13 +185,6 @@ def test_available_false_offline(mock_thermostat_device) -> None:
     coordinator = create_coordinator(
         {mock_thermostat_device.device_id: mock_thermostat_device}
     )
-    climate_entity = WattsVisionClimate(coordinator, mock_thermostat_device)
-    assert climate_entity.available is False
-
-
-def test_available_false_device_not_found(mock_thermostat_device) -> None:
-    """Test available property when device is not found."""
-    coordinator = create_coordinator()
     climate_entity = WattsVisionClimate(coordinator, mock_thermostat_device)
     assert climate_entity.available is False
 

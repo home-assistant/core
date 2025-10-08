@@ -36,9 +36,9 @@ class WattsVisionEntity(CoordinatorEntity[WattsVisionCoordinator]):
             )
 
     @property
-    def device(self) -> Device | None:
+    def device(self) -> Device:
         """Return the device object from the coordinator data."""
-        return self.coordinator.data.get(self.coordinator_context)
+        return self.coordinator.data[self.coordinator_context]
 
     @property
     def available(self) -> bool:
