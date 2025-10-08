@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from collections.abc import Callable
 from enum import StrEnum
 import logging
 from typing import Any
@@ -34,6 +35,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
 from .const import OTBR_DOMAIN, ZHA_DOMAIN
+from .helpers import async_register_firmware_info_callback
 from .util import (
     ApplicationType,
     FirmwareInfo,
@@ -97,7 +99,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self.addon_uninstall_task: asyncio.Task | None = None
         self.firmware_install_task: asyncio.Task[None] | None = None
         self.installing_firmware_name: str | None = None
-        self._firmware_info_callback_unsubscribe: callback | None = None
+        self._firmware_info_callback_unsubscribe: Callable[[], None] | None = None
 
     def _get_translation_placeholders(self) -> dict[str, str]:
         """Shared translation placeholders."""
@@ -589,8 +591,6 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
 
     def _register_firmware_info_callback(self) -> None:
         """Register firmware info callback for automatic config entry creation."""
-        from .helpers import async_register_firmware_info_callback
-
         assert self._device is not None
 
         # If the user decides to ignore this hardware integration and directly set up
@@ -602,8 +602,7 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
         )
 
     def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
-        """Handle new firmware info from the callback."""
-        # An existing integration is already controlling the device
+        """Handle new firmware info being pushed by an existing integration."""
         self._probed_firmware_info = firmware_info
 
         # Create the config entry and finish this flow
@@ -611,12 +610,7 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
 
     async def _async_create_entry_from_callback(self) -> None:
         """Create config entry after callback and finish the flow."""
-        # The flow is currently at a step waiting for user input.
-        # We have all the info we need, so call _async_flow_finished() to create the entry.
         result = self._async_flow_finished()
-
-        # Process the result through the flow manager to actually create the config entry
-        # This is equivalent to the flow returning CREATE_ENTRY from a step
         await self.hass.config_entries.flow.async_finish_flow(self, result)
 
         # Remove the in-progress flow
@@ -625,7 +619,6 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
     @callback
     def async_remove(self) -> None:
         """Notification that the flow has been removed."""
-        # Clean up the firmware info callback subscription
         if self._firmware_info_callback_unsubscribe is not None:
             self._firmware_info_callback_unsubscribe()
             self._firmware_info_callback_unsubscribe = None
