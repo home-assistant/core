@@ -2807,7 +2807,7 @@ sentry-sdk==1.45.1
 sfrbox-api==0.0.12
 
 # homeassistant.components.sharkiq
-sharkiq==1.4.1
+sharkiq==1.4.2
 
 # homeassistant.components.aquostv
 sharp_aquos_rc==0.3.2
