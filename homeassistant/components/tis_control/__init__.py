@@ -26,6 +26,7 @@ class TISData:
 
 # Define the Home Assistant platforms that this integration will support.
 PLATFORMS: list[Platform] = [Platform.SWITCH]
+
 # Create a type alias for a ConfigEntry specific to this integration.
 type TISConfigEntry = ConfigEntry[TISData]
 
@@ -41,8 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
         domain=DOMAIN,
         devices_dict=DEVICES_DICT,
     )
-    # Store the API object in the config entry so it can be accessed by platforms.
-    entry.runtime_data = TISData(api=tis_api)
+    # Store the API object in the `hass` object so it can be accessed by platforms.
+    hass.data[DOMAIN]["api"] = tis_api
 
     try:
         # Establish a connection to the TIS gateway.
@@ -50,7 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
     except ConnectionError as e:
         # If connection fails, raise ConfigEntryNotReady to prompt Home Assistant to retry setup later.
         _LOGGER.error("Failed to connect: %s", e)
-        raise ConfigEntryNotReady from e
+        raise ConfigEntryNotReady(
+            f"Failed to connect to TIS API Gateway, error: {e}"
+        ) from e
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
