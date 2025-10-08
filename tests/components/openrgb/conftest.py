@@ -85,6 +85,11 @@ def mock_openrgb_client(mock_openrgb_device: MagicMock) -> Generator[MagicMock]:
             "homeassistant.components.openrgb.config_flow.OpenRGBClient",
             new=client_mock,
         ),
+        # Patch Debouncer to remove delays in tests
+        patch(
+            "homeassistant.components.openrgb.coordinator.Debouncer",
+            return_value=None,
+        ),
     ):
         client = client_mock.return_value
 
