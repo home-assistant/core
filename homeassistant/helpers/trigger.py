@@ -318,13 +318,16 @@ class TriggerAction(Protocol):
 
 
 class TriggerActionType(Protocol):
-    """Protocol type for trigger action callback."""
+    """Protocol type for trigger action callback.
 
-    async def __call__(
+    Contrary to TriggerAction, this type supports both sync and async callables.
+    """
+
+    def __call__(
         self,
         run_variables: dict[str, Any],
         context: Context | None = None,
-    ) -> Any:
+    ) -> Coroutine[Any, Any, Any] | Any:
         """Define action callback type."""
 
 
