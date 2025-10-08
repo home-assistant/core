@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
-from ..const import DPCode
+from ..models import StateConversionFunction
 
 
 class CommonClimateType(StrEnum):
@@ -22,6 +22,6 @@ class TuyaClimateDefinition:
 
     common_type: CommonClimateType
 
-    current_temperature_dp_code: DPCode | None = None
-    set_temperature_dp_code: DPCode | None = None
-    switch_dp_code: DPCode | None = None
+    current_temperature_state_conversion: StateConversionFunction | None = None
+    target_temperature_state_conversion: StateConversionFunction | None = None
+    target_temperature_command_conversion: StateConversionFunction | None = None

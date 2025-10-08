@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass, replace
-from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 from tuya_sharing.device import DeviceStatusRange
@@ -43,7 +41,13 @@ from .const import (
     UnitOfMeasurement,
 )
 from .entity import TuyaEntity
-from .models import ComplexValue, ElectricityValue, EnumTypeData, IntegerTypeData
+from .models import (
+    ComplexValue,
+    ElectricityValue,
+    EnumTypeData,
+    IntegerTypeData,
+    StateConversionFunction,
+)
 from .xternal_tuya_quirks import TUYA_QUIRKS_REGISTRY
 from .xternal_tuya_quirks.sensor import CommonSensorType, TuyaSensorDefinition
 
@@ -73,12 +77,7 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
 
     complex_type: type[ComplexValue] | None = None
     subkey: str | None = None
-    state_conversion: (
-        Callable[
-            [CustomerDevice, EnumTypeData | IntegerTypeData | None, Any], StateType
-        ]
-        | None
-    ) = None
+    state_conversion: StateConversionFunction | None = None
 
 
 # Commonly used battery sensors, that are reused in the sensors down below.

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Self
 from tuya_sharing import CustomerDevice
 
 from ..const import DPCode
-from ..models import EnumTypeData, IntegerTypeData
+from ..models import EnumTypeData, IntegerTypeData, StateConversionFunction
 from .climate import CommonClimateType, TuyaClimateDefinition
 from .cover import CommonCoverType, TuyaCoverDefinition
 from .select import CommonSelectType, TuyaSelectDefinition
@@ -64,18 +64,18 @@ class TuyaDeviceQuirk:
         *,
         key: str,
         common_type: CommonClimateType,
-        current_temperature_dp_code: DPCode | None = None,
-        set_temperature_dp_code: DPCode | None = None,
-        switch_dp_code: DPCode | None = None,
+        current_temperature_state_conversion: StateConversionFunction | None = None,
+        target_temperature_state_conversion: StateConversionFunction | None = None,
+        target_temperature_command_conversion: StateConversionFunction | None = None,
     ) -> Self:
         """Add climate definition."""
         self.climate_definitions.append(
             TuyaClimateDefinition(
                 key=key,
                 common_type=common_type,
-                switch_dp_code=switch_dp_code,
-                current_temperature_dp_code=current_temperature_dp_code,
-                set_temperature_dp_code=set_temperature_dp_code,
+                current_temperature_state_conversion=current_temperature_state_conversion,
+                target_temperature_state_conversion=target_temperature_state_conversion,
+                target_temperature_command_conversion=target_temperature_command_conversion,
             )
         )
         return self
