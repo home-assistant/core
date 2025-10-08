@@ -477,17 +477,17 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
     assert isinstance(events[0].context, Context)
 
 
-async def test_webhook_endpoint_generates_telegram_attachment_event(
+async def test_webhook_endpoint_generates_telegram_attachment_photo_event(
     hass: HomeAssistant,
     webhook_platform,
     hass_client: ClientSessionGenerator,
     mock_generate_secret_token,
 ) -> None:
-    """POST to the configured webhook endpoint and assert fired `telegram_attachment` event."""
+    """POST to the configured webhook endpoint and assert fired `telegram_attachment` for photo event."""
     client = await hass_client()
     events = async_capture_events(hass, "telegram_attachment")
     update_message_attachment = await async_load_fixture(
-        hass, "update_message_attachment.json", DOMAIN
+        hass, "update_message_attachment_photo.json", DOMAIN
     )
 
     response = await client.post(
@@ -508,6 +508,43 @@ async def test_webhook_endpoint_generates_telegram_attachment_event(
     assert (
         events[0].data["file_id"]
         == json_util.json_loads(update_message_attachment)["message"]["photo"][-1][
+            "file_id"
+        ]
+    )
+    assert isinstance(events[0].context, Context)
+
+
+async def test_webhook_endpoint_generates_telegram_attachment_document_event(
+    hass: HomeAssistant,
+    webhook_platform,
+    hass_client: ClientSessionGenerator,
+    mock_generate_secret_token,
+) -> None:
+    """POST to the configured webhook endpoint and assert fired `telegram_attachment` for document event."""
+    client = await hass_client()
+    events = async_capture_events(hass, "telegram_attachment")
+    update_message_attachment = await async_load_fixture(
+        hass, "update_message_attachment_document.json", DOMAIN
+    )
+
+    response = await client.post(
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
+        data=update_message_attachment,
+        headers={
+            "X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token,
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status == 200
+    assert (await response.read()).decode("utf-8") == ""
+
+    # Make sure event has fired
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert (
+        events[0].data["file_id"]
+        == json_util.json_loads(update_message_attachment)["message"]["document"][
             "file_id"
         ]
     )
