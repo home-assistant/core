@@ -164,6 +164,9 @@ async def async_setup_entry(
 
     async_add_entities([entity])
 
+    # Fetch firmware info early to avoid prolonged Unknown state
+    await entity.coordinator.async_request_refresh()
+
 
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """SkyConnect firmware update entity."""
