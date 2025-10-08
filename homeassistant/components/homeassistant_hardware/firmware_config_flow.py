@@ -587,6 +587,46 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
         """Return the options flow."""
         raise NotImplementedError
 
+    def _register_firmware_info_callback(self) -> None:
+        """Register firmware info callback for automatic config entry creation."""
+        from .helpers import async_register_firmware_info_callback
+
+        assert self._device is not None
+
+        # If the user decides to ignore this hardware integration and directly set up
+        # the device by connecting to the serial port, we need to auto-create the entry
+        self._firmware_info_callback_unsubscribe = (
+            async_register_firmware_info_callback(
+                self.hass, self._device, self._firmware_info_callback
+            )
+        )
+
+    def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
+        """Handle new firmware info from the callback."""
+        # An existing integration is already controlling the device
+        self._probed_firmware_info = firmware_info
+
+        # Create the config entry and finish this flow
+        self.hass.async_create_task(self._async_create_entry_from_callback())
+
+    async def _async_create_entry_from_callback(self) -> None:
+        """Create config entry after callback and finish the flow."""
+        # The flow is currently at a step waiting for user input.
+        # We have all the info we need, so call _async_flow_finished() to create the entry.
+        result = self._async_flow_finished()
+
+        # Process the result through the flow manager to actually create the config entry
+        # This is equivalent to the flow returning CREATE_ENTRY from a step
+        await self.hass.config_entries.flow.async_finish_flow(self, result)
+
+    @callback
+    def async_remove(self) -> None:
+        """Notification that the flow has been removed."""
+        # Clean up the firmware info callback subscription
+        if self._firmware_info_callback_unsubscribe is not None:
+            self._firmware_info_callback_unsubscribe()
+            self._firmware_info_callback_unsubscribe = None
+
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -600,6 +640,9 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
             if await owner.is_running(self.hass):
                 self._probed_firmware_info = fw_info
                 return self._async_flow_finished()
+
+        # Register callback to auto-create entry if another integration takes over
+        self._register_firmware_info_callback()
 
         return await self.async_step_pick_firmware()
 

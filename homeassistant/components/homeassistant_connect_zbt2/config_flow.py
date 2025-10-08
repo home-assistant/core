@@ -7,9 +7,6 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import firmware_config_flow
-from homeassistant.components.homeassistant_hardware.helpers import (
-    async_register_firmware_info_callback,
-)
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
@@ -124,25 +121,6 @@ class HomeAssistantConnectZBT2ConfigFlow(
         """Return the options flow."""
         return HomeAssistantConnectZBT2OptionsFlowHandler(config_entry)
 
-    def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
-        """Handle new firmware info from the callback."""
-
-        # An existing integration is already controlling the device
-        self._probed_firmware_info = firmware_info
-
-        # Create the config entry and abort this flow
-        self.hass.async_create_task(self._async_create_entry_from_callback())
-
-    async def _async_create_entry_from_callback(self) -> None:
-        """Create config entry after callback and finish the flow."""
-        # The flow is currently at the pick_firmware menu step waiting for user input.
-        # We have all the info we need, so just call _async_flow_finished() to create the entry.
-        result = self._async_flow_finished()
-
-        # Process the result through the flow manager to actually create the config entry
-        # This is equivalent to the flow returning CREATE_ENTRY from a step
-        await self.hass.config_entries.flow.async_finish_flow(self, result)
-
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
         device = discovery_info.device
@@ -167,13 +145,6 @@ class HomeAssistantConnectZBT2ConfigFlow(
         # Set parent class attributes
         self._device = self._usb_info.device
         self._hardware_name = HARDWARE_NAME
-
-        # If the user for some reason decides to ignore this hardware integration and
-        # just directly set up the device by connecting to the serial port, we need to
-        # auto-confirm the discovery (or create a config entry manually).
-        async_register_firmware_info_callback(
-            self.hass, device, self._firmware_info_callback
-        )
 
         return await self.async_step_confirm()
 

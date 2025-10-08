@@ -419,8 +419,6 @@ async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None
     # Verify the config entry was auto-created
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data == {
-        "device", USB_DATA_ZBT2.device,
-        "firmware", ApplicationType.EZSP.value,
-        "firmware_version", "7.4.4.0",
-    }
+    assert entries[0].data["device"] == USB_DATA_ZBT2.device
+    assert entries[0].data["firmware"] == ApplicationType.EZSP.value
+    assert entries[0].data["firmware_version"] == "7.4.4.0"
