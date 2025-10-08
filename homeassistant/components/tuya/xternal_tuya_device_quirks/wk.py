@@ -34,6 +34,7 @@ def _scale_value_back_force_scale_1(
 
 
 (
+    # This model has invalid scale 0 for temperature dps - force scale 1
     TuyaDeviceQuirk()
     .applies_to(category="wk", product_id="IAYz2WK1th0cMLmL")
     .add_climate(
