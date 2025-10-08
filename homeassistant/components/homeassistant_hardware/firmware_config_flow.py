@@ -619,6 +619,9 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
         # This is equivalent to the flow returning CREATE_ENTRY from a step
         await self.hass.config_entries.flow.async_finish_flow(self, result)
 
+        # Remove the in-progress flow
+        self.hass.config_entries.flow.async_abort(self.flow_id)
+
     @callback
     def async_remove(self) -> None:
         """Notification that the flow has been removed."""

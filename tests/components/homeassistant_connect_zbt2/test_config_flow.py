@@ -424,3 +424,6 @@ async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None
         "manufacturer": USB_DATA_ZBT2.manufacturer,
         "product": USB_DATA_ZBT2.description,
     }
+
+    # The discovery flow is gone
+    assert not hass.config_entries.flow.async_progress_by_domain(DOMAIN)
