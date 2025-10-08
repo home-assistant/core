@@ -702,6 +702,11 @@ def async_remove_orphaned_entities(
     for device in devices:
         entities = er.async_entries_for_device(entity_reg, device.id, True)
         for entity in entities:
+            LOGGER.debug(
+                "Checking entity: %s with unique id: %s",
+                entity.entity_id,
+                entity.unique_id,
+            )
             if not entity.entity_id.startswith(platform):
                 continue
             if key_suffix is not None and key_suffix not in entity.unique_id:
@@ -712,6 +717,11 @@ def async_remove_orphaned_entities(
 
             key = match.group()
             if key not in keys:
+                LOGGER.debug(
+                    "Removing entity: %s with unique id: %s",
+                    entity.entity_id,
+                    entity.unique_id,
+                )
                 orphaned_entities.append(entity.unique_id.split("-", 1)[1])
 
     if orphaned_entities:
