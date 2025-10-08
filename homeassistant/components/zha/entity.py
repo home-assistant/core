@@ -11,7 +11,13 @@ from typing import Any
 from propcache.api import cached_property
 from zha.mixins import LogMixin
 
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
+from homeassistant.const import (
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_VIA_DEVICE,
+    EntityCategory,
+)
 from homeassistant.core import State, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -85,14 +91,19 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         ieee = zha_device_info["ieee"]
         zha_gateway = self.entity_data.device_proxy.gateway_proxy.gateway
 
-        return DeviceInfo(
+        device_info = DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},
             identifiers={(DOMAIN, ieee)},
             manufacturer=zha_device_info[ATTR_MANUFACTURER],
             model=zha_device_info[ATTR_MODEL],
             name=zha_device_info[ATTR_NAME],
-            via_device=(DOMAIN, str(zha_gateway.state.node_info.ieee)),
         )
+        if ieee != str(zha_gateway.state.node_info.ieee):
+            device_info[ATTR_VIA_DEVICE] = (
+                DOMAIN,
+                str(zha_gateway.state.node_info.ieee),
+            )
+        return device_info
 
     @callback
     def _handle_entity_events(self, event: Any) -> None:
