@@ -97,6 +97,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self.addon_uninstall_task: asyncio.Task | None = None
         self.firmware_install_task: asyncio.Task[None] | None = None
         self.installing_firmware_name: str | None = None
+        self._firmware_info_callback_unsubscribe: callback | None = None
 
     def _get_translation_placeholders(self) -> dict[str, str]:
         """Shared translation placeholders."""
