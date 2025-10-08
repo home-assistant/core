@@ -91,10 +91,8 @@ async def test_sensor_vh400_type(
     assert state.attributes["unit_of_measurement"] == "%"
 
     # The vh400_transform function should be applied to the raw voltage
-    # Raw voltage is 1.5V from UPDATE_DATA
-    # Verify the value is transformed (not the raw voltage)
-    assert state.state != "1.5"
-    assert float(state.state) != 1.5
+    # Raw voltage is 1.5V from UPDATE_DATA, expected output is ~24.615%
+    assert float(state.state) == pytest.approx(24.615, rel=1e-3)
 
 
 async def test_sensor_therm200_type(
@@ -125,9 +123,13 @@ async def test_sensor_therm200_type(
 
     # The therm200_transform function should be applied to the raw voltage
     # Raw voltage is 1.45599997V from UPDATE_DATA
-    # Verify the value is transformed (not the raw voltage)
-    assert state.state != "1.45599997"
-    assert float(state.state) != 1.45599997
+    # Formula: (voltage - 0.4) * 41.67 = (1.45599997 - 0.4) * 41.67 ≈ 44.02°C
+    # However, looking at the library test, 1.0V gives 1.67°C
+    # So the formula appears to be: (voltage - 1) * 41.67 + 1.67
+    # For 1.45599997V: (1.45599997 - 1) * 41.67 + 1.67 ≈ 20.674°C
+    # Actually from the test: (v * 41.67) - 40 is the formula
+    # For 1.45599997V: (1.45599997 * 41.67) - 40 ≈ 20.669°C
+    assert float(state.state) == pytest.approx(20.669, rel=1e-2)
 
 
 async def test_sensor_mixed_types(
@@ -162,25 +164,28 @@ async def test_sensor_mixed_types(
     state1 = hass.states.get("sensor.vegehub_input_1")
     assert state1 is not None
     assert state1.attributes["device_class"] == "voltage"
-    assert state1.state == "1.5"
+    assert float(state1.state) == 1.5
 
-    # Verify sensor 2 (VH400) - should be transformed
+    # Verify sensor 2 (VH400) - should be transformed to moisture %
+    # 1.45599997V -> ~22.5%
     state2 = hass.states.get("sensor.vegehub_input_2_moisture")
     assert state2 is not None
     assert state2.attributes["device_class"] == "moisture"
-    assert state2.state != "1.45599997"
+    assert float(state2.state) == pytest.approx(22.5, rel=1e-2)
 
-    # Verify sensor 3 (THERM200) - should be transformed
+    # Verify sensor 3 (THERM200) - should be transformed to temperature
+    # 1.330000043V -> ~15.42°C
     state3 = hass.states.get("sensor.vegehub_input_3_temperature")
     assert state3 is not None
     assert state3.attributes["device_class"] == "temperature"
-    assert state3.state != "1.330000043"
+    assert float(state3.state) == pytest.approx(15.42, rel=1e-2)
 
-    # Verify sensor 4 (VH400) - should be transformed
+    # Verify sensor 4 (VH400) - should be transformed to moisture %
+    # 0.075999998V -> ~0.69%
     state4 = hass.states.get("sensor.vegehub_input_4_moisture")
     assert state4 is not None
     assert state4.attributes["device_class"] == "moisture"
-    assert state4.state != "0.075999998"
+    assert float(state4.state) == pytest.approx(0.69, rel=1e-2)
 
 
 async def test_sensor_default_type_when_no_options(
