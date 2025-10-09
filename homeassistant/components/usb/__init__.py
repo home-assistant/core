@@ -41,7 +41,6 @@ from homeassistant.loader import USBMatcher, async_get_usb
 from .const import DOMAIN
 from .models import USBDevice
 from .utils import (
-    get_usb_matchers_for_device,
     scan_serial_ports,
     usb_device_from_path,  # noqa: F401
     usb_device_from_port,  # noqa: F401
@@ -143,6 +142,15 @@ def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> boo
             description,
         ) in usb_discovery.seen
     )
+
+
+@hass_callback
+def async_get_usb_matchers_for_device(
+    hass: HomeAssistant, device: USBDevice
+) -> list[USBMatcher]:
+    """Return a list of matchers that match the given device."""
+    usb_discovery: USBDiscovery = hass.data[DOMAIN]
+    return usb_discovery.async_get_usb_matchers_for_device(device)
 
 
 _DEPRECATED_UsbServiceInfo = DeprecatedConstant(
@@ -357,6 +365,29 @@ class USBDiscovery:
 
         return _async_remove_callback
 
+    @hass_callback
+    def async_get_usb_matchers_for_device(self, device: USBDevice) -> list[USBMatcher]:
+        """Return a list of matchers that match the given device."""
+        matched = [
+            matcher
+            for matcher in self.usb
+            if usb_device_matches_matcher(device, matcher)
+        ]
+
+        if not matched:
+            return []
+
+        # Sort by specificity (most fields matched first)
+        sorted_by_most_targeted = sorted(matched, key=lambda item: -len(item))
+
+        # Only return matchers with the same specificity as the most specific one
+        most_matched_fields = len(sorted_by_most_targeted[0])
+        return [
+            matcher
+            for matcher in sorted_by_most_targeted
+            if len(matcher) == most_matched_fields
+        ]
+
     async def _async_process_discovered_usb_device(self, device: USBDevice) -> None:
         """Process a USB discovery."""
         _LOGGER.debug("Discovered USB Device: %s", device)
@@ -365,7 +396,7 @@ class USBDiscovery:
             return
         self.seen.add(device_tuple)
 
-        matched = get_usb_matchers_for_device(device, self.usb)
+        matched = self.async_get_usb_matchers_for_device(device)
         if not matched:
             return
 

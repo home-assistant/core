@@ -19,10 +19,11 @@ DATA_COMPONENT: HassKey[HardwareInfoDispatcher] = HassKey(DOMAIN)
 ZHA_DOMAIN = "zha"
 OTBR_DOMAIN = "otbr"
 
-# Hardware integration domains
-SKYCONNECT_DOMAIN = "homeassistant_sky_connect"
-ZBT2_DOMAIN = "homeassistant_connect_zbt2"
-YELLOW_DOMAIN = "homeassistant_yellow"
+HARDWARE_INTEGRATION_DOMAINS = {
+    "homeassistant_sky_connect",
+    "homeassistant_connect_zbt2",
+    "homeassistant_yellow",
+}
 
 OTBR_ADDON_NAME = "OpenThread Border Router"
 OTBR_ADDON_MANAGER_DATA = "openthread_border_router"

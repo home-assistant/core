@@ -115,7 +115,6 @@ class HardwareInfoDispatcher:
         USB matchers, then triggers an import flow for only that integration.
         """
 
-        # Identify which domain should handle this device
         hardware_domain = await async_get_hardware_domain_for_usb_device(
             self.hass, firmware_info.device
         )

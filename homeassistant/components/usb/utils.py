@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 import fnmatch
 import os
 
@@ -97,29 +97,3 @@ def usb_device_matches_matcher(device: USBDevice, matcher: USBMatcher) -> bool:
         return False
 
     return True
-
-
-def get_usb_matchers_for_device(
-    device: USBDevice,
-    matchers: Iterable[USBMatcher],
-    *,
-    most_specific_only: bool = True,
-) -> list[USBMatcher]:
-    """Get all USB matchers that match a device, sorted by specificity."""
-    matched = [
-        matcher for matcher in matchers if usb_device_matches_matcher(device, matcher)
-    ]
-
-    if not matched:
-        return []
-
-    # Sort by specificity (most fields matched first)
-    sorted_by_most_targeted = sorted(matched, key=lambda item: -len(item))
-
-    # Only return matchers with the same specificity as the most specific one
-    most_matched_fields = len(sorted_by_most_targeted[0])
-    return [
-        matcher
-        for matcher in sorted_by_most_targeted
-        if len(matcher) == most_matched_fields
-    ]

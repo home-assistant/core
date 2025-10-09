@@ -20,7 +20,7 @@ from universal_silabs_flasher.flasher import Flasher
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.components.usb import (
     USBDevice,
-    get_usb_matchers_for_device,
+    async_get_usb_matchers_for_device,
     usb_device_from_path,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -29,17 +29,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.singleton import singleton
-from homeassistant.loader import async_get_usb
 
 from . import DATA_COMPONENT
 from .const import (
     DOMAIN,
+    HARDWARE_INTEGRATION_DOMAINS,
     OTBR_ADDON_MANAGER_DATA,
     OTBR_ADDON_NAME,
     OTBR_ADDON_SLUG,
-    SKYCONNECT_DOMAIN,
-    YELLOW_DOMAIN,
-    ZBT2_DOMAIN,
     ZIGBEE_FLASHER_ADDON_MANAGER_DATA,
     ZIGBEE_FLASHER_ADDON_NAME,
     ZIGBEE_FLASHER_ADDON_SLUG,
@@ -453,19 +450,10 @@ async def async_get_hardware_domain_for_usb_device(
         _LOGGER.debug("Could not find USB device for path %s", device_path)
         return None
 
-    # Get all USB matchers
-    usb_matchers = await async_get_usb(hass)
+    matched = async_get_usb_matchers_for_device(hass, usb_device)
+    hw_domains = {match["domain"] for match in matched} & HARDWARE_INTEGRATION_DOMAINS
 
-    # Filter to only hardware integration domains
-    hardware_domains = {SKYCONNECT_DOMAIN, ZBT2_DOMAIN, YELLOW_DOMAIN}
-    hardware_matchers = [
-        matcher for matcher in usb_matchers if matcher["domain"] in hardware_domains
-    ]
-
-    # Find matching hardware integrations using shared USB matching logic
-    matched = get_usb_matchers_for_device(usb_device, hardware_matchers)
-
-    if not matched:
+    if not hw_domains:
         _LOGGER.debug(
             "No hardware integration matches USB device %s (vid=%s, pid=%s, desc=%s)",
             device_path,
@@ -475,14 +463,7 @@ async def async_get_hardware_domain_for_usb_device(
         )
         return None
 
-    # Return the first (most specific) match
-    best_match = matched[0]
+    # We can never have two hardware integrations overlap in discovery
+    assert len(hw_domains) == 1
 
-    _LOGGER.debug(
-        "USB device %s matched to domain %s (matcher: %s)",
-        device_path,
-        best_match["domain"],
-        best_match,
-    )
-
-    return best_match["domain"]
+    return list(hw_domains)[0]
