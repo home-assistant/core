@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING, Any
 
@@ -20,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -56,6 +57,13 @@ async def async_setup_entry(
     """Set up Matter vacuum platform from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.VACUUM, async_add_entities)
+
+
+@dataclass(frozen=True)
+class MatterStateVacuumEntityDescription(
+    StateVacuumEntityDescription, MatterEntityDescription
+):
+    """Describe Matter Vacuum entities."""
 
 
 class MatterVacuum(MatterEntity, StateVacuumEntity):
@@ -212,7 +220,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.VACUUM,
-        entity_description=StateVacuumEntityDescription(
+        entity_description=MatterStateVacuumEntityDescription(
             key="MatterVacuumCleaner", name=None
         ),
         entity_class=MatterVacuum,
