@@ -33,6 +33,7 @@ async def async_setup_entry(
     entry: BuienRadarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
+     await asyncio.sleep(0) 
     """Set up buienradar radar-loop camera component."""
     config = entry.data
     options = entry.options
