@@ -86,7 +86,6 @@ class OctoPrintTemperatureNumber(
     _attr_native_step = 1
     _attr_mode = NumberMode.BOX
     _attr_device_class = NumberDeviceClass.TEMPERATURE
-    _attr_translation_key = "set_temperature"
 
     def __init__(
         self,
@@ -99,10 +98,14 @@ class OctoPrintTemperatureNumber(
         super().__init__(coordinator)
         self._device_id = device_id
         self._api_tool = tool
-        self._attr_translation_placeholders = {"tool": tool}
-        self._attr_unique_id = f"{device_id}_{tool}_temperature"
         self._attr_device_info = coordinator.device_info
         self._client = client
+        if is_bed(tool):
+            self._attr_translation_key = "bed_temperature"
+        else:
+            self._attr_translation_key = "tool_temperature"
+            self._attr_translation_placeholders = {"tool": tool}
+        self._attr_unique_id = f"{device_id}_{tool}_temperature"
 
     @property
     def native_value(self) -> float | None:
