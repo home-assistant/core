@@ -40,7 +40,10 @@ LOGGER = logging.getLogger(__name__)
 
 
 async def _get_filtered_vehicles(account: RenaultAccount) -> list[KamereonVehiclesLink]:
-    """Filter out vehicles with missing details."""
+    """Filter out vehicles with missing details.
+
+    May be due to new purchases, or issue with the Renault servers.
+    """
     vehicles = await account.get_vehicles()
     if not vehicles.vehicleLinks:
         return []
@@ -100,7 +103,9 @@ class RenaultHub:
         self._account = await self._client.get_api_account(account_id)
         vehicle_links = await _get_filtered_vehicles(self._account)
         if not vehicle_links:
-            LOGGER.warning("No valid vehicle details found for account_id: %s", account_id)
+            LOGGER.warning(
+                "No valid vehicle details found for account_id: %s", account_id
+            )
             raise ConfigEntryNotReady(
                 "Failed to retrieve vehicle details from Renault servers"
             )
