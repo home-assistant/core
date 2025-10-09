@@ -9,16 +9,16 @@
         "data_description": {
           "api_token": "The link copied from the Nintendo website"
         }
-      }
-    },
-    "reauth_confirm": {
-      "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**.",
-      "data": {
+      },
+      "reauth_confirm": {
+        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**.",
+        "data": {
           "api_token": "Access token"
         },
         "data_description": {
           "api_token": "The link copied from the Nintendo website"
         }
+      }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
