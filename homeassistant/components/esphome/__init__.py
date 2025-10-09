@@ -22,6 +22,7 @@ from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DOMAIN
 from .domain_data import DomainData
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .manager import DEVICE_CONFLICT_ISSUE_FORMAT, ESPHomeManager, cleanup_instance
+from .websocket_api import async_setup as async_setup_websocket_api
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -32,6 +33,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the esphome component."""
     ffmpeg_proxy.async_setup(hass)
     await dashboard.async_setup(hass)
+    async_setup_websocket_api(hass)
     return True
 
 
