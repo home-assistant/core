@@ -681,6 +681,7 @@ async def test_rpc_presencezone_component(
         ("input", "input", None),  # negative test, input is not a virtual component
     ],
 )
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_migrate_unique_id_virtual_components_roles(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
