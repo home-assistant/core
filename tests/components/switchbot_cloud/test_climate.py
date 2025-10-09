@@ -219,7 +219,7 @@ async def test_air_conditioner_turn_off(
 async def test_air_conditioner_turn_on(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """Test the climate.turn_on service."""
+    """Test turning on a climate entity that has a non-off HVAC_STATE."""
     mock_list_devices.return_value = [
         Remote(
             deviceId="ac-device-id-1",
@@ -229,24 +229,70 @@ async def test_air_conditioner_turn_on(
         ),
     ]
 
+    mock_state = State(
+        "climate.climate_1",
+        "cool",
+        {
+            ATTR_FAN_MODE: "high",
+            ATTR_TEMPERATURE: 25,
+        },
+    )
+    mock_restore_cache(hass, (mock_state,))
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
     entity_id = "climate.climate_1"
+    assert hass.states.get(entity_id).state == "cool"
 
-    hass.states.async_set(entity_id, "off", {})
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == "off"
-
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+    with patch.object(SwitchBotAPI, "send_command") as mock_turn_on_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        mock_send_command.assert_called_once()
-        assert "21,4,1,on" in str(mock_send_command.call_args)
+        mock_turn_on_command.assert_called_once()
+        assert "25,2,4,on" in str(mock_turn_on_command.call_args)
+
+    assert hass.states.get(entity_id).state == "cool"
+
+
+async def test_air_conditioner_turn_on_from_hvac_mode_off(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test turning on a climate entity that has an off HVAC_STATE."""
+    mock_list_devices.return_value = [
+        Remote(
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            remoteType="DIY Air Conditioner",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_state = State(
+        "climate.climate_1",
+        "off",
+        {
+            ATTR_FAN_MODE: "high",
+            ATTR_TEMPERATURE: 25,
+        },
+    )
+    mock_restore_cache(hass, (mock_state,))
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "climate.climate_1"
+    assert hass.states.get(entity_id).state == "off"
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_turn_on_command:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mock_turn_on_command.assert_called_once()
+        assert "25,4,4,on" in str(mock_turn_on_command.call_args)
 
     assert hass.states.get(entity_id).state == "fan_only"
