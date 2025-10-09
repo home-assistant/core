@@ -221,7 +221,7 @@ async def test_flow_resp_forbidden_error(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_flow_malformed_response(
+async def test_flow_missing_title(
     hass: HomeAssistant,
     ptdevices_level_missing_title: PTDevicesResponse,
 ) -> None:
