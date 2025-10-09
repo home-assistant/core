@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 @callback
 def async_device_led_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if device supports LED control."""
-    device = hub.api.devices[obj_id]
+    device: Device = hub.api.devices[obj_id]
     return device.supports_led_ring
 
 
@@ -155,14 +155,18 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
 
         self._attr_is_on = description.is_on_fn(self.hub, device_obj)
 
+        brightness = device.led_override_color_brightness
         self._attr_brightness = (
-            int((device.led_override_color_brightness / 100) * 255)
-            if device.led_override_color_brightness is not None
-            else None
+            int((int(brightness) / 100) * 255) if brightness is not None else None
         )
 
-        if self._attr_is_on and device.led_override_color:
-            rgb_list = rgb_hex_to_rgb_list(device.led_override_color)
-            self._attr_rgb_color = tuple(rgb_list) if rgb_list else None
+        hex_color = (
+            device.led_override_color.lstrip("#")
+            if self._attr_is_on and device.led_override_color
+            else None
+        )
+        if hex_color and len(hex_color) == 6:
+            rgb_list = rgb_hex_to_rgb_list(hex_color)
+            self._attr_rgb_color = (rgb_list[0], rgb_list[1], rgb_list[2])
         else:
             self._attr_rgb_color = None
