@@ -19,8 +19,6 @@ from .entity import PooldoseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_NAME = "sensor"
-
 SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
@@ -146,21 +144,16 @@ async def async_setup_entry(
         assert config_entry.unique_id is not None
 
     coordinator = config_entry.runtime_data
-    data = coordinator.data
+    sensor_data = coordinator.data["sensor"]
     serial_number = config_entry.unique_id
 
-    sensor_data = data.get(PLATFORM_NAME, {}) if data else {}
-
-    # Ensure sensor_data is a dictionary
-    if not isinstance(sensor_data, dict):
-        sensor_data = {}
     async_add_entities(
         PooldoseSensor(
             coordinator,
             serial_number,
             coordinator.device_info,
             description,
-            PLATFORM_NAME,
+            "sensor",
         )
         for description in SENSOR_DESCRIPTIONS
         if description.key in sensor_data
@@ -174,16 +167,17 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
     def native_value(self) -> float | int | str | None:
         """Return the current value of the sensor."""
         data = self.get_data()
-        if isinstance(data, dict) and "value" in data:
+        if data is not None:
             return data["value"]
         return None
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        if self.entity_description.key == "temperature":
-            data = self.get_data()
-            if isinstance(data, dict) and "unit" in data and data["unit"] is not None:
-                return data["unit"]  # °C or °F
+        if (
+            self.entity_description.key == "temperature"
+            and (data := self.get_data()) is not None
+        ):
+            return data["unit"]  # °C or °F
 
         return super().native_unit_of_measurement

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Literal
 
-from pooldose.type_definitions import DeviceInfoDict
+from pooldose.type_definitions import DeviceInfoDict, ValueDict
 
 from homeassistant.const import CONF_MAC
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -55,7 +55,7 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         serial_number: str,
         device_properties: DeviceInfoDict,
         entity_description: EntityDescription,
-        platform_name: str,
+        platform_name: Literal["sensor", "switch", "number", "binary_sensor", "select"],
     ) -> None:
         """Initialize PoolDose entity."""
         super().__init__(coordinator)
@@ -68,23 +68,7 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
             coordinator.config_entry.data.get(CONF_MAC),
         )
 
-    @property
-    def available(self) -> bool:
-        """Return True if the entity is available."""
-        if not super().available or self.coordinator.data is None:
-            return False
-        # Check if the entity type exists in coordinator data
-        platform_data = self.coordinator.data.get(self.platform_name, {})
-        return (
-            isinstance(platform_data, dict)
-            and self.entity_description.key in platform_data
-        )
-
-    def get_data(self) -> dict[str, Any] | None:
+    def get_data(self) -> ValueDict | None:
         """Get data for this entity, only if available."""
-        if not self.available:
-            return None
-        platform_data = self.coordinator.data.get(self.platform_name, {})
-        if isinstance(platform_data, dict):
-            return platform_data.get(self.entity_description.key)
-        return None
+        platform_data = self.coordinator.data[self.platform_name]
+        return platform_data.get(self.entity_description.key)
