@@ -390,7 +390,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.original_addon_config = dict(addon_config)
         # Remove legacy network_key
         new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
-        addon_manager: AddonManager = get_addon_manager(self.hass)
+        addon_manager = get_addon_manager(self.hass)
         try:
             await addon_manager.async_set_addon_options(new_addon_config)
         except AddonError as err:
@@ -399,12 +399,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_install_addon(self) -> None:
         """Install the Z-Wave JS add-on."""
-        addon_manager: AddonManager = get_addon_manager(self.hass)
+        addon_manager = get_addon_manager(self.hass)
         await addon_manager.async_schedule_install_addon()
 
     async def _async_get_addon_discovery_info(self) -> dict:
         """Return add-on discovery info."""
-        addon_manager: AddonManager = get_addon_manager(self.hass)
+        addon_manager = get_addon_manager(self.hass)
         try:
             discovery_info_config = await addon_manager.async_get_addon_discovery_info()
         except AddonError as err:
@@ -1001,6 +1001,66 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def _async_update_config(
+        self,
+        *,
+        entry_id: str,
+        updates: dict[str, Any],
+        unique_id: str | None = None,
+        reload_entry: bool = True,
+    ) -> None:
+        """Update the config entry and addon with new data."""
+        # config_entry = self._reconfigure_config_entry
+        # assert config_entry is not None
+        config_entry = self.hass.config_entries.async_get_known_entry(entry_id)
+        new_data = config_entry.data | updates
+        kwargs = {
+            "data": new_data,
+        }
+        if unique_id:
+            kwargs["unique_id"] = unique_id
+
+        updated_entry = self.hass.config_entries.async_update_entry(
+            config_entry, **kwargs
+        )
+
+        if not updated_entry:
+            return
+
+        if not new_data[CONF_USE_ADDON]:
+            if reload_entry:
+                self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
+
+            return
+
+        # Stop the add-on if it is running. Reload will start it again and ensure config correct.
+        addon_info = await self._async_get_addon_info()
+        if addon_info.state == AddonState.RUNNING:
+            addon_manager = get_addon_manager(self.hass)
+            await addon_manager.async_stop_addon()
+
+        await self._async_set_addon_config(
+            {
+                CONF_ADDON_DEVICE: new_data[CONF_USB_PATH],
+                CONF_ADDON_SOCKET: new_data[CONF_SOCKET_PATH],
+                CONF_ADDON_S0_LEGACY_KEY: new_data[CONF_S0_LEGACY_KEY],
+                CONF_ADDON_S2_ACCESS_CONTROL_KEY: new_data[CONF_S2_ACCESS_CONTROL_KEY],
+                CONF_ADDON_S2_AUTHENTICATED_KEY: new_data[CONF_S2_AUTHENTICATED_KEY],
+                CONF_ADDON_S2_UNAUTHENTICATED_KEY: new_data[
+                    CONF_S2_UNAUTHENTICATED_KEY
+                ],
+                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: new_data[
+                    CONF_LR_S2_ACCESS_CONTROL_KEY
+                ],
+                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: new_data[
+                    CONF_LR_S2_AUTHENTICATED_KEY
+                ],
+            }
+        )
+
+        if reload_entry:
+            self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
+
     @callback
     def _async_update_entry(self, updates: dict[str, Any]) -> None:
         """Update the config entry with new data."""
@@ -1494,6 +1554,18 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_abort(reason="reconfigure_successful")
 
+    @callback
+    def _async_find_config_entry(self, home_id: str) -> ZwaveJSConfigEntry | None:
+        """Find a config entry by home id."""
+        return next(
+            (
+                entry
+                for entry in self._async_current_entries(include_ignore=False)
+                if entry.unique_id == home_id
+            ),
+            None,
+        )
+
     async def async_step_esphome(
         self, discovery_info: ESPHomeServiceInfo
     ) -> ConfigFlowResult:
@@ -1504,19 +1576,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery_info.zwave_home_id:
             if (
                 (
-                    current_config_entries := self._async_current_entries(
-                        include_ignore=False
-                    )
-                )
-                and (home_id := str(discovery_info.zwave_home_id))
-                and (
-                    existing_entry := next(
-                        (
-                            entry
-                            for entry in current_config_entries
-                            if entry.unique_id == home_id
-                        ),
-                        None,
+                    existing_entry := self._async_find_config_entry(
+                        str(discovery_info.zwave_home_id)
                     )
                 )
                 # Only update existing entries that are configured via sockets
@@ -1524,11 +1585,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 # And use the add-on
                 and existing_entry.data.get(CONF_USE_ADDON)
             ):
-                await self._async_set_addon_config(
-                    {CONF_ADDON_SOCKET: discovery_info.socket_path}
+                await self._async_update_config(
+                    entry_id=existing_entry.entry_id,
+                    updates={CONF_SOCKET_PATH: discovery_info.socket_path},
                 )
-                # Reloading will sync add-on options to config entry data
-                self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
                 return self.async_abort(reason="already_configured")
 
             # We are not aborting if home ID configured here, we just want to make sure that it's set
