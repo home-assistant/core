@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     CONTENT_TYPE_TEXT_PLAIN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -209,6 +209,28 @@ class ImapMessage:
         return str(self.email_message.get_payload())
 
 
+@callback
+def get_parts(message: Message, prefix: str | None = None) -> dict[str, Any]:
+    """Return information about the parts of a multipart message."""
+    parts: dict[str, Any] = {}
+    if not message.is_multipart():
+        return {}
+    for index, part in enumerate(message.get_payload(), 0):
+        if TYPE_CHECKING:
+            assert isinstance(part, Message)
+        key = f"{prefix},{index}" if prefix else f"{index}"
+        if part.is_multipart():
+            parts |= get_parts(part, key)
+            continue
+        parts[key] = {"content_type": part.get_content_type()}
+        if filename := part.get_filename():
+            parts[key]["filename"] = filename
+        if content_transfer_encoding := part.get("Content-Transfer-Encoding"):
+            parts[key]["content_transfer_encoding"] = content_transfer_encoding
+
+    return parts
+
+
 class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
     """Base class for imap client."""
 
@@ -241,6 +263,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=update_interval,
         )
@@ -274,12 +297,13 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 "sender": message.sender,
                 "subject": message.subject,
                 "uid": last_message_uid,
+                "parts": get_parts(message.email_message),
             }
             data.update({key: getattr(message, key) for key in self._event_data_keys})
             if self.custom_event_template is not None:
                 try:
                     data["custom"] = self.custom_event_template.async_render(
-                        data, parse_result=True
+                        data | {"text": message.text}, parse_result=True
                     )
                     _LOGGER.debug(
                         "IMAP custom template (%s) for msguid %s (%s) rendered to: %s, initial: %s",

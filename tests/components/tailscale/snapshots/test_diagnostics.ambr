@@ -82,6 +82,38 @@
         'update_available': True,
         'user': '**REDACTED**',
       }),
+      dict({
+        'addresses': '**REDACTED**',
+        'advertised_routes': list([
+          '0.0.0.0/0',
+          '10.10.10.0/23',
+          '::/0',
+        ]),
+        'authorized': True,
+        'blocks_incoming_connections': False,
+        'client_connectivity': None,
+        'client_version': '1.14.0-t5cff36945-g809e87bba',
+        'created': '2021-08-29T09:49:06+00:00',
+        'device_id': '**REDACTED**',
+        'enabled_routes': list([
+          '0.0.0.0/0',
+          '10.10.10.0/23',
+          '::/0',
+        ]),
+        'expires': '2022-02-25T09:49:06+00:00',
+        'hostname': '**REDACTED**',
+        'is_external': False,
+        'key_expiry_disabled': False,
+        'last_seen': '2021-11-15T20:37:03+00:00',
+        'machine_key': '**REDACTED**',
+        'name': '**REDACTED**',
+        'node_key': '**REDACTED**',
+        'os': 'linux',
+        'tags': list([
+        ]),
+        'update_available': True,
+        'user': '**REDACTED**',
+      }),
     ]),
   })
 # ---

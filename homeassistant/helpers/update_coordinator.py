@@ -84,9 +84,19 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.update_interval = update_interval
         self._shutdown_requested = False
         if config_entry is UNDEFINED:
+            # late import to avoid circular imports
+            from . import frame  # noqa: PLC0415
+
+            # It is not planned to enforce this for custom integrations.
+            # see https://github.com/home-assistant/core/pull/138161#discussion_r1958184241
+            frame.report_usage(
+                "relies on ContextVar, but should pass the config entry explicitly.",
+                core_behavior=frame.ReportBehavior.ERROR,
+                custom_integration_behavior=frame.ReportBehavior.IGNORE,
+                breaks_in_ha_version="2026.8",
+            )
+
             self.config_entry = config_entries.current_entry.get()
-            # This should be deprecated once all core integrations are updated
-            # to pass in the config entry explicitly.
         else:
             self.config_entry = config_entry
         self.always_update = always_update
@@ -138,6 +148,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         async def _on_hass_stop(_: Event) -> None:
             """Shutdown coordinator on HomeAssistant stop."""
+            # Already cleared on EVENT_HOMEASSISTANT_STOP, via async_fire_internal
+            self._unsub_shutdown = None
             await self.async_shutdown()
 
         self._unsub_shutdown = self.hass.bus.async_listen_once(
@@ -348,8 +360,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         only once during the first refresh.
         """
         if self.setup_method is None:
-            return None
-        return await self.setup_method()
+            return
+        await self.setup_method()
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""

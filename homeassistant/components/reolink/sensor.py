@@ -8,6 +8,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from reolink_aio.api import Host
+from reolink_aio.const import YOLO_DETECT_TYPES
 from reolink_aio.enums import BatteryEnum
 
 from homeassistant.components.sensor import (
@@ -16,9 +17,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .entity import (
@@ -107,18 +113,77 @@ SENSORS = (
         value=lambda api, ch: BatteryEnum(api.battery_status(ch)).name,
         supported=lambda api, ch: api.supported(ch, "battery"),
     ),
+    ReolinkSensorEntityDescription(
+        key="day_night_state",
+        cmd_id=33,
+        cmd_key="296",
+        translation_key="day_night_state",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["day", "night", "led_day"],
+        value=lambda api, ch: api.baichuan.day_night_state(ch),
+        supported=lambda api, ch: api.supported(ch, "day_night_state"),
+    ),
+    ReolinkSensorEntityDescription(
+        key="wifi_signal",
+        cmd_key="115",
+        translation_key="wifi_signal",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        entity_registry_enabled_default=False,
+        value=lambda api, ch: api.wifi_signal(ch),
+        supported=lambda api, ch: api.supported(ch, "wifi"),
+    ),
+    ReolinkSensorEntityDescription(
+        key="person_type",
+        cmd_id=696,
+        translation_key="person_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=YOLO_DETECT_TYPES["people"],
+        value=lambda api, ch: api.baichuan.ai_detect_type(ch, "person"),
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_yolo_type") and api.supported(ch, "ai_people")
+        ),
+    ),
+    ReolinkSensorEntityDescription(
+        key="vehicle_type",
+        cmd_id=696,
+        translation_key="vehicle_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=YOLO_DETECT_TYPES["vehicle"],
+        value=lambda api, ch: api.baichuan.ai_detect_type(ch, "vehicle"),
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_yolo_type") and api.supported(ch, "ai_vehicle")
+        ),
+    ),
+    ReolinkSensorEntityDescription(
+        key="animal_type",
+        cmd_id=696,
+        translation_key="animal_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=YOLO_DETECT_TYPES["dog_cat"],
+        value=lambda api, ch: api.baichuan.ai_detect_type(ch, "dog_cat"),
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_yolo_type") and api.supported(ch, "ai_dog_cat")
+        ),
+    ),
 )
 
 HOST_SENSORS = (
     ReolinkHostSensorEntityDescription(
         key="wifi_signal",
-        cmd_key="GetWifiSignal",
+        cmd_id=464,
+        cmd_key="115",
         translation_key="wifi_signal",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
-        value=lambda api: api.wifi_signal,
-        supported=lambda api: api.supported(None, "wifi") and api.wifi_connection,
+        value=lambda api: api.wifi_signal(),
+        supported=lambda api: api.supported(None, "wifi") and api.wifi_connection(),
     ),
     ReolinkHostSensorEntityDescription(
         key="cpu_usage",
@@ -150,7 +215,7 @@ HDD_SENSORS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
     reolink_data: ReolinkData = config_entry.runtime_data
@@ -219,7 +284,7 @@ class ReolinkHostSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
 
 
 class ReolinkHddSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
-    """Base sensor class for Reolink host sensors."""
+    """Base sensor class for Reolink storage device sensors."""
 
     entity_description: ReolinkSensorEntityDescription
 
@@ -229,7 +294,7 @@ class ReolinkHddSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
         hdd_index: int,
         entity_description: ReolinkSensorEntityDescription,
     ) -> None:
-        """Initialize Reolink host sensor."""
+        """Initialize Reolink storage device sensor."""
         self.entity_description = entity_description
         super().__init__(reolink_data)
         self._hdd_index = hdd_index

@@ -56,6 +56,7 @@ async def test_options_flow_disabled_not_setup(
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is False
     await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("macos_adapter")
@@ -396,6 +397,7 @@ async def test_options_flow_linux(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PASSIVE] is False
     await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures(
@@ -425,6 +427,7 @@ async def test_options_flow_disabled_macos(
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is False
     await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures(
@@ -457,6 +460,7 @@ async def test_options_flow_enabled_linux(
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is True
     await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures(
@@ -487,6 +491,8 @@ async def test_options_flow_remote_adapter(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "remote_adapters_not_supported"
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures(
@@ -514,6 +520,8 @@ async def test_options_flow_local_no_passive_support(hass: HomeAssistant) -> Non
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "local_adapters_no_passive_support"
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("one_adapter")
@@ -608,3 +616,40 @@ async def test_async_step_integration_discovery_remote_adapter(
     await hass.async_block_till_done()
     cancel_scanner()
     await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_step_integration_discovery_remote_adapter_mac_fix(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test remote adapter corrects mac address via integration discovery."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    bluetooth_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SOURCE: "AA:BB:CC:DD:EE:FF",
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
+            CONF_SOURCE_DEVICE_ID: None,
+        },
+    )
+    bluetooth_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_SOURCE: "AA:AA:AA:AA:AA:AA",
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
+            CONF_SOURCE_DEVICE_ID: None,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert bluetooth_entry.unique_id == "AA:AA:AA:AA:AA:AA"
+    assert bluetooth_entry.data[CONF_SOURCE] == "AA:AA:AA:AA:AA:AA"

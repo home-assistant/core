@@ -15,8 +15,9 @@ from homeassistant.components.stt import (
     async_get_speech_to_text_engine,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -34,7 +35,6 @@ from tests.common import (
     mock_integration,
     mock_platform,
     mock_restore_cache,
-    reset_translation_cache,
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -123,14 +123,16 @@ async def mock_config_entry_setup(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.STT]
+        )
         return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Unload up test config entry."""
-        await hass.config_entries.async_forward_entry_unload(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_unload(config_entry, Platform.STT)
         return True
 
     mock_integration(
@@ -145,7 +147,7 @@ async def mock_config_entry_setup(
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test stt platform via config entry."""
         async_add_entities([mock_provider_entity])
@@ -518,9 +520,6 @@ async def test_default_engine_prefer_cloud_entity(
     assert provider_engine is not None
     assert provider_engine.name == "test"
     assert async_default_engine(hass) == "stt.cloud_stt_entity"
-
-    # Reset the `cloud` translations cache to avoid flaky translation checks
-    reset_translation_cache(hass, ["cloud"])
 
 
 async def test_get_engine_legacy(

@@ -8,7 +8,7 @@ from tessie_api import schedule_software_update
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TessieConfigEntry
 from .const import TessieUpdateStatus
@@ -21,7 +21,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TessieConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tessie Update platform from a config entry."""
     data = entry.runtime_data
@@ -87,6 +87,13 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         ):
             return self.get("vehicle_state_software_update_install_perc")
         return None
+
+    @property
+    def release_url(self) -> str | None:
+        """URL to the full release notes of the latest version available."""
+        if self.latest_version is None:
+            return None
+        return f"https://stats.tessie.com/versions/{self.latest_version}"
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any

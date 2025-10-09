@@ -3,9 +3,10 @@
 import logging
 from typing import Any
 
-from ccm15 import CCM15DeviceState
+from ccm15 import CCM15DeviceState, CCM15SlaveDevice
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -20,7 +21,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONST_CMD_FAN_MAP, CONST_CMD_STATE_MAP, DOMAIN
@@ -32,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: CCM15ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all climate."""
     coordinator = config_entry.runtime_data
@@ -88,7 +89,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         )
 
     @property
-    def data(self) -> CCM15DeviceState | None:
+    def data(self) -> CCM15SlaveDevice | None:
         """Return device data."""
         return self.coordinator.get_ac_data(self._ac_index)
 
@@ -144,15 +145,17 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            await self.coordinator.async_set_temperature(self._ac_index, temperature)
+            await self.coordinator.async_set_temperature(
+                self._ac_index, self.data, temperature, kwargs.get(ATTR_HVAC_MODE)
+            )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
-        await self.coordinator.async_set_hvac_mode(self._ac_index, hvac_mode)
+        await self.coordinator.async_set_hvac_mode(self._ac_index, self.data, hvac_mode)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
-        await self.coordinator.async_set_fan_mode(self._ac_index, fan_mode)
+        await self.coordinator.async_set_fan_mode(self._ac_index, self.data, fan_mode)
 
     async def async_turn_off(self) -> None:
         """Turn off."""

@@ -14,7 +14,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -24,8 +24,7 @@ from .entity import IRobotEntity
 from .models import RoombaData
 
 SUPPORT_IROBOT = (
-    VacuumEntityFeature.BATTERY
-    | VacuumEntityFeature.PAUSE
+    VacuumEntityFeature.PAUSE
     | VacuumEntityFeature.RETURN_HOME
     | VacuumEntityFeature.SEND_COMMAND
     | VacuumEntityFeature.START
@@ -89,7 +88,7 @@ SUPPORT_BRAAVA = SUPPORT_IROBOT | VacuumEntityFeature.FAN_SPEED
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the iRobot Roomba vacuum cleaner."""
     domain_data: RoombaData = hass.data[DOMAIN][config_entry.entry_id]
@@ -404,11 +403,16 @@ class BraavaJet(IRobotVacuum):
         detected_pad = state.get("detectedPad")
         mop_ready = state.get("mopReady", {})
         lid_closed = mop_ready.get("lidClosed")
-        tank_present = mop_ready.get("tankPresent")
+        tank_present = mop_ready.get("tankPresent") or state.get("tankPresent")
         tank_level = state.get("tankLvl")
         state_attrs[ATTR_DETECTED_PAD] = detected_pad
         state_attrs[ATTR_LID_CLOSED] = lid_closed
         state_attrs[ATTR_TANK_PRESENT] = tank_present
         state_attrs[ATTR_TANK_LEVEL] = tank_level
+        bin_raw_state = state.get("bin", {})
+        if bin_raw_state.get("present") is not None:
+            state_attrs[ATTR_BIN_PRESENT] = bin_raw_state.get("present")
+        if bin_raw_state.get("full") is not None:
+            state_attrs[ATTR_BIN_FULL] = bin_raw_state.get("full")
 
         return state_attrs

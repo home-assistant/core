@@ -1,8 +1,8 @@
 {
   "common": {
-    "data_description_password": "The Remote Admin Password from the Fully Kiosk Browser app settings.",
+    "data_description_password": "The Remote Admin password from the Fully Kiosk Browser app settings.",
     "data_description_ssl": "Is the Fully Kiosk app configured to require SSL for the connection?",
-    "data_description_verify_ssl": "Should SSL certificartes be verified? This should be off for self-signed certificates."
+    "data_description_verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates."
   },
   "config": {
     "step": {
@@ -69,6 +69,9 @@
       },
       "load_start_url": {
         "name": "Load start URL"
+      },
+      "clear_cache": {
+        "name": "Clear browser cache"
       }
     },
     "image": {
@@ -144,6 +147,10 @@
       "name": "Load URL",
       "description": "Loads a URL on Fully Kiosk Browser.",
       "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "The target device for this action."
+        },
         "url": {
           "name": "[%key:common::config_flow::data::url%]",
           "description": "URL to load."
@@ -151,9 +158,13 @@
       }
     },
     "set_config": {
-      "name": "Set Configuration",
+      "name": "Set configuration",
       "description": "Sets a configuration parameter on Fully Kiosk Browser.",
       "fields": {
+        "device_id": {
+          "name": "[%key:component::fully_kiosk::services::load_url::fields::device_id::name%]",
+          "description": "[%key:component::fully_kiosk::services::load_url::fields::device_id::description%]"
+        },
         "key": {
           "name": "Key",
           "description": "Configuration parameter to set."
@@ -165,12 +176,16 @@
       }
     },
     "start_application": {
-      "name": "Start Application",
+      "name": "Start application",
       "description": "Starts an application on the device running Fully Kiosk Browser.",
       "fields": {
         "application": {
           "name": "Application",
           "description": "Package name of the application to start."
+        },
+        "device_id": {
+          "name": "[%key:component::fully_kiosk::services::load_url::fields::device_id::name%]",
+          "description": "[%key:component::fully_kiosk::services::load_url::fields::device_id::description%]"
         }
       }
     }

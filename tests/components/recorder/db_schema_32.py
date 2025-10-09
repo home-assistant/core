@@ -414,10 +414,9 @@ class States(Base):  # type: ignore[misc,valid-type]
     @staticmethod
     def from_event(event: Event) -> States:
         """Create object from a state_changed event."""
-        entity_id = event.data["entity_id"]
         state: State | None = event.data.get("new_state")
         dbstate = States(
-            entity_id=entity_id,
+            entity_id=None,
             attributes=None,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
@@ -583,6 +582,8 @@ class StatisticsBase:
     last_reset_ts = Column(TIMESTAMP_TYPE)
     state = Column(DOUBLE_TYPE)
     sum = Column(DOUBLE_TYPE)
+    # *** Not originally in v32, only added for tests. Added in v49
+    mean_weight = Column(DOUBLE_TYPE)
 
     @classmethod
     def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:

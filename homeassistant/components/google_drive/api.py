@@ -22,6 +22,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_entry_oauth2_flow
 
 _UPLOAD_AND_DOWNLOAD_TIMEOUT = 12 * 3600
+_UPLOAD_MAX_RETRIES = 20
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -146,9 +147,11 @@ class DriveClient:
             backup.backup_id,
             backup_metadata,
         )
-        await self._api.upload_file(
+        await self._api.resumable_upload_file(
             backup_metadata,
             open_stream,
+            backup.size,
+            max_retries=_UPLOAD_MAX_RETRIES,
             timeout=ClientTimeout(total=_UPLOAD_AND_DOWNLOAD_TIMEOUT),
         )
         _LOGGER.debug(

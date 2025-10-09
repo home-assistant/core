@@ -43,6 +43,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
+from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -55,7 +56,6 @@ from .const import (
     DEFAULT_MAX_BIND_VARS,
     DOMAIN,
     KEEPALIVE_TIME,
-    LAST_REPORTED_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
     MAX_QUEUE_BACKLOG_MIN_VALUE,
@@ -78,7 +78,13 @@ from .db_schema import (
     StatisticsShortTerm,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
-from .models import DatabaseEngine, StatisticData, StatisticMetaData, UnsupportedDialect
+from .models import (
+    DatabaseEngine,
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+    UnsupportedDialect,
+)
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .table_managers.event_data import EventDataManager
 from .table_managers.event_types import EventTypeManager
@@ -121,8 +127,6 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_URL = "sqlite:///{hass_config_path}"
 
 # Controls how often we clean up
 # States and Events objects
@@ -183,7 +187,7 @@ class Recorder(threading.Thread):
         self.db_retry_wait = db_retry_wait
         self.database_engine: DatabaseEngine | None = None
         # Database connection is ready, but non-live migration may be in progress
-        db_connected: asyncio.Future[bool] = hass.data[DOMAIN].db_connected
+        db_connected: asyncio.Future[bool] = hass.data[DATA_RECORDER].db_connected
         self.async_db_connected: asyncio.Future[bool] = db_connected
         # Database is ready to use but live migration may be in progress
         self.async_db_ready: asyncio.Future[bool] = hass.loop.create_future()
@@ -612,6 +616,17 @@ class Recorder(threading.Thread):
         table: type[Statistics | StatisticsShortTerm],
     ) -> None:
         """Schedule import of statistics."""
+        if "mean_type" not in metadata:
+            # Backwards compatibility for old metadata format
+            # Can be removed after 2026.4
+            metadata["mean_type"] = (  # type: ignore[unreachable]
+                StatisticMeanType.ARITHMETIC
+                if metadata.get("has_mean")
+                else StatisticMeanType.NONE
+            )
+        # Remove deprecated has_mean as it's not needed anymore in core
+        metadata.pop("has_mean", None)
+
         self.queue_task(ImportStatisticsTask(metadata, stats, table))
 
     @callback
@@ -790,6 +805,10 @@ class Recorder(threading.Thread):
 
         # Catch up with missed statistics
         self._schedule_compile_missing_statistics()
+
+        # Kick off live migrations
+        migration.migrate_data_live(self, self.get_session, schema_status)
+
         _LOGGER.debug("Recorder processing the queue")
         self._adjust_lru_size()
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
@@ -805,8 +824,6 @@ class Recorder(threading.Thread):
             # herd of queries to find the statistics meta data if
             # there are a lot of statistics graphs on the frontend.
             self.statistics_meta_manager.load(session)
-
-        migration.migrate_data_live(self, self.get_session, schema_status)
 
         # We must only set the db ready after we have set the table managers
         # to active if there is no data to migrate.
@@ -1111,9 +1128,6 @@ class Recorder(threading.Thread):
         else:
             states_manager.add_pending(entity_id, dbstate)
 
-        if states_meta_manager.active:
-            dbstate.entity_id = None
-
         if entity_id is None or not (
             shared_attrs_bytes := state_attributes_manager.serialize_from_event(event)
         ):
@@ -1124,7 +1138,7 @@ class Recorder(threading.Thread):
             dbstate.states_meta_rel = pending_states_meta
         elif metadata_id := states_meta_manager.get(entity_id, session, True):
             dbstate.metadata_id = metadata_id
-        elif states_meta_manager.active and entity_removed:
+        elif entity_removed:
             # If the entity was removed, we don't need to add it to the
             # StatesMeta table or record it in the pending commit
             # if it does not have a metadata_id allocated to it as
@@ -1211,7 +1225,7 @@ class Recorder(threading.Thread):
         if (
             pending_last_reported
             := self.states_manager.get_pending_last_reported_timestamp()
-        ) and self.schema_version >= LAST_REPORTED_SCHEMA_VERSION:
+        ):
             with session.no_autoflush:
                 session.execute(
                     update(States),
@@ -1291,11 +1305,17 @@ class Recorder(threading.Thread):
 
     async def async_block_till_done(self) -> None:
         """Async version of block_till_done."""
+        if future := self.async_get_commit_future():
+            await future
+
+    @callback
+    def async_get_commit_future(self) -> asyncio.Future[None] | None:
+        """Return a future that will wait for the next commit or None if nothing pending."""
         if self._queue.empty() and not self._event_session_has_pending_writes:
-            return
-        event = asyncio.Event()
-        self.queue_task(SynchronizeTask(event))
-        await event.wait()
+            return None
+        future: asyncio.Future[None] = self.hass.loop.create_future()
+        self.queue_task(SynchronizeTask(future))
+        return future
 
     def block_till_done(self) -> None:
         """Block till all events processed.

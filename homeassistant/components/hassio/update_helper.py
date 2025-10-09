@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import HomeAssistantUpdateOptions, StoreAddonUpdate
+from aiohasupervisor.models import (
+    HomeAssistantUpdateOptions,
+    OSUpdate,
+    StoreAddonUpdate,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -25,8 +29,7 @@ async def update_addon(
     client = get_supervisor_client(hass)
 
     if backup:
-        # pylint: disable-next=import-outside-toplevel
-        from .backup import backup_addon_before_update
+        from .backup import backup_addon_before_update  # noqa: PLC0415
 
         await backup_addon_before_update(hass, addon, addon_name, installed_version)
 
@@ -46,8 +49,7 @@ async def update_core(hass: HomeAssistant, version: str | None, backup: bool) ->
     client = get_supervisor_client(hass)
 
     if backup:
-        # pylint: disable-next=import-outside-toplevel
-        from .backup import backup_core_before_update
+        from .backup import backup_core_before_update  # noqa: PLC0415
 
         await backup_core_before_update(hass)
 
@@ -57,3 +59,23 @@ async def update_core(hass: HomeAssistant, version: str | None, backup: bool) ->
         )
     except SupervisorError as err:
         raise HomeAssistantError(f"Error updating Home Assistant Core: {err}") from err
+
+
+async def update_os(hass: HomeAssistant, version: str | None, backup: bool) -> None:
+    """Update OS.
+
+    Optionally make a core backup before updating.
+    """
+    client = get_supervisor_client(hass)
+
+    if backup:
+        from .backup import backup_core_before_update  # noqa: PLC0415
+
+        await backup_core_before_update(hass)
+
+    try:
+        await client.os.update(OSUpdate(version=version))
+    except SupervisorError as err:
+        raise HomeAssistantError(
+            f"Error updating Home Assistant Operating System: {err}"
+        ) from err

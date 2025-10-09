@@ -10,15 +10,19 @@ from gardena_bluetooth.const import DeviceConfiguration, DeviceInformation
 from gardena_bluetooth.exceptions import CommunicationFailure
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import DeviceUnavailable, GardenaBluetoothCoordinator
+from .coordinator import (
+    DeviceUnavailable,
+    GardenaBluetoothConfigEntry,
+    GardenaBluetoothCoordinator,
+)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -31,8 +35,6 @@ PLATFORMS: list[Platform] = [
 LOGGER = logging.getLogger(__name__)
 TIMEOUT = 20.0
 DISCONNECT_DELAY = 5
-
-type GardenaBluetoothConfigEntry = ConfigEntry[GardenaBluetoothCoordinator]
 
 
 def get_connection(hass: HomeAssistant, address: str) -> CachedConnection:
@@ -73,6 +75,7 @@ async def async_setup_entry(
 
     device = DeviceInfo(
         identifiers={(DOMAIN, address)},
+        connections={(dr.CONNECTION_BLUETOOTH, address)},
         name=name,
         sw_version=sw_version,
         manufacturer=manufacturer,
@@ -80,7 +83,7 @@ async def async_setup_entry(
     )
 
     coordinator = GardenaBluetoothCoordinator(
-        hass, LOGGER, client, uuids, device, address
+        hass, entry, LOGGER, client, uuids, device, address
     )
 
     entry.runtime_data = coordinator

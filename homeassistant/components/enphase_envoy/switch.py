@@ -14,7 +14,7 @@ from pyenphase.models.tariff import EnvoyStorageSettings
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
@@ -78,7 +78,7 @@ CHARGE_FROM_GRID_SWITCH = EnvoyStorageSettingsSwitchEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EnphaseConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Enphase Envoy switch platform."""
     coordinator = config_entry.runtime_data
@@ -138,6 +138,7 @@ class EnvoyEnpowerSwitchEntity(EnvoyBaseEntity, SwitchEntity):
             name=f"Enpower {self._serial_number}",
             sw_version=str(enpower.firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=self._serial_number,
         )
 
     @property
@@ -235,6 +236,7 @@ class EnvoyStorageSettingsSwitchEntity(EnvoyBaseEntity, SwitchEntity):
                 name=f"Enpower {self._serial_number}",
                 sw_version=str(enpower.firmware_version),
                 via_device=(DOMAIN, self.envoy_serial_num),
+                serial_number=self._serial_number,
             )
         else:
             # If no enpower device assign switches to Envoy itself

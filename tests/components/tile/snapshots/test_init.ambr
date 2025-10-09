@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -16,7 +17,6 @@
         '19264d2dffdbca32',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tile Inc.',
@@ -26,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '01.12.14.0',
     'via_device_id': None,
   })

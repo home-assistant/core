@@ -33,12 +33,13 @@ from . import (
     entity_registry,
     floor_registry,
 )
+from .deprecation import EnumWithDeprecatedMembers
 from .typing import VolSchemaType
 
 _LOGGER = logging.getLogger(__name__)
 type _SlotsType = dict[str, Any]
 type _IntentSlotsType = dict[
-    str | tuple[str, str], VolSchemaType | Callable[[Any], Any]
+    str | tuple[str, str], IntentSlotInfo | VolSchemaType | Callable[[Any], Any]
 ]
 
 INTENT_TURN_OFF = "HassTurnOff"
@@ -59,6 +60,7 @@ INTENT_GET_CURRENT_DATE = "HassGetCurrentDate"
 INTENT_GET_CURRENT_TIME = "HassGetCurrentTime"
 INTENT_RESPOND = "HassRespond"
 INTENT_BROADCAST = "HassBroadcast"
+INTENT_GET_TEMPERATURE = "HassClimateGetTemperature"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -113,6 +115,7 @@ async def async_handle(
     language: str | None = None,
     assistant: str | None = None,
     device_id: str | None = None,
+    satellite_id: str | None = None,
     conversation_agent_id: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
@@ -137,6 +140,7 @@ async def async_handle(
         language=language,
         assistant=assistant,
         device_id=device_id,
+        satellite_id=satellite_id,
         conversation_agent_id=conversation_agent_id,
     )
 
@@ -506,12 +510,22 @@ def _add_areas(
             candidate.area = areas.async_get_area(candidate.device.area_id)
 
 
+def _default_area_candidate_filter(
+    candidate: MatchTargetsCandidate, possible_area_ids: Collection[str]
+) -> bool:
+    """Keep candidates in the possible areas."""
+    return (candidate.area is not None) and (candidate.area.id in possible_area_ids)
+
+
 @callback
 def async_match_targets(  # noqa: C901
     hass: HomeAssistant,
     constraints: MatchTargetsConstraints,
     preferences: MatchTargetsPreferences | None = None,
     states: list[State] | None = None,
+    area_candidate_filter: Callable[
+        [MatchTargetsCandidate, Collection[str]], bool
+    ] = _default_area_candidate_filter,
 ) -> MatchTargetsResult:
     """Match entities based on constraints in order to handle an intent."""
     preferences = preferences or MatchTargetsPreferences()
@@ -622,9 +636,7 @@ def async_match_targets(  # noqa: C901
             }
 
             candidates = [
-                c
-                for c in candidates
-                if (c.area is not None) and (c.area.id in possible_area_ids)
+                c for c in candidates if area_candidate_filter(c, possible_area_ids)
             ]
             if not candidates:
                 return MatchTargetsResult(
@@ -648,9 +660,7 @@ def async_match_targets(  # noqa: C901
             # May be constrained by floors above
             possible_area_ids.intersection_update(matching_area_ids)
             candidates = [
-                c
-                for c in candidates
-                if (c.area is not None) and (c.area.id in possible_area_ids)
+                c for c in candidates if area_candidate_filter(c, possible_area_ids)
             ]
             if not candidates:
                 return MatchTargetsResult(
@@ -700,7 +710,7 @@ def async_match_targets(  # noqa: C901
                 group_candidates = [
                     c
                     for c in group_candidates
-                    if (c.area is not None) and (c.area.id == preferences.area_id)
+                    if area_candidate_filter(c, {preferences.area_id})
                 ]
                 if len(group_candidates) < 2:
                     # Disambiguated by area
@@ -746,7 +756,7 @@ def async_match_targets(  # noqa: C901
         if preferences.area_id:
             # Filter by area
             filtered_candidates = [
-                c for c in candidates if c.area and (c.area.id == preferences.area_id)
+                c for c in candidates if area_candidate_filter(c, {preferences.area_id})
             ]
 
         if (len(filtered_candidates) > 1) and preferences.floor_id:
@@ -867,6 +877,34 @@ def non_empty_string(value: Any) -> str:
     return value_str
 
 
+@dataclass(kw_only=True)
+class IntentSlotInfo:
+    """Details about how intent slots are processed and validated."""
+
+    service_data_name: str | None = None
+    """Optional name of the service data input to map to this slot."""
+
+    description: str | None = None
+    """Human readable description of the slot."""
+
+    value_schema: VolSchemaType | Callable[[Any], Any] = vol.Any
+    """Validator for the slot."""
+
+
+def _convert_slot_info(
+    key: str | tuple[str, str],
+    value: IntentSlotInfo | VolSchemaType | Callable[[Any], Any],
+) -> tuple[str, IntentSlotInfo]:
+    """Create an IntentSlotInfo from the various supported input arguments."""
+    if isinstance(value, IntentSlotInfo):
+        if not isinstance(key, str):
+            raise TypeError("Tuple key and IntentSlotDescription value not supported")
+        return key, value
+    if isinstance(key, tuple):
+        return key[0], IntentSlotInfo(service_data_name=key[1], value_schema=value)
+    return key, IntentSlotInfo(value_schema=value)
+
+
 class DynamicServiceIntentHandler(IntentHandler):
     """Service Intent handler registration (dynamic).
 
@@ -900,23 +938,14 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.platforms = platforms
         self.device_classes = device_classes
 
-        self.required_slots: _IntentSlotsType = {}
-        if required_slots:
-            for key, value_schema in required_slots.items():
-                if isinstance(key, str):
-                    # Slot name/service data key
-                    key = (key, key)
-
-                self.required_slots[key] = value_schema
-
-        self.optional_slots: _IntentSlotsType = {}
-        if optional_slots:
-            for key, value_schema in optional_slots.items():
-                if isinstance(key, str):
-                    # Slot name/service data key
-                    key = (key, key)
-
-                self.optional_slots[key] = value_schema
+        self.required_slots: dict[str, IntentSlotInfo] = dict(
+            _convert_slot_info(key, value)
+            for key, value in (required_slots or {}).items()
+        )
+        self.optional_slots: dict[str, IntentSlotInfo] = dict(
+            _convert_slot_info(key, value)
+            for key, value in (optional_slots or {}).items()
+        )
 
     @cached_property
     def slot_schema(self) -> dict:
@@ -957,16 +986,20 @@ class DynamicServiceIntentHandler(IntentHandler):
         if self.required_slots:
             slot_schema.update(
                 {
-                    vol.Required(key[0]): validator
-                    for key, validator in self.required_slots.items()
+                    vol.Required(
+                        key, description=slot_info.description
+                    ): slot_info.value_schema
+                    for key, slot_info in self.required_slots.items()
                 }
             )
 
         if self.optional_slots:
             slot_schema.update(
                 {
-                    vol.Optional(key[0]): validator
-                    for key, validator in self.optional_slots.items()
+                    vol.Optional(
+                        key, description=slot_info.description
+                    ): slot_info.value_schema
+                    for key, slot_info in self.optional_slots.items()
                 }
             )
 
@@ -1149,18 +1182,15 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         service_data: dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
         if self.required_slots:
-            service_data.update(
-                {
-                    key[1]: intent_obj.slots[key[0]]["value"]
-                    for key in self.required_slots
-                }
-            )
+            for key, slot_info in self.required_slots.items():
+                service_data[slot_info.service_data_name or key] = intent_obj.slots[
+                    key
+                ]["value"]
 
         if self.optional_slots:
-            for key in self.optional_slots:
-                value = intent_obj.slots.get(key[0])
-                if value:
-                    service_data[key[1]] = value["value"]
+            for key, slot_info in self.optional_slots.items():
+                if value := intent_obj.slots.get(key):
+                    service_data[slot_info.service_data_name or key] = value["value"]
 
         await self._run_then_background(
             hass.async_create_task_internal(
@@ -1237,22 +1267,11 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         return (self.domain, self.service)
 
 
-class IntentCategory(Enum):
-    """Category of an intent."""
-
-    ACTION = "action"
-    """Trigger an action like turning an entity on or off"""
-
-    QUERY = "query"
-    """Get information about the state of an entity"""
-
-
 class Intent:
     """Hold the intent."""
 
     __slots__ = [
         "assistant",
-        "category",
         "context",
         "conversation_agent_id",
         "device_id",
@@ -1260,6 +1279,7 @@ class Intent:
         "intent_type",
         "language",
         "platform",
+        "satellite_id",
         "slots",
         "text_input",
     ]
@@ -1273,9 +1293,9 @@ class Intent:
         text_input: str | None,
         context: Context,
         language: str,
-        category: IntentCategory | None = None,
         assistant: str | None = None,
         device_id: str | None = None,
+        satellite_id: str | None = None,
         conversation_agent_id: str | None = None,
     ) -> None:
         """Initialize an intent."""
@@ -1286,9 +1306,9 @@ class Intent:
         self.text_input = text_input
         self.context = context
         self.language = language
-        self.category = category
         self.assistant = assistant
         self.device_id = device_id
+        self.satellite_id = satellite_id
         self.conversation_agent_id = conversation_agent_id
 
     @callback
@@ -1297,14 +1317,23 @@ class Intent:
         return IntentResponse(language=self.language, intent=self)
 
 
-class IntentResponseType(Enum):
+class IntentResponseType(
+    Enum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "PARTIAL_ACTION_DONE": (
+            "IntentResponseType.ACTION_DONE or IntentResponseType.ERROR",
+            "2026.3.0",
+        ),
+    },
+):
     """Type of the intent response."""
 
     ACTION_DONE = "action_done"
     """Intent caused an action to occur"""
 
     PARTIAL_ACTION_DONE = "partial_action_done"
-    """Intent caused an action, but it could only be partially done"""
+    """Deprecated. Intent caused an action, but it could only be partially done"""
 
     QUERY_ANSWER = "query_answer"
     """Response is an answer to a query"""
@@ -1371,12 +1400,7 @@ class IntentResponse:
         self.matched_states: list[State] = []
         self.unmatched_states: list[State] = []
         self.speech_slots: dict[str, Any] = {}
-
-        if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
-            # speech will be the answer to the query
-            self.response_type = IntentResponseType.QUERY_ANSWER
-        else:
-            self.response_type = IntentResponseType.ACTION_DONE
+        self.response_type = IntentResponseType.ACTION_DONE
 
     @callback
     def async_set_speech(

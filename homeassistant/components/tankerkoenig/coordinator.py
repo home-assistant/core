@@ -24,7 +24,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_FUEL_TYPES, CONF_STATIONS, DOMAIN
+from .const import CONF_STATIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,6 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
 
         self._selected_stations: list[str] = self.config_entry.data[CONF_STATIONS]
         self.stations: dict[str, Station] = {}
-        self.fuel_types: list[str] = self.config_entry.data[CONF_FUEL_TYPES]
         self.show_on_map: bool = self.config_entry.options[CONF_SHOW_ON_MAP]
 
         self._tankerkoenig = Tankerkoenig(
@@ -132,19 +131,31 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                     stations,
                     err,
                 )
-                raise ConfigEntryAuthFailed(err) from err
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_api_key",
+                ) from err
             except TankerkoenigRateLimitError as err:
                 _LOGGER.warning(
                     "API rate limit reached, consider to increase polling interval"
                 )
-                raise UpdateFailed(err) from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="rate_limit_reached",
+                ) from err
             except (TankerkoenigError, TankerkoenigConnectionError) as err:
                 _LOGGER.debug(
                     "error occur during update of stations %s %s",
                     stations,
                     err,
                 )
-                raise UpdateFailed(err) from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="station_update_failed",
+                    translation_placeholders={
+                        "station_ids": ", ".join(stations),
+                    },
+                ) from err
 
             prices.update(data)
 

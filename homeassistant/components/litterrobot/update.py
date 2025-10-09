@@ -15,7 +15,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity
@@ -26,12 +26,13 @@ FIRMWARE_UPDATE_ENTITY = UpdateEntityDescription(
     key="firmware",
     device_class=UpdateDeviceClass.FIRMWARE,
 )
+RELEASE_URL = "https://www.litter-robot.com/releases.html"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LitterRobotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot update platform."""
     coordinator = entry.runtime_data
@@ -48,6 +49,7 @@ async def async_setup_entry(
 class RobotUpdateEntity(LitterRobotEntity[LitterRobot4], UpdateEntity):
     """A class that describes robot update entities."""
 
+    _attr_release_url = RELEASE_URL
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )

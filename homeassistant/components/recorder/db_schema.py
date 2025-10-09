@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, Final, Protocol, Self, cast
+from typing import Any, Final, Protocol, Self
 
 import ciso8601
 from fnv_hash_fast import fnv1a_32
@@ -45,22 +45,16 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
 )
-from homeassistant.core import Context, Event, EventOrigin, EventStateChangedData, State
+from homeassistant.core import Event, EventStateChangedData
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import (
-    JSON_DECODE_EXCEPTIONS,
-    json_loads,
-    json_loads_object,
-)
 
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import (
     StatisticData,
     StatisticDataTimestamp,
+    StatisticMeanType,
     StatisticMetaData,
-    bytes_to_ulid_or_none,
-    bytes_to_uuid_hex_or_none,
     datetime_to_timestamp_or_none,
     process_timestamp,
     ulid_to_bytes_or_none,
@@ -77,7 +71,7 @@ class LegacyBase(DeclarativeBase):
     """Base class for tables, used for schema migration."""
 
 
-SCHEMA_VERSION = 48
+SCHEMA_VERSION = 50
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -203,11 +197,11 @@ UINT_32_TYPE = BigInteger().with_variant(
     "mariadb",
 )
 JSON_VARIANT_CAST = Text().with_variant(
-    postgresql.JSON(none_as_null=True),  # type: ignore[no-untyped-call]
+    postgresql.JSON(none_as_null=True),
     "postgresql",
 )
 JSONB_VARIANT_CAST = Text().with_variant(
-    postgresql.JSONB(none_as_null=True),  # type: ignore[no-untyped-call]
+    postgresql.JSONB(none_as_null=True),
     "postgresql",
 )
 DATETIME_TYPE = (
@@ -248,9 +242,6 @@ class JSONLiteral(JSON):
             return JSON_DUMP(value)
 
         return process
-
-
-EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
 
 
 class Events(Base):
@@ -332,28 +323,6 @@ class Events(Base):
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
         )
 
-    def to_native(self, validate_entity_id: bool = True) -> Event | None:
-        """Convert to a native HA Event."""
-        context = Context(
-            id=bytes_to_ulid_or_none(self.context_id_bin),
-            user_id=bytes_to_uuid_hex_or_none(self.context_user_id_bin),
-            parent_id=bytes_to_ulid_or_none(self.context_parent_id_bin),
-        )
-        try:
-            return Event(
-                self.event_type or "",
-                json_loads_object(self.event_data) if self.event_data else {},
-                EventOrigin(self.origin)
-                if self.origin
-                else EVENT_ORIGIN_ORDER[self.origin_idx or 0],
-                self.time_fired_ts or 0,
-                context=context,
-            )
-        except JSON_DECODE_EXCEPTIONS:
-            # When json_loads fails
-            _LOGGER.exception("Error converting to event: %s", self)
-            return None
-
 
 class LegacyEvents(LegacyBase):
     """Event history data with event_id, used for schema migration."""
@@ -408,17 +377,6 @@ class EventData(Base):
     def hash_shared_data_bytes(shared_data_bytes: bytes) -> int:
         """Return the hash of json encoded shared data."""
         return fnv1a_32(shared_data_bytes)
-
-    def to_native(self) -> dict[str, Any]:
-        """Convert to an event data dictionary."""
-        shared_data = self.shared_data
-        if shared_data is None:
-            return {}
-        try:
-            return cast(dict[str, Any], json_loads(shared_data))
-        except JSON_DECODE_EXCEPTIONS:
-            _LOGGER.exception("Error converting row to event data: %s", self)
-            return {}
 
 
 class EventTypes(Base):
@@ -536,7 +494,7 @@ class States(Base):
         context = event.context
         return States(
             state=state_value,
-            entity_id=event.data["entity_id"],
+            entity_id=None,
             attributes=None,
             context_id=None,
             context_id_bin=ulid_to_bytes_or_none(context.id),
@@ -550,44 +508,6 @@ class States(Base):
             last_updated_ts=last_updated_ts,
             last_changed_ts=last_changed_ts,
             last_reported_ts=last_reported_ts,
-        )
-
-    def to_native(self, validate_entity_id: bool = True) -> State | None:
-        """Convert to an HA state object."""
-        context = Context(
-            id=bytes_to_ulid_or_none(self.context_id_bin),
-            user_id=bytes_to_uuid_hex_or_none(self.context_user_id_bin),
-            parent_id=bytes_to_ulid_or_none(self.context_parent_id_bin),
-        )
-        try:
-            attrs = json_loads_object(self.attributes) if self.attributes else {}
-        except JSON_DECODE_EXCEPTIONS:
-            # When json_loads fails
-            _LOGGER.exception("Error converting row to state: %s", self)
-            return None
-        last_updated = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
-        if self.last_changed_ts is None or self.last_changed_ts == self.last_updated_ts:
-            last_changed = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
-        else:
-            last_changed = dt_util.utc_from_timestamp(self.last_changed_ts or 0)
-        if (
-            self.last_reported_ts is None
-            or self.last_reported_ts == self.last_updated_ts
-        ):
-            last_reported = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
-        else:
-            last_reported = dt_util.utc_from_timestamp(self.last_reported_ts or 0)
-        return State(
-            self.entity_id or "",
-            self.state,  # type: ignore[arg-type]
-            # Join the state_attributes table on attributes_id to get the attributes
-            # for newer states
-            attrs,
-            last_changed=last_changed,
-            last_reported=last_reported,
-            last_updated=last_updated,
-            context=context,
-            validate_entity_id=validate_entity_id,
         )
 
 
@@ -674,18 +594,6 @@ class StateAttributes(Base):
         """Return the hash of json encoded shared attributes."""
         return fnv1a_32(shared_attrs_bytes)
 
-    def to_native(self) -> dict[str, Any]:
-        """Convert to a state attributes dictionary."""
-        shared_attrs = self.shared_attrs
-        if shared_attrs is None:
-            return {}
-        try:
-            return cast(dict[str, Any], json_loads(shared_attrs))
-        except JSON_DECODE_EXCEPTIONS:
-            # When json_loads fails
-            _LOGGER.exception("Error converting row to state attributes: %s", self)
-            return {}
-
 
 class StatesMeta(Base):
     """Metadata for states."""
@@ -719,6 +627,7 @@ class StatisticsBase:
     start: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     start_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
     mean: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
+    mean_weight: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     min: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     max: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     last_reset: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
@@ -740,6 +649,7 @@ class StatisticsBase:
             start=None,
             start_ts=stats["start"].timestamp(),
             mean=stats.get("mean"),
+            mean_weight=stats.get("mean_weight"),
             min=stats.get("min"),
             max=stats.get("max"),
             last_reset=None,
@@ -763,6 +673,7 @@ class StatisticsBase:
             start=None,
             start_ts=stats["start_ts"],
             mean=stats.get("mean"),
+            mean_weight=stats.get("mean_weight"),
             min=stats.get("min"),
             max=stats.get("max"),
             last_reset=None,
@@ -848,6 +759,9 @@ class _StatisticsMeta:
     has_mean: Mapped[bool | None] = mapped_column(Boolean)
     has_sum: Mapped[bool | None] = mapped_column(Boolean)
     name: Mapped[str | None] = mapped_column(String(255))
+    mean_type: Mapped[StatisticMeanType] = mapped_column(
+        SmallInteger, nullable=False, default=StatisticMeanType.NONE.value
+    )  # See StatisticMeanType
 
     @staticmethod
     def from_meta(meta: StatisticMetaData) -> StatisticsMeta:
@@ -895,10 +809,6 @@ class RecorderRuns(Base):
             f" closed_incorrect={self.closed_incorrect},"
             f" created='{self.created.isoformat(sep=' ', timespec='seconds')}')>"
         )
-
-    def to_native(self, validate_entity_id: bool = True) -> Self:
-        """Return self, native format is this model."""
-        return self
 
 
 class MigrationChanges(Base):

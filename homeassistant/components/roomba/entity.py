@@ -52,11 +52,6 @@ class IRobotEntity(Entity):
         return self.robot_unique_id
 
     @property
-    def battery_level(self):
-        """Return the battery level of the vacuum cleaner."""
-        return self.vacuum_state.get("batPct")
-
-    @property
     def run_stats(self):
         """Return the run stats."""
         return self.vacuum_state.get("bbrun", {})
@@ -72,6 +67,16 @@ class IRobotEntity(Entity):
         return self.vacuum_state.get("bbchg3", {})
 
     @property
+    def tank_level(self) -> int | None:
+        """Return the tank level."""
+        return self.vacuum_state.get("tankLvl")
+
+    @property
+    def dock_tank_level(self) -> int | None:
+        """Return the dock tank level."""
+        return self.vacuum_state.get("dock", {}).get("tankLvl")
+
+    @property
     def last_mission(self):
         """Return last mission start time."""
         if (
@@ -80,7 +85,7 @@ class IRobotEntity(Entity):
             return None
         return dt_util.utc_from_timestamp(ts)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callback function."""
         self.vacuum.register_on_message_callback(self.on_message)
 

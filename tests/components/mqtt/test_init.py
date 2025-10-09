@@ -45,6 +45,7 @@ from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
+    MockMqttReasonCode,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache,
@@ -604,6 +605,23 @@ def test_entity_device_info_schema() -> None:
 
 
 @pytest.mark.parametrize(
+    ("side_effect", "error_message"),
+    [
+        (
+            ValueError("Invalid value for sensor"),
+            "Value error while updating "
+            "state of sensor.test_sensor, topic: 'test/state' "
+            "with payload: b'payload causing errors'",
+        ),
+        (
+            TypeError("Invalid value for sensor"),
+            "Exception raised while updating "
+            "state of sensor.test_sensor, topic: 'test/state' "
+            "with payload: b'payload causing errors'",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     "hass_config",
     [
         {
@@ -624,6 +642,8 @@ async def test_handle_logging_on_writing_the_entity_state(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
+    side_effect: Exception,
+    error_message: str,
 ) -> None:
     """Test on log handling when an error occurs writing the state."""
     await mqtt_mock_entry()
@@ -636,7 +656,7 @@ async def test_handle_logging_on_writing_the_entity_state(
     assert state.state == "initial_state"
     with patch(
         "homeassistant.helpers.entity.Entity.async_write_ha_state",
-        side_effect=ValueError("Invalid value for sensor"),
+        side_effect=side_effect,
     ):
         async_fire_mqtt_message(hass, "test/state", b"payload causing errors")
         await hass.async_block_till_done()
@@ -644,11 +664,7 @@ async def test_handle_logging_on_writing_the_entity_state(
         assert state is not None
         assert state.state == "initial_state"
         assert "Invalid value for sensor" in caplog.text
-        assert (
-            "Exception raised while updating "
-            "state of sensor.test_sensor, topic: 'test/state' "
-            "with payload: b'payload causing errors'" in caplog.text
-        )
+        assert error_message in caplog.text
 
 
 async def test_receiving_non_utf8_message_gets_logged(
@@ -682,11 +698,9 @@ async def test_receiving_message_with_non_utf8_topic_gets_logged(
     # Local import to avoid processing MQTT modules when running a testcase
     # which does not use MQTT.
 
-    # pylint: disable-next=import-outside-toplevel
-    from paho.mqtt.client import MQTTMessage
+    from paho.mqtt.client import MQTTMessage  # noqa: PLC0415
 
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.mqtt.models import MqttData
+    from homeassistant.components.mqtt.models import MqttData  # noqa: PLC0415
 
     msg = MQTTMessage(topic=b"tasmota/discovery/18FE34E0B760\xcc\x02")
     msg.payload = b"Payload"
@@ -1000,10 +1014,9 @@ async def test_dump_service(
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
         await hass.async_block_till_done()
 
-    writes = mopen.return_value.write.mock_calls
-    assert len(writes) == 2
-    assert writes[0][1][0] == "bla/1,test1\n"
-    assert writes[1][1][0] == "bla/2,test2\n"
+    writes = mopen.return_value.writelines.mock_calls
+    assert len(writes) == 1
+    assert writes[0][1][0] == ["bla/1,test1\n", "bla/2,test2\n"]
 
 
 async def test_mqtt_ws_remove_discovered_device(
@@ -1572,6 +1585,7 @@ async def test_subscribe_connection_status(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test connextion status subscription."""
+
     mqtt_client_mock = setup_with_birth_msg_client_mock
     mqtt_connected_calls_callback: list[bool] = []
     mqtt_connected_calls_async: list[bool] = []
@@ -1589,7 +1603,7 @@ async def test_subscribe_connection_status(
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is False
 
@@ -1603,12 +1617,12 @@ async def test_subscribe_connection_status(
 
     # Mock connect status
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is False
 
@@ -1618,7 +1632,7 @@ async def test_subscribe_connection_status(
 
     # Mock connect status
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
     assert mqtt.is_connected(hass) is True
 

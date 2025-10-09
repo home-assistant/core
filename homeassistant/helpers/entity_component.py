@@ -18,31 +18,29 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     Event,
-    HassJob,
     HassJobType,
     HomeAssistant,
     ServiceCall,
-    ServiceResponse,
     SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util.hass_dict import HassKey
 
-from . import config_validation as cv, discovery, entity, service
-from .entity_platform import EntityPlatform
+from . import device_registry as dr, discovery, entity, entity_registry as er, service
+from .entity_platform import EntityPlatform, async_calculate_suggested_object_id
 from .typing import ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
-DATA_INSTANCES = "entity_components"
+DATA_INSTANCES: HassKey[dict[str, EntityComponent]] = HassKey("entity_components")
 
 
 @bind_hass
 async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Trigger an update for an entity."""
     domain = entity_id.partition(".")[0]
-    entity_comp: EntityComponent[entity.Entity] | None
     entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
 
     if entity_comp is None:
@@ -58,6 +56,36 @@ async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
         return
 
     await entity_obj.async_update_ha_state(True)
+
+
+@callback
+def async_get_entity_suggested_object_id(
+    hass: HomeAssistant, entity_id: str
+) -> str | None:
+    """Get the suggested object id for an entity.
+
+    Raises HomeAssistantError if the entity is not in the registry or
+    is not backed by an object.
+    """
+    entity_registry = er.async_get(hass)
+    if not (entity_entry := entity_registry.async_get(entity_id)):
+        raise HomeAssistantError(f"Entity {entity_id} is not in the registry.")
+
+    domain = entity_id.partition(".")[0]
+
+    if entity_entry.name:
+        return entity_entry.name
+
+    if entity_entry.suggested_object_id:
+        return entity_entry.suggested_object_id
+
+    entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
+    if not (entity_obj := entity_comp.get_entity(entity_id) if entity_comp else None):
+        raise HomeAssistantError(f"Entity {entity_id} has no object.")
+    device: dr.DeviceEntry | None = None
+    if device_id := entity_entry.device_id:
+        device = dr.async_get(hass).async_get(device_id)
+    return async_calculate_suggested_object_id(entity_obj, device)
 
 
 class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
@@ -95,7 +123,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         self.async_add_entities = domain_platform.async_add_entities
         self.add_entities = domain_platform.add_entities
         self._entities: dict[str, entity.Entity] = domain_platform.domain_entities
-        hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
+        hass.data.setdefault(DATA_INSTANCES, {})[domain] = self  # type: ignore[assignment]
 
     @property
     def entities(self) -> Iterable[_EntityT]:
@@ -212,44 +240,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         This method must be run in the event loop.
         """
         return await service.async_extract_entities(
-            self.hass, self.entities, service_call, expand_group
-        )
-
-    @callback
-    def async_register_legacy_entity_service(
-        self,
-        name: str,
-        schema: VolDictType | VolSchemaType,
-        func: str | Callable[..., Any],
-        required_features: list[int] | None = None,
-        supports_response: SupportsResponse = SupportsResponse.NONE,
-    ) -> None:
-        """Register an entity service with a legacy response format."""
-        if isinstance(schema, dict):
-            schema = cv.make_entity_service_schema(schema)
-
-        service_func: str | HassJob[..., Any]
-        service_func = func if isinstance(func, str) else HassJob(func)
-
-        async def handle_service(
-            call: ServiceCall,
-        ) -> ServiceResponse:
-            """Handle the service."""
-
-            result = await service.entity_service_call(
-                self.hass, self._entities, service_func, call, required_features
-            )
-
-            if result:
-                if len(result) > 1:
-                    raise HomeAssistantError(
-                        "Deprecated service call matched more than one entity"
-                    )
-                return result.popitem()[1]
-            return None
-
-        self.hass.services.async_register(
-            self.domain, name, handle_service, schema, supports_response
+            self.entities, service_call, expand_group
         )
 
     @callback

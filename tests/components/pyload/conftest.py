@@ -12,17 +12,17 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
+    CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from tests.common import MockConfigEntry
 
 USER_INPUT = {
-    CONF_HOST: "pyload.local",
+    CONF_URL: "https://pyload.local:8000/prefix",
     CONF_PASSWORD: "test-password",
-    CONF_PORT: 8000,
-    CONF_SSL: True,
     CONF_USERNAME: "test-username",
     CONF_VERIFY_SSL: False,
 }
@@ -33,13 +33,26 @@ REAUTH_INPUT = {
 }
 
 NEW_INPUT = {
-    CONF_HOST: "pyload.local",
+    CONF_URL: "https://pyload.local:8000/prefix",
     CONF_PASSWORD: "new-password",
-    CONF_PORT: 8000,
-    CONF_SSL: True,
     CONF_USERNAME: "new-username",
     CONF_VERIFY_SSL: False,
 }
+
+
+ADDON_DISCOVERY_INFO = {
+    "addon": "pyLoad-ng",
+    CONF_URL: "http://539df76c-pyload-ng:8000/",
+    CONF_USERNAME: "pyload",
+    CONF_PASSWORD: "pyload",
+}
+
+ADDON_SERVICE_INFO = HassioServiceInfo(
+    config=ADDON_DISCOVERY_INFO,
+    name="pyLoad-ng Addon",
+    slug="p539df76c_pyload-ng",
+    uuid="1234",
+)
 
 
 @pytest.fixture
@@ -97,5 +110,28 @@ def mock_pyloadapi() -> Generator[MagicMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Mock pyLoad configuration entry."""
     return MockConfigEntry(
-        domain=DOMAIN, title=DEFAULT_NAME, data=USER_INPUT, entry_id="XXXXXXXXXXXXXX"
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        data=USER_INPUT,
+        entry_id="XXXXXXXXXXXXXX",
+    )
+
+
+@pytest.fixture(name="config_entry_migrate")
+def mock_config_entry_migrate() -> MockConfigEntry:
+    """Mock pyLoad configuration entry for migration."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        data={
+            CONF_HOST: "pyload.local",
+            CONF_PASSWORD: "test-password",
+            CONF_PORT: 8000,
+            CONF_SSL: True,
+            CONF_USERNAME: "test-username",
+            CONF_VERIFY_SSL: False,
+        },
+        version=1,
+        minor_version=0,
+        entry_id="XXXXXXXXXXXXXX",
     )

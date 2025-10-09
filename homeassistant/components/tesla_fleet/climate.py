@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslaFleetConfigEntry
 from .const import DOMAIN, TeslaFleetClimateSide
@@ -38,7 +38,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tesla Fleet Climate platform from a config entry."""
 
@@ -164,12 +164,6 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
-        if hvac_mode not in self.hvac_modes:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_hvac_mode",
-                translation_placeholders={"hvac_mode": hvac_mode},
-            )
         if hvac_mode == HVACMode.OFF:
             await self.async_turn_off()
         else:

@@ -11,7 +11,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.modbus.const import MODBUS_DOMAIN as DOMAIN, TCP
+from homeassistant.components.modbus.const import DOMAIN, TCP
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_HOST,
@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from tests.common import async_fire_time_changed, mock_restore_cache
 
@@ -42,6 +43,7 @@ class ReadResult:
         self.registers = register_words
         self.bits = register_words
         self.value = register_words
+        self.count = len(register_words) if register_words is not None else 0
 
     def isError(self):
         """Set error state."""
@@ -120,6 +122,7 @@ def mock_pymodbus_fixture(do_exception, register_words):
 async def mock_modbus_fixture(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
     check_config_loaded,
     config_addon,
     do_config,
@@ -156,6 +159,15 @@ async def mock_modbus_fixture(
     ):
         result = await async_setup_component(hass, DOMAIN, config)
         assert result or not check_config_loaded
+    await hass.async_block_till_done()
+    key = HassKey(DOMAIN)
+    if key not in hass.data:
+        return None
+    hub = hass.data[HassKey(DOMAIN)][TEST_MODBUS_NAME]
+    await hub.event_connected.wait()
+    assert hub.event_connected.is_set()
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     return mock_pymodbus
 

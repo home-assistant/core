@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from goslideapi.goslideapi import (
     AuthenticationFailed,
@@ -14,6 +14,7 @@ from goslideapi.goslideapi import (
     GoSlideLocal as SlideLocalApi,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_HOST,
@@ -27,27 +28,34 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_OFFSET, DOMAIN
+from .const import CONF_INVERT_POSITION, DEFAULT_OFFSET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-if TYPE_CHECKING:
-    from . import SlideConfigEntry
+type SlideConfigEntry = ConfigEntry[SlideCoordinator]
 
 
 class SlideCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Get and update the latest data."""
 
-    def __init__(self, hass: HomeAssistant, entry: SlideConfigEntry) -> None:
+    config_entry: SlideConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: SlideConfigEntry) -> None:
         """Initialize the data object."""
         super().__init__(
-            hass, _LOGGER, name="Slide", update_interval=timedelta(seconds=15)
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Slide",
+            update_interval=timedelta(seconds=15),
         )
         self.slide = SlideLocalApi()
-        self.api_version = entry.data[CONF_API_VERSION]
-        self.mac = entry.data[CONF_MAC]
-        self.host = entry.data[CONF_HOST]
-        self.password = entry.data[CONF_PASSWORD] if self.api_version == 1 else ""
+        self.api_version = config_entry.data[CONF_API_VERSION]
+        self.mac = config_entry.data[CONF_MAC]
+        self.host = config_entry.data[CONF_HOST]
+        self.password = (
+            config_entry.data[CONF_PASSWORD] if self.api_version == 1 else ""
+        )
 
     async def _async_setup(self) -> None:
         """Do initialization logic for Slide coordinator."""
@@ -92,19 +100,22 @@ class SlideCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             data["pos"] = max(0, min(1, data["pos"]))
 
+            if not self.config_entry.options.get(CONF_INVERT_POSITION, False):
+                # For slide 0->open, 1->closed; for HA 0->closed, 1->open
+                # Value has therefore to be inverted, unless CONF_INVERT_POSITION is true
+                data["pos"] = 1 - data["pos"]
+
             if oldpos is None or oldpos == data["pos"]:
                 data["state"] = (
-                    STATE_CLOSED if data["pos"] > (1 - DEFAULT_OFFSET) else STATE_OPEN
+                    STATE_CLOSED if data["pos"] < DEFAULT_OFFSET else STATE_OPEN
                 )
-            elif oldpos < data["pos"]:
+            elif oldpos > data["pos"]:
                 data["state"] = (
-                    STATE_CLOSED
-                    if data["pos"] >= (1 - DEFAULT_OFFSET)
-                    else STATE_CLOSING
+                    STATE_CLOSED if data["pos"] <= DEFAULT_OFFSET else STATE_CLOSING
                 )
             else:
                 data["state"] = (
-                    STATE_OPEN if data["pos"] <= DEFAULT_OFFSET else STATE_OPENING
+                    STATE_OPEN if data["pos"] >= (1 - DEFAULT_OFFSET) else STATE_OPENING
                 )
 
         _LOGGER.debug("Data successfully updated: %s", data)

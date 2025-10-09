@@ -7,6 +7,12 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["homee"],
-  "quality_scale": "bronze",
-  "requirements": ["pyHomee==1.2.5"]
+  "quality_scale": "silver",
+  "requirements": ["pyHomee==1.3.8"],
+  "zeroconf": [
+    {
+      "type": "_ssh._tcp.local.",
+      "name": "homee-*"
+    }
+  ]
 }

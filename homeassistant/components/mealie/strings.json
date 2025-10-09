@@ -39,6 +39,16 @@
           "api_token": "[%key:component::mealie::common::data_description_api_token%]",
           "verify_ssl": "[%key:component::mealie::common::data_description_verify_ssl%]"
         }
+      },
+      "hassio_confirm": {
+        "title": "Mealie via Home Assistant add-on",
+        "description": "Do you want to configure Home Assistant to connect to the Mealie instance provided by the add-on: {addon}?",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "[%key:component::mealie::common::data_description_api_token%]"
+        }
       }
     },
     "error": {
@@ -50,6 +60,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_account": "You have to use the same account that was used to configure the integration."
@@ -109,6 +120,9 @@
     "recipe_not_found": {
       "message": "Recipe with ID or slug `{recipe_id}` not found."
     },
+    "no_recipes_found": {
+      "message": "No recipes found matching your search."
+    },
     "could_not_import_recipe": {
       "message": "Mealie could not import the recipe from the URL."
     },
@@ -146,11 +160,11 @@
   "services": {
     "get_mealplan": {
       "name": "Get mealplan",
-      "description": "Get mealplan from Mealie",
+      "description": "Gets a mealplan from Mealie",
       "fields": {
         "config_entry_id": {
           "name": "Mealie instance",
-          "description": "Select the Mealie instance to get mealplan from"
+          "description": "The Mealie instance to use for this action."
         },
         "start_date": {
           "name": "Start date",
@@ -164,7 +178,7 @@
     },
     "get_recipe": {
       "name": "Get recipe",
-      "description": "Get recipe from Mealie",
+      "description": "Gets a recipe from Mealie",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
@@ -176,9 +190,27 @@
         }
       }
     },
+    "get_recipes": {
+      "name": "Get recipes",
+      "description": "Searches for recipes with any matching properties in Mealie",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]"
+        },
+        "search_terms": {
+          "name": "Search terms",
+          "description": "Terms to search for in recipe properties."
+        },
+        "result_limit": {
+          "name": "Result limit",
+          "description": "Maximum number of recipes to return (default: 10)."
+        }
+      }
+    },
     "import_recipe": {
       "name": "Import recipe",
-      "description": "Import recipe from an URL",
+      "description": "Imports a recipe from an URL",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
@@ -196,7 +228,7 @@
     },
     "set_random_mealplan": {
       "name": "Set random mealplan",
-      "description": "Set a random mealplan for a specific date",
+      "description": "Sets a random mealplan for a specific date",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
@@ -214,7 +246,7 @@
     },
     "set_mealplan": {
       "name": "Set a mealplan",
-      "description": "Set a mealplan for a specific date",
+      "description": "Sets a mealplan for a specific date",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",

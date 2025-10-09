@@ -50,7 +50,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
@@ -99,7 +99,7 @@ T = TypeVar(
 
 
 @dataclass(frozen=True, kw_only=True)
-class DeconzSensorDescription(Generic[T], SensorEntityDescription):
+class DeconzSensorDescription(SensorEntityDescription, Generic[T]):
     """Class describing deCONZ binary sensor entities."""
 
     instance_check: type[T] | None = None
@@ -332,7 +332,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: DeconzConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the deCONZ sensors."""
     hub = config_entry.runtime_data
@@ -468,7 +468,7 @@ class DeconzBatteryTracker:
         sensor_id: str,
         hub: DeconzHub,
         description: DeconzSensorDescription,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up tracker."""
         self.sensor = hub.api.sensors[sensor_id]

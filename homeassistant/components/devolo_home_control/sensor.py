@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DevoloHomeControlConfigEntry
 from .entity import DevoloDeviceEntity
@@ -40,7 +40,7 @@ STATE_CLASS_MAPPING = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DevoloHomeControlConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all sensor devices and setup them via config entry."""
     entities: list[SensorEntity] = []
@@ -185,7 +185,7 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         """
         return f"{self._attr_unique_id}_{self._sensor_type}"
 
-    def _sync(self, message: tuple) -> None:
+    def sync_callback(self, message: tuple) -> None:
         """Update the consumption sensor state."""
         if message[0] == self._attr_unique_id:
             self._value = getattr(

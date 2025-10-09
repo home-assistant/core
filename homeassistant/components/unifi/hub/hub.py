@@ -16,7 +16,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN, PLATFORMS
+from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, PLATFORMS
 from .config import UnifiConfig
 from .entity_helper import UnifiEntityHelper
 from .entity_loader import UnifiEntityLoader
@@ -39,7 +39,7 @@ class UnifiHub:
         self.hass = hass
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
-        self.entity_loader = UnifiEntityLoader(self)
+        self.entity_loader = UnifiEntityLoader(self, config_entry)
         self._entity_helper = UnifiEntityHelper(hass, api)
         self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
 
@@ -91,7 +91,9 @@ class UnifiHub:
         assert self.config.entry.unique_id is not None
         self.is_admin = self.api.sites[self.config.entry.unique_id].role == "admin"
 
-        self.config.entry.add_update_listener(self.async_config_entry_updated)
+        self.config.entry.async_on_unload(
+            self.config.entry.add_update_listener(self.async_config_entry_updated)
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -104,7 +106,7 @@ class UnifiHub:
 
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(UNIFI_DOMAIN, self.config.entry.unique_id)},
+            identifiers={(DOMAIN, self.config.entry.unique_id)},
             manufacturer=ATTR_MANUFACTURER,
             model="UniFi Network Application",
             name="UniFi Network",

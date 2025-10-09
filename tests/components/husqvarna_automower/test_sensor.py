@@ -4,13 +4,19 @@ import datetime
 from unittest.mock import AsyncMock, patch
 import zoneinfo
 
-from aioautomower.model import MowerAttributes, MowerModes, MowerStates
+from aioautomower.model import (
+    ExternalReasons,
+    MowerAttributes,
+    MowerModes,
+    MowerStates,
+    RestrictedReasons,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -39,7 +45,7 @@ async def test_sensor_unknown_states(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_mode")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_cutting_blade_usage_time_sensor(
@@ -53,7 +59,7 @@ async def test_cutting_blade_usage_time_sensor(
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("sensor.test_mower_1_cutting_blade_usage_time")
     assert state is not None
-    assert state.state == "0.034"
+    assert float(state.state) == pytest.approx(0.03416666)
 
 
 @pytest.mark.freeze_time(
@@ -78,7 +84,7 @@ async def test_next_start_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_next_start")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_work_area_sensor(
@@ -109,6 +115,53 @@ async def test_work_area_sensor(
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_work_area")
     assert state.state == "my_lawn"
+
+    # Test EPOS mower, which returns work_area_id = 0, when no
+    # work area is active and has no default work_area_id=0
+    values[TEST_MOWER_ID].mower.work_area_id = 0
+    del values[TEST_MOWER_ID].work_areas[0]
+    del values[TEST_MOWER_ID].work_area_dict[0]
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mower_1_work_area")
+    assert state.state == "no_work_area_active"
+
+
+async def test_restricted_reason_sensor(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
+) -> None:
+    """Test the work area sensor."""
+    sensor = "sensor.test_mower_1_restricted_reason"
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get(sensor)
+    assert state is not None
+    assert state.state == RestrictedReasons.WEEK_SCHEDULE
+
+    values[TEST_MOWER_ID].planner.restricted_reason = RestrictedReasons.EXTERNAL
+    values[TEST_MOWER_ID].planner.external_reason = None
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(sensor)
+    assert state.state == RestrictedReasons.EXTERNAL
+
+    values[TEST_MOWER_ID].planner.restricted_reason = RestrictedReasons.EXTERNAL
+    values[
+        TEST_MOWER_ID
+    ].planner.external_reason = ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(sensor)
+    assert state.state == ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

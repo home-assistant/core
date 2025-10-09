@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -16,7 +17,6 @@
         'alfred-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Jäspi',
@@ -26,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '10001',
-    'suggested_area': None,
     'sw_version': '9682R7A',
     'via_device_id': None,
   })
@@ -35,6 +34,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -48,7 +48,6 @@
         'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Nibe',
@@ -58,7 +57,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '10002',
-    'suggested_area': None,
     'sw_version': '9682R7B',
     'via_device_id': None,
   })
@@ -67,6 +65,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -80,7 +79,6 @@
         'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Nibe',
@@ -90,7 +88,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '10003',
-    'suggested_area': None,
     'sw_version': '9682R7C',
     'via_device_id': None,
   })

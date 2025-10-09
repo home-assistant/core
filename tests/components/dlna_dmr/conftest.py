@@ -10,7 +10,7 @@ from async_upnp_client.client import UpnpDevice, UpnpService
 from async_upnp_client.client_factory import UpnpFactory
 import pytest
 
-from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
+from homeassistant.components.dlna_dmr.const import DOMAIN
 from homeassistant.components.dlna_dmr.data import DlnaDmrData
 from homeassistant.const import CONF_DEVICE_ID, CONF_MAC, CONF_TYPE, CONF_URL
 from homeassistant.core import HomeAssistant
@@ -76,7 +76,7 @@ def domain_data_mock(hass: HomeAssistant) -> Mock:
     seal(upnp_device)
     domain_data.upnp_factory.async_create_device.return_value = upnp_device
 
-    hass.data[DLNA_DOMAIN] = domain_data
+    hass.data[DOMAIN] = domain_data
     return domain_data
 
 
@@ -85,7 +85,7 @@ def config_entry_mock() -> MockConfigEntry:
     """Mock a config entry for this platform."""
     return MockConfigEntry(
         unique_id=MOCK_DEVICE_UDN,
-        domain=DLNA_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_URL: MOCK_DEVICE_LOCATION,
             CONF_DEVICE_ID: MOCK_DEVICE_UDN,
@@ -102,7 +102,7 @@ def config_entry_mock_no_mac() -> MockConfigEntry:
     """Mock a config entry that does not already contain a MAC address."""
     return MockConfigEntry(
         unique_id=MOCK_DEVICE_UDN,
-        domain=DLNA_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_URL: MOCK_DEVICE_LOCATION,
             CONF_DEVICE_ID: MOCK_DEVICE_UDN,

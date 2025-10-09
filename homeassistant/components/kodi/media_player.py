@@ -15,7 +15,6 @@ import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     BrowseError,
     BrowseMedia,
     MediaPlayerEntity,
@@ -24,19 +23,11 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
-    CONF_HOST,
     CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_PROXY_SSL,
-    CONF_SSL,
-    CONF_TIMEOUT,
     CONF_TYPE,
-    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
@@ -46,48 +37,24 @@ from homeassistant.helpers import (
     entity_platform,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import dt as dt_util
 
+from . import KodiConfigEntry
 from .browse_media import (
     build_item_response,
     get_media_info,
     library_payload,
     media_source_content_filter,
 )
-from .const import (
-    CONF_WS_PORT,
-    DATA_CONNECTION,
-    DATA_KODI,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
-    DEFAULT_TIMEOUT,
-    DEFAULT_WS_PORT,
-    DOMAIN,
-    EVENT_TURN_OFF,
-    EVENT_TURN_ON,
-)
+from .const import DOMAIN, EVENT_TURN_OFF, EVENT_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
 
 EVENT_KODI_CALL_METHOD_RESULT = "kodi_call_method_result"
-
-CONF_TCP_PORT = "tcp_port"
-CONF_TURN_ON_ACTION = "turn_on_action"
-CONF_TURN_OFF_ACTION = "turn_off_action"
-CONF_ENABLE_WEBSOCKET = "enable_websocket"
-
-DEPRECATED_TURN_OFF_ACTIONS = {
-    None: None,
-    "quit": "Application.Quit",
-    "hibernate": "System.Hibernate",
-    "suspend": "System.Suspend",
-    "reboot": "System.Reboot",
-    "shutdown": "System.Shutdown",
-}
 
 WEBSOCKET_WATCHDOG_INTERVAL = timedelta(seconds=10)
 
@@ -118,25 +85,6 @@ MAP_KODI_MEDIA_TYPES: dict[MediaType | str, str] = {
 }
 
 
-PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TCP_PORT, default=DEFAULT_WS_PORT): cv.port,
-        vol.Optional(CONF_PROXY_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_TURN_ON_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_TURN_OFF_ACTION): vol.Any(
-            cv.SCRIPT_SCHEMA, vol.In(DEPRECATED_TURN_OFF_ACTIONS)
-        ),
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Inclusive(CONF_USERNAME, "auth"): cv.string,
-        vol.Inclusive(CONF_PASSWORD, "auth"): cv.string,
-        vol.Optional(CONF_ENABLE_WEBSOCKET, default=True): cv.boolean,
-    }
-)
-
-
 SERVICE_ADD_MEDIA = "add_to_playlist"
 SERVICE_CALL_METHOD = "call_method"
 
@@ -159,54 +107,10 @@ KODI_CALL_METHOD_SCHEMA = cv.make_entity_service_schema(
 )
 
 
-def find_matching_config_entries_for_host(hass, host):
-    """Search existing config entries for one matching the host."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[CONF_HOST] == host:
-            return entry
-    return None
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Kodi platform."""
-    if discovery_info:
-        # Now handled by zeroconf in the config flow
-        return
-
-    host = config[CONF_HOST]
-    if find_matching_config_entries_for_host(hass, host):
-        return
-
-    websocket = config.get(CONF_ENABLE_WEBSOCKET)
-    ws_port = config.get(CONF_TCP_PORT) if websocket else None
-
-    entry_data = {
-        CONF_NAME: config.get(CONF_NAME, host),
-        CONF_HOST: host,
-        CONF_PORT: config.get(CONF_PORT),
-        CONF_WS_PORT: ws_port,
-        CONF_USERNAME: config.get(CONF_USERNAME),
-        CONF_PASSWORD: config.get(CONF_PASSWORD),
-        CONF_SSL: config.get(CONF_PROXY_SSL),
-        CONF_TIMEOUT: config.get(CONF_TIMEOUT),
-    }
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_data
-        )
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: KodiConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Kodi media player platform."""
     platform = entity_platform.async_get_current_platform()
@@ -217,14 +121,12 @@ async def async_setup_entry(
         SERVICE_CALL_METHOD, KODI_CALL_METHOD_SCHEMA, "async_call_method"
     )
 
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    connection = data[DATA_CONNECTION]
-    kodi = data[DATA_KODI]
+    data = config_entry.runtime_data
     name = config_entry.data[CONF_NAME]
     if (uid := config_entry.unique_id) is None:
         uid = config_entry.entry_id
 
-    entity = KodiEntity(connection, kodi, name, uid)
+    entity = KodiEntity(data.connection, data.kodi, name, uid)
     async_add_entities([entity])
 
 

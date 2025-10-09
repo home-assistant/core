@@ -4,7 +4,7 @@ import asyncio
 from datetime import timedelta
 import time
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -140,7 +140,6 @@ async def test_setup_and_stop_passive(
         "adapter": "hci0",
         "bluez": scanner.PASSIVE_SCANNER_ARGS,  # pylint: disable=c-extension-no-member
         "scanning_mode": "passive",
-        "detection_callback": ANY,
     }
 
 
@@ -190,7 +189,6 @@ async def test_setup_and_stop_old_bluez(
     assert init_kwargs == {
         "adapter": "hci0",
         "scanning_mode": "active",
-        "detection_callback": ANY,
     }
 
 
@@ -3297,6 +3295,55 @@ async def test_cleanup_orphened_remote_scanner_config_entry(
     await hass.async_block_till_done()
 
     # Orphened remote scanner config entry should be cleaned up
+    assert not hass.config_entries.async_entry_for_domain_unique_id(
+        "bluetooth", scanner.source
+    )
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_fix_incorrect_mac_remote_scanner_config_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test the remote scanner config entries can replace a incorrect mac."""
+    source_entry = MockConfigEntry(domain="test")
+    source_entry.add_to_hass(hass)
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeRemoteScanner("AA:BB:CC:DD:EE:FF", "esp32", connector, True)
+    assert scanner.source == "AA:BB:CC:DD:EE:FF"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SOURCE: scanner.source,
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: source_entry.entry_id,
+        },
+        unique_id=scanner.source,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.config_entries.async_entry_for_domain_unique_id(
+        "bluetooth", scanner.source
+    )
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    new_scanner = FakeRemoteScanner("AA:BB:CC:DD:EE:AA", "esp32", connector, True)
+    assert new_scanner.source == "AA:BB:CC:DD:EE:AA"
+    hass.config_entries.async_update_entry(
+        entry,
+        data={**entry.data, CONF_SOURCE: new_scanner.source},
+        unique_id=new_scanner.source,
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.config_entries.async_entry_for_domain_unique_id(
+        "bluetooth", new_scanner.source
+    )
+    # Incorrect connection should be removed
     assert not hass.config_entries.async_entry_for_domain_unique_id(
         "bluetooth", scanner.source
     )

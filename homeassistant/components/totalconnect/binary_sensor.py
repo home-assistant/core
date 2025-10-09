@@ -12,12 +12,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import TotalConnectDataUpdateCoordinator
+from .coordinator import TotalConnectConfigEntry, TotalConnectDataUpdateCoordinator
 from .entity import TotalConnectLocationEntity, TotalConnectZoneEntity
 
 LOW_BATTERY = "low_battery"
@@ -119,7 +118,9 @@ LOCATION_BINARY_SENSORS: tuple[TotalConnectAlarmBinarySensorEntityDescription, .
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TotalConnectConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TotalConnect device sensors based on a config entry."""
     sensors: list = []
@@ -171,9 +172,9 @@ class TotalConnectZoneBinarySensor(TotalConnectZoneEntity, BinarySensorEntity):
         super().__init__(coordinator, zone, location_id, entity_description.key)
         self.entity_description = entity_description
         self._attr_extra_state_attributes = {
-            "zone_id": zone.zoneid,
+            "zone_id": str(zone.zoneid),
             "location_id": location_id,
-            "partition": zone.partition,
+            "partition": str(zone.partition),
         }
 
     @property

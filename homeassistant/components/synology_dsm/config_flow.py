@@ -24,7 +24,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_DISKS,
@@ -33,14 +33,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -67,7 +65,6 @@ from .const import (
     DEFAULT_BACKUP_PATH,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_SNAPSHOT_QUALITY,
     DEFAULT_TIMEOUT,
     DEFAULT_USE_SSL,
@@ -75,7 +72,7 @@ from .const import (
     DOMAIN,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
-from .models import SynologyDSMData
+from .coordinator import SynologyDSMConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,7 +131,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SynologyDSMConfigEntry,
     ) -> SynologyDSMOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SynologyDSMOptionsFlowHandler()
@@ -146,6 +143,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         self.reauth_conf: Mapping[str, Any] = {}
         self.reauth_reason: str | None = None
         self.shares: list[SynoFileSharedFolder] | None = None
+        self.api: SynologyDSM | None = None
 
     def _show_form(
         self,
@@ -159,6 +157,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         description_placeholders = {}
         data_schema = None
+        self.api = None
 
         if step_id == "link":
             user_input.update(self.discovered_conf)
@@ -197,14 +196,21 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 port = DEFAULT_PORT
 
-        session = async_get_clientsession(self.hass, verify_ssl)
-        api = SynologyDSM(
-            session, host, port, username, password, use_ssl, timeout=DEFAULT_TIMEOUT
-        )
+        if self.api is None:
+            session = async_get_clientsession(self.hass, verify_ssl)
+            self.api = SynologyDSM(
+                session,
+                host,
+                port,
+                username,
+                password,
+                use_ssl,
+                timeout=DEFAULT_TIMEOUT,
+            )
 
         errors = {}
         try:
-            serial = await _login_and_fetch_syno_info(api, otp_code)
+            serial = await _login_and_fetch_syno_info(self.api, otp_code)
         except SynologyDSMLogin2SARequiredException:
             return await self.async_step_2sa(user_input)
         except SynologyDSMLogin2SAFailedException:
@@ -224,10 +230,11 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "missing_data"
 
         if errors:
+            self.api = None
             return self._show_form(step_id, user_input, errors)
 
         with suppress(*SYNOLOGY_CONNECTION_EXCEPTIONS):
-            self.shares = await api.file.get_shared_folders(only_writable=True)
+            self.shares = await self.api.file.get_shared_folders(only_writable=True)
 
         if self.shares and not backup_path:
             return await self.async_step_backup_share(user_input)
@@ -242,14 +249,14 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_VERIFY_SSL: verify_ssl,
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
-            CONF_MAC: api.network.macs,
+            CONF_MAC: self.api.network.macs,
         }
         config_options = {
             CONF_BACKUP_PATH: backup_path,
             CONF_BACKUP_SHARE: backup_share,
         }
         if otp_code:
-            config_data[CONF_DEVICE_TOKEN] = api.device_token
+            config_data[CONF_DEVICE_TOKEN] = self.api.device_token
         if user_input.get(CONF_DISKS):
             config_data[CONF_DISKS] = user_input[CONF_DISKS]
         if user_input.get(CONF_VOLUMES):
@@ -444,8 +451,10 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         return None
 
 
-class SynologyDSMOptionsFlowHandler(OptionsFlow):
+class SynologyDSMOptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow."""
+
+    config_entry: SynologyDSMConfigEntry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -454,16 +463,10 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        syno_data: SynologyDSMData = self.hass.data[DOMAIN][self.config_entry.unique_id]
+        syno_data = self.config_entry.runtime_data
 
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_SCAN_INTERVAL,
-                    default=self.config_entry.options.get(
-                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    ),
-                ): cv.positive_int,
                 vol.Required(
                     CONF_SNAPSHOT_QUALITY,
                     default=self.config_entry.options.get(

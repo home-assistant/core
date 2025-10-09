@@ -14,21 +14,20 @@ from homeassistant.components.valve import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 ValveConfigurationAndControl = clusters.ValveConfigurationAndControl
-
 ValveStateEnum = ValveConfigurationAndControl.Enums.ValveStateEnum
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter valve platform from Config Entry."""
     matter = get_matter(hass)
@@ -52,9 +51,12 @@ class MatterValve(MatterEntity, ValveEntity):
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
-        await self.send_device_command(
-            ValveConfigurationAndControl.Commands.Open(targetLevel=position)
-        )
+        if position > 0:
+            await self.send_device_command(
+                ValveConfigurationAndControl.Commands.Open(targetLevel=position)
+            )
+            return
+        await self.send_device_command(ValveConfigurationAndControl.Commands.Close())
 
     @callback
     def _update_from_device(self) -> None:

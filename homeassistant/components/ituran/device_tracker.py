@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from propcache.api import cached_property
+
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IturanConfigEntry
 from .coordinator import IturanDataUpdateCoordinator
@@ -14,7 +16,7 @@ from .entity import IturanBaseEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: IturanConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Ituran tracker from config entry."""
     coordinator = config_entry.runtime_data
@@ -38,12 +40,12 @@ class IturanDeviceTracker(IturanBaseEntity, TrackerEntity):
         """Initialize the device tracker."""
         super().__init__(coordinator, license_plate, "device_tracker")
 
-    @property
+    @cached_property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
         return self.vehicle.gps_coordinates[0]
 
-    @property
+    @cached_property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         return self.vehicle.gps_coordinates[1]

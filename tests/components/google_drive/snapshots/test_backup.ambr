@@ -136,7 +136,7 @@
       }),
     ),
     tuple(
-      'upload_file',
+      'resumable_upload_file',
       tuple(
         dict({
           'description': '{"addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}], "backup_id": "test-backup", "date": "2025-01-01T01:23:45.678Z", "database_included": true, "extra_metadata": {"with_automatic_settings": false}, "folders": [], "homeassistant_included": true, "homeassistant_version": "2024.12.0", "name": "Test", "protected": false, "size": 987}',
@@ -151,8 +151,10 @@
           }),
         }),
         "CoreBackupReaderWriter.async_receive_backup.<locals>.open_backup() -> 'AsyncIterator[bytes]'",
+        987,
       ),
       dict({
+        'max_retries': 20,
         'timeout': dict({
           'ceil_threshold': 5,
           'connect': None,
@@ -207,7 +209,7 @@
       }),
     ),
     tuple(
-      'upload_file',
+      'resumable_upload_file',
       tuple(
         dict({
           'description': '{"addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}], "backup_id": "test-backup", "date": "2025-01-01T01:23:45.678Z", "database_included": true, "extra_metadata": {"with_automatic_settings": false}, "folders": [], "homeassistant_included": true, "homeassistant_version": "2024.12.0", "name": "Test", "protected": false, "size": 987}',
@@ -222,8 +224,10 @@
           }),
         }),
         "CoreBackupReaderWriter.async_receive_backup.<locals>.open_backup() -> 'AsyncIterator[bytes]'",
+        987,
       ),
       dict({
+        'max_retries': 20,
         'timeout': dict({
           'ceil_threshold': 5,
           'connect': None,

@@ -7,12 +7,12 @@ from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Robot
-from pylitterbot.robot.litterrobot4 import BrightnessLevel
+from pylitterbot.robot.litterrobot4 import BrightnessLevel, NightLightMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
 from .entity import LitterRobotEntity, _WhiskerEntityT
@@ -32,35 +32,73 @@ class RobotSelectEntityDescription(
     select_fn: Callable[[_WhiskerEntityT, str], Coroutine[Any, Any, bool]]
 
 
-ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
-    LitterRobot: RobotSelectEntityDescription[LitterRobot, int](  # type: ignore[type-abstract]  # only used for isinstance check
-        key="cycle_delay",
-        translation_key="cycle_delay",
-        unit_of_measurement=UnitOfTime.MINUTES,
-        current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
-        options_fn=lambda robot: robot.VALID_WAIT_TIMES,
-        select_fn=lambda robot, opt: robot.set_wait_time(int(opt)),
-    ),
-    LitterRobot4: RobotSelectEntityDescription[LitterRobot4, str](
-        key="panel_brightness",
-        translation_key="brightness_level",
-        current_fn=(
-            lambda robot: bri.name.lower()
-            if (bri := robot.panel_brightness) is not None
-            else None
-        ),
-        options_fn=lambda _: [level.name.lower() for level in BrightnessLevel],
-        select_fn=(
-            lambda robot, opt: robot.set_panel_brightness(BrightnessLevel[opt.upper()])
+ROBOT_SELECT_MAP: dict[type[Robot], tuple[RobotSelectEntityDescription, ...]] = {
+    LitterRobot: (
+        RobotSelectEntityDescription[LitterRobot, int](  # type: ignore[type-abstract]  # only used for isinstance check
+            key="cycle_delay",
+            translation_key="cycle_delay",
+            unit_of_measurement=UnitOfTime.MINUTES,
+            current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
+            options_fn=lambda robot: robot.VALID_WAIT_TIMES,
+            select_fn=lambda robot, opt: robot.set_wait_time(int(opt)),
         ),
     ),
-    FeederRobot: RobotSelectEntityDescription[FeederRobot, float](
-        key="meal_insert_size",
-        translation_key="meal_insert_size",
-        unit_of_measurement="cups",
-        current_fn=lambda robot: robot.meal_insert_size,
-        options_fn=lambda robot: robot.VALID_MEAL_INSERT_SIZES,
-        select_fn=lambda robot, opt: robot.set_meal_insert_size(float(opt)),
+    LitterRobot4: (
+        RobotSelectEntityDescription[LitterRobot4, str](
+            key="globe_brightness",
+            translation_key="globe_brightness",
+            current_fn=(
+                lambda robot: bri.name.lower()
+                if (bri := robot.night_light_level) is not None
+                else None
+            ),
+            options_fn=lambda _: [level.name.lower() for level in BrightnessLevel],
+            select_fn=(
+                lambda robot, opt: robot.set_night_light_brightness(
+                    BrightnessLevel[opt.upper()]
+                )
+            ),
+        ),
+        RobotSelectEntityDescription[LitterRobot4, str](
+            key="globe_light",
+            translation_key="globe_light",
+            current_fn=(
+                lambda robot: mode.name.lower()
+                if (mode := robot.night_light_mode) is not None
+                else None
+            ),
+            options_fn=lambda _: [mode.name.lower() for mode in NightLightMode],
+            select_fn=(
+                lambda robot, opt: robot.set_night_light_mode(
+                    NightLightMode[opt.upper()]
+                )
+            ),
+        ),
+        RobotSelectEntityDescription[LitterRobot4, str](
+            key="panel_brightness",
+            translation_key="brightness_level",
+            current_fn=(
+                lambda robot: bri.name.lower()
+                if (bri := robot.panel_brightness) is not None
+                else None
+            ),
+            options_fn=lambda _: [level.name.lower() for level in BrightnessLevel],
+            select_fn=(
+                lambda robot, opt: robot.set_panel_brightness(
+                    BrightnessLevel[opt.upper()]
+                )
+            ),
+        ),
+    ),
+    FeederRobot: (
+        RobotSelectEntityDescription[FeederRobot, float](
+            key="meal_insert_size",
+            translation_key="meal_insert_size",
+            unit_of_measurement="cups",
+            current_fn=lambda robot: robot.meal_insert_size,
+            options_fn=lambda robot: robot.VALID_MEAL_INSERT_SIZES,
+            select_fn=lambda robot, opt: robot.set_meal_insert_size(float(opt)),
+        ),
     ),
 }
 
@@ -68,7 +106,7 @@ ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LitterRobotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot selects using config entry."""
     coordinator = entry.runtime_data
@@ -77,8 +115,9 @@ async def async_setup_entry(
             robot=robot, coordinator=coordinator, description=description
         )
         for robot in coordinator.account.robots
-        for robot_type, description in ROBOT_SELECT_MAP.items()
+        for robot_type, descriptions in ROBOT_SELECT_MAP.items()
         if isinstance(robot, robot_type)
+        for description in descriptions
     )
 
 

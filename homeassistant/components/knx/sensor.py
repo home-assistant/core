@@ -1,4 +1,4 @@
-"""Support for KNX/IP sensors."""
+"""Support for KNX sensor entities."""
 
 from __future__ import annotations
 
@@ -29,13 +29,13 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util.enum import try_parse_enum
 
-from . import KNXModule
 from .const import ATTR_SOURCE, KNX_MODULE_KEY
 from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import SensorSchema
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -112,7 +112,7 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor(s) for KNX platform."""
     knx_module = hass.data[KNX_MODULE_KEY]

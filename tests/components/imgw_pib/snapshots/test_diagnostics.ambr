@@ -15,6 +15,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'River Name (Station Name)',
       'unique_id': '123',
       'version': 1,
@@ -32,9 +34,24 @@
         'unit': None,
         'value': None,
       }),
+      'hydrological_alert': dict({
+        'level': 'yellow',
+        'probability': 80,
+        'valid_from': '2024-04-27T07:00:00+00:00',
+        'valid_to': '2024-04-28T11:00:00+00:00',
+        'value': 'rapid_water_level_rise',
+      }),
+      'latitude': None,
+      'longitude': None,
       'river': 'River Name',
       'station': 'Station Name',
       'station_id': '123',
+      'water_flow': dict({
+        'name': 'Water Flow',
+        'unit': None,
+        'value': 123.45,
+      }),
+      'water_flow_measurement_date': '2024-04-27T10:05:00+00:00',
       'water_level': dict({
         'name': 'Water Level',
         'unit': None,

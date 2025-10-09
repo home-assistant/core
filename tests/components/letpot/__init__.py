@@ -2,7 +2,13 @@
 
 import datetime
 
-from letpot.models import AuthenticationInfo, LetPotDeviceErrors, LetPotDeviceStatus
+from letpot.models import (
+    AuthenticationInfo,
+    LetPotDeviceErrors,
+    LetPotDeviceStatus,
+    LightMode,
+    TemperatureUnit,
+)
 
 from homeassistant.core import HomeAssistant
 
@@ -25,18 +31,38 @@ AUTHENTICATION = AuthenticationInfo(
     email="email@example.com",
 )
 
-STATUS = LetPotDeviceStatus(
-    errors=LetPotDeviceErrors(low_water=False),
-    light_brightness=500,
-    light_mode=1,
-    light_schedule_end=datetime.time(12, 10),
-    light_schedule_start=datetime.time(12, 0),
+MAX_STATUS = LetPotDeviceStatus(
+    errors=LetPotDeviceErrors(low_water=True, low_nutrients=False, refill_error=False),
+    light_brightness=750,
+    light_mode=LightMode.VEGETABLE,
+    light_schedule_end=datetime.time(18, 0),
+    light_schedule_start=datetime.time(8, 0),
     online=True,
     plant_days=1,
     pump_mode=1,
     pump_nutrient=None,
     pump_status=0,
-    raw=[77, 0, 1, 18, 98, 1, 0, 0, 1, 1, 1, 0, 1, 12, 0, 12, 10, 1, 244, 0, 0, 0],
+    raw=[],  # Not used by integration, and it requires a real device to get
+    system_on=True,
+    system_sound=False,
+    temperature_unit=TemperatureUnit.CELSIUS,
+    temperature_value=18,
+    water_mode=1,
+    water_level=100,
+)
+
+SE_STATUS = LetPotDeviceStatus(
+    errors=LetPotDeviceErrors(low_water=True, pump_malfunction=True),
+    light_brightness=500,
+    light_mode=LightMode.VEGETABLE,
+    light_schedule_end=datetime.time(18, 0),
+    light_schedule_start=datetime.time(8, 0),
+    online=True,
+    plant_days=1,
+    pump_mode=1,
+    pump_nutrient=None,
+    pump_status=0,
+    raw=[],  # Not used by integration, and it requires a real device to get
     system_on=True,
     system_sound=False,
 )

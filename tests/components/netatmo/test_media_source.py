@@ -4,10 +4,10 @@ import ast
 
 import pytest
 
+from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
     DOMAIN as MS_DOMAIN,
     URI_SCHEME,
-    BrowseError,
     PlayMedia,
     async_browse_media,
     async_resolve_media,
@@ -16,7 +16,7 @@ from homeassistant.components.netatmo import DATA_CAMERAS, DATA_EVENTS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 
 
 async def test_async_browse_media(hass: HomeAssistant) -> None:
@@ -26,7 +26,7 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     # Prepare cached Netatmo event date
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_EVENTS] = ast.literal_eval(
-        load_fixture("netatmo/events.txt")
+        await async_load_fixture(hass, "events.txt", DOMAIN)
     )
 
     hass.data[DOMAIN][DATA_CAMERAS] = {
@@ -57,8 +57,10 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     # Test invalid base
     with pytest.raises(BrowseError) as excinfo:
         await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/")
-    assert str(excinfo.value) == "Invalid media source URI"
-
+    assert str(excinfo.value) == (
+        "Failed to browse media with content id media-source://netatmo/: "
+        "Invalid media source URI"
+    )
     # Test successful listing
     media = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/events")
 

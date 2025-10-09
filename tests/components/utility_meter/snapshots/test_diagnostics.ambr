@@ -8,7 +8,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'utility_meter',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
         'cycle': 'monthly',
         'delta_values': False,
@@ -25,6 +25,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Energy Bill',
       'unique_id': None,
       'version': 2,

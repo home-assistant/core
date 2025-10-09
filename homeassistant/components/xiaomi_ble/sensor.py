@@ -9,9 +9,11 @@ from xiaomi_ble.parser import ExtendedSensorDeviceClass
 
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataUpdate,
+    PassiveBluetoothEntityKey,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
+    EntityDescription,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -31,7 +33,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .coordinator import XiaomiPassiveBluetoothDataProcessor
@@ -78,6 +80,7 @@ SENSOR_DESCRIPTIONS = {
         icon="mdi:omega",
         native_unit_of_measurement=Units.OHM,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="impedance",
     ),
     # Mass sensor (kg)
     (DeviceClass.MASS, Units.MASS_KILOGRAMS): SensorEntityDescription(
@@ -93,6 +96,7 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="weight_non_stabilized",
     ),
     (DeviceClass.MOISTURE, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{DeviceClass.MOISTURE}_{Units.PERCENTAGE}",
@@ -173,6 +177,25 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Low frequency impedance sensor (ohm)
+    (ExtendedSensorDeviceClass.IMPEDANCE_LOW, Units.OHM): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.IMPEDANCE_LOW),
+        native_unit_of_measurement=Units.OHM,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:omega",
+    ),
+    # Heart rate sensor (bpm)
+    (ExtendedSensorDeviceClass.HEART_RATE, "bpm"): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.HEART_RATE),
+        native_unit_of_measurement="bpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:heart-pulse",
+    ),
+    # User profile ID sensor
+    (ExtendedSensorDeviceClass.PROFILE_ID, None): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.PROFILE_ID),
+        icon="mdi:identifier",
+    ),
 }
 
 
@@ -180,18 +203,20 @@ def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
 ) -> PassiveBluetoothDataUpdate[float | None]:
     """Convert a sensor update to a bluetooth data update."""
+    entity_descriptions: dict[PassiveBluetoothEntityKey, EntityDescription] = {
+        device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
+            (description.device_class, description.native_unit_of_measurement)
+        ]
+        for device_key, description in sensor_update.entity_descriptions.items()
+        if description.device_class
+    }
+
     return PassiveBluetoothDataUpdate(
         devices={
             device_id: sensor_device_info_to_hass_device_info(device_info)
             for device_id, device_info in sensor_update.devices.items()
         },
-        entity_descriptions={
-            device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
-                (description.device_class, description.native_unit_of_measurement)
-            ]
-            for device_key, description in sensor_update.entity_descriptions.items()
-            if description.device_class
-        },
+        entity_descriptions=entity_descriptions,
         entity_data={
             device_key_to_bluetooth_entity_key(device_key): cast(
                 float | None, sensor_values.native_value
@@ -201,6 +226,17 @@ def sensor_update_to_bluetooth_data_update(
         entity_names={
             device_key_to_bluetooth_entity_key(device_key): sensor_values.name
             for device_key, sensor_values in sensor_update.entity_values.items()
+            # Add names where the entity description has neither a translation_key nor
+            # a device_class
+            if (
+                description := entity_descriptions.get(
+                    device_key_to_bluetooth_entity_key(device_key)
+                )
+            )
+            is None
+            or (
+                description.translation_key is None and description.device_class is None
+            )
         },
     )
 
@@ -208,7 +244,7 @@ def sensor_update_to_bluetooth_data_update(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: XiaomiBLEConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi BLE sensors."""
     coordinator = entry.runtime_data

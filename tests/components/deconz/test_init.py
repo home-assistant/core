@@ -6,10 +6,7 @@ from unittest.mock import patch
 import pydeconz
 import pytest
 
-from homeassistant.components.deconz.const import (
-    CONF_MASTER_GATEWAY,
-    DOMAIN as DECONZ_DOMAIN,
-)
+from homeassistant.components.deconz.const import CONF_MASTER_GATEWAY, DOMAIN
 from homeassistant.components.deconz.errors import AuthenticationRequired
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -76,7 +73,7 @@ async def test_setup_entry_multiple_gateways(
     config_entry = await config_entry_factory()
 
     entry2 = MockConfigEntry(
-        domain=DECONZ_DOMAIN,
+        domain=DOMAIN,
         entry_id="2",
         unique_id="01234E56789B",
         data=config_entry.data | {"host": "2.3.4.5"},
@@ -105,7 +102,7 @@ async def test_unload_entry_multiple_gateways(
     config_entry = await config_entry_factory()
 
     entry2 = MockConfigEntry(
-        domain=DECONZ_DOMAIN,
+        domain=DOMAIN,
         entry_id="2",
         unique_id="01234E56789B",
         data=config_entry.data | {"host": "2.3.4.5"},
@@ -127,7 +124,7 @@ async def test_unload_entry_multiple_gateways_parallel(
     config_entry = await config_entry_factory()
 
     entry2 = MockConfigEntry(
-        domain=DECONZ_DOMAIN,
+        domain=DOMAIN,
         entry_id="2",
         unique_id="01234E56789B",
         data=config_entry.data | {"host": "2.3.4.5"},

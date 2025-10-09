@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
+from logging import getLogger
 import mimetypes
+from typing import TYPE_CHECKING
 
 from aiohttp import web
 from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
 from synology_dsm.exceptions import SynologyDSMException
 
 from homeassistant.components import http
-from homeassistant.components.media_player import MediaClass
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
-    BrowseError,
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
@@ -22,7 +23,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, SHARED_SUFFIX
-from .models import SynologyDSMData
+from .coordinator import SynologyDSMConfigEntry, SynologyDSMData
+
+LOGGER = getLogger(__name__)
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
@@ -41,14 +44,12 @@ class SynologyPhotosMediaSourceIdentifier:
         """Split identifier into parts."""
         parts = identifier.split("/")
 
-        self.unique_id = None
+        self.unique_id = parts[0]
         self.album_id = None
         self.cache_key = None
         self.file_name = None
         self.is_shared = False
         self.passphrase = ""
-
-        self.unique_id = parts[0]
 
         if len(parts) > 1:
             album_parts = parts[1].split("_")
@@ -82,7 +83,7 @@ class SynologyPhotosMediaSource(MediaSource):
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
-        if not self.hass.data.get(DOMAIN):
+        if not self.hass.config_entries.async_loaded_entries(DOMAIN):
             raise BrowseError("Diskstation not initialized")
         return BrowseMediaSource(
             domain=DOMAIN,
@@ -116,8 +117,16 @@ class SynologyPhotosMediaSource(MediaSource):
                 for entry in self.entries
             ]
         identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)
-        diskstation: SynologyDSMData = self.hass.data[DOMAIN][identifier.unique_id]
-        assert diskstation.api.photos is not None
+        entry: SynologyDSMConfigEntry | None = (
+            self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, identifier.unique_id
+            )
+        )
+        if TYPE_CHECKING:
+            assert entry
+        diskstation = entry.runtime_data
+        if TYPE_CHECKING:
+            assert diskstation.api.photos is not None
 
         if identifier.album_id is None:
             # Get Albums
@@ -125,7 +134,8 @@ class SynologyPhotosMediaSource(MediaSource):
                 albums = await diskstation.api.photos.get_albums()
             except SynologyDSMException:
                 return []
-            assert albums is not None
+            if TYPE_CHECKING:
+                assert albums is not None
 
             ret = [
                 BrowseMediaSource(
@@ -134,6 +144,17 @@ class SynologyPhotosMediaSource(MediaSource):
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaClass.IMAGE,
                     title="All images",
+                    can_play=False,
+                    can_expand=True,
+                )
+            ]
+            ret += [
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"{item.identifier}/shared",
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaClass.IMAGE,
+                    title="Shared space",
                     can_play=False,
                     can_expand=True,
                 )
@@ -155,14 +176,26 @@ class SynologyPhotosMediaSource(MediaSource):
 
         # Request items of album
         # Get Items
-        album = SynoPhotosAlbum(int(identifier.album_id), "", 0, identifier.passphrase)
-        try:
-            album_items = await diskstation.api.photos.get_items_from_album(
-                album, 0, 1000
+        if identifier.album_id == "shared":
+            # Get items from shared space
+            try:
+                album_items = await diskstation.api.photos.get_items_from_shared_space(
+                    0, 1000
+                )
+            except SynologyDSMException:
+                return []
+        else:
+            album = SynoPhotosAlbum(
+                int(identifier.album_id), "", 0, identifier.passphrase
             )
-        except SynologyDSMException:
-            return []
-        assert album_items is not None
+            try:
+                album_items = await diskstation.api.photos.get_items_from_album(
+                    album, 0, 1000
+                )
+            except SynologyDSMException:
+                return []
+        if TYPE_CHECKING:
+            assert album_items is not None
 
         ret = []
         for album_item in album_items:
@@ -221,7 +254,8 @@ class SynologyPhotosMediaSource(MediaSource):
         self, item: SynoPhotosItem, diskstation: SynologyDSMData
     ) -> str | None:
         """Get thumbnail."""
-        assert diskstation.api.photos is not None
+        if TYPE_CHECKING:
+            assert diskstation.api.photos is not None
 
         try:
             thumbnail = await diskstation.api.photos.get_item_thumbnail_url(item)
@@ -244,7 +278,7 @@ class SynologyDsmMediaView(http.HomeAssistantView):
         self, request: web.Request, source_dir_id: str, location: str
     ) -> web.Response:
         """Start a GET request."""
-        if not self.hass.data.get(DOMAIN):
+        if not self.hass.config_entries.async_loaded_entries(DOMAIN):
             raise web.HTTPNotFound
         # location: {cache_key}/{filename}
         cache_key, file_name, passphrase = location.split("/")
@@ -257,8 +291,16 @@ class SynologyDsmMediaView(http.HomeAssistantView):
         if not isinstance(mime_type, str):
             raise web.HTTPNotFound
 
-        diskstation: SynologyDSMData = self.hass.data[DOMAIN][source_dir_id]
-        assert diskstation.api.photos is not None
+        entry: SynologyDSMConfigEntry | None = (
+            self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, source_dir_id
+            )
+        )
+        if TYPE_CHECKING:
+            assert entry
+        diskstation = entry.runtime_data
+        if TYPE_CHECKING:
+            assert diskstation.api.photos is not None
         item = SynoPhotosItem(image_id, "", "", "", cache_key, "xl", shared, passphrase)
         try:
             if passphrase:

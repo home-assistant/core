@@ -3,7 +3,12 @@
 from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, patch
 
-from letpot.models import LetPotDevice
+from letpot.models import (
+    DeviceFeature,
+    LetPotDevice,
+    LetPotDeviceInfo,
+    LetPotDeviceStatus,
+)
 import pytest
 
 from homeassistant.components.letpot.const import (
@@ -15,9 +20,74 @@ from homeassistant.components.letpot.const import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 
-from . import AUTHENTICATION, STATUS
+from . import AUTHENTICATION, MAX_STATUS, SE_STATUS
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def device_type() -> str:
+    """Return the device type to use for mock data."""
+    return "LPH63"
+
+
+def _mock_device_info(device_type: str) -> LetPotDeviceInfo:
+    """Return mock device info for the given type."""
+    return LetPotDeviceInfo(
+        model=device_type,
+        model_name=f"LetPot {device_type}",
+        model_code=device_type,
+        features=_mock_device_features(device_type),
+    )
+
+
+def _mock_device_features(device_type: str) -> DeviceFeature:
+    """Return mock device feature support for the given type."""
+    if device_type == "LPH31":
+        return (
+            DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+            | DeviceFeature.LIGHT_BRIGHTNESS_LOW_HIGH
+            | DeviceFeature.PUMP_STATUS
+        )
+    if device_type == "LPH62":
+        return (
+            DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+            | DeviceFeature.LIGHT_BRIGHTNESS_LEVELS
+            | DeviceFeature.NUTRIENT_BUTTON
+            | DeviceFeature.PUMP_AUTO
+            | DeviceFeature.TEMPERATURE
+            | DeviceFeature.TEMPERATURE_SET_UNIT
+            | DeviceFeature.WATER_LEVEL
+        )
+    if device_type == "LPH63":
+        return (
+            DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+            | DeviceFeature.LIGHT_BRIGHTNESS_LEVELS
+            | DeviceFeature.NUTRIENT_BUTTON
+            | DeviceFeature.PUMP_AUTO
+            | DeviceFeature.PUMP_STATUS
+            | DeviceFeature.TEMPERATURE
+            | DeviceFeature.WATER_LEVEL
+        )
+    raise ValueError(f"No mock data for device type {device_type}")
+
+
+def _mock_device_status(device_type: str) -> LetPotDeviceStatus:
+    """Return mock device status for the given type."""
+    if device_type == "LPH31":
+        return SE_STATUS
+    if device_type in {"LPH62", "LPH63"}:
+        return MAX_STATUS
+    raise ValueError(f"No mock data for device type {device_type}")
+
+
+def _mock_light_brightness_levels(device_type: str) -> list[int]:
+    """Return mock brightness levels for the given type."""
+    if device_type == "LPH31":
+        return [500, 1000]
+    if device_type in {"LPH62", "LPH63"}:
+        return [125, 250, 375, 500, 625, 750, 875, 1000]
+    raise ValueError(f"No mock data for device type {device_type}")
 
 
 @pytest.fixture
@@ -30,7 +100,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_client() -> Generator[AsyncMock]:
+def mock_client(device_type: str) -> Generator[AsyncMock]:
     """Mock a LetPotClient."""
     with (
         patch(
@@ -47,9 +117,9 @@ def mock_client() -> Generator[AsyncMock]:
         client.refresh_token.return_value = AUTHENTICATION
         client.get_devices.return_value = [
             LetPotDevice(
-                serial_number="LPH21ABCD",
+                serial_number=f"{device_type}ABCD",
                 name="Garden",
-                device_type="LPH21",
+                device_type=device_type,
                 is_online=True,
                 is_remote=False,
             )
@@ -61,27 +131,33 @@ def mock_client() -> Generator[AsyncMock]:
 def mock_device_client() -> Generator[AsyncMock]:
     """Mock a LetPotDeviceClient."""
     with patch(
-        "homeassistant.components.letpot.coordinator.LetPotDeviceClient",
+        "homeassistant.components.letpot.LetPotDeviceClient",
         autospec=True,
     ) as mock_device_client:
         device_client = mock_device_client.return_value
-        device_client.device_model_code = "LPH21"
-        device_client.device_model_name = "LetPot Air"
 
-        subscribe_callbacks: list[Callable] = []
+        subscribe_callbacks: dict[str, Callable] = {}
 
-        def subscribe_side_effect(callback: Callable) -> None:
-            subscribe_callbacks.append(callback)
+        def subscribe_side_effect(serial: str, callback: Callable) -> None:
+            subscribe_callbacks[serial] = callback
 
-        def status_side_effect() -> None:
-            # Deliver a status update to any subscribers, like the real client
-            for callback in subscribe_callbacks:
-                callback(STATUS)
+        def request_status_side_effect(serial: str) -> None:
+            # Deliver a status update to the subscriber, like the real client
+            if (callback := subscribe_callbacks.get(serial)) is not None:
+                callback(_mock_device_status(serial[:5]))
 
-        device_client.get_current_status.side_effect = status_side_effect
-        device_client.get_current_status.return_value = STATUS
-        device_client.last_status.return_value = STATUS
-        device_client.request_status_update.side_effect = status_side_effect
+        def get_current_status_side_effect(serial: str) -> LetPotDeviceStatus:
+            request_status_side_effect(serial)
+            return _mock_device_status(serial[:5])
+
+        device_client.device_info.side_effect = lambda serial: _mock_device_info(
+            serial[:5]
+        )
+        device_client.get_light_brightness_levels.side_effect = (
+            lambda serial: _mock_light_brightness_levels(serial[:5])
+        )
+        device_client.get_current_status.side_effect = get_current_status_side_effect
+        device_client.request_status_update.side_effect = request_status_side_effect
         device_client.subscribe.side_effect = subscribe_side_effect
 
         yield device_client

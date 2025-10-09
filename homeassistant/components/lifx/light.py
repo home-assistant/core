@@ -10,6 +10,9 @@ import aiolifx_effects as aiolifx_effects_module
 import voluptuous as vol
 
 from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_STEP,
+    ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_EFFECT,
     ATTR_TRANSITION,
     LIGHT_TURN_ON_SCHEMA,
@@ -17,12 +20,11 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import VolDictType
 
@@ -37,7 +39,7 @@ from .const import (
     INFRARED_BRIGHTNESS,
     LIFX_CEILING_PRODUCT_IDS,
 )
-from .coordinator import FirmwareEffect, LIFXUpdateCoordinator
+from .coordinator import FirmwareEffect, LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
@@ -78,13 +80,12 @@ HSBK_KELVIN = 3
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LIFXConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LIFX from a config entry."""
-    domain_data = hass.data[DOMAIN]
-    coordinator: LIFXUpdateCoordinator = domain_data[entry.entry_id]
-    manager: LIFXManager = domain_data[DATA_LIFX_MANAGER]
+    coordinator = entry.runtime_data
+    manager = hass.data[DATA_LIFX_MANAGER]
     device = coordinator.device
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -123,7 +124,7 @@ class LIFXLight(LIFXEntity, LightEntity):
         self,
         coordinator: LIFXUpdateCoordinator,
         manager: LIFXManager,
-        entry: ConfigEntry,
+        entry: LIFXConfigEntry,
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)
@@ -235,6 +236,20 @@ class LIFXLight(LIFXEntity, LightEntity):
             fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
             fade = 0
+
+        if ATTR_BRIGHTNESS_STEP in kwargs or ATTR_BRIGHTNESS_STEP_PCT in kwargs:
+            brightness = self.brightness if self.is_on and self.brightness else 0
+
+            if ATTR_BRIGHTNESS_STEP in kwargs:
+                brightness += kwargs.pop(ATTR_BRIGHTNESS_STEP)
+
+            else:
+                brightness_pct = round(brightness / 255 * 100)
+                brightness = round(
+                    (brightness_pct + kwargs.pop(ATTR_BRIGHTNESS_STEP_PCT)) / 100 * 255
+                )
+
+            kwargs[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
 
         # These are both False if ATTR_POWER is not set
         power_on = kwargs.get(ATTR_POWER, False)

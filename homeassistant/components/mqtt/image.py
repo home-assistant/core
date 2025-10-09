@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolSchemaType
@@ -25,6 +25,13 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
+from .const import (
+    CONF_CONTENT_TYPE,
+    CONF_IMAGE_ENCODING,
+    CONF_IMAGE_TOPIC,
+    CONF_URL_TEMPLATE,
+    CONF_URL_TOPIC,
+)
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     DATA_MQTT,
@@ -38,12 +45,6 @@ from .util import valid_subscribe_topic
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
-CONF_CONTENT_TYPE = "content_type"
-CONF_IMAGE_ENCODING = "image_encoding"
-CONF_IMAGE_TOPIC = "image_topic"
-CONF_URL_TEMPLATE = "url_template"
-CONF_URL_TOPIC = "url_topic"
 
 DEFAULT_NAME = "MQTT Image"
 
@@ -67,7 +68,7 @@ PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Exclusive(CONF_URL_TOPIC, "image_topic"): valid_subscribe_topic,
         vol.Exclusive(CONF_IMAGE_TOPIC, "image_topic"): valid_subscribe_topic,
-        vol.Optional(CONF_IMAGE_ENCODING): "b64",
+        vol.Optional(CONF_IMAGE_ENCODING): vol.In({"b64", "raw"}),
         vol.Optional(CONF_URL_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -82,7 +83,7 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT image through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -146,7 +147,7 @@ class MqttImage(MqttEntity, ImageEntity):
     def _image_data_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages."""
         try:
-            if CONF_IMAGE_ENCODING in self._config:
+            if self._config.get(CONF_IMAGE_ENCODING) == "b64":
                 self._last_image = b64decode(msg.payload)
             else:
                 if TYPE_CHECKING:

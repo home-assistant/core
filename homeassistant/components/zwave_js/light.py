@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
     TARGET_VALUE_PROPERTY,
     TRANSITION_DURATION_OPTION,
@@ -38,15 +37,15 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -66,11 +65,11 @@ MAX_MIREDS = 370  # 2700K as a safe default
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ZwaveJSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Light from Config Entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_light(info: ZwaveDiscoveryInfo) -> None:
@@ -78,7 +77,11 @@ async def async_setup_entry(
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
 
-        if info.platform_hint == "color_onoff":
+        if info.platform_hint == "zwa2_led_color":
+            async_add_entities([ZWA2LEDColorLight(config_entry, driver, info)])
+        elif info.platform_hint == "zwa2_led_onoff":
+            async_add_entities([ZWA2LEDOnOffLight(config_entry, driver, info)])
+        elif info.platform_hint == "color_onoff":
             async_add_entities([ZwaveColorOnOffLight(config_entry, driver, info)])
         else:
             async_add_entities([ZwaveLight(config_entry, driver, info)])
@@ -109,7 +112,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     _attr_max_color_temp_kelvin = 6500  # 153 mireds as a safe default
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the light."""
         super().__init__(config_entry, driver, info)
@@ -184,7 +187,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if self._supports_color_temp:
             self._supported_color_modes.add(ColorMode.COLOR_TEMP)
         if not self._supported_color_modes:
-            self._supported_color_modes.add(ColorMode.BRIGHTNESS)
+            if self.info.primary_value.command_class == CommandClass.SWITCH_BINARY:
+                self._supported_color_modes.add(ColorMode.ONOFF)
+            else:
+                self._supported_color_modes.add(ColorMode.BRIGHTNESS)
         self._calculate_color_values()
 
         # Entity class attributes
@@ -483,7 +489,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             red = multi_color.get(COLOR_SWITCH_COMBINED_RED, red_val.value)
             green = multi_color.get(COLOR_SWITCH_COMBINED_GREEN, green_val.value)
             blue = multi_color.get(COLOR_SWITCH_COMBINED_BLUE, blue_val.value)
-            if None not in (red, green, blue):
+            if red is not None and green is not None and blue is not None:
                 # convert to HS
                 self._hs_color = color_util.color_RGB_to_hs(red, green, blue)
                 # Light supports color, set color mode to hs
@@ -496,7 +502,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             # Calculate color temps based on whites
             if cold_white or warm_white:
                 self._color_temp = color_util.color_temperature_mired_to_kelvin(
-                    MAX_MIREDS - ((cold_white / 255) * (MAX_MIREDS - MIN_MIREDS))
+                    MAX_MIREDS
+                    - ((cast(int, cold_white) / 255) * (MAX_MIREDS - MIN_MIREDS))
                 )
                 # White channels turned on, set color mode to color_temp
                 self._color_mode = ColorMode.COLOR_TEMP
@@ -505,6 +512,13 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # only one white channel (warm white) = rgbw support
         elif red_val and green_val and blue_val and ww_val:
             white = multi_color.get(COLOR_SWITCH_COMBINED_WARM_WHITE, ww_val.value)
+            if TYPE_CHECKING:
+                assert (
+                    red is not None
+                    and green is not None
+                    and blue is not None
+                    and white is not None
+                )
             self._rgbw_color = (red, green, blue, white)
             # Light supports rgbw, set color mode to rgbw
             self._color_mode = ColorMode.RGBW
@@ -512,6 +526,13 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         elif cw_val:
             self._supports_rgbw = True
             white = multi_color.get(COLOR_SWITCH_COMBINED_COLD_WHITE, cw_val.value)
+            if TYPE_CHECKING:
+                assert (
+                    red is not None
+                    and green is not None
+                    and blue is not None
+                    and white is not None
+                )
             self._rgbw_color = (red, green, blue, white)
             # Light supports rgbw, set color mode to rgbw
             self._color_mode = ColorMode.RGBW
@@ -524,7 +545,7 @@ class ZwaveColorOnOffLight(ZwaveLight):
     """
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the light."""
         super().__init__(config_entry, driver, info)
@@ -591,10 +612,7 @@ class ZwaveColorOnOffLight(ZwaveLight):
             # If brightness gets set, preserve the color and mix it with the new brightness
             if self.color_mode == ColorMode.HS:
                 scale = brightness / 255
-            if (
-                self._last_on_color is not None
-                and None not in self._last_on_color.values()
-            ):
+            if self._last_on_color is not None:
                 # Changed brightness from 0 to >0
                 old_brightness = max(self._last_on_color.values())
                 new_scale = brightness / old_brightness
@@ -613,8 +631,9 @@ class ZwaveColorOnOffLight(ZwaveLight):
             elif current_brightness is not None:
                 scale = current_brightness / 255
 
-        # Reset last color until turning off again
+        # Reset last color and brightness until turning off again
         self._last_on_color = None
+        self._last_brightness = None
 
         if new_colors is None:
             new_colors = self._get_new_colors(
@@ -630,8 +649,10 @@ class ZwaveColorOnOffLight(ZwaveLight):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
 
-        # Remember last color and brightness to restore it when turning on
-        self._last_brightness = self.brightness
+        # Remember last color and brightness to restore it when turning on,
+        # only if we're sure the light is turned on to avoid overwriting good values
+        if self._last_brightness is None:
+            self._last_brightness = self.brightness
         if self._current_color and isinstance(self._current_color.value, dict):
             red = self._current_color.value.get(COLOR_SWITCH_COMBINED_RED)
             green = self._current_color.value.get(COLOR_SWITCH_COMBINED_GREEN)
@@ -645,7 +666,8 @@ class ZwaveColorOnOffLight(ZwaveLight):
             if blue is not None:
                 last_color[ColorComponent.BLUE] = blue
 
-            if last_color:
+            # Only store the last color if we're aware of it, i.e. ignore off light
+            if last_color and max(last_color.values()) > 0:
                 self._last_on_color = last_color
 
         if self._target_brightness:
@@ -663,3 +685,29 @@ class ZwaveColorOnOffLight(ZwaveLight):
                 colors,
                 kwargs.get(ATTR_TRANSITION),
             )
+
+
+class ZWA2LEDColorLight(ZwaveColorOnOffLight):
+    """LED entity specific to the ZWA-2 (legacy firmware)."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize the ZWA-2 LED entity."""
+        super().__init__(config_entry, driver, info)
+        self._attr_name = "LED"
+
+
+class ZWA2LEDOnOffLight(ZwaveLight):
+    """LED entity specific to the ZWA-2."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize the ZWA-2 LED entity."""
+        super().__init__(config_entry, driver, info)
+        self._attr_name = "LED"

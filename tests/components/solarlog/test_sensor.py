@@ -10,7 +10,7 @@ from solarlog_cli.solarlog_exceptions import (
     SolarLogUpdateError,
 )
 from solarlog_cli.solarlog_models import InverterData
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant

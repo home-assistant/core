@@ -12,10 +12,10 @@ from homeassistant.setup import async_get_loaded_integrations
 
 from .const import LOGSEVERITY
 from .helpers import (
+    DATA_LOGGER,
     LoggerSetting,
     LogPersistance,
     LogSettingsType,
-    async_get_domain_config,
     get_logger,
 )
 
@@ -68,7 +68,7 @@ async def handle_integration_log_level(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Integration not found"
         )
         return
-    await async_get_domain_config(hass).settings.async_update(
+    await hass.data[DATA_LOGGER].settings.async_update(
         hass,
         msg["integration"],
         LoggerSetting(
@@ -93,7 +93,7 @@ async def handle_module_log_level(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle setting integration log level."""
-    await async_get_domain_config(hass).settings.async_update(
+    await hass.data[DATA_LOGGER].settings.async_update(
         hass,
         msg["module"],
         LoggerSetting(

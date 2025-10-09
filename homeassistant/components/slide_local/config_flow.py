@@ -14,14 +14,18 @@ from goslideapi.goslideapi import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import SlideConfigEntry
 from .const import CONF_INVERT_POSITION, DOMAIN
+from .coordinator import SlideConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -232,7 +236,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class SlideOptionsFlowHandler(OptionsFlow):
+class SlideOptionsFlowHandler(OptionsFlowWithReload):
     """Handle a options flow for slide_local."""
 
     async def async_step_init(

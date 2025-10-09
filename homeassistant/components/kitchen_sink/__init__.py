@@ -12,16 +12,27 @@ from random import random
 import voluptuous as vol
 
 from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     async_import_statistics,
     get_last_statistics,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import Platform, UnitOfEnergy, UnitOfTemperature, UnitOfVolume
+from homeassistant.const import (
+    DEGREE,
+    Platform,
+    UnitOfEnergy,
+    UnitOfTemperature,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -70,11 +81,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set the config entry up."""
+    if "recorder" in hass.config.components:
+        # Insert stats for mean_type_changed issue
+        await _insert_wrong_wind_direction_statistics(hass)
+
     # Set up demo platforms with config entry
     await hass.config_entries.async_forward_entry_setups(
-        config_entry, COMPONENTS_WITH_DEMO_PLATFORM
+        entry, COMPONENTS_WITH_DEMO_PLATFORM
     )
 
     # Create issues
@@ -85,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await _insert_statistics(hass)
 
     # Start a reauth flow
-    config_entry.async_start_reauth(hass)
+    entry.async_start_reauth(hass)
 
     # Notify backup listeners
     hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
@@ -101,6 +116,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(
         entry, COMPONENTS_WITH_DEMO_PLATFORM
     )
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+
+    # Allow deleting any device except statistics_issues, just to give
+    # something to test the negative case.
+    for identifier in device_entry.identifiers:
+        if identifier[0] == DOMAIN and identifier[1] == "statistics_issues":
+            return False
+
+    return True
 
 
 async def _notify_backup_listeners(hass: HomeAssistant) -> None:
@@ -226,7 +255,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Outdoor temperature",
         "statistic_id": f"{DOMAIN}:temperature_outdoor",
         "unit_of_measurement": UnitOfTemperature.CELSIUS,
-        "has_mean": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
@@ -239,7 +268,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Energy consumption 1",
         "statistic_id": f"{DOMAIN}:energy_consumption_kwh",
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
-        "has_mean": False,
+        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
     }
     await _insert_sum_statistics(hass, metadata, yesterday_midnight, today_midnight, 1)
@@ -251,7 +280,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Energy consumption 2",
         "statistic_id": f"{DOMAIN}:energy_consumption_mwh",
         "unit_of_measurement": UnitOfEnergy.MEGA_WATT_HOUR,
-        "has_mean": False,
+        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
     }
     await _insert_sum_statistics(
@@ -265,7 +294,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Gas consumption 1",
         "statistic_id": f"{DOMAIN}:gas_consumption_m3",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
-        "has_mean": False,
+        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
     }
     await _insert_sum_statistics(
@@ -279,7 +308,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Gas consumption 2",
         "statistic_id": f"{DOMAIN}:gas_consumption_ft3",
         "unit_of_measurement": UnitOfVolume.CUBIC_FEET,
-        "has_mean": False,
+        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
     }
     await _insert_sum_statistics(hass, metadata, yesterday_midnight, today_midnight, 15)
@@ -289,9 +318,9 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_1",
+        "statistic_id": "sensor.statistics_issues_issue_1",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
-        "has_mean": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
@@ -301,9 +330,9 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_2",
+        "statistic_id": "sensor.statistics_issues_issue_2",
         "unit_of_measurement": "cats",
-        "has_mean": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
@@ -313,9 +342,9 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_3",
+        "statistic_id": "sensor.statistics_issues_issue_3",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
-        "has_mean": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
@@ -325,10 +354,30 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_4",
+        "statistic_id": "sensor.statistics_issues_issue_4",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
-        "has_mean": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
+    async_import_statistics(hass, metadata, statistics)
+
+
+async def _insert_wrong_wind_direction_statistics(hass: HomeAssistant) -> None:
+    """Insert some fake wind direction statistics."""
+    now = dt_util.now()
+    yesterday = now - datetime.timedelta(days=1)
+    yesterday_midnight = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_midnight = yesterday_midnight + datetime.timedelta(days=1)
+
+    # Add some statistics required to raise the mean_type_changed issue later
+    metadata: StatisticMetaData = {
+        "source": RECORDER_DOMAIN,
+        "name": None,
+        "statistic_id": "sensor.statistics_issues_issue_5",
+        "unit_of_measurement": DEGREE,
+        "mean_type": StatisticMeanType.ARITHMETIC,
+        "has_sum": False,
+    }
+    statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 0, 360)
     async_import_statistics(hass, metadata, statistics)

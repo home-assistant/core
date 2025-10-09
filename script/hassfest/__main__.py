@@ -12,12 +12,14 @@ from . import (
     application_credentials,
     bluetooth,
     codeowners,
+    conditions,
     config_flow,
     config_schema,
     dependencies,
     dhcp,
     docker,
     icons,
+    integration_info,
     json,
     manifest,
     metadata,
@@ -28,6 +30,7 @@ from . import (
     services,
     ssdp,
     translations,
+    triggers,
     usb,
     zeroconf,
 )
@@ -37,10 +40,12 @@ INTEGRATION_PLUGINS = [
     application_credentials,
     bluetooth,
     codeowners,
+    conditions,
     config_schema,
     dependencies,
     dhcp,
     icons,
+    integration_info,
     json,
     manifest,
     mqtt,
@@ -49,6 +54,7 @@ INTEGRATION_PLUGINS = [
     services,
     ssdp,
     translations,
+    triggers,
     usb,
     zeroconf,
     config_flow,  # This needs to run last, after translations are processed
@@ -107,7 +113,13 @@ def get_config() -> Config:
         "--plugins",
         type=validate_plugins,
         default=ALL_PLUGIN_NAMES,
-        help="Comma-separate list of plugins to run. Valid plugin names: %(default)s",
+        help="Comma-separated list of plugins to run. Valid plugin names: %(default)s",
+    )
+    parser.add_argument(
+        "--skip-plugins",
+        type=validate_plugins,
+        default=[],
+        help=f"Comma-separated list of plugins to skip. Valid plugin names: {ALL_PLUGIN_NAMES}",
     )
     parser.add_argument(
         "--core-path",
@@ -130,6 +142,9 @@ def get_config() -> Config:
         and not (parsed.core_path / "requirements_all.txt").is_file()
     ):
         raise RuntimeError("Run from Home Assistant root")
+
+    if parsed.skip_plugins:
+        parsed.plugins = set(parsed.plugins) - set(parsed.skip_plugins)
 
     return Config(
         root=parsed.core_path.absolute(),

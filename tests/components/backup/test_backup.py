@@ -10,7 +10,7 @@ from tarfile import TarError
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import DOMAIN, AgentBackup
 from homeassistant.core import HomeAssistant

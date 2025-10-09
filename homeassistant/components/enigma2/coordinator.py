@@ -1,5 +1,6 @@
 """Data update coordinator for the Enigma2 integration."""
 
+import asyncio
 import logging
 
 from openwebif.api import OpenWebIfDevice, OpenWebIfStatus
@@ -30,18 +31,27 @@ from .const import CONF_SOURCE_BOUQUET, DOMAIN
 
 LOGGER = logging.getLogger(__package__)
 
+SETUP_TIMEOUT = 10
+
+type Enigma2ConfigEntry = ConfigEntry[Enigma2UpdateCoordinator]
+
 
 class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
     """The Enigma2 data update coordinator."""
 
+    config_entry: Enigma2ConfigEntry
     device: OpenWebIfDevice
     unique_id: str | None
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: Enigma2ConfigEntry) -> None:
         """Initialize the Enigma2 data update coordinator."""
 
         super().__init__(
-            hass, logger=LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
+            hass,
+            logger=LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
         base_url = URL.build(
@@ -72,7 +82,7 @@ class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
     async def _async_setup(self) -> None:
         """Provide needed data to the device info."""
 
-        about = await self.device.get_about()
+        about = await asyncio.wait_for(self.device.get_about(), timeout=SETUP_TIMEOUT)
         self.device.mac_address = about["info"]["ifaces"][0]["mac"]
         self.device_info["model"] = about["info"]["model"]
         self.device_info["manufacturer"] = about["info"]["brand"]

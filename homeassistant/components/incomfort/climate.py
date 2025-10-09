@@ -12,14 +12,13 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, EntityCategory, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import InComfortConfigEntry
 from .const import CONF_LEGACY_SETPOINT_STATUS, DOMAIN
-from .coordinator import InComfortDataCoordinator
+from .coordinator import InComfortConfigEntry, InComfortDataCoordinator
 from .entity import IncomfortEntity
 
 PARALLEL_UPDATES = 1
@@ -28,7 +27,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: InComfortConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up InComfort/InTouch climate devices."""
     incomfort_coordinator = entry.runtime_data
@@ -44,7 +43,6 @@ async def async_setup_entry(
 class InComfortClimate(IncomfortEntity, ClimateEntity):
     """Representation of an InComfort/InTouch climate device."""
 
-    _attr_entity_category = EntityCategory.CONFIG
     _attr_min_temp = 5.0
     _attr_max_temp = 30.0
     _attr_name = None
@@ -74,7 +72,10 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
             name=f"Thermostat {room.room_no}",
         )
         if coordinator.unique_id:
-            self._attr_device_info["via_device"] = (DOMAIN, coordinator.unique_id)
+            self._attr_device_info["via_device"] = (
+                DOMAIN,
+                coordinator.config_entry.entry_id,
+            )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

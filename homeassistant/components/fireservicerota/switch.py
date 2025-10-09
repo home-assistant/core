@@ -7,20 +7,26 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN as FIRESERVICEROTA_DOMAIN
+from .const import DOMAIN
+from .coordinator import (
+    FireServiceConfigEntry,
+    FireServiceRotaClient,
+    FireServiceUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FireServiceConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up FireServiceRota switch based on a config entry."""
-    client = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_CLIENT]
-
-    coordinator = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    coordinator = entry.runtime_data
+    client = coordinator.client
 
     async_add_entities([ResponseSwitch(coordinator, client, entry)])
 
@@ -32,15 +38,20 @@ class ResponseSwitch(SwitchEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "incident_response"
 
-    def __init__(self, coordinator, client, entry):
+    def __init__(
+        self,
+        coordinator: FireServiceUpdateCoordinator,
+        client: FireServiceRotaClient,
+        entry: ConfigEntry,
+    ) -> None:
         """Initialize."""
         self._coordinator = coordinator
         self._client = client
         self._attr_unique_id = f"{entry.unique_id}_Response"
         self._entry_id = entry.entry_id
 
-        self._state = None
-        self._state_attributes = {}
+        self._state: bool | None = None
+        self._state_attributes: dict[str, Any] = {}
         self._state_icon = None
 
     @property
@@ -54,7 +65,7 @@ class ResponseSwitch(SwitchEntity):
         return "mdi:forum"
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Get the assumed state of the switch."""
         return self._state
 
@@ -111,7 +122,7 @@ class ResponseSwitch(SwitchEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{FIRESERVICEROTA_DOMAIN}_{self._entry_id}_update",
+                f"{DOMAIN}_{self._entry_id}_update",
                 self.client_update,
             )
         )

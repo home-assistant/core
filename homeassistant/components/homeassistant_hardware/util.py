@@ -4,17 +4,23 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import AsyncIterator, Callable, Iterable, Sequence
+from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
 
-from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
+from universal_silabs_flasher.const import (
+    ApplicationType as FlasherApplicationType,
+    ResetTarget as FlasherResetTarget,
+)
+from universal_silabs_flasher.firmware import parse_firmware_image
 from universal_silabs_flasher.flasher import Flasher
 
-from homeassistant.components.hassio import AddonError, AddonState
+from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 
@@ -39,9 +45,10 @@ class ApplicationType(StrEnum):
     """Application type running on a device."""
 
     GECKO_BOOTLOADER = "bootloader"
-    CPC = "cpc"
     EZSP = "ezsp"
     SPINEL = "spinel"
+    CPC = "cpc"
+    ROUTER = "router"
 
     @classmethod
     def from_flasher_application_type(
@@ -53,6 +60,18 @@ class ApplicationType(StrEnum):
     def as_flasher_application_type(self) -> FlasherApplicationType:
         """Convert the application type enum into one compatible with USF."""
         return FlasherApplicationType(self.value)
+
+
+class ResetTarget(StrEnum):
+    """Methods to reset a device into bootloader mode."""
+
+    RTS_DTR = "rts_dtr"
+    BAUDRATE = "baudrate"
+    YELLOW = "yellow"
+
+    def as_flasher_reset_target(self) -> FlasherResetTarget:
+        """Convert the reset target enum into one compatible with USF."""
+        return FlasherResetTarget(self.value)
 
 
 @singleton(OTBR_ADDON_MANAGER_DATA)
@@ -104,6 +123,28 @@ class OwningAddon:
         else:
             return addon_info.state == AddonState.RUNNING
 
+    @asynccontextmanager
+    async def temporarily_stop(self, hass: HomeAssistant) -> AsyncIterator[None]:
+        """Temporarily stop the add-on, restarting it after completion."""
+        addon_manager = self._get_addon_manager(hass)
+
+        try:
+            addon_info = await addon_manager.async_get_addon_info()
+        except AddonError:
+            yield
+            return
+
+        if addon_info.state != AddonState.RUNNING:
+            yield
+            return
+
+        try:
+            await addon_manager.async_stop_addon()
+            await addon_manager.async_wait_until_addon_state(AddonState.NOT_RUNNING)
+            yield
+        finally:
+            await addon_manager.async_start_addon_waiting()
+
 
 @dataclass(kw_only=True)
 class OwningIntegration:
@@ -121,6 +162,23 @@ class OwningIntegration:
             ConfigEntryState.SETUP_RETRY,
             ConfigEntryState.SETUP_IN_PROGRESS,
         )
+
+    @asynccontextmanager
+    async def temporarily_stop(self, hass: HomeAssistant) -> AsyncIterator[None]:
+        """Temporarily stop the integration, restarting it after completion."""
+        if (entry := hass.config_entries.async_get_entry(self.config_entry_id)) is None:
+            yield
+            return
+
+        if entry.state != ConfigEntryState.LOADED:
+            yield
+            return
+
+        try:
+            await hass.config_entries.async_unload(entry.entry_id)
+            yield
+        finally:
+            await hass.config_entries.async_setup(entry.entry_id)
 
 
 @dataclass(kw_only=True)
@@ -143,6 +201,31 @@ class FirmwareInfo:
         return all(states)
 
 
+async def get_otbr_addon_firmware_info(
+    hass: HomeAssistant, otbr_addon_manager: AddonManager
+) -> FirmwareInfo | None:
+    """Get firmware info from the OTBR add-on."""
+    try:
+        otbr_addon_info = await otbr_addon_manager.async_get_addon_info()
+    except AddonError:
+        return None
+
+    if otbr_addon_info.state == AddonState.NOT_INSTALLED:
+        return None
+
+    if (otbr_path := otbr_addon_info.options.get("device")) is None:
+        return None
+
+    # Only create a new entry if there are no existing OTBR ones
+    return FirmwareInfo(
+        device=otbr_path,
+        firmware_type=ApplicationType.SPINEL,
+        firmware_version=None,
+        source="otbr",
+        owners=[OwningAddon(slug=otbr_addon_manager.addon_slug)],
+    )
+
+
 async def guess_hardware_owners(
     hass: HomeAssistant, device_path: str
 ) -> list[FirmwareInfo]:
@@ -155,28 +238,19 @@ async def guess_hardware_owners(
     # It may be possible for the OTBR addon to be present without the integration
     if is_hassio(hass):
         otbr_addon_manager = get_otbr_addon_manager(hass)
+        otbr_addon_fw_info = await get_otbr_addon_firmware_info(
+            hass, otbr_addon_manager
+        )
+        otbr_path = (
+            otbr_addon_fw_info.device if otbr_addon_fw_info is not None else None
+        )
 
-        try:
-            otbr_addon_info = await otbr_addon_manager.async_get_addon_info()
-        except AddonError:
-            pass
-        else:
-            if otbr_addon_info.state != AddonState.NOT_INSTALLED:
-                otbr_path = otbr_addon_info.options.get("device")
-
-                # Only create a new entry if there are no existing OTBR ones
-                if otbr_path is not None and not any(
-                    info.source == "otbr" for info in device_guesses[otbr_path]
-                ):
-                    device_guesses[otbr_path].append(
-                        FirmwareInfo(
-                            device=otbr_path,
-                            firmware_type=ApplicationType.SPINEL,
-                            firmware_version=None,
-                            source="otbr",
-                            owners=[OwningAddon(slug=otbr_addon_manager.addon_slug)],
-                        )
-                    )
+        # Only create a new entry if there are no existing OTBR ones
+        if otbr_path is not None and not any(
+            info.source == "otbr" for info in device_guesses[otbr_path]
+        ):
+            assert otbr_addon_fw_info is not None
+            device_guesses[otbr_path].append(otbr_addon_fw_info)
 
     if is_hassio(hass):
         multipan_addon_manager = await get_multiprotocol_addon_manager(hass)
@@ -232,10 +306,10 @@ async def guess_firmware_info(hass: HomeAssistant, device_path: str) -> Firmware
     return guesses[-1][0]
 
 
-async def probe_silabs_firmware_type(
+async def probe_silabs_firmware_info(
     device: str, *, probe_methods: Iterable[ApplicationType] | None = None
-) -> ApplicationType | None:
-    """Probe the running firmware on a Silabs device."""
+) -> FirmwareInfo | None:
+    """Probe the running firmware on a SiLabs device."""
     flasher = Flasher(
         device=device,
         **(
@@ -253,4 +327,77 @@ async def probe_silabs_firmware_type(
     if flasher.app_type is None:
         return None
 
-    return ApplicationType.from_flasher_application_type(flasher.app_type)
+    return FirmwareInfo(
+        device=device,
+        firmware_type=ApplicationType.from_flasher_application_type(flasher.app_type),
+        firmware_version=(
+            flasher.app_version.orig_version
+            if flasher.app_version is not None
+            else None
+        ),
+        source="probe",
+        owners=[],
+    )
+
+
+async def probe_silabs_firmware_type(
+    device: str, *, probe_methods: Iterable[ApplicationType] | None = None
+) -> ApplicationType | None:
+    """Probe the running firmware type on a SiLabs device."""
+
+    fw_info = await probe_silabs_firmware_info(device, probe_methods=probe_methods)
+    if fw_info is None:
+        return None
+
+    return fw_info.firmware_type
+
+
+async def async_flash_silabs_firmware(
+    hass: HomeAssistant,
+    device: str,
+    fw_data: bytes,
+    expected_installed_firmware_type: ApplicationType,
+    bootloader_reset_methods: Sequence[ResetTarget] = (),
+    progress_callback: Callable[[int, int], None] | None = None,
+) -> FirmwareInfo:
+    """Flash firmware to the SiLabs device."""
+    firmware_info = await guess_firmware_info(hass, device)
+    _LOGGER.debug("Identified firmware info: %s", firmware_info)
+
+    fw_image = await hass.async_add_executor_job(parse_firmware_image, fw_data)
+
+    flasher = Flasher(
+        device=device,
+        probe_methods=(
+            ApplicationType.GECKO_BOOTLOADER.as_flasher_application_type(),
+            ApplicationType.EZSP.as_flasher_application_type(),
+            ApplicationType.SPINEL.as_flasher_application_type(),
+            ApplicationType.CPC.as_flasher_application_type(),
+        ),
+        bootloader_reset=tuple(
+            m.as_flasher_reset_target() for m in bootloader_reset_methods
+        ),
+    )
+
+    async with AsyncExitStack() as stack:
+        for owner in firmware_info.owners:
+            await stack.enter_async_context(owner.temporarily_stop(hass))
+
+        try:
+            # Enter the bootloader with indeterminate progress
+            await flasher.enter_bootloader()
+
+            # Flash the firmware, with progress
+            await flasher.flash_firmware(fw_image, progress_callback=progress_callback)
+        except Exception as err:
+            raise HomeAssistantError("Failed to flash firmware") from err
+
+        probed_firmware_info = await probe_silabs_firmware_info(
+            device,
+            probe_methods=(expected_installed_firmware_type,),
+        )
+
+    if probed_firmware_info is None:
+        raise HomeAssistantError("Failed to probe the firmware after flashing")
+
+    return probed_firmware_info

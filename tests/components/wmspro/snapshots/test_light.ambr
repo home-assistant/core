@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -16,7 +17,6 @@
         '97358',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -26,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '97358',
-    'suggested_area': 'Terrasse',
     'sw_version': None,
     'via_device_id': <ANY>,
   })

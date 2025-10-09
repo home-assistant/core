@@ -1,9 +1,10 @@
 """Sensor tests for the YouTube integration."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from youtubeaio.types import UnauthorizedError, YouTubeBackendError
 
 from homeassistant import config_entries
@@ -42,12 +43,13 @@ async def test_sensor_without_uploaded_video(
     with patch(
         "homeassistant.components.youtube.api.AsyncConfigEntryAuth.get_resource",
         return_value=MockYouTube(
-            playlist_items_fixture="youtube/get_no_playlist_items.json"
+            hass, playlist_items_fixture="get_no_playlist_items.json"
         ),
     ):
         future = dt_util.utcnow() + timedelta(minutes=15)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
+        await asyncio.sleep(0.1)
 
     state = hass.states.get("sensor.google_for_developers_latest_upload")
     assert state == snapshot
@@ -72,12 +74,13 @@ async def test_sensor_updating(
     with patch(
         "homeassistant.components.youtube.api.AsyncConfigEntryAuth.get_resource",
         return_value=MockYouTube(
-            playlist_items_fixture="youtube/get_playlist_items_2.json"
+            hass, playlist_items_fixture="get_playlist_items_2.json"
         ),
     ):
         future = dt_util.utcnow() + timedelta(minutes=15)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
+        await asyncio.sleep(0.1)
     state = hass.states.get("sensor.google_for_developers_latest_upload")
     assert state
     assert state.name == "Google for Developers Latest upload"

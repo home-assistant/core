@@ -16,7 +16,7 @@ from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity
 
 from .const import (
@@ -138,7 +138,7 @@ def _async_camera_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Discover cameras on a UniFi Protect NVR."""
     data = entry.runtime_data
@@ -247,7 +247,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         if self.channel.is_package:
             last_image = await self.device.get_package_snapshot(width, height)
         else:
-            last_image = await self.device.get_snapshot(width, height)
+            last_image = await self.device.get_public_api_snapshot()
         self._last_image = last_image
         return self._last_image
 

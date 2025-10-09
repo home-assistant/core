@@ -7,6 +7,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 HOST = "192.168.1.31"
 PORT = 23
+MAC = bytes.fromhex("c4dd57f8a55f")
 
 TVM_ZEROCONF_SERVICE_TYPE = "_tvm._tcp.local."
 

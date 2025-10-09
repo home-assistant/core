@@ -109,7 +109,11 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serializable_data = cls._serializable_issue_registry_entry(data)
         elif isinstance(data, dict) and "flow_id" in data and "handler" in data:
             serializable_data = cls._serializable_flow_result(data)
-        elif isinstance(data, dict) and set(data) == {"conversation_id", "response"}:
+        elif isinstance(data, dict) and set(data) == {
+            "conversation_id",
+            "response",
+            "continue_conversation",
+        }:
             serializable_data = cls._serializable_conversation_result(data)
         elif isinstance(data, vol.Schema):
             serializable_data = voluptuous_serialize.convert(data)
@@ -160,6 +164,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             attrs.asdict(data)
             | {
                 "config_entries": ANY,
+                "config_entries_subentries": ANY,
                 "id": ANY,
             }
         )
@@ -168,6 +173,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         if serialized["primary_config_entry"] is not None:
             serialized["primary_config_entry"] = ANY
         serialized.pop("_cache")
+        # This can be removed when suggested_area is removed from DeviceEntry
+        serialized.pop("_suggested_area")
         return cls._remove_created_and_modified_at(serialized)
 
     @classmethod
@@ -188,6 +195,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             attrs.asdict(data)
             | {
                 "config_entry_id": ANY,
+                "config_subentry_id": ANY,
                 "device_id": ANY,
                 "id": ANY,
                 "options": {k: dict(v) for k, v in data.options.items()},

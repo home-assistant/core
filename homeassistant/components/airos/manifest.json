@@ -1,0 +1,10 @@
+{
+  "domain": "airos",
+  "name": "Ubiquiti airOS",
+  "codeowners": ["@CoMPaTech"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/airos",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["airos==0.5.5"]
+}

@@ -32,6 +32,7 @@
       "LIFX GU10",
       "LIFX Indoor Neon",
       "LIFX Lightstrip",
+      "LIFX Luna",
       "LIFX Mini",
       "LIFX Neon",
       "LIFX Nightvision",
@@ -51,8 +52,8 @@
   "iot_class": "local_polling",
   "loggers": ["aiolifx", "aiolifx_effects", "bitstring"],
   "requirements": [
-    "aiolifx==1.1.2",
+    "aiolifx==1.2.1",
     "aiolifx-effects==0.3.2",
-    "aiolifx-themes==0.6.4"
+    "aiolifx-themes==1.0.2"
   ]
 }

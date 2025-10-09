@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -139,7 +139,7 @@ SENSOR_TYPES: tuple[KrakenSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add kraken entities from a config_entry."""
 
@@ -156,7 +156,7 @@ async def async_setup_entry(
                     for description in SENSOR_TYPES
                 ]
             )
-        async_add_entities(entities, True)
+        async_add_entities(entities)
 
     _async_add_kraken_sensors(config_entry.options[CONF_TRACKED_ASSET_PAIRS])
 

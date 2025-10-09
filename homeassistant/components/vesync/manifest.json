@@ -6,11 +6,12 @@
     "@webdjoe",
     "@thegardenmonkey",
     "@cdnninja",
-    "@iprak"
+    "@iprak",
+    "@sapuseven"
   ],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vesync",
   "iot_class": "cloud_polling",
   "loggers": ["pyvesync"],
-  "requirements": ["pyvesync==2.1.17"]
+  "requirements": ["pyvesync==3.1.0"]
 }

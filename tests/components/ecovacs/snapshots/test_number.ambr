@@ -11,6 +11,7 @@
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -31,6 +32,7 @@
     'original_name': 'Cut direction',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cut_direction',
     'unique_id': '8516fbb1-17f1-4194-0000000_cut_direction',
@@ -67,6 +69,7 @@
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -87,6 +90,7 @@
     'original_name': 'Volume',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '8516fbb1-17f1-4194-0000000_volume',
@@ -110,6 +114,177 @@
     'state': '3',
   })
 # ---
+# name: test_number_entities[n0vyif][number.x8_pro_omni_clean_count:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 4,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.x8_pro_omni_clean_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clean count',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clean_count',
+    'unique_id': 'E1234567890000000009_clean_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities[n0vyif][number.x8_pro_omni_clean_count:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'X8 PRO OMNI Clean count',
+      'max': 4,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.x8_pro_omni_clean_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_number_entities[n0vyif][number.x8_pro_omni_volume:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 11,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.x8_pro_omni_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'volume',
+    'unique_id': 'E1234567890000000009_volume',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities[n0vyif][number.x8_pro_omni_volume:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'X8 PRO OMNI Volume',
+      'max': 11,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.x8_pro_omni_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_number_entities[n0vyif][number.x8_pro_omni_water_flow_level:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 50,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.x8_pro_omni_water_flow_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water flow level',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_amount',
+    'unique_id': 'E1234567890000000009_water_amount',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities[n0vyif][number.x8_pro_omni_water_flow_level:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'X8 PRO OMNI Water flow level',
+      'max': 50,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.x8_pro_omni_water_flow_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '14',
+  })
+# ---
 # name: test_number_entities[yna5x1][number.ozmo_950_volume:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -122,6 +297,7 @@
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -142,6 +318,7 @@
     'original_name': 'Volume',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': 'E1234567890000000001_volume',

@@ -12,7 +12,7 @@ from axis.rtsp import Signal, State
 import pytest
 import respx
 
-from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
+from homeassistant.components.axis.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -91,7 +91,7 @@ def fixture_config_entry(
 ) -> MockConfigEntry:
     """Define a config entry fixture."""
     return MockConfigEntry(
-        domain=AXIS_DOMAIN,
+        domain=DOMAIN,
         entry_id="676abe5b73621446e6550a2e86ffe3dd",
         unique_id=FORMATTED_MAC,
         data=config_entry_data,

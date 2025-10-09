@@ -7,6 +7,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -27,6 +28,7 @@
     'original_name': None,
     'platform': 'sonos',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 4127295>,
     'translation_key': None,
     'unique_id': 'RINCON_test',
@@ -78,5 +80,117 @@
         'media_title': 'Track with no album or creator',
       }),
     ]),
+  })
+# ---
+# name: test_media_info_attributes[basic_track]
+  dict({
+    'entity_picture': '/api/media_player_proxy/media_player.zone_a?token=123456789&cache=0b180fe5758c0b7f',
+    'media_album_name': 'Abbey Road',
+    'media_artist': 'The Beatles',
+    'media_channel': None,
+    'media_content_id': 'x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3',
+    'media_content_type': <MediaType.MUSIC: 'music'>,
+    'media_duration': 156,
+    'media_playlist': None,
+    'media_position': 42,
+    'media_title': 'Something',
+    'queue_position': 5,
+    'source': None,
+  })
+# ---
+# name: test_media_info_attributes[basic_track_no_art]
+  dict({
+    'entity_picture': '/api/media_player_proxy/media_player.zone_a?token=123456789&cache=0b28413f58211151',
+    'media_album_name': 'Abbey Road',
+    'media_artist': 'The Beatles',
+    'media_channel': None,
+    'media_content_id': 'x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3',
+    'media_content_type': <MediaType.MUSIC: 'music'>,
+    'media_duration': 156,
+    'media_playlist': None,
+    'media_position': 42,
+    'media_title': 'Something',
+    'queue_position': 5,
+    'source': None,
+  })
+# ---
+# name: test_media_info_attributes[basic_track_no_position]
+  dict({
+    'entity_picture': '/api/media_player_proxy/media_player.zone_a?token=123456789&cache=0b180fe5758c0b7f',
+    'media_album_name': 'Abbey Road',
+    'media_artist': 'The Beatles',
+    'media_channel': None,
+    'media_content_id': 'x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3',
+    'media_content_type': <MediaType.MUSIC: 'music'>,
+    'media_duration': None,
+    'media_playlist': None,
+    'media_position': None,
+    'media_title': 'Something',
+    'queue_position': 5,
+    'source': None,
+  })
+# ---
+# name: test_media_info_attributes[line_in]
+  dict({
+    'entity_picture': None,
+    'media_album_name': None,
+    'media_artist': None,
+    'media_channel': None,
+    'media_content_id': 'x-rincon-stream:0',
+    'media_content_type': <MediaType.MUSIC: 'music'>,
+    'media_duration': None,
+    'media_playlist': None,
+    'media_position': None,
+    'media_title': 'Line-in',
+    'queue_position': None,
+    'source': 'Line-in',
+  })
+# ---
+# name: test_media_info_attributes[playlist_container]
+  dict({
+    'entity_picture': '/api/media_player_proxy/media_player.zone_a?token=123456789&cache=0b180fe5758c0b7f',
+    'media_album_name': 'Abbey Road',
+    'media_artist': 'The Beatles',
+    'media_channel': None,
+    'media_content_id': 'x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3',
+    'media_content_type': <MediaType.MUSIC: 'music'>,
+    'media_duration': None,
+    'media_playlist': 'My Playlist',
+    'media_position': None,
+    'media_title': 'Something',
+    'queue_position': 5,
+    'source': None,
+  })
+# ---
+# name: test_media_info_attributes[radio_station]
+  dict({
+    'entity_picture': '/api/media_player_proxy/media_player.zone_a?token=123456789&cache=0b180fe5758c0b7f',
+    'media_album_name': None,
+    'media_artist': None,
+    'media_channel': 'World News',
+    'media_content_id': 'x-sonosapi-stream:1234',
+    'media_content_type': <MediaType.MUSIC: 'music'>,
+    'media_duration': 156,
+    'media_playlist': None,
+    'media_position': 42,
+    'media_title': 'World News',
+    'queue_position': None,
+    'source': None,
+  })
+# ---
+# name: test_media_info_attributes[radio_station_with_show]
+  dict({
+    'entity_picture': '/api/media_player_proxy/media_player.zone_a?token=123456789&cache=0b180fe5758c0b7f',
+    'media_album_name': None,
+    'media_artist': None,
+    'media_channel': 'World News • Live at 6',
+    'media_content_id': 'x-sonosapi-stream:1234',
+    'media_content_type': <MediaType.MUSIC: 'music'>,
+    'media_duration': 156,
+    'media_playlist': None,
+    'media_position': 42,
+    'media_title': 'World News • Live at 6',
+    'queue_position': None,
+    'source': None,
   })
 # ---

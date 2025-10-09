@@ -17,8 +17,7 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -27,17 +26,18 @@ from .const import (
     SHIX3_1_INPUTS_EVENTS_TYPES,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .entity import ShellyBlockEntity
+from .entity import ShellyBlockEntity, get_entity_rpc_device_info
 from .utils import (
     async_remove_orphaned_entities,
     async_remove_shelly_entity,
     get_device_entry_gen,
     get_rpc_entity_name,
     get_rpc_key_instances,
-    get_rpc_script_event_types,
     is_block_momentary_input,
     is_rpc_momentary_input,
 )
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -76,14 +76,13 @@ SCRIPT_EVENT: Final = ShellyRpcEventDescription(
     translation_key="script",
     device_class=None,
     entity_registry_enabled_default=False,
-    has_entity_name=True,
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
     entities: list[ShellyBlockEvent | ShellyRpcEvent] = []
@@ -109,18 +108,15 @@ async def async_setup_entry(
         script_instances = get_rpc_key_instances(
             coordinator.device.status, SCRIPT_EVENT.key
         )
+        script_events = config_entry.runtime_data.rpc_script_events
         for script in script_instances:
             script_name = get_rpc_entity_name(coordinator.device, script)
             if script_name == BLE_SCRIPT_NAME:
                 continue
 
-            event_types = await get_rpc_script_event_types(
-                coordinator.device, int(script.split(":")[-1])
-            )
-            if not event_types:
-                continue
-
-            entities.append(ShellyRpcScriptEvent(coordinator, script, event_types))
+            script_id = int(script.split(":")[-1])
+            if script_events and (event_types := script_events[script_id]):
+                entities.append(ShellyRpcScriptEvent(coordinator, script, event_types))
 
         # If a script is removed, from the device configuration, we need to remove orphaned entities
         async_remove_orphaned_entities(
@@ -197,6 +193,7 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
 class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
     """Represent RPC event entity."""
 
+    _attr_has_entity_name = True
     entity_description: ShellyRpcEventDescription
 
     def __init__(
@@ -208,9 +205,7 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.event_id = int(key.split(":")[-1])
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
-        )
+        self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
         self.entity_description = description

@@ -166,6 +166,13 @@ SSDP = {
             "st": "urn:hyperion-project.org:device:basic:1",
         },
     ],
+    "imeon_inverter": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+            "manufacturer": "IMEON",
+            "st": "upnp:rootdevice",
+        },
+    ],
     "isy994": [
         {
             "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1",
@@ -210,6 +217,12 @@ SSDP = {
         },
         {
             "st": "nanoleaf:nl52",
+        },
+        {
+            "st": "nanoleaf:nl69",
+        },
+        {
+            "st": "inanoleaf:nl81",
         },
     ],
     "netgear": [

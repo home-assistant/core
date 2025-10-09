@@ -46,8 +46,10 @@ from homeassistant.util.ulid import bytes_to_ulid, ulid_at_time, ulid_to_bytes
 
 from .common import (
     async_attach_db_engine,
+    async_drop_index,
     async_recorder_block_till_done,
     async_wait_recording_done,
+    get_patched_live_version,
 )
 from .conftest import instrument_migration
 
@@ -107,6 +109,11 @@ def db_schema_32():
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
@@ -126,6 +133,7 @@ def db_schema_32():
 async def test_migrate_events_context_ids(
     async_test_recorder: RecorderInstanceContextManager,
     indices_to_drop: list[tuple[str, str]],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
     importlib.import_module(SCHEMA_MODULE_32)
@@ -224,6 +232,11 @@ async def test_migrate_events_context_ids(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration.EventsContextIDMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
@@ -245,7 +258,7 @@ async def test_migrate_events_context_ids(
             for table, index in indices_to_drop:
                 with session_scope(hass=hass) as session:
                     assert get_index_by_name(session, table, index) is not None
-                migration._drop_index(instance.get_session, table, index)
+                await async_drop_index(instance, table, index, caplog)
 
             await hass.async_stop()
             await hass.async_block_till_done()
@@ -283,11 +296,20 @@ async def test_migrate_events_context_ids(
                 "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
             ) as wrapped_idx_create,
         ):
+            # Stall migration when the last non-live schema migration is done
+            instrumented_migration.stall_on_schema_version = (
+                migration.LIVE_MIGRATION_MIN_SCHEMA_VERSION
+            )
             async with async_test_recorder(
                 hass, wait_recorder=False, wait_recorder_setup=False
             ) as instance:
                 # Check the context ID migrator is considered non-live
                 assert recorder.util.async_migration_is_live(hass) is False
+                # Wait for non-live schema migration to complete
+                await hass.async_add_executor_job(
+                    instrumented_migration.apply_update_stalled.wait
+                )
+                wrapped_idx_create.reset_mock()
                 instrumented_migration.migration_stall.set()
                 instance.recorder_and_worker_thread_ids.add(threading.get_ident())
 
@@ -420,14 +442,12 @@ async def test_finish_migrate_events_context_ids(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
-        patch.object(migration.EventsContextIDMigration, "migrate_data"),
         patch.object(
-            migration.EventIDPostMigration,
-            "needs_migrate_impl",
-            return_value=migration.DataMigrationStatus(
-                needs_migrate=False, migration_done=True
-            ),
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
         ),
+        patch.object(migration.EventsContextIDMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with (
@@ -507,6 +527,7 @@ async def test_finish_migrate_events_context_ids(
 async def test_migrate_states_context_ids(
     async_test_recorder: RecorderInstanceContextManager,
     indices_to_drop: list[tuple[str, str]],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
     importlib.import_module(SCHEMA_MODULE_32)
@@ -587,6 +608,11 @@ async def test_migrate_states_context_ids(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration.StatesContextIDMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
@@ -604,7 +630,7 @@ async def test_migrate_states_context_ids(
             for table, index in indices_to_drop:
                 with session_scope(hass=hass) as session:
                     assert get_index_by_name(session, table, index) is not None
-                migration._drop_index(instance.get_session, table, index)
+                await async_drop_index(instance, table, index, caplog)
 
             await hass.async_stop()
             await hass.async_block_till_done()
@@ -641,11 +667,20 @@ async def test_migrate_states_context_ids(
                 "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
             ) as wrapped_idx_create,
         ):
+            # Stall migration when the last non-live schema migration is done
+            instrumented_migration.stall_on_schema_version = (
+                migration.LIVE_MIGRATION_MIN_SCHEMA_VERSION
+            )
             async with async_test_recorder(
                 hass, wait_recorder=False, wait_recorder_setup=False
             ) as instance:
                 # Check the context ID migrator is considered non-live
                 assert recorder.util.async_migration_is_live(hass) is False
+                # Wait for non-live schema migration to complete
+                await hass.async_add_executor_job(
+                    instrumented_migration.apply_update_stalled.wait
+                )
+                wrapped_idx_create.reset_mock()
                 instrumented_migration.migration_stall.set()
                 instance.recorder_and_worker_thread_ids.add(threading.get_ident())
 
@@ -782,14 +817,12 @@ async def test_finish_migrate_states_context_ids(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
-        patch.object(migration.StatesContextIDMigration, "migrate_data"),
         patch.object(
-            migration.EventIDPostMigration,
-            "needs_migrate_impl",
-            return_value=migration.DataMigrationStatus(
-                needs_migrate=False, migration_done=True
-            ),
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
         ),
+        patch.object(migration.StatesContextIDMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with (
@@ -898,6 +931,11 @@ async def test_migrate_event_type_ids(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration.EventTypeIDMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
@@ -1016,6 +1054,11 @@ async def test_migrate_entity_ids(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration.EntityIDMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
@@ -1094,6 +1137,7 @@ async def test_migrate_entity_ids(
 async def test_post_migrate_entity_ids(
     async_test_recorder: RecorderInstanceContextManager,
     indices_to_drop: list[tuple[str, str]],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we can migrate entity_ids to the StatesMeta table."""
     importlib.import_module(SCHEMA_MODULE_32)
@@ -1125,6 +1169,11 @@ async def test_post_migrate_entity_ids(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration.EntityIDMigration, "migrate_data"),
         patch.object(migration.EntityIDPostMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
@@ -1143,7 +1192,7 @@ async def test_post_migrate_entity_ids(
             for table, index in indices_to_drop:
                 with session_scope(hass=hass) as session:
                     assert get_index_by_name(session, table, index) is not None
-                migration._drop_index(instance.get_session, table, index)
+                await async_drop_index(instance, table, index, caplog)
 
             await hass.async_stop()
             await hass.async_block_till_done()
@@ -1158,34 +1207,48 @@ async def test_post_migrate_entity_ids(
             return {state.state: state.entity_id for state in states}
 
     # Run again with new schema, let migration run
-    with patch(
-        "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
-    ) as wrapped_idx_create:
-        async with (
-            async_test_home_assistant() as hass,
-            async_test_recorder(hass) as instance,
+    async with async_test_home_assistant() as hass:
+        with (
+            instrument_migration(hass) as instrumented_migration,
+            patch(
+                "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
+            ) as wrapped_idx_create,
         ):
-            instance.recorder_and_worker_thread_ids.add(threading.get_ident())
-
-            await hass.async_block_till_done()
-            await async_wait_recording_done(hass)
-            await async_wait_recording_done(hass)
-
-            states_by_state = await instance.async_add_executor_job(
-                _fetch_migrated_states
+            # Stall migration when the last non-live schema migration is done
+            instrumented_migration.stall_on_schema_version = (
+                migration.LIVE_MIGRATION_MIN_SCHEMA_VERSION
             )
+            async with async_test_recorder(
+                hass, wait_recorder=False, wait_recorder_setup=False
+            ) as instance:
+                # Wait for non-live schema migration to complete
+                await hass.async_add_executor_job(
+                    instrumented_migration.apply_update_stalled.wait
+                )
+                wrapped_idx_create.reset_mock()
+                instrumented_migration.migration_stall.set()
 
-            # Check the index which will be removed by the migrator no longer exists
-            with session_scope(hass=hass) as session:
-                assert (
-                    get_index_by_name(
-                        session, "states", "ix_states_entity_id_last_updated_ts"
-                    )
-                    is None
+                instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+
+                await hass.async_block_till_done()
+                await async_wait_recording_done(hass)
+                await async_wait_recording_done(hass)
+
+                states_by_state = await instance.async_add_executor_job(
+                    _fetch_migrated_states
                 )
 
-            await hass.async_stop()
-            await hass.async_block_till_done()
+                # Check the index which will be removed by the migrator no longer exists
+                with session_scope(hass=hass) as session:
+                    assert (
+                        get_index_by_name(
+                            session, "states", "ix_states_entity_id_last_updated_ts"
+                        )
+                        is None
+                    )
+
+                await hass.async_stop()
+                await hass.async_block_till_done()
 
     # Check the index we removed was recreated
     index_names = [call[1][0].name for call in wrapped_idx_create.mock_calls]
@@ -1235,6 +1298,11 @@ async def test_migrate_null_entity_ids(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration.EntityIDMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
@@ -1345,6 +1413,11 @@ async def test_migrate_null_event_type_ids(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration.EventTypeIDMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
@@ -1531,6 +1604,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
             "last_reset_ts": one_year_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": process_timestamp(one_year_ago).replace(tzinfo=None),
@@ -1546,6 +1620,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
             "last_reset_ts": six_months_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1561,6 +1636,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
             "last_reset_ts": one_month_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": process_timestamp(one_month_ago).replace(tzinfo=None),
@@ -1698,6 +1774,7 @@ async def test_stats_timestamp_with_one_by_one(
             "last_reset_ts": one_year_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1713,6 +1790,7 @@ async def test_stats_timestamp_with_one_by_one(
             "last_reset_ts": six_months_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1728,6 +1806,7 @@ async def test_stats_timestamp_with_one_by_one(
             "last_reset_ts": one_month_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1751,6 +1830,7 @@ async def test_stats_timestamp_with_one_by_one(
             "last_reset_ts": one_year_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1766,6 +1846,7 @@ async def test_stats_timestamp_with_one_by_one(
             "last_reset_ts": six_months_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1781,6 +1862,7 @@ async def test_stats_timestamp_with_one_by_one(
             "last_reset_ts": one_month_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1925,6 +2007,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
             "last_reset_ts": one_year_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1940,6 +2023,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
             "last_reset_ts": six_months_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1955,6 +2039,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
             "last_reset_ts": one_month_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -1978,6 +2063,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
             "last_reset_ts": six_months_ago.timestamp(),
             "max": None,
             "mean": None,
+            "mean_weight": None,
             "metadata_id": 1000,
             "min": None,
             "start": None,
@@ -2028,6 +2114,11 @@ async def test_stats_migrate_times(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
@@ -2223,6 +2314,11 @@ async def test_cleanup_unmigrated_state_timestamps(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with (
@@ -2232,7 +2328,6 @@ async def test_cleanup_unmigrated_state_timestamps(
             await instance.async_add_executor_job(_insert_states)
 
             await async_wait_recording_done(hass)
-            now = dt_util.utcnow()
             await _async_wait_migration_done(hass)
             await async_wait_recording_done(hass)
 
@@ -2246,29 +2341,22 @@ async def test_cleanup_unmigrated_state_timestamps(
             return {state.state_id: _object_as_dict(state) for state in states}
 
     # Run again with new schema, let migration run
-    async with async_test_home_assistant() as hass:
-        with (
-            freeze_time(now),
-            instrument_migration(hass) as instrumented_migration,
-        ):
-            async with async_test_recorder(
-                hass, wait_recorder=False, wait_recorder_setup=False
-            ) as instance:
-                # Check the context ID migrator is considered non-live
-                assert recorder.util.async_migration_is_live(hass) is False
-                instrumented_migration.migration_stall.set()
-                instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass) as instance,
+    ):
+        instance.recorder_and_worker_thread_ids.add(threading.get_ident())
 
-                await hass.async_block_till_done()
-                await async_wait_recording_done(hass)
-                await async_wait_recording_done(hass)
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
 
-                states_by_metadata_id = await instance.async_add_executor_job(
-                    _fetch_migrated_states
-                )
+        states_by_metadata_id = await instance.async_add_executor_job(
+            _fetch_migrated_states
+        )
 
-                await hass.async_stop()
-                await hass.async_block_till_done()
+        await hass.async_stop()
+        await hass.async_block_till_done()
 
     assert len(states_by_metadata_id) == 3
     for state in states_by_metadata_id.values():

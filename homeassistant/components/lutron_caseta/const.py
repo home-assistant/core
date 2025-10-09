@@ -29,12 +29,14 @@ ATTR_DEVICE_NAME = "device_name"
 ATTR_AREA_NAME = "area_name"
 ATTR_ACTION = "action"
 
+ACTION_MULTITAP = "multi_tap"
 ACTION_PRESS = "press"
 ACTION_RELEASE = "release"
 
 CONF_SUBTYPE = "subtype"
 
-BRIDGE_TIMEOUT = 35
+CONNECT_TIMEOUT = 9
+CONFIGURE_TIMEOUT = 50
 
 UNASSIGNED_AREA = "Unassigned"
 

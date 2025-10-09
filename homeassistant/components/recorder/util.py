@@ -27,6 +27,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
 
+from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.recorder import (  # noqa: F401
@@ -109,9 +110,7 @@ SUNDAY_WEEKDAY = 6
 DAYS_IN_WEEK = 7
 
 
-def execute(
-    qry: Query, to_native: bool = False, validate_entity_ids: bool = True
-) -> list[Row]:
+def execute(qry: Query) -> list[Row]:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -121,33 +120,15 @@ def execute(
         try:
             if debug:
                 timer_start = time.perf_counter()
-
-            if to_native:
-                result = [
-                    row
-                    for row in (
-                        row.to_native(validate_entity_id=validate_entity_ids)
-                        for row in qry
-                    )
-                    if row is not None
-                ]
-            else:
-                result = qry.all()
+            result = qry.all()
 
             if debug:
                 elapsed = time.perf_counter() - timer_start
-                if to_native:
-                    _LOGGER.debug(
-                        "converting %d rows to native objects took %fs",
-                        len(result),
-                        elapsed,
-                    )
-                else:
-                    _LOGGER.debug(
-                        "querying %d rows took %fs",
-                        len(result),
-                        elapsed,
-                    )
+                _LOGGER.debug(
+                    "querying %d rows took %fs",
+                    len(result),
+                    elapsed,
+                )
 
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
@@ -258,7 +239,7 @@ def basic_sanity_check(cursor: SQLiteCursor) -> bool:
 
 def validate_sqlite_database(dbpath: str) -> bool:
     """Run a quick check on an sqlite database to see if it is corrupt."""
-    import sqlite3  # pylint: disable=import-outside-toplevel
+    import sqlite3  # noqa: PLC0415
 
     try:
         conn = sqlite3.connect(dbpath)
@@ -402,9 +383,8 @@ def _datetime_or_none(value: str) -> datetime | None:
 def build_mysqldb_conv() -> dict:
     """Build a MySQLDB conv dict that uses cisco8601 to parse datetimes."""
     # Late imports since we only call this if they are using mysqldb
-    # pylint: disable=import-outside-toplevel
-    from MySQLdb.constants import FIELD_TYPE
-    from MySQLdb.converters import conversions
+    from MySQLdb.constants import FIELD_TYPE  # noqa: PLC0415
+    from MySQLdb.converters import conversions  # noqa: PLC0415
 
     return {**conversions, FIELD_TYPE.DATETIME: _datetime_or_none}
 
@@ -464,6 +444,7 @@ def setup_connection_for_dialect(
     """Execute statements needed for dialect connection."""
     version: AwesomeVersion | None = None
     slow_range_in_select = False
+    slow_dependent_subquery = False
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
             old_isolation = dbapi_connection.isolation_level  # type: ignore[attr-defined]
@@ -505,9 +486,8 @@ def setup_connection_for_dialect(
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
-            is_maria_db = "mariadb" in version_string.lower()
 
-            if is_maria_db:
+            if "mariadb" in version_string.lower():
                 if not version or version < MIN_VERSION_MARIA_DB:
                     _raise_if_version_unsupported(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
@@ -523,19 +503,21 @@ def setup_connection_for_dialect(
                         instance.hass,
                         version,
                     )
-
+                slow_range_in_select = bool(
+                    not version
+                    or version < MARIADB_WITH_FIXED_IN_QUERIES_105
+                    or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
+                    or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
+                    or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
+                )
             elif not version or version < MIN_VERSION_MYSQL:
                 _raise_if_version_unsupported(
                     version or version_string, "MySQL", MIN_VERSION_MYSQL
                 )
-
-            slow_range_in_select = bool(
-                not version
-                or version < MARIADB_WITH_FIXED_IN_QUERIES_105
-                or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
-                or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
-                or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
-            )
+            else:
+                # MySQL
+                # https://github.com/home-assistant/core/issues/137178
+                slow_dependent_subquery = True
 
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
@@ -565,7 +547,10 @@ def setup_connection_for_dialect(
     return DatabaseEngine(
         dialect=SupportedDialect(dialect_name),
         version=version,
-        optimizer=DatabaseOptimizer(slow_range_in_select=slow_range_in_select),
+        optimizer=DatabaseOptimizer(
+            slow_range_in_select=slow_range_in_select,
+            slow_dependent_subquery=slow_dependent_subquery,
+        ),
         max_bind_vars=DEFAULT_MAX_BIND_VARS,
     )
 
@@ -645,7 +630,7 @@ def _wrap_retryable_database_job_func_or_meth[**_P](
                 # Failed with retryable error
                 return False
 
-            _LOGGER.warning("Error executing %s: %s", description, err)
+            _LOGGER.error("Error executing %s: %s", description, err)
 
         # Failed with permanent error
         return True
@@ -798,6 +783,7 @@ PERIOD_SCHEMA = vol.Schema(
             {
                 vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
                 vol.Optional("offset"): int,
+                vol.Optional("first_weekday"): vol.Any(*WEEKDAYS),
             }
         ),
         vol.Exclusive("fixed_period", "period"): vol.Schema(
@@ -836,7 +822,12 @@ def resolve_period(
             start_time += timedelta(days=cal_offset)
             end_time = start_time + timedelta(days=1)
         elif calendar_period == "week":
-            start_time = start_of_day - timedelta(days=start_of_day.weekday())
+            first_weekday = WEEKDAYS.index(
+                period_def["calendar"].get("first_weekday", WEEKDAYS[0])
+            )
+            start_time = start_of_day - timedelta(
+                days=(start_of_day.weekday() - first_weekday) % 7
+            )
             start_time += timedelta(days=cal_offset * 7)
             end_time = start_time + timedelta(weeks=1)
         elif calendar_period == "month":

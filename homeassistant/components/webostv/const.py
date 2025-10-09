@@ -13,7 +13,6 @@ DATA_HASS_CONFIG = "hass_config"
 DEFAULT_NAME = "LG webOS TV"
 
 ATTR_BUTTON = "button"
-ATTR_CONFIG_ENTRY_ID = "entry_id"
 ATTR_PAYLOAD = "payload"
 ATTR_SOUND_OUTPUT = "sound_output"
 
@@ -31,6 +30,7 @@ WEBOSTV_EXCEPTIONS = (
     WebOsTvCommandError,
     aiohttp.ClientConnectorError,
     aiohttp.ServerDisconnectedError,
+    aiohttp.WSMessageTypeError,
     asyncio.CancelledError,
     asyncio.TimeoutError,
 )

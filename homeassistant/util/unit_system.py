@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from numbers import Number
 from typing import TYPE_CHECKING, Final
 
@@ -82,8 +83,20 @@ def _is_valid_unit(unit: str, unit_type: str) -> bool:
     return False
 
 
+@dataclass(frozen=True, kw_only=True)
 class UnitSystem:
     """A container for units of measure."""
+
+    _name: str
+    accumulated_precipitation_unit: UnitOfPrecipitationDepth
+    area_unit: UnitOfArea
+    length_unit: UnitOfLength
+    mass_unit: UnitOfMass
+    pressure_unit: UnitOfPressure
+    temperature_unit: UnitOfTemperature
+    volume_unit: UnitOfVolume
+    wind_speed_unit: UnitOfSpeed
+    _conversions: dict[tuple[SensorDeviceClass | str | None, str | None], str]
 
     def __init__(
         self,
@@ -118,16 +131,16 @@ class UnitSystem:
         if errors:
             raise ValueError(errors)
 
-        self._name = name
-        self.accumulated_precipitation_unit = accumulated_precipitation
-        self.area_unit = area
-        self.length_unit = length
-        self.mass_unit = mass
-        self.pressure_unit = pressure
-        self.temperature_unit = temperature
-        self.volume_unit = volume
-        self.wind_speed_unit = wind_speed
-        self._conversions = conversions
+        super().__setattr__("_name", name)
+        super().__setattr__("accumulated_precipitation_unit", accumulated_precipitation)
+        super().__setattr__("area_unit", area)
+        super().__setattr__("length_unit", length)
+        super().__setattr__("mass_unit", mass)
+        super().__setattr__("pressure_unit", pressure)
+        super().__setattr__("temperature_unit", temperature)
+        super().__setattr__("volume_unit", volume)
+        super().__setattr__("wind_speed_unit", wind_speed)
+        super().__setattr__("_conversions", conversions)
 
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
@@ -268,6 +281,7 @@ METRIC_SYSTEM = UnitSystem(
         # Convert non-metric volumes of gas meters
         ("gas", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("gas", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        ("gas", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert non-metric precipitation
         ("precipitation", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
         # Convert non-metric precipitation intensity
@@ -282,6 +296,7 @@ METRIC_SYSTEM = UnitSystem(
         # Convert non-metric pressure
         ("pressure", UnitOfPressure.PSI): UnitOfPressure.KPA,
         ("pressure", UnitOfPressure.INHG): UnitOfPressure.HPA,
+        ("pressure", UnitOfPressure.INH2O): UnitOfPressure.KPA,
         # Convert non-metric speeds except knots to km/h
         ("speed", UnitOfSpeed.FEET_PER_SECOND): UnitOfSpeed.KILOMETERS_PER_HOUR,
         ("speed", UnitOfSpeed.INCHES_PER_SECOND): UnitOfSpeed.MILLIMETERS_PER_SECOND,
@@ -299,10 +314,12 @@ METRIC_SYSTEM = UnitSystem(
         ("volume", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("volume", UnitOfVolume.FLUID_OUNCES): UnitOfVolume.MILLILITERS,
         ("volume", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
+        ("volume", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert non-metric volumes of water meters
         ("water", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
+        ("water", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert wind speeds except knots to km/h
         **{
             ("wind_speed", unit): UnitOfSpeed.KILOMETERS_PER_HOUR
@@ -342,6 +359,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
         # Convert non-USCS volumes of gas meters
         ("gas", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
+        ("gas", UnitOfVolume.LITERS): UnitOfVolume.CUBIC_FEET,
         # Convert non-USCS precipitation
         ("precipitation", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,
         ("precipitation", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
@@ -362,7 +380,9 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("pressure", UnitOfPressure.HPA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.KPA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.MMHG): UnitOfPressure.INHG,
+        ("pressure", UnitOfPressure.INH2O): UnitOfPressure.PSI,
         # Convert non-USCS speeds, except knots, to mph
+        ("speed", UnitOfSpeed.METERS_PER_MINUTE): UnitOfSpeed.INCHES_PER_SECOND,
         ("speed", UnitOfSpeed.METERS_PER_SECOND): UnitOfSpeed.MILES_PER_HOUR,
         ("speed", UnitOfSpeed.MILLIMETERS_PER_SECOND): UnitOfSpeed.INCHES_PER_SECOND,
         ("speed", UnitOfSpeed.KILOMETERS_PER_HOUR): UnitOfSpeed.MILES_PER_HOUR,

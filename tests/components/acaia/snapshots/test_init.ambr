@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'kitchen',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -20,7 +21,6 @@
         'aa:bb:cc:dd:ee:ff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Acaia',
@@ -30,7 +30,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Kitchen',
     'sw_version': None,
     'via_device_id': None,
   })

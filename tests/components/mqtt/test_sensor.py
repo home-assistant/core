@@ -15,17 +15,19 @@ import pytest
 from homeassistant.components import mqtt, sensor
 from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
 from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfElectricPotential,
     UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -71,6 +73,7 @@ from .test_common import (
 
 from tests.common import (
     MockConfigEntry,
+    async_capture_events,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
@@ -875,6 +878,151 @@ async def test_invalid_device_class(
     [
         {
             mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "device_class": "energy",
+                    "unit_of_measurement": "ppm",
+                }
+            }
+        }
+    ],
+)
+async def test_invalid_unit_of_measurement(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test device_class with invalid unit of measurement."""
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    assert await mqtt_mock_entry()
+    assert (
+        "The unit of measurement `ppm` is not valid together with device class `energy`"
+        in caplog.text
+    )
+    # A repair issue was logged for the failing YAML config
+    assert len(events) == 1
+    assert events[0].data["domain"] == mqtt.DOMAIN
+    # Assert the sensor is not created
+    state = hass.states.get("sensor.test")
+    assert state is None
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "device_class": "voltage",
+                    "unit_of_measurement": "\u00b5V",  # microVolt
+                }
+            }
+        }
+    ],
+)
+async def test_device_class_with_equivalent_unit_of_measurement_received(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test device_class with equivalent unit of measurement."""
+    assert await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "100")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == "100"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
+
+    caplog.clear()
+
+    discovery_payload = {
+        "name": "bla",
+        "state_topic": "test-topic2",
+        "device_class": "voltage",
+        "unit_of_measurement": "\u00b5V",
+    }
+    # Now discover a sensor with an altarantive mu char
+    async_fire_mqtt_message(
+        hass, "homeassistant/sensor/bla/config", json.dumps(discovery_payload)
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "test-topic2", "21")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.bla")
+    assert state is not None
+    assert state.state == "21"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "unit_of_measurement": "\u00b5V",
+                }
+            }
+        }
+    ],
+)
+async def test_equivalent_unit_of_measurement_received_without_device_class(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test device_class with equivalent unit of measurement."""
+    assert await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "100")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == "100"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
+
+    caplog.clear()
+
+    discovery_payload = {
+        "name": "bla",
+        "state_topic": "test-topic2",
+        "unit_of_measurement": "\u00b5V",
+    }
+    # Now discover an invalid sensor
+    async_fire_mqtt_message(
+        hass, "homeassistant/sensor/bla/config", json.dumps(discovery_payload)
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "test-topic2", "21")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.bla")
+    assert state is not None
+    assert state.state == "21"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
                 sensor.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -888,6 +1036,30 @@ async def test_invalid_device_class(
                         "device_class": None,
                         "unit_of_measurement": None,
                     },
+                    {
+                        "name": "Test 4",
+                        "state_topic": "test-topic",
+                        "device_class": "ph",
+                        "unit_of_measurement": "",
+                    },
+                    {
+                        "name": "Test 5",
+                        "state_topic": "test-topic",
+                        "device_class": "ph",
+                        "unit_of_measurement": " ",
+                    },
+                    {
+                        "name": "Test 6",
+                        "state_topic": "test-topic",
+                        "device_class": None,
+                        "unit_of_measurement": "",
+                    },
+                    {
+                        "name": "Test 7",
+                        "state_topic": "test-topic",
+                        "device_class": None,
+                        "unit_of_measurement": " ",
+                    },
                 ]
             }
         }
@@ -900,10 +1072,25 @@ async def test_valid_device_class_and_uom(
     await mqtt_mock_entry()
 
     state = hass.states.get("sensor.test_1")
+    assert state is not None
     assert state.attributes["device_class"] == "temperature"
     state = hass.states.get("sensor.test_2")
+    assert state is not None
     assert "device_class" not in state.attributes
     state = hass.states.get("sensor.test_3")
+    assert state is not None
+    assert "device_class" not in state.attributes
+    state = hass.states.get("sensor.test_4")
+    assert state is not None
+    assert state.attributes["device_class"] == "ph"
+    state = hass.states.get("sensor.test_5")
+    assert state is not None
+    assert state.attributes["device_class"] == "ph"
+    state = hass.states.get("sensor.test_6")
+    assert state is not None
+    assert "device_class" not in state.attributes
+    state = hass.states.get("sensor.test_7")
+    assert state is not None
     assert "device_class" not in state.attributes
 
 
@@ -927,6 +1114,32 @@ async def test_invalid_state_class(
     """Test state_class option with invalid value."""
     assert await mqtt_mock_entry()
     assert "expected SensorStateClass or one of" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "state_class": "measurement_angle",
+                    "unit_of_measurement": "deg",
+                }
+            }
+        }
+    ],
+)
+async def test_invalid_state_class_with_unit_of_measurement(
+    mqtt_mock_entry: MqttMockHAClientGenerator, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test state_class option with invalid unit of measurement."""
+    assert await mqtt_mock_entry()
+    assert (
+        "The unit of measurement 'deg' is not valid together with state class 'measurement_angle'"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(
@@ -1409,6 +1622,7 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
+@pytest.mark.usefixtures("mock_temp_dir")
 @pytest.mark.parametrize(
     "hass_config",
     [
@@ -1448,7 +1662,7 @@ async def test_cleanup_triggers_and_restoring_state(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic1", "100")
     state = hass.states.get("sensor.test1")
-    assert state.state == "38"  # 100 °F -> 38 °C
+    assert round(float(state.state)) == 38  # 100 °F -> 38 °C
 
     async_fire_mqtt_message(hass, "test-topic2", "200")
     state = hass.states.get("sensor.test2")
@@ -1460,14 +1674,14 @@ async def test_cleanup_triggers_and_restoring_state(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test1")
-    assert state.state == "38"  # 100 °F -> 38 °C
+    assert round(float(state.state)) == 38  # 100 °F -> 38 °C
 
     state = hass.states.get("sensor.test2")
     assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "test-topic1", "80")
     state = hass.states.get("sensor.test1")
-    assert state.state == "27"  # 80 °F -> 27 °C
+    assert round(float(state.state)) == 27  # 80 °F -> 27 °C
 
     async_fire_mqtt_message(hass, "test-topic2", "201")
     state = hass.states.get("sensor.test2")

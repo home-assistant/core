@@ -13,9 +13,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -38,6 +37,7 @@ from .const import (
     CredentialType,
     FeatureAccess,
 )
+from .store import GoogleConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -197,7 +197,12 @@ class OAuth2FlowHandler(
                 "Error reading primary calendar, make sure Google Calendar API is enabled: %s",
                 err,
             )
-            return self.async_abort(reason="api_disabled")
+            return self.async_abort(
+                reason="calendar_api_disabled",
+                description_placeholders={
+                    "calendar_api_url": "https://console.cloud.google.com/apis/library/calendar-json.googleapis.com"
+                },
+            )
         except ApiException as err:
             _LOGGER.error("Error reading primary calendar: %s", err)
             return self.async_abort(reason="cannot_connect")
@@ -235,13 +240,13 @@ class OAuth2FlowHandler(
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+        config_entry: GoogleConfigEntry,
+    ) -> OptionsFlowHandler:
         """Create an options flow."""
         return OptionsFlowHandler()
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Google Calendar options flow."""
 
     async def async_step_init(

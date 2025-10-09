@@ -19,7 +19,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EconetConfigEntry
 from .entity import EcoNetEntity
@@ -48,7 +48,7 @@ SUPPORT_FLAGS_HEATER = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EconetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EcoNet water heater based on a config entry."""
     equipment = entry.runtime_data
@@ -91,15 +91,15 @@ class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
     def operation_list(self) -> list[str]:
         """List of available operation modes."""
         econet_modes = self.water_heater.modes
-        op_list = []
+        operation_modes = set()
         for mode in econet_modes:
             if (
                 mode is not WaterHeaterOperationMode.UNKNOWN
                 and mode is not WaterHeaterOperationMode.VACATION
             ):
                 ha_mode = ECONET_STATE_TO_HA[mode]
-                op_list.append(ha_mode)
-        return op_list
+                operation_modes.add(ha_mode)
+        return list(operation_modes)
 
     @property
     def supported_features(self) -> WaterHeaterEntityFeature:

@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -23,9 +24,10 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Auto charge',
+    'original_name': 'Auto-charge',
     'platform': 'technove',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_charge',
     'unique_id': 'AA:AA:AA:AA:AA:BB_auto_charge',
@@ -35,7 +37,7 @@
 # name: test_switches[switch.technove_station_auto_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TechnoVE Station Auto charge',
+      'friendly_name': 'TechnoVE Station Auto-charge',
     }),
     'context': <ANY>,
     'entity_id': 'switch.technove_station_auto_charge',
@@ -52,6 +54,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -69,9 +72,10 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Charging Enabled',
+    'original_name': 'Charging enabled',
     'platform': 'technove',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'session_active',
     'unique_id': 'AA:AA:AA:AA:AA:BB_session_active',
@@ -81,7 +85,7 @@
 # name: test_switches[switch.technove_station_charging_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TechnoVE Station Charging Enabled',
+      'friendly_name': 'TechnoVE Station Charging enabled',
     }),
     'context': <ANY>,
     'entity_id': 'switch.technove_station_charging_enabled',

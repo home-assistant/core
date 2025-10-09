@@ -3,7 +3,9 @@
 import logging
 from typing import Any
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.base_devices.bulb_base import VeSyncBulb
+from pyvesync.base_devices.switch_base import VeSyncSwitch
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -14,10 +16,10 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .const import DEV_TYPE_TO_HA, DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY, VS_MANAGER
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -29,7 +31,7 @@ MIN_MIREDS = 153  # 1,000,000 divided by 6500 Kelvin = 153 Mireds
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up lights."""
 
@@ -44,7 +46,9 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
+    _setup_entities(
+        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+    )
 
 
 @callback
@@ -56,10 +60,13 @@ def _setup_entities(
     """Check if device is a light and add entity."""
     entities: list[VeSyncBaseLightHA] = []
     for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) in ("walldimmer", "bulb-dimmable"):
+        if isinstance(dev, VeSyncBulb):
+            if dev.supports_color_temp:
+                entities.append(VeSyncTunableWhiteLightHA(dev, coordinator))
+            elif dev.supports_brightness:
+                entities.append(VeSyncDimmableLightHA(dev, coordinator))
+        elif isinstance(dev, VeSyncSwitch) and dev.supports_dimmable:
             entities.append(VeSyncDimmableLightHA(dev, coordinator))
-        elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white",):
-            entities.append(VeSyncTunableWhiteLightHA(dev, coordinator))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -72,13 +79,13 @@ class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return True if device is on."""
-        return self.device.device_status == "on"
+        return self.device.state.device_status == "on"
 
     @property
     def brightness(self) -> int:
         """Get light brightness."""
         # get value from pyvesync library api,
-        result = self.device.brightness
+        result = self.device.state.brightness
         try:
             # check for validity of brightness value received
             brightness_value = int(result)
@@ -92,7 +99,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
         # convert percent brightness to ha expected range
         return round((max(1, brightness_value) / 100) * 255)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         attribute_adjustment_only = False
         # set white temperature
@@ -112,7 +119,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
             # ensure value between 0-100
             color_temp = max(0, min(color_temp, 100))
             # call pyvesync library api method to set color_temp
-            self.device.set_color_temp(color_temp)
+            await self.device.set_color_temp(color_temp)
             # flag attribute_adjustment_only, so it doesn't turn_on the device redundantly
             attribute_adjustment_only = True
         # set brightness level
@@ -129,7 +136,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
             # ensure value between 1-100
             brightness = max(1, min(brightness, 100))
             # call pyvesync library api method to set brightness
-            self.device.set_brightness(brightness)
+            await self.device.set_brightness(brightness)
             # flag attribute_adjustment_only, so it doesn't
             # turn_on the device redundantly
             attribute_adjustment_only = True
@@ -137,11 +144,11 @@ class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
         if attribute_adjustment_only:
             return
         # send turn_on command to pyvesync api
-        self.device.turn_on()
+        await self.device.turn_on()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self.device.turn_off()
+        await self.device.turn_off()
 
 
 class VeSyncDimmableLightHA(VeSyncBaseLightHA, LightEntity):
@@ -162,8 +169,9 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLightHA, LightEntity):
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
-        # get value from pyvesync library api,
-        result = self.device.color_temp_pct
+        # get value from pyvesync library api
+        # pyvesync v3 provides BulbState.color_temp_kelvin() - possible to use that instead?
+        result = self.device.state.color_temp
         try:
             # check for validity of brightness value received
             color_temp_value = int(result)

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from pyotgw import vars as gw_vars
@@ -21,8 +21,9 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenThermGatewayHub
 from .const import (
@@ -30,6 +31,7 @@ from .const import (
     CONF_SET_PRECISION,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
+    DOMAIN,
     THERMOSTAT_DEVICE_DESCRIPTION,
     OpenThermDataSource,
 )
@@ -50,7 +52,7 @@ class OpenThermClimateEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an OpenTherm Gateway climate entity."""
     ents = []
@@ -75,7 +77,7 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_hvac_modes = []
+    _attr_hvac_modes = [HVACMode.HEAT]
     _attr_name = None
     _attr_preset_modes = []
     _attr_min_temp = 1
@@ -94,7 +96,7 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         self,
         gw_hub: OpenThermGatewayHub,
         description: OpenThermClimateEntityDescription,
-        options: MappingProxyType[str, Any],
+        options: Mapping[str, Any],
     ) -> None:
         """Initialize the entity."""
         super().__init__(gw_hub, description)
@@ -129,9 +131,11 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         if ch_active and flame_on:
             self._attr_hvac_action = HVACAction.HEATING
             self._attr_hvac_mode = HVACMode.HEAT
+            self._attr_hvac_modes = [HVACMode.HEAT]
         elif cooling_active:
             self._attr_hvac_action = HVACAction.COOLING
             self._attr_hvac_mode = HVACMode.COOL
+            self._attr_hvac_modes = [HVACMode.COOL]
         else:
             self._attr_hvac_action = HVACAction.IDLE
 
@@ -181,6 +185,13 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         if self._away_state_a or self._away_state_b:
             return PRESET_AWAY
         return PRESET_NONE
+
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="change_hvac_mode_not_supported",
+        )
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""

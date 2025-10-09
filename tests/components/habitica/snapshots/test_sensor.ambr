@@ -13,6 +13,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -33,6 +34,7 @@
     'original_name': 'Class',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.CLASS: 'class'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_class',
@@ -67,6 +69,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -90,6 +93,7 @@
     'original_name': 'Constitution',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.CONSTITUTION: 'constitution'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_constitution',
@@ -122,6 +126,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -142,6 +147,7 @@
     'original_name': 'Display name',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.DISPLAY_NAME: 'display_name'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_display_name',
@@ -151,7 +157,12 @@
 # name: test_sensors[sensor.test_user_display_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'blurb': 'My mind is a swirling miasma of scintillating thoughts and turgid ideas.',
+      'entity_picture': 'https://pbs.twimg.com/profile_images/378800000771780608/a32e71fe6a64eba6773c20d289eddc8e.png',
       'friendly_name': 'test-user Display name',
+      'joined': datetime.date(2013, 12, 2),
+      'last_login': datetime.date(2025, 2, 1),
+      'total_logins': 241,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_user_display_name',
@@ -168,6 +179,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -188,6 +200,7 @@
     'original_name': 'Eggs',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.EGGS_TOTAL: 'eggs_total'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_eggs_total',
@@ -219,6 +232,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -239,6 +253,7 @@
     'original_name': 'Experience',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.EXPERIENCE: 'experience'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_experience',
@@ -267,6 +282,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -290,6 +306,7 @@
     'original_name': 'Gems',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.GEMS: 'gems'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_gems',
@@ -318,6 +335,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -341,6 +359,7 @@
     'original_name': 'Gold',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.GOLD: 'gold'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_gold',
@@ -362,212 +381,6 @@
     'state': '137.625872146098',
   })
 # ---
-# name: test_sensors[sensor.test_user_habits-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_user_habits',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Habits',
-    'platform': 'habitica',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <HabiticaSensorEntity.HABITS: 'habits'>,
-    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_habits',
-    'unit_of_measurement': 'tasks',
-  })
-# ---
-# name: test_sensors[sensor.test_user_habits-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      '1d147de6-5c02-4740-8e2f-71d3015a37f4': dict({
-        'challenge': dict({
-          'broken': None,
-          'id': None,
-          'shortName': None,
-          'taskId': None,
-          'winner': None,
-        }),
-        'created_at': '2024-07-07T17:51:53.266000+00:00',
-        'frequency': 'daily',
-        'group': dict({
-          'assignedDate': None,
-          'assignedUsers': list([
-          ]),
-          'assignedUsersDetail': dict({
-          }),
-          'assigningUsername': None,
-          'completedBy': dict({
-            'date': None,
-            'userId': None,
-          }),
-          'id': None,
-          'managerNotes': None,
-          'taskId': None,
-        }),
-        'priority': 1,
-        'repeat': dict({
-          'f': False,
-          'm': True,
-          's': False,
-          'su': False,
-          't': True,
-          'th': False,
-          'w': True,
-        }),
-        'text': 'Eine kurze Pause machen',
-        'type': 'habit',
-        'up': True,
-      }),
-      'bc1d1855-b2b8-4663-98ff-62e7b763dfc4': dict({
-        'challenge': dict({
-          'broken': None,
-          'id': None,
-          'shortName': None,
-          'taskId': None,
-          'winner': None,
-        }),
-        'created_at': '2024-07-07T17:51:53.265000+00:00',
-        'down': True,
-        'frequency': 'daily',
-        'group': dict({
-          'assignedDate': None,
-          'assignedUsers': list([
-          ]),
-          'assignedUsersDetail': dict({
-          }),
-          'assigningUsername': None,
-          'completedBy': dict({
-            'date': None,
-            'userId': None,
-          }),
-          'id': None,
-          'managerNotes': None,
-          'taskId': None,
-        }),
-        'notes': 'Oder lösche es über die Bearbeitungs-Ansicht',
-        'priority': 1,
-        'repeat': dict({
-          'f': False,
-          'm': True,
-          's': False,
-          'su': False,
-          't': True,
-          'th': False,
-          'w': True,
-        }),
-        'text': 'Klicke hier um dies als schlechte Gewohnheit zu markieren, die Du gerne loswerden möchtest',
-        'type': 'habit',
-      }),
-      'e97659e0-2c42-4599-a7bb-00282adc410d': dict({
-        'challenge': dict({
-          'broken': None,
-          'id': None,
-          'shortName': None,
-          'taskId': None,
-          'winner': None,
-        }),
-        'created_at': '2024-07-07T17:51:53.264000+00:00',
-        'frequency': 'daily',
-        'group': dict({
-          'assignedDate': None,
-          'assignedUsers': list([
-          ]),
-          'assignedUsersDetail': dict({
-          }),
-          'assigningUsername': None,
-          'completedBy': dict({
-            'date': None,
-            'userId': None,
-          }),
-          'id': None,
-          'managerNotes': None,
-          'taskId': None,
-        }),
-        'notes': 'Eine Gewohnheit, eine Tagesaufgabe oder ein To-Do',
-        'priority': 1,
-        'repeat': dict({
-          'f': False,
-          'm': True,
-          's': False,
-          'su': False,
-          't': True,
-          'th': False,
-          'w': True,
-        }),
-        'text': 'Füge eine Aufgabe zu Habitica hinzu',
-        'type': 'habit',
-        'up': True,
-      }),
-      'f21fa608-cfc6-4413-9fc7-0eb1b48ca43a': dict({
-        'challenge': dict({
-          'broken': None,
-          'id': None,
-          'shortName': None,
-          'taskId': None,
-          'winner': None,
-        }),
-        'created_at': '2024-07-07T17:51:53.268000+00:00',
-        'down': True,
-        'frequency': 'daily',
-        'group': dict({
-          'assignedDate': None,
-          'assignedUsers': list([
-          ]),
-          'assignedUsersDetail': dict({
-          }),
-          'assigningUsername': None,
-          'completedBy': dict({
-            'date': None,
-            'userId': None,
-          }),
-          'id': None,
-          'managerNotes': None,
-          'taskId': None,
-        }),
-        'priority': 1,
-        'repeat': dict({
-          'f': False,
-          'm': True,
-          's': False,
-          'su': False,
-          't': True,
-          'th': False,
-          'w': True,
-        }),
-        'text': 'Gesundes Essen/Junkfood',
-        'type': 'habit',
-        'up': True,
-      }),
-      'friendly_name': 'test-user Habits',
-      'unit_of_measurement': 'tasks',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_user_habits',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
 # name: test_sensors[sensor.test_user_hatching_potions-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -575,6 +388,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -595,6 +409,7 @@
     'original_name': 'Hatching potions',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.HATCHING_POTIONS_TOTAL: 'hatching_potions_total'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_hatching_potions_total',
@@ -626,6 +441,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -649,6 +465,7 @@
     'original_name': 'Health',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.HEALTH: 'health'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_health',
@@ -677,6 +494,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -700,6 +518,7 @@
     'original_name': 'Intelligence',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.INTELLIGENCE: 'intelligence'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_intelligence',
@@ -725,6 +544,55 @@
     'state': '72',
   })
 # ---
+# name: test_sensors[sensor.test_user_last_check_in-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_last_check_in',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last check-in',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.LAST_CHECKIN: 'last_checkin'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_last_checkin',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_user_last_check_in-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'test-user Last check-in',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_last_check_in',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-02-02T03:14:33+00:00',
+  })
+# ---
 # name: test_sensors[sensor.test_user_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -732,6 +600,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -752,6 +621,7 @@
     'original_name': 'Level',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.LEVEL: 'level'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_level',
@@ -778,6 +648,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -801,6 +672,7 @@
     'original_name': 'Mana',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.MANA: 'mana'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_mana',
@@ -822,53 +694,6 @@
     'state': '50.9',
   })
 # ---
-# name: test_sensors[sensor.test_user_max_health-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_user_max_health',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Max. health',
-    'platform': 'habitica',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <HabiticaSensorEntity.HEALTH_MAX: 'health_max'>,
-    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_health_max',
-    'unit_of_measurement': 'HP',
-  })
-# ---
-# name: test_sensors[sensor.test_user_max_health-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Max. health',
-      'unit_of_measurement': 'HP',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_user_max_health',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '50',
-  })
-# ---
 # name: test_sensors[sensor.test_user_max_mana-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -876,6 +701,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -896,6 +722,7 @@
     'original_name': 'Max. mana',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.MANA_MAX: 'mana_max'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_mana_max',
@@ -924,6 +751,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -947,6 +775,7 @@
     'original_name': 'Mystic hourglasses',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.TRINKETS: 'trinkets'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_trinkets',
@@ -975,6 +804,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -995,6 +825,7 @@
     'original_name': 'Next level',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.EXPERIENCE_MAX: 'experience_max'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_experience_max',
@@ -1016,6 +847,108 @@
     'state': '880',
   })
 # ---
+# name: test_sensors[sensor.test_user_pending_damage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_pending_damage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pending damage',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.PENDING_DAMAGE: 'pending_damage'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_pending_damage',
+    'unit_of_measurement': 'damage',
+  })
+# ---
+# name: test_sensors[sensor.test_user_pending_damage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSItMyAtMyAyMiAyMiI+CiAgICA8ZGVmcz4KICAgICAgICA8cGF0aCBpZD0iYSIgZD0iTTEwLjQ2NCAyLjkxN0w4LjIgNS4xOTd2Mi4wMmwyLjI2NC0yLjE3M1YyLjkxN3oiPjwvcGF0aD4KICAgIDwvZGVmcz4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgdHJhbnNmb3JtPSJtYXRyaXgoLTEgMCAwIDEgMTYgLjMyKSI+CiAgICAgICAgPHBhdGggZmlsbD0iI0YwNjE2NiIgZD0iTTYuMTMgOS4yMDRsMi4xMTEuOTM0Yy4xNzYuMDc4LjI5LjIzNS4zMzMuNDE1LjA3My4zMDQuMjk1IDEuMDEuMzEzIDEuMzg2LjAxLjIxLS4yMTQuMzU2LS40MTQuMjdsLTMuNTI5LTEuNjIzYS41ODIuNTgyIDAgMCAxLS4yNTQtLjI0NEwzIDYuOTU1Yy0uMDktLjE5Mi4wNjMtLjQwNy4yODEtLjM5Ny4zOTEuMDE3IDEuMTEyLjIxOCAxLjQ0NC4zLjE4Ni4wNDUuMzUxLjE1LjQzMi4zMTlsLjk3MyAyLjAyN3oiPjwvcGF0aD4KICAgICAgICA8cGF0aCBmaWxsPSIjODc4MTkwIiBkPSJNMS4wMjQgMTQuMTA3bC45MS44NzUgMi4zNjMtLjE3OS4xMjEtMS40OSAxLjM1Ni0xLjMgMi40NjcgMS4xMjYgMS44NDYtLjQ3Ny0uNzc0LTMuMTk2IDUuMTcxLTQuNjMzLjk5LTQuNTk2aC0uMDAyVi4yMzVsLTQuNzg2Ljk1TDUuODYgNi4xNWwtMy4zMy0uNzQzLS40OTcgMS43NyAxLjE3NCAyLjM3LTEuMzU1IDEuMy0xLjU1Mi4xMTgtLjE4NiAyLjI2Ny45MS44NzV6Ij48L3BhdGg+CiAgICAgICAgPHBhdGggZmlsbD0iI0YwNjE2NiIgZD0iTTIuOTc2IDEzLjM2NmwtMS4xODItMS4xMzQgMi45MjMtMi44MDUgMS4xOCAxLjEzNHoiPjwvcGF0aD4KICAgICAgICA8cGF0aCBmaWxsPSIjRjA2MTY2IiBkPSJNMS4xMjYgMTIuODc0bC4wODUtMS4wMzUgMS4wNzgtLjA4MiAxLjE4MiAxLjEzNS0uMDg1IDEuMDM1LTEuMDc4LjA4MnoiPjwvcGF0aD4KICAgICAgICA8cGF0aCBmaWxsPSIjRkZGIiBkPSJNMTEuMzEyIDIuMDg4bC4xIDIuMDQ2IDIuNzAyLTIuNTk1Yy0uMDUtLjA0NS0yLjA4Ni4xOC0yLjgwMi41NSI+PC9wYXRoPgogICAgICAgIDxwYXRoIGZpbGw9IiNFREVDRUUiIGQ9Ik0xMS4yNjIgMi4xMTNMNS41NTMgNy44NjJsMS40NjMuNDkyIDQuMzk2LTQuMjItLjEtMi4wNDYtLjA1LjAyNU01LjU1MyA3Ljg2MmwtLjA1LjA1Mi42MjIgMS4yOTQuODktLjg1NC0xLjQ2Mi0uNDkyeiI+PC9wYXRoPgogICAgICAgIDxwYXRoIGZpbGw9IiNFREVDRUUiIGQ9Ik0xMy41NDEgNC4yM2wtMi4xMy0uMDk2IDIuNzAzLTIuNTk0Yy4wNDYuMDQ4LS4xODkgMi4wMDMtLjU3MyAyLjY5Ij48L3BhdGg+CiAgICAgICAgPHBhdGggZmlsbD0iI0UxRTBFMyIgZD0iTTEzLjUxNiA0LjI3OGwtNS45ODkgNS40OC0uNTEyLTEuNDA0IDQuMzk2LTQuMjIgMi4xMy4wOTYtLjAyNS4wNDhNNy41MjcgOS43NThsLS4wNTQuMDQ4LTEuMzQ4LS41OTcuODktLjg1NC41MTIgMS40MDN6Ij48L3BhdGg+CiAgICAgICAgPHBhdGggZmlsbD0iI0Q1QzhGRiIgZD0iTTIuMjg5IDExLjc1N2wtLjI1Ljg3OC0uODI5LS43OTZ6TTMuNDY5IDEyLjg5bC0uOTE0LjI0LjgyOC43OTV6Ij48L3BhdGg+CiAgICAgICAgPHBhdGggZmlsbD0iI0JEQThGRiIgZD0iTTIuMjg5IDExLjc1N2wxLjE4MiAxLjEzNS0uOTE2LjIzNy0uNTE2LS40OTR6Ij48L3BhdGg+CiAgICAgICAgPHBhdGggZmlsbD0iI0JEQThGRiIgZD0iTTEuMTI3IDEyLjg3NmwuOTE0LS4yNC0uODI4LS43OTZ6TTIuMzA3IDE0LjAwOGwuMjUtLjg3Ny44MjkuNzk2eiI+PC9wYXRoPgogICAgICAgIDxwYXRoIGZpbGw9IiNENUM4RkYiIGQ9Ik0xLjEyNyAxMi44NzZMMi4zMSAxNC4wMWwuMjQ3LS44OC0uNTE2LS40OTV6Ij48L3BhdGg+CiAgICAgICAgPHBhdGggZmlsbD0iI0IzNjIxMyIgZD0iTTQuOSAxMS41MjNsLTEuMTg0LTEuMTM3LjcxNS0uNjg1IDEuMTg0IDEuMTM2eiI+PC9wYXRoPgogICAgICAgIDxwYXRoIGZpbGw9IiNFMzhGM0QiIGQ9Ik00LjE4NyAxMi4yMDhsLTEuMTg0LTEuMTM2LjcxNC0uNjg1TDQuOSAxMS41MjN6Ij48L3BhdGg+CiAgICAgICAgPHBhdGggZmlsbD0iI0IzNjIxMyIgZD0iTTMuNDczIDEyLjg5NGwtMS4xODQtMS4xMzcuNzE0LS42ODUgMS4xODQgMS4xMzZ6Ij48L3BhdGg+CiAgICAgICAgPHBhdGggZmlsbD0iI0MzQzBDNyIgZD0iTTYuMTMyIDkuMjA1bC0uOTc0LTIuMDI3YS41MjYuNTI2IDAgMCAwLS4xNTMtLjE4NS43MTguNzE4IDAgMCAwLS4yNzktLjEzNWMtLjMzMS0uMDgtMS4wNTItLjI4Mi0xLjQ0My0uM2EuMjk1LjI5NSAwIDAgMC0uMjQyLjEwOEw0LjQ2IDcuODI5IDUuNTAzIDkuODFsLjYzLS42MDVoLS4wMDF6Ij48L3BhdGg+CiAgICAgICAgPHBhdGggZmlsbD0iI0E1QTFBQyIgZD0iTTQuNDYgNy44MjlMMy4wNCA2LjY2NmEuMjcuMjcgMCAwIDAtLjAzOS4yOWwxLjY5IDMuMzg3Yy4wMjkuMDUzLjA2Ni4xLjExLjE0MmwuNzAyLS42NzVMNC40NiA3LjgzeiI+PC9wYXRoPgogICAgICAgIDxwYXRoIGZpbGw9IiNDM0MwQzciIGQ9Ik04Ljg5MSAxMS45NGMtLjAxOC0uMzc1LS4yMjgtMS4wNjgtLjMxMi0xLjM4NWEuNjY4LjY2OCAwIDAgMC0uMTQtLjI2OC41NC41NCAwIDAgMC0uMTkzLS4xNDdsLTIuMTExLS45MzV2LS4wMDJsLS42MzEuNjA2IDIuMDY0IDEuMDAxIDEuMjExIDEuMzYzYS4yNzUuMjc1IDAgMCAwIC4xMTItLjIzMyI+PC9wYXRoPgogICAgICAgIDxwYXRoIGZpbGw9IiNBNUExQUMiIGQ9Ik03LjU2OCAxMC44MWwxLjIxMSAxLjM2M2EuMy4zIDAgMCAxLS4zMDEuMDM3bC0zLjUzLTEuNjIyYS41ODguNTg4IDAgMCAxLS4xNDctLjEwNWwuNzAzLS42NzQgMi4wNjQgMS4wMDF6Ij48L3BhdGg+CiAgICAgICAgPG1hc2sgaWQ9ImIiIGZpbGw9IiNmZmYiPgogICAgICAgICAgICA8dXNlIHhsaW5rOmhyZWY9IiNhIj48L3VzZT4KICAgICAgICA8L21hc2s+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTkuODI0IDcuNDVoLjMyOVYxLjg2NWgtLjMyOXpNOC4yIDguODYyaC45NzRWMy4yNzdIOC4yeiIgbWFzaz0idXJsKCNiKSI+PC9wYXRoPgogICAgPC9nPgo8L3N2Zz4=',
+      'friendly_name': 'test-user Pending damage',
+      'unit_of_measurement': 'damage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_pending_damage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.test_user_pending_quest_items-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_pending_quest_items',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pending quest items',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.PENDING_QUEST_ITEMS: 'pending_quest_items'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_pending_quest_items',
+    'unit_of_measurement': 'items',
+  })
+# ---
+# name: test_sensors[sensor.test_user_pending_quest_items-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Pending quest items',
+      'unit_of_measurement': 'items',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_pending_quest_items',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensors[sensor.test_user_perception-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1023,6 +956,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1046,6 +980,7 @@
     'original_name': 'Perception',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.PERCEPTION: 'perception'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_perception',
@@ -1078,6 +1013,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1098,6 +1034,7 @@
     'original_name': 'Pet food',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.FOOD_TOTAL: 'food_total'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_food_total',
@@ -1129,6 +1066,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1149,6 +1087,7 @@
     'original_name': 'Quest scrolls',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.QUEST_SCROLLS: 'quest_scrolls'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_quest_scrolls',
@@ -1174,19 +1113,234 @@
     'state': '2',
   })
 # ---
-# name: test_sensors[sensor.test_user_rewards-entry]
+# name: test_sensors[sensor.test_user_s_party_boss_health-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_user_rewards',
+    'entity_id': 'sensor.test_user_s_party_boss_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Boss health',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.BOSS_HP: 'boss_hp'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_1e87097c-4c03-4f8c-a475-67cc7da7f409_boss_hp',
+    'unit_of_measurement': 'HP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_boss_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSItNiAtNiAzNiAzNiI+CiAgICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxwYXRoIGZpbGw9IiNGNzRFNTIiIGQ9Ik0yIDQuNUw2LjE2NyAyIDEyIDUuMTY3IDE3LjgzMyAyIDIyIDQuNVYxMmwtNC4xNjcgNS44MzNMMTIgMjJsLTUuODMzLTQuMTY3TDIgMTJ6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGNjE2NSIgZD0iTTcuMzMzIDE2LjY2N0wzLjY2NyAxMS41VjUuNDE3bDIuNS0xLjVMMTIgNy4wODNsNS44MzMtMy4xNjYgMi41IDEuNVYxMS41bC0zLjY2NiA1LjE2N0wxMiAxOS45MTd6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEyIDE0LjA4M2w0LjY2NyAyLjU4NEwxMiAxOS45MTd6IiBvcGFjaXR5PSIuNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNCNTI0MjgiIGQ9Ik0xMiAxNC4wODNsLTQuNjY3IDIuNTg0TDEyIDE5LjkxN3oiIG9wYWNpdHk9Ii4zNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik03LjMzMyAxNi42NjdMMy42NjcgMTEuNSAxMiAxNC4wODN6IiBvcGFjaXR5PSIuMjUiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjQjUyNDI4IiBkPSJNMTYuNjY3IDE2LjY2N2wzLjY2Ni01LjE2N0wxMiAxNC4wODN6IiBvcGFjaXR5PSIuNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNCNTI0MjgiIGQ9Ik0xMiAxNC4wODNsNS44MzMtMTAuMTY2IDIuNSAxLjVWMTEuNXoiIG9wYWNpdHk9Ii4zNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNCNTI0MjgiIGQ9Ik0xMiAxNC4wODNMNi4xNjcgMy45MTdsLTIuNSAxLjVWMTEuNXoiIG9wYWNpdHk9Ii41Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEyIDE0LjA4M0w2LjE2NyAzLjkxNyAxMiA3LjA4M3oiIG9wYWNpdHk9Ii41Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEyIDE0LjA4M2w1LjgzMy0xMC4xNjZMMTIgNy4wODN6IiBvcGFjaXR5PSIuMjUiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjRkZGIiBkPSJNOS4xNjcgMTQuODMzbC0zLTQuMTY2VjYuODMzaC4wODNMMTIgOS45MTdsNS43NS0zLjA4NGguMDgzdjMuODM0bC0zIDQuMTY2TDEyIDE2LjkxN3oiIG9wYWNpdHk9Ii41Ii8+CiAgICA8L2c+Cjwvc3ZnPg==',
+      'friendly_name': "test-user's Party Boss health",
+      'unit_of_measurement': 'HP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_s_party_boss_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '500.0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_boss_health_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_s_party_boss_health_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Boss health remaining',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.BOSS_HP_REMAINING: 'boss_hp_remaining'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_1e87097c-4c03-4f8c-a475-67cc7da7f409_boss_hp_remaining',
+    'unit_of_measurement': 'HP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_boss_health_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSItNiAtNiAzNiAzNiI+CiAgICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxwYXRoIGZpbGw9IiNGNzRFNTIiIGQ9Ik0yIDQuNUw2LjE2NyAyIDEyIDUuMTY3IDE3LjgzMyAyIDIyIDQuNVYxMmwtNC4xNjcgNS44MzNMMTIgMjJsLTUuODMzLTQuMTY3TDIgMTJ6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGNjE2NSIgZD0iTTcuMzMzIDE2LjY2N0wzLjY2NyAxMS41VjUuNDE3bDIuNS0xLjVMMTIgNy4wODNsNS44MzMtMy4xNjYgMi41IDEuNVYxMS41bC0zLjY2NiA1LjE2N0wxMiAxOS45MTd6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEyIDE0LjA4M2w0LjY2NyAyLjU4NEwxMiAxOS45MTd6IiBvcGFjaXR5PSIuNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNCNTI0MjgiIGQ9Ik0xMiAxNC4wODNsLTQuNjY3IDIuNTg0TDEyIDE5LjkxN3oiIG9wYWNpdHk9Ii4zNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik03LjMzMyAxNi42NjdMMy42NjcgMTEuNSAxMiAxNC4wODN6IiBvcGFjaXR5PSIuMjUiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjQjUyNDI4IiBkPSJNMTYuNjY3IDE2LjY2N2wzLjY2Ni01LjE2N0wxMiAxNC4wODN6IiBvcGFjaXR5PSIuNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNCNTI0MjgiIGQ9Ik0xMiAxNC4wODNsNS44MzMtMTAuMTY2IDIuNSAxLjVWMTEuNXoiIG9wYWNpdHk9Ii4zNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNCNTI0MjgiIGQ9Ik0xMiAxNC4wODNMNi4xNjcgMy45MTdsLTIuNSAxLjVWMTEuNXoiIG9wYWNpdHk9Ii41Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEyIDE0LjA4M0w2LjE2NyAzLjkxNyAxMiA3LjA4M3oiIG9wYWNpdHk9Ii41Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEyIDE0LjA4M2w1LjgzMy0xMC4xNjZMMTIgNy4wODN6IiBvcGFjaXR5PSIuMjUiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjRkZGIiBkPSJNOS4xNjcgMTQuODMzbC0zLTQuMTY2VjYuODMzaC4wODNMMTIgOS45MTdsNS43NS0zLjA4NGguMDgzdjMuODM0bC0zIDQuMTY2TDEyIDE2LjkxN3oiIG9wYWNpdHk9Ii41Ii8+CiAgICA8L2c+Cjwvc3ZnPg==',
+      'friendly_name': "test-user's Party Boss health remaining",
+      'unit_of_measurement': 'HP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_s_party_boss_health_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_boss_rage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_s_party_boss_rage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Boss rage',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.BOSS_RAGE: 'boss_rage'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_1e87097c-4c03-4f8c-a475-67cc7da7f409_boss_rage',
+    'unit_of_measurement': 'rage',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_boss_rage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSItMiAtMiAxOCAyMCI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48ZyBmaWxsLXJ1bGU9Im5vbnplcm8iPjxnPjxnPjxnPjxwYXRoIGZpbGw9IiMyNENDOEYiIGQ9Ik0wIDZMNS44MzMgMCAxMS42NjcgNiA1LjgzMyAxNnoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iIzI0Q0M4RiIgZD0iTTAgNkw1LjgzMyAwIDExLjY2NyA2IDUuODMzIDE2eiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMTAuMTUgNi4yTDUuODMzIDUuMiA1LjgzMyAxLjh6IiBvcGFjaXR5PSIuMjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTUuODMzIDUuMkwxLjUxNyA2LjIgNS44MzMgMS44eiIgb3BhY2l0eT0iLjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iIzVBRTRCMiIgZD0iTTUuODMzIDUuMkw1LjgzMyAxMy42IDEuNTE3IDYuMnoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iIzFCOTk2QiIgZD0iTTEwLjE1IDYuMkw1LjgzMyAxMy42IDUuODMzIDUuMnoiIG9wYWNpdHk9Ii4zNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRjQ3ODI1IiBkPSJNMTEuNjY3IDZMNS44MzMgMCAwIDYgMS4xNjcgOCAwIDEwIDUuODMzIDE2IDExLjY2NyAxMCAxMC41IDh6IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNTI0IC0yMDcwKSB0cmFuc2xhdGUoNDg0IDE2MzIpIHRyYW5zbGF0ZSg0MCA0MzgpIHRyYW5zbGF0ZSguODc1KSI+PC9wYXRoPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0xMC4xNSA2LjJMNS44MzMgNS4yIDUuODMzIDEuOHoiIG9wYWNpdHk9Ii4yNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNNS44MzMgNS4yTDEuNTE3IDYuMiA1LjgzMyAxLjh6IiBvcGFjaXR5PSIuNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNNS44MzMgNS4yTDUuODMzIDEzLjYgNC42OTkgMTEuNjUzIDEuNTE3IDYuMnpNNS44MzMgMTAuOEw1LjgzMyAyLjQgNi45NjggNC4zNDcgMTAuMTUgOS44eiIgb3BhY2l0eT0iLjI1IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNTI0IC0yMDcwKSB0cmFuc2xhdGUoNDg0IDE2MzIpIHRyYW5zbGF0ZSg0MCA0MzgpIHRyYW5zbGF0ZSguODc1KSI+PC9wYXRoPjxwYXRoIGZpbGw9IiNCNDU5MUIiIGQ9Ik0xMC4xNSA2LjJMNS44MzMgMTMuNiA1LjgzMyA1LjJ6TTEuNTE3IDkuOEw1LjgzMyAxMC44IDUuODMzIDE0LjJ6IiBvcGFjaXR5PSIuMzUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTUuODMzIDEwLjhMMTAuMTUgOS44IDUuODMzIDE0LjJ6IiBvcGFjaXR5PSIuNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMS41MTcgOS44TDUuODMzIDIuNCA1LjgzMyAxMC44eiIgb3BhY2l0eT0iLjI1IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNTI0IC0yMDcwKSB0cmFuc2xhdGUoNDg0IDE2MzIpIHRyYW5zbGF0ZSg0MCA0MzgpIHRyYW5zbGF0ZSguODc1KSI+PC9wYXRoPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0zLjA2MyA5LjUzM0wzLjk3MyA4IDMuMDYzIDYuNDY3IDUuODMzIDMuNjY3IDguNjA0IDYuNDY3IDcuNjk0IDggOC42MDQgOS41MzMgNS44MzMgMTIuMzMzeiIgb3BhY2l0eT0iLjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PC9nPjwvZz48L2c+PC9nPjwvZz48L3N2Zz4=',
+      'friendly_name': "test-user's Party Boss rage",
+      'unit_of_measurement': 'rage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_s_party_boss_rage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.14',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_boss_rage_limit_break-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_s_party_boss_rage_limit_break',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Boss rage limit break',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.BOSS_RAGE_LIMIT: 'boss_rage_limit'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_1e87097c-4c03-4f8c-a475-67cc7da7f409_boss_rage_limit',
+    'unit_of_measurement': 'rage',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_boss_rage_limit_break-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'effect': 'skill effect',
+      'entity_picture': 'data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSItMiAtMiAxOCAyMCI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48ZyBmaWxsLXJ1bGU9Im5vbnplcm8iPjxnPjxnPjxnPjxwYXRoIGZpbGw9IiMyNENDOEYiIGQ9Ik0wIDZMNS44MzMgMCAxMS42NjcgNiA1LjgzMyAxNnoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iIzI0Q0M4RiIgZD0iTTAgNkw1LjgzMyAwIDExLjY2NyA2IDUuODMzIDE2eiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMTAuMTUgNi4yTDUuODMzIDUuMiA1LjgzMyAxLjh6IiBvcGFjaXR5PSIuMjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTUuODMzIDUuMkwxLjUxNyA2LjIgNS44MzMgMS44eiIgb3BhY2l0eT0iLjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iIzVBRTRCMiIgZD0iTTUuODMzIDUuMkw1LjgzMyAxMy42IDEuNTE3IDYuMnoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iIzFCOTk2QiIgZD0iTTEwLjE1IDYuMkw1LjgzMyAxMy42IDUuODMzIDUuMnoiIG9wYWNpdHk9Ii4zNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRjQ3ODI1IiBkPSJNMTEuNjY3IDZMNS44MzMgMCAwIDYgMS4xNjcgOCAwIDEwIDUuODMzIDE2IDExLjY2NyAxMCAxMC41IDh6IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNTI0IC0yMDcwKSB0cmFuc2xhdGUoNDg0IDE2MzIpIHRyYW5zbGF0ZSg0MCA0MzgpIHRyYW5zbGF0ZSguODc1KSI+PC9wYXRoPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0xMC4xNSA2LjJMNS44MzMgNS4yIDUuODMzIDEuOHoiIG9wYWNpdHk9Ii4yNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNNS44MzMgNS4yTDEuNTE3IDYuMiA1LjgzMyAxLjh6IiBvcGFjaXR5PSIuNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNNS44MzMgNS4yTDUuODMzIDEzLjYgNC42OTkgMTEuNjUzIDEuNTE3IDYuMnpNNS44MzMgMTAuOEw1LjgzMyAyLjQgNi45NjggNC4zNDcgMTAuMTUgOS44eiIgb3BhY2l0eT0iLjI1IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNTI0IC0yMDcwKSB0cmFuc2xhdGUoNDg0IDE2MzIpIHRyYW5zbGF0ZSg0MCA0MzgpIHRyYW5zbGF0ZSguODc1KSI+PC9wYXRoPjxwYXRoIGZpbGw9IiNCNDU5MUIiIGQ9Ik0xMC4xNSA2LjJMNS44MzMgMTMuNiA1LjgzMyA1LjJ6TTEuNTE3IDkuOEw1LjgzMyAxMC44IDUuODMzIDE0LjJ6IiBvcGFjaXR5PSIuMzUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTUuODMzIDEwLjhMMTAuMTUgOS44IDUuODMzIDE0LjJ6IiBvcGFjaXR5PSIuNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMS41MTcgOS44TDUuODMzIDIuNCA1LjgzMyAxMC44eiIgb3BhY2l0eT0iLjI1IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNTI0IC0yMDcwKSB0cmFuc2xhdGUoNDg0IDE2MzIpIHRyYW5zbGF0ZSg0MCA0MzgpIHRyYW5zbGF0ZSguODc1KSI+PC9wYXRoPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0zLjA2MyA5LjUzM0wzLjk3MyA4IDMuMDYzIDYuNDY3IDUuODMzIDMuNjY3IDguNjA0IDYuNDY3IDcuNjk0IDggOC42MDQgOS41MzMgNS44MzMgMTIuMzMzeiIgb3BhY2l0eT0iLjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PC9nPjwvZz48L2c+PC9nPjwvZz48L3N2Zz4=',
+      'friendly_name': "test-user's Party Boss rage limit break",
+      'rage_skill': 'rage skill name',
+      'unit_of_measurement': 'rage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_s_party_boss_rage_limit_break',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_collected_quest_items-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_s_party_collected_quest_items',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1198,66 +1352,227 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Rewards',
+    'original_name': 'Collected quest items',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': <HabiticaSensorEntity.REWARDS: 'rewards'>,
-    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_rewards',
-    'unit_of_measurement': 'tasks',
+    'translation_key': <HabiticaSensorEntity.COLLECTED_ITEMS: 'collected_items'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_1e87097c-4c03-4f8c-a475-67cc7da7f409_collected_items',
+    'unit_of_measurement': 'items',
   })
 # ---
-# name: test_sensors[sensor.test_user_rewards-state]
+# name: test_sensors[sensor.test_user_s_party_collected_quest_items-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      '5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b': dict({
-        'challenge': dict({
-          'broken': None,
-          'id': None,
-          'shortName': None,
-          'taskId': None,
-          'winner': None,
-        }),
-        'created_at': '2024-07-07T17:51:53.266000+00:00',
-        'group': dict({
-          'assignedDate': None,
-          'assignedUsers': list([
-          ]),
-          'assignedUsersDetail': dict({
-          }),
-          'assigningUsername': None,
-          'completedBy': dict({
-            'date': None,
-            'userId': None,
-          }),
-          'id': None,
-          'managerNotes': None,
-          'taskId': None,
-        }),
-        'notes': 'Schaue fern, spiele ein Spiel, gönne Dir einen Leckerbissen, es liegt ganz bei Dir!',
-        'priority': 1,
-        'repeat': dict({
-          'f': False,
-          'm': True,
-          's': False,
-          'su': False,
-          't': True,
-          'th': False,
-          'w': True,
-        }),
-        'text': 'Belohne Dich selbst',
-        'type': 'reward',
-        'value': 10.0,
-      }),
-      'friendly_name': 'test-user Rewards',
-      'unit_of_measurement': 'tasks',
+      'Seifenstücke': '10 / 20',
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/quest_atom1_soapBars.png',
+      'friendly_name': "test-user's Party Collected quest items",
+      'unit_of_measurement': 'items',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_user_rewards',
+    'entity_id': 'sensor.test_user_s_party_collected_quest_items',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '10',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_group_leader-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_s_party_group_leader',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Group leader',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.GROUP_LEADER: 'group_leader'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_1e87097c-4c03-4f8c-a475-67cc7da7f409_group_leader',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_group_leader-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': "test-user's Party Group leader",
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_s_party_group_leader',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'test-user',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_member_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_s_party_member_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Member count',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.MEMBER_COUNT: 'member_count'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_1e87097c-4c03-4f8c-a475-67cc7da7f409_member_count',
+    'unit_of_measurement': 'members',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_member_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii02IC02IDQ2IDUwIj48dGl0bGU+QnJvbnplX1NtYWxsPC90aXRsZT48cGF0aCBkPSJNMjAsMzYuMjhDNy4xOCwzMC42MSw1LjYsMjQuNjksNS41LDEwLjQyTDIwLDMuNzVsMTQuNSw2LjY3QzM0LjQsMjQuNjksMzIuODIsMzAuNjEsMjAsMzYuMjhaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMyAtMSkiIGZpbGw9IiNlYThjMzEiPjwvcGF0aD48cGF0aCBkPSJNMjAsNi41TDMyLDEyYy0wLjE1LDExLjU2LTEuNTEsMTYuNjItMTIsMjEuNTFDOS41MywyOC42NCw4LjE3LDIzLjU4LDgsMTJMMjAsNi41TTIwLDFMMyw4LjgyQzMsMjQuNDcsNC4xMywzMi4yOSwyMCwzOSwzNS44NywzMi4yOSwzNywyNC40NywzNyw4LjgyTDIwLDFoMFoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0zIC0xKSIgZmlsbD0iI2IzNjIxMyI+PC9wYXRoPjxwYXRoIGQ9Ik0yMCw0LjNsMTQsNi40NGMtMC4xMiwxMy43Mi0xLjcyLDE5LjUxLTE0LDI1QzcuNzMsMzAuMjUsNi4xMiwyNC40Niw2LDEwLjc0TDIwLDQuM00yMCwxTDMsOC44MkMzLDI0LjQ3LDQuMTMsMzIuMjksMjAsMzksMzUuODcsMzIuMjksMzcsMjQuNDcsMzcsOC44MkwyMCwxaDBaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMyAtMSkiIGZpbGw9IiNkNzdhMjAiPjwvcGF0aD48L3N2Zz4=',
+      'friendly_name': "test-user's Party Member count",
+      'unit_of_measurement': 'members',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_s_party_member_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_quest-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_s_party_quest',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Quest',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.QUEST: 'quest'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_1e87097c-4c03-4f8c-a475-67cc7da7f409_quest',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_quest-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/inventory_quest_scroll_atom1.png',
+      'friendly_name': "test-user's Party Quest",
+      'quest_details': 'Du erreichst die Ufer des Waschbeckensees für eine wohlverdiente Auszeit ... Aber der See ist verschmutzt mit nicht abgespültem Geschirr! Wie ist das passiert? Wie auch immer, Du kannst den See jedenfalls nicht in diesem Zustand lassen. Es gibt nur eine Sache die Du tun kannst: Abspülen und den Ferienort retten! Dazu musst Du aber Seife für den Abwasch finden. Viel Seife ...',
+      'quest_participants': '1 / 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_s_party_quest',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Angriff des Banalen, Teil 1: Abwasch-Katastrophe!',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_quest_boss-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_s_party_quest_boss',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Quest boss',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.BOSS: 'boss'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_1e87097c-4c03-4f8c-a475-67cc7da7f409_boss',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_quest_boss-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': "test-user's Party Quest boss",
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_s_party_quest_boss',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'boss name',
   })
 # ---
 # name: test_sensors[sensor.test_user_saddles-entry]
@@ -1267,6 +1582,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1287,6 +1603,7 @@
     'original_name': 'Saddles',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.SADDLE: 'saddle'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_saddle',
@@ -1315,6 +1632,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1338,6 +1656,7 @@
     'original_name': 'Strength',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSensorEntity.STRENGTH: 'strength'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_strength',

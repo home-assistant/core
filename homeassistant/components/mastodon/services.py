@@ -5,23 +5,25 @@ from functools import partial
 from typing import Any, cast
 
 from mastodon import Mastodon
-from mastodon.Mastodon import MastodonAPIError
+from mastodon.Mastodon import MastodonAPIError, MediaAttachment
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from . import MastodonConfigEntry
 from .const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_CONTENT_WARNING,
+    ATTR_LANGUAGE,
     ATTR_MEDIA,
+    ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_WARNING,
     ATTR_STATUS,
     ATTR_VISIBILITY,
     DOMAIN,
 )
+from .coordinator import MastodonConfigEntry
 from .utils import get_media_type
 
 
@@ -41,7 +43,9 @@ SERVICE_POST_SCHEMA = vol.Schema(
         vol.Required(ATTR_STATUS): str,
         vol.Optional(ATTR_VISIBILITY): vol.In([x.lower() for x in StatusVisibility]),
         vol.Optional(ATTR_CONTENT_WARNING): str,
+        vol.Optional(ATTR_LANGUAGE): str,
         vol.Optional(ATTR_MEDIA): str,
+        vol.Optional(ATTR_MEDIA_DESCRIPTION): str,
         vol.Optional(ATTR_MEDIA_WARNING): bool,
     }
 )
@@ -80,7 +84,9 @@ def setup_services(hass: HomeAssistant) -> None:
             else None
         )
         spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
+        language: str | None = call.data.get(ATTR_LANGUAGE)
         media_path: str | None = call.data.get(ATTR_MEDIA)
+        media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
         media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
 
         await hass.async_add_executor_job(
@@ -90,7 +96,9 @@ def setup_services(hass: HomeAssistant) -> None:
                 status=status,
                 visibility=visibility,
                 spoiler_text=spoiler_text,
+                language=language,
                 media_path=media_path,
+                media_description=media_description,
                 sensitive=media_warning,
             )
         )
@@ -100,7 +108,7 @@ def setup_services(hass: HomeAssistant) -> None:
     def _post(client: Mastodon, **kwargs: Any) -> None:
         """Post to Mastodon."""
 
-        media_data: dict[str, Any] | None = None
+        media_data: MediaAttachment | None = None
 
         media_path = kwargs.get("media_path")
         if media_path:
@@ -112,9 +120,12 @@ def setup_services(hass: HomeAssistant) -> None:
                 )
 
             media_type = get_media_type(media_path)
+            media_description = kwargs.get("media_description")
             try:
                 media_data = client.media_post(
-                    media_file=media_path, mime_type=media_type
+                    media_file=media_path,
+                    mime_type=media_type,
+                    description=media_description,
                 )
 
             except MastodonAPIError as err:
@@ -125,11 +136,12 @@ def setup_services(hass: HomeAssistant) -> None:
                 ) from err
 
         kwargs.pop("media_path", None)
+        kwargs.pop("media_description", None)
 
         try:
             media_ids: str | None = None
             if media_data:
-                media_ids = media_data["id"]
+                media_ids = media_data.id
             client.status_post(media_ids=media_ids, **kwargs)
         except MastodonAPIError as err:
             raise HomeAssistantError(

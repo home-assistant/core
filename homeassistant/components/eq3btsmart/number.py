@@ -1,17 +1,12 @@
 """Platform for eq3 number entities."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from eq3btsmart import Thermostat
-from eq3btsmart.const import (
-    EQ3BT_MAX_OFFSET,
-    EQ3BT_MAX_TEMP,
-    EQ3BT_MIN_OFFSET,
-    EQ3BT_MIN_TEMP,
-)
-from eq3btsmart.models import Presets
+from eq3btsmart.const import EQ3_MAX_OFFSET, EQ3_MAX_TEMP, EQ3_MIN_OFFSET, EQ3_MIN_TEMP
+from eq3btsmart.models import Presets, Status
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -21,7 +16,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import Eq3ConfigEntry
 from .const import (
@@ -42,7 +37,7 @@ class Eq3NumberEntityDescription(NumberEntityDescription):
     value_func: Callable[[Presets], float]
     value_set_func: Callable[
         [Thermostat],
-        Callable[[float], Awaitable[None]],
+        Callable[[float], Coroutine[None, None, Status]],
     ]
     mode: NumberMode = NumberMode.BOX
     entity_category: EntityCategory | None = EntityCategory.CONFIG
@@ -51,44 +46,44 @@ class Eq3NumberEntityDescription(NumberEntityDescription):
 NUMBER_ENTITY_DESCRIPTIONS = [
     Eq3NumberEntityDescription(
         key=ENTITY_KEY_COMFORT,
-        value_func=lambda presets: presets.comfort_temperature.value,
+        value_func=lambda presets: presets.comfort_temperature,
         value_set_func=lambda thermostat: thermostat.async_configure_comfort_temperature,
         translation_key=ENTITY_KEY_COMFORT,
-        native_min_value=EQ3BT_MIN_TEMP,
-        native_max_value=EQ3BT_MAX_TEMP,
+        native_min_value=EQ3_MIN_TEMP,
+        native_max_value=EQ3_MAX_TEMP,
         native_step=EQ3BT_STEP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
     ),
     Eq3NumberEntityDescription(
         key=ENTITY_KEY_ECO,
-        value_func=lambda presets: presets.eco_temperature.value,
+        value_func=lambda presets: presets.eco_temperature,
         value_set_func=lambda thermostat: thermostat.async_configure_eco_temperature,
         translation_key=ENTITY_KEY_ECO,
-        native_min_value=EQ3BT_MIN_TEMP,
-        native_max_value=EQ3BT_MAX_TEMP,
+        native_min_value=EQ3_MIN_TEMP,
+        native_max_value=EQ3_MAX_TEMP,
         native_step=EQ3BT_STEP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
     ),
     Eq3NumberEntityDescription(
         key=ENTITY_KEY_WINDOW_OPEN_TEMPERATURE,
-        value_func=lambda presets: presets.window_open_temperature.value,
+        value_func=lambda presets: presets.window_open_temperature,
         value_set_func=lambda thermostat: thermostat.async_configure_window_open_temperature,
         translation_key=ENTITY_KEY_WINDOW_OPEN_TEMPERATURE,
-        native_min_value=EQ3BT_MIN_TEMP,
-        native_max_value=EQ3BT_MAX_TEMP,
+        native_min_value=EQ3_MIN_TEMP,
+        native_max_value=EQ3_MAX_TEMP,
         native_step=EQ3BT_STEP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
     ),
     Eq3NumberEntityDescription(
         key=ENTITY_KEY_OFFSET,
-        value_func=lambda presets: presets.offset_temperature.value,
+        value_func=lambda presets: presets.offset_temperature,
         value_set_func=lambda thermostat: thermostat.async_configure_temperature_offset,
         translation_key=ENTITY_KEY_OFFSET,
-        native_min_value=EQ3BT_MIN_OFFSET,
-        native_max_value=EQ3BT_MAX_OFFSET,
+        native_min_value=EQ3_MIN_OFFSET,
+        native_max_value=EQ3_MAX_OFFSET,
         native_step=EQ3BT_STEP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
@@ -96,7 +91,7 @@ NUMBER_ENTITY_DESCRIPTIONS = [
     Eq3NumberEntityDescription(
         key=ENTITY_KEY_WINDOW_OPEN_TIMEOUT,
         value_set_func=lambda thermostat: thermostat.async_configure_window_open_duration,
-        value_func=lambda presets: presets.window_open_time.value.total_seconds() / 60,
+        value_func=lambda presets: presets.window_open_time.total_seconds() / 60,
         translation_key=ENTITY_KEY_WINDOW_OPEN_TIMEOUT,
         native_min_value=0,
         native_max_value=60,
@@ -109,7 +104,7 @@ NUMBER_ENTITY_DESCRIPTIONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: Eq3ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the entry."""
 
@@ -137,7 +132,6 @@ class Eq3NumberEntity(Eq3Entity, NumberEntity):
         """Return the state of the entity."""
 
         if TYPE_CHECKING:
-            assert self._thermostat.status is not None
             assert self._thermostat.status.presets is not None
 
         return self.entity_description.value_func(self._thermostat.status.presets)
@@ -152,7 +146,7 @@ class Eq3NumberEntity(Eq3Entity, NumberEntity):
         """Return whether the entity is available."""
 
         return (
-            self._thermostat.status is not None
+            super().available
             and self._thermostat.status.presets is not None
             and self._attr_available
         )

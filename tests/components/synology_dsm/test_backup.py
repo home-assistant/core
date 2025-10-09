@@ -4,9 +4,13 @@ from io import StringIO
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from synology_dsm.api.file_station.models import SynoFileFile, SynoFileSharedFolder
-from synology_dsm.exceptions import SynologyDSMAPIErrorException
+from synology_dsm.exceptions import (
+    SynologyDSMAPIErrorException,
+    SynologyDSMRequestException,
+)
 
 from homeassistant.components.backup import (
     DOMAIN as BACKUP_DOMAIN,
@@ -29,22 +33,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util.aiohttp import MockStreamReader
+from homeassistant.util.aiohttp import MockStreamReader, MockStreamReaderChunked
 
-from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
+from .common import mock_dsm_information
+from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 BASE_FILENAME = "Automatic_backup_2025.2.0.dev0_2025-01-09_20.14_35457323"
-
-
-class MockStreamReaderChunked(MockStreamReader):
-    """Mock a stream reader with simulated chunked data."""
-
-    async def readchunk(self) -> tuple[bytes, bool]:
-        """Read bytes."""
-        return (self._content.read(), False)
 
 
 async def _mock_download_file(path: str, filename: str) -> MockStreamReader:
@@ -99,7 +96,7 @@ def mock_dsm_with_filestation():
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
+        dsm.information = mock_dsm_information()
         dsm.file = AsyncMock(
             get_shared_folders=AsyncMock(
                 return_value=[
@@ -147,12 +144,12 @@ def mock_dsm_without_filestation():
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
         dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.information = mock_dsm_information()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
         dsm.file = None
 
         yield dsm
@@ -275,6 +272,50 @@ async def test_agents_on_unload(
     }
 
 
+async def test_agents_on_changed_update_success(
+    hass: HomeAssistant,
+    setup_dsm_with_filestation: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test backup agent on changed update success of coordintaor."""
+    client = await hass_ws_client(hass)
+
+    # config entry is loaded
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]["agents"]) == 2
+
+    # coordinator update was successful
+    freezer.tick(910)  # 15 min interval + 10s
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]["agents"]) == 2
+
+    # coordinator update was un-successful
+    setup_dsm_with_filestation.update.side_effect = SynologyDSMRequestException(
+        OSError()
+    )
+    freezer.tick(910)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]["agents"]) == 1
+
+    # coordinator update was successful again
+    setup_dsm_with_filestation.update.side_effect = None
+    freezer.tick(910)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]["agents"]) == 2
+
+
 async def test_agents_list_backups(
     hass: HomeAssistant,
     setup_dsm_with_filestation: MagicMock,
@@ -298,14 +339,16 @@ async def test_agents_list_backups(
                 }
             },
             "backup_id": "abcd12ef",
-            "date": "2025-01-09T20:14:35.457323+01:00",
             "database_included": True,
+            "date": "2025-01-09T20:14:35.457323+01:00",
             "extra_metadata": {"instance_id": ANY, "with_automatic_settings": True},
+            "failed_addons": [],
+            "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2025.2.0.dev0",
             "name": "Automatic backup 2025.2.0.dev0",
-            "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
     ]
@@ -334,7 +377,7 @@ async def test_agents_list_backups_error(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -369,14 +412,16 @@ async def test_agents_list_backups_disabled_filestation(
                     }
                 },
                 "backup_id": "abcd12ef",
-                "date": "2025-01-09T20:14:35.457323+01:00",
                 "database_included": True,
+                "date": "2025-01-09T20:14:35.457323+01:00",
                 "extra_metadata": {"instance_id": ANY, "with_automatic_settings": True},
+                "failed_addons": [],
+                "failed_agent_ids": [],
+                "failed_folders": [],
                 "folders": [],
                 "homeassistant_included": True,
                 "homeassistant_version": "2025.2.0.dev0",
                 "name": "Automatic backup 2025.2.0.dev0",
-                "failed_agent_ids": [],
                 "with_automatic_settings": None,
             },
         ),

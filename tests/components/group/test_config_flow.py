@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 from tests.typing import WebSocketGenerator
 
 
@@ -44,7 +44,8 @@ from tests.typing import WebSocketGenerator
             {},
         ),
         ("fan", "on", "on", {}, {}, {}, {}),
-        ("light", "on", "on", {}, {}, {}, {}),
+        ("light", "on", "on", {}, {}, {"all": False}, {}),
+        ("light", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("lock", "locked", "locked", {}, {}, {}, {}),
         ("notify", STATE_UNKNOWN, "2021-01-01T23:59:59.123+00:00", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
@@ -57,7 +58,8 @@ from tests.typing import WebSocketGenerator
             {"type": "sum"},
             {},
         ),
-        ("switch", "on", "on", {}, {}, {}, {}),
+        ("switch", "on", "on", {}, {}, {"all": False}, {}),
+        ("switch", "on", "on", {}, {"all": True}, {"all": True}, {}),
     ],
 )
 async def test_config_flow(
@@ -201,17 +203,6 @@ async def test_config_flow_hides_members(
     assert entity_registry.async_get(f"{group_type}.three").hidden_by == hidden_by
 
 
-def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
-    for k in schema:
-        if k == key:
-            if k.description is None or "suggested_value" not in k.description:
-                return None
-            return k.description["suggested_value"]
-    # Wanted key absent from schema
-    raise KeyError("Wanted key absent from schema")
-
-
 @pytest.mark.parametrize(
     ("group_type", "member_state", "extra_options", "options_options"),
     [
@@ -269,7 +260,9 @@ async def test_options(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == group_type
-    assert get_suggested(result["data_schema"].schema, "entities") == members1
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, "entities") == members1
+    )
     assert "name" not in result["data_schema"].schema
     assert result["data_schema"].schema["entities"].config["exclude_entities"] == [
         f"{group_type}.bed_room"
@@ -316,19 +309,19 @@ async def test_options(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == group_type
 
-    assert get_suggested(result["data_schema"].schema, "entities") is None
-    assert get_suggested(result["data_schema"].schema, "name") is None
+    assert get_schema_suggested_value(result["data_schema"].schema, "entities") is None
+    assert get_schema_suggested_value(result["data_schema"].schema, "name") is None
 
 
 @pytest.mark.parametrize(
     ("group_type", "extra_options", "extra_options_after", "advanced"),
     [
         ("light", {"all": False}, {"all": False}, False),
-        ("light", {"all": True}, {"all": True}, False),
+        ("light", {"all": True}, {"all": False}, False),
         ("light", {"all": False}, {"all": False}, True),
         ("light", {"all": True}, {"all": False}, True),
         ("switch", {"all": False}, {"all": False}, False),
-        ("switch", {"all": True}, {"all": True}, False),
+        ("switch", {"all": True}, {"all": False}, False),
         ("switch", {"all": False}, {"all": False}, True),
         ("switch", {"all": True}, {"all": False}, True),
     ],

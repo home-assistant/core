@@ -2,7 +2,7 @@
   "services": {
     "virtualkey": {
       "name": "Virtual key",
-      "description": "Presses a virtual key from CCU/Homegear or simulate keypress.",
+      "description": "Simulates a keypress (or other valid action) on CCU/Homegear with virtual or device keys.",
       "fields": {
         "address": {
           "name": "Address",
@@ -24,7 +24,7 @@
     },
     "set_variable_value": {
       "name": "Set variable value",
-      "description": "Sets the name of a node.",
+      "description": "Sets the value of a system variable.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -42,7 +42,7 @@
     },
     "set_device_value": {
       "name": "Set device value",
-      "description": "Sets a device property on RPC XML interface.",
+      "description": "Controls a device manually. Equivalent to setValue-method from XML-RPC.",
       "fields": {
         "address": {
           "name": "Address",
@@ -80,11 +80,11 @@
       "fields": {
         "interface": {
           "name": "Interface",
-          "description": "Select the given interface into install mode."
+          "description": "The interface to set into install mode."
         },
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
-          "description": "1= Normal mode / 2= Remove exists old links."
+          "description": "1= Normal mode / 2= Remove existing old links."
         },
         "time": {
           "name": "Time",
@@ -98,11 +98,11 @@
     },
     "put_paramset": {
       "name": "Put paramset",
-      "description": "Calls to putParamset in the RPC XML interface.",
+      "description": "Manually changes a device’s paramset. Equivalent to putParamset-method from XML-RPC.",
       "fields": {
         "interface": {
           "name": "Interface",
-          "description": "The interfaces name from the config."
+          "description": "The interface's name from the config."
         },
         "address": {
           "name": "Address",

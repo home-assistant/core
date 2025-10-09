@@ -20,19 +20,38 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
 from .const import (
+    CONF_CODE_FORMAT,
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_PAYLOAD_LOCK,
+    CONF_PAYLOAD_OPEN,
     CONF_PAYLOAD_RESET,
+    CONF_PAYLOAD_UNLOCK,
+    CONF_STATE_JAMMED,
+    CONF_STATE_LOCKED,
+    CONF_STATE_LOCKING,
     CONF_STATE_OPEN,
     CONF_STATE_OPENING,
     CONF_STATE_TOPIC,
+    CONF_STATE_UNLOCKED,
+    CONF_STATE_UNLOCKING,
+    DEFAULT_PAYLOAD_LOCK,
+    DEFAULT_PAYLOAD_RESET,
+    DEFAULT_PAYLOAD_UNLOCK,
+    DEFAULT_STATE_JAMMED,
+    DEFAULT_STATE_LOCKED,
+    DEFAULT_STATE_LOCKING,
+    DEFAULT_STATE_OPEN,
+    DEFAULT_STATE_OPENING,
+    DEFAULT_STATE_UNLOCKED,
+    DEFAULT_STATE_UNLOCKING,
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
@@ -47,31 +66,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
-CONF_CODE_FORMAT = "code_format"
-
-CONF_PAYLOAD_LOCK = "payload_lock"
-CONF_PAYLOAD_UNLOCK = "payload_unlock"
-CONF_PAYLOAD_OPEN = "payload_open"
-
-CONF_STATE_LOCKED = "state_locked"
-CONF_STATE_LOCKING = "state_locking"
-
-CONF_STATE_UNLOCKED = "state_unlocked"
-CONF_STATE_UNLOCKING = "state_unlocking"
-CONF_STATE_JAMMED = "state_jammed"
-
 DEFAULT_NAME = "MQTT Lock"
-DEFAULT_PAYLOAD_LOCK = "LOCK"
-DEFAULT_PAYLOAD_UNLOCK = "UNLOCK"
-DEFAULT_PAYLOAD_OPEN = "OPEN"
-DEFAULT_PAYLOAD_RESET = "None"
-DEFAULT_STATE_LOCKED = "LOCKED"
-DEFAULT_STATE_LOCKING = "LOCKING"
-DEFAULT_STATE_OPEN = "OPEN"
-DEFAULT_STATE_OPENING = "OPENING"
-DEFAULT_STATE_UNLOCKED = "UNLOCKED"
-DEFAULT_STATE_UNLOCKING = "UNLOCKING"
-DEFAULT_STATE_JAMMED = "JAMMED"
 
 MQTT_LOCK_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -116,7 +111,7 @@ STATE_CONFIG_KEYS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT lock through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -193,7 +188,10 @@ class MqttLock(MqttEntity, LockEntity):
             return
         if payload == self._config[CONF_PAYLOAD_RESET]:
             # Reset the state to `unknown`
-            self._attr_is_locked = None
+            self._attr_is_locked = self._attr_is_locking = None
+            self._attr_is_unlocking = None
+            self._attr_is_open = self._attr_is_opening = None
+            self._attr_is_jammed = None
         elif payload in self._valid_states:
             self._attr_is_locked = payload == self._config[CONF_STATE_LOCKED]
             self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]

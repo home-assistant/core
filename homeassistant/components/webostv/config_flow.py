@@ -9,7 +9,11 @@ from urllib.parse import urlparse
 from aiowebostv import WebOsClient, WebOsTvPairError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -60,7 +64,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: WebOsTvConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: WebOsTvConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -92,13 +96,16 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(
-                    client.hello_info["deviceUUID"], raise_on_progress=False
+                    client.tv_info.hello["deviceUUID"], raise_on_progress=False
                 )
                 self._abort_if_unique_id_configured({CONF_HOST: self._host})
                 data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client.client_key}
 
                 if not self._name:
-                    self._name = f"{DEFAULT_NAME} {client.system_info['modelName']}"
+                    if model_name := client.tv_info.system.get("modelName"):
+                        self._name = f"{DEFAULT_NAME} {model_name}"
+                    else:
+                        self._name = DEFAULT_NAME
                 return self.async_create_entry(title=self._name, data=data)
 
         return self.async_show_form(step_id="pairing", errors=errors)
@@ -176,7 +183,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             except WEBOSTV_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(client.hello_info["deviceUUID"])
+                await self.async_set_unique_id(client.tv_info.hello["deviceUUID"])
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 data = {CONF_HOST: host, CONF_CLIENT_SECRET: client.client_key}
                 return self.async_update_reload_and_abort(reconfigure_entry, data=data)
@@ -194,7 +201,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle options."""
 
     def __init__(self, config_entry: WebOsTvConfigEntry) -> None:
@@ -214,7 +221,7 @@ class OptionsFlowHandler(OptionsFlow):
         sources_list = []
         try:
             client = await async_control_connect(self.hass, self.host, self.key)
-            sources_list = get_sources(client)
+            sources_list = get_sources(client.tv_state)
         except WebOsTvPairError:
             errors["base"] = "error_pairing"
         except WEBOSTV_EXCEPTIONS:

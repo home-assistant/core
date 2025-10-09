@@ -1,4 +1,128 @@
 # serializer version: 1
+# name: test_sensor[sensor.river_name_station_name_hydrological_alert-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_alert',
+        'hydrological_drought',
+        'rapid_water_level_rise',
+        'exceeding_the_warning_level',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.river_name_station_name_hydrological_alert',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Hydrological alert',
+    'platform': 'imgw_pib',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hydrological_alert',
+    'unique_id': '123_hydrological_alert',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.river_name_station_name_hydrological_alert-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by IMGW-PIB',
+      'device_class': 'enum',
+      'friendly_name': 'River Name (Station Name) Hydrological alert',
+      'level': 'yellow',
+      'options': list([
+        'no_alert',
+        'hydrological_drought',
+        'rapid_water_level_rise',
+        'exceeding_the_warning_level',
+      ]),
+      'probability': 80,
+      'valid_from': datetime.datetime(2024, 4, 27, 7, 0, tzinfo=datetime.timezone.utc),
+      'valid_to': datetime.datetime(2024, 4, 28, 11, 0, tzinfo=datetime.timezone.utc),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.river_name_station_name_hydrological_alert',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'rapid_water_level_rise',
+  })
+# ---
+# name: test_sensor[sensor.river_name_station_name_water_flow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.river_name_station_name_water_flow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
+    'original_icon': None,
+    'original_name': 'Water flow',
+    'platform': 'imgw_pib',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_flow',
+    'unique_id': '123_water_flow',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND: 'm³/s'>,
+  })
+# ---
+# name: test_sensor[sensor.river_name_station_name_water_flow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by IMGW-PIB',
+      'device_class': 'volume_flow_rate',
+      'friendly_name': 'River Name (Station Name) Water flow',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND: 'm³/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.river_name_station_name_water_flow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '123.45',
+  })
+# ---
 # name: test_sensor[sensor.river_name_station_name_water_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -8,6 +132,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -31,6 +156,7 @@
     'original_name': 'Water level',
     'platform': 'imgw_pib',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_level',
     'unique_id': '123_water_level',
@@ -63,6 +189,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -86,6 +213,7 @@
     'original_name': 'Water temperature',
     'platform': 'imgw_pib',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_temperature',
     'unique_id': '123_water_temperature',

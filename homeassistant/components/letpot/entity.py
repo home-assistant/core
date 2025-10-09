@@ -1,16 +1,25 @@
 """Base class for LetPot entities."""
 
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 from typing import Any, Concatenate
 
 from letpot.exceptions import LetPotConnectionException, LetPotException
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import LetPotDeviceCoordinator
+
+
+@dataclass(frozen=True, kw_only=True)
+class LetPotEntityDescription(EntityDescription):
+    """Description for all LetPot entities."""
+
+    supported_fn: Callable[[LetPotDeviceCoordinator], bool] = lambda _: True
 
 
 class LetPotEntity(CoordinatorEntity[LetPotDeviceCoordinator]):
@@ -21,12 +30,13 @@ class LetPotEntity(CoordinatorEntity[LetPotDeviceCoordinator]):
     def __init__(self, coordinator: LetPotDeviceCoordinator) -> None:
         """Initialize a LetPot entity."""
         super().__init__(coordinator)
+        info = coordinator.device_client.device_info(coordinator.device.serial_number)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.device.serial_number)},
             name=coordinator.device.name,
             manufacturer="LetPot",
-            model=coordinator.device_client.device_model_name,
-            model_id=coordinator.device_client.device_model_code,
+            model=info.model_name,
+            model_id=info.model_code,
             serial_number=coordinator.device.serial_number,
         )
 

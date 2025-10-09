@@ -21,6 +21,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
+from .const import STATELESS_LLM_API
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -40,36 +42,43 @@ def _format_tool(
 
 
 async def create_server(
-    hass: HomeAssistant, llm_api_id: str, llm_context: llm.LLMContext
+    hass: HomeAssistant, llm_api_id: str | list[str], llm_context: llm.LLMContext
 ) -> Server:
     """Create a new Model Context Protocol Server.
 
     A Model Context Protocol Server object is associated with a single session.
     The MCP SDK handles the details of the protocol.
     """
+    if llm_api_id == STATELESS_LLM_API:
+        llm_api_id = llm.LLM_API_ASSIST
 
-    server = Server("home-assistant")
+    server = Server[Any]("home-assistant")
 
-    @server.list_prompts()  # type: ignore[no-untyped-call, misc]
+    async def get_api_instance() -> llm.APIInstance:
+        """Get the LLM API selected."""
+        # Backwards compatibility with old MCP Server config
+        return await llm.async_get_api(hass, llm_api_id, llm_context)
+
+    @server.list_prompts()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_list_prompts() -> list[types.Prompt]:
-        llm_api = await llm.async_get_api(hass, llm_api_id, llm_context)
+        llm_api = await get_api_instance()
         return [
             types.Prompt(
                 name=llm_api.api.name,
-                description=f"Default prompt for the Home Assistant LLM API {llm_api.api.name}",
+                description=f"Default prompt for Home Assistant {llm_api.api.name} API",
             )
         ]
 
-    @server.get_prompt()  # type: ignore[no-untyped-call, misc]
+    @server.get_prompt()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_get_prompt(
         name: str, arguments: dict[str, str] | None
     ) -> types.GetPromptResult:
-        llm_api = await llm.async_get_api(hass, llm_api_id, llm_context)
+        llm_api = await get_api_instance()
         if name != llm_api.api.name:
             raise ValueError(f"Unknown prompt: {name}")
 
         return types.GetPromptResult(
-            description=f"Default prompt for the Home Assistant LLM API {llm_api.api.name}",
+            description=f"Default prompt for Home Assistant {llm_api.api.name} API",
             messages=[
                 types.PromptMessage(
                     role="assistant",
@@ -81,16 +90,16 @@ async def create_server(
             ],
         )
 
-    @server.list_tools()  # type: ignore[no-untyped-call, misc]
+    @server.list_tools()  # type: ignore[no-untyped-call,untyped-decorator]
     async def list_tools() -> list[types.Tool]:
         """List available time tools."""
-        llm_api = await llm.async_get_api(hass, llm_api_id, llm_context)
+        llm_api = await get_api_instance()
         return [_format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools]
 
-    @server.call_tool()  # type: ignore[no-untyped-call, misc]
+    @server.call_tool()  # type: ignore[untyped-decorator]
     async def call_tool(name: str, arguments: dict) -> Sequence[types.TextContent]:
         """Handle calling tools."""
-        llm_api = await llm.async_get_api(hass, llm_api_id, llm_context)
+        llm_api = await get_api_instance()
         tool_input = llm.ToolInput(tool_name=name, tool_args=arguments)
         _LOGGER.debug("Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args)
 

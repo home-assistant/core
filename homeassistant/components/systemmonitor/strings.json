@@ -48,13 +48,13 @@
         "name": "Last boot"
       },
       "load_15m": {
-        "name": "Load (15m)"
+        "name": "Load (15 min)"
       },
       "load_1m": {
-        "name": "Load (1m)"
+        "name": "Load (1 min)"
       },
       "load_5m": {
-        "name": "Load (5m)"
+        "name": "Load (5 min)"
       },
       "memory_free": {
         "name": "Memory free"
@@ -100,6 +100,9 @@
       },
       "swap_use_percent": {
         "name": "Swap usage"
+      },
+      "process_num_fds": {
+        "name": "Open file descriptors {process}"
       }
     }
   }

@@ -51,7 +51,7 @@ rules:
     status: exempt
     comment: No supportable devices.
   docs-supported-functions: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
     status: exempt
@@ -72,7 +72,7 @@ rules:
     comment: Used to inform of deprecated entities and actions.
   stale-devices:
     status: done
-    comment: Not applicable. Only one device per config entry. Removed together with the config entry.
+    comment: Party device is remove if stale.
 
   # Platinum
   async-dependency: done

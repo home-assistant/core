@@ -21,11 +21,11 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .const import F_SERIES
+from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
 from .helpers import find_matching_platform, skip_entity, transform_model_series
 
@@ -214,7 +214,7 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MyUplinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up myUplink sensor."""
 
@@ -293,8 +293,8 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Sensor state value."""
-        device_point = self.coordinator.data.points[self.device_id][self.point_id]
-        if device_point.value == MARKER_FOR_UNKNOWN_VALUE:
+        device_point = self.coordinator.data.points[self.device_id].get(self.point_id)
+        if device_point is None or device_point.value == MARKER_FOR_UNKNOWN_VALUE:
             return None
         return device_point.value  # type: ignore[no-any-return]
 

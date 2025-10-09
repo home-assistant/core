@@ -13,6 +13,7 @@ from here_routing import (
     Return,
     RoutingMode,
     Spans,
+    TrafficMode,
     TransportMode,
 )
 import here_transit
@@ -25,7 +26,8 @@ from here_transit import (
 )
 import voluptuous as vol
 
-from homeassistant.const import UnitOfLength
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODE, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.location import find_coordinates
@@ -33,66 +35,84 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import DistanceConverter
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, ROUTE_MODE_FASTEST
-from .model import HERETravelTimeConfig, HERETravelTimeData
+from .const import (
+    CONF_ARRIVAL_TIME,
+    CONF_DEPARTURE_TIME,
+    CONF_DESTINATION_ENTITY_ID,
+    CONF_DESTINATION_LATITUDE,
+    CONF_DESTINATION_LONGITUDE,
+    CONF_ORIGIN_ENTITY_ID,
+    CONF_ORIGIN_LATITUDE,
+    CONF_ORIGIN_LONGITUDE,
+    CONF_ROUTE_MODE,
+    CONF_TRAFFIC_MODE,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    ROUTE_MODE_FASTEST,
+)
+from .model import HERETravelTimeAPIParams, HERETravelTimeData
 
 BACKOFF_MULTIPLIER = 1.1
 
 _LOGGER = logging.getLogger(__name__)
 
+type HereConfigEntry = ConfigEntry[
+    HERETransitDataUpdateCoordinator | HERERoutingDataUpdateCoordinator
+]
+
 
 class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]):
-    """here_routing DataUpdateCoordinator."""
+    """HERETravelTime DataUpdateCoordinator for the routing API."""
+
+    config_entry: HereConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: HereConfigEntry,
         api_key: str,
-        config: HERETravelTimeConfig,
     ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self._api = HERERoutingApi(api_key)
-        self.config = config
 
     async def _async_update_data(self) -> HERETravelTimeData:
         """Get the latest data from the HERE Routing API."""
-        origin, destination, arrival, departure = prepare_parameters(
-            self.hass, self.config
-        )
-
-        route_mode = (
-            RoutingMode.FAST
-            if self.config.route_mode == ROUTE_MODE_FASTEST
-            else RoutingMode.SHORT
-        )
+        params = prepare_parameters(self.hass, self.config_entry)
 
         _LOGGER.debug(
             (
                 "Requesting route for origin: %s, destination: %s, route_mode: %s,"
-                " mode: %s, arrival: %s, departure: %s"
+                " mode: %s, arrival: %s, departure: %s, traffic_mode: %s"
             ),
-            origin,
-            destination,
-            route_mode,
-            TransportMode(self.config.travel_mode),
-            arrival,
-            departure,
+            params.origin,
+            params.destination,
+            params.route_mode,
+            TransportMode(params.travel_mode),
+            params.arrival,
+            params.departure,
+            params.traffic_mode,
         )
 
         try:
             response = await self._api.route(
-                transport_mode=TransportMode(self.config.travel_mode),
-                origin=here_routing.Place(origin[0], origin[1]),
-                destination=here_routing.Place(destination[0], destination[1]),
-                routing_mode=route_mode,
-                arrival_time=arrival,
-                departure_time=departure,
+                transport_mode=TransportMode(params.travel_mode),
+                origin=here_routing.Place(
+                    float(params.origin[0]), float(params.origin[1])
+                ),
+                destination=here_routing.Place(
+                    float(params.destination[0]), float(params.destination[1])
+                ),
+                routing_mode=params.route_mode,
+                arrival_time=params.arrival,
+                departure_time=params.departure,
+                traffic_mode=params.traffic_mode,
                 return_values=[Return.POLYINE, Return.SUMMARY],
                 spans=[Spans.NAMES],
             )
@@ -119,8 +139,8 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
     def _parse_routing_response(self, response: dict[str, Any]) -> HERETravelTimeData:
         """Parse the routing response dict to a HERETravelTimeData."""
         distance: float = 0.0
-        duration: float = 0.0
-        duration_in_traffic: float = 0.0
+        duration: int = 0
+        duration_in_traffic: int = 0
 
         for section in response["routes"][0]["sections"]:
             distance += DistanceConverter.convert(
@@ -153,8 +173,8 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
             destination_name = names[0]["value"]
         return HERETravelTimeData(
             attribution=None,
-            duration=round(duration / 60),
-            duration_in_traffic=round(duration_in_traffic / 60),
+            duration=duration,
+            duration_in_traffic=duration_in_traffic,
             distance=distance,
             origin=f"{mapped_origin_lat},{mapped_origin_lon}",
             destination=f"{mapped_destination_lat},{mapped_destination_lon}",
@@ -166,48 +186,50 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
 class HERETransitDataUpdateCoordinator(
     DataUpdateCoordinator[HERETravelTimeData | None]
 ):
-    """HERETravelTime DataUpdateCoordinator."""
+    """HERETravelTime DataUpdateCoordinator for the transit API."""
+
+    config_entry: HereConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: HereConfigEntry,
         api_key: str,
-        config: HERETravelTimeConfig,
     ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self._api = HERETransitApi(api_key)
-        self.config = config
 
     async def _async_update_data(self) -> HERETravelTimeData | None:
         """Get the latest data from the HERE Routing API."""
-        origin, destination, arrival, departure = prepare_parameters(
-            self.hass, self.config
-        )
+        params = prepare_parameters(self.hass, self.config_entry)
 
         _LOGGER.debug(
             (
                 "Requesting transit route for origin: %s, destination: %s, arrival: %s,"
                 " departure: %s"
             ),
-            origin,
-            destination,
-            arrival,
-            departure,
+            params.origin,
+            params.destination,
+            params.arrival,
+            params.departure,
         )
         try:
             response = await self._api.route(
-                origin=here_transit.Place(latitude=origin[0], longitude=origin[1]),
-                destination=here_transit.Place(
-                    latitude=destination[0], longitude=destination[1]
+                origin=here_transit.Place(
+                    latitude=params.origin[0], longitude=params.origin[1]
                 ),
-                arrival_time=arrival,
-                departure_time=departure,
+                destination=here_transit.Place(
+                    latitude=params.destination[0], longitude=params.destination[1]
+                ),
+                arrival_time=params.arrival,
+                departure_time=params.departure,
                 return_values=[
                     here_transit.Return.POLYLINE,
                     here_transit.Return.TRAVEL_SUMMARY,
@@ -255,13 +277,13 @@ class HERETransitDataUpdateCoordinator(
             UnitOfLength.METERS,
             UnitOfLength.KILOMETERS,
         )
-        duration: float = sum(
+        duration: int = sum(
             section["travelSummary"]["duration"] for section in sections
         )
         return HERETravelTimeData(
             attribution=attribution,
-            duration=round(duration / 60),
-            duration_in_traffic=round(duration / 60),
+            duration=duration,
+            duration_in_traffic=duration,
             distance=distance,
             origin=f"{mapped_origin_lat},{mapped_origin_lon}",
             destination=f"{mapped_destination_lat},{mapped_destination_lon}",
@@ -272,8 +294,8 @@ class HERETransitDataUpdateCoordinator(
 
 def prepare_parameters(
     hass: HomeAssistant,
-    config: HERETravelTimeConfig,
-) -> tuple[list[str], list[str], str | None, str | None]:
+    config_entry: HereConfigEntry,
+) -> HERETravelTimeAPIParams:
     """Prepare parameters for the HERE api."""
 
     def _from_entity_id(entity_id: str) -> list[str]:
@@ -292,32 +314,61 @@ def prepare_parameters(
         return formatted_coordinates
 
     # Destination
-    if config.destination_entity_id is not None:
-        destination = _from_entity_id(config.destination_entity_id)
+    if (
+        destination_entity_id := config_entry.data.get(CONF_DESTINATION_ENTITY_ID)
+    ) is not None:
+        destination = _from_entity_id(str(destination_entity_id))
     else:
         destination = [
-            str(config.destination_latitude),
-            str(config.destination_longitude),
+            str(config_entry.data[CONF_DESTINATION_LATITUDE]),
+            str(config_entry.data[CONF_DESTINATION_LONGITUDE]),
         ]
 
     # Origin
-    if config.origin_entity_id is not None:
-        origin = _from_entity_id(config.origin_entity_id)
+    if (origin_entity_id := config_entry.data.get(CONF_ORIGIN_ENTITY_ID)) is not None:
+        origin = _from_entity_id(str(origin_entity_id))
     else:
         origin = [
-            str(config.origin_latitude),
-            str(config.origin_longitude),
+            str(config_entry.data[CONF_ORIGIN_LATITUDE]),
+            str(config_entry.data[CONF_ORIGIN_LONGITUDE]),
         ]
 
     # Arrival/Departure
-    arrival: str | None = None
-    departure: str | None = None
-    if config.arrival is not None:
-        arrival = next_datetime(config.arrival).isoformat()
-    if config.departure is not None:
-        departure = next_datetime(config.departure).isoformat()
+    arrival: datetime | None = None
+    if (
+        conf_arrival := dt_util.parse_time(
+            config_entry.options.get(CONF_ARRIVAL_TIME, "")
+        )
+    ) is not None:
+        arrival = next_datetime(conf_arrival)
+    departure: datetime | None = None
+    if (
+        conf_departure := dt_util.parse_time(
+            config_entry.options.get(CONF_DEPARTURE_TIME, "")
+        )
+    ) is not None:
+        departure = next_datetime(conf_departure)
 
-    return (origin, destination, arrival, departure)
+    route_mode = (
+        RoutingMode.FAST
+        if config_entry.options[CONF_ROUTE_MODE] == ROUTE_MODE_FASTEST
+        else RoutingMode.SHORT
+    )
+    traffic_mode = (
+        TrafficMode.DISABLED
+        if config_entry.options[CONF_TRAFFIC_MODE] is False
+        else TrafficMode.DEFAULT
+    )
+
+    return HERETravelTimeAPIParams(
+        destination=destination,
+        origin=origin,
+        travel_mode=config_entry.data[CONF_MODE],
+        route_mode=route_mode,
+        arrival=arrival,
+        departure=departure,
+        traffic_mode=traffic_mode,
+    )
 
 
 def build_hass_attribution(sections: list[dict[str, Any]]) -> str | None:

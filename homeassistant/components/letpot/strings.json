@@ -32,6 +32,59 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "low_nutrients": {
+        "name": "Low nutrients"
+      },
+      "low_water": {
+        "name": "Low water"
+      },
+      "pump": {
+        "name": "Pump"
+      },
+      "pump_error": {
+        "name": "Pump error"
+      },
+      "refill_error": {
+        "name": "Refill error"
+      }
+    },
+    "number": {
+      "light_brightness": {
+        "name": "Light brightness"
+      },
+      "plant_days": {
+        "name": "Plants age"
+      }
+    },
+    "select": {
+      "display_temperature_unit": {
+        "name": "Temperature unit on display",
+        "state": {
+          "celsius": "Celsius",
+          "fahrenheit": "Fahrenheit"
+        }
+      },
+      "light_brightness": {
+        "name": "[%key:component::letpot::entity::number::light_brightness::name%]",
+        "state": {
+          "low": "[%key:common::state::low%]",
+          "high": "[%key:common::state::high%]"
+        }
+      },
+      "light_mode": {
+        "name": "Light mode",
+        "state": {
+          "flower": "Fruits/Flowers",
+          "vegetable": "Veggies/Herbs"
+        }
+      }
+    },
+    "sensor": {
+      "water_level": {
+        "name": "Water level"
+      }
+    },
     "switch": {
       "alarm_sound": {
         "name": "Alarm sound"

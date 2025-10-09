@@ -13,7 +13,7 @@
         },
         "data_description": {
           "email": "The email address associated with your Bring! account.",
-          "password": "The password to login to your Bring! account."
+          "password": "The password to log in to your Bring! account."
         }
       },
       "reauth_confirm": {
@@ -25,7 +25,7 @@
         },
         "data_description": {
           "email": "[%key:component::bring::config::step::user::data_description::email%]",
-          "password": "[%key:component::bring::config::step::user::data_description::email%]"
+          "password": "[%key:component::bring::config::step::user::data_description::password%]"
         }
       },
       "reconfigure": {
@@ -37,7 +37,7 @@
         },
         "data_description": {
           "email": "[%key:component::bring::config::step::user::data_description::email%]",
-          "password": "[%key:component::bring::config::step::user::data_description::email%]"
+          "password": "[%key:component::bring::config::step::user::data_description::password%]"
         }
       }
     },
@@ -144,6 +144,19 @@
     },
     "notify_request_failed": {
       "message": "Failed to send push notification for Bring! due to a connection error, try again later"
+    },
+    "reaction_request_failed": {
+      "message": "Failed to send reaction for Bring! due to a connection error, try again later"
+    },
+    "activity_not_found": {
+      "message": "Failed to send reaction for Bring! — No recent activity found"
+    },
+    "entity_not_found": {
+      "message": "Failed to send reaction for Bring! — Unknown entity {entity_id}"
+    },
+
+    "entry_not_loaded": {
+      "message": "The account associated with this Bring! list is either not loaded or disabled in Home Assistant."
     }
   },
   "services": {
@@ -151,10 +164,6 @@
       "name": "[%key:component::notify::services::notify::name%]",
       "description": "Sends a mobile push notification to members of a shared Bring! list.",
       "fields": {
-        "entity_id": {
-          "name": "List",
-          "description": "Bring! list whose members (except sender) will be notified."
-        },
         "message": {
           "name": "Notification type",
           "description": "Type of push notification to send to list members."
@@ -162,6 +171,20 @@
         "item": {
           "name": "Item (Required if notification type 'Urgent message' is selected)",
           "description": "Item name(s) to include in an urgent message e.g. 'Attention! Attention! - We still urgently need: [Items]'"
+        }
+      }
+    },
+    "send_reaction": {
+      "name": "Send reaction",
+      "description": "Sends a reaction to a recent activity on a Bring! list by a member of the shared list.",
+      "fields": {
+        "entity_id": {
+          "name": "Activities",
+          "description": "Select the Bring! activities event entity for reacting to its most recent event"
+        },
+        "reaction": {
+          "name": "Reaction",
+          "description": "Type of reaction to send in response."
         }
       }
     }

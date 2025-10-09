@@ -13,7 +13,7 @@ from homeassistant.components.camera import (
     CameraEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
@@ -37,23 +37,27 @@ CAMERA_ENTITIES = (
         key="sub",
         stream="sub",
         translation_key="sub",
+        supported=lambda api, ch: api.supported(ch, "stream"),
     ),
     ReolinkCameraEntityDescription(
         key="main",
         stream="main",
         translation_key="main",
+        supported=lambda api, ch: api.supported(ch, "stream"),
         entity_registry_enabled_default=False,
     ),
     ReolinkCameraEntityDescription(
         key="snapshots_sub",
         stream="snapshots_sub",
         translation_key="snapshots_sub",
+        supported=lambda api, ch: api.supported(ch, "snapshot"),
         entity_registry_enabled_default=False,
     ),
     ReolinkCameraEntityDescription(
         key="snapshots",
         stream="snapshots_main",
         translation_key="snapshots_main",
+        supported=lambda api, ch: api.supported(ch, "snapshot"),
         entity_registry_enabled_default=False,
     ),
     ReolinkCameraEntityDescription(
@@ -65,21 +69,28 @@ CAMERA_ENTITIES = (
     ),
     ReolinkCameraEntityDescription(
         key="autotrack_sub",
-        stream="autotrack_sub",
-        translation_key="autotrack_sub",
+        stream="telephoto_sub",
+        translation_key="telephoto_sub",
         supported=lambda api, ch: api.supported(ch, "autotrack_stream"),
+    ),
+    ReolinkCameraEntityDescription(
+        key="autotrack_main",
+        stream="telephoto_main",
+        translation_key="telephoto_main",
+        supported=lambda api, ch: api.supported(ch, "autotrack_stream"),
+        entity_registry_enabled_default=False,
     ),
     ReolinkCameraEntityDescription(
         key="autotrack_snapshots_sub",
         stream="autotrack_snapshots_sub",
-        translation_key="autotrack_snapshots_sub",
+        translation_key="telephoto_snapshots_sub",
         supported=lambda api, ch: api.supported(ch, "autotrack_stream"),
         entity_registry_enabled_default=False,
     ),
     ReolinkCameraEntityDescription(
         key="autotrack_snapshots_main",
         stream="autotrack_snapshots_main",
-        translation_key="autotrack_snapshots_main",
+        translation_key="telephoto_snapshots_main",
         supported=lambda api, ch: api.supported(ch, "autotrack_stream"),
         entity_registry_enabled_default=False,
     ),
@@ -89,7 +100,7 @@ CAMERA_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
     reolink_data: ReolinkData = config_entry.runtime_data

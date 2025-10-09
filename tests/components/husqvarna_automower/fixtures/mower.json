@@ -86,7 +86,8 @@
           "override": {
             "action": "NOT_ACTIVE"
           },
-          "restrictedReason": "WEEK_SCHEDULE"
+          "restrictedReason": "WEEK_SCHEDULE",
+          "externalReason": 4000
         },
         "metadata": {
           "connected": true,
@@ -176,13 +177,15 @@
         ],
         "statistics": {
           "cuttingBladeUsageTime": 123,
+          "downTime": 3600,
           "numberOfChargingCycles": 1380,
           "numberOfCollisions": 11396,
           "totalChargingTime": 4334400,
           "totalCuttingTime": 4194000,
           "totalDriveDistance": 1780272,
           "totalRunningTime": 4564800,
-          "totalSearchingTime": 370800
+          "totalSearchingTime": 370800,
+          "upTime": 7200
         },
         "stayOutZones": {
           "dirty": false,

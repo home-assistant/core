@@ -13,6 +13,7 @@
       'min_temp': 5.0,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -33,6 +34,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-5-MatterThermostat-513-0',
@@ -75,6 +77,7 @@
       'min_temp': 10.0,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -95,6 +98,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-MatterThermostat-513-0',
@@ -141,6 +145,7 @@
       'min_temp': 16.0,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -161,6 +166,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterThermostat-513-0',
@@ -193,6 +199,71 @@
     'state': 'off',
   })
 # ---
+# name: test_climates[tado_smart_radiator_thermostat_x][climate.smart_radiator_thermostat_x-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 5.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.smart_radiator_thermostat_x',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[tado_smart_radiator_thermostat_x][climate.smart_radiator_thermostat_x-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 74.92,
+      'current_temperature': 20.9,
+      'friendly_name': 'Smart Radiator Thermostat X',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 18.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.smart_radiator_thermostat_x',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_climates[thermostat][climate.longan_link_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -209,6 +280,7 @@
       'min_temp': 7,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -229,6 +301,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 387>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterThermostat-513-0',

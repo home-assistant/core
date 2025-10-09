@@ -16,7 +16,7 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -26,7 +26,7 @@ from .models import MatterDiscoverySchema
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Button platform."""
     matter = get_matter(hass)
@@ -142,5 +142,17 @@ DISCOVERY_SCHEMAS = [
         ),
         value_contains=clusters.ActivatedCarbonFilterMonitoring.Commands.ResetCondition.command_id,
         allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="SmokeCoAlarmSelfTestRequest",
+            translation_key="self_test_request",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            command=clusters.SmokeCoAlarm.Commands.SelfTestRequest,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.AcceptedCommandList,),
+        value_contains=clusters.SmokeCoAlarm.Commands.SelfTestRequest.command_id,
     ),
 ]

@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
 from . import NordPoolConfigEntry
@@ -34,8 +34,11 @@ def validate_prices(
     index: int,
 ) -> float | None:
     """Validate and return."""
-    if result := func(entity)[area][index]:
-        return result / 1000
+    try:
+        if (result := func(entity)[area][index]) is not None:
+            return result / 1000
+    except KeyError:
+        return None
     return None
 
 
@@ -271,7 +274,7 @@ DAILY_AVERAGE_PRICES_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: NordPoolConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Nord Pool sensor platform."""
 

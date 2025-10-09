@@ -5,28 +5,39 @@ from unittest.mock import AsyncMock, Mock, PropertyMock
 
 from aioshelly.const import (
     BLU_TRV_IDENTIFIER,
-    MODEL_BLU_GATEWAY_GEN3,
+    MODEL_BLU_GATEWAY_G3,
     MODEL_VALVE,
     MODEL_WALL_DISPLAY,
 )
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
+    FAN_LOW,
     PRESET_NONE,
+    SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.shelly.const import BLU_TRV_TIMEOUT, DOMAIN
+from homeassistant.components.humidifier import ATTR_HUMIDITY
+from homeassistant.components.shelly.climate import PRESET_FROST_PROTECTION
+from homeassistant.components.shelly.const import (
+    DOMAIN,
+    MODEL_LINKEDGO_ST802_THERMOSTAT,
+    MODEL_LINKEDGO_ST1820_THERMOSTAT,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
@@ -34,6 +45,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -44,14 +56,18 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import (
     MOCK_MAC,
-    get_entity_attribute,
     init_integration,
+    patch_platforms,
     register_device,
     register_entity,
 )
 from .conftest import MOCK_STATUS_COAP
 
-from tests.common import mock_restore_cache, mock_restore_cache_with_extra_data
+from tests.common import (
+    async_load_json_object_fixture,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 
 SENSOR_BLOCK_ID = 3
 DEVICE_BLOCK_ID = 4
@@ -60,11 +76,19 @@ GAS_VALVE_BLOCK_ID = 6
 ENTITY_ID = f"{CLIMATE_DOMAIN}.test_name"
 
 
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.CLIMATE, Platform.SWITCH]):
+        yield
+
+
 async def test_climate_hvac_mode(
     hass: HomeAssistant,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test climate hvac mode service."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
@@ -83,12 +107,9 @@ async def test_climate_hvac_mode(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Test initial hvac mode - off
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == HVACMode.OFF
+    assert hass.states.get(ENTITY_ID) == snapshot(name=f"{ENTITY_ID}-state")
 
-    entry = entity_registry.async_get(ENTITY_ID)
-    assert entry
-    assert entry.unique_id == "123456789ABC-sensor_0"
+    assert entity_registry.async_get(ENTITY_ID) == snapshot(name=f"{ENTITY_ID}-entry")
 
     # Test set hvac mode heat
     await hass.services.async_call(
@@ -103,7 +124,8 @@ async def test_climate_hvac_mode(
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 20.0)
     mock_block_device.mock_update()
-    state = hass.states.get(ENTITY_ID)
+
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.state == HVACMode.HEAT
 
     # Test set hvac mode off
@@ -120,13 +142,13 @@ async def test_climate_hvac_mode(
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 4.0)
     mock_block_device.mock_update()
-    state = hass.states.get(ENTITY_ID)
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.state == HVACMode.OFF
 
     # Test unavailable on error
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 1)
     mock_block_device.mock_update()
-    state = hass.states.get(ENTITY_ID)
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -143,7 +165,7 @@ async def test_climate_set_temperature(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(ENTITY_ID)
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.state == HVACMode.OFF
     assert state.attributes[ATTR_TEMPERATURE] == 4
 
@@ -197,7 +219,7 @@ async def test_climate_set_preset_mode(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(ENTITY_ID)
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
     # Test set Profile2
@@ -215,7 +237,7 @@ async def test_climate_set_preset_mode(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "mode", 2)
     mock_block_device.mock_update()
 
-    state = hass.states.get(ENTITY_ID)
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.attributes[ATTR_PRESET_MODE] == "Profile2"
 
     # Set preset to none
@@ -234,7 +256,7 @@ async def test_climate_set_preset_mode(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "mode", 0)
     mock_block_device.mock_update()
 
-    state = hass.states.get(ENTITY_ID)
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
 
@@ -269,23 +291,26 @@ async def test_block_restored_climate(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == HVACMode.OFF
-    assert hass.states.get(entity_id).attributes.get("temperature") == 4.0
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.OFF
+    assert state.attributes.get(ATTR_TEMPERATURE) == 4.0
 
     # Partial update, should not change state
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == HVACMode.OFF
-    assert hass.states.get(entity_id).attributes.get("temperature") == 4.0
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.OFF
+    assert state.attributes.get(ATTR_TEMPERATURE) == 4.0
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(entity_id).state == HVACMode.OFF
-    assert hass.states.get(entity_id).attributes.get("temperature") == 4.0
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.OFF
+    assert state.attributes.get(ATTR_TEMPERATURE) == 4.0
 
     # Test set hvac mode heat, target temp should be set to last target temp (22)
     await hass.services.async_call(
@@ -300,9 +325,10 @@ async def test_block_restored_climate(
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 22.0)
     mock_block_device.mock_update()
-    state = hass.states.get(ENTITY_ID)
+
+    assert (state := hass.states.get(entity_id))
     assert state.state == HVACMode.HEAT
-    assert hass.states.get(entity_id).attributes.get("temperature") == 22.0
+    assert state.attributes.get(ATTR_TEMPERATURE) == 22.0
 
 
 async def test_block_restored_climate_us_customary(
@@ -337,17 +363,19 @@ async def test_block_restored_climate_us_customary(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == HVACMode.OFF
-    assert hass.states.get(entity_id).attributes.get("temperature") == 39
-    assert hass.states.get(entity_id).attributes.get("current_temperature") == 67
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.OFF
+    assert state.attributes.get(ATTR_TEMPERATURE) == 39
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 67
 
     # Partial update, should not change state
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == HVACMode.OFF
-    assert hass.states.get(entity_id).attributes.get("temperature") == 39
-    assert hass.states.get(entity_id).attributes.get("current_temperature") == 67
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.OFF
+    assert state.attributes.get(ATTR_TEMPERATURE) == 39
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 67
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
@@ -356,9 +384,10 @@ async def test_block_restored_climate_us_customary(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(entity_id).state == HVACMode.OFF
-    assert hass.states.get(entity_id).attributes.get("temperature") == 39
-    assert hass.states.get(entity_id).attributes.get("current_temperature") == 65
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.OFF
+    assert state.attributes.get(ATTR_TEMPERATURE) == 39
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 65
 
     # Test set hvac mode heat, target temp should be set to last target temp (10.0/50)
     await hass.services.async_call(
@@ -373,9 +402,10 @@ async def test_block_restored_climate_us_customary(
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 10.0)
     mock_block_device.mock_update()
-    state = hass.states.get(ENTITY_ID)
+
+    assert (state := hass.states.get(entity_id))
     assert state.state == HVACMode.HEAT
-    assert hass.states.get(entity_id).attributes.get("temperature") == 50
+    assert state.attributes.get(ATTR_TEMPERATURE) == 50
 
 
 async def test_block_restored_climate_unavailable(
@@ -403,7 +433,8 @@ async def test_block_restored_climate_unavailable(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == HVACMode.OFF
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.OFF
 
 
 async def test_block_restored_climate_set_preset_before_online(
@@ -431,7 +462,8 @@ async def test_block_restored_climate_set_preset_before_online(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == HVACMode.HEAT
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.HEAT
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
@@ -460,7 +492,10 @@ async def test_block_set_mode_connection_error(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Device communication error occurred while calling action for climate.test_name of Test name",
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -603,27 +638,21 @@ async def test_rpc_climate_hvac_mode(
     entity_registry: EntityRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test climate hvac mode service."""
-    entity_id = "climate.test_name_thermostat_0"
+    entity_id = "climate.test_name"
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(entity_id)
-    assert state.state == HVACMode.HEAT
-    assert state.attributes[ATTR_TEMPERATURE] == 23
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 12.3
-    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
-    assert state.attributes[ATTR_CURRENT_HUMIDITY] == 44.4
+    assert (state := hass.states.get(entity_id)) == snapshot(name=f"{entity_id}-state")
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "123456789ABC-thermostat:0"
+    assert entity_registry.async_get(entity_id) == snapshot(name=f"{entity_id}-entry")
 
     monkeypatch.setitem(mock_rpc_device.status["thermostat:0"], "output", False)
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
+    assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 44.4
 
@@ -639,7 +668,7 @@ async def test_rpc_climate_hvac_mode(
     mock_rpc_device.call_rpc.assert_called_once_with(
         "Thermostat.SetConfig", {"config": {"id": 0, "enable": False}}
     )
-    state = hass.states.get(entity_id)
+    assert (state := hass.states.get(entity_id))
     assert state.state == HVACMode.OFF
 
 
@@ -650,22 +679,21 @@ async def test_rpc_climate_without_humidity(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test climate entity without the humidity value."""
-    entity_id = "climate.test_name_thermostat_0"
+    entity_id = "climate.test_name"
     new_status = deepcopy(mock_rpc_device.status)
     new_status.pop("humidity:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(entity_id)
+    assert (state := hass.states.get(entity_id))
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 23
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 12.3
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
     assert ATTR_CURRENT_HUMIDITY not in state.attributes
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-thermostat:0"
 
 
@@ -673,11 +701,11 @@ async def test_rpc_climate_set_temperature(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test climate set target temperature."""
-    entity_id = "climate.test_name_thermostat_0"
+    entity_id = "climate.test_name"
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(entity_id)
+    assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_TEMPERATURE] == 23
 
     monkeypatch.setitem(mock_rpc_device.status["thermostat:0"], "target_C", 28)
@@ -692,7 +720,7 @@ async def test_rpc_climate_set_temperature(
     mock_rpc_device.call_rpc.assert_called_once_with(
         "Thermostat.SetConfig", {"config": {"id": 0, "target_C": 28}}
     )
-    state = hass.states.get(entity_id)
+    assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_TEMPERATURE] == 28
 
 
@@ -700,14 +728,14 @@ async def test_rpc_climate_hvac_mode_cool(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test climate with hvac mode cooling."""
-    entity_id = "climate.test_name_thermostat_0"
+    entity_id = "climate.test_name"
     new_config = deepcopy(mock_rpc_device.config)
     new_config["thermostat:0"]["type"] = "cooling"
     monkeypatch.setattr(mock_rpc_device, "config", new_config)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(entity_id)
+    assert (state := hass.states.get(entity_id))
     assert state.state == HVACMode.COOL
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
 
@@ -717,10 +745,11 @@ async def test_wall_display_thermostat_mode(
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test Wall Display in thermostat mode."""
-    climate_entity_id = "climate.test_name_thermostat_0"
-    switch_entity_id = "switch.test_switch_0"
+    climate_entity_id = "climate.test_name"
+    switch_entity_id = "switch.test_name_test_switch_0"
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
@@ -730,13 +759,11 @@ async def test_wall_display_thermostat_mode(
 
     # the climate entity should be created
     state = hass.states.get(climate_entity_id)
-    assert state
-    assert state.state == HVACMode.HEAT
+    assert state == snapshot(name=f"{climate_entity_id}-state")
     assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
 
     entry = entity_registry.async_get(climate_entity_id)
-    assert entry
-    assert entry.unique_id == "123456789ABC-thermostat:0"
+    assert entry == snapshot(name=f"{climate_entity_id}-entry")
 
 
 async def test_wall_display_thermostat_mode_external_actuator(
@@ -746,45 +773,47 @@ async def test_wall_display_thermostat_mode_external_actuator(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test Wall Display in thermostat mode with an external actuator."""
-    climate_entity_id = "climate.test_name_thermostat_0"
-    switch_entity_id = "switch.test_switch_0"
+    climate_entity_id = "climate.test_name"
+    switch_entity_id = "switch.test_name_test_switch_0"
 
     new_status = deepcopy(mock_rpc_device.status)
     new_status["sys"]["relay_in_thermostat"] = False
+    new_status.pop("cover:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     # the switch entity should be created
-    state = hass.states.get(switch_entity_id)
-    assert state
+    assert (state := hass.states.get(switch_entity_id))
     assert state.state == STATE_ON
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     # the climate entity should be created
-    state = hass.states.get(climate_entity_id)
-    assert state
+    assert (state := hass.states.get(climate_entity_id))
     assert state.state == HVACMode.HEAT
     assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
 
-    entry = entity_registry.async_get(climate_entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(climate_entity_id))
     assert entry.unique_id == "123456789ABC-thermostat:0"
 
 
 async def test_blu_trv_climate_set_temperature(
     hass: HomeAssistant,
     mock_blu_trv: Mock,
+    entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test BLU TRV set target temperature."""
 
     entity_id = "climate.trv_name"
     monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
-    assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 17.1
+    assert (state := hass.states.get(entity_id)) == snapshot(name=f"{entity_id}-state")
+
+    assert entity_registry.async_get(entity_id) == snapshot(name=f"{entity_id}-entry")
 
     monkeypatch.setitem(
         mock_blu_trv.status[f"{BLU_TRV_IDENTIFIER}:200"], "target_C", 28
@@ -797,17 +826,10 @@ async def test_blu_trv_climate_set_temperature(
     )
     mock_blu_trv.mock_update()
 
-    mock_blu_trv.call_rpc.assert_called_once_with(
-        "BluTRV.Call",
-        {
-            "id": 200,
-            "method": "Trv.SetTarget",
-            "params": {"id": 0, "target_C": 28.0},
-        },
-        BLU_TRV_TIMEOUT,
-    )
+    mock_blu_trv.blu_trv_set_target_temperature.assert_called_once_with(200, 28.0)
 
-    assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 28
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_TEMPERATURE] == 28
 
 
 async def test_blu_trv_climate_disabled(
@@ -820,16 +842,18 @@ async def test_blu_trv_climate_disabled(
     entity_id = "climate.trv_name"
     monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
-    assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 17.1
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_TEMPERATURE] == 17.1
 
     monkeypatch.setitem(
         mock_blu_trv.config[f"{BLU_TRV_IDENTIFIER}:200"], "enable", False
     )
     mock_blu_trv.mock_update()
 
-    assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) is None
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_TEMPERATURE] is None
 
 
 async def test_blu_trv_climate_hvac_action(
@@ -842,11 +866,257 @@ async def test_blu_trv_climate_hvac_action(
     entity_id = "climate.trv_name"
     monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
-    assert get_entity_attribute(hass, entity_id, ATTR_HVAC_ACTION) == HVACAction.IDLE
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
     monkeypatch.setitem(mock_blu_trv.status[f"{BLU_TRV_IDENTIFIER}:200"], "pos", 10)
     mock_blu_trv.mock_update()
 
-    assert get_entity_attribute(hass, entity_id, ATTR_HVAC_ACTION) == HVACAction.HEATING
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            DeviceConnectionError,
+            "Device communication error occurred while calling action for climate.trv_name of Test name",
+        ),
+        (
+            RpcCallError(999),
+            "RPC call error occurred while calling action for climate.trv_name of Test name",
+        ),
+    ],
+)
+async def test_blu_trv_set_target_temp_exc(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """BLU TRV target temperature setting test with excepton."""
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    mock_blu_trv.blu_trv_set_target_temperature.side_effect = exception
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: "climate.trv_name", ATTR_TEMPERATURE: 28},
+            blocking=True,
+        )
+
+
+async def test_blu_trv_set_target_temp_auth_error(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+) -> None:
+    """BLU TRV target temperature setting test with authentication error."""
+    entry = await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    mock_blu_trv.blu_trv_set_target_temperature.side_effect = InvalidAuthError
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.trv_name", ATTR_TEMPERATURE: 28},
+        blocking=True,
+    )
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id
+
+
+async def test_rpc_linkedgo_st802_thermostat(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test LINKEDGO ST802 thermostat climate."""
+    entity_id = "climate.test_name"
+
+    device_fixture = await async_load_json_object_fixture(
+        hass, "st802_gen3.json", DOMAIN
+    )
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
+    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
+    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+
+    await init_integration(hass, 3, model=MODEL_LINKEDGO_ST802_THERMOSTAT)
+
+    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state")
+
+    assert entity_registry.async_get(entity_id) == snapshot(name=f"{entity_id}-entry")
+
+    # Test HVAC mode cool
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
+        blocking=True,
+    )
+    monkeypatch.setitem(mock_rpc_device.status["enum:201"], "value", "cool")
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.boolean_set.assert_called_once_with(201, True)
+    mock_rpc_device.enum_set.assert_called_once_with(201, "cool")
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.COOL
+
+    # Test set temperature
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
+        blocking=True,
+    )
+    monkeypatch.setitem(mock_rpc_device.status["number:203"], "value", 25)
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.number_set.assert_called_once_with(203, 25.0)
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes.get(ATTR_TEMPERATURE) == 25
+
+    # Test set humidity
+    mock_rpc_device.number_set.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HUMIDITY,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HUMIDITY: 66},
+        blocking=True,
+    )
+    monkeypatch.setitem(mock_rpc_device.status["number:202"], "value", 66)
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.number_set.assert_called_once_with(202, 66.0)
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes.get(ATTR_HUMIDITY) == 66
+
+    # Anti-Freeze preset mode
+    mock_rpc_device.boolean_set.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_FROST_PROTECTION},
+        blocking=True,
+    )
+    monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.boolean_set.assert_called_once_with(200, True)
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_FROST_PROTECTION
+
+    # Test set fan mode
+    mock_rpc_device.enum_set.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_LOW},
+        blocking=True,
+    )
+    monkeypatch.setitem(mock_rpc_device.status["enum:200"], "value", "low")
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.enum_set.assert_called_once_with(200, "low")
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes.get(ATTR_FAN_MODE) == FAN_LOW
+
+    # Test HVAC mode off
+    mock_rpc_device.boolean_set.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+    monkeypatch.setitem(mock_rpc_device.status["boolean:201"], "value", False)
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.boolean_set.assert_called_once_with(201, False)
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.OFF
+
+
+async def test_rpc_linkedgo_st1820_thermostat(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test LINKEDGO ST1820 thermostat climate."""
+    entity_id = "climate.test_name"
+
+    device_fixture = await async_load_json_object_fixture(
+        hass, "st1820_gen3.json", DOMAIN
+    )
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
+    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
+    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+
+    await init_integration(hass, 3, model=MODEL_LINKEDGO_ST1820_THERMOSTAT)
+
+    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state")
+
+    assert entity_registry.async_get(entity_id) == snapshot(name=f"{entity_id}-entry")
+
+    # Test set temperature
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
+        blocking=True,
+    )
+    monkeypatch.setitem(mock_rpc_device.status["number:202"], "value", 25)
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.number_set.assert_called_once_with(202, 25.0)
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes.get(ATTR_TEMPERATURE) == 25
+
+    # Anti-Freeze preset mode
+    mock_rpc_device.boolean_set.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_FROST_PROTECTION},
+        blocking=True,
+    )
+    monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.boolean_set.assert_called_once_with(200, True)
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_FROST_PROTECTION
+
+    # Test HVAC mode off
+    mock_rpc_device.boolean_set.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+    monkeypatch.setitem(mock_rpc_device.status["boolean:202"], "value", False)
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.boolean_set.assert_called_once_with(202, False)
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.OFF

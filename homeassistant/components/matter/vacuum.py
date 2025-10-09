@@ -17,7 +17,8 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity
 from .helpers import get_matter
@@ -30,10 +31,10 @@ class OperationalState(IntEnum):
     Combination of generic OperationalState and RvcOperationalState.
     """
 
-    NO_ERROR = 0x00
-    UNABLE_TO_START_OR_RESUME = 0x01
-    UNABLE_TO_COMPLETE_OPERATION = 0x02
-    COMMAND_INVALID_IN_STATE = 0x03
+    STOPPED = 0x00
+    RUNNING = 0x01
+    PAUSED = 0x02
+    ERROR = 0x03
     SEEKING_CHARGER = 0x40
     CHARGING = 0x41
     DOCKED = 0x42
@@ -50,7 +51,7 @@ class ModeTag(IntEnum):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter vacuum platform from Config Entry."""
     matter = get_matter(hass)
@@ -62,14 +63,36 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 
     _last_accepted_commands: list[int] | None = None
     _supported_run_modes: (
-        dict[int, clusters.RvcCleanMode.Structs.ModeOptionStruct] | None
+        dict[int, clusters.RvcRunMode.Structs.ModeOptionStruct] | None
     ) = None
     entity_description: StateVacuumEntityDescription
     _platform_translation_key = "vacuum"
 
+    def _get_run_mode_by_tag(
+        self, tag: ModeTag
+    ) -> clusters.RvcRunMode.Structs.ModeOptionStruct | None:
+        """Get the run mode by tag."""
+        supported_run_modes = self._supported_run_modes or {}
+        for mode in supported_run_modes.values():
+            for t in mode.modeTags:
+                if t.value == tag.value:
+                    return mode
+        return None
+
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
-        await self.send_device_command(clusters.OperationalState.Commands.Stop())
+        # We simply set the RvcRunMode to the first runmode
+        # that has the idle tag to stop the vacuum cleaner.
+        # this is compatible with both Matter 1.2 and 1.3+ devices.
+        mode = self._get_run_mode_by_tag(ModeTag.IDLE)
+        if mode is None:
+            raise HomeAssistantError(
+                "No supported run mode found to stop the vacuum cleaner."
+            )
+
+        await self.send_device_command(
+            clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
+        )
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
@@ -83,29 +106,40 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Start or resume the cleaning task."""
         if TYPE_CHECKING:
             assert self._last_accepted_commands is not None
+
+        accepted_operational_commands = self._last_accepted_commands
         if (
             clusters.RvcOperationalState.Commands.Resume.command_id
-            in self._last_accepted_commands
+            in accepted_operational_commands
+            and self.state == VacuumActivity.PAUSED
         ):
+            # vacuum is paused and supports resume command
             await self.send_device_command(
                 clusters.RvcOperationalState.Commands.Resume()
             )
-        else:
-            await self.send_device_command(clusters.OperationalState.Commands.Start())
+            return
+
+        # We simply set the RvcRunMode to the first runmode
+        # that has the cleaning tag to start the vacuum cleaner.
+        # this is compatible with both Matter 1.2 and 1.3+ devices.
+        mode = self._get_run_mode_by_tag(ModeTag.CLEANING)
+        if mode is None:
+            raise HomeAssistantError(
+                "No supported run mode found to start the vacuum cleaner."
+            )
+
+        await self.send_device_command(
+            clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
+        )
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
-        await self.send_device_command(clusters.OperationalState.Commands.Pause())
+        await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
 
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
-        # optional battery level
-        if VacuumEntityFeature.BATTERY & self._attr_supported_features:
-            self._attr_battery_level = self.get_matter_attribute_value(
-                clusters.PowerSource.Attributes.BatPercentRemaining
-            )
         # derive state from the run mode + operational state
         run_mode_raw: int = self.get_matter_attribute_value(
             clusters.RvcRunMode.Attributes.CurrentMode
@@ -120,17 +154,18 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             state = VacuumActivity.DOCKED
         elif operational_state == OperationalState.SEEKING_CHARGER:
             state = VacuumActivity.RETURNING
-        elif operational_state in (
-            OperationalState.UNABLE_TO_COMPLETE_OPERATION,
-            OperationalState.UNABLE_TO_START_OR_RESUME,
-        ):
+        elif operational_state == OperationalState.ERROR:
             state = VacuumActivity.ERROR
+        elif operational_state == OperationalState.PAUSED:
+            state = VacuumActivity.PAUSED
         elif (run_mode := self._supported_run_modes.get(run_mode_raw)) is not None:
             tags = {x.value for x in run_mode.modeTags}
             if ModeTag.CLEANING in tags:
                 state = VacuumActivity.CLEANING
             elif ModeTag.IDLE in tags:
                 state = VacuumActivity.IDLE
+            elif ModeTag.MAPPING in tags:
+                state = VacuumActivity.CLEANING
         self._attr_activity = state
 
     @callback
@@ -144,17 +179,15 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             return
         self._last_accepted_commands = accepted_operational_commands
         supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
+        supported_features |= VacuumEntityFeature.START
         supported_features |= VacuumEntityFeature.STATE
-        # optional battery attribute = battery feature
-        if self.get_matter_attribute_value(
-            clusters.PowerSource.Attributes.BatPercentRemaining
-        ):
-            supported_features |= VacuumEntityFeature.BATTERY
+        supported_features |= VacuumEntityFeature.STOP
+
         # optional identify cluster = locate feature (value must be not None or 0)
         if self.get_matter_attribute_value(clusters.Identify.Attributes.IdentifyType):
             supported_features |= VacuumEntityFeature.LOCATE
         # create a map of supported run modes
-        run_modes: list[clusters.RvcCleanMode.Structs.ModeOptionStruct] = (
+        run_modes: list[clusters.RvcRunMode.Structs.ModeOptionStruct] = (
             self.get_matter_attribute_value(
                 clusters.RvcRunMode.Attributes.SupportedModes
             )
@@ -166,22 +199,6 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             in accepted_operational_commands
         ):
             supported_features |= VacuumEntityFeature.PAUSE
-        if (
-            clusters.OperationalState.Commands.Stop.command_id
-            in accepted_operational_commands
-        ):
-            supported_features |= VacuumEntityFeature.STOP
-        if (
-            clusters.OperationalState.Commands.Start.command_id
-            in accepted_operational_commands
-        ):
-            # note that start has been replaced by resume in rev2 of the spec
-            supported_features |= VacuumEntityFeature.START
-        if (
-            clusters.RvcOperationalState.Commands.Resume.command_id
-            in accepted_operational_commands
-        ):
-            supported_features |= VacuumEntityFeature.START
         if (
             clusters.RvcOperationalState.Commands.GoHome.command_id
             in accepted_operational_commands
@@ -201,11 +218,7 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterVacuum,
         required_attributes=(
             clusters.RvcRunMode.Attributes.CurrentMode,
-            clusters.RvcOperationalState.Attributes.CurrentPhase,
-        ),
-        optional_attributes=(
-            clusters.RvcCleanMode.Attributes.CurrentMode,
-            clusters.PowerSource.Attributes.BatPercentRemaining,
+            clusters.RvcOperationalState.Attributes.OperationalState,
         ),
         device_type=(device_types.RoboticVacuumCleaner,),
         allow_none_value=True,

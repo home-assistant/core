@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'garden',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -16,7 +17,6 @@
         'c7233734-b219-4287-a173-08e3643f89f0',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Husqvarna',
@@ -26,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '123',
-    'suggested_area': 'Garden',
     'sw_version': None,
     'via_device_id': None,
   })

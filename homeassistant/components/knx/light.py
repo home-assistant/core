@@ -1,4 +1,4 @@
-"""Support for KNX/IP lights."""
+"""Support for KNX light entities."""
 
 from __future__ import annotations
 
@@ -22,20 +22,20 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import color as color_util
 
-from . import KNXModule
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY, ColorTempModes
 from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import LightSchema
 from .storage.const import (
+    CONF_COLOR,
     CONF_COLOR_TEMP_MAX,
     CONF_COLOR_TEMP_MIN,
-    CONF_DPT,
     CONF_ENTITY,
     CONF_GA_BLUE_BRIGHTNESS,
     CONF_GA_BLUE_SWITCH,
@@ -45,23 +45,21 @@ from .storage.const import (
     CONF_GA_GREEN_BRIGHTNESS,
     CONF_GA_GREEN_SWITCH,
     CONF_GA_HUE,
-    CONF_GA_PASSIVE,
     CONF_GA_RED_BRIGHTNESS,
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
-    CONF_GA_STATE,
     CONF_GA_SWITCH,
     CONF_GA_WHITE_BRIGHTNESS,
     CONF_GA_WHITE_SWITCH,
-    CONF_GA_WRITE,
 )
 from .storage.entity_store_schema import LightColorMode
+from .storage.util import ConfigExtractor
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up light(s) for KNX platform."""
     knx_module = hass.data[KNX_MODULE_KEY]
@@ -203,94 +201,116 @@ def _create_yaml_light(xknx: XKNX, config: ConfigType) -> XknxLight:
 def _create_ui_light(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxLight:
     """Return a KNX Light device to be used within XKNX."""
 
-    def get_write(key: str) -> str | None:
-        """Get the write group address."""
-        return knx_config[key][CONF_GA_WRITE] if key in knx_config else None
-
-    def get_state(key: str) -> list[Any] | None:
-        """Get the state group address."""
-        return (
-            [knx_config[key][CONF_GA_STATE], *knx_config[key][CONF_GA_PASSIVE]]
-            if key in knx_config
-            else None
-        )
-
-    def get_dpt(key: str) -> str | None:
-        """Get the DPT."""
-        return knx_config[key].get(CONF_DPT) if key in knx_config else None
+    conf = ConfigExtractor(knx_config)
 
     group_address_tunable_white = None
     group_address_tunable_white_state = None
     group_address_color_temp = None
     group_address_color_temp_state = None
+
     color_temperature_type = ColorTemperatureType.UINT_2_BYTE
-    if ga_color_temp := knx_config.get(CONF_GA_COLOR_TEMP):
-        if ga_color_temp[CONF_DPT] == ColorTempModes.RELATIVE.value:
-            group_address_tunable_white = ga_color_temp[CONF_GA_WRITE]
-            group_address_tunable_white_state = [
-                ga_color_temp[CONF_GA_STATE],
-                *ga_color_temp[CONF_GA_PASSIVE],
-            ]
+    if _color_temp_dpt := conf.get_dpt(CONF_GA_COLOR_TEMP):
+        if _color_temp_dpt == ColorTempModes.RELATIVE.value:
+            group_address_tunable_white = conf.get_write(CONF_GA_COLOR_TEMP)
+            group_address_tunable_white_state = conf.get_state_and_passive(
+                CONF_GA_COLOR_TEMP
+            )
         else:
             # absolute uint or float
-            group_address_color_temp = ga_color_temp[CONF_GA_WRITE]
-            group_address_color_temp_state = [
-                ga_color_temp[CONF_GA_STATE],
-                *ga_color_temp[CONF_GA_PASSIVE],
-            ]
-            if ga_color_temp[CONF_DPT] == ColorTempModes.ABSOLUTE_FLOAT.value:
+            group_address_color_temp = conf.get_write(CONF_GA_COLOR_TEMP)
+            group_address_color_temp_state = conf.get_state_and_passive(
+                CONF_GA_COLOR_TEMP
+            )
+            if _color_temp_dpt == ColorTempModes.ABSOLUTE_FLOAT.value:
                 color_temperature_type = ColorTemperatureType.FLOAT_2_BYTE
 
-    _color_dpt = get_dpt(CONF_GA_COLOR)
+    color_dpt = conf.get_dpt(CONF_COLOR, CONF_GA_COLOR)
+
     return XknxLight(
         xknx,
         name=name,
-        group_address_switch=get_write(CONF_GA_SWITCH),
-        group_address_switch_state=get_state(CONF_GA_SWITCH),
-        group_address_brightness=get_write(CONF_GA_BRIGHTNESS),
-        group_address_brightness_state=get_state(CONF_GA_BRIGHTNESS),
-        group_address_color=get_write(CONF_GA_COLOR)
-        if _color_dpt == LightColorMode.RGB
-        else None,
-        group_address_color_state=get_state(CONF_GA_COLOR)
-        if _color_dpt == LightColorMode.RGB
-        else None,
-        group_address_rgbw=get_write(CONF_GA_COLOR)
-        if _color_dpt == LightColorMode.RGBW
-        else None,
-        group_address_rgbw_state=get_state(CONF_GA_COLOR)
-        if _color_dpt == LightColorMode.RGBW
-        else None,
-        group_address_hue=get_write(CONF_GA_HUE),
-        group_address_hue_state=get_state(CONF_GA_HUE),
-        group_address_saturation=get_write(CONF_GA_SATURATION),
-        group_address_saturation_state=get_state(CONF_GA_SATURATION),
-        group_address_xyy_color=get_write(CONF_GA_COLOR)
-        if _color_dpt == LightColorMode.XYY
-        else None,
-        group_address_xyy_color_state=get_write(CONF_GA_COLOR)
-        if _color_dpt == LightColorMode.XYY
-        else None,
+        group_address_switch=conf.get_write(CONF_GA_SWITCH),
+        group_address_switch_state=conf.get_state_and_passive(CONF_GA_SWITCH),
+        group_address_brightness=conf.get_write(CONF_GA_BRIGHTNESS),
+        group_address_brightness_state=conf.get_state_and_passive(CONF_GA_BRIGHTNESS),
+        group_address_color=(
+            conf.get_write(CONF_COLOR, CONF_GA_COLOR)
+            if color_dpt == LightColorMode.RGB
+            else None
+        ),
+        group_address_color_state=(
+            conf.get_state_and_passive(CONF_COLOR, CONF_GA_COLOR)
+            if color_dpt == LightColorMode.RGB
+            else None
+        ),
+        group_address_rgbw=(
+            conf.get_write(CONF_COLOR, CONF_GA_COLOR)
+            if color_dpt == LightColorMode.RGBW
+            else None
+        ),
+        group_address_rgbw_state=(
+            conf.get_state_and_passive(CONF_COLOR, CONF_GA_COLOR)
+            if color_dpt == LightColorMode.RGBW
+            else None
+        ),
+        group_address_hue=conf.get_write(CONF_COLOR, CONF_GA_HUE),
+        group_address_hue_state=conf.get_state_and_passive(CONF_COLOR, CONF_GA_HUE),
+        group_address_saturation=conf.get_write(CONF_COLOR, CONF_GA_SATURATION),
+        group_address_saturation_state=conf.get_state_and_passive(
+            CONF_COLOR, CONF_GA_SATURATION
+        ),
+        group_address_xyy_color=(
+            conf.get_write(CONF_COLOR, CONF_GA_COLOR)
+            if color_dpt == LightColorMode.XYY
+            else None
+        ),
+        group_address_xyy_color_state=(
+            conf.get_state_and_passive(CONF_COLOR, CONF_GA_COLOR)
+            if color_dpt == LightColorMode.XYY
+            else None
+        ),
         group_address_tunable_white=group_address_tunable_white,
         group_address_tunable_white_state=group_address_tunable_white_state,
         group_address_color_temperature=group_address_color_temp,
         group_address_color_temperature_state=group_address_color_temp_state,
-        group_address_switch_red=get_write(CONF_GA_RED_SWITCH),
-        group_address_switch_red_state=get_state(CONF_GA_RED_SWITCH),
-        group_address_brightness_red=get_write(CONF_GA_RED_BRIGHTNESS),
-        group_address_brightness_red_state=get_state(CONF_GA_RED_BRIGHTNESS),
-        group_address_switch_green=get_write(CONF_GA_GREEN_SWITCH),
-        group_address_switch_green_state=get_state(CONF_GA_GREEN_SWITCH),
-        group_address_brightness_green=get_write(CONF_GA_GREEN_BRIGHTNESS),
-        group_address_brightness_green_state=get_state(CONF_GA_GREEN_BRIGHTNESS),
-        group_address_switch_blue=get_write(CONF_GA_BLUE_SWITCH),
-        group_address_switch_blue_state=get_state(CONF_GA_BLUE_SWITCH),
-        group_address_brightness_blue=get_write(CONF_GA_BLUE_BRIGHTNESS),
-        group_address_brightness_blue_state=get_state(CONF_GA_BLUE_BRIGHTNESS),
-        group_address_switch_white=get_write(CONF_GA_WHITE_SWITCH),
-        group_address_switch_white_state=get_state(CONF_GA_WHITE_SWITCH),
-        group_address_brightness_white=get_write(CONF_GA_WHITE_BRIGHTNESS),
-        group_address_brightness_white_state=get_state(CONF_GA_WHITE_BRIGHTNESS),
+        group_address_switch_red=conf.get_write(CONF_COLOR, CONF_GA_RED_SWITCH),
+        group_address_switch_red_state=conf.get_state_and_passive(
+            CONF_COLOR, CONF_GA_RED_SWITCH
+        ),
+        group_address_brightness_red=conf.get_write(CONF_COLOR, CONF_GA_RED_BRIGHTNESS),
+        group_address_brightness_red_state=conf.get_state_and_passive(
+            CONF_COLOR, CONF_GA_RED_BRIGHTNESS
+        ),
+        group_address_switch_green=conf.get_write(CONF_COLOR, CONF_GA_GREEN_SWITCH),
+        group_address_switch_green_state=conf.get_state_and_passive(
+            CONF_COLOR, CONF_GA_GREEN_SWITCH
+        ),
+        group_address_brightness_green=conf.get_write(
+            CONF_COLOR, CONF_GA_GREEN_BRIGHTNESS
+        ),
+        group_address_brightness_green_state=conf.get_state_and_passive(
+            CONF_COLOR, CONF_GA_GREEN_BRIGHTNESS
+        ),
+        group_address_switch_blue=conf.get_write(CONF_COLOR, CONF_GA_BLUE_SWITCH),
+        group_address_switch_blue_state=conf.get_state_and_passive(
+            CONF_COLOR, CONF_GA_BLUE_SWITCH
+        ),
+        group_address_brightness_blue=conf.get_write(
+            CONF_COLOR, CONF_GA_BLUE_BRIGHTNESS
+        ),
+        group_address_brightness_blue_state=conf.get_state_and_passive(
+            CONF_COLOR, CONF_GA_BLUE_BRIGHTNESS
+        ),
+        group_address_switch_white=conf.get_write(CONF_COLOR, CONF_GA_WHITE_SWITCH),
+        group_address_switch_white_state=conf.get_state_and_passive(
+            CONF_COLOR, CONF_GA_WHITE_SWITCH
+        ),
+        group_address_brightness_white=conf.get_write(
+            CONF_COLOR, CONF_GA_WHITE_BRIGHTNESS
+        ),
+        group_address_brightness_white_state=conf.get_state_and_passive(
+            CONF_COLOR, CONF_GA_WHITE_BRIGHTNESS
+        ),
         color_temperature_type=color_temperature_type,
         min_kelvin=knx_config[CONF_COLOR_TEMP_MIN],
         max_kelvin=knx_config[CONF_COLOR_TEMP_MAX],

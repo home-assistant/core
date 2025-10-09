@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import BringConfigEntry, BringData, BringDataUpdateCoordinator
@@ -85,10 +85,10 @@ SENSOR_DESCRIPTIONS: tuple[BringSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BringConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.data
     lists_added: set[str] = set()
 
     @callback
@@ -117,6 +117,7 @@ class BringSensorEntity(BringBaseEntity, SensorEntity):
     """A sensor entity."""
 
     entity_description: BringSensorEntityDescription
+    coordinator: BringDataUpdateCoordinator
 
     def __init__(
         self,

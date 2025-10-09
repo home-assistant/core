@@ -10,7 +10,7 @@ from homeassistant.components import button, mqtt
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from .test_common import (
+from .common import (
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -55,7 +55,7 @@ DEFAULT_CONFIG = {
                 button.DOMAIN: {
                     "command_topic": "command-topic",
                     "name": "test",
-                    "object_id": "test_button",
+                    "default_entity_id": "button.test_button",
                     "payload_press": "beer press",
                     "qos": "2",
                 }

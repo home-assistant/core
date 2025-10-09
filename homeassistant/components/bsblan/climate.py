@@ -19,7 +19,7 @@ from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
 from . import BSBLanConfigEntry, BSBLanData
@@ -43,7 +43,7 @@ PRESET_MODES = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BSBLanConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BSBLAN device based on a config entry."""
     data = entry.runtime_data
@@ -81,11 +81,15 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
+        if self.coordinator.data.state.current_temperature is None:
+            return None
         return self.coordinator.data.state.current_temperature.value
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
+        if self.coordinator.data.state.target_temperature is None:
+            return None
         return self.coordinator.data.state.target_temperature.value
 
     @property

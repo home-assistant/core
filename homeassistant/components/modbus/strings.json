@@ -2,11 +2,11 @@
   "services": {
     "reload": {
       "name": "[%key:common::action::reload%]",
-      "description": "Reloads all modbus entities."
+      "description": "Reloads all Modbus entities."
     },
     "write_coil": {
       "name": "Write coil",
-      "description": "Writes to a modbus coil.",
+      "description": "Writes to a Modbus coil.",
       "fields": {
         "address": {
           "name": "Address",
@@ -17,8 +17,8 @@
           "description": "State to write."
         },
         "slave": {
-          "name": "Slave",
-          "description": "Address of the modbus unit/slave."
+          "name": "Server",
+          "description": "Address of the Modbus unit/server."
         },
         "hub": {
           "name": "Hub",
@@ -28,7 +28,7 @@
     },
     "write_register": {
       "name": "Write register",
-      "description": "Writes to a modbus holding register.",
+      "description": "Writes to a Modbus holding register.",
       "fields": {
         "address": {
           "name": "[%key:component::modbus::services::write_coil::fields::address::name%]",
@@ -50,7 +50,7 @@
     },
     "stop": {
       "name": "[%key:common::action::stop%]",
-      "description": "Stops modbus hub.",
+      "description": "Stops a Modbus hub.",
       "fields": {
         "hub": {
           "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]",
@@ -60,7 +60,7 @@
     },
     "restart": {
       "name": "[%key:common::action::restart%]",
-      "description": "Restarts modbus hub (if running stop then start).",
+      "description": "Restarts a Modbus hub (if running, stops then starts).",
       "fields": {
         "hub": {
           "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]",
@@ -70,14 +70,6 @@
     }
   },
   "issues": {
-    "removed_lazy_error_count": {
-      "title": "{config_key} configuration key is being removed",
-      "description": "Please remove the `{config_key}` key from the {integration} entry in your configuration.yaml file and restart Home Assistant to fix this issue. All errors will be reported, as lazy_error_count is accepted but ignored"
-    },
-    "deprecated_retries": {
-      "title": "{config_key} configuration key is being removed",
-      "description": "Please remove the `{config_key}` key from the {integration} entry in your configuration.yaml file and restart Home Assistant to fix this issue.\n\nThe maximum number of retries is now fixed to 3."
-    },
     "missing_modbus_name": {
       "title": "Modbus entry with host {sub_2} missing name",
       "description": "Please add `{sub_1}` key to the {integration} entry with host `{sub_2}` in your configuration.yaml file and restart Home Assistant to fix this issue\n\n. `{sub_1}: {sub_3}` have been added."
@@ -88,11 +80,11 @@
     },
     "duplicate_entity_entry": {
       "title": "Modbus {sub_1} address {sub_2} is duplicate, second entry not loaded.",
-      "description": "An address can only be associated with one entity, Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue."
+      "description": "An address can only be associated with one entity. Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue."
     },
     "duplicate_entity_name": {
       "title": "Modbus {sub_1} is duplicate, second entry not loaded.",
-      "description": "A entity name must be unique, Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue."
+      "description": "An entity name must be unique. Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue."
     },
     "no_entities": {
       "title": "Modbus {sub_1} contain no entities, entry not loaded.",

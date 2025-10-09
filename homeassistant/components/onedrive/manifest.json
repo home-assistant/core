@@ -1,6 +1,7 @@
 {
   "domain": "onedrive",
   "name": "OneDrive",
+  "after_dependencies": ["cloud"],
   "codeowners": ["@zweckj"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
@@ -8,6 +9,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["onedrive_personal_sdk"],
-  "quality_scale": "bronze",
-  "requirements": ["onedrive-personal-sdk==0.0.8"]
+  "quality_scale": "platinum",
+  "requirements": ["onedrive-personal-sdk==0.0.14"]
 }

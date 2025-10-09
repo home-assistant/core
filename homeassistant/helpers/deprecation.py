@@ -138,6 +138,41 @@ def deprecated_function[**_P, _R](
     return deprecated_decorator
 
 
+def deprecated_hass_argument[**_P, _T](
+    breaks_in_ha_version: str | None = None,
+) -> Callable[[Callable[_P, _T]], Callable[_P, _T]]:
+    """Decorate function to indicate that first argument hass will be ignored."""
+
+    def _decorator(func: Callable[_P, _T]) -> Callable[_P, _T]:
+        @functools.wraps(func)
+        def _inner(*args: _P.args, **kwargs: _P.kwargs) -> _T:
+            from homeassistant.core import HomeAssistant  # noqa: PLC0415
+
+            in_arg = len(args) > 0 and isinstance(args[0], HomeAssistant)
+            in_kwarg = "hass" in kwargs and isinstance(kwargs["hass"], HomeAssistant)
+
+            if in_arg or in_kwarg:
+                _print_deprecation_warning_internal(
+                    "hass",
+                    func.__module__,
+                    f"{func.__name__} without hass argument",
+                    "argument",
+                    f"passed to {func.__name__}",
+                    breaks_in_ha_version,
+                    log_when_no_integration_is_found=True,
+                )
+                if in_arg:
+                    args = args[1:]  # type: ignore[assignment]
+                if in_kwarg:
+                    kwargs.pop("hass")
+
+            return func(*args, **kwargs)
+
+        return _inner
+
+    return _decorator
+
+
 def _print_deprecation_warning(
     obj: Any,
     replacement: str,
@@ -190,15 +225,14 @@ def _print_deprecation_warning_internal_impl(
     *,
     log_when_no_integration_is_found: bool,
 ) -> None:
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.core import async_get_hass_or_none
-    from homeassistant.loader import async_suggest_report_issue
+    from homeassistant.core import async_get_hass_or_none  # noqa: PLC0415
+    from homeassistant.loader import async_suggest_report_issue  # noqa: PLC0415
 
-    from .frame import MissingIntegrationFrame, get_integration_frame
+    from .frame import MissingIntegrationFrame, get_integration_frame  # noqa: PLC0415
 
     logger = logging.getLogger(module_name)
     if breaks_in_ha_version:
-        breaks_in = f" which will be removed in HA Core {breaks_in_ha_version}"
+        breaks_in = f" It will be removed in HA Core {breaks_in_ha_version}."
     else:
         breaks_in = ""
     try:
@@ -206,9 +240,10 @@ def _print_deprecation_warning_internal_impl(
     except MissingIntegrationFrame:
         if log_when_no_integration_is_found:
             logger.warning(
-                "%s is a deprecated %s%s. Use %s instead",
-                obj_name,
+                "The deprecated %s %s was %s.%s Use %s instead",
                 description,
+                obj_name,
+                verb,
                 breaks_in,
                 replacement,
             )
@@ -220,59 +255,56 @@ def _print_deprecation_warning_internal_impl(
                 module=integration_frame.module,
             )
             logger.warning(
-                (
-                    "%s was %s from %s, this is a deprecated %s%s. Use %s instead,"
-                    " please %s"
-                ),
+                ("The deprecated %s %s was %s from %s.%s Use %s instead, please %s"),
+                description,
                 obj_name,
                 verb,
                 integration_frame.integration,
-                description,
                 breaks_in,
                 replacement,
                 report_issue,
             )
         else:
             logger.warning(
-                "%s was %s from %s, this is a deprecated %s%s. Use %s instead",
+                "The deprecated %s %s was %s from %s.%s Use %s instead",
+                description,
                 obj_name,
                 verb,
                 integration_frame.integration,
-                description,
                 breaks_in,
                 replacement,
             )
 
 
-class DeprecatedConstant(NamedTuple):
+class DeprecatedConstant[T](NamedTuple):
     """Deprecated constant."""
 
-    value: Any
+    value: T
     replacement: str
     breaks_in_ha_version: str | None
 
 
-class DeprecatedConstantEnum(NamedTuple):
+class DeprecatedConstantEnum[T: (StrEnum | IntEnum | IntFlag)](NamedTuple):
     """Deprecated constant."""
 
-    enum: StrEnum | IntEnum | IntFlag
+    enum: T
     breaks_in_ha_version: str | None
 
 
-class DeprecatedAlias(NamedTuple):
+class DeprecatedAlias[T](NamedTuple):
     """Deprecated alias."""
 
-    value: Any
+    value: T
     replacement: str
     breaks_in_ha_version: str | None
 
 
-class DeferredDeprecatedAlias:
+class DeferredDeprecatedAlias[T]:
     """Deprecated alias with deferred evaluation of the value."""
 
     def __init__(
         self,
-        value_fn: Callable[[], Any],
+        value_fn: Callable[[], T],
         replacement: str,
         breaks_in_ha_version: str | None,
     ) -> None:
@@ -282,7 +314,7 @@ class DeferredDeprecatedAlias:
         self._value_fn = value_fn
 
     @functools.cached_property
-    def value(self) -> Any:
+    def value(self) -> T:
         """Return the value."""
         return self._value_fn()
 
@@ -369,7 +401,7 @@ class EnumWithDeprecatedMembers(EnumType):
     """Enum with deprecated members."""
 
     def __new__(
-        mcs,  # noqa: N804  ruff bug, ruff does not understand this is a metaclass
+        mcs,
         cls: str,
         bases: tuple[type, ...],
         classdict: _EnumDict,

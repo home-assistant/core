@@ -5,50 +5,107 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.components.sensor.const import DEVICE_CLASS_STATE_CLASSES
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     UnitOfApparentPower,
+    UnitOfArea,
+    UnitOfBloodGlucoseConcentration,
+    UnitOfConductivity,
+    UnitOfDataRate,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfEnergyDistance,
     UnitOfFrequency,
+    UnitOfInformation,
+    UnitOfIrradiance,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfReactiveEnergy,
     UnitOfReactivePower,
+    UnitOfSoundPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
+    UnitOfVolumetricFlux,
 )
 
 from tests.common import MockEntity
 
 UNITS_OF_MEASUREMENT = {
-    SensorDeviceClass.APPARENT_POWER: UnitOfApparentPower.VOLT_AMPERE,  # apparent power (VA)
-    SensorDeviceClass.BATTERY: PERCENTAGE,  # % of battery that is left
-    SensorDeviceClass.CO: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO concentration
-    SensorDeviceClass.CO2: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO2 concentration
-    SensorDeviceClass.HUMIDITY: PERCENTAGE,  # % of humidity in the air
-    SensorDeviceClass.ILLUMINANCE: LIGHT_LUX,  # current light level lx
-    SensorDeviceClass.MOISTURE: PERCENTAGE,  # % of water in a substance
-    SensorDeviceClass.NITROGEN_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen dioxide
-    SensorDeviceClass.NITROGEN_MONOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen monoxide
-    SensorDeviceClass.NITROUS_OXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen oxide
-    SensorDeviceClass.OZONE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of ozone
-    SensorDeviceClass.PM1: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of PM1
-    SensorDeviceClass.PM10: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of PM10
-    SensorDeviceClass.PM25: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of PM2.5
-    SensorDeviceClass.SIGNAL_STRENGTH: SIGNAL_STRENGTH_DECIBELS,  # signal strength (dB/dBm)
-    SensorDeviceClass.SULPHUR_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of sulphur dioxide
-    SensorDeviceClass.TEMPERATURE: "C",  # temperature (C/F)
-    SensorDeviceClass.PRESSURE: UnitOfPressure.HPA,  # pressure (hPa/mbar)
-    SensorDeviceClass.POWER: "kW",  # power (W/kW)
-    SensorDeviceClass.CURRENT: "A",  # current (A)
-    SensorDeviceClass.ENERGY: "kWh",  # energy (Wh/kWh/MWh)
-    SensorDeviceClass.FREQUENCY: UnitOfFrequency.GIGAHERTZ,  # energy (Hz/kHz/MHz/GHz)
-    SensorDeviceClass.POWER_FACTOR: PERCENTAGE,  # power factor (no unit, min: -1.0, max: 1.0)
-    SensorDeviceClass.REACTIVE_POWER: UnitOfReactivePower.VOLT_AMPERE_REACTIVE,  # reactive power (var)
-    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of vocs
-    SensorDeviceClass.VOLTAGE: "V",  # voltage (V)
-    SensorDeviceClass.GAS: UnitOfVolume.CUBIC_METERS,  # gas (m³)
+    SensorDeviceClass.ABSOLUTE_HUMIDITY: CONCENTRATION_GRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.APPARENT_POWER: UnitOfApparentPower.VOLT_AMPERE,
+    SensorDeviceClass.AQI: None,
+    SensorDeviceClass.AREA: UnitOfArea.SQUARE_METERS,
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: UnitOfPressure.HPA,
+    SensorDeviceClass.BATTERY: PERCENTAGE,
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+    SensorDeviceClass.CO2: CONCENTRATION_PARTS_PER_MILLION,
+    SensorDeviceClass.CO: CONCENTRATION_PARTS_PER_MILLION,
+    SensorDeviceClass.CONDUCTIVITY: UnitOfConductivity.SIEMENS_PER_CM,
+    SensorDeviceClass.CURRENT: UnitOfElectricCurrent.AMPERE,
+    SensorDeviceClass.DATA_RATE: UnitOfDataRate.BITS_PER_SECOND,
+    SensorDeviceClass.DATA_SIZE: UnitOfInformation.BYTES,
+    SensorDeviceClass.DATE: None,
+    SensorDeviceClass.DISTANCE: UnitOfLength.METERS,
+    SensorDeviceClass.DURATION: UnitOfTime.SECONDS,
+    SensorDeviceClass.ENERGY: UnitOfEnergy.KILO_WATT_HOUR,
+    SensorDeviceClass.ENERGY_DISTANCE: UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+    SensorDeviceClass.ENERGY_STORAGE: UnitOfEnergy.KILO_WATT_HOUR,
+    SensorDeviceClass.ENUM: None,
+    SensorDeviceClass.FREQUENCY: UnitOfFrequency.GIGAHERTZ,
+    SensorDeviceClass.GAS: UnitOfVolume.CUBIC_METERS,
+    SensorDeviceClass.HUMIDITY: PERCENTAGE,
+    SensorDeviceClass.ILLUMINANCE: LIGHT_LUX,
+    SensorDeviceClass.IRRADIANCE: UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+    SensorDeviceClass.MOISTURE: PERCENTAGE,
+    SensorDeviceClass.MONETARY: None,
+    SensorDeviceClass.NITROGEN_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.NITROGEN_MONOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.NITROUS_OXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.OZONE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.PH: None,
+    SensorDeviceClass.PM10: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.PM1: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.PM25: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.PM4: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.POWER: UnitOfPower.KILO_WATT,
+    SensorDeviceClass.POWER_FACTOR: PERCENTAGE,
+    SensorDeviceClass.PRECIPITATION: UnitOfPrecipitationDepth.MILLIMETERS,
+    SensorDeviceClass.PRECIPITATION_INTENSITY: UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+    SensorDeviceClass.PRESSURE: UnitOfPressure.HPA,
+    SensorDeviceClass.REACTIVE_ENERGY: UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+    SensorDeviceClass.REACTIVE_POWER: UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+    SensorDeviceClass.SIGNAL_STRENGTH: SIGNAL_STRENGTH_DECIBELS,
+    SensorDeviceClass.SOUND_PRESSURE: UnitOfSoundPressure.DECIBEL,
+    SensorDeviceClass.SPEED: UnitOfSpeed.METERS_PER_SECOND,
+    SensorDeviceClass.SULPHUR_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.TEMPERATURE: UnitOfTemperature.CELSIUS,
+    SensorDeviceClass.TIMESTAMP: None,
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: CONCENTRATION_PARTS_PER_MILLION,
+    SensorDeviceClass.VOLTAGE: UnitOfElectricPotential.VOLT,
+    SensorDeviceClass.VOLUME: UnitOfVolume.LITERS,
+    SensorDeviceClass.VOLUME_FLOW_RATE: UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+    SensorDeviceClass.VOLUME_STORAGE: UnitOfVolume.LITERS,
+    SensorDeviceClass.WATER: UnitOfVolume.LITERS,
+    SensorDeviceClass.WEIGHT: UnitOfMass.KILOGRAMS,
+    SensorDeviceClass.WIND_DIRECTION: DEGREE,
+    SensorDeviceClass.WIND_SPEED: UnitOfSpeed.METERS_PER_SECOND,
 }
+assert UNITS_OF_MEASUREMENT.keys() == {cls.value for cls in SensorDeviceClass}
 
 
 class MockSensor(MockEntity, SensorEntity):
@@ -116,6 +173,7 @@ def get_mock_sensor_entities() -> dict[str, MockSensor]:
             name=f"{device_class} sensor",
             unique_id=f"unique_{device_class}",
             device_class=device_class,
+            state_class=DEVICE_CLASS_STATE_CLASSES.get(device_class),
             native_unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
         )
         for device_class in SensorDeviceClass

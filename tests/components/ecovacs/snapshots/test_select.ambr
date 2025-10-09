@@ -1,4 +1,295 @@
 # serializer version: 1
+# name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_active_map:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Map 2',
+        '1',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.x8_pro_omni_active_map',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active map',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_map',
+    'unique_id': 'E1234567890000000009_active_map',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_active_map:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'X8 PRO OMNI Active map',
+      'options': list([
+        'Map 2',
+        '1',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.x8_pro_omni_active_map',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Map 2',
+  })
+# ---
+# name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_work_mode:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'mop',
+        'mop_after_vacuum',
+        'vacuum',
+        'vacuum_and_mop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.x8_pro_omni_work_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Work mode',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_mode',
+    'unique_id': 'E1234567890000000009_work_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_work_mode:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'X8 PRO OMNI Work mode',
+      'options': list([
+        'mop',
+        'mop_after_vacuum',
+        'vacuum',
+        'vacuum_and_mop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.x8_pro_omni_work_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'vacuum',
+  })
+# ---
+# name: test_selects[qhe2o2-entity_ids1][select.dusty_active_map:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Map 2',
+        '1',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dusty_active_map',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active map',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_map',
+    'unique_id': '8516fbb1-17f1-4194-0000001_active_map',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[qhe2o2-entity_ids1][select.dusty_active_map:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Active map',
+      'options': list([
+        'Map 2',
+        '1',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dusty_active_map',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Map 2',
+  })
+# ---
+# name: test_selects[qhe2o2-entity_ids1][select.dusty_water_flow_level:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dusty_water_flow_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water flow level',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_amount',
+    'unique_id': '8516fbb1-17f1-4194-0000001_water_amount',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[qhe2o2-entity_ids1][select.dusty_water_flow_level:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Water flow level',
+      'options': list([
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dusty_water_flow_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_selects[yna5x1-entity_ids0][select.ozmo_950_active_map:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Map 2',
+        '1',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.ozmo_950_active_map',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active map',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_map',
+    'unique_id': 'E1234567890000000001_active_map',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[yna5x1-entity_ids0][select.ozmo_950_active_map:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ozmo 950 Active map',
+      'options': list([
+        'Map 2',
+        '1',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ozmo_950_active_map',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Map 2',
+  })
+# ---
 # name: test_selects[yna5x1-entity_ids0][select.ozmo_950_water_flow_level:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -13,6 +304,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -33,6 +325,7 @@
     'original_name': 'Water flow level',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_amount',
     'unique_id': 'E1234567890000000001_water_amount',

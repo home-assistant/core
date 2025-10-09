@@ -94,8 +94,8 @@ async def test_step_user_existing_host(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_data
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["errors"] == {CONF_BASE: "already_configured"}
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(

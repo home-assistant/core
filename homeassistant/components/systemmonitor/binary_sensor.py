@@ -9,8 +9,6 @@ import logging
 import sys
 from typing import Literal
 
-from psutil import NoSuchProcess
-
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
@@ -20,12 +18,12 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from . import SystemMonitorConfigEntry
-from .const import CONF_PROCESS, DOMAIN
+from .const import CONF_PROCESS, DOMAIN, PROCESS_ERRORS
 from .coordinator import SystemMonitorCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,12 +57,8 @@ def get_process(entity: SystemMonitorSensor) -> bool:
             if entity.argument == proc.name():
                 state = True
                 break
-        except NoSuchProcess as err:
-            _LOGGER.warning(
-                "Failed to load process with ID: %s, old name: %s",
-                err.pid,
-                err.name,
-            )
+        except PROCESS_ERRORS:
+            continue
     return state
 
 
@@ -91,7 +85,7 @@ SENSOR_TYPES: tuple[SysMonitorBinarySensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SystemMonitorConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up System Monitor binary sensors based on a config entry."""
     coordinator = entry.runtime_data.coordinator

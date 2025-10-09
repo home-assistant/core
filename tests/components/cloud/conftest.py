@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, PropertyMock, patch
 
-from hass_nabucasa import Cloud
+from hass_nabucasa import Cloud, payments_api
 from hass_nabucasa.auth import CognitoAuth
 from hass_nabucasa.cloudhooks import Cloudhooks
 from hass_nabucasa.const import DEFAULT_SERVERS, DEFAULT_VALUES, STATE_CONNECTED
@@ -55,7 +55,10 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
         # Attributes set in the constructor without parameters.
         # We spec the mocks with the real classes
         # and set constructor attributes or mock properties as needed.
-        mock_cloud.google_report_state = MagicMock(spec=GoogleReportState)
+        mock_cloud.google_report_state = MagicMock(
+            spec=GoogleReportState,
+            request_sync=AsyncMock(),
+        )
         mock_cloud.cloudhooks = MagicMock(spec=Cloudhooks)
         mock_cloud.remote = MagicMock(
             spec=RemoteUI,
@@ -71,6 +74,11 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
         mock_cloud.voice = MagicMock(spec=Voice)
         mock_cloud.files = MagicMock(spec=Files)
         mock_cloud.started = None
+        mock_cloud.payments = MagicMock(
+            spec=payments_api.PaymentsApi,
+            subscription_info=AsyncMock(),
+            migrate_paypal_agreement=AsyncMock(),
+        )
         mock_cloud.ice_servers = MagicMock(
             spec=IceServers,
             async_register_ice_servers_listener=AsyncMock(
@@ -145,7 +153,12 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
 
         # Methods that we mock with a custom side effect.
 
-        async def mock_login(email: str, password: str) -> None:
+        async def mock_login(
+            email: str,
+            password: str,
+            *,
+            check_connection: bool = False,
+        ) -> None:
             """Mock login.
 
             When called, it should call the on_start callback.
@@ -213,9 +226,9 @@ def mock_user_data() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_cloud_fixture(hass: HomeAssistant) -> CloudPreferences:
+async def mock_cloud_fixture(hass: HomeAssistant) -> CloudPreferences:
     """Fixture for cloud component."""
-    hass.loop.run_until_complete(mock_cloud(hass))
+    await mock_cloud(hass)
     return mock_cloud_prefs(hass, {})
 
 

@@ -1,27 +1,52 @@
 {
   "config": {
     "error": {
-      "api_error": "An error occured in the pyemoncms API : {details}"
+      "api_error": "An error occurred in the pyemoncms API : {details}"
     },
     "step": {
       "user": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "sync_mode": "Synchronization mode"
         },
         "data_description": {
           "url": "Server URL starting with the protocol (http or https)",
-          "api_key": "Your 32 bits API key"
+          "api_key": "Your 32 bits API key",
+          "sync_mode": "Pick your feeds manually (default) or synchronize them at once"
         }
       },
       "choose_feeds": {
         "data": {
           "include_only_feed_id": "Choose feeds to include"
+        },
+        "data_description": {
+          "include_only_feed_id": "Pick the feeds you want to synchronize"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "url": "[%key:component::emoncms::config::step::user::data_description::url%]",
+          "api_key": "[%key:component::emoncms::config::step::user::data_description::api_key%]"
         }
       }
     },
     "abort": {
-      "already_configured": "This server is already configured"
+      "already_configured": "This server is already configured",
+      "unique_id_mismatch": "This emoncms serial number does not match the previous serial number",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "selector": {
+    "sync_mode": {
+      "options": {
+        "auto": "Synchronize all available feeds",
+        "manual": "Select which feeds to synchronize"
+      }
     }
   },
   "entity": {
@@ -78,19 +103,14 @@
       "init": {
         "data": {
           "include_only_feed_id": "[%key:component::emoncms::config::step::choose_feeds::data::include_only_feed_id%]"
+        },
+        "data_description": {
+          "include_only_feed_id": "[%key:component::emoncms::config::step::choose_feeds::data_description::include_only_feed_id%]"
         }
       }
     }
   },
   "issues": {
-    "remove_value_template": {
-      "title": "The {domain} integration cannot start",
-      "description": "Configuring {domain} using YAML is being removed and the `{parameter}` parameter cannot be imported.\n\nPlease remove `{parameter}` from your `{domain}` yaml configuration and restart Home Assistant\n\nAlternatively, you may entirely remove the `{domain}` configuration from your configuration.yaml, restart Home Assistant, and add the {domain} integration manually."
-    },
-    "missing_include_only_feed_id": {
-      "title": "No feed synchronized with the {domain} sensor",
-      "description": "Configuring {domain} using YAML is being removed.\n\nPlease add manually the feeds you want to synchronize with the `configure` button of the integration."
-    },
     "migrate_database": {
       "title": "Upgrade your emoncms version",
       "description": "Your [emoncms]({url}) does not ship a unique identifier.\n\nPlease upgrade to at least version 11.5.7 and migrate your emoncms database.\n\nMore info in the [emoncms documentation]({doc_url})"

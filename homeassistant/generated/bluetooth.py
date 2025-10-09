@@ -49,6 +49,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "b42e3882-ade7-11e4-89d3-123b93f75cba",
     },
     {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+        "service_uuid": "b42e90a2-ade7-11e4-89d3-123b93f75cba",
+    },
+    {
         "connectable": False,
         "domain": "aranet",
         "manufacturer_id": 1794,
@@ -205,6 +210,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "govee_ble",
+        "local_name": "GVH5110*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
         "manufacturer_id": 1,
         "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
     },
@@ -357,6 +367,56 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "tps",
     },
     {
+        "connectable": False,
+        "domain": "inkbird",
+        "local_name": "ITH-11-B",
+    },
+    {
+        "connectable": False,
+        "domain": "inkbird",
+        "local_name": "ITH-13-B",
+    },
+    {
+        "connectable": False,
+        "domain": "inkbird",
+        "local_name": "ITH-21-B",
+    },
+    {
+        "connectable": False,
+        "domain": "inkbird",
+        "local_name": "IBS-P02B",
+    },
+    {
+        "connectable": True,
+        "domain": "inkbird",
+        "local_name": "Ink@IAM-T1",
+    },
+    {
+        "connectable": True,
+        "domain": "inkbird",
+        "local_name": "Ink@IAM-T2",
+    },
+    {
+        "connectable": True,
+        "domain": "inkbird",
+        "manufacturer_data_start": [
+            65,
+            67,
+            45,
+        ],
+        "manufacturer_id": 12628,
+    },
+    {
+        "connectable": False,
+        "domain": "inkbird",
+        "manufacturer_data_start": [
+            0,
+            98,
+            0,
+        ],
+        "manufacturer_id": 12884,
+    },
+    {
         "connectable": True,
         "domain": "iron_os",
         "service_uuid": "9eae1000-9d0d-48c5-aa55-33e27f9bc533",
@@ -373,6 +433,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "keymitt_ble",
         "local_name": "mib*",
+    },
+    {
+        "domain": "kulersky",
+        "service_uuid": "8d96a001-0002-64c2-0001-9acc4838521c",
     },
     {
         "domain": "lamarzocco",
@@ -550,6 +614,12 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "manufacturer_id": 220,
     },
     {
+        "connectable": True,
+        "domain": "probe_plus",
+        "local_name": "FM2*",
+        "manufacturer_id": 36606,
+    },
+    {
         "connectable": False,
         "domain": "qingping",
         "local_name": "Qingping*",
@@ -694,6 +764,15 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "manufacturer_data_start": [
             0,
         ],
+        "manufacturer_id": 20,
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "thermobeacon",
+        "manufacturer_data_start": [
+            0,
+        ],
         "manufacturer_id": 21,
         "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
     },
@@ -759,6 +838,12 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
             187,
         ],
         "manufacturer_id": 76,
+    },
+    {
+        "connectable": True,
+        "domain": "togrill",
+        "manufacturer_id": 34714,
+        "service_uuid": "0000cee0-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": False,
