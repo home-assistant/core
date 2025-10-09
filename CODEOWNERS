@@ -1415,8 +1415,8 @@ build.json @home-assistant/supervisor
 /tests/components/sfr_box/ @epenet
 /homeassistant/components/sftp_storage/ @maretodoric
 /tests/components/sftp_storage/ @maretodoric
-/homeassistant/components/sharkiq/ @JeffResc @funkybunch
-/tests/components/sharkiq/ @JeffResc @funkybunch
+/homeassistant/components/sharkiq/ @JeffResc @funkybunch @TheOneOgre
+/tests/components/sharkiq/ @JeffResc @funkybunch @TheOneOgre
 /homeassistant/components/shell_command/ @home-assistant/core
 /tests/components/shell_command/ @home-assistant/core
 /homeassistant/components/shelly/ @bieniu @thecode @chemelli74 @bdraco
