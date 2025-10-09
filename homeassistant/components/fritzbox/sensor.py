@@ -67,7 +67,7 @@ def suitable_nextchange_time(device: FritzhomeDevice) -> bool:
 
 def suitable_temperature(device: FritzhomeDevice) -> bool:
     """Check suitablity for temperature sensor."""
-    return device.has_temperature_sensor and not device.has_thermostat
+    return bool(device.has_temperature_sensor)
 
 
 def entity_category_temperature(device: FritzhomeDevice) -> EntityCategory | None:
