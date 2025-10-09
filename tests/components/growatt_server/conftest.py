@@ -64,7 +64,7 @@ def mock_growatt_api():
 
 
 @pytest.fixture
-def mock_config_entry():
+def mock_config_entry() -> MockConfigEntry:
     """Return a mocked config entry for V1 API."""
     return MockConfigEntry(
         domain=DOMAIN,
