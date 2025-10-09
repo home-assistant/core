@@ -4,6 +4,15 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 from typing import Any
+from .const import (
+    ICON_COMPASS_OUTLINE,
+    ICON_WEATHER_WINDY,
+    ICON_GAUGE,
+    ICON_WEATHER_PARTLY_CLOUDY,
+    RAIN_THRESHOLD_MM,
+    WIND_MS_STRONG,
+    MSG_NO_FDAY,
+)
 
 import aiohttp
 from buienradar.buienradar import parse_data
@@ -70,14 +79,14 @@ class BrData:
         self.timeframe = timeframe
         self.unsub_schedule_update: CALLBACK_TYPE | None = None
 
-    async def update_devices(self):
-        """Update all devices/sensors."""
-        if not self.devices:
-            return
+   def update_devices(self):
+    """Update all devices/sensors."""
+    if not self.devices:
+        return
 
-        # Update all devices
-        for dev in self.devices:
-            dev.data_updated(self)
+    # Update all devices
+    for dev in self.devices:
+        dev.data_updated(self)
 
     @callback
     def async_schedule_update(self, minute=1):
@@ -174,12 +183,12 @@ class BrData:
         if data is None:
             self.async_schedule_update(SCHEDULE_NOK)
             return
-
+            
         self.data = data
-        await self.update_devices()
+        self.update_devices()
         self.async_schedule_update(SCHEDULE_OK)
-
-    @property
+        
+        @property
     def attribution(self):
         """Return the attribution."""
         return self.data.get(ATTRIBUTION)
