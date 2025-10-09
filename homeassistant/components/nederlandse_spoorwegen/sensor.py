@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -145,6 +146,7 @@ async def async_setup_entry(
 class NSDepartureSensor(SensorEntity):
     """Implementation of a NS Departure Sensor."""
 
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_attribution = "Data provided by NS"
     _attr_icon = "mdi:train"
 
@@ -165,7 +167,6 @@ class NSDepartureSensor(SensorEntity):
         self._via = via
         self._heading = heading
         self._time = time
-        self._state: str | None = None
         self._trips: list[Trip] | None = None
         self._first_trip: Trip | None = None
         self._next_trip: Trip | None = None
@@ -175,11 +176,6 @@ class NSDepartureSensor(SensorEntity):
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the next departure time."""
-        return self._state
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -274,7 +270,7 @@ class NSDepartureSensor(SensorEntity):
             (datetime.now() + timedelta(minutes=30)).time() < self._time
             or (datetime.now() - timedelta(minutes=30)).time() > self._time
         ):
-            self._state = None
+            self._attr_native_value = None
             self._trips = None
             self._first_trip = None
             return
@@ -314,7 +310,7 @@ class NSDepartureSensor(SensorEntity):
                 if len(filtered_times) > 0:
                     sorted_times = sorted(filtered_times, key=lambda x: x[1])
                     self._first_trip = self._trips[sorted_times[0][0]]
-                    self._state = sorted_times[0][1].strftime("%H:%M")
+                    self._attr_native_value = sorted_times[0][1]
 
                     # Filter again to remove trains that leave at the exact same time.
                     filtered_times = [
@@ -331,7 +327,7 @@ class NSDepartureSensor(SensorEntity):
 
                 else:
                     self._first_trip = None
-                    self._state = None
+                    self._attr_native_value = None
 
         except (
             requests.exceptions.ConnectionError,

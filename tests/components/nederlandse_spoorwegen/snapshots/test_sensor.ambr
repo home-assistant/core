@@ -48,6 +48,7 @@
       'departure_platform_planned': '4',
       'departure_time_actual': '16:35',
       'departure_time_planned': '16:34',
+      'device_class': 'timestamp',
       'friendly_name': 'To work',
       'going': True,
       'icon': 'mdi:train',
@@ -67,6 +68,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '16:35',
+    'state': '2025-09-15T14:35:00+00:00',
   })
 # ---

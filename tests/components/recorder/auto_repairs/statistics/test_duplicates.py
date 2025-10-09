@@ -64,6 +64,7 @@ async def test_duplicate_statistics_handle_integrity_error(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_energy_statistics_1 = [
