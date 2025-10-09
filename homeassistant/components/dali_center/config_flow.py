@@ -44,7 +44,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle gateway discovery."""
         errors: dict[str, str] = {}
 
-        if discovery_info is not None and "selected_gateway" in discovery_info:
+        if discovery_info and "selected_gateway" in discovery_info:
             selected_sn = discovery_info["selected_gateway"]
             selected_gateway: DaliGatewayType | None = next(
                 (gw for gw in self._discovered_gateways if gw["gw_sn"] == selected_sn),
@@ -67,11 +67,14 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "device_not_found"
 
         if not self._discovered_gateways or errors:
+            _LOGGER.debug("Starting gateway discovery")
+            discovery = DaliGatewayDiscovery()
             try:
-                _LOGGER.debug("Starting gateway discovery")
-                discovery = DaliGatewayDiscovery()
                 discovered = await discovery.discover_gateways()
-
+            except DaliGatewayError as err:
+                _LOGGER.debug("Gateway discovery failed", exc_info=err)
+                errors["base"] = "discovery_failed"
+            else:
                 configured_gateways = {
                     entry.data[CONF_GATEWAY_SN]
                     for entry in self.hass.config_entries.async_entries(DOMAIN)
@@ -80,10 +83,6 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered_gateways = [
                     gw for gw in discovered if gw["gw_sn"] not in configured_gateways
                 ]
-
-            except DaliGatewayError:
-                _LOGGER.exception("Gateway discovery failed")
-                errors["base"] = "discovery_failed"
 
         if not self._discovered_gateways:
             return self.async_show_form(

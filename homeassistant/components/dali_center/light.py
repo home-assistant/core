@@ -48,7 +48,7 @@ async def async_setup_entry(
 
     gateway.on_light_status = _on_light_status
 
-    _LOGGER.info("Setting up light platform: %d devices", len(devices))
+    _LOGGER.debug("Setting up light platform: %d devices", len(devices))
 
     added_entities: set[str] = set()
     new_lights: list[DaliCenterLight] = []
@@ -189,4 +189,4 @@ class DaliCenterLight(LightEntity):
         ):
             self._attr_rgbw_color = status["rgbw_color"]
 
-        self.hass.loop.call_soon_threadsafe(self.schedule_update_ha_state)
+        self.async_write_ha_state()
