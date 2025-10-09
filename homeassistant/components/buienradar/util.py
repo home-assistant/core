@@ -70,7 +70,7 @@ class BrData:
         self.timeframe = timeframe
         self.unsub_schedule_update: CALLBACK_TYPE | None = None
 
-    async def update_devices(self):
+    def update_devices(self):
         """Update all devices/sensors."""
         if not self.devices:
             return
@@ -176,7 +176,7 @@ class BrData:
             return
 
         self.data = data
-        await self.update_devices()
+        self.update_devices()
         self.async_schedule_update(SCHEDULE_OK)
 
     @property
