@@ -2,42 +2,14 @@
 
 from __future__ import annotations
 
-import voluptuous as vol
-
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import device_registry as dr
 
 from .config_flow import CONF_ENOCEAN_DEVICES
 from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, LOGGER, PLATFORMS
 from .dongle import EnOceanDongle
-from .importer import setup_yaml_import
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the EnOcean component."""
-    # support for text-based configuration (legacy)
-    if DOMAIN not in config:
-        return True
-
-    if hass.config_entries.async_entries(DOMAIN):
-        # We can only have one dongle. If there is already one in the config,
-        # there is no need to import the yaml based config.
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
-        )
-    )
-
-    return True
 
 
 async def async_setup_entry(
@@ -52,9 +24,10 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
     async_cleanup_device_registry(hass=hass, entry=config_entry)
-    forward_entry_setup_to_platforms(hass=hass, entry=config_entry)
 
-    return setup_yaml_import(hass)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    return True
 
 
 @callback
@@ -87,19 +60,6 @@ def async_cleanup_device_registry(
                     hass_device.id, remove_config_entry_id=entry.entry_id
                 )
                 break
-
-
-def forward_entry_setup_to_platforms(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-) -> None:
-    """Forward entry setup to all implemented platforms."""
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setups(
-                entry=entry, platforms=[platform]
-            )
-        )
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):

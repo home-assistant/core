@@ -3,29 +3,16 @@
 from __future__ import annotations
 
 from enocean.utils import from_hex_string, to_hex_string
-import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import _LOGGER, ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
+from .const import DATA_ENOCEAN, ENOCEAN_DONGLE
 from .entity import EnOceanEntity
-from .importer import (
-    EnOceanPlatformConfig,
-    register_platform_config_for_migration_to_config_entry,
-)
 from .supported_device_type import (
     EnOceanSupportedDeviceType,
     get_supported_enocean_device_types,
@@ -34,26 +21,6 @@ from .supported_device_type import (
 DEFAULT_NAME = ""
 DEPENDENCIES = ["enocean"]
 EVENT_BUTTON_PRESSED = "button_pressed"
-
-PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    }
-)
-
-
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Binary Sensor platform for EnOcean."""
-    register_platform_config_for_migration_to_config_entry(
-        EnOceanPlatformConfig(platform=Platform.BINARY_SENSOR, config=config)
-    )
 
 
 async def async_setup_entry(
@@ -64,6 +31,7 @@ async def async_setup_entry(
     """Set up entry."""
 
     # config_entry.options.get(CONF_DEVICE)
+    # enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
     async_add_entities(
         [
             EnOceanBinarySensor(
@@ -188,6 +156,8 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
             self.onoff = 0
             if self._channel in ("A0", "B0", "AB0"):
                 self._attr_on = True
+                enocean_dongle = self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
+                _LOGGER.warning("Chip id: %s", enocean_dongle.chip_id)
         elif action == 0x15:
             self.which = 10
             self.onoff = 1

@@ -6,6 +6,7 @@ from os.path import basename, normpath
 
 from enocean.communicators import SerialCommunicator
 from enocean.protocol.packet import RadioPacket
+from enocean.utils import to_hex_string
 import serial
 
 from homeassistant.core import HomeAssistant
@@ -26,16 +27,24 @@ class EnOceanDongle:
     def __init__(self, hass: HomeAssistant, serial_path) -> None:
         """Initialize the EnOcean dongle."""
         self._communicator = SerialCommunicator(
-            port=serial_path, callback=self.callback
+            port=serial_path  # , callback=self.callback
         )
         self.serial_path = serial_path
         self.identifier = basename(normpath(serial_path))
         self.hass = hass
         self.dispatcher_disconnect_handle = None
+        self._base_id = "00:00:00:00"
+        self._chip_id = "00:00:00:00"
 
     async def async_setup(self):
         """Finish the setup of the bridge and supported platforms."""
         self._communicator.start()
+        self._chip_id = to_hex_string(self._communicator.chip_id)
+        self._base_id = to_hex_string(self._communicator.base_id)
+        self._communicator.callback = self.callback
+
+        _LOGGER.warning("Chip id: %s", self.chip_id)
+        _LOGGER.warning("Base id: %s", self.base_id)
         self.dispatcher_disconnect_handle = async_dispatcher_connect(
             self.hass, SIGNAL_SEND_MESSAGE, self._send_message_callback
         )
@@ -49,12 +58,12 @@ class EnOceanDongle:
     @property
     def base_id(self):
         """Get the dongle's base id."""
-        return self._communicator.base_id
+        return self._base_id
 
     @property
     def chip_id(self):
         """Get the dongle's chip id (REQUIRES UPDATE OF ENOCEAN LIBRARY)."""
-        return None
+        return self._chip_id
 
     def _send_message_callback(self, command):
         """Send a command through the EnOcean dongle."""
