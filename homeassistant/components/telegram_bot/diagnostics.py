@@ -29,8 +29,5 @@ async def async_get_config_entry_diagnostics(
     return {
         "data": data,
         "options": async_redact_data(config_entry.options, TO_REDACT),
-        "subentries": [
-            async_redact_data(subentry.data, TO_REDACT)
-            for subentry in config_entry.subentries.values()
-        ],
+        "subentries_count": len(config_entry.subentries.values()),
     }

@@ -13,13 +13,6 @@
     'options': dict({
       'parse_mode': 'markdown',
     }),
-    'subentries': list([
-      dict({
-        'chat_id': '**REDACTED**',
-      }),
-      dict({
-        'chat_id': '**REDACTED**',
-      }),
-    ]),
+    'subentries_count': 2,
   })
 # ---
