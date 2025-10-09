@@ -322,7 +322,14 @@ async def _transform_stream(  # noqa: C901
             elif isinstance(response.delta, ThinkingDelta):
                 yield {"thinking_content": response.delta.thinking}
             elif isinstance(response.delta, CitationsDelta):
+                # Citations after WebSearchToolResultBlock need a new assistant message
+                # because native content can only be set once per message
+                if has_native:
+                    yield {"role": "assistant"}
+                    has_native = False
+                    has_content = False
                 yield {"native": response.delta}
+                has_native = True
             elif isinstance(response.delta, SignatureDelta):
                 yield {
                     "native": ThinkingBlock(
