@@ -1524,10 +1524,20 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 # And use the add-on
                 and existing_entry.data.get(CONF_USE_ADDON)
             ):
+                manager = get_addon_manager(self.hass)
+                addon_info = await manager.async_get_addon_info()
+                if addon_info.state == AddonState.RUNNING:
+                    await manager.async_stop_addon()
                 await self._async_set_addon_config(
                     {CONF_ADDON_SOCKET: discovery_info.socket_path}
                 )
-                # Reloading will sync add-on options to config entry data
+                self.hass.config_entries.async_update_entry(
+                    existing_entry,
+                    data={
+                        **existing_entry.data,
+                        CONF_SOCKET_PATH: discovery_info.socket_path,
+                    },
+                )
                 self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
                 return self.async_abort(reason="already_configured")
 
