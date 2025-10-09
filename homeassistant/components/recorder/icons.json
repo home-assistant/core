@@ -14,6 +14,9 @@
     },
     "get_statistics": {
       "service": "mdi:chart-bar"
+    },
+    "get_history": {
+      "service": "mdi:chart-box-multiple"
     }
   }
 }

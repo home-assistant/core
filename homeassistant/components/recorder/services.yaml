@@ -108,3 +108,26 @@ get_statistics:
         temperature: "°C"
       selector:
         object:
+
+get_history:
+  fields:
+    start_time:
+      required: true
+      example: "2025-01-01 00:00:00"
+      selector:
+        datetime:
+
+    end_time:
+      required: false
+      example: "2025-01-02 00:00:00"
+      selector:
+        datetime:
+
+    history_ids:
+      required: true
+      example:
+        - sensor.hvac_action
+        - sensor.temperature
+      selector:
+        entity:
+          multiple: true
