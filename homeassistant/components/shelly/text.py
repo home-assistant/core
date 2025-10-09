@@ -38,12 +38,13 @@ class RpcTextDescription(RpcEntityDescription, TextEntityDescription):
 
 
 RPC_TEXT_ENTITIES: Final = {
-    "text": RpcTextDescription(
+    "text_generic": RpcTextDescription(
         key="text",
         sub_key="value",
         removal_condition=lambda config, _status, key: not is_view_for_platform(
             config, key, TEXT_PLATFORM
         ),
+        role="generic",
     ),
 }
 
