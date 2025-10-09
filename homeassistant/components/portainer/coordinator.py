@@ -111,7 +111,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
             if endpoint.status == ENDPOINT_STATUS_DOWN:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Skipping offline endpoint: %s (ID: %d)",
                     endpoint.name,
                     endpoint.id,
