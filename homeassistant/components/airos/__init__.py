@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, SECTION_ADVANCED_SETTINGS
+from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN, SECTION_ADVANCED_SETTINGS
 from .coordinator import AirOSConfigEntry, AirOSDataUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [
@@ -80,42 +80,44 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
         )
 
     # 2.1 Migrate binary_sensor entity unique_id from device_id to mac_address
+    #     Step 1 - migrate binary_sensor entity unique_id
+    #     Step 2 - migrate device entity identifier
     if entry.version == 1:
         new_version = 2
         new_minor_version = 1
+
+        mac_adress = dr.format_mac(str(entry.unique_id))
+
         device_registry = dr.async_get(hass)
-        device_entries = dr.async_entries_for_config_entry(
-            device_registry, entry.entry_id
-        )
-
-        # Skip if no device entries found
-        if not device_entries:
-            hass.config_entries.async_update_entry(
-                entry, version=new_version, minor_version=new_minor_version
+        if device_entry := device_registry.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, mac_adress)}
+        ):
+            old_device_id = next(
+                (
+                    device_id
+                    for domain, device_id in device_entry.identifiers
+                    if domain == DOMAIN
+                ),
+                None,
             )
-            return True
 
-        device_entry = device_entries[0]
-        mac_address = None
+            @callback
+            def update_unique_id(
+                entity_entry: er.RegistryEntry,
+            ) -> dict[str, str] | None:
+                """Update unique id from device_id to mac address."""
+                if old_device_id and entity_entry.unique_id.startswith(old_device_id):
+                    suffix = entity_entry.unique_id.removeprefix(old_device_id)
+                    new_unique_id = f"{mac_adress}{suffix}"
+                    _LOGGER.info("Migrating unique_id to %s", new_unique_id)
+                    return {"new_unique_id": new_unique_id}
+                return None
 
-        for connection_type, value in device_entry.connections:
-            if connection_type == dr.CONNECTION_NETWORK_MAC:
-                mac_address = dr.format_mac(value)
-                break
+            await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-        @callback
-        def update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
-            """Update unique id from device_id to mac address."""
-            suffix = entity_entry.unique_id.removeprefix(str(entry.unique_id))
-            new_unique_id = f"{mac_address}{suffix}"
-            _LOGGER.error(
-                "Migrating entity %s unique_id to %s",
-                entity_entry.entity_id,
-                new_unique_id,
+            device_registry.async_update_device(
+                device_entry.id, new_identifiers={(DOMAIN, mac_adress)}
             )
-            return {"new_unique_id": new_unique_id}
-
-        await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
         hass.config_entries.async_update_entry(
             entry, version=new_version, minor_version=new_minor_version

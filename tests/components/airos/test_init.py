@@ -137,10 +137,10 @@ async def test_ssl_migrate_entry(
 
 
 @pytest.mark.parametrize(
-    ("sensor_domain", "sensor_name"),
+    ("sensor_domain", "sensor_name", "mock_id"),
     [
-        (BINARY_SENSOR_DOMAIN, "port_forwarding"),
-        (SENSOR_DOMAIN, "antenna_gain"),
+        (BINARY_SENSOR_DOMAIN, "port_forwarding", "device_id_12345"),
+        (SENSOR_DOMAIN, "antenna_gain", "01:23:45:67:89:ab"),
     ],
 )
 async def test_uid_migrate_entry(
@@ -149,13 +149,14 @@ async def test_uid_migrate_entry(
     device_registry: dr.DeviceRegistry,
     sensor_domain: str,
     sensor_name: str,
+    mock_id: str,
 ) -> None:
     """Test migrate entry unique id."""
     entity_registry = er.async_get(hass)
 
     MOCK_MAC = dr.format_mac("01:23:45:67:89:AB")
     MOCK_ID = "device_id_12345"
-    old_unique_id = f"{MOCK_ID}_{sensor_name}"
+    old_unique_id = f"{mock_id}_{sensor_name}"
     new_unique_id = f"{MOCK_MAC}_{sensor_name}"
 
     entry = MockConfigEntry(
@@ -163,7 +164,7 @@ async def test_uid_migrate_entry(
         source=SOURCE_USER,
         data=MOCK_CONFIG_V1_2,
         entry_id="1",
-        unique_id=MOCK_ID,
+        unique_id=mock_id,
         version=1,
         minor_version=2,
     )
@@ -182,6 +183,9 @@ async def test_uid_migrate_entry(
         DOMAIN, sensor_domain, old_unique_id, config_entry=entry
     )
     original_entity_id = old_entity_entry.entity_id
+
+    hass.config_entries.async_update_entry(entry, unique_id=MOCK_MAC)
+    await hass.async_block_till_done()
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

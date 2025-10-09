@@ -33,7 +33,7 @@ class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, airos_data.derived.mac)},
             configuration_url=configuration_url,
-            identifiers={(DOMAIN, str(airos_data.host.device_id))},
+            identifiers={(DOMAIN, airos_data.derived.mac)},
             manufacturer=MANUFACTURER,
             model=airos_data.host.devmodel,
             name=airos_data.host.hostname,
