@@ -146,5 +146,10 @@
         "name": "Probe Temperature"
       }
     }
+  },
+  "exceptions": {
+    "malformed_response_missing_key": {
+      "message": "The response from PTDevices was missing the key(s) `{missing_keys}`"
+    }
   }
 }

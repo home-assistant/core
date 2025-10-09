@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Final
+from typing import Any, Final
 
 import aioptdevices
 from aioptdevices.interface import PTDevicesResponse
@@ -99,5 +99,21 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        else:
-            return data
+
+        # Verify that we have the keys needed
+        body: dict[str, Any] = data.get("body", {})
+        required_keys: list[str] = ["title", "device_id", "version", "units"]
+        missing_keys: list[str] = [
+            required_key for required_key in required_keys if required_key not in body
+        ]
+        if missing_keys:
+            raise UpdateFailed(
+                # "Test Error {key}",
+                translation_domain=DOMAIN,
+                translation_key="malformed_response_missing_key",
+                translation_placeholders={
+                    "missing_keys": ",".join(missing_keys),
+                },
+            )
+
+        return data
