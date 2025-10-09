@@ -1223,6 +1223,49 @@ async def test_chaining_progress_steps(
     assert result["type"] == flow_result_after_next
 
 
+async def test_progress_step_done_abort(
+    hass: HomeAssistant,
+    manager: MockFlowManager,
+) -> None:
+    """Test progress_step decorator without done result set."""
+    manager.hass = hass
+    events = []
+
+    @callback
+    def capture_events(event: Event) -> None:
+        events.append(event)
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+
+        @data_entry_flow.progress_step()
+        async def async_step_init(self, user_input=None):
+            # async_show_progress_done
+            return data_entry_flow.FlowResult(
+                flow_id=self.flow_id,
+                handler=self.handler,
+                type=data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE,
+            )
+
+    hass.bus.async_listen(
+        data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED,
+        capture_events,
+    )
+
+    result = await manager.async_init("test")
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE
+    assert len(manager.async_progress()) == 1
+    assert len(manager.async_progress_by_handler("test")) == 1
+
+    result = await manager.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == ""
+    assert len(manager.async_progress()) == 0
+    assert len(manager.async_progress_by_handler("test")) == 0
+    assert not events
+
+
 async def test_abort_flow_exception_step(manager: MockFlowManager) -> None:
     """Test that the AbortFlow exception works in a step."""
 
