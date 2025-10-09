@@ -431,11 +431,9 @@ def uninstall_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
 
 
 @pytest.fixture(name="create_backup")
-def create_backup_fixture() -> Generator[AsyncMock]:
+def create_backup_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock create backup."""
-    from .hassio.common import mock_create_backup  # noqa: PLC0415
-
-    yield from mock_create_backup()
+    return supervisor_client.backups.partial_backup
 
 
 @pytest.fixture(name="update_addon")
