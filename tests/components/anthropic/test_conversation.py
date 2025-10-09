@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from anthropic import RateLimitError
 from anthropic.types import (
+    CitationsDelta,
     InputJSONDelta,
     Message,
     MessageDeltaUsage,
@@ -17,6 +18,7 @@ from anthropic.types import (
     RawMessageStopEvent,
     RawMessageStreamEvent,
     RedactedThinkingBlock,
+    ServerToolUseBlock,
     SignatureDelta,
     TextBlock,
     TextDelta,
@@ -24,6 +26,8 @@ from anthropic.types import (
     ThinkingDelta,
     ToolUseBlock,
     Usage,
+    WebSearchResultBlock,
+    WebSearchToolResultBlock,
 )
 from anthropic.types.raw_message_delta_event import Delta
 from freezegun import freeze_time
@@ -176,6 +180,70 @@ def create_tool_use_block(
             for json_part in json_parts
         ],
         RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_server_tool_use_block(
+    index: int, tool_id: str, tool_name: str, json_parts: list[str]
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool use content block (e.g., web search) with the specified deltas."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=ServerToolUseBlock(
+                id=tool_id, name=tool_name, input={}, type="server_tool_use"
+            ),
+            index=index,
+        ),
+        *[
+            RawContentBlockDeltaEvent(
+                delta=InputJSONDelta(partial_json=json_part, type="input_json_delta"),
+                index=index,
+                type="content_block_delta",
+            )
+            for json_part in json_parts
+        ],
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_web_search_result_block(
+    index: int, tool_use_id: str, results: list[dict[str, Any]]
+) -> list[RawMessageStreamEvent]:
+    """Create a web search result content block."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=WebSearchToolResultBlock(
+                type="web_search_tool_result",
+                tool_use_id=tool_use_id,
+                content=[
+                    WebSearchResultBlock(
+                        type="web_search_result",
+                        **result,
+                    )
+                    for result in results
+                ],
+            ),
+            index=index,
+        ),
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_citations_delta(
+    index: int, citations: list[dict[str, Any]]
+) -> list[RawMessageStreamEvent]:
+    """Create a citations delta event."""
+    return [
+        RawContentBlockDeltaEvent(
+            delta=CitationsDelta(
+                type="citations_delta",
+                citations=citations,
+            ),
+            index=index,
+            type="content_block_delta",
+        ),
     ]
 
 
@@ -1155,7 +1223,7 @@ async def test_web_search_tool_marked_as_external(
             create_messages(
                 [
                     *create_content_block(0, ["I'll search for that information."]),
-                    *create_tool_use_block(
+                    *create_server_tool_use_block(
                         1,
                         "toolu_web_search_123",
                         "web_search",
@@ -1165,7 +1233,7 @@ async def test_web_search_tool_marked_as_external(
                 stop_reason="tool_use",
             )
         ),
-    ) as mock_create:
+    ):
         result = await conversation.async_converse(
             hass,
             "Search for information",
@@ -1223,7 +1291,7 @@ async def test_web_search_chat_log_persistence(
             create_messages(
                 [
                     *create_content_block(0, ["I found some information for you."]),
-                    *create_tool_use_block(
+                    *create_server_tool_use_block(
                         1,
                         "toolu_web_search_123",
                         "web_search",
@@ -1254,7 +1322,7 @@ async def test_web_search_chat_log_persistence(
             )
         ),
     ) as mock_create:
-        result2 = await conversation.async_converse(
+        await conversation.async_converse(
             hass,
             "What did you find?",
             conversation_id,
@@ -1272,7 +1340,7 @@ async def test_web_search_chat_log_persistence(
             for content_block in message["content"]:
                 if (
                     isinstance(content_block, dict)
-                    and content_block.get("type") == "tool_use"
+                    and content_block.get("type") == "server_tool_use"
                     and content_block.get("name") == "web_search"
                 ):
                     found_web_search = True
@@ -1315,7 +1383,7 @@ async def test_web_search_multi_turn_with_snapshot(
                     *create_content_block(
                         0, ["I'll search for current weather information."]
                     ),
-                    *create_tool_use_block(
+                    *create_server_tool_use_block(
                         1,
                         "toolu_web_search_001",
                         "web_search",
@@ -1325,7 +1393,7 @@ async def test_web_search_multi_turn_with_snapshot(
                 stop_reason="tool_use",
             )
         ),
-    ) as mock_create:
+    ):
         result1 = await conversation.async_converse(
             hass,
             "What's the weather like today?",
@@ -1369,7 +1437,7 @@ async def test_web_search_multi_turn_with_snapshot(
             )
         ),
     ) as mock_create_2:
-        result2 = await conversation.async_converse(
+        await conversation.async_converse(
             hass,
             "What temperature will it be?",
             conversation_id,
@@ -1380,3 +1448,70 @@ async def test_web_search_multi_turn_with_snapshot(
     # Verify the second API call included the external tool from first turn
     messages_sent = mock_create_2.call_args.kwargs["messages"]
     assert messages_sent == snapshot
+
+
+async def test_server_tool_use_block_streaming(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test ServerToolUseBlock streaming (web search tools)."""
+    # Enable web search
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-3-5-sonnet-latest",
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_MAX_USES: 5,
+        },
+    )
+    with patch("anthropic.resources.models.AsyncModels.retrieve"):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                [
+                    *create_content_block(0, ["Let me search for that."]),
+                    *create_server_tool_use_block(
+                        1,
+                        "srvtoolu_web_search_456",
+                        "web_search",
+                        ['{"query": "test query"}'],
+                    ),
+                ],
+                stop_reason="tool_use",
+            )
+        ),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "Search for something",
+            None,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    # Verify the server tool call was marked as external
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    assert chat_log is not None
+
+    # Find the assistant content with tool calls
+    assistant_content = None
+    for content in chat_log.content:
+        if isinstance(content, conversation.AssistantContent) and content.tool_calls:
+            assistant_content = content
+            break
+
+    assert assistant_content is not None
+    assert len(assistant_content.tool_calls) == 1
+    tool_call = assistant_content.tool_calls[0]
+    assert tool_call.tool_name == "web_search"
+    assert tool_call.external is True
+    assert tool_call.tool_args == {"query": "test query"}

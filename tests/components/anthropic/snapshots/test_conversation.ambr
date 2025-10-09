@@ -449,7 +449,7 @@
             'query': 'current weather forecast today',
           }),
           'name': 'web_search',
-          'type': 'tool_use',
+          'type': 'server_tool_use',
         }),
       ]),
       'role': 'assistant',

@@ -7,6 +7,7 @@ from typing import Any
 import anthropic
 from anthropic import AsyncStream
 from anthropic.types import (
+    CitationsDelta,
     InputJSONDelta,
     MessageDeltaUsage,
     MessageParam,
@@ -18,6 +19,8 @@ from anthropic.types import (
     RawMessageStartEvent,
     RedactedThinkingBlock,
     RedactedThinkingBlockParam,
+    ServerToolUseBlock,
+    ServerToolUseBlockParam,
     SignatureDelta,
     TextBlock,
     TextBlockParam,
@@ -32,6 +35,7 @@ from anthropic.types import (
     ToolUseBlock,
     ToolUseBlockParam,
     Usage,
+    WebSearchToolResultBlock,
 )
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
 from voluptuous_openapi import convert
@@ -154,22 +158,41 @@ def _convert_content(
                     messages[-1]["content"].append(  # type: ignore[attr-defined]
                         redacted_thinking_block
                     )
+            elif isinstance(content.native, WebSearchToolResultBlock):
+                # Reconstruct WebSearchToolResultBlock from native content
+                messages[-1]["content"].append(  # type: ignore[union-attr]
+                    content.native
+                )
+            elif isinstance(content.native, CitationsDelta):
+                # Citations are handled as part of text blocks during reconstruction
+                # They don't need to be explicitly added as separate blocks
+                pass
             if content.content:
                 messages[-1]["content"].append(  # type: ignore[union-attr]
                     TextBlockParam(type="text", text=content.content)
                 )
             if content.tool_calls:
-                messages[-1]["content"].extend(  # type: ignore[union-attr]
-                    [
-                        ToolUseBlockParam(
-                            type="tool_use",
-                            id=tool_call.id,
-                            name=tool_call.tool_name,
-                            input=tool_call.tool_args,
+                for tool_call in content.tool_calls:
+                    if tool_call.external:
+                        # External tools (like web_search) use ServerToolUseBlockParam
+                        messages[-1]["content"].append(  # type: ignore[union-attr]
+                            ServerToolUseBlockParam(
+                                type="server_tool_use",
+                                id=tool_call.id,
+                                name=tool_call.tool_name,  # type: ignore[typeddict-item]
+                                input=tool_call.tool_args,
+                            )
                         )
-                        for tool_call in content.tool_calls
-                    ]
-                )
+                    else:
+                        # Regular tools use ToolUseBlockParam
+                        messages[-1]["content"].append(  # type: ignore[union-attr]
+                            ToolUseBlockParam(
+                                type="tool_use",
+                                id=tool_call.id,
+                                name=tool_call.tool_name,
+                                input=tool_call.tool_args,
+                            )
+                        )
         else:
             # Note: We don't pass SystemContent here as its passed to the API as the prompt
             raise TypeError(f"Unexpected content type: {type(content)}")
@@ -177,7 +200,7 @@ def _convert_content(
     return messages
 
 
-async def _transform_stream(
+async def _transform_stream(  # noqa: C901
     chat_log: conversation.ChatLog,
     stream: AsyncStream[MessageStreamEvent],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
@@ -227,7 +250,7 @@ async def _transform_stream(
                 raise ValueError("Unexpected message role")
             input_usage = response.message.usage
         elif isinstance(response, RawContentBlockStartEvent):
-            if isinstance(response.content_block, ToolUseBlock):
+            if isinstance(response.content_block, ToolUseBlock | ServerToolUseBlock):
                 current_tool_block = ToolUseBlockParam(
                     type="tool_use",
                     id=response.content_block.id,
@@ -235,6 +258,13 @@ async def _transform_stream(
                     input="",
                 )
                 current_tool_args = ""
+            elif isinstance(response.content_block, WebSearchToolResultBlock):
+                if has_native:
+                    yield {"role": "assistant"}
+                    has_native = False
+                    has_content = False
+                yield {"native": response.content_block}
+                has_native = True
             elif isinstance(response.content_block, TextBlock):
                 if has_content:
                     yield {"role": "assistant"}
@@ -266,6 +296,8 @@ async def _transform_stream(
                 yield {"content": response.delta.text}
             elif isinstance(response.delta, ThinkingDelta):
                 yield {"thinking_content": response.delta.thinking}
+            elif isinstance(response.delta, CitationsDelta):
+                yield {"native": response.delta}
             elif isinstance(response.delta, SignatureDelta):
                 yield {
                     "native": ThinkingBlock(
@@ -367,7 +399,7 @@ class AnthropicBaseLLMEntity(Entity):
                 }
                 if tools is None:
                     tools = []
-                tools.append(web_search_tool)
+                tools.append(web_search_tool)  # type: ignore[arg-type]
 
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):

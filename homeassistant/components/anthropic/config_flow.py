@@ -24,6 +24,7 @@ from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -294,7 +295,9 @@ def anthropic_config_option_schema(
             vol.Optional(
                 CONF_WEB_SEARCH_MAX_USES,
                 default=RECOMMENDED_WEB_SEARCH_MAX_USES,
-            ): NumberSelector(NumberSelectorConfig(min=1, max=20, mode="box")),
+            ): NumberSelector(
+                NumberSelectorConfig(min=1, max=20, mode=NumberSelectorMode.BOX)
+            ),
         }
     )
     return schema
