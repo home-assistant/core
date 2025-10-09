@@ -50,7 +50,10 @@ async def async_setup_entry(
     _LOGGER.debug("disk arguments to be added: %s", disk_arguments)
 
     coordinator: SystemMonitorCoordinator = SystemMonitorCoordinator(
-        hass, entry, psutil_wrapper, disk_arguments
+        hass,
+        entry,
+        psutil_wrapper,
+        disk_arguments,
     )
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = SystemMonitorData(coordinator, psutil_wrapper)

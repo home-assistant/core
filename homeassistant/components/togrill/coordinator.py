@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TypeVar
 
 from bleak.exc import BleakError
 from togrill_bluetooth.client import Client
@@ -38,8 +38,6 @@ type ToGrillConfigEntry = ConfigEntry[ToGrillCoordinator]
 
 SCAN_INTERVAL = timedelta(seconds=30)
 LOGGER = logging.getLogger(__name__)
-
-PacketType = TypeVar("PacketType", bound=Packet)
 
 
 def get_version_string(packet: PacketA0Notify) -> str:
@@ -149,8 +147,9 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             raise DeviceNotFound("Unable to connect to device") from exc
 
         try:
-            packet_a0 = await client.read(PacketA0Notify)
-        except (BleakError, DecodeError) as exc:
+            async with asyncio.timeout(10):
+                packet_a0 = await client.read(PacketA0Notify)
+        except (BleakError, DecodeError, TimeoutError) as exc:
             await client.disconnect()
             raise DeviceFailed(f"Device failed {exc}") from exc
 
@@ -179,9 +178,9 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         self.client = await self._connect_and_update_registry()
         return self.client
 
-    def get_packet(
-        self, packet_type: type[PacketType], probe=None
-    ) -> PacketType | None:
+    def get_packet[PacketT: Packet](
+        self, packet_type: type[PacketT], probe=None
+    ) -> PacketT | None:
         """Get a cached packet of a certain type."""
 
         if packet := self.data.get((packet_type.type, probe)):
@@ -215,9 +214,19 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
 
     @callback
     def _async_request_refresh_soon(self) -> None:
-        self.config_entry.async_create_task(
-            self.hass, self.async_request_refresh(), eager_start=False
-        )
+        """Request a refresh in the near future.
+
+        This way have been called during an update and
+        would be ignored by debounce logic, so we delay
+        it by a slight amount to hopefully let the current
+        update finish first.
+        """
+
+        async def _delayed_refresh() -> None:
+            await asyncio.sleep(0.5)
+            await self.async_request_refresh()
+
+        self.config_entry.async_create_task(self.hass, _delayed_refresh())
 
     @callback
     def _disconnected_callback(self) -> None:
