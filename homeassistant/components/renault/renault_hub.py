@@ -100,7 +100,7 @@ class RenaultHub:
         self._account = await self._client.get_api_account(account_id)
         vehicle_links = await _get_filtered_vehicles(self._account)
         if not vehicle_links:
-            LOGGER.warning("No valid vehicle details found")
+            LOGGER.warning("No valid vehicle details found for account_id: %s", account_id)
             raise ConfigEntryNotReady(
                 "Failed to retrieve vehicle details from Renault servers"
             )
