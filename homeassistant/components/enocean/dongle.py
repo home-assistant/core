@@ -26,6 +26,9 @@ class EnOceanDongle:
 
     def __init__(self, hass: HomeAssistant, serial_path) -> None:
         """Initialize the EnOcean dongle."""
+
+        # callback needs to be set after initialization
+        # in order for chip_id and base_id to be available
         self._communicator = SerialCommunicator(
             port=serial_path  # , callback=self.callback
         )
@@ -35,16 +38,29 @@ class EnOceanDongle:
         self.dispatcher_disconnect_handle = None
         self._base_id = "00:00:00:00"
         self._chip_id = "00:00:00:00"
+        self._chip_version = "n/a"
+        self._sw_version = "n/a"
 
     async def async_setup(self):
         """Finish the setup of the bridge and supported platforms."""
         self._communicator.start()
         self._chip_id = to_hex_string(self._communicator.chip_id)
         self._base_id = to_hex_string(self._communicator.base_id)
+        self._chip_version = self._communicator.version_info.chip_version
+
+        self._sw_version = (
+            self._communicator.version_info.app_version.versionString()
+            + " (app), "
+            + self._communicator.version_info.api_version.versionString()
+            + " (api)"
+        )
+
+        # callback needs to be set after initialization
+        # in order for chip_id and base_id to be available
         self._communicator.callback = self.callback
 
-        _LOGGER.warning("Chip id: %s", self.chip_id)
-        _LOGGER.warning("Base id: %s", self.base_id)
+        #  _LOGGER.warning("Chip id: %s", self.chip_id)
+        #  _LOGGER.warning("Base id: %s", self.base_id)
         self.dispatcher_disconnect_handle = async_dispatcher_connect(
             self.hass, SIGNAL_SEND_MESSAGE, self._send_message_callback
         )
@@ -64,6 +80,16 @@ class EnOceanDongle:
     def chip_id(self):
         """Get the dongle's chip id (REQUIRES UPDATE OF ENOCEAN LIBRARY)."""
         return self._chip_id
+
+    @property
+    def chip_version(self):
+        """Get the dongle's base id."""
+        return self._chip_version
+
+    @property
+    def sw_version(self):
+        """Get the dongle's base id."""
+        return self._sw_version
 
     def _send_message_callback(self, command):
         """Send a command through the EnOcean dongle."""

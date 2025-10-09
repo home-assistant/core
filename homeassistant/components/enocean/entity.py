@@ -6,7 +6,13 @@ from enocean.utils import combine_hex
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .const import (
+    DATA_ENOCEAN,
+    DOMAIN,
+    ENOCEAN_DONGLE,
+    SIGNAL_RECEIVE_MESSAGE,
+    SIGNAL_SEND_MESSAGE,
+)
 from .supported_device_type import EnOceanSupportedDeviceType
 
 
@@ -30,6 +36,7 @@ class EnOceanEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        self._gateway_id = self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].chip_id
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -73,8 +80,9 @@ class EnOceanEntity(Entity):
                 "manufacturer": self.dev_type.manufacturer,
                 "model": self.dev_type.model,
                 "model_id": "model id",
-                # "sw_version": "n/a",
-                # "hw_version": "n/a",
+                "serial_number": self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].chip_id,
+                "sw_version": self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].sw_version,
+                "hw_version": self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].chip_version,
             }
         return {
             "identifiers": {(DOMAIN, self.dev_id_string())},
