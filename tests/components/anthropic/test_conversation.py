@@ -1515,3 +1515,140 @@ async def test_server_tool_use_block_streaming(
     assert tool_call.tool_name == "web_search"
     assert tool_call.external is True
     assert tool_call.tool_args == {"query": "test query"}
+
+
+async def test_web_search_result_block_streaming(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that WebSearchToolResultBlock is properly handled in streaming."""
+    # Enable web search
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-3-5-sonnet-latest",
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_MAX_USES: 5,
+        },
+    )
+    with patch("anthropic.resources.models.AsyncModels.retrieve"):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    # First conversation: Web search is performed and results are returned
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                [
+                    *create_content_block(0, ["Let me search for that information."]),
+                    *create_server_tool_use_block(
+                        1,
+                        "srvtoolu_web_search_123",
+                        "web_search",
+                        ['{"query": "current weather"}'],
+                    ),
+                    *create_web_search_result_block(
+                        2,
+                        "srvtoolu_web_search_123",
+                        [
+                            {
+                                "url": "https://weather.example.com",
+                                "title": "Weather Forecast",
+                                "encrypted_content": "encrypted_search_result_data",
+                            }
+                        ],
+                    ),
+                    *create_content_block(
+                        3, ["Based on my search, the weather is sunny today."]
+                    ),
+                ],
+            )
+        ),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "What's the weather?",
+            None,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    conversation_id = result.conversation_id
+
+    # Verify the chat log contains both the tool call and the result
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(conversation_id)
+    assert chat_log is not None
+
+    # Find the assistant content with web search
+    assistant_content = None
+    for content in chat_log.content:
+        if isinstance(content, conversation.AssistantContent) and content.tool_calls:
+            if any(tool_call.external for tool_call in content.tool_calls):
+                assistant_content = content
+                break
+
+    assert assistant_content is not None
+    assert len(assistant_content.tool_calls) == 1
+    assert assistant_content.tool_calls[0].external is True
+    assert assistant_content.tool_calls[0].id == "srvtoolu_web_search_123"
+    assert isinstance(assistant_content.native, WebSearchToolResultBlock)
+    assert assistant_content.native.tool_use_id == "srvtoolu_web_search_123"
+
+    # Second conversation: Follow-up question should include the complete web search history
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                create_content_block(0, ["The temperature is 75 degrees Fahrenheit."]),
+            )
+        ),
+    ) as mock_create:
+        await conversation.async_converse(
+            hass,
+            "What's the temperature?",
+            conversation_id,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    # Verify that the second call properly reconstructed the web search with both blocks
+    messages = mock_create.call_args.kwargs["messages"]
+
+    # Find the assistant message with web search from the first turn
+    found_server_tool_use = False
+    found_web_search_result = False
+    server_tool_use_index = -1
+    web_search_result_index = -1
+
+    for message in messages:
+        if message["role"] == "assistant":
+            for j, content_block in enumerate(message["content"]):
+                if isinstance(content_block, dict):
+                    if (
+                        content_block.get("type") == "server_tool_use"
+                        and content_block.get("name") == "web_search"
+                        and content_block.get("id") == "srvtoolu_web_search_123"
+                    ):
+                        found_server_tool_use = True
+                        server_tool_use_index = j
+                elif isinstance(content_block, WebSearchToolResultBlock):
+                    if content_block.tool_use_id == "srvtoolu_web_search_123":
+                        found_web_search_result = True
+                        web_search_result_index = j
+
+    assert found_server_tool_use, (
+        "ServerToolUseBlock should be included in reconstructed history"
+    )
+    assert found_web_search_result, (
+        "WebSearchToolResultBlock should be included in reconstructed history"
+    )
+    assert server_tool_use_index < web_search_result_index, (
+        "ServerToolUseBlock must precede WebSearchToolResultBlock "
+        "(got server_tool_use at index {server_tool_use_index}, "
+        "web_search_result at index {web_search_result_index})"
+    )

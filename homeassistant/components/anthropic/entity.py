@@ -159,7 +159,25 @@ def _convert_content(
                         redacted_thinking_block
                     )
             elif isinstance(content.native, WebSearchToolResultBlock):
-                # Reconstruct WebSearchToolResultBlock from native content
+                # Web search results must be preceded by their corresponding server_tool_use block
+                # Find the matching tool call by tool_use_id
+                if content.tool_calls:
+                    for tool_call in content.tool_calls:
+                        if (
+                            tool_call.external
+                            and tool_call.id == content.native.tool_use_id
+                        ):
+                            # Add the server_tool_use block first
+                            messages[-1]["content"].append(  # type: ignore[union-attr]
+                                ServerToolUseBlockParam(
+                                    type="server_tool_use",
+                                    id=tool_call.id,
+                                    name=tool_call.tool_name,  # type: ignore[typeddict-item]
+                                    input=tool_call.tool_args,
+                                )
+                            )
+                            break
+                # Then add the web_search_tool_result block
                 messages[-1]["content"].append(  # type: ignore[union-attr]
                     content.native
                 )
@@ -173,6 +191,13 @@ def _convert_content(
                 )
             if content.tool_calls:
                 for tool_call in content.tool_calls:
+                    # Skip external tool calls that were already added with WebSearchToolResultBlock
+                    if (
+                        tool_call.external
+                        and isinstance(content.native, WebSearchToolResultBlock)
+                        and tool_call.id == content.native.tool_use_id
+                    ):
+                        continue
                     if tool_call.external:
                         # External tools (like web_search) use ServerToolUseBlockParam
                         messages[-1]["content"].append(  # type: ignore[union-attr]
