@@ -98,7 +98,8 @@ class VivotekCam(Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        return self._cam.snapshot()
+        _snapshot = self._cam.snapshot()
+        return _snapshot or None
 
     async def stream_source(self) -> str:
         """Return the source of the stream."""
