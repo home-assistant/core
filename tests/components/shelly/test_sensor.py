@@ -1089,6 +1089,7 @@ async def test_rpc_device_virtual_text_sensor(
         ("text", "text_generic", None),
     ],
 )
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_migrate_unique_id_virtual_components_roles(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
