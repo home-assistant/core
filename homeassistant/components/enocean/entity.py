@@ -16,7 +16,7 @@ class EnOceanEntity(Entity):
     def __init__(
         self,
         dev_id,
-        dev_name="EnOcean device",
+        dev_name="EnOcean entity",
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
     ) -> None:
@@ -26,9 +26,11 @@ class EnOceanEntity(Entity):
         self.dev_type = dev_type
         self._attr_name = name
         self._attr_has_entity_name = True
+        self._gateway_id = "00:00:00:00"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SIGNAL_RECEIVE_MESSAGE, self._message_received_callback
@@ -57,14 +59,26 @@ class EnOceanEntity(Entity):
         value = hex(self.dev_id_number())[2:].rjust(8, "0").upper()
         return ":".join(value[i : i + 2] for i in range(0, len(value), 2))
 
+    def gateway_id(self):
+        """Return the gateway's chip id as colon-separated hex string (NOT YET IMPLEMENTED)."""
+        return self._gateway_id
+
     @property
     def device_info(self):
         """Get device info."""
+        if self.dev_id_number() == 0:
+            return {
+                "identifiers": {(DOMAIN, self.dev_id_string())},
+                "name": self.dev_name,
+                "manufacturer": self.dev_type.manufacturer,
+                "model": self.dev_type.model,
+                "sw_version": "",
+            }
         return {
             "identifiers": {(DOMAIN, self.dev_id_string())},
             "name": self.dev_name,
             "manufacturer": self.dev_type.manufacturer,
             "model": self.dev_type.model,
             "sw_version": "",
-            "via_device": (DOMAIN, "not yet set"),
+            "via_device": (DOMAIN, self.gateway_id()),
         }
