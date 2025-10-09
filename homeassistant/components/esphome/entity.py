@@ -329,7 +329,7 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
     def __init__(
         self,
         entry_data: RuntimeEntryData,
-        domain: str,
+        domain: str,  # Kept for backwards compatibility but not used
         entity_info: EntityInfo,
         state_type: type[_StateT],
     ) -> None:
@@ -343,7 +343,6 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         self._state_type = state_type
         self._on_static_info_update(entity_info)
 
-        device_name = device_info.name
         # Determine the device connection based on whether this entity belongs to a sub device
         if entity_info.device_id:
             # Entity belongs to a sub device
@@ -352,26 +351,11 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
                     (DOMAIN, f"{device_info.mac_address}_{entity_info.device_id}")
                 }
             )
-            # Use the pre-computed device_id_to_name mapping for O(1) lookup
-            device_name = entry_data.device_id_to_name.get(
-                entity_info.device_id, device_info.name
-            )
         else:
             # Entity belongs to the main device
             self._attr_device_info = DeviceInfo(
                 connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
             )
-
-        if entity_info.name:
-            self.entity_id = f"{domain}.{device_name}_{entity_info.name}"
-        else:
-            # https://github.com/home-assistant/core/issues/132532
-            # If name is not set, ESPHome will use the sanitized friendly name
-            # as the name, however we want to use the original object_id
-            # as the entity_id before it is sanitized since the sanitizer
-            # is not utf-8 aware. In this case, its always going to be
-            # an empty string so we drop the object_id.
-            self.entity_id = f"{domain}.{device_name}"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
