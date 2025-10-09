@@ -4,12 +4,7 @@ from __future__ import annotations
 
 from pyfirefly.models import Account, Category
 
-from homeassistant.components.sensor import (
-    SensorEntity,
-    SensorEntityDescription,
-    SensorStateClass,
-    StateType,
-)
+from homeassistant.components.sensor import SensorEntity, SensorStateClass, StateType
 from homeassistant.components.sensor.const import SensorDeviceClass
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -18,31 +13,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import ACCOUNT_ROLE_MAPPING, ACCOUNT_TYPE_ICONS
 from .coordinator import FireflyConfigEntry, FireflyDataUpdateCoordinator
 from .entity import FireflyAccountBaseEntity, FireflyCategoryBaseEntity
-
-ACCOUNT_BALANCE_DESCRIPTION = SensorEntityDescription(
-    key="account_balance",
-    translation_key="account_balance",
-    device_class=SensorDeviceClass.MONETARY,
-    state_class=SensorStateClass.TOTAL,
-)
-ACCOUNT_ROLE_DESCRIPTION = SensorEntityDescription(
-    key="account_role",
-    translation_key="account_role",
-    entity_category=EntityCategory.DIAGNOSTIC,
-    entity_registry_enabled_default=True,
-)
-ACCOUNT_TYPE_DESCRIPTION = SensorEntityDescription(
-    key="account_type",
-    translation_key="account_type",
-    entity_category=EntityCategory.DIAGNOSTIC,
-    entity_registry_enabled_default=True,
-)
-CATEGORY_DESCRIPTION = SensorEntityDescription(
-    key="category",
-    translation_key="category",
-    device_class=SensorDeviceClass.MONETARY,
-    state_class=SensorStateClass.TOTAL,
-)
 
 
 async def async_setup_entry(
@@ -56,20 +26,14 @@ async def async_setup_entry(
 
     for account in coordinator.data.accounts:
         entities.append(
-            FireflyAccountBalanceSensor(
-                coordinator, ACCOUNT_BALANCE_DESCRIPTION, account
-            )
+            FireflyAccountBalanceSensor(coordinator, account, "account_balance")
         )
-        entities.append(
-            FireflyAccountRoleSensor(coordinator, ACCOUNT_ROLE_DESCRIPTION, account)
-        )
-        entities.append(
-            FireflyAccountTypeSensor(coordinator, ACCOUNT_TYPE_DESCRIPTION, account)
-        )
+        entities.append(FireflyAccountRoleSensor(coordinator, account, "account_role"))
+        entities.append(FireflyAccountTypeSensor(coordinator, account, "account_type"))
 
     entities.extend(
         [
-            FireflyCategorySensor(coordinator, CATEGORY_DESCRIPTION, category)
+            FireflyCategorySensor(coordinator, category, "category")
             for category in coordinator.data.category_details
         ]
     )
@@ -87,11 +51,11 @@ class FireflyAccountBalanceSensor(FireflyAccountBaseEntity, SensorEntity):
     def __init__(
         self,
         coordinator: FireflyDataUpdateCoordinator,
-        description: SensorEntityDescription,
         account: Account,
+        key: str,
     ) -> None:
         """Initialize the account balance sensor."""
-        super().__init__(coordinator, description, account)
+        super().__init__(coordinator, account, key)
         self._account = account
         self._attr_native_unit_of_measurement = (
             coordinator.data.primary_currency.attributes.code
@@ -113,11 +77,11 @@ class FireflyAccountRoleSensor(FireflyAccountBaseEntity, SensorEntity):
     def __init__(
         self,
         coordinator: FireflyDataUpdateCoordinator,
-        description: SensorEntityDescription,
         account: Account,
+        key: str,
     ) -> None:
         """Initialize the account role sensor."""
-        super().__init__(coordinator, description, account)
+        super().__init__(coordinator, account, key)
         self._account = account
 
     @property
@@ -142,11 +106,11 @@ class FireflyAccountTypeSensor(FireflyAccountBaseEntity, SensorEntity):
     def __init__(
         self,
         coordinator: FireflyDataUpdateCoordinator,
-        description: SensorEntityDescription,
         account: Account,
+        key: str,
     ) -> None:
         """Initialize the account type sensor."""
-        super().__init__(coordinator, description, account)
+        super().__init__(coordinator, account, key)
         acc_type = account.attributes.type
         self._attr_icon = (
             ACCOUNT_TYPE_ICONS.get(acc_type, "mdi:bank")
@@ -166,13 +130,12 @@ class FireflyCategorySensor(FireflyCategoryBaseEntity, SensorEntity):
     def __init__(
         self,
         coordinator: FireflyDataUpdateCoordinator,
-        description: SensorEntityDescription,
         category: Category,
+        key: str,
     ) -> None:
         """Initialize the category sensor."""
-        super().__init__(coordinator, description, category)
+        super().__init__(coordinator, category, key)
         self._category = category
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_category_{category.id}_{description.key}"
         self._attr_native_unit_of_measurement = (
             coordinator.data.primary_currency.attributes.code
         )
