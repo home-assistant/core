@@ -1148,7 +1148,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
         return value
 
 
-class ObjectSelectorField(TypedDict):
+class ObjectSelectorField(TypedDict, total=False):
     """Class to represent an object selector fields dict."""
 
     label: str
@@ -1156,7 +1156,7 @@ class ObjectSelectorField(TypedDict):
     selector: dict[str, Any]
 
 
-class ObjectSelectorConfig(BaseSelectorConfig):
+class ObjectSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an object selector config."""
 
     fields: dict[str, ObjectSelectorField]
@@ -1196,7 +1196,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         """Validate the passed selection."""
         if "fields" not in self.config:
             # Return data if no fields are defined
-            return data  # type: ignore[unreachable]
+            return data
 
         if not isinstance(data, (list, dict)):
             raise vol.Invalid("Value should be a dict or a list of dicts")
@@ -1211,6 +1211,10 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
                     raise vol.Invalid(f"Field {field} is required")
                 if field in _config:
                     selector(field_data["selector"])(_config[field])  # type: ignore[operator]
+
+            for key in _config:
+                if key not in self.config["fields"]:
+                    raise vol.Invalid(f"Field {key} is not allowed")
 
         return data
 

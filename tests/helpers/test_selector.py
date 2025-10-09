@@ -708,7 +708,12 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
                 ],
                 [{"name": "abc123"}],
             ),
-            ("abc123", None, [{"name": "abc123", "percentage": "nope"}]),
+            (
+                "abc123",
+                None,
+                [{"name": "abc123", "percentage": "nope"}],
+                [{"name": "abc123", "percentage": 3, "not_exist": 5}],
+            ),
         ),
     ],
     [],
