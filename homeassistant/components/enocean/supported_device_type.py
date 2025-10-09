@@ -364,6 +364,12 @@ _supported_enocean_device_types: dict[str, EnOceanSupportedDeviceType] = {
         eep="D2-01-14",
         model="EEP D2-01-14 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 14)",
     ),
+    # D2-05-00 Blinds Control for Position and Angle
+    "D2-05-00": EnOceanSupportedDeviceType(
+        unique_id="D2-05-00",
+        eep="D2-05-00",
+        model="EEP D2-05-00 (Blinds Control for Position and Angle, Type 00)",
+    ),
     # F6-02 Light and Blind Control
     "F6-02-01": EnOceanSupportedDeviceType(
         unique_id="F6-02-01",
@@ -426,6 +432,12 @@ _supported_enocean_device_types: dict[str, EnOceanSupportedDeviceType] = {
         eep="D2-01-12",
         manufacturer="NodOn",
         model="SIN-2-2-01",
+    ),
+    "NodOn_SIN-2-RS-01": EnOceanSupportedDeviceType(
+        unique_id="NodOn_SIN-2-RS-01",
+        eep="D2-05-00",
+        manufacturer="NodOn",
+        model="SIN-2-RS-01 (roller shutter controller, EEP D2-05-00)",
     ),
     "Permundo_PSC234": EnOceanSupportedDeviceType(
         unique_id="Permundo_PSC234",
