@@ -468,7 +468,9 @@ class OpenAIBaseLLMEntity(Entity):
             model_args["reasoning"] = {
                 "effort": options.get(
                     CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                ),
+                )
+                if not model_args["model"].startswith("gpt-5-pro")
+                else "high",  # GPT-5 pro only supports reasoning.effort: high
                 "summary": "auto",
             }
             model_args["include"] = ["reasoning.encrypted_content"]
@@ -487,7 +489,7 @@ class OpenAIBaseLLMEntity(Entity):
 
         if options.get(CONF_WEB_SEARCH):
             web_search = WebSearchToolParam(
-                type="web_search_preview",
+                type="web_search",
                 search_context_size=options.get(
                     CONF_WEB_SEARCH_CONTEXT_SIZE, RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE
                 ),
