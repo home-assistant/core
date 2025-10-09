@@ -27,7 +27,7 @@ from .entity import (
     async_setup_block_attribute_entities,
     async_setup_entry_rpc,
 )
-from .utils import async_remove_shelly_entity, get_device_entry_gen
+from .utils import get_device_entry_gen
 
 PARALLEL_UPDATES = 0
 
@@ -42,12 +42,15 @@ class RpcValveDescription(RpcEntityDescription, ValveEntityDescription):
     """Class to describe a RPC virtual valve."""
 
 
-GAS_VALVE = BlockValveDescription(
-    key="valve|valve",
-    name="Valve",
-    available=lambda block: block.valve not in ("failure", "checking"),
-    removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
-)
+BLOCK_VALVES: dict[tuple[str, str], BlockValveDescription] = {
+    ("valve", "valve"): BlockValveDescription(
+        key="valve|valve",
+        name="Valve",
+        available=lambda block: block.valve not in ("failure", "checking"),
+        removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
+        models={MODEL_GAS},
+    ),
+}
 
 
 class RpcShellyBaseWaterValve(ShellyRpcAttributeEntity, ValveEntity):
@@ -162,19 +165,15 @@ def async_setup_block_entry(
 ) -> None:
     """Set up valve for device."""
     coordinator = config_entry.runtime_data.block
-    assert coordinator and coordinator.device.blocks
+    assert coordinator
 
-    if coordinator.model == MODEL_GAS:
-        async_setup_block_attribute_entities(
-            hass,
-            async_add_entities,
-            coordinator,
-            {("valve", "valve"): GAS_VALVE},
-            BlockShellyValve,
-        )
-        # Remove deprecated switch entity for gas valve
-        unique_id = f"{coordinator.mac}-valve_0-valve"
-        async_remove_shelly_entity(hass, "switch", unique_id)
+    async_setup_block_attribute_entities(
+        hass,
+        async_add_entities,
+        coordinator,
+        BLOCK_VALVES,
+        BlockShellyValve,
+    )
 
 
 class BlockShellyValve(ShellyBlockAttributeEntity, ValveEntity):
