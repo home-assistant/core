@@ -36,6 +36,13 @@
       "get_api_key": "Open the OctoPrint UI and select **Allow** on the Access Request for **Home Assistant**."
     }
   },
+  "entity": {
+    "number": {
+      "set_temperature": {
+        "name": "Set {tool} temperature"
+      }
+    }
+  },
   "exceptions": {
     "error_setting_temperature": {
       "message": "Error setting target {tool} temperature"

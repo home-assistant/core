@@ -82,12 +82,14 @@ class OctoPrintTemperatureNumber(
 ):
     """Representation of an OctoPrint temperature setter entity."""
 
+    _attr_has_entity_name = True
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_native_min_value = 0
     _attr_native_max_value = 300
     _attr_native_step = 1
     _attr_mode = NumberMode.BOX
     _attr_device_class = NumberDeviceClass.TEMPERATURE
+    _attr_translation_key = "set_temperature"
 
     def __init__(
         self,
@@ -100,8 +102,8 @@ class OctoPrintTemperatureNumber(
         super().__init__(coordinator)
         self._device_id = device_id
         self._api_tool = tool
-        self._attr_name = f"OctoPrint set {tool} temp"
-        self._attr_unique_id = f"set-{tool}-temp-{device_id}"
+        self._attr_translation_placeholders = {"tool": tool}
+        self._attr_unique_id = f"{device_id}_{tool}_temperature"
         self._attr_device_info = coordinator.device_info
         self._client = client
 
