@@ -4062,25 +4062,78 @@ async def test_compile_hourly_statistics_equivalent_units_2(
 @pytest.mark.parametrize(
     (
         "device_class",
-        "state_unit",
-        "statistic_unit",
-        "unit_class",
+        "unit_1",
+        "unit_2",
+        "unit_class_1",
+        "unit_class_2",
+        "factor",
         "mean1",
         "mean2",
         "min",
         "max",
     ),
     [
-        ("power", "kW", "kW", "power", 13.050847, 13.333333, -10, 30),
+        (
+            "power",
+            "kW",
+            "kW",
+            "power",
+            "power",
+            1,
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
+        (
+            "carbon_monoxide",
+            "ppm",
+            "ppm",
+            "unitless",
+            "carbon_monoxide",
+            1,
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
+        # Valid change of unit class from unitless to carbon_monoxide
+        (
+            "carbon_monoxide",
+            "ppm",
+            "mg/m³",
+            "unitless",
+            "carbon_monoxide",
+            1.145609,
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
+        # Valid change of unit class from concentration to carbon_monoxide
+        (
+            "carbon_monoxide",
+            "mg/m³",
+            "ppm",
+            "concentration",
+            "carbon_monoxide",
+            1 / 1.145609,
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
     ],
 )
 async def test_compile_hourly_statistics_changing_device_class_1(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
-    state_unit,
-    statistic_unit,
-    unit_class,
+    unit_1,
+    unit_2,
+    unit_class_1,
+    unit_class_2,
+    factor,
     mean1,
     mean2,
     min,
@@ -4088,7 +4141,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
 ) -> None:
     """Test compiling hourly statistics where device class changes from one hour to the next.
 
-    Device class is ignored, meaning changing device class should not influence the statistics.
+    In this test, the device class is first None, then set to a specific device class.
+
+    Changing device class may influence the unit class.
     """
     zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
@@ -4098,7 +4153,7 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     # Record some states for an initial period, the entity has no device class
     attributes = {
         "state_class": "measurement",
-        "unit_of_measurement": state_unit,
+        "unit_of_measurement": unit_1,
     }
     with freeze_time(zero) as freezer:
         four, states = await async_record_states(
@@ -4113,14 +4168,14 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
-            "display_unit_of_measurement": state_unit,
+            "display_unit_of_measurement": unit_1,
             "has_mean": True,
             "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": state_unit,
-            "unit_class": unit_class,
+            "statistics_unit_of_measurement": unit_1,
+            "unit_class": unit_class_1,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -4163,14 +4218,14 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
-            "display_unit_of_measurement": state_unit,
+            "display_unit_of_measurement": unit_1,
             "has_mean": True,
             "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": state_unit,
-            "unit_class": unit_class,
+            "statistics_unit_of_measurement": unit_1,
+            "unit_class": unit_class_2,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -4200,14 +4255,15 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     }
 
     # Update device class and record additional states in a different UoM
-    attributes["unit_of_measurement"] = statistic_unit
+    attributes["unit_of_measurement"] = unit_2
+    seq = [x * factor for x in (-10, 15, 30)]
     with freeze_time(zero) as freezer:
         four, _states = await async_record_states(
-            hass, freezer, zero + timedelta(minutes=15), "sensor.test1", attributes
+            hass, freezer, zero + timedelta(minutes=15), "sensor.test1", attributes, seq
         )
         states["sensor.test1"] += _states["sensor.test1"]
         four, _states = await async_record_states(
-            hass, freezer, zero + timedelta(minutes=20), "sensor.test1", attributes
+            hass, freezer, zero + timedelta(minutes=20), "sensor.test1", attributes, seq
         )
     await async_wait_recording_done(hass)
     states["sensor.test1"] += _states["sensor.test1"]
@@ -4223,14 +4279,14 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
-            "display_unit_of_measurement": state_unit,
+            "display_unit_of_measurement": unit_2,
             "has_mean": True,
             "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": state_unit,
-            "unit_class": unit_class,
+            "statistics_unit_of_measurement": unit_1,
+            "unit_class": unit_class_2,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -4239,9 +4295,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             {
                 "start": process_timestamp(zero).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
-                "mean": pytest.approx(mean1),
-                "min": pytest.approx(min),
-                "max": pytest.approx(max),
+                "mean": pytest.approx(mean1 * factor),
+                "min": pytest.approx(min * factor),
+                "max": pytest.approx(max * factor),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -4249,9 +4305,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             {
                 "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=15)).timestamp(),
-                "mean": pytest.approx(mean2),
-                "min": pytest.approx(min),
-                "max": pytest.approx(max),
+                "mean": pytest.approx(mean2 * factor),
+                "min": pytest.approx(min * factor),
+                "max": pytest.approx(max * factor),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -4259,9 +4315,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             {
                 "start": process_timestamp(zero + timedelta(minutes=20)).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=25)).timestamp(),
-                "mean": pytest.approx(mean2),
-                "min": pytest.approx(min),
-                "max": pytest.approx(max),
+                "mean": pytest.approx(mean2 * factor),
+                "min": pytest.approx(min * factor),
+                "max": pytest.approx(max * factor),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -4302,7 +4358,9 @@ async def test_compile_hourly_statistics_changing_device_class_2(
 ) -> None:
     """Test compiling hourly statistics where device class changes from one hour to the next.
 
-    Device class is ignored, meaning changing device class should not influence the statistics.
+    In this test, the device class is first set to a specific device class, then set to None.
+
+    Changing device class may influence the unit class.
     """
     zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})

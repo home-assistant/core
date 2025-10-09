@@ -280,19 +280,27 @@ def _normalize_states(
     state_unit: str | None = None
     statistics_unit: str | None
     state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+    device_class = fstates[0][1].attributes.get(ATTR_DEVICE_CLASS)
     old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
     if not old_metadata:
         # We've not seen this sensor before, the first valid state determines the unit
         # used for statistics
         statistics_unit = state_unit
-        unit_class = _get_unit_class(
-            fstates[0][1].attributes.get(ATTR_DEVICE_CLASS),
-            state_unit,
-        )
+        unit_class = _get_unit_class(device_class, state_unit)
     else:
         # We have seen this sensor before, use the unit from metadata
         statistics_unit = old_metadata["unit_of_measurement"]
         unit_class = old_metadata["unit_class"]
+        # Check if the unit class has changed
+        if (
+            (new_unit_class := _get_unit_class(device_class, state_unit)) != unit_class
+            and (new_converter := _get_unit_converter(unit_class))
+            and state_unit in new_converter.VALID_UNITS
+            and statistics_unit in new_converter.VALID_UNITS
+        ):
+            # The new unit class supports conversion between the units in metadata
+            # and the unit in the state, so we can use the new unit class
+            unit_class = new_unit_class
 
     if not (converter := _get_unit_converter(unit_class)):
         # The unit used by this sensor doesn't support unit conversion
