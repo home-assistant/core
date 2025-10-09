@@ -39,7 +39,7 @@
   "entity": {
     "number": {
       "set_temperature": {
-        "name": "Set {tool} temperature"
+        "name": "{tool} temperature"
       }
     }
   },
