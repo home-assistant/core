@@ -8,16 +8,21 @@ from contextlib import asynccontextmanager
 import logging
 from typing import TYPE_CHECKING, Protocol, TypedDict
 
-from homeassistant.components.usb import USBDevice, usb_device_from_path
+from homeassistant.components.usb import (
+    USBDevice,
+    async_get_usb_matchers_for_device,
+    usb_device_from_path,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers import discovery_flow
 
 from . import DATA_COMPONENT
-from .util import FirmwareInfo, async_get_hardware_domain_for_usb_device
+from .const import HARDWARE_INTEGRATION_DOMAINS
 
 if TYPE_CHECKING:
     from .util import FirmwareInfo
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +59,23 @@ class AsyncHardwareFirmwareInfoModule(Protocol):
 type HardwareFirmwareInfoModule = (
     SyncHardwareFirmwareInfoModule | AsyncHardwareFirmwareInfoModule
 )
+
+
+async def async_get_hardware_domain_for_usb_device(
+    hass: HomeAssistant, usb_device: USBDevice
+) -> str | None:
+    """Identify which hardware domain should handle a USB device."""
+    matched = async_get_usb_matchers_for_device(hass, usb_device)
+    hw_domains = {match["domain"] for match in matched} & HARDWARE_INTEGRATION_DOMAINS
+
+    if not hw_domains:
+        _LOGGER.debug("No hardware integration matches USB device %r", usb_device)
+        return None
+
+    # We can never have two hardware integrations overlap in discovery
+    assert len(hw_domains) == 1
+
+    return list(hw_domains)[0]
 
 
 class HardwareInfoDispatcher:

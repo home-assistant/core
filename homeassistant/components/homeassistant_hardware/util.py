@@ -18,7 +18,7 @@ from universal_silabs_flasher.firmware import parse_firmware_image
 from universal_silabs_flasher.flasher import Flasher
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
-from homeassistant.components.usb import USBDevice, async_get_usb_matchers_for_device
+from homeassistant.components.usb import USBDevice
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -29,7 +29,6 @@ from homeassistant.helpers.singleton import singleton
 from . import DATA_COMPONENT
 from .const import (
     DOMAIN,
-    HARDWARE_INTEGRATION_DOMAINS,
     OTBR_ADDON_MANAGER_DATA,
     OTBR_ADDON_NAME,
     OTBR_ADDON_SLUG,
@@ -433,20 +432,3 @@ def usb_service_info_from_device(usb_device: USBDevice) -> UsbServiceInfo:
         manufacturer=usb_device.manufacturer,
         description=usb_device.description,
     )
-
-
-async def async_get_hardware_domain_for_usb_device(
-    hass: HomeAssistant, usb_device: USBDevice
-) -> str | None:
-    """Identify which hardware domain should handle a USB device."""
-    matched = async_get_usb_matchers_for_device(hass, usb_device)
-    hw_domains = {match["domain"] for match in matched} & HARDWARE_INTEGRATION_DOMAINS
-
-    if not hw_domains:
-        _LOGGER.debug("No hardware integration matches USB device %r", usb_device)
-        return None
-
-    # We can never have two hardware integrations overlap in discovery
-    assert len(hw_domains) == 1
-
-    return list(hw_domains)[0]
