@@ -72,13 +72,18 @@ class EnOceanEntity(Entity):
                 "name": self.dev_name,
                 "manufacturer": self.dev_type.manufacturer,
                 "model": self.dev_type.model,
-                "sw_version": "",
+                "model_id": "model id",
+                # "sw_version": "n/a",
+                # "hw_version": "n/a",
             }
         return {
             "identifiers": {(DOMAIN, self.dev_id_string())},
             "name": self.dev_name,
             "manufacturer": self.dev_type.manufacturer,
             "model": self.dev_type.model,
-            "sw_version": "",
+            "serial_number": self.dev_id_string(),
             "via_device": (DOMAIN, self.gateway_id()),
+            "model_id": "EEP " + self.dev_type.eep,
+            # "sw_version": "",
+            # "hw_version": "",
         }
