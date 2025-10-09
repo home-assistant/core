@@ -116,10 +116,7 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
-        mode = HVAC_MODE_TO_THERMOSTAT.get(hvac_mode)
-        if mode is None:
-            _LOGGER.error("Unsupported HVAC mode %s for %s", hvac_mode, self.device_id)
-            return
+        mode = HVAC_MODE_TO_THERMOSTAT[hvac_mode]
 
         try:
             await self.coordinator.client.set_thermostat_mode(self.device_id, mode)
