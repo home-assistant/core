@@ -94,9 +94,9 @@ async def async_setup_entry(
                         dev_name=device["name"],
                         channel=channel,
                         dev_type=device_type,
-                        name="Button " + channel,
+                        name=channel,
                     )
-                    for channel in ("A0", "A1", "B0", "B1")
+                    for channel in ("A0", "A1", "B0", "B1", "A", "B")
                 ]
             )
 
@@ -126,7 +126,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         self._attr_unique_id = (
             f"{to_hex_string(dev_id).upper()}-{device_class}-{channel}"
         )
-        self._attr_on = True
+        self._attr_on = False
 
         self._attr_should_poll = False
 
@@ -137,9 +137,10 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         """Return the class of this sensor."""
         return self._device_class
 
-    # def is_on(self):
-    #     """Return true if the binary sensor is on."""
-    #     return self._attr_on
+    @property
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return self._attr_on
 
     def value_changed(self, packet):
         """Fire an event with the data that have changed.
@@ -167,25 +168,21 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
             self.onoff = 0
             if self._channel == "A0":
                 self._attr_on = True
-                _LOGGER.info("Button A0 pressed")
         elif action == 0x50:
             self.which = 0
             self.onoff = 1
             if self._channel == "A1":
                 self._attr_on = True
-                _LOGGER.info("Button A1 pressed")
         elif action == 0x30:
             self.which = 1
             self.onoff = 0
             if self._channel == "B0":
                 self._attr_on = True
-                _LOGGER.info("Button B0 pressed")
         elif action == 0x10:
             self.which = 1
             self.onoff = 1
             if self._channel == "B1":
                 self._attr_on = True
-                _LOGGER.info("Button B1 pressed")
         elif action == 0x37:
             self.which = 10
             self.onoff = 0
@@ -194,9 +191,9 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
             self.onoff = 1
         elif action == 0x00:
             self._attr_on = False
-            _LOGGER.info("Button released")
         else:
             _LOGGER.warning("Unknown action: %s", action)
+            self._attr_on = False
 
         self.schedule_update_ha_state()
 
