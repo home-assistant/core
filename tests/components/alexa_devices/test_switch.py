@@ -70,9 +70,21 @@ async def test_switch_dnd(
 
     device_data = deepcopy(TEST_DEVICE_1)
     device_data.sensors = {
-        "dnd": AmazonDeviceSensor(name="dnd", value=True, error=False, scale=None),
+        "dnd": AmazonDeviceSensor(
+            name="dnd",
+            value=True,
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale=None,
+        ),
         "temperature": AmazonDeviceSensor(
-            name="temperature", value="22.5", error=False, scale="CELSIUS"
+            name="temperature",
+            value="22.5",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale="CELSIUS",
         ),
     }
     mock_amazon_devices_client.get_devices_data.return_value = {
@@ -94,9 +106,21 @@ async def test_switch_dnd(
     )
 
     device_data.sensors = {
-        "dnd": AmazonDeviceSensor(name="dnd", value=False, error=False, scale=None),
+        "dnd": AmazonDeviceSensor(
+            name="dnd",
+            value=False,
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale=None,
+        ),
         "temperature": AmazonDeviceSensor(
-            name="temperature", value="22.5", error=False, scale="CELSIUS"
+            name="temperature",
+            value="22.5",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale="CELSIUS",
         ),
     }
     mock_amazon_devices_client.get_devices_data.return_value = {
