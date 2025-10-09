@@ -87,7 +87,8 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data={**reauth_entry.data,
+                    data={
+                        **reauth_entry.data,
                         CONF_SESSION_TOKEN: self.auth.get_session_token,
                     },
                 )
