@@ -387,26 +387,22 @@ class MatterLight(MatterEntity, LightEntity):
                 ):
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
                     self._supports_color_temperature = True
-                    device_min_mireds = max(
-                        1,  # Minimum Matter value for ColorTempPhysicalMinMireds
-                        self.get_matter_attribute_value(
-                            clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
-                        ),
+                    min_mireds = self.get_matter_attribute_value(
+                        clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
                     )
-                    self._attr_max_color_temp_kelvin = min(
-                        color_util.color_temperature_mired_to_kelvin(device_min_mireds),
-                        DEFAULT_MAX_KELVIN,
+                    if min_mireds > 0:
+                        self._attr_max_color_temp_kelvin = min(
+                            color_util.color_temperature_mired_to_kelvin(min_mireds),
+                            DEFAULT_MAX_KELVIN,
+                        )
+                    max_mireds = self.get_matter_attribute_value(
+                        clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
                     )
-                    device_max_mireds = min(
-                        65279,  # Maximum Matter value for ColorTempPhysicalMaxMireds
-                        self.get_matter_attribute_value(
-                            clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
-                        ),
-                    )
-                    self._attr_min_color_temp_kelvin = max(
-                        color_util.color_temperature_mired_to_kelvin(device_max_mireds),
-                        DEFAULT_MIN_KELVIN,
-                    )
+                    if max_mireds > 0:
+                        self._attr_min_color_temp_kelvin = max(
+                            color_util.color_temperature_mired_to_kelvin(max_mireds),
+                            DEFAULT_MIN_KELVIN,
+                        )
 
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
