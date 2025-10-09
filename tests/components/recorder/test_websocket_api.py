@@ -6,6 +6,7 @@ from datetime import timedelta
 import math
 from statistics import fmean
 import sys
+from typing import Any
 from unittest.mock import ANY, patch
 
 from _pytest.python_api import ApproxBase
@@ -319,8 +320,8 @@ async def test_statistic_during_period(
         )
 
     imported_metadata = {
-        "has_mean": True,
         "has_sum": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.test",
@@ -1095,8 +1096,8 @@ async def test_statistic_during_period_hole(
     ]
 
     imported_metadata = {
-        "has_mean": True,
         "has_sum": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.test",
@@ -1440,8 +1441,8 @@ async def test_statistic_during_period_partial_overlap(
 
     statId = "sensor.test_overlapping"
     imported_metadata = {
-        "has_mean": True,
         "has_sum": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Total imported energy overlapping",
         "source": "recorder",
         "statistic_id": statId,
@@ -3550,8 +3551,8 @@ async def test_get_statistics_metadata(
         },
     )
     external_energy_metadata_1 = {
-        "has_mean": has_mean,
         "has_sum": has_sum,
+        "mean_type": mean_type,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_gas",
@@ -3648,6 +3649,15 @@ async def test_get_statistics_metadata(
 
 
 @pytest.mark.parametrize(
+    ("external_metadata_extra_2"),
+    [
+        {"has_mean": False},
+        {
+            "mean_type": int(StatisticMeanType.NONE)
+        },  # The WS API accepts integer, not enum
+    ],
+)
+@pytest.mark.parametrize(
     ("external_metadata_extra", "unit_1", "unit_2", "unit_3", "expected_unit_class"),
     [
         ({}, "kWh", "kWh", "kWh", "energy"),
@@ -3675,6 +3685,7 @@ async def test_import_statistics(
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
     external_metadata_extra: dict[str, str],
+    external_metadata_extra_2: dict[str, Any],
     unit_1: str,
     unit_2: str,
     unit_3: str,
@@ -3705,14 +3716,17 @@ async def test_import_statistics(
         "sum": 3,
     }
 
-    imported_metadata = {
-        "has_mean": False,
-        "has_sum": True,
-        "name": "Total imported energy",
-        "source": source,
-        "statistic_id": statistic_id,
-        "unit_of_measurement": unit_1,
-    } | external_metadata_extra
+    imported_metadata = (
+        {
+            "has_sum": True,
+            "name": "Total imported energy",
+            "source": source,
+            "statistic_id": statistic_id,
+            "unit_of_measurement": unit_1,
+        }
+        | external_metadata_extra
+        | external_metadata_extra_2
+    )
 
     await client.send_json_auto_id(
         {
@@ -3997,8 +4011,8 @@ async def test_import_statistics_with_error(
     }
 
     imported_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": int(StatisticMeanType.NONE),
         "name": "Total imported energy",
         "source": source,
         "statistic_id": statistic_id,
@@ -4047,6 +4061,15 @@ async def test_import_statistics_with_error(
     ],
 )
 @pytest.mark.parametrize(
+    ("external_metadata_extra_2"),
+    [
+        {"has_mean": False},
+        {
+            "mean_type": int(StatisticMeanType.NONE)
+        },  # The WS API accepts integer, not enum
+    ],
+)
+@pytest.mark.parametrize(
     ("source", "statistic_id"),
     [
         ("test", "test:total_energy_import"),
@@ -4059,6 +4082,7 @@ async def test_adjust_sum_statistics_energy(
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
     external_metadata_extra: dict[str, str],
+    external_metadata_extra_2: dict[str, Any],
     source,
     statistic_id,
 ) -> None:
@@ -4085,14 +4109,17 @@ async def test_adjust_sum_statistics_energy(
         "sum": 3,
     }
 
-    imported_metadata = {
-        "has_mean": False,
-        "has_sum": True,
-        "name": "Total imported energy",
-        "source": source,
-        "statistic_id": statistic_id,
-        "unit_of_measurement": "kWh",
-    } | external_metadata_extra
+    imported_metadata = (
+        {
+            "has_sum": True,
+            "name": "Total imported energy",
+            "source": source,
+            "statistic_id": statistic_id,
+            "unit_of_measurement": "kWh",
+        }
+        | external_metadata_extra
+        | external_metadata_extra_2
+    )
 
     await client.send_json_auto_id(
         {
@@ -4251,6 +4278,15 @@ async def test_adjust_sum_statistics_energy(
     ],
 )
 @pytest.mark.parametrize(
+    ("external_metadata_extra_2"),
+    [
+        {"has_mean": False},
+        {
+            "mean_type": int(StatisticMeanType.NONE)
+        },  # The WS API accepts integer, not enum
+    ],
+)
+@pytest.mark.parametrize(
     ("source", "statistic_id"),
     [
         ("test", "test:total_gas"),
@@ -4263,6 +4299,7 @@ async def test_adjust_sum_statistics_gas(
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
     external_metadata_extra: dict[str, str],
+    external_metadata_extra_2: dict[str, Any],
     source,
     statistic_id,
 ) -> None:
@@ -4289,14 +4326,17 @@ async def test_adjust_sum_statistics_gas(
         "sum": 3,
     }
 
-    imported_metadata = {
-        "has_mean": False,
-        "has_sum": True,
-        "name": "Total imported energy",
-        "source": source,
-        "statistic_id": statistic_id,
-        "unit_of_measurement": "m³",
-    } | external_metadata_extra
+    imported_metadata = (
+        {
+            "has_sum": True,
+            "name": "Total imported energy",
+            "source": source,
+            "statistic_id": statistic_id,
+            "unit_of_measurement": "m³",
+        }
+        | external_metadata_extra
+        | external_metadata_extra_2
+    )
 
     await client.send_json_auto_id(
         {
@@ -4503,8 +4543,8 @@ async def test_adjust_sum_statistics_errors(
     }
 
     imported_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": int(StatisticMeanType.NONE),
         "name": "Total imported energy",
         "source": source,
         "statistic_id": statistic_id,
@@ -4667,8 +4707,8 @@ async def test_import_statistics_with_last_reset(
     }
 
     external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
