@@ -1,31 +1,24 @@
 """Provides triggers for lights."""
 
-from typing import Final, cast, override
+from typing import TYPE_CHECKING, Final, cast, override
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_PLATFORM,
     CONF_STATE,
     CONF_TARGET,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    HassJob,
-    HomeAssistant,
-    callback,
-    split_entity_id,
-)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import process_state_match
 from homeassistant.helpers.target import (
     TargetStateChangedData,
     async_track_target_selector_state_change_event,
 )
-from homeassistant.helpers.trigger import Trigger, TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -63,28 +56,28 @@ class StateTrigger(Trigger):
         """Validate config."""
         return cast(ConfigType, STATE_TRIGGER_SCHEMA(config))
 
-    def __init__(self, hass: HomeAssistant, config: dict) -> None:
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the state trigger."""
-        self.hass = hass
-        self.config = config
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.options is not None
+            assert config.target is not None
+        self._options = config.options
+        self._target = config.target
 
     @override
-    async def async_attach(
-        self, action: TriggerActionType, trigger_info: TriggerInfo
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
     ) -> CALLBACK_TYPE:
-        """Attach the trigger."""
-        job = HassJob(action, f"light state trigger {trigger_info}")
-        trigger_data = trigger_info["trigger_data"]
-        config_options = self.config[CONF_OPTIONS]
-
-        match_config_state = process_state_match(config_options.get(CONF_STATE))
+        """Attach the trigger to an action runner."""
+        match_config_state = process_state_match(self._options.get(CONF_STATE))
 
         def check_all_match(entity_ids: set[str]) -> bool:
             """Check if all entity states match."""
             return all(
                 match_config_state(state.state)
                 for entity_id in entity_ids
-                if (state := self.hass.states.get(entity_id)) is not None
+                if (state := self._hass.states.get(entity_id)) is not None
             )
 
         def check_one_match(entity_ids: set[str]) -> bool:
@@ -93,12 +86,12 @@ class StateTrigger(Trigger):
                 sum(
                     match_config_state(state.state)
                     for entity_id in entity_ids
-                    if (state := self.hass.states.get(entity_id)) is not None
+                    if (state := self._hass.states.get(entity_id)) is not None
                 )
                 == 1
             )
 
-        behavior = config_options.get(ATTR_BEHAVIOR)
+        behavior = self._options.get(ATTR_BEHAVIOR)
 
         @callback
         def state_change_listener(
@@ -126,18 +119,13 @@ class StateTrigger(Trigger):
                 if not check_one_match(target_state_change_data.targeted_entity_ids):
                     return
 
-            self.hass.async_run_hass_job(
-                job,
+            run_action(
                 {
-                    "trigger": {
-                        **trigger_data,
-                        CONF_PLATFORM: self.config[CONF_PLATFORM],
-                        ATTR_ENTITY_ID: entity_id,
-                        "from_state": from_state,
-                        "to_state": to_state,
-                        "description": f"state of {entity_id}",
-                    }
+                    ATTR_ENTITY_ID: entity_id,
+                    "from_state": from_state,
+                    "to_state": to_state,
                 },
+                f"state of {entity_id}",
                 event.context,
             )
 
@@ -149,9 +137,8 @@ class StateTrigger(Trigger):
                 if split_entity_id(entity_id)[0] == DOMAIN
             }
 
-        target_config = self.config[CONF_TARGET]
         return async_track_target_selector_state_change_event(
-            self.hass, target_config, state_change_listener, entity_filter
+            self._hass, self._target, state_change_listener, entity_filter
         )
 
 
