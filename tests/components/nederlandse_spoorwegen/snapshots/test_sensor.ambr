@@ -22,7 +22,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': 'mdi:train',
     'original_name': 'To work',
     'platform': 'nederlandse_spoorwegen',
