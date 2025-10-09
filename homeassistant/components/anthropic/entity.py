@@ -264,7 +264,7 @@ async def _transform_stream(  # noqa: C901
     current_tool_block: ToolUseBlockParam | None = None
     current_tool_args: str = ""
     input_usage: Usage | None = None
-    has_native = False
+    has_native_block = False  # Tracks if we have a native block (not delta)
 
     async for response in stream:
         LOGGER.debug("Received response: %s", response)
@@ -283,31 +283,31 @@ async def _transform_stream(  # noqa: C901
                 )
                 current_tool_args = ""
             elif isinstance(response.content_block, WebSearchToolResultBlock):
-                if has_native:
+                if has_native_block:
                     yield {"role": "assistant"}
-                    has_native = False
+                    has_native_block = False
                 yield {"native": response.content_block}
-                has_native = True
+                has_native_block = True
             elif isinstance(response.content_block, TextBlock):
                 # Multiple TextBlocks can occur in the same message (e.g., text before and after web search)
                 # They should all be part of the same assistant message, not split into separate bubbles
                 if response.content_block.text:
                     yield {"content": response.content_block.text}
             elif isinstance(response.content_block, ThinkingBlock):
-                if has_native:
+                if has_native_block:
                     yield {"role": "assistant"}
-                    has_native = False
+                    has_native_block = False
             elif isinstance(response.content_block, RedactedThinkingBlock):
                 LOGGER.debug(
                     "Some of Claude's internal reasoning has been automatically "
                     "encrypted for safety reasons. This doesn't affect the quality of "
                     "responses"
                 )
-                if has_native:
+                if has_native_block:
                     yield {"role": "assistant"}
-                    has_native = False
+                    has_native_block = False
                 yield {"native": response.content_block}
-                has_native = True
+                has_native_block = True
         elif isinstance(response, RawContentBlockDeltaEvent):
             if isinstance(response.delta, InputJSONDelta):
                 current_tool_args += response.delta.partial_json
@@ -316,13 +316,12 @@ async def _transform_stream(  # noqa: C901
             elif isinstance(response.delta, ThinkingDelta):
                 yield {"thinking_content": response.delta.thinking}
             elif isinstance(response.delta, CitationsDelta):
-                # Citations after WebSearchToolResultBlock need a new assistant message
-                # because native content can only be set once per message
-                if has_native:
-                    yield {"role": "assistant"}
-                    has_native = False
-                yield {"native": response.delta}
-                has_native = True
+                # Citations are metadata from web search results
+                # They're not sent back to the API (see _convert_content line 186-187)
+                # So we don't store them in native to avoid "Native content already set" errors
+                # from multiple citations. We just ignore them for now.
+                # TODO: Implement proper citation handling if needed for UI display
+                pass
             elif isinstance(response.delta, SignatureDelta):
                 yield {
                     "native": ThinkingBlock(
@@ -331,7 +330,7 @@ async def _transform_stream(  # noqa: C901
                         signature=response.delta.signature,
                     )
                 }
-                has_native = True
+                has_native_block = True
         elif isinstance(response, RawContentBlockStopEvent):
             if current_tool_block is not None:
                 tool_args = json.loads(current_tool_args) if current_tool_args else {}
