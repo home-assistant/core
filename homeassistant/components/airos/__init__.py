@@ -98,7 +98,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
                     for domain, device_id in device_entry.identifiers
                     if domain == DOMAIN
                 ),
-                None,
             )
 
             @callback
