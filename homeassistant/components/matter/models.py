@@ -152,3 +152,4 @@ class MatterDiscoverySchema:
     # [optional] the secondary (required) attribute value must NOT have this value
     # for example to filter out empty lists in list sensor values
     secondary_value_is_not: Any = UNSET
+    
