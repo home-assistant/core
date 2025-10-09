@@ -4,6 +4,7 @@ from enum import StrEnum, unique
 
 import voluptuous as vol
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
@@ -24,8 +25,10 @@ from ..const import (
     CONF_SYNC_STATE,
     DOMAIN,
     SUPPORTED_PLATFORMS_UI,
+    ClimateConf,
     ColorTempModes,
     CoverConf,
+    FanZeroMode,
 )
 from .const import (
     CONF_COLOR,
@@ -34,27 +37,47 @@ from .const import (
     CONF_DATA,
     CONF_DEVICE_INFO,
     CONF_ENTITY,
+    CONF_GA_ACTIVE,
     CONF_GA_ANGLE,
     CONF_GA_BLUE_BRIGHTNESS,
     CONF_GA_BLUE_SWITCH,
     CONF_GA_BRIGHTNESS,
     CONF_GA_COLOR,
     CONF_GA_COLOR_TEMP,
+    CONF_GA_CONTROLLER_MODE,
+    CONF_GA_CONTROLLER_STATUS,
+    CONF_GA_FAN_SPEED,
+    CONF_GA_FAN_SWING,
+    CONF_GA_FAN_SWING_HORIZONTAL,
     CONF_GA_GREEN_BRIGHTNESS,
     CONF_GA_GREEN_SWITCH,
+    CONF_GA_HEAT_COOL,
     CONF_GA_HUE,
+    CONF_GA_HUMIDITY_CURRENT,
+    CONF_GA_ON_OFF,
+    CONF_GA_OP_MODE_COMFORT,
+    CONF_GA_OP_MODE_ECO,
+    CONF_GA_OP_MODE_PROTECTION,
+    CONF_GA_OP_MODE_STANDBY,
+    CONF_GA_OPERATION_MODE,
     CONF_GA_POSITION_SET,
     CONF_GA_POSITION_STATE,
     CONF_GA_RED_BRIGHTNESS,
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
     CONF_GA_SENSOR,
+    CONF_GA_SETPOINT_SHIFT,
     CONF_GA_STEP,
     CONF_GA_STOP,
     CONF_GA_SWITCH,
+    CONF_GA_TEMPERATURE_CURRENT,
+    CONF_GA_TEMPERATURE_TARGET,
     CONF_GA_UP_DOWN,
+    CONF_GA_VALVE,
     CONF_GA_WHITE_BRIGHTNESS,
     CONF_GA_WHITE_SWITCH,
+    CONF_IGNORE_AUTO_MODE,
+    CONF_TARGET_TEMPERATURE,
 )
 from .knx_selector import (
     AllSerializeFirst,
@@ -311,8 +334,160 @@ SWITCH_KNX_SCHEMA = vol.Schema(
     },
 )
 
+
+@unique
+class ConfSetpointShiftMode(StrEnum):
+    """Enum for setpoint shift mode."""
+
+    COUNT = "6.010"
+    FLOAT = "9.002"
+
+
+@unique
+class ActiveMode(StrEnum):
+    """Enum for active mode."""
+
+    BINARY = "1"
+    VALVE = "5.001"
+
+
+@unique
+class ClimateFanSpeedMode(StrEnum):
+    """Enum for climate fan speed mode."""
+
+    PERCENTAGE = "5.001"
+    STEPS = "5.010"
+
+
+CLIMATE_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_TEMPERATURE_CURRENT): GASelector(
+            write=False, state_required=True, valid_dpt="9.001"
+        ),
+        vol.Optional(CONF_GA_HUMIDITY_CURRENT): GASelector(
+            write=False, valid_dpt="9.002"
+        ),
+        vol.Required(CONF_TARGET_TEMPERATURE): GroupSelect(
+            GroupSelectOption(
+                translation_key="group_direct_temp",
+                schema={
+                    vol.Required(CONF_GA_TEMPERATURE_TARGET): GASelector(
+                        write_required=True, valid_dpt="9.001"
+                    ),
+                    vol.Required(
+                        ClimateConf.MIN_TEMP, default=7
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=-20, max=80, step=1, unit_of_measurement="°C"
+                        )
+                    ),
+                    vol.Required(
+                        ClimateConf.MAX_TEMP, default=28
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=0, max=100, step=1, unit_of_measurement="°C"
+                        )
+                    ),
+                    vol.Required(
+                        ClimateConf.TEMPERATURE_STEP, default=0.1
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=0.1, max=2, step=0.1, unit_of_measurement="K"
+                        ),
+                    ),
+                },
+            ),
+            GroupSelectOption(
+                translation_key="group_setpoint_shift",
+                schema={
+                    vol.Required(CONF_GA_TEMPERATURE_TARGET): GASelector(
+                        write=False, state_required=True, valid_dpt="9.001"
+                    ),
+                    vol.Required(CONF_GA_SETPOINT_SHIFT): GASelector(
+                        write_required=True,
+                        state_required=True,
+                        dpt=ConfSetpointShiftMode,
+                    ),
+                    vol.Required(
+                        ClimateConf.SETPOINT_SHIFT_MIN, default=-6
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=-32, max=0, step=1, unit_of_measurement="K"
+                        )
+                    ),
+                    vol.Required(
+                        ClimateConf.SETPOINT_SHIFT_MAX, default=6
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=0, max=32, step=1, unit_of_measurement="K"
+                        )
+                    ),
+                    vol.Required(
+                        ClimateConf.TEMPERATURE_STEP, default=0.1
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=0.1, max=2, step=0.1, unit_of_measurement="K"
+                        ),
+                    ),
+                },
+            ),
+            collapsible=False,
+        ),
+        "section_activity": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_GA_ACTIVE): GASelector(write=False, valid_dpt="1"),
+        vol.Optional(CONF_GA_VALVE): GASelector(write=False, valid_dpt="5.001"),
+        "section_operation_mode": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_GA_OPERATION_MODE): GASelector(valid_dpt="20.102"),
+        vol.Optional(CONF_IGNORE_AUTO_MODE): selector.BooleanSelector(),
+        "section_operation_mode_individual": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_GA_OP_MODE_COMFORT): GASelector(state=False, valid_dpt="1"),
+        vol.Optional(CONF_GA_OP_MODE_ECO): GASelector(state=False, valid_dpt="1"),
+        vol.Optional(CONF_GA_OP_MODE_STANDBY): GASelector(state=False, valid_dpt="1"),
+        vol.Optional(CONF_GA_OP_MODE_PROTECTION): GASelector(
+            state=False, valid_dpt="1"
+        ),
+        "section_heat_cool": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_GA_HEAT_COOL): GASelector(valid_dpt="1.100"),
+        "section_on_off": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_GA_ON_OFF): GASelector(valid_dpt="1"),
+        vol.Optional(ClimateConf.ON_OFF_INVERT): selector.BooleanSelector(),
+        "section_controller_mode": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_GA_CONTROLLER_MODE): GASelector(valid_dpt="20.105"),
+        vol.Optional(CONF_GA_CONTROLLER_STATUS): GASelector(write=False),
+        vol.Required(
+            ClimateConf.DEFAULT_CONTROLLER_MODE, default=HVACMode.HEAT
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=list(HVACMode),
+                translation_key="component.climate.selector.hvac_mode",
+            )
+        ),
+        "section_fan": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_GA_FAN_SPEED): GASelector(dpt=ClimateFanSpeedMode),
+        vol.Required(ClimateConf.FAN_MAX_STEP, default=3): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=1,
+                max=100,
+                step=1,
+            )
+        ),
+        vol.Required(
+            ClimateConf.FAN_ZERO_MODE, default=FanZeroMode.OFF
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=list(FanZeroMode),
+                translation_key="component.knx.config_panel.entities.create.climate.knx.fan_zero_mode",
+            )
+        ),
+        vol.Optional(CONF_GA_FAN_SWING): GASelector(valid_dpt="1"),
+        vol.Optional(CONF_GA_FAN_SWING_HORIZONTAL): GASelector(valid_dpt="1"),
+        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+    },
+)
+
 KNX_SCHEMA_FOR_PLATFORM = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_KNX_SCHEMA,
+    Platform.CLIMATE: CLIMATE_KNX_SCHEMA,
     Platform.COVER: COVER_KNX_SCHEMA,
     Platform.LIGHT: LIGHT_KNX_SCHEMA,
     Platform.SWITCH: SWITCH_KNX_SCHEMA,

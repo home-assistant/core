@@ -160,6 +160,7 @@ SUPPORTED_PLATFORMS_YAML: Final = {
 
 SUPPORTED_PLATFORMS_UI: Final = {
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
     Platform.SWITCH,
@@ -193,3 +194,23 @@ class CoverConf:
     INVERT_UPDOWN: Final = "invert_updown"
     INVERT_POSITION: Final = "invert_position"
     INVERT_ANGLE: Final = "invert_angle"
+
+
+class ClimateConf:
+    """Common config keys for climate."""
+
+    MIN_TEMP: Final = "min_temp"
+    MAX_TEMP: Final = "max_temp"
+    TEMPERATURE_STEP = "temperature_step"
+    SETPOINT_SHIFT_MAX = "setpoint_shift_max"
+    SETPOINT_SHIFT_MIN = "setpoint_shift_min"
+
+    ON_OFF_INVERT = "on_off_invert"
+
+    OPERATION_MODES = "operation_modes"
+    CONTROLLER_MODES = "controller_modes"
+    DEFAULT_CONTROLLER_MODE = "default_controller_mode"
+
+    FAN_MAX_STEP = "fan_max_step"
+    FAN_SPEED_MODE = "fan_speed_mode"
+    FAN_ZERO_MODE = "fan_zero_mode"

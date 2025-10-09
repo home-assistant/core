@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.knx.const import ClimateConf
 from homeassistant.components.knx.schema import ClimateSchema
 from homeassistant.const import CONF_NAME, STATE_IDLE
 from homeassistant.core import HomeAssistant
@@ -158,7 +159,7 @@ async def test_climate_hvac_mode(
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_CONTROLLER_MODE_ADDRESS: controller_mode_ga,
                 ClimateSchema.CONF_CONTROLLER_MODE_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_OPERATION_MODES: ["Auto"],
+                ClimateConf.OPERATION_MODES: ["Auto"],
             }
             | (
                 {
@@ -452,8 +453,8 @@ async def test_fan_speed_3_steps(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_SPEED_MODE: "step",
-                ClimateSchema.CONF_FAN_MAX_STEP: 3,
+                ClimateConf.FAN_SPEED_MODE: "step",
+                ClimateConf.FAN_MAX_STEP: 3,
             }
         }
     )
@@ -508,8 +509,8 @@ async def test_fan_speed_2_steps(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_SPEED_MODE: "step",
-                ClimateSchema.CONF_FAN_MAX_STEP: 2,
+                ClimateConf.FAN_SPEED_MODE: "step",
+                ClimateConf.FAN_MAX_STEP: 2,
             }
         }
     )
@@ -561,8 +562,8 @@ async def test_fan_speed_1_step(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_SPEED_MODE: "step",
-                ClimateSchema.CONF_FAN_MAX_STEP: 1,
+                ClimateConf.FAN_SPEED_MODE: "step",
+                ClimateConf.FAN_MAX_STEP: 1,
             }
         }
     )
@@ -604,8 +605,8 @@ async def test_fan_speed_5_steps(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_SPEED_MODE: "step",
-                ClimateSchema.CONF_FAN_MAX_STEP: 5,
+                ClimateConf.FAN_SPEED_MODE: "step",
+                ClimateConf.FAN_MAX_STEP: 5,
             }
         }
     )
@@ -660,7 +661,7 @@ async def test_fan_speed_percentage(hass: HomeAssistant, knx: KNXTestKit) -> Non
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_SPEED_MODE: "percent",
+                ClimateConf.FAN_SPEED_MODE: "percent",
             }
         }
     )
@@ -725,8 +726,8 @@ async def test_fan_speed_percentage_4_steps(
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_SPEED_MODE: "percent",
-                ClimateSchema.CONF_FAN_MAX_STEP: 4,
+                ClimateConf.FAN_SPEED_MODE: "percent",
+                ClimateConf.FAN_MAX_STEP: 4,
             }
         }
     )
@@ -785,9 +786,9 @@ async def test_fan_speed_zero_mode_auto(hass: HomeAssistant, knx: KNXTestKit) ->
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_MAX_STEP: 3,
-                ClimateSchema.CONF_FAN_SPEED_MODE: "step",
-                ClimateSchema.CONF_FAN_ZERO_MODE: "auto",
+                ClimateConf.FAN_MAX_STEP: 3,
+                ClimateConf.FAN_SPEED_MODE: "step",
+                ClimateConf.FAN_ZERO_MODE: "auto",
             }
         }
     )
