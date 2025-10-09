@@ -45,7 +45,7 @@ COLOR_MODE_MAP = {
 }
 
 # Default color temperature limits.
-# Most real devices are not properly calibrated and report the full minred rane as being supported.
+# Most real devices are not properly calibrated and report the full mired range as being supported.
 # This sets a more realistic default range that can be further limited by the device.
 # Values based on testing showing sample "real world" devices responding over these ranges
 # though they are not necessarily accurate for human vision.
