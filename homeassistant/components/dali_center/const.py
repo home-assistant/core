@@ -1,4 +1,4 @@
-"""Constants for the Dali Center integration."""
+"""Constants for the DALI Center integration."""
 
 DOMAIN = "dali_center"
 MANUFACTURER = "Sunricher"

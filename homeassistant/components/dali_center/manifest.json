@@ -1,6 +1,6 @@
 {
   "domain": "dali_center",
-  "name": "Dali Center",
+  "name": "DALI Center",
   "codeowners": ["@niracler"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dali_center",

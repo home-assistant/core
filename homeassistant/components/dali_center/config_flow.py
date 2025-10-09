@@ -1,4 +1,4 @@
-"""Config flow for the Dali Center integration."""
+"""Config flow for the DALI Center integration."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Dali Center."""
+    """Handle a config flow for DALI Center."""
 
     VERSION = 1
 

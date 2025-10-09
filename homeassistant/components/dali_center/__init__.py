@@ -1,4 +1,4 @@
-"""The Dali Center integration."""
+"""The DALI Center integration."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> bool:
-    """Set up Dali Center from a config entry."""
+    """Set up DALI Center from a config entry."""
 
     gateway = DaliGateway(entry.data[CONF_GATEWAY_DATA])
     gw_sn = gateway.gw_sn

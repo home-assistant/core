@@ -1181,7 +1181,7 @@
       "iot_class": "local_polling"
     },
     "dali_center": {
-      "name": "Dali Center",
+      "name": "DALI Center",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
