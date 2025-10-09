@@ -18,11 +18,7 @@ from universal_silabs_flasher.firmware import parse_firmware_image
 from universal_silabs_flasher.flasher import Flasher
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
-from homeassistant.components.usb import (
-    USBDevice,
-    async_get_usb_matchers_for_device,
-    usb_device_from_path,
-)
+from homeassistant.components.usb import USBDevice, async_get_usb_matchers_for_device
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -440,27 +436,14 @@ def usb_service_info_from_device(usb_device: USBDevice) -> UsbServiceInfo:
 
 
 async def async_get_hardware_domain_for_usb_device(
-    hass: HomeAssistant, device_path: str
+    hass: HomeAssistant, usb_device: USBDevice
 ) -> str | None:
     """Identify which hardware domain should handle a USB device."""
-
-    # Get the USB device info
-    usb_device = await hass.async_add_executor_job(usb_device_from_path, device_path)
-    if usb_device is None:
-        _LOGGER.debug("Could not find USB device for path %s", device_path)
-        return None
-
     matched = async_get_usb_matchers_for_device(hass, usb_device)
     hw_domains = {match["domain"] for match in matched} & HARDWARE_INTEGRATION_DOMAINS
 
     if not hw_domains:
-        _LOGGER.debug(
-            "No hardware integration matches USB device %s (vid=%s, pid=%s, desc=%s)",
-            device_path,
-            usb_device.vid,
-            usb_device.pid,
-            usb_device.description,
-        )
+        _LOGGER.debug("No hardware integration matches USB device %r", usb_device)
         return None
 
     # We can never have two hardware integrations overlap in discovery

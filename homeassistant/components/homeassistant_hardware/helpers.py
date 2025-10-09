@@ -6,8 +6,9 @@ from collections import defaultdict
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import logging
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, TypedDict
 
+from homeassistant.components.usb import USBDevice, usb_device_from_path
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers import discovery_flow
@@ -19,6 +20,13 @@ if TYPE_CHECKING:
     from .util import FirmwareInfo
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class HardwareFirmwareDiscoveryInfo(TypedDict):
+    """Data for triggering hardware integration discovery via firmware notification."""
+
+    usb_device: USBDevice
+    firmware_info: FirmwareInfo
 
 
 class SyncHardwareFirmwareInfoModule(Protocol):
@@ -115,14 +123,20 @@ class HardwareInfoDispatcher:
         USB matchers, then triggers an import flow for only that integration.
         """
 
+        usb_device = await self.hass.async_add_executor_job(
+            usb_device_from_path, firmware_info.device
+        )
+
+        if usb_device is None:
+            _LOGGER.debug("No USB device found for device %s", firmware_info.device)
+            return
+
         hardware_domain = await async_get_hardware_domain_for_usb_device(
-            self.hass, firmware_info.device
+            self.hass, usb_device
         )
 
         if hardware_domain is None:
-            _LOGGER.debug(
-                "No hardware integration found for device %s", firmware_info.device
-            )
+            _LOGGER.debug("No hardware integration found for device %s", usb_device)
             return
 
         _LOGGER.debug(
@@ -135,7 +149,10 @@ class HardwareInfoDispatcher:
             self.hass,
             hardware_domain,
             context={"source": SOURCE_IMPORT},
-            data=firmware_info,
+            data=HardwareFirmwareDiscoveryInfo(
+                usb_device=usb_device,
+                firmware_info=firmware_info,
+            ),
         )
 
     async def iter_firmware_info(self) -> AsyncIterator[FirmwareInfo]:

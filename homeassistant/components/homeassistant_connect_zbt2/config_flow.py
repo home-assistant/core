@@ -7,6 +7,9 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import firmware_config_flow
+from homeassistant.components.homeassistant_hardware.helpers import (
+    HardwareFirmwareDiscoveryInfo,
+)
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
@@ -14,7 +17,6 @@ from homeassistant.components.homeassistant_hardware.util import (
     usb_service_info_from_device,
     usb_unique_id_from_service_info,
 )
-from homeassistant.components.usb import usb_device_from_path
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryBaseFlow,
@@ -145,25 +147,20 @@ class HomeAssistantConnectZBT2ConfigFlow(
 
         return await self.async_step_confirm()
 
-    async def async_step_import(self, firmware_info: FirmwareInfo) -> ConfigFlowResult:
+    async def async_step_import(
+        self, fw_discovery_info: HardwareFirmwareDiscoveryInfo
+    ) -> ConfigFlowResult:
         """Handle import from ZHA/OTBR firmware notification."""
-        usb_device = await self.hass.async_add_executor_job(
-            usb_device_from_path, firmware_info.device
-        )
-
-        if not usb_device:
-            return self.async_abort(reason="usb_device_not_found")
-
-        usb_info = usb_service_info_from_device(usb_device)
-
+        usb_info = usb_service_info_from_device(fw_discovery_info["usb_device"])
         unique_id = usb_unique_id_from_service_info(usb_info)
+
         if await self.async_set_unique_id(unique_id, raise_on_progress=False):
             self._abort_if_unique_id_configured(updates={DEVICE: usb_info.device})
 
         self._usb_info = usb_info
         self._device = usb_info.device
         self._hardware_name = HARDWARE_NAME
-        self._probed_firmware_info = firmware_info
+        self._probed_firmware_info = fw_discovery_info["firmware_info"]
 
         return self._async_flow_finished()
 

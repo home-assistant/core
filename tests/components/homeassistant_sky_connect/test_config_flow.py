@@ -462,7 +462,7 @@ async def test_firmware_callback_auto_creates_entry(
     )
 
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.usb_device_from_path",
+        "homeassistant.components.homeassistant_hardware.helpers.usb_device_from_path",
         return_value=usb_device,
     ):
         await async_notify_firmware_info(
