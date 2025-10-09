@@ -25,7 +25,6 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -534,7 +533,6 @@ class Entity(
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
     _attr_has_entity_name: bool
-    _attr_included_entities: list[str] | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_entity_registry_visible_default: bool
@@ -765,16 +763,6 @@ class Entity(
         """
         return self._attr_capability_attributes
 
-    @property
-    def included_entities(self) -> list[str] | None:
-        """Return a list of entity IDs if the entity represents a group.
-
-        Included entities will be shown as members in the UI.
-        """
-        if hasattr(self, "_attr_included_entities"):
-            return self._attr_included_entities
-        return None
-
     def get_initial_entity_options(self) -> er.EntityOptionsType | None:
         """Return initial entity options.
 
@@ -803,18 +791,9 @@ class Entity(
         Implemented by platform classes. Convention for attribute names
         is lowercase snake_case.
         """
-        entity_ids = (
-            None
-            if self.included_entities is None
-            else {ATTR_ENTITY_ID: self.included_entities}
-        )
         if hasattr(self, "_attr_extra_state_attributes"):
-            return (
-                self._attr_extra_state_attributes
-                if entity_ids is None
-                else self._attr_extra_state_attributes | entity_ids
-            )
-        return None or entity_ids
+            return self._attr_extra_state_attributes
+        return None
 
     @cached_property
     def device_info(self) -> DeviceInfo | None:
@@ -1718,3 +1697,79 @@ class ToggleEntity(
             await self.async_turn_off(**kwargs)
         else:
             await self.async_turn_on(**kwargs)
+
+
+class IncludedEntitiesMixin(Entity):
+    """Mixin class to include entities that are contained.
+
+    Integrations can include the this Mixin class for platforms that have
+    included the `entity_id` capability attribute.
+    Domain base entity platforms can include the `entity_id` capability attribute
+    to expose to allow exposure of the included entities.
+    """
+
+    _attr_included_entities: list[str]
+    _included_unique_ids: list[str]
+    _initialized: bool = False
+    _platform_domain: str
+
+    @callback
+    def async_set_included_entities(
+        self, platform_domain: str, unique_ids: list[str]
+    ) -> None:
+        """Set the list of included entities identified by their unique IDs.
+
+        The entity_id of included entities will will be looked up and they will be
+        tracked for changes.
+        None existing entities for the supplied unique IDs will be ignored.
+        """
+        self._included_unique_ids = unique_ids
+        self._platform_domain = platform_domain
+        self._monitor_member_updates()
+
+    @property
+    def included_entities(self) -> list[str] | None:
+        """Return a list of entity IDs if the entity represents a group.
+
+        Included entities will be shown as members in the UI.
+        """
+        if hasattr(self, "_attr_included_entities"):
+            return self._attr_included_entities
+        return None
+
+    @callback
+    def _monitor_member_updates(self) -> None:
+        """Update the group members if the entity registry is updated."""
+        entity_registry = er.async_get(self.hass)
+
+        def _update_group_entity_ids() -> None:
+            self._attr_included_entities = []
+            for included_id in self._included_unique_ids:
+                if entity_id := entity_registry.async_get_entity_id(
+                    self.entity_id.split(".")[0], self._platform_domain, included_id
+                ):
+                    self._attr_included_entities.append(entity_id)
+
+        async def _handle_entity_registry_updated(event: Event[Any]) -> None:
+            """Handle registry create or update event."""
+            if (
+                event.data["action"] in {"create", "update"}
+                and (entry := entity_registry.async_get(event.data["entity_id"]))
+                and entry.unique_id in self._included_unique_ids
+            ) or (
+                event.data["action"] == "remove"
+                and self.included_entities is not None
+                and event.data["entity_id"] in self.included_entities
+            ):
+                _update_group_entity_ids()
+                self.async_write_ha_state()
+
+        if not self._initialized:
+            self.async_on_remove(
+                self.hass.bus.async_listen(
+                    er.EVENT_ENTITY_REGISTRY_UPDATED,
+                    _handle_entity_registry_updated,
+                )
+            )
+            self._initialized = True
+        _update_group_entity_ids()
