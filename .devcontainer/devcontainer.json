@@ -13,8 +13,16 @@
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  // Port 5683 udp is used by Shelly integration
-  "appPort": ["8123:8123", "5683:5683/udp"],
+  "forwardPorts": [8123],
+  "portsAttributes": {
+    "8123": {
+      "label": "Home Assistant",
+      "onAutoForward": "silent"
+    }
+  },
+  // Port 5683 udp is used by Shelly integration, but forwardPorts does not support udp:
+  // https://github.com/devcontainers/spec/issues/643
+  "appPort": ["5683/udp"],
   "runArgs": [
     "-e",
     "GIT_EDITOR=code --wait",
