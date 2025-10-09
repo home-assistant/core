@@ -129,9 +129,8 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
                 mode.name,
                 self.device_id,
             )
-
-            await asyncio.sleep(UPDATE_DELAY_AFTER_COMMAND)
-            await self.coordinator.async_refresh_device(self.device_id)
-
         except (ValueError, RuntimeError) as err:
             _LOGGER.error("Error setting HVAC mode for %s: %s", self.device_id, err)
+
+        await asyncio.sleep(UPDATE_DELAY_AFTER_COMMAND)
+        await self.coordinator.async_refresh_device(self.device_id)
