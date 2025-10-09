@@ -1016,20 +1016,20 @@ async def test_progress_step(
 
 @pytest.mark.parametrize(
     (
-        "task_init_side_effect",
-        "task_next_side_effect",
-        "flow_result_before_init",
-        "flow_result_after_init",
-        "flow_result_after_next",
-        "flow_init_events",
-        "flow_next_events",
-        "manager_call_after_init",
-        "manager_call_after_next",
-        "before_init_task_side_effect",
-        "before_next_task_side_effect",
+        "task_init_side_effect",  # side effect for initial step task
+        "task_next_side_effect",  # side effect for next step task
+        "flow_result_before_init",  # result before init task is done
+        "flow_result_after_init",  # result after init task is done
+        "flow_result_after_next",  # result after next task is done
+        "flow_init_events",  # number of events fired after init task is done
+        "flow_next_events",  # number of events fired after next task is done
+        "manager_call_after_init",  # lambda to continue the flow after init task
+        "manager_call_after_next",  # lambda to continue the flow after next task
+        "before_init_task_side_effect",  # function called before init event
+        "before_next_task_side_effect",  # function called before next event
     ),
     [
-        (
+        (  # both steps show progress and complete successfully
             None,
             None,
             data_entry_flow.FlowResultType.SHOW_PROGRESS,
@@ -1042,7 +1042,7 @@ async def test_progress_step(
             lambda received_event, init_task_event, next_task_event: None,
             lambda received_event, init_task_event, next_task_event: None,
         ),
-        (
+        (  # first step aborts
             data_entry_flow.AbortFlow("fail"),
             None,
             data_entry_flow.FlowResultType.SHOW_PROGRESS,
@@ -1055,7 +1055,7 @@ async def test_progress_step(
             lambda received_event, init_task_event, next_task_event: None,
             lambda received_event, init_task_event, next_task_event: None,
         ),
-        (
+        (  # first step shows progress, second step aborts
             None,
             data_entry_flow.AbortFlow("fail"),
             data_entry_flow.FlowResultType.SHOW_PROGRESS,
@@ -1068,7 +1068,7 @@ async def test_progress_step(
             lambda received_event, init_task_event, next_task_event: None,
             lambda received_event, init_task_event, next_task_event: None,
         ),
-        (
+        (  # first step shows progress and second step task is already done
             None,
             None,
             data_entry_flow.FlowResultType.SHOW_PROGRESS,
@@ -1083,7 +1083,7 @@ async def test_progress_step(
             next_task_event: next_task_event.set(),
             lambda received_event, init_task_event, next_task_event: None,
         ),
-        (
+        (  # both step tasks are already done and flow completes immediately
             None,
             None,
             data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE,
@@ -1102,7 +1102,7 @@ async def test_progress_step(
             init_task_event,
             next_task_event: received_event.set(),
         ),
-        (
+        (  # first step task is already done, second step shows progress and completes
             None,
             None,
             data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE,
