@@ -34,9 +34,10 @@ WORKDIR /usr/src
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
+USER vscode
+
 RUN uv python install 3.13.2
 
-USER vscode
 ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
 RUN uv venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"

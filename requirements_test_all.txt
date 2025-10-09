@@ -173,7 +173,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.1
 
 # homeassistant.components.alexa_devices
-aioamazondevices==6.2.9
+aioamazondevices==6.4.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -518,7 +518,7 @@ auroranoaa==0.0.5
 aurorapy==0.2.7
 
 # homeassistant.components.autarco
-autarco==3.1.0
+autarco==3.2.0
 
 # homeassistant.components.husqvarna_automower_ble
 automower-ble==0.2.7
@@ -615,7 +615,7 @@ bring-api==1.1.0
 broadlink==0.19.0
 
 # homeassistant.components.brother
-brother==5.1.0
+brother==5.1.1
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -2578,7 +2578,7 @@ vilfo-api-client==0.5.0
 voip-utils==0.3.4
 
 # homeassistant.components.volvo
-volvocarsapi==0.4.2
+volvocarsapi==0.4.3
 
 # homeassistant.components.verisure
 vsure==2.6.7
