@@ -66,7 +66,10 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
 
     _attr_assumed_state = True
     _attr_supported_features = (
-        ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+        ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_fan_modes = [
         FanState.FAN_AUTO,
@@ -161,3 +164,17 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         await self._do_send_command(temperature=temperature)
         self._attr_target_temperature = temperature
         self.async_write_ha_state()
+
+    async def async_turn_off(self) -> None:
+        """Turn climate entity off."""
+        await self.async_set_hvac_mode(HVACMode.OFF)
+
+    async def async_turn_on(self) -> None:
+        """Turn climate entity on.
+
+        Uses the last known hvac_mode (if not OFF), otherwise defaults to FAN_ONLY.
+        """
+        hvac_mode = self._attr_hvac_mode
+        if hvac_mode == HVACMode.OFF:
+            hvac_mode = HVACMode.FAN_ONLY
+        await self.async_set_hvac_mode(hvac_mode)
