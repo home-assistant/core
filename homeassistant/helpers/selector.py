@@ -1154,7 +1154,7 @@ class ObjectSelectorField(TypedDict, total=False):
 
     label: str
     required: bool
-    selector: Selector | dict[str, Any]
+    selector: Required[Selector | dict[str, Any]]
 
 
 class ObjectSelectorConfig(BaseSelectorConfig, total=False):
