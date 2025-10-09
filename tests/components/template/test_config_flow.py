@@ -1745,7 +1745,7 @@ async def test_options_flow_change_device(
 
 
 @pytest.mark.parametrize(
-    ("step_id", "user_input"),
+    ("step_id", "user_input", "expected_error"),
     [
         (
             "light",
@@ -1757,6 +1757,7 @@ async def test_options_flow_change_device(
                 "turn_off": [],
                 "set_level": [],
             },
+            "UndefinedError: 'statex' is undefined",
         ),
         (
             "sensor",
@@ -1764,6 +1765,7 @@ async def test_options_flow_change_device(
                 "name": "",
                 "state": "{{ state() }}",
             },
+            "UndefinedError: 'state' is undefined",
         ),
         (
             "light",
@@ -1775,6 +1777,7 @@ async def test_options_flow_change_device(
                 "turn_off": [],
                 "set_level": [],
             },
+            "UndefinedError: 'state' is undefined",
         ),
     ],
 )
@@ -1783,6 +1786,7 @@ async def test_preview_error(
     hass_ws_client: WebSocketGenerator,
     step_id: str,
     user_input: dict,
+    expected_error: str,
 ) -> None:
     """Test preview will error if any template errors."""
     client = await hass_ws_client(hass)
@@ -1816,9 +1820,11 @@ async def test_preview_error(
     assert msg["success"]
     assert msg["result"] is None
 
-    # Test for a single error and no preview
+    # Test expected error
     msg = await client.receive_json()
     assert "error" in msg["event"]
+    assert msg["event"]["error"] == expected_error
 
+    # Test No preview is created
     with pytest.raises(TimeoutError):
         await client.receive_json(timeout=0.01)
