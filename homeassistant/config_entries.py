@@ -3008,8 +3008,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Return current unique IDs."""
         return {
             entry.unique_id
-            for entry in self.hass.config_entries.async_entries(self.handler)
-            if include_ignore or entry.source != SOURCE_IGNORE
+            for entry in self.hass.config_entries.async_entries(
+                self.handler, include_ignore=include_ignore
+            )
         }
 
     @callback
