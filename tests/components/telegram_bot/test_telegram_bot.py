@@ -486,7 +486,7 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 )
 async def test_webhook_endpoint_generates_telegram_attachment_event(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_platform: None,
     hass_client: ClientSessionGenerator,
     mock_generate_secret_token: str,
     attachment_type: str,
