@@ -52,9 +52,10 @@ STORAGE_FIELDS: VolDictType = {
 
 def _cv_input_weekday(cfg: dict[str, Any]) -> dict[str, Any]:
     """Configure validation helper for input weekday (voluptuous)."""
-    weekdays = cfg.get(CONF_WEEKDAYS, [])
-    # Remove duplicates while preserving order
-    cfg[CONF_WEEKDAYS] = list(dict.fromkeys(weekdays))
+    if CONF_WEEKDAYS in cfg:
+        weekdays = cfg[CONF_WEEKDAYS]
+        # Remove duplicates while preserving order
+        cfg[CONF_WEEKDAYS] = list(dict.fromkeys(weekdays))
     return cfg
 
 
@@ -64,7 +65,7 @@ CONFIG_SCHEMA = vol.Schema(
             vol.All(
                 {
                     vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_WEEKDAYS, default=list): vol.All(
+                    vol.Optional(CONF_WEEKDAYS): vol.All(
                         cv.ensure_list, [vol.In(WEEKDAYS)]
                     ),
                     vol.Optional(CONF_ICON): cv.icon,
@@ -177,7 +178,7 @@ class InputWeekdayStorageCollection(collection.DictStorageCollection):
     ) -> dict[str, Any]:
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
-        return {CONF_ID: item[CONF_ID]} | update_data
+        return item | update_data
 
 
 # pylint: disable-next=hass-enforce-class-module
@@ -211,9 +212,9 @@ class InputWeekday(collection.CollectionEntity, RestoreEntity):
         return input_weekday
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return name of the weekday input."""
-        return self._config.get(CONF_NAME)
+        return self._config.get(CONF_NAME) or self._config[CONF_ID]
 
     @property
     def icon(self) -> str | None:

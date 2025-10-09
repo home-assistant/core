@@ -465,7 +465,7 @@ async def test_websocket_update(
         {
             "id": 2,
             "type": f"{DOMAIN}/update",
-            f"{DOMAIN}_id": entity_entry.id,
+            f"{DOMAIN}_id": entity_entry.unique_id,
             "weekdays": ["tue", "wed"],
             "name": "Updated Weekday",
         }
@@ -508,7 +508,7 @@ async def test_websocket_delete(
         {
             "id": 2,
             "type": f"{DOMAIN}/delete",
-            f"{DOMAIN}_id": entity_entry.id,
+            f"{DOMAIN}_id": entity_entry.unique_id,
         }
     )
     resp = await client.receive_json()
