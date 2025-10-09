@@ -956,6 +956,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
                 }
             )
+            if self.restart_addon:
+                manager = get_addon_manager(self.hass)
+                await manager.async_stop_addon()
 
         self._abort_if_unique_id_configured(
             updates={
@@ -1525,12 +1528,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 and existing_entry.data.get(CONF_USE_ADDON)
             ):
                 manager = get_addon_manager(self.hass)
-                addon_info = await manager.async_get_addon_info()
-                if addon_info.state == AddonState.RUNNING:
-                    await manager.async_stop_addon()
                 await self._async_set_addon_config(
                     {CONF_ADDON_SOCKET: discovery_info.socket_path}
                 )
+                if self.restart_addon:
+                    await manager.async_stop_addon()
                 self.hass.config_entries.async_update_entry(
                     existing_entry,
                     data={

@@ -1287,11 +1287,12 @@ async def test_esphome_discovery_intent_custom(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_installed", "addon_running", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_running", "addon_running", "addon_info")
 async def test_esphome_discovery_intent_recommended(
     hass: HomeAssistant,
     set_addon_options: AsyncMock,
     addon_options: dict,
+    stop_addon: AsyncMock,
 ) -> None:
     """Test ESPHome discovery success path."""
     addon_options.update(
@@ -1359,6 +1360,8 @@ async def test_esphome_discovery_intent_recommended(
             }
         ),
     )
+    assert stop_addon.call_count == 1
+    assert stop_addon.call_args == call("core_zwave_js")
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
