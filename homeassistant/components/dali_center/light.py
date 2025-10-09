@@ -18,7 +18,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -151,6 +151,7 @@ class DaliCenterLight(LightEntity):
 
         self._light.read_status()
 
+    @callback
     def _handle_device_update(self, status: LightStatus) -> None:
         if status.get("is_on") is not None:
             self._attr_is_on = status["is_on"]
