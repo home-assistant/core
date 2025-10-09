@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
@@ -21,6 +21,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.color import rgb_hex_to_rgb_list
 
 from . import UnifiConfigEntry
 from .entity import (
@@ -48,12 +49,12 @@ def async_device_led_is_on_fn(hub: UnifiHub, device: Device) -> bool:
 
 
 async def async_device_led_control_fn(
-    hub: UnifiHub, obj_id: str, **kwargs: Any
+    hub: UnifiHub, obj_id: str, turn_on: bool, **kwargs: Any
 ) -> None:
     """Control device LED."""
     device = hub.api.devices[obj_id]
 
-    status = "on" if kwargs.get("turn_on", device.led_override == "on") else "off"
+    status = "on" if turn_on else "off"
 
     brightness = (
         int((kwargs[ATTR_BRIGHTNESS] / 255) * 100)
@@ -77,31 +78,13 @@ async def async_device_led_control_fn(
     )
 
 
-def _parse_hex_color(
-    hex_color: str | None, default: tuple[int, int, int]
-) -> tuple[int, int, int]:
-    """Parse hex color string to RGB tuple."""
-    if not hex_color:
-        return default
-
-    color_hex = hex_color.lstrip("#")
-    if len(color_hex) != 6:
-        return default
-
-    try:
-        rgb_values = [int(color_hex[i : i + 2], 16) for i in (0, 2, 4)]
-        return (rgb_values[0], rgb_values[1], rgb_values[2])
-    except ValueError:
-        return default
-
-
 @dataclass(frozen=True, kw_only=True)
 class UnifiLightEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     LightEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi light entity."""
 
-    control_fn: Callable[..., Awaitable[None]]
+    control_fn: Callable[[UnifiHub, str, bool], Coroutine[Any, Any, None]]
     is_on_fn: Callable[[UnifiHub, ApiItemT], bool]
 
 
@@ -133,6 +116,7 @@ async def async_setup_entry(
         async_add_entities,
         UnifiLightEntity,
         ENTITY_DESCRIPTIONS,
+        requires_admin=True,
     )
 
 
@@ -142,18 +126,9 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     """Base representation of a UniFi light."""
 
     entity_description: UnifiLightEntityDescription[HandlerT, ApiItemT]
-
-    def __init__(
-        self,
-        obj_id: str,
-        hub: UnifiHub,
-        description: UnifiLightEntityDescription[HandlerT, ApiItemT],
-    ) -> None:
-        """Initialize UniFi light entity."""
-        super().__init__(obj_id, hub, description)
-        self._attr_supported_features = LightEntityFeature(0)
-        self._attr_color_mode = ColorMode.RGB
-        self._attr_supported_color_modes = {ColorMode.RGB}
+    _attr_supported_features = LightEntityFeature(0)
+    _attr_color_mode = ColorMode.RGB
+    _attr_supported_color_modes = {ColorMode.RGB}
 
     @callback
     def async_initiate_state(self) -> None:
@@ -162,14 +137,12 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
-        await self.entity_description.control_fn(
-            self.hub, self._obj_id, turn_on=True, **kwargs
-        )
+        await self.entity_description.control_fn(self.hub, self._obj_id, True, **kwargs)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         await self.entity_description.control_fn(
-            self.hub, self._obj_id, turn_on=False, **kwargs
+            self.hub, self._obj_id, False, **kwargs
         )
 
     @callback
@@ -181,7 +154,6 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         device = cast(Device, device_obj)
 
         self._attr_is_on = description.is_on_fn(self.hub, device_obj)
-        self._attr_color_mode = ColorMode.RGB
 
         self._attr_brightness = (
             int((device.led_override_color_brightness / 100) * 255)
@@ -189,8 +161,8 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             else None
         )
 
-        self._attr_rgb_color = (
-            _parse_hex_color(device.led_override_color, (255, 255, 255))
-            if self._attr_is_on
-            else None
-        )
+        if self._attr_is_on and device.led_override_color:
+            rgb_list = rgb_hex_to_rgb_list(device.led_override_color)
+            self._attr_rgb_color = tuple(rgb_list) if rgb_list else None
+        else:
+            self._attr_rgb_color = None
