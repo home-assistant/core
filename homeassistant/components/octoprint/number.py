@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
-from pyoctoprintapi import OctoprintClient, OctoprintPrinterInfo
+from pyoctoprintapi import OctoprintClient
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
@@ -53,22 +52,20 @@ async def async_setup_entry(
             return
 
         new_numbers: list[OctoPrintTemperatureNumber] = []
-        for tool in [
-            tool
-            for tool in coordinator.data["printer"].temperatures
-            if is_extruder(tool.name) or is_bed(tool.name)
-            if tool.name not in known_tools
-        ]:
-            assert device_id is not None
-            known_tools.add(tool.name)
-            new_numbers.append(
-                OctoPrintTemperatureNumber(
-                    coordinator,
-                    client,
-                    tool.name,
-                    device_id,
+        for tool in coordinator.data["printer"].temperatures:
+            if (
+                is_extruder(tool.name) or is_bed(tool.name)
+            ) and tool.name not in known_tools:
+                assert device_id is not None
+                known_tools.add(tool.name)
+                new_numbers.append(
+                    OctoPrintTemperatureNumber(
+                        coordinator,
+                        client,
+                        tool.name,
+                        device_id,
+                    )
                 )
-            )
         async_add_entities(new_numbers)
 
     config_entry.async_on_unload(coordinator.async_add_listener(async_add_tool_numbers))
@@ -112,12 +109,9 @@ class OctoPrintTemperatureNumber(
         """Return the current target temperature."""
         if not self.coordinator.data["printer"]:
             return None
-        for tool in [
-            tool
-            for tool in self.coordinator.data["printer"].temperatures
-            if tool.name == self._api_tool and tool.target_temp is not None
-        ]:
-            return tool.target_temp
+        for tool in self.coordinator.data["printer"].temperatures:
+            if tool.name == self._api_tool and tool.target_temp is not None:
+                return tool.target_temp
 
         return None
 
