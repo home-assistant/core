@@ -716,7 +716,6 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
             ),
         ),
     ],
-    [],
 )
 def test_object_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test object selector."""
@@ -781,7 +780,6 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
         ),
         ({"multiple": "False"}, pytest.raises(vol.Invalid)),
     ],
-    [],
 )
 def test_object_selector_validate_schema(
     schema: dict, raises: AbstractContextManager
@@ -789,9 +787,8 @@ def test_object_selector_validate_schema(
     """Test object selector schemas."""
     # Validate selector configuration
 
-    config = {"object": schema}
     with raises:
-        selector.validate_selector(config)
+        selector.validate_selector({"object": schema})
 
 
 @pytest.mark.parametrize(
