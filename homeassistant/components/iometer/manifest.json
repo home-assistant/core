@@ -1,7 +1,7 @@
 {
   "domain": "iometer",
   "name": "IOmeter",
-  "codeowners": ["@MaestroOnICe"],
+  "codeowners": ["@jukrebs"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/iometer",
   "integration_type": "device",
