@@ -205,7 +205,7 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==0.12.3
+aiocomelit==1.1.1
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.2.1
@@ -235,7 +235,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.12.0
+aioesphomeapi==41.13.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -366,7 +366,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.11.0
+aioshelly==13.12.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -518,7 +518,7 @@ auroranoaa==0.0.5
 aurorapy==0.2.7
 
 # homeassistant.components.autarco
-autarco==3.1.0
+autarco==3.2.0
 
 # homeassistant.components.husqvarna_automower_ble
 automower-ble==0.2.7
@@ -777,7 +777,7 @@ energyzero==2.1.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.11.2
+env-canada==0.11.3
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1032,7 +1032,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.81
+holidays==0.82
 
 # homeassistant.components.frontend
 home-assistant-frontend==20251001.0
@@ -1328,7 +1328,7 @@ nextcord==3.1.0
 nextdns==4.1.0
 
 # homeassistant.components.niko_home_control
-nhc==0.4.12
+nhc==0.6.1
 
 # homeassistant.components.nibe_heatpump
 nibe==2.19.0
@@ -1399,7 +1399,7 @@ open-meteo==0.3.2
 
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
-openai==1.99.5
+openai==2.2.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -1487,7 +1487,7 @@ prowlpy==1.0.2
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==7.0.0
+psutil==7.1.0
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
@@ -1783,7 +1783,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.1.1
+pylamarzocco==2.1.2
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1844,6 +1844,9 @@ pynetgear==0.10.10
 
 # homeassistant.components.nina
 pynina==0.3.6
+
+# homeassistant.components.nintendo_parental
+pynintendoparental==1.1.1
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
@@ -1993,7 +1996,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.9.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.3.0
+pysmartthings==3.3.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2566,7 +2569,7 @@ velbus-aio==2025.8.0
 venstarcolortouch==0.21
 
 # homeassistant.components.victron_remote_monitoring
-victron-vrm==0.1.7
+victron-vrm==0.1.8
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0

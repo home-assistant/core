@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
@@ -21,6 +21,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import (
+    MODEL_FRANKEVER_IRRIGATION_CONTROLLER,
+    MODEL_LINKEDGO_ST802_THERMOSTAT,
+    MODEL_LINKEDGO_ST1820_THERMOSTAT,
+    MODEL_NEO_WATER_VALVE,
+    MODEL_TOP_EV_CHARGER_EVE01,
+)
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -30,6 +37,7 @@ from .entity import (
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import (
     async_remove_orphaned_entities,
@@ -71,7 +79,7 @@ class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
     is_on: Callable[[dict[str, Any]], bool]
     method_on: str
     method_off: str
-    method_params_fn: Callable[[int | None, bool], dict]
+    method_params_fn: Callable[[int | None, bool], tuple]
 
 
 RPC_RELAY_SWITCHES = {
@@ -80,33 +88,173 @@ RPC_RELAY_SWITCHES = {
         sub_key="output",
         removal_condition=is_rpc_exclude_from_relay,
         is_on=lambda status: bool(status["output"]),
-        method_on="Switch.Set",
-        method_off="Switch.Set",
-        method_params_fn=lambda id, value: {"id": id, "on": value},
+        method_on="switch_set",
+        method_off="switch_set",
+        method_params_fn=lambda id, value: (id, value),
     ),
 }
 
 RPC_SWITCHES = {
-    "boolean": RpcSwitchDescription(
+    "boolean_generic": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
         removal_condition=lambda config, _status, key: not is_view_for_platform(
             config, key, SWITCH_PLATFORM
         ),
         is_on=lambda status: bool(status["value"]),
-        method_on="Boolean.Set",
-        method_off="Boolean.Set",
-        method_params_fn=lambda id, value: {"id": id, "value": value},
+        method_on="boolean_set",
+        method_off="boolean_set",
+        method_params_fn=lambda id, value: (id, value),
+        role="generic",
+    ),
+    "boolean_anti_freeze": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        is_on=lambda status: bool(status["value"]),
+        method_on="boolean_set",
+        method_off="boolean_set",
+        method_params_fn=lambda id, value: (id, value),
+        role="anti_freeze",
+        models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
+    ),
+    "boolean_child_lock": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="boolean_set",
+        method_off="boolean_set",
+        method_params_fn=lambda id, value: (id, value),
+        role="child_lock",
+        models={MODEL_LINKEDGO_ST1820_THERMOSTAT},
+    ),
+    "boolean_enable": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        is_on=lambda status: bool(status["value"]),
+        method_on="boolean_set",
+        method_off="boolean_set",
+        method_params_fn=lambda id, value: (id, value),
+        role="enable",
+        models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
+    ),
+    "boolean_start_charging": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="boolean_set",
+        method_off="boolean_set",
+        method_params_fn=lambda id, value: (id, value),
+        role="start_charging",
+        models={MODEL_TOP_EV_CHARGER_EVE01},
+    ),
+    "boolean_state": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        is_on=lambda status: bool(status["value"]),
+        method_on="boolean_set",
+        method_off="boolean_set",
+        method_params_fn=lambda id, value: (id, value),
+        role="state",
+        models={MODEL_NEO_WATER_VALVE},
+    ),
+    "boolean_zone0": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="boolean_set",
+        method_off="boolean_set",
+        method_params_fn=lambda id, value: (id, value),
+        role="zone0",
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone1": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="boolean_set",
+        method_off="boolean_set",
+        method_params_fn=lambda id, value: (id, value),
+        role="zone1",
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone2": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="boolean_set",
+        method_off="boolean_set",
+        method_params_fn=lambda id, value: (id, value),
+        role="zone2",
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone3": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="boolean_set",
+        method_off="boolean_set",
+        method_params_fn=lambda id, value: (id, value),
+        role="zone3",
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone4": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="boolean_set",
+        method_off="boolean_set",
+        method_params_fn=lambda id, value: (id, value),
+        role="zone4",
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone5": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="boolean_set",
+        method_off="boolean_set",
+        method_params_fn=lambda id, value: (id, value),
+        role="zone5",
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
     "script": RpcSwitchDescription(
         key="script",
         sub_key="running",
         is_on=lambda status: bool(status["running"]),
-        method_on="Script.Start",
-        method_off="Script.Stop",
-        method_params_fn=lambda id, _: {"id": id},
+        method_on="script_start",
+        method_off="script_stop",
+        method_params_fn=lambda id, _: (id,),
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
+    ),
+    "cury_left": RpcSwitchDescription(
+        key="cury",
+        sub_key="slots",
+        name="Left slot",
+        translation_key="cury_slot",
+        is_on=lambda status: bool(status["slots"]["left"]["on"]),
+        method_on="cury_set",
+        method_off="cury_set",
+        method_params_fn=lambda id, value: (id, "left", value),
+        entity_registry_enabled_default=True,
+        available=lambda status: (left := status["left"]) is not None
+        and left.get("vial", {}).get("level", -1) != -1,
+    ),
+    "cury_right": RpcSwitchDescription(
+        key="cury",
+        sub_key="slots",
+        name="Right slot",
+        translation_key="cury_slot",
+        is_on=lambda status: bool(status["slots"]["right"]["on"]),
+        method_on="cury_set",
+        method_off="cury_set",
+        method_params_fn=lambda id, value: (id, "right", value),
+        entity_registry_enabled_default=True,
+        available=lambda status: (right := status["right"]) is not None
+        and right.get("vial", {}).get("level", -1) != -1,
     ),
 }
 
@@ -301,19 +449,27 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
         """If switch is on."""
         return self.entity_description.is_on(self.status)
 
+    @rpc_call
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on relay."""
-        await self.call_rpc(
-            self.entity_description.method_on,
-            self.entity_description.method_params_fn(self._id, True),
-        )
+        """Turn on switch."""
+        method = getattr(self.coordinator.device, self.entity_description.method_on)
 
+        if TYPE_CHECKING:
+            assert method is not None
+
+        params = self.entity_description.method_params_fn(self._id, True)
+        await method(*params)
+
+    @rpc_call
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off relay."""
-        await self.call_rpc(
-            self.entity_description.method_off,
-            self.entity_description.method_params_fn(self._id, False),
-        )
+        """Turn off switch."""
+        method = getattr(self.coordinator.device, self.entity_description.method_off)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        params = self.entity_description.method_params_fn(self._id, False)
+        await method(*params)
 
 
 class RpcRelaySwitch(RpcSwitch):
