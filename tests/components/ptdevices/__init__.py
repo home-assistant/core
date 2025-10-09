@@ -1,1 +1,1 @@
-"""Tests for the PTDevices integration."""
+"""Tests for the PTDevices component."""

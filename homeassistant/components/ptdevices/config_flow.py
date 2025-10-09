@@ -52,8 +52,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
     except aioptdevices.PTDevicesForbiddenError as err:
         raise InvalidAuth from err
 
-    device_title: str = response.get("body", {}).get("title", "")
+    body: dict[str, Any] = response.get("body", {})
+    if not body:
+        raise MalformedResponse("response is missing body.")
 
+    device_title: str = body.get("title", "")
     if device_title == "":
         raise MalformedResponse("Device title was not included in the response.")
 
