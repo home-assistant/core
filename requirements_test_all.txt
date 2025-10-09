@@ -2578,7 +2578,7 @@ vilfo-api-client==0.5.0
 voip-utils==0.3.4
 
 # homeassistant.components.volvo
-volvocarsapi==0.4.2
+volvocarsapi==0.4.3
 
 # homeassistant.components.verisure
 vsure==2.6.7
