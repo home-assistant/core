@@ -91,7 +91,6 @@ async def test_sensor_vh400_type(
     assert state.attributes["unit_of_measurement"] == "%"
 
     # The vh400_transform function should be applied to the raw voltage
-    # Raw voltage is 1.5V from UPDATE_DATA, expected output is ~24.615%
     assert float(state.state) == pytest.approx(24.615, rel=1e-3)
 
 
@@ -122,13 +121,6 @@ async def test_sensor_therm200_type(
     assert state.attributes["unit_of_measurement"] == "°C"
 
     # The therm200_transform function should be applied to the raw voltage
-    # Raw voltage is 1.45599997V from UPDATE_DATA
-    # Formula: (voltage - 0.4) * 41.67 = (1.45599997 - 0.4) * 41.67 ≈ 44.02°C
-    # However, looking at the library test, 1.0V gives 1.67°C
-    # So the formula appears to be: (voltage - 1) * 41.67 + 1.67
-    # For 1.45599997V: (1.45599997 - 1) * 41.67 + 1.67 ≈ 20.674°C
-    # Actually from the test: (v * 41.67) - 40 is the formula
-    # For 1.45599997V: (1.45599997 * 41.67) - 40 ≈ 20.669°C
     assert float(state.state) == pytest.approx(20.669, rel=1e-2)
 
 
