@@ -13,9 +13,10 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
-from ..const import CIRCULAR_MEAN_SCHEMA_VERSION
+from ..const import CIRCULAR_MEAN_SCHEMA_VERSION, UNIT_CLASS_SCHEMA_VERSION
 from ..db_schema import StatisticsMeta
 from ..models import StatisticMeanType, StatisticMetaData
+from ..statistics import STATISTIC_UNIT_TO_UNIT_CONVERTER
 from ..util import execute_stmt_lambda_element
 
 if TYPE_CHECKING:
@@ -41,6 +42,7 @@ INDEX_UNIT_OF_MEASUREMENT: Final = 3
 INDEX_HAS_SUM: Final = 4
 INDEX_NAME: Final = 5
 INDEX_MEAN_TYPE: Final = 6
+INDEX_UNIT_CLASS: Final = 7
 
 
 def _generate_get_metadata_stmt(
@@ -58,6 +60,8 @@ def _generate_get_metadata_stmt(
         columns.append(StatisticsMeta.mean_type)
     else:
         columns.append(StatisticsMeta.has_mean)
+    if schema_version >= UNIT_CLASS_SCHEMA_VERSION:
+        columns.append(StatisticsMeta.unit_class)
     stmt = lambda_stmt(lambda: select(*columns))
     if statistic_ids:
         stmt += lambda q: q.where(StatisticsMeta.statistic_id.in_(statistic_ids))
@@ -140,6 +144,13 @@ class StatisticsMetaManager:
                         if row[INDEX_MEAN_TYPE]
                         else StatisticMeanType.NONE
                     )
+                if self.recorder.schema_version >= UNIT_CLASS_SCHEMA_VERSION:
+                    unit_class = row[INDEX_UNIT_CLASS]
+                else:
+                    conv = STATISTIC_UNIT_TO_UNIT_CONVERTER.get(
+                        row[INDEX_UNIT_OF_MEASUREMENT]
+                    )
+                    unit_class = conv.UNIT_CLASS if conv else None
                 meta = {
                     "has_mean": mean_type is StatisticMeanType.ARITHMETIC,
                     "mean_type": mean_type,
@@ -148,6 +159,7 @@ class StatisticsMetaManager:
                     "source": row[INDEX_SOURCE],
                     "statistic_id": statistic_id,
                     "unit_of_measurement": row[INDEX_UNIT_OF_MEASUREMENT],
+                    "unit_class": unit_class,
                 }
                 id_meta = (row_id, meta)
                 results[statistic_id] = id_meta
@@ -206,6 +218,7 @@ class StatisticsMetaManager:
             old_metadata["mean_type"] != new_metadata["mean_type"]
             or old_metadata["has_sum"] != new_metadata["has_sum"]
             or old_metadata["name"] != new_metadata["name"]
+            or old_metadata["unit_class"] != new_metadata["unit_class"]
             or old_metadata["unit_of_measurement"]
             != new_metadata["unit_of_measurement"]
         ):
@@ -217,6 +230,7 @@ class StatisticsMetaManager:
                 StatisticsMeta.mean_type: new_metadata["mean_type"],
                 StatisticsMeta.has_sum: new_metadata["has_sum"],
                 StatisticsMeta.name: new_metadata["name"],
+                StatisticsMeta.unit_class: new_metadata["unit_class"],
                 StatisticsMeta.unit_of_measurement: new_metadata["unit_of_measurement"],
             },
             synchronize_session=False,
@@ -328,7 +342,11 @@ class StatisticsMetaManager:
         )
 
     def update_unit_of_measurement(
-        self, session: Session, statistic_id: str, new_unit: str | None
+        self,
+        session: Session,
+        statistic_id: str,
+        new_unit_class: str | None,
+        new_unit: str | None,
     ) -> None:
         """Update the unit of measurement for a statistic_id.
 
@@ -338,7 +356,12 @@ class StatisticsMetaManager:
         self._assert_in_recorder_thread()
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id == statistic_id
-        ).update({StatisticsMeta.unit_of_measurement: new_unit})
+        ).update(
+            {
+                StatisticsMeta.unit_of_measurement: new_unit,
+                StatisticsMeta.unit_class: new_unit_class,
+            }
+        )
         self._clear_cache([statistic_id])
 
     def update_statistic_id(

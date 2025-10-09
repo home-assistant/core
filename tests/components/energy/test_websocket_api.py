@@ -370,6 +370,7 @@ async def test_fossil_energy_consumption_no_co2(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_energy_statistics_2 = (
@@ -404,6 +405,7 @@ async def test_fossil_energy_consumption_no_co2(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -535,6 +537,7 @@ async def test_fossil_energy_consumption_hole(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_energy_statistics_2 = (
@@ -569,6 +572,7 @@ async def test_fossil_energy_consumption_hole(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -698,6 +702,7 @@ async def test_fossil_energy_consumption_no_data(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_energy_statistics_2 = (
@@ -732,6 +737,7 @@ async def test_fossil_energy_consumption_no_data(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -850,6 +856,7 @@ async def test_fossil_energy_consumption(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_energy_statistics_2 = (
@@ -884,6 +891,7 @@ async def test_fossil_energy_consumption(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
+        "unit_class": "energy",
         "unit_of_measurement": "Wh",
     }
     external_co2_statistics = (
@@ -914,6 +922,7 @@ async def test_fossil_energy_consumption(
         "name": "Fossil percentage",
         "source": "test",
         "statistic_id": "test:fossil_percentage",
+        "unit_class": None,
         "unit_of_measurement": "%",
     }
 
@@ -1101,6 +1110,7 @@ async def test_fossil_energy_consumption_check_missing_hour(
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -1135,6 +1145,7 @@ async def test_fossil_energy_consumption_check_missing_hour(
         "name": "Fossil percentage",
         "source": "test",
         "statistic_id": "test:fossil_percentage",
+        "unit_class": None,
         "unit_of_measurement": "%",
     }
 
@@ -1196,6 +1207,7 @@ async def test_fossil_energy_consumption_missing_sum(
         "name": "Mean imported energy",
         "source": "test",
         "statistic_id": "test:mean_energy_import_tariff",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 

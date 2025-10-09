@@ -1,4 +1,8 @@
-"""Models for SQLAlchemy."""
+"""Models for SQLAlchemy.
+
+This file contains the model definitions for schema version 50.
+It is used to test the schema migration logic.
+"""
 
 from __future__ import annotations
 
@@ -35,6 +39,20 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator
 
+from homeassistant.components.recorder.const import (
+    ALL_DOMAIN_EXCLUDE_ATTRS,
+    SupportedDialect,
+)
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticDataTimestamp,
+    StatisticMeanType,
+    StatisticMetaData,
+    datetime_to_timestamp_or_none,
+    process_timestamp,
+    ulid_to_bytes_or_none,
+    uuid_hex_to_bytes_or_none,
+)
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -49,18 +67,6 @@ from homeassistant.core import Event, EventStateChangedData
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
 from homeassistant.util import dt as dt_util
 
-from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
-from .models import (
-    StatisticData,
-    StatisticDataTimestamp,
-    StatisticMeanType,
-    StatisticMetaData,
-    datetime_to_timestamp_or_none,
-    process_timestamp,
-    ulid_to_bytes_or_none,
-    uuid_hex_to_bytes_or_none,
-)
-
 
 # SQLAlchemy Schema
 class Base(DeclarativeBase):
@@ -71,7 +77,7 @@ class LegacyBase(DeclarativeBase):
     """Base class for tables, used for schema migration."""
 
 
-SCHEMA_VERSION = 51
+SCHEMA_VERSION = 50
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -756,7 +762,6 @@ class _StatisticsMeta:
     )
     source: Mapped[str | None] = mapped_column(String(32))
     unit_of_measurement: Mapped[str | None] = mapped_column(String(255))
-    unit_class: Mapped[str | None] = mapped_column(String(255))
     has_mean: Mapped[bool | None] = mapped_column(Boolean)
     has_sum: Mapped[bool | None] = mapped_column(Boolean)
     name: Mapped[str | None] = mapped_column(String(255))

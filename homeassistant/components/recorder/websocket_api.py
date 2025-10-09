@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime as dt
+import logging
 from typing import Any, Literal, cast
 
 import voluptuous as vol
@@ -14,6 +15,7 @@ from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     ApparentPowerConverter,
@@ -43,11 +45,12 @@ from homeassistant.util.unit_conversion import (
 
 from .models import StatisticMeanType, StatisticPeriod
 from .statistics import (
-    STATISTIC_UNIT_TO_UNIT_CONVERTER,
+    UNIT_CLASS_TO_UNIT_CONVERTER,
     async_add_external_statistics,
     async_change_statistics_unit,
     async_import_statistics,
     async_list_statistic_ids,
+    async_update_statistics_metadata,
     list_statistic_ids,
     statistic_during_period,
     statistics_during_period,
@@ -55,6 +58,8 @@ from .statistics import (
     validate_statistics,
 )
 from .util import PERIOD_SCHEMA, get_instance, resolve_period
+
+_LOGGER = logging.getLogger(__name__)
 
 CLEAR_STATISTICS_TIME_OUT = 10
 UPDATE_STATISTICS_METADATA_TIME_OUT = 10
@@ -392,6 +397,7 @@ async def ws_get_statistics_metadata(
     {
         vol.Required("type"): "recorder/update_statistics_metadata",
         vol.Required("statistic_id"): str,
+        vol.Optional("unit_class"): vol.Any(str, None),
         vol.Required("unit_of_measurement"): vol.Any(str, None),
     }
 )
@@ -401,6 +407,8 @@ async def ws_update_statistics_metadata(
 ) -> None:
     """Update statistics metadata for a statistic_id.
 
+    The unit_class specifies which unit conversion class to use, if applicable.
+
     Only the normalized unit of measurement can be updated.
     """
     done_event = asyncio.Event()
@@ -408,10 +416,20 @@ async def ws_update_statistics_metadata(
     def update_statistics_metadata_done() -> None:
         hass.loop.call_soon_threadsafe(done_event.set)
 
-    get_instance(hass).async_update_statistics_metadata(
+    if "unit_class" not in msg:
+        _LOGGER.warning(
+            "WS command recorder/update_statistics_metadata called without "
+            "specifying unit_class in metadata, this is deprecated and will "
+            "stop working in HA Core 2026.11"
+        )
+
+    async_update_statistics_metadata(
+        hass,
         msg["statistic_id"],
+        new_unit_class=msg.get("unit_class", UNDEFINED),
         new_unit_of_measurement=msg["unit_of_measurement"],
         on_done=update_statistics_metadata_done,
+        _called_from_ws_api=True,
     )
     try:
         async with asyncio.timeout(UPDATE_STATISTICS_METADATA_TIME_OUT):
@@ -434,15 +452,15 @@ async def ws_update_statistics_metadata(
         vol.Required("old_unit_of_measurement"): vol.Any(str, None),
     }
 )
-@callback
-def ws_change_statistics_unit(
+@websocket_api.async_response
+async def ws_change_statistics_unit(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Change the unit_of_measurement for a statistic_id.
 
     All existing statistics will be converted to the new unit.
     """
-    async_change_statistics_unit(
+    await async_change_statistics_unit(
         hass,
         msg["statistic_id"],
         new_unit_of_measurement=msg["new_unit_of_measurement"],
@@ -487,17 +505,23 @@ async def ws_adjust_sum_statistics(
         return
     metadata = metadatas[0]
 
-    def valid_units(statistics_unit: str | None, adjustment_unit: str | None) -> bool:
+    def valid_units(
+        unit_class: str | None, statistics_unit: str | None, adjustment_unit: str | None
+    ) -> bool:
         if statistics_unit == adjustment_unit:
             return True
-        converter = STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistics_unit)
-        if converter is not None and adjustment_unit in converter.VALID_UNITS:
+        if (
+            (converter := UNIT_CLASS_TO_UNIT_CONVERTER.get(unit_class)) is not None
+            and statistics_unit in converter.VALID_UNITS
+            and adjustment_unit in converter.VALID_UNITS
+        ):
             return True
         return False
 
+    unit_class = metadata["unit_class"]
     stat_unit = metadata["statistics_unit_of_measurement"]
     adjustment_unit = msg["adjustment_unit_of_measurement"]
-    if not valid_units(stat_unit, adjustment_unit):
+    if not valid_units(unit_class, stat_unit, adjustment_unit):
         connection.send_error(
             msg["id"],
             "invalid_units",
@@ -521,6 +545,7 @@ async def ws_adjust_sum_statistics(
             vol.Required("name"): vol.Any(str, None),
             vol.Required("source"): str,
             vol.Required("statistic_id"): str,
+            vol.Optional("unit_class"): vol.Any(str, None),
             vol.Required("unit_of_measurement"): vol.Any(str, None),
         },
         vol.Required("stats"): [
@@ -540,16 +565,25 @@ async def ws_adjust_sum_statistics(
 def ws_import_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Import statistics."""
+    """Import statistics.
+
+    The unit_class specifies which unit conversion class to use, if applicable.
+    """
     metadata = msg["metadata"]
     # The WS command will be changed in a follow up PR
     metadata["mean_type"] = (
         StatisticMeanType.ARITHMETIC if metadata["has_mean"] else StatisticMeanType.NONE
     )
+    if "unit_class" not in metadata:
+        _LOGGER.warning(
+            "WS command recorder/import_statistics called without specifying "
+            "unit_class in metadata, this is deprecated and will stop working "
+            "in HA Core 2026.11"
+        )
     stats = msg["stats"]
 
     if valid_entity_id(metadata["statistic_id"]):
-        async_import_statistics(hass, metadata, stats)
+        async_import_statistics(hass, metadata, stats, _called_from_ws_api=True)
     else:
-        async_add_external_statistics(hass, metadata, stats)
+        async_add_external_statistics(hass, metadata, stats, _called_from_ws_api=True)
     connection.send_result(msg["id"])
