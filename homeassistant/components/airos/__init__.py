@@ -115,7 +115,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
             await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
             device_registry.async_update_device(
-                device_entry.id, new_identifiers={(DOMAIN, mac_adress)}
+                device_entry.id, merge_identifiers={(DOMAIN, mac_adress)}
             )
 
         hass.config_entries.async_update_entry(
