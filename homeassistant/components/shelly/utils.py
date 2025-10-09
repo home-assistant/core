@@ -402,12 +402,12 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     if key in device.config and key != "em:0":
         # workaround for Pro 3EM, we don't want to get name for em:0
         if component_name := device.config[key].get("name"):
-            if component in (*VIRTUAL_COMPONENTS, "presencezone", "script"):
+            if component in (*VIRTUAL_COMPONENTS, "input", "presencezone", "script"):
                 return cast(str, component_name)
 
             return cast(str, component_name) if instances == 1 else None
 
-    if component in VIRTUAL_COMPONENTS:
+    if component in (*VIRTUAL_COMPONENTS, "input"):
         return f"{component.title()} {component_id}"
 
     return None
@@ -482,6 +482,11 @@ def get_rpc_key_by_role(keys_dict: dict[str, Any], role: str) -> str | None:
         if value.get("role") == role:
             return key
     return None
+
+
+def get_rpc_role_by_key(keys_dict: dict[str, Any], key: str) -> str:
+    """Return role by key for RPC device from a dict."""
+    return cast(str, keys_dict[key].get("role", "generic"))
 
 
 def id_from_key(key: str) -> int:
@@ -934,3 +939,35 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
 def format_ble_addr(ble_addr: str) -> str:
     """Format BLE address to use in unique_id."""
     return ble_addr.replace(":", "").upper()
+
+
+@callback
+def async_migrate_rpc_virtual_components_unique_ids(
+    config: dict[str, Any], entity_entry: er.RegistryEntry
+) -> dict[str, Any] | None:
+    """Migrate RPC virtual components unique_ids to include role in the ID.
+
+    This is needed to support multiple components with the same key.
+    The old unique_id format is: {mac}-{key}-{component}
+    The new unique_id format is: {mac}-{key}-{component}_{role}
+    """
+    for component in VIRTUAL_COMPONENTS:
+        if entity_entry.unique_id.endswith(f"-{component!s}"):
+            key = entity_entry.unique_id.split("-")[-2]
+            if key not in config:
+                continue
+            role = get_rpc_role_by_key(config, key)
+            new_unique_id = f"{entity_entry.unique_id}_{role}"
+            LOGGER.debug(
+                "Migrating unique_id for %s entity from [%s] to [%s]",
+                entity_entry.entity_id,
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            return {
+                "new_unique_id": entity_entry.unique_id.replace(
+                    entity_entry.unique_id, new_unique_id
+                )
+            }
+
+    return None

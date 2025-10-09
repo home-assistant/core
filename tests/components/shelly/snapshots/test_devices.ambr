@@ -3071,7 +3071,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_a_active_power-entry]
+# name: test_shelly_pro_3em[sensor.test_name_phase_a_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3086,7 +3086,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_phase_a_active_power',
+    'entity_id': 'sensor.test_name_phase_a_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3101,7 +3101,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Active power',
+    'original_name': 'Power',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3111,16 +3111,16 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_a_active_power-state]
+# name: test_shelly_pro_3em[sensor.test_name_phase_a_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Test name Phase A Active power',
+      'friendly_name': 'Test name Phase A Power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_phase_a_active_power',
+    'entity_id': 'sensor.test_name_phase_a_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3521,7 +3521,7 @@
     'state': '227.0',
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_b_active_power-entry]
+# name: test_shelly_pro_3em[sensor.test_name_phase_b_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3536,7 +3536,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_phase_b_active_power',
+    'entity_id': 'sensor.test_name_phase_b_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3551,7 +3551,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Active power',
+    'original_name': 'Power',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3561,16 +3561,16 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_b_active_power-state]
+# name: test_shelly_pro_3em[sensor.test_name_phase_b_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Test name Phase B Active power',
+      'friendly_name': 'Test name Phase B Power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_phase_b_active_power',
+    'entity_id': 'sensor.test_name_phase_b_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3971,7 +3971,7 @@
     'state': '230.0',
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_c_active_power-entry]
+# name: test_shelly_pro_3em[sensor.test_name_phase_c_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3986,7 +3986,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_phase_c_active_power',
+    'entity_id': 'sensor.test_name_phase_c_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4001,7 +4001,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Active power',
+    'original_name': 'Power',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4011,16 +4011,16 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_c_active_power-state]
+# name: test_shelly_pro_3em[sensor.test_name_phase_c_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Test name Phase C Active power',
+      'friendly_name': 'Test name Phase C Power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_phase_c_active_power',
+    'entity_id': 'sensor.test_name_phase_c_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4421,7 +4421,7 @@
     'state': '230.2',
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_n_current-entry]
+# name: test_shelly_pro_3em[sensor.test_name_neutral_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4436,7 +4436,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_phase_n_current',
+    'entity_id': 'sensor.test_name_neutral_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4451,7 +4451,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Phase N current',
+    'original_name': 'Neutral current',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4461,16 +4461,16 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_n_current-state]
+# name: test_shelly_pro_3em[sensor.test_name_neutral_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Test name Phase N current',
+      'friendly_name': 'Test name Neutral current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_phase_n_current',
+    'entity_id': 'sensor.test_name_neutral_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4645,7 +4645,7 @@
     'state': '5415.41419',
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_total_active_power-entry]
+# name: test_shelly_pro_3em[sensor.test_name_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4660,7 +4660,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_total_active_power',
+    'entity_id': 'sensor.test_name_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4675,7 +4675,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Total active power',
+    'original_name': 'Power',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4685,16 +4685,16 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_total_active_power-state]
+# name: test_shelly_pro_3em[sensor.test_name_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Test name Total active power',
+      'friendly_name': 'Test name Power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_total_active_power',
+    'entity_id': 'sensor.test_name_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4760,7 +4760,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_total_apparent_power-entry]
+# name: test_shelly_pro_3em[sensor.test_name_apparent_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4775,7 +4775,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_total_apparent_power',
+    'entity_id': 'sensor.test_name_apparent_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4790,7 +4790,7 @@
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
-    'original_name': 'Total apparent power',
+    'original_name': 'Apparent power',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4800,23 +4800,23 @@
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_total_apparent_power-state]
+# name: test_shelly_pro_3em[sensor.test_name_apparent_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'apparent_power',
-      'friendly_name': 'Test name Total apparent power',
+      'friendly_name': 'Test name Apparent power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_total_apparent_power',
+    'entity_id': 'sensor.test_name_apparent_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2525.779',
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_total_current-entry]
+# name: test_shelly_pro_3em[sensor.test_name_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4831,7 +4831,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_total_current',
+    'entity_id': 'sensor.test_name_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4846,7 +4846,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Total current',
+    'original_name': 'Current',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4856,16 +4856,16 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_total_current-state]
+# name: test_shelly_pro_3em[sensor.test_name_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Test name Total current',
+      'friendly_name': 'Test name Current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_total_current',
+    'entity_id': 'sensor.test_name_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5887,7 +5887,7 @@
       'installed_version': '2.4.4',
       'latest_version': '2.4.4',
       'release_summary': None,
-      'release_url': 'https://shelly-api-docs.shelly.cloud/gen2/changelog/#unreleased',
+      'release_url': None,
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 5>,
       'title': None,
@@ -5948,7 +5948,7 @@
       'installed_version': '2.4.4',
       'latest_version': '2.4.4',
       'release_summary': None,
-      'release_url': 'https://shelly-api-docs.shelly.cloud/gen2/changelog/',
+      'release_url': None,
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 5>,
       'title': None,
