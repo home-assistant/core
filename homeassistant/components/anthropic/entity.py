@@ -264,7 +264,6 @@ async def _transform_stream(  # noqa: C901
     current_tool_block: ToolUseBlockParam | None = None
     current_tool_args: str = ""
     input_usage: Usage | None = None
-    has_content = False
     has_native = False
 
     async for response in stream:
@@ -287,31 +286,26 @@ async def _transform_stream(  # noqa: C901
                 if has_native:
                     yield {"role": "assistant"}
                     has_native = False
-                    has_content = False
                 yield {"native": response.content_block}
                 has_native = True
             elif isinstance(response.content_block, TextBlock):
-                if has_content:
-                    yield {"role": "assistant"}
-                    has_native = False
-                has_content = True
+                # Multiple TextBlocks can occur in the same message (e.g., text before and after web search)
+                # They should all be part of the same assistant message, not split into separate bubbles
                 if response.content_block.text:
                     yield {"content": response.content_block.text}
             elif isinstance(response.content_block, ThinkingBlock):
                 if has_native:
                     yield {"role": "assistant"}
                     has_native = False
-                    has_content = False
             elif isinstance(response.content_block, RedactedThinkingBlock):
                 LOGGER.debug(
-                    "Some of Claude’s internal reasoning has been automatically "
-                    "encrypted for safety reasons. This doesn’t affect the quality of "
+                    "Some of Claude's internal reasoning has been automatically "
+                    "encrypted for safety reasons. This doesn't affect the quality of "
                     "responses"
                 )
                 if has_native:
                     yield {"role": "assistant"}
                     has_native = False
-                    has_content = False
                 yield {"native": response.content_block}
                 has_native = True
         elif isinstance(response, RawContentBlockDeltaEvent):
@@ -327,7 +321,6 @@ async def _transform_stream(  # noqa: C901
                 if has_native:
                     yield {"role": "assistant"}
                     has_native = False
-                    has_content = False
                 yield {"native": response.delta}
                 has_native = True
             elif isinstance(response.delta, SignatureDelta):
