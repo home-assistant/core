@@ -462,6 +462,8 @@ class TemplateEntity(AbstractTemplateEntity):
 
         async_at_start(self.hass, self._async_template_startup)
 
+        await self.async_setup_actions()
+
     async def async_update(self) -> None:
         """Call for forced update."""
         assert self._template_result_info

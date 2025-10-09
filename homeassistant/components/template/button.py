@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_PRESS, DOMAIN
+from .const import CONF_PRESS
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
@@ -104,11 +104,11 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
 
         # Scripts can be an empty list, therefore we need to check for None
         if (action := config.get(CONF_PRESS)) is not None:
-            self.add_script(CONF_PRESS, action, self._attr_name, DOMAIN)
+            self.add_actions(CONF_PRESS, action, self._attr_name)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state = None
 
     async def async_press(self) -> None:
         """Press the button."""
         if script := self._action_scripts.get(CONF_PRESS):
-            await self.async_run_script(script, context=self._context)
+            await self.async_run_actions(script, context=self._context)

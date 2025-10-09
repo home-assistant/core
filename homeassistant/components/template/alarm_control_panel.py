@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Sequence
+from collections.abc import Generator
 from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any
@@ -36,12 +36,10 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
-from .entity import AbstractTemplateEntity
+from .entity import AbstractTemplateEntity, TemplateActions
 from .helpers import (
     async_setup_template_entry,
     async_setup_template_platform,
@@ -227,7 +225,7 @@ class AbstractTemplateAlarmControlPanel(
     def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[
-        tuple[str, Sequence[dict[str, Any]], AlarmControlPanelEntityFeature | int]
+        tuple[str, list[dict[str, Any]], AlarmControlPanelEntityFeature | int]
     ]:
         for action_id, supported_feature in (
             (CONF_DISARM_ACTION, 0),
@@ -275,11 +273,13 @@ class AbstractTemplateAlarmControlPanel(
         )
         self._state = None
 
-    async def _async_alarm_arm(self, state: Any, script: Script | None, code: Any):
+    async def _async_alarm_arm(
+        self, state: Any, script: TemplateActions | None, code: Any
+    ):
         """Arm the panel to specified state with supplied script."""
 
         if script:
-            await self.async_run_script(
+            await self.async_run_actions(
                 script, run_variables={ATTR_CODE: code}, context=self._context
             )
 
@@ -365,7 +365,7 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
         for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
-            self.add_script(action_id, action_config, name, DOMAIN)
+            self.add_actions(action_id, action_config, name)
             self._attr_supported_features |= supported_feature
 
     async def async_added_to_hass(self) -> None:
@@ -415,7 +415,7 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
         for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
-            self.add_script(action_id, action_config, name, DOMAIN)
+            self.add_actions(action_id, action_config, name)
             self._attr_supported_features |= supported_feature
 
     async def async_added_to_hass(self) -> None:

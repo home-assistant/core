@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Sequence
+from collections.abc import Generator
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -41,7 +41,6 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -228,7 +227,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
 
     def _iterate_scripts(
         self, config: dict[str, Any]
-    ) -> Generator[tuple[str, Sequence[dict[str, Any]], FanEntityFeature | int]]:
+    ) -> Generator[tuple[str, list[dict[str, Any]], FanEntityFeature | int]]:
         for action_id, supported_feature in (
             (CONF_ON_ACTION, 0),
             (CONF_OFF_ACTION, 0),
@@ -368,7 +367,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        await self.async_run_script(
+        await self.async_run_actions(
             self._action_scripts[CONF_ON_ACTION],
             run_variables={
                 ATTR_PERCENTAGE: percentage,
@@ -388,7 +387,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        await self.async_run_script(
+        await self.async_run_actions(
             self._action_scripts[CONF_OFF_ACTION], context=self._context
         )
 
@@ -401,7 +400,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         self._percentage = percentage
 
         if script := self._action_scripts.get(CONF_SET_PERCENTAGE_ACTION):
-            await self.async_run_script(
+            await self.async_run_actions(
                 script,
                 run_variables={ATTR_PERCENTAGE: self._percentage},
                 context=self._context,
@@ -418,7 +417,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         self._preset_mode = preset_mode
 
         if script := self._action_scripts.get(CONF_SET_PRESET_MODE_ACTION):
-            await self.async_run_script(
+            await self.async_run_actions(
                 script,
                 run_variables={ATTR_PRESET_MODE: self._preset_mode},
                 context=self._context,
@@ -436,7 +435,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if (
             script := self._action_scripts.get(CONF_SET_OSCILLATING_ACTION)
         ) is not None:
-            await self.async_run_script(
+            await self.async_run_actions(
                 script,
                 run_variables={ATTR_OSCILLATING: self.oscillating},
                 context=self._context,
@@ -452,7 +451,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             if (
                 script := self._action_scripts.get(CONF_SET_DIRECTION_ACTION)
             ) is not None:
-                await self.async_run_script(
+                await self.async_run_actions(
                     script,
                     run_variables={ATTR_DIRECTION: direction},
                     context=self._context,
@@ -489,7 +488,7 @@ class StateFanEntity(TemplateEntity, AbstractTemplateFan):
         for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
-            self.add_script(action_id, action_config, name, DOMAIN)
+            self.add_actions(action_id, action_config, name)
             self._attr_supported_features |= supported_feature
 
     @callback
@@ -564,7 +563,7 @@ class TriggerFanEntity(TriggerEntity, AbstractTemplateFan):
         for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
-            self.add_script(action_id, action_config, name, DOMAIN)
+            self.add_actions(action_id, action_config, name)
             self._attr_supported_features |= supported_feature
 
         for key in (

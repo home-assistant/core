@@ -25,7 +25,6 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -128,7 +127,7 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
             self._attr_current_option = option
             self.async_write_ha_state()
         if select_option := self._action_scripts.get(CONF_SELECT_OPTION):
-            await self.async_run_script(
+            await self.async_run_actions(
                 select_option,
                 run_variables={ATTR_OPTION: option},
                 context=self._context,
@@ -155,7 +154,7 @@ class TemplateSelect(TemplateEntity, AbstractTemplateSelect):
             assert name is not None
 
         if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
-            self.add_script(CONF_SELECT_OPTION, select_option, name, DOMAIN)
+            self.add_actions(CONF_SELECT_OPTION, select_option, name)
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -197,11 +196,10 @@ class TriggerSelectEntity(TriggerEntity, AbstractTemplateSelect):
 
         # Scripts can be an empty list, therefore we need to check for None
         if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
-            self.add_script(
+            self.add_actions(
                 CONF_SELECT_OPTION,
                 select_option,
                 self._rendered.get(CONF_NAME, DEFAULT_NAME),
-                DOMAIN,
             )
 
     def _handle_coordinator_update(self):

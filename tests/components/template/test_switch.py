@@ -135,8 +135,7 @@ async def async_ensure_triggered_entity_updates(
         await hass.async_block_till_done()
 
 
-@pytest.fixture
-async def setup_switch(
+async def setup_switch_config(
     hass: HomeAssistant,
     count: int,
     style: ConfigurationStyle,
@@ -149,6 +148,17 @@ async def setup_switch(
         await async_setup_modern_format(hass, count, switch_config)
     elif style == ConfigurationStyle.TRIGGER:
         await async_setup_trigger_format(hass, count, switch_config)
+
+
+@pytest.fixture
+async def setup_switch(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    switch_config: dict[str, Any],
+) -> None:
+    """Do setup of switch integration."""
+    await setup_switch_config(hass, count, style, switch_config)
 
 
 @pytest.fixture
