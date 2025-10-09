@@ -954,11 +954,25 @@ def time(
     if weekday is not None:
         now_weekday = WEEKDAYS[now.weekday()]
 
-        condition_trace_update_result(weekday=weekday, now_weekday=now_weekday)
-        if (
-            isinstance(weekday, str) and weekday != now_weekday
-        ) or now_weekday not in weekday:
-            return False
+        # Check if weekday is an entity_id
+        if isinstance(weekday, str) and weekday.startswith("input_weekday."):
+            if (weekday_state := hass.states.get(weekday)) is None:
+                condition_trace_update_result(weekday=weekday, now_weekday=now_weekday)
+                return False
+            entity_weekdays = weekday_state.attributes.get("weekdays", [])
+            condition_trace_update_result(
+                weekday=weekday,
+                now_weekday=now_weekday,
+                entity_weekdays=entity_weekdays,
+            )
+            if now_weekday not in entity_weekdays:
+                return False
+        else:
+            condition_trace_update_result(weekday=weekday, now_weekday=now_weekday)
+            if (
+                isinstance(weekday, str) and weekday != now_weekday
+            ) or now_weekday not in weekday:
+                return False
 
     return True
 

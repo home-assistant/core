@@ -1061,6 +1061,14 @@ def test_weekday_validation() -> None:
     }
     time.TRIGGER_SCHEMA(valid_config)
 
+    # Valid input_weekday entity
+    valid_config = {
+        "platform": "time",
+        "at": "5:00:00",
+        "weekday": "input_weekday.workdays",
+    }
+    time.TRIGGER_SCHEMA(valid_config)
+
     # Invalid weekday
     invalid_config = {"platform": "time", "at": "5:00:00", "weekday": "invalid"}
     with pytest.raises(vol.Invalid):
@@ -1074,3 +1082,177 @@ def test_weekday_validation() -> None:
     }
     with pytest.raises(vol.Invalid):
         time.TRIGGER_SCHEMA(invalid_config)
+
+    # Invalid entity domain
+    invalid_config = {
+        "platform": "time",
+        "at": "5:00:00",
+        "weekday": "input_boolean.my_bool",
+    }
+    with pytest.raises(vol.Invalid):
+        time.TRIGGER_SCHEMA(invalid_config)
+
+
+async def test_if_fires_using_weekday_input_weekday_entity(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for firing on weekday using input_weekday entity."""
+    # Setup input_weekday helper
+    await async_setup_component(
+        hass,
+        "input_weekday",
+        {"input_weekday": {"workdays": {"name": "Work Days"}}},
+    )
+
+    # Set workdays to Mon, Tue, Wed
+    hass.states.async_set(
+        "input_weekday.workdays",
+        "3",
+        {"weekdays": ["mon", "tue", "wed"], "editable": True},
+    )
+
+    # Freeze time to Monday, January 2, 2023 at 5:00:00
+    monday_trigger = dt_util.as_utc(datetime(2023, 1, 2, 5, 0, 0, 0))
+    freezer.move_to(monday_trigger)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time",
+                    "at": "5:00:00",
+                    "weekday": "input_weekday.workdays",
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.platform }} - {{ trigger.now.strftime('%A') }}",
+                    },
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Fire on Monday - should trigger (Monday is in workdays)
+    async_fire_time_changed(hass, monday_trigger + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    automation_calls = [call for call in service_calls if call.domain == "test"]
+    assert len(automation_calls) == 1
+    assert "Monday" in automation_calls[0].data["some"]
+
+    # Fire on Tuesday - should trigger (Tuesday is in workdays)
+    tuesday_trigger = dt_util.as_utc(datetime(2023, 1, 3, 5, 0, 0, 0))
+    async_fire_time_changed(hass, tuesday_trigger)
+    await hass.async_block_till_done()
+    automation_calls = [call for call in service_calls if call.domain == "test"]
+    assert len(automation_calls) == 2
+    assert "Tuesday" in automation_calls[1].data["some"]
+
+    # Fire on Thursday - should not trigger (Thursday is not in workdays)
+    thursday_trigger = dt_util.as_utc(datetime(2023, 1, 5, 5, 0, 0, 0))
+    async_fire_time_changed(hass, thursday_trigger)
+    await hass.async_block_till_done()
+    automation_calls = [call for call in service_calls if call.domain == "test"]
+    assert len(automation_calls) == 2
+
+    # Fire on Saturday - should not trigger (Saturday is not in workdays)
+    saturday_trigger = dt_util.as_utc(datetime(2023, 1, 7, 5, 0, 0, 0))
+    async_fire_time_changed(hass, saturday_trigger)
+    await hass.async_block_till_done()
+    automation_calls = [call for call in service_calls if call.domain == "test"]
+    assert len(automation_calls) == 2
+
+
+async def test_if_action_weekday_input_weekday_entity(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test time condition with input_weekday entity."""
+    # Setup input_weekday helper
+    await async_setup_component(
+        hass,
+        "input_weekday",
+        {"input_weekday": {"weekend": {"name": "Weekend Days"}}},
+    )
+
+    # Set weekend to Sat, Sun
+    hass.states.async_set(
+        "input_weekday.weekend",
+        "2",
+        {"weekdays": ["sat", "sun"], "editable": True},
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {"condition": "time", "weekday": "input_weekday.weekend"},
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    days_past_monday = dt_util.now().weekday()
+    monday = dt_util.now() - timedelta(days=days_past_monday)
+    saturday = monday + timedelta(days=5)
+    sunday = saturday + timedelta(days=1)
+
+    # Test on Monday - should not trigger (not in weekend)
+    with patch("homeassistant.helpers.condition.dt_util.now", return_value=monday):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Test on Saturday - should trigger
+    with patch("homeassistant.helpers.condition.dt_util.now", return_value=saturday):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    # Test on Sunday - should trigger
+    with patch("homeassistant.helpers.condition.dt_util.now", return_value=sunday):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+    assert len(service_calls) == 2
+
+
+async def test_if_fires_weekday_entity_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test that trigger does not fire when input_weekday entity is unavailable."""
+    # Freeze time to Monday, January 2, 2023 at 5:00:00
+    monday_trigger = dt_util.as_utc(datetime(2023, 1, 2, 5, 0, 0, 0))
+    freezer.move_to(monday_trigger)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time",
+                    "at": "5:00:00",
+                    "weekday": "input_weekday.nonexistent",
+                },
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Fire on Monday - should not trigger (entity doesn't exist)
+    async_fire_time_changed(hass, monday_trigger + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    automation_calls = [call for call in service_calls if call.domain == "test"]
+    assert len(automation_calls) == 0
