@@ -489,7 +489,7 @@ async def test_entity_without_name_device_with_friendly_name(
         states=states,
         device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
     )
-    state = hass.states.get("binary_sensor.mixer")
+    state = hass.states.get("binary_sensor.the_best_mixer")
     assert state is not None
     assert state.state == STATE_ON
     # Make sure we have set the name to `None` as otherwise
@@ -601,7 +601,7 @@ async def test_entity_id_preserved_on_upgrade_when_in_storage(
         states=states,
         device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
     )
-    state = hass.states.get("binary_sensor.mixer_my")
+    state = hass.states.get("binary_sensor.the_best_mixer_my")
     assert state is not None
     # now rename the entity
     ent_reg_entry = entity_registry.async_get_or_create(
@@ -874,8 +874,8 @@ async def test_entity_friendly_names_with_empty_device_names(
     )
 
     # Check entity friendly name on sub-device with empty name
-    # Since sub device has empty name, it falls back to main device name "test"
-    state_1 = hass.states.get("binary_sensor.test_motion_detected")
+    # Since sub device has empty name, it falls back to main device name "Main device"
+    state_1 = hass.states.get("binary_sensor.main_device_motion_detected")
     assert state_1 is not None
     # With has_entity_name, friendly name is "{device_name} {entity_name}"
     # Since sub-device falls back to main device name: "Main Device Motion Detected"
@@ -894,7 +894,7 @@ async def test_entity_friendly_names_with_empty_device_names(
     assert state_3.attributes[ATTR_FRIENDLY_NAME] == "Kitchen Light"
 
     # Test entity on main device
-    state_4 = hass.states.get("binary_sensor.test_main_status")
+    state_4 = hass.states.get("binary_sensor.main_device_main_status")
     assert state_4 is not None
     assert state_4.attributes[ATTR_FRIENDLY_NAME] == "Main Device Main Status"
 
@@ -1050,6 +1050,7 @@ async def test_entity_id_uses_sub_device_name(
     device_info = {
         "devices": sub_devices,
         "name": "main_device",
+        "friendly_name": None,
     }
 
     # Create entities that belong to different devices
@@ -1131,6 +1132,7 @@ async def test_entity_id_with_empty_sub_device_name(
     device_info = {
         "devices": sub_devices,
         "name": "main_device",
+        "friendly_name": None,
     }
 
     # Create entity on sub device with empty name
