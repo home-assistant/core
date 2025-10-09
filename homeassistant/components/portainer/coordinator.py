@@ -110,6 +110,14 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
+            if endpoint.status == 2:
+                _LOGGER.info(
+                    "Skipping offline endpoint: %s (ID: %d)",
+                    endpoint.name,
+                    endpoint.id,
+                )
+                continue
+
             try:
                 containers = await self.portainer.get_containers(endpoint.id)
             except PortainerConnectionError as err:
