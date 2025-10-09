@@ -15,7 +15,6 @@ from .helpers import async_verify_key
 
 _LOGGER = logging.getLogger(__name__)
 
-# This is just to suppress https://github.com/home-assistant/core/blob/dev/homeassistant/setup.py#L365-L378
 CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
 
 
