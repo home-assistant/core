@@ -158,8 +158,8 @@ class MatterLight(MatterEntity, LightEntity):
         device_min_mireds = self.get_matter_attribute_value(
             clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
         )
-        color_temp_mired = min(color_temp_mired, device_max_mireds)
-        color_temp_mired = max(color_temp_mired, device_min_mireds)
+        color_temp_mired = min(color_temp_mired, device_max_mireds, 65279)
+        color_temp_mired = max(color_temp_mired, device_min_mireds, 1)
 
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColorTemperature(
