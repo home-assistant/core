@@ -42,20 +42,6 @@
     }
   },
   "entity": {
-    "number": {
-      "battery_charge_power_limit": {
-        "name": "Battery charge power limit"
-      },
-      "battery_charge_soc_limit": {
-        "name": "Battery charge SOC limit"
-      },
-      "battery_discharge_power_limit": {
-        "name": "Battery discharge power limit"
-      },
-      "battery_discharge_soc_limit": {
-        "name": "Battery discharge SOC limit"
-      }
-    },
     "sensor": {
       "inverter_amperage_input_1": {
         "name": "Input 1 amperage"
@@ -521,6 +507,48 @@
       "ac_charge": {
         "name": "Charge from grid"
       }
+    }
+  },
+  "services": {
+    "read_min_time_segments": {
+      "description": "Read all time-of-use (TOU) segments from a MIN inverter.",
+      "fields": {
+        "device_id": {
+          "description": "MIN device ID (only required when multiple MIN devices exist).",
+          "name": "Device ID"
+        }
+      },
+      "name": "Read MIN time segments"
+    },
+    "update_min_time_segment": {
+      "description": "Update a time-of-use (TOU) segment for MIN inverters.",
+      "fields": {
+        "batt_mode": {
+          "description": "Battery operation mode for this time segment.",
+          "name": "Battery mode"
+        },
+        "device_id": {
+          "description": "MIN device ID (only required when multiple MIN devices exist).",
+          "name": "Device ID"
+        },
+        "enabled": {
+          "description": "Whether this time segment is active.",
+          "name": "Enabled"
+        },
+        "end_time": {
+          "description": "End time for the segment (HH:MM format).",
+          "name": "End time"
+        },
+        "segment_id": {
+          "description": "Time segment ID (1-9).",
+          "name": "Segment ID"
+        },
+        "start_time": {
+          "description": "Start time for the segment (HH:MM format).",
+          "name": "Start time"
+        }
+      },
+      "name": "Update MIN time segment"
     }
   },
   "title": "Growatt Server"

@@ -12,6 +12,7 @@ import growattServer
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -251,3 +252,157 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.previous_values[variable] = return_value
 
         return return_value
+
+    async def update_min_time_segment(
+        self, segment_id: int, batt_mode: int, start_time, end_time, enabled: bool
+    ) -> None:
+        """Update a MIN inverter time segment.
+
+        Args:
+            segment_id: Time segment ID (1-9)
+            batt_mode: Battery mode (0=load first, 1=battery first, 2=grid first)
+            start_time: Start time (datetime.time object)
+            end_time: End time (datetime.time object)
+            enabled: Whether the segment is enabled
+        """
+        _LOGGER.debug(
+            "Updating MIN time segment %s for device %s",
+            segment_id,
+            self.device_id,
+        )
+
+        if self.api_version != "v1":
+            _LOGGER.warning(
+                "Updating time segments is only supported with V1 API (token authentication)"
+            )
+            raise HomeAssistantError(
+                "Updating time segments requires token authentication"
+            )
+
+        try:
+            # Use V1 API for token authentication
+            response = await self.hass.async_add_executor_job(
+                self.api.min_write_time_segment,
+                self.device_id,
+                segment_id,
+                batt_mode,
+                start_time,
+                end_time,
+                enabled,
+            )
+        except growattServer.GrowattV1ApiError as err:
+            _LOGGER.error(
+                "API error updating MIN time segment %s for device %s: %s",
+                segment_id,
+                self.device_id,
+                err,
+            )
+            raise HomeAssistantError(f"API error updating time segment: {err}") from err
+
+        # Check response error code
+        if response.get("error_code", 1) != 0:
+            error_msg = response.get("error_msg", "Unknown error")
+            _LOGGER.error(
+                "Failed to update MIN time segment %s for device %s: %s",
+                segment_id,
+                self.device_id,
+                error_msg,
+            )
+            raise HomeAssistantError(f"Failed to update time segment: {error_msg}")
+
+        _LOGGER.info(
+            "Successfully updated MIN time segment %s for device %s",
+            segment_id,
+            self.device_id,
+        )
+        # Trigger a refresh to update the data
+        await self.async_refresh()
+
+    async def read_min_time_segments(self) -> list[dict]:
+        """Read time segments from a MIN inverter.
+
+        Returns:
+            List of dictionaries containing segment information
+        """
+        _LOGGER.debug(
+            "Reading MIN time segments for device %s",
+            self.device_id,
+        )
+
+        if self.api_version != "v1":
+            _LOGGER.warning(
+                "Reading time segments is only supported with V1 API (token authentication)"
+            )
+            raise HomeAssistantError(
+                "Reading time segments requires token authentication"
+            )
+
+        # Ensure we have current data
+        if not self.data:
+            _LOGGER.debug("Triggering refresh to get time segments")
+            await self.async_refresh()
+
+        time_segments = []
+        mode_names = {0: "Load First", 1: "Battery First", 2: "Grid First"}
+
+        # Extract time segments from coordinator data
+        for i in range(1, 10):  # Segments 1-9
+            segment = self._parse_time_segment(i, mode_names)
+            time_segments.append(segment)
+
+        _LOGGER.debug(
+            "Read %d time segments for device %s", len(time_segments), self.device_id
+        )
+        return time_segments
+
+    def _parse_time_segment(self, segment_id: int, mode_names: dict[int, str]) -> dict:
+        """Parse a single time segment from coordinator data."""
+        # Get raw time values
+        start_time_raw = self.data.get(f"forcedTimeStart{segment_id}", "0:0")
+        end_time_raw = self.data.get(f"forcedTimeStop{segment_id}", "0:0")
+
+        # Handle 'null' or empty values
+        if start_time_raw in ("null", None, ""):
+            start_time_raw = "0:0"
+        if end_time_raw in ("null", None, ""):
+            end_time_raw = "0:0"
+
+        # Format times with leading zeros (HH:MM)
+        start_time = self._format_time(start_time_raw)
+        end_time = self._format_time(end_time_raw)
+
+        # Get battery mode
+        batt_mode_raw = self.data.get(f"forcedChargeBatMode{segment_id}", 0)
+        try:
+            batt_mode = int(batt_mode_raw)
+        except (ValueError, TypeError):
+            batt_mode = 0
+
+        mode_name = mode_names.get(batt_mode, "Unknown")
+
+        # Get enabled status
+        enabled_raw = self.data.get(f"forcedChargeFlag{segment_id}", 0)
+        try:
+            enabled = bool(int(enabled_raw))
+        except (ValueError, TypeError):
+            enabled = False
+
+        return {
+            "segment_id": segment_id,
+            "start_time": start_time,
+            "end_time": end_time,
+            "batt_mode": batt_mode,
+            "mode_name": mode_name,
+            "enabled": enabled,
+        }
+
+    def _format_time(self, time_raw: str) -> str:
+        """Format time string to HH:MM format."""
+        try:
+            parts = str(time_raw).split(":")
+            hour = int(parts[0])
+            minute = int(parts[1])
+        except (ValueError, IndexError):
+            return "00:00"
+        else:
+            return f"{hour:02d}:{minute:02d}"
