@@ -96,16 +96,18 @@ class OctoPrintTemperatureNumber(
     ) -> None:
         """Initialize a new OctoPrint temperature number entity."""
         super().__init__(coordinator)
-        self._device_id = device_id
         self._api_tool = tool
         self._attr_device_info = coordinator.device_info
+        self._attr_unique_id = f"{device_id}_{tool}_temperature"
         self._client = client
+        self._device_id = device_id
         if is_bed(tool):
             self._attr_translation_key = "bed_temperature"
         else:
+            # When multiple tools are present,
+            # Home Assistant automatically appends a sequence number to the entity name
+            # to avoid duplicate names.
             self._attr_translation_key = "tool_temperature"
-            self._attr_translation_placeholders = {"tool": tool}
-        self._attr_unique_id = f"{device_id}_{tool}_temperature"
 
     @property
     def native_value(self) -> float | None:

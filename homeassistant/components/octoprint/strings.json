@@ -38,8 +38,11 @@
   },
   "entity": {
     "number": {
-      "set_temperature": {
-        "name": "{tool} temperature"
+      "bed_temperature": {
+        "name": "Bed temperature"
+      },
+      "tool_temperature": {
+        "name": "Extruder temperature"
       }
     }
   },
