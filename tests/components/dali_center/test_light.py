@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.dali_center.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -13,6 +14,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import snapshot_platform
 
 from tests.common import MockConfigEntry, SnapshotAssertion
+
+
+def _get_light_entity_id(hass: HomeAssistant, unique_id: str) -> str:
+    """Return the entity_id for the given unique_id."""
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id("light", DOMAIN, unique_id)
+    assert entity_id is not None
+    return entity_id
 
 
 @pytest.fixture
@@ -53,7 +62,7 @@ async def test_entities(
     device_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert len(device_entries) == 3
+    assert len(device_entries) == 5
 
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
@@ -68,7 +77,7 @@ async def test_turn_on_light(
     mock_devices: list[MagicMock],
 ) -> None:
     """Test turning on a light."""
-    entity_id = "light.dimmer_0000_02_light"
+    entity_id = _get_light_entity_id(hass, "01010000026A242121110E")
 
     await hass.services.async_call(
         "light",
@@ -86,7 +95,7 @@ async def test_turn_off_light(
     mock_devices: list[MagicMock],
 ) -> None:
     """Test turning off a light."""
-    entity_id = "light.dimmer_0000_02_light"
+    entity_id = _get_light_entity_id(hass, "01010000026A242121110E")
 
     await hass.services.async_call(
         "light",
@@ -104,7 +113,7 @@ async def test_turn_on_with_brightness(
     mock_devices: list[MagicMock],
 ) -> None:
     """Test turning on light with brightness."""
-    entity_id = "light.dimmer_0000_02_light"
+    entity_id = _get_light_entity_id(hass, "01010000026A242121110E")
 
     await hass.services.async_call(
         "light",
@@ -127,7 +136,7 @@ async def test_dispatcher_connection(
     mock_devices: list[MagicMock],
 ) -> None:
     """Test that dispatcher signals are properly connected."""
-    entity_id = "light.dimmer_0000_02_light"
+    entity_id = _get_light_entity_id(hass, "01010000026A242121110E")
 
     entity_registry = er.async_get(hass)
     entity_entry = entity_registry.async_get(entity_id)

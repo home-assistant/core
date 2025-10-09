@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[light.cct_0000_03_light-entry]
+# name: test_entities[light.cct_0000_03-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -20,7 +20,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.cct_0000_03_light',
+    'entity_id': 'light.cct_0000_03',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -32,7 +32,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Light',
+    'original_name': None,
     'platform': 'dali_center',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -42,14 +42,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[light.cct_0000_03_light-state]
+# name: test_entities[light.cct_0000_03-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
       'color_temp': None,
       'color_temp_kelvin': None,
-      'friendly_name': 'CCT 0000-03 Light',
+      'friendly_name': 'CCT 0000-03',
       'hs_color': None,
       'max_color_temp_kelvin': 8000,
       'max_mireds': 1000,
@@ -63,14 +63,14 @@
       'xy_color': None,
     }),
     'context': <ANY>,
-    'entity_id': 'light.cct_0000_03_light',
+    'entity_id': 'light.cct_0000_03',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_entities[light.dimmer_0000_02_light-entry]
+# name: test_entities[light.dimmer_0000_02-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -87,7 +87,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.dimmer_0000_02_light',
+    'entity_id': 'light.dimmer_0000_02',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,7 +99,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Light',
+    'original_name': None,
     'platform': 'dali_center',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -109,19 +109,142 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[light.dimmer_0000_02_light-state]
+# name: test_entities[light.dimmer_0000_02-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'friendly_name': 'Dimmer 0000-02 Light',
+      'friendly_name': 'Dimmer 0000-02',
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.dimmer_0000_02_light',
+    'entity_id': 'light.dimmer_0000_02',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[light.hs_color_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.HS: 'hs'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.hs_color_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'dali_center',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01030000046A242121110E',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[light.hs_color_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': None,
+      'color_mode': None,
+      'friendly_name': 'HS Color Light',
+      'hs_color': None,
+      'rgb_color': None,
+      'supported_color_modes': list([
+        <ColorMode.HS: 'hs'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.hs_color_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[light.rgbw_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.RGBW: 'rgbw'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.rgbw_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'dali_center',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01040000056A242121110E',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[light.rgbw_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': None,
+      'color_mode': None,
+      'friendly_name': 'RGBW Light',
+      'hs_color': None,
+      'rgb_color': None,
+      'rgbw_color': None,
+      'supported_color_modes': list([
+        <ColorMode.RGBW: 'rgbw'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.rgbw_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

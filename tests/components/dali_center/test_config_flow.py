@@ -1,16 +1,13 @@
-"""Test the Dali Center config flow."""
-
-from unittest.mock import AsyncMock, MagicMock, patch
+"""Test the DALI Center config flow."""
 
 from PySrDaliGateway.exceptions import DaliGatewayError
-import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.dali_center.config_flow import (
-    CannotConnect,
-    validate_input,
+from homeassistant.components.dali_center.const import (
+    CONF_GATEWAY_DATA,
+    CONF_GATEWAY_SN,
+    DOMAIN,
 )
-from homeassistant.components.dali_center.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -19,11 +16,12 @@ from tests.common import MockConfigEntry
 MOCK_GATEWAY_DATA = {
     "gw_sn": "TEST123",
     "gw_ip": "192.168.1.100",
+    "name": "Test Gateway",
 }
 
 
 async def test_user_step_form(hass: HomeAssistant) -> None:
-    """Test user step shows form."""
+    """Test the initial user step shows the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -33,177 +31,163 @@ async def test_user_step_form(hass: HomeAssistant) -> None:
 
 async def test_discovery_flow_success(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_discovery: MagicMock,
-    mock_validate_input: MagicMock,
-    mock_dali_gateway_class: MagicMock,
+    mock_setup_entry,
+    mock_discovery,
 ) -> None:
-    """Test successful discovery and configuration."""
+    """Test a successful discovery flow."""
     mock_discovery.discover_gateways.return_value = [MOCK_GATEWAY_DATA]
-    mock_validate_input.return_value = {
-        "title": "Test Gateway",
-        "gateway_info": MOCK_GATEWAY_DATA,
-    }
 
-    result = await hass.config_entries.flow.async_init(
+    init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    discovery_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"], {}
+    )
+    assert discovery_result["type"] is FlowResultType.FORM
+    assert discovery_result["step_id"] == "discovery"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+    select_result = await hass.config_entries.flow.async_configure(
+        discovery_result["flow_id"],
         {"selected_gateway": MOCK_GATEWAY_DATA["gw_sn"]},
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Gateway"
-    assert result["data"]["sn"] == MOCK_GATEWAY_DATA["gw_sn"]
+    assert select_result["type"] is FlowResultType.CREATE_ENTRY
+    assert select_result["title"] == MOCK_GATEWAY_DATA["name"]
+    assert select_result["data"] == {
+        CONF_GATEWAY_SN: MOCK_GATEWAY_DATA["gw_sn"],
+        CONF_GATEWAY_DATA: MOCK_GATEWAY_DATA,
+    }
+    assert mock_discovery.discover_gateways.await_count == 1
+    mock_setup_entry.assert_called_once()
 
 
 async def test_discovery_no_gateways_found(
     hass: HomeAssistant,
-    mock_discovery: MagicMock,
+    mock_discovery,
 ) -> None:
-    """Test discovery when no gateways are found."""
+    """Test discovery step when no gateways are found."""
     mock_discovery.discover_gateways.return_value = []
 
-    result = await hass.config_entries.flow.async_init(
+    init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    discovery_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"], {}
+    )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert discovery_result["type"] is FlowResultType.FORM
+    assert discovery_result["step_id"] == "discovery"
+    assert discovery_result["errors"]["base"] == "no_devices_found"
+    assert mock_discovery.discover_gateways.await_count == 1
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery"
-    assert result["errors"]["base"] == "no_devices_found"
 
-
-async def test_discovery_gateway_connection_error(
+async def test_discovery_gateway_error(
     hass: HomeAssistant,
-    mock_discovery: MagicMock,
-    mock_validate_input: MagicMock,
+    mock_discovery,
 ) -> None:
-    """Test discovery with gateway connection error."""
-    mock_discovery.discover_gateways.return_value = [MOCK_GATEWAY_DATA]
-    mock_validate_input.side_effect = CannotConnect
+    """Test discovery error handling when gateway search fails."""
+    mock_discovery.discover_gateways.side_effect = DaliGatewayError("failure")
 
-    result = await hass.config_entries.flow.async_init(
+    init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    discovery_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"], {}
+    )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert discovery_result["type"] is FlowResultType.FORM
+    assert discovery_result["step_id"] == "discovery"
+    assert discovery_result["errors"]["base"] == "discovery_failed"
+    assert mock_discovery.discover_gateways.await_count == 1
 
-    # Mock gateway connection failure
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+
+async def test_discovery_device_not_found(
+    hass: HomeAssistant,
+    mock_discovery,
+) -> None:
+    """Test selection error when the gateway no longer exists."""
+    mock_discovery.discover_gateways.return_value = [MOCK_GATEWAY_DATA]
+
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    flow_id = init_result["flow_id"]
+    _ = await hass.config_entries.flow.async_configure(flow_id, {})
+
+    flow = hass.config_entries.flow._progress[flow_id]
+    flow._discovered_gateways.clear()
+
+    select_result = await hass.config_entries.flow.async_configure(
+        flow_id,
         {"selected_gateway": MOCK_GATEWAY_DATA["gw_sn"]},
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery"
-    assert result["errors"]["base"] == "cannot_connect"
+    assert select_result["type"] is FlowResultType.FORM
+    assert select_result["step_id"] == "discovery"
+    assert select_result["errors"]["base"] == "device_not_found"
+    assert mock_discovery.discover_gateways.await_count == 2
 
 
-async def test_discovery_exception(hass: HomeAssistant) -> None:
-    """Test discovery with exception during gateway search."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.dali_center.config_flow.DaliGatewayDiscovery.discover_gateways",
-        side_effect=DaliGatewayError("Discovery failed"),
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery"
-    assert result["errors"]["base"] == "discovery_failed"
-
-
-async def test_duplicate_prevention(
+async def test_discovery_duplicate_filtered(
     hass: HomeAssistant,
-    mock_discovery: MagicMock,
-    mock_validate_input: MagicMock,
+    mock_discovery,
 ) -> None:
-    """Test that duplicate gateways are prevented."""
+    """Test that already configured gateways are filtered out."""
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"sn": MOCK_GATEWAY_DATA["gw_sn"]},
+        data={
+            CONF_GATEWAY_SN: MOCK_GATEWAY_DATA["gw_sn"],
+            CONF_GATEWAY_DATA: MOCK_GATEWAY_DATA,
+        },
         unique_id=MOCK_GATEWAY_DATA["gw_sn"],
     )
     existing_entry.add_to_hass(hass)
 
     mock_discovery.discover_gateways.return_value = [MOCK_GATEWAY_DATA]
 
-    result = await hass.config_entries.flow.async_init(
+    init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    discovery_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"], {}
+    )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert discovery_result["type"] is FlowResultType.FORM
+    assert discovery_result["step_id"] == "discovery"
+    assert discovery_result["errors"]["base"] == "no_devices_found"
+    assert mock_discovery.discover_gateways.await_count == 1
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery"
-    assert result["errors"]["base"] == "no_devices_found"
 
-
-async def test_validate_input_success(
+async def test_discovery_unique_id_already_configured(
     hass: HomeAssistant,
-    mock_dali_gateway_class: MagicMock,
+    mock_discovery,
 ) -> None:
-    """Test validate_input function with successful connection."""
-
-    mock_gateway = mock_dali_gateway_class.return_value
-    mock_gateway.name = "Test Gateway"
-
-    data = {"gateway": MOCK_GATEWAY_DATA}
-    result = await validate_input(hass, data)
-
-    assert result["title"] == "Test Gateway"
-    assert result["gateway_info"] == MOCK_GATEWAY_DATA
-    mock_gateway.connect.assert_called_once()
-    mock_gateway.disconnect.assert_called_once()
-
-
-async def test_validate_input_dali_gateway_error(
-    hass: HomeAssistant,
-    mock_dali_gateway_class: MagicMock,
-) -> None:
-    """Test validate_input function with DaliGatewayError."""
-
-    mock_gateway = mock_dali_gateway_class.return_value
-    mock_gateway.connect.side_effect = DaliGatewayError("Connection failed")
-
-    data = {"gateway": MOCK_GATEWAY_DATA}
-
-    with pytest.raises(CannotConnect):
-        await validate_input(hass, data)
-
-
-async def test_discovery_unexpected_exception(
-    hass: HomeAssistant,
-    mock_discovery: MagicMock,
-    mock_validate_input: MagicMock,
-) -> None:
-    """Test discovery step with unexpected exception during gateway selection."""
+    """Test duplicate protection when the entry appears during the flow."""
     mock_discovery.discover_gateways.return_value = [MOCK_GATEWAY_DATA]
-    mock_validate_input.side_effect = ValueError("Unexpected error")
 
-    result = await hass.config_entries.flow.async_init(
+    init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    discovery_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"], {}
+    )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    duplicate_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_GATEWAY_SN: MOCK_GATEWAY_DATA["gw_sn"],
+            CONF_GATEWAY_DATA: MOCK_GATEWAY_DATA,
+        },
+        unique_id=MOCK_GATEWAY_DATA["gw_sn"],
+    )
+    duplicate_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+    select_result = await hass.config_entries.flow.async_configure(
+        discovery_result["flow_id"],
         {"selected_gateway": MOCK_GATEWAY_DATA["gw_sn"]},
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery"
-    assert result["errors"]["base"] == "unknown"
+    assert select_result["type"] is FlowResultType.ABORT
+    assert select_result["reason"] == "already_configured"
+    assert mock_discovery.discover_gateways.await_count == 1

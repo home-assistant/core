@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.dali_center.const import DOMAIN
+from homeassistant.components.dali_center.const import (
+    CONF_GATEWAY_DATA,
+    CONF_GATEWAY_SN,
+    DOMAIN,
+)
 
 from tests.common import MockConfigEntry
 
@@ -16,38 +20,12 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            "sn": "6A242121110E",
-            "gateway": {"gw_sn": "6A242121110E", "gw_ip": "192.168.1.100"},
-            "devices": [
-                {
-                    "unique_id": "01010000026A242121110E",
-                    "id": "01010000026A242121110E",
-                    "name": "Dimmer 0000-02",
-                    "dev_type": "0101",
-                    "channel": 0,
-                    "address": 2,
-                    "status": "online",
-                    "dev_sn": "71DF763153191241",
-                    "area_name": "",
-                    "area_id": "",
-                    "prop": [],
-                    "model": "DALI DT6 Dimmable Driver",
-                },
-                {
-                    "unique_id": "01020000036A242121110E",
-                    "id": "01020000036A242121110E",
-                    "name": "CCT 0000-03",
-                    "dev_type": "0102",
-                    "channel": 0,
-                    "address": 3,
-                    "status": "online",
-                    "dev_sn": "58405A2908C0DEB9",
-                    "area_name": "",
-                    "area_id": "",
-                    "prop": [],
-                    "model": "DALI DT8 Tc Dimmable Driver",
-                },
-            ],
+            CONF_GATEWAY_SN: "6A242121110E",
+            CONF_GATEWAY_DATA: {
+                "gw_sn": "6A242121110E",
+                "gw_ip": "192.168.1.100",
+                "name": "Test Gateway",
+            },
         },
         unique_id="6A242121110E",
         title="Test Gateway",
@@ -55,7 +33,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_devices() -> Generator[list[MagicMock]]:
+def mock_devices(mock_dali_gateway: MagicMock) -> Generator[list[MagicMock]]:
     """Return mocked Device objects."""
     with patch(
         "homeassistant.components.dali_center.light.Device"
@@ -130,6 +108,10 @@ def mock_devices() -> Generator[list[MagicMock]]:
         devices = [device1, device2, device3, device4, device_duplicate]
         mock_device_class.side_effect = devices
 
+        mock_dali_gateway.discover_devices = AsyncMock(
+            return_value=[{"dev_id": device.dev_id} for device in devices]
+        )
+
         yield devices
 
 
@@ -142,33 +124,6 @@ def mock_discovery() -> Generator[MagicMock]:
         mock_discovery = mock_discovery_class.return_value
         mock_discovery.discover_gateways = AsyncMock()
         yield mock_discovery
-
-
-@pytest.fixture
-def mock_validate_input() -> Generator[MagicMock]:
-    """Mock validate_input function."""
-    with patch(
-        "homeassistant.components.dali_center.config_flow.validate_input"
-    ) as mock_validate:
-        yield mock_validate
-
-
-@pytest.fixture
-def mock_dali_gateway_class() -> Generator[MagicMock]:
-    """Mock DaliGateway class for config flow."""
-    with patch(
-        "homeassistant.components.dali_center.config_flow.DaliGateway"
-    ) as mock_class:
-        mock_gateway = MagicMock()
-        mock_gateway.connect = AsyncMock()
-        mock_gateway.disconnect = AsyncMock()
-        mock_gateway.discover_devices = AsyncMock(return_value=[])
-        mock_gateway.to_dict = MagicMock(
-            return_value={"gw_sn": "TEST123", "gw_ip": "192.168.1.100"}
-        )
-        mock_gateway.name = "Test Gateway"
-        mock_class.return_value = mock_gateway
-        yield mock_class
 
 
 @pytest.fixture
