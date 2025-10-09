@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
@@ -13,6 +14,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityDescription,
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -20,10 +22,40 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import RPC_COVER_UPDATE_TIME_SEC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .entity import ShellyBlockEntity, ShellyRpcEntity
-from .utils import get_device_entry_gen, get_rpc_key_ids
+from .entity import (
+    BlockEntityDescription,
+    RpcEntityDescription,
+    ShellyBlockAttributeEntity,
+    ShellyRpcAttributeEntity,
+    async_setup_entry_attribute_entities,
+    async_setup_entry_rpc,
+)
+from .utils import get_device_entry_gen
 
 PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class BlockCoverDescription(BlockEntityDescription, CoverEntityDescription):
+    """Class to describe a BLOCK cover."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class RpcCoverDescription(RpcEntityDescription, CoverEntityDescription):
+    """Class to describe a RPC cover."""
+
+
+BLOCK_COVERS = {
+    ("roller", "roller"): BlockCoverDescription(
+        key="roller|roller",
+    )
+}
+
+RPC_COVERS = {
+    "cover": RpcCoverDescription(
+        key="cover",
+    ),
+}
 
 
 async def async_setup_entry(
@@ -46,13 +78,11 @@ def async_setup_block_entry(
 ) -> None:
     """Set up cover for device."""
     coordinator = config_entry.runtime_data.block
-    assert coordinator and coordinator.device.blocks
-    blocks = [block for block in coordinator.device.blocks if block.type == "roller"]
+    assert coordinator
 
-    if not blocks:
-        return
-
-    async_add_entities(BlockShellyCover(coordinator, block) for block in blocks)
+    async_setup_entry_attribute_entities(
+        hass, config_entry, async_add_entities, BLOCK_COVERS, BlockShellyCover
+    )
 
 
 @callback
@@ -64,26 +94,32 @@ def async_setup_rpc_entry(
     """Set up entities for RPC device."""
     coordinator = config_entry.runtime_data.rpc
     assert coordinator
-    cover_key_ids = get_rpc_key_ids(coordinator.device.status, "cover")
 
-    if not cover_key_ids:
-        return
-
-    async_add_entities(RpcShellyCover(coordinator, id_) for id_ in cover_key_ids)
+    async_setup_entry_rpc(
+        hass, config_entry, async_add_entities, RPC_COVERS, RpcShellyCover
+    )
 
 
-class BlockShellyCover(ShellyBlockEntity, CoverEntity):
+class BlockShellyCover(ShellyBlockAttributeEntity, CoverEntity):
     """Entity that controls a cover on block based Shelly devices."""
 
+    entity_description: BlockCoverDescription
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_supported_features: CoverEntityFeature = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
 
-    def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block,
+        attribute: str,
+        description: BlockCoverDescription,
+    ) -> None:
         """Initialize block cover."""
-        super().__init__(coordinator, block)
+        super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
+        self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
         if self.coordinator.device.settings["rollers"][0]["positioning"]:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
@@ -148,22 +184,29 @@ class BlockShellyCover(ShellyBlockEntity, CoverEntity):
         super()._update_callback()
 
 
-class RpcShellyCover(ShellyRpcEntity, CoverEntity):
+class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
     """Entity that controls a cover on RPC based Shelly devices."""
 
+    entity_description: RpcCoverDescription
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_supported_features: CoverEntityFeature = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
 
-    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcCoverDescription,
+    ) -> None:
         """Initialize rpc cover."""
-        super().__init__(coordinator, f"cover:{id_}")
-        self._id = id_
+        super().__init__(coordinator, key, attribute, description)
+        self._attr_unique_id: str = f"{coordinator.mac}-{key}"
         self._update_task: asyncio.Task | None = None
         if self.status["pos_control"]:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
-        if coordinator.device.config[f"cover:{id_}"].get("slat", {}).get("enable"):
+        if coordinator.device.config[key].get("slat", {}).get("enable"):
             self._attr_supported_features |= (
                 CoverEntityFeature.OPEN_TILT
                 | CoverEntityFeature.CLOSE_TILT
