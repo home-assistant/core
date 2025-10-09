@@ -9,6 +9,8 @@ from homeassistant.const import Platform
 
 ATTR_STATE_BATTERY_LOW: Final = "battery_low"
 ATTR_STATE_HOLIDAY_MODE: Final = "holiday_mode"
+ATTR_STATE_ADAPTIVE_HEATING_ACTIVE: Final = "adaptive_heating_active"
+ATTR_STATE_ADAPTIVE_HEATING_RUNNING: Final = "adaptive_heating_running"
 ATTR_STATE_SUMMER_MODE: Final = "summer_mode"
 ATTR_STATE_WINDOW_OPEN: Final = "window_open"
 

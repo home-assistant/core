@@ -26,6 +26,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import (
     ATTR_STATE_BATTERY_LOW,
     ATTR_STATE_HOLIDAY_MODE,
+    ATTR_STATE_ADAPTIVE_HEATING_ACTIVE,
+    ATTR_STATE_ADAPTIVE_HEATING_RUNNING,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
     DOMAIN,
@@ -219,7 +221,11 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             attrs[ATTR_STATE_SUMMER_MODE] = self.data.summer_active
         if self.data.window_open is not None:
             attrs[ATTR_STATE_WINDOW_OPEN] = self.data.window_open
-
+        # adaptiv heating added in fritzos 7.39
+        if self.data.adaptive_heating_active is not None:
+            attrs[ATTR_STATE_ADAPTIVE_HEATING_ACTIVE] = self.data.adaptive_heating_active
+        if self.data.adaptive_heating_running is not None:
+            attrs[ATTR_STATE_ADAPTIVE_HEATING_RUNNING] = self.data.adaptive_heating_running
         return attrs
 
     def check_active_or_lock_mode(self) -> None:
