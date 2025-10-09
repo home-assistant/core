@@ -1,26 +1,9 @@
 # serializer version: 1
-# name: test_diagnostics
+# name: test_entry_diagnostics
   dict({
-    'coordinator_data': dict({
-      'address': '01:03:05:07:09:11',
+    'coordinator': dict({
       'available': True,
       'last_update_success': True,
-      'mode': 'BluetoothScanningMode.ACTIVE',
-    }),
-    'entry': dict({
-      'data': dict({
-      }),
-      'disabled_by': None,
-      'domain': 'sensirion_ble',
-      'minor_version': 1,
-      'options': dict({
-      }),
-      'pref_disable_new_entities': False,
-      'pref_disable_polling': False,
-      'source': 'bluetooth',
-      'title': '**REDACTED**',
-      'unique_id': '**REDACTED**',
-      'version': 1,
     }),
   })
 # ---
