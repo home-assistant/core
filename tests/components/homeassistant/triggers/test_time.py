@@ -1099,19 +1099,20 @@ async def test_if_fires_using_weekday_input_weekday_entity(
     service_calls: list[ServiceCall],
 ) -> None:
     """Test for firing on weekday using input_weekday entity."""
-    # Setup input_weekday helper
+    # Setup input_weekday helper with Mon, Tue, Wed
     await async_setup_component(
         hass,
         "input_weekday",
-        {"input_weekday": {"workdays": {"name": "Work Days"}}},
+        {
+            "input_weekday": {
+                "workdays": {
+                    "name": "Work Days",
+                    "weekdays": ["mon", "tue", "wed"],
+                }
+            }
+        },
     )
-
-    # Set workdays to Mon, Tue, Wed
-    hass.states.async_set(
-        "input_weekday.workdays",
-        "3",
-        {"weekdays": ["mon", "tue", "wed"], "editable": True},
-    )
+    await hass.async_block_till_done()
 
     # Freeze time to Monday, January 2, 2023 at 5:00:00
     monday_trigger = dt_util.as_utc(datetime(2023, 1, 2, 5, 0, 0, 0))
@@ -1172,19 +1173,17 @@ async def test_if_action_weekday_input_weekday_entity(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test time condition with input_weekday entity."""
-    # Setup input_weekday helper
+    # Setup input_weekday helper with Sat, Sun
     await async_setup_component(
         hass,
         "input_weekday",
-        {"input_weekday": {"weekend": {"name": "Weekend Days"}}},
+        {
+            "input_weekday": {
+                "weekend": {"name": "Weekend Days", "weekdays": ["sat", "sun"]}
+            }
+        },
     )
-
-    # Set weekend to Sat, Sun
-    hass.states.async_set(
-        "input_weekday.weekend",
-        "2",
-        {"weekdays": ["sat", "sun"], "editable": True},
-    )
+    await hass.async_block_till_done()
 
     assert await async_setup_component(
         hass,
