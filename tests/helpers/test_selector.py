@@ -868,7 +868,7 @@ def test_nested_object_selectors(snapshot: SnapshotAssertion) -> None:
                 "label_field": "name",
                 "description_field": "percentage",
             },
-            pytest.raises(vol.Invalid),
+            does_not_raise(),
         ),
         (
             {
