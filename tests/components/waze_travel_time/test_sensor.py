@@ -156,3 +156,33 @@ async def test_sensor_failed_wrcerror(
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert "Error on retrieving data: " in caplog.text
+
+
+async def test_sensor_maintains_state_on_update_failure(
+    hass: HomeAssistant, mock_update
+) -> None:
+    """Test that sensor maintains state when coordinator update fails."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        options=DEFAULT_OPTIONS,
+        entry_id="test",
+        version=WazeConfigFlow.VERSION,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.waze_travel_time")
+    assert state is not None
+    assert state.state == "150"
+
+    mock_update.side_effect = WRCError("Connection error")
+
+    coordinator = config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.waze_travel_time")
+    assert state is not None
+    assert state.state == "150"
