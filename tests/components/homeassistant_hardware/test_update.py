@@ -364,6 +364,8 @@ async def test_update_entity_installation(
         expected_installed_firmware_type: ApplicationType,
         bootloader_reset_methods: Sequence[ResetTarget] = (),
         progress_callback: Callable[[int, int], None] | None = None,
+        *,
+        domain: str = "homeassistant_hardware",
     ) -> FirmwareInfo:
         await asyncio.sleep(0)
         progress_callback(0, 100)
