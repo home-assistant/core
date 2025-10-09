@@ -46,20 +46,23 @@ rules:
     status: exempt
     comment: |
       No used, no sensor
-  discovery: todo
+  discovery: done
   stale-devices: todo
   diagnostics: todo
   exception-translations: todo
-  icon-translations: todo
+  icon-translations: exempt
   reconfiguration-flow: todo
   dynamic-devices: todo
-  discovery-update-info: todo
+  discovery-update-info: exempt
   repair-issues: exempt
-  docs-use-cases: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-use-cases: done
+  docs-supported-devices: 
+      status: exempt
+      comment: |
+        There is only one device
+  docs-supported-functions: done
   docs-data-update: todo
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-troubleshooting: todo
   docs-examples: todo
 
