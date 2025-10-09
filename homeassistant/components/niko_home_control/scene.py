@@ -9,6 +9,7 @@ from nhc.scene import NHCScene
 from homeassistant.components.scene import BaseScene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import NHCController, NikoHomeControlConfigEntry
 from .entity import NikoHomeControlEntity
@@ -37,6 +38,14 @@ class NikoHomeControlScene(NikoHomeControlEntity, BaseScene):
         """Set up the Niko Home Control scene platform."""
         super().__init__(action, controller, unique_id)
         self._attr_icon = "mdi:palette"
+        self._last_activated: str | None = None
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            "last_activated": self._last_activated,
+        }
 
     async def _async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
@@ -44,4 +53,4 @@ class NikoHomeControlScene(NikoHomeControlEntity, BaseScene):
 
     def update_state(self) -> None:
         """Update HA state."""
-        self._async_record_activation()
+        self._last_activated = dt_util.now().isoformat()

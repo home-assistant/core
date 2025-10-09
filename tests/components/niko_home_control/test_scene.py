@@ -78,15 +78,15 @@ async def test_updating(
     entity_id = scene_entities[0].entity_id
 
     # Capture current state (could be unknown or a timestamp depending on implementation)
-    before = hass.states.get(entity_id)
-    assert before is not None
+    before = hass.states.get(entity_id).attributes
 
     # Simulate a device-originated update for the scene (controller callback)
     await find_update_callback(mock_niko_home_control_connection, scene.id)(0)
     await hass.async_block_till_done()
 
-    after = hass.states.get(entity_id)
+    after = hass.states.get(entity_id).attributes
+
     assert after is not None
     # If integration records activation on updates, state should change and be a valid ISO timestamp
-    if after.state != before.state:
-        datetime.fromisoformat(after.state)
+    if after["last_activated"] != before["last_activated"]:
+        datetime.fromisoformat(after["last_activated"])
