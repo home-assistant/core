@@ -6,7 +6,6 @@ import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 import dataclasses
 from datetime import datetime, timedelta
-import fnmatch
 from functools import partial
 import logging
 import os
@@ -42,9 +41,11 @@ from homeassistant.loader import USBMatcher, async_get_usb
 from .const import DOMAIN
 from .models import USBDevice
 from .utils import (
+    get_usb_matchers_for_device,
     scan_serial_ports,
     usb_device_from_path,  # noqa: F401
     usb_device_from_port,  # noqa: F401
+    usb_device_matches_matcher,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,7 +123,7 @@ def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> boo
 
     usb_discovery: USBDiscovery = hass.data[DOMAIN]
     return any(
-        _is_matching(
+        usb_device_matches_matcher(
             USBDevice(
                 device=device,
                 vid=vid,
@@ -212,34 +213,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = usb_discovery
     websocket_api.async_register_command(hass, websocket_usb_scan)
 
-    return True
-
-
-def _fnmatch_lower(name: str | None, pattern: str) -> bool:
-    """Match a lowercase version of the name."""
-    if name is None:
-        return False
-    return fnmatch.fnmatch(name.lower(), pattern)
-
-
-def _is_matching(device: USBDevice, matcher: USBMatcher | USBCallbackMatcher) -> bool:
-    """Return True if a device matches."""
-    if "vid" in matcher and device.vid != matcher["vid"]:
-        return False
-    if "pid" in matcher and device.pid != matcher["pid"]:
-        return False
-    if "serial_number" in matcher and not _fnmatch_lower(
-        device.serial_number, matcher["serial_number"]
-    ):
-        return False
-    if "manufacturer" in matcher and not _fnmatch_lower(
-        device.manufacturer, matcher["manufacturer"]
-    ):
-        return False
-    if "description" in matcher and not _fnmatch_lower(
-        device.description, matcher["description"]
-    ):
-        return False
     return True
 
 
@@ -392,21 +365,13 @@ class USBDiscovery:
             return
         self.seen.add(device_tuple)
 
-        matched = [matcher for matcher in self.usb if _is_matching(device, matcher)]
+        matched = get_usb_matchers_for_device(device, self.usb)
         if not matched:
             return
 
         service_info: _UsbServiceInfo | None = None
 
-        sorted_by_most_targeted = sorted(matched, key=lambda item: -len(item))
-        most_matched_fields = len(sorted_by_most_targeted[0])
-
-        for matcher in sorted_by_most_targeted:
-            # If there is a less targeted match, we only
-            # want the most targeted match
-            if len(matcher) < most_matched_fields:
-                break
-
+        for matcher in matched:
             if service_info is None:
                 service_info = _UsbServiceInfo(
                     device=await self.hass.async_add_executor_job(

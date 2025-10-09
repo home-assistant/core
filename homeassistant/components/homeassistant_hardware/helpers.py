@@ -13,8 +13,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_ca
 from homeassistant.helpers import discovery_flow
 
 from . import DATA_COMPONENT
-from .const import SKYCONNECT_DOMAIN, ZBT2_DOMAIN
-from .util import FirmwareInfo
+from .util import FirmwareInfo, async_get_hardware_domain_for_usb_device
 
 if TYPE_CHECKING:
     from .util import FirmwareInfo
@@ -112,24 +111,33 @@ class HardwareInfoDispatcher:
     ) -> None:
         """Trigger hardware integration config flows from firmware info.
 
-        Triggers import flows for all hardware integrations and lets each one
-        validate whether it should handle the device.
+        Identifies which hardware integration should handle the device based on
+        USB matchers, then triggers an import flow for only that integration.
         """
-        hardware_domains = [SKYCONNECT_DOMAIN, ZBT2_DOMAIN]
 
-        for hardware_domain in hardware_domains:
+        # Identify which domain should handle this device
+        hardware_domain = await async_get_hardware_domain_for_usb_device(
+            self.hass, firmware_info.device
+        )
+
+        if hardware_domain is None:
             _LOGGER.debug(
-                "Triggering %s import flow for device %s",
-                hardware_domain,
-                firmware_info.device,
+                "No hardware integration found for device %s", firmware_info.device
             )
+            return
 
-            discovery_flow.async_create_flow(
-                self.hass,
-                hardware_domain,
-                context={"source": SOURCE_IMPORT},
-                data=firmware_info,
-            )
+        _LOGGER.debug(
+            "Triggering %s import flow for device %s",
+            hardware_domain,
+            firmware_info.device,
+        )
+
+        discovery_flow.async_create_flow(
+            self.hass,
+            hardware_domain,
+            context={"source": SOURCE_IMPORT},
+            data=firmware_info,
+        )
 
     async def iter_firmware_info(self) -> AsyncIterator[FirmwareInfo]:
         """Iterate over all firmware information for all hardware."""

@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
+import fnmatch
 import os
 
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
+
+from homeassistant.loader import USBMatcher
 
 from .models import USBDevice
 
@@ -61,3 +64,62 @@ def usb_device_from_path(device_path: str) -> USBDevice | None:
             )
 
     return None
+
+
+def _fnmatch_lower(name: str | None, pattern: str) -> bool:
+    """Match a lowercase version of the name."""
+    if name is None:
+        return False
+    return fnmatch.fnmatch(name.lower(), pattern)
+
+
+def usb_device_matches_matcher(device: USBDevice, matcher: USBMatcher) -> bool:
+    """Check if a USB device matches a USB matcher."""
+    if "vid" in matcher and device.vid != matcher["vid"]:
+        return False
+
+    if "pid" in matcher and device.pid != matcher["pid"]:
+        return False
+
+    if "serial_number" in matcher and not _fnmatch_lower(
+        device.serial_number, matcher["serial_number"]
+    ):
+        return False
+
+    if "manufacturer" in matcher and not _fnmatch_lower(
+        device.manufacturer, matcher["manufacturer"]
+    ):
+        return False
+
+    if "description" in matcher and not _fnmatch_lower(
+        device.description, matcher["description"]
+    ):
+        return False
+
+    return True
+
+
+def get_usb_matchers_for_device(
+    device: USBDevice,
+    matchers: Iterable[USBMatcher],
+    *,
+    most_specific_only: bool = True,
+) -> list[USBMatcher]:
+    """Get all USB matchers that match a device, sorted by specificity."""
+    matched = [
+        matcher for matcher in matchers if usb_device_matches_matcher(device, matcher)
+    ]
+
+    if not matched:
+        return []
+
+    # Sort by specificity (most fields matched first)
+    sorted_by_most_targeted = sorted(matched, key=lambda item: -len(item))
+
+    # Only return matchers with the same specificity as the most specific one
+    most_matched_fields = len(sorted_by_most_targeted[0])
+    return [
+        matcher
+        for matcher in sorted_by_most_targeted
+        if len(matcher) == most_matched_fields
+    ]
