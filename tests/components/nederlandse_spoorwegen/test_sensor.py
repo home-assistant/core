@@ -15,13 +15,14 @@ from homeassistant.components.nederlandse_spoorwegen.const import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+import homeassistant.helpers.entity_registry as er
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import API_KEY
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_config_import(
@@ -65,8 +66,9 @@ async def test_sensor(
     mock_nsapi,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor initialization."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.to_work") == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

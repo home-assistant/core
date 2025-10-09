@@ -12,7 +12,7 @@ from homeassistant.components.nederlandse_spoorwegen.const import (
     CONF_VIA,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 
 from .const import API_KEY
@@ -61,7 +61,7 @@ def mock_config_entry() -> MockConfigEntry:
         data={CONF_API_KEY: API_KEY},
         domain=DOMAIN,
         subentries_data=[
-            ConfigSubentryData(
+            ConfigSubentryDataWithId(
                 data={
                     CONF_NAME: "To work",
                     CONF_FROM: "Ams",
@@ -71,6 +71,7 @@ def mock_config_entry() -> MockConfigEntry:
                 subentry_type="route",
                 title="Test Route",
                 unique_id=None,
+                subentry_id="01K721DZPMEN39R5DK0ATBMSY8",
             ),
         ],
     )
