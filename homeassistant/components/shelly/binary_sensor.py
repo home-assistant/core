@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_SLEEP_PERIOD
+from .const import CONF_SLEEP_PERIOD, MODEL_FRANKEVER_WATER_VALVE
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -37,9 +37,9 @@ from .utils import (
     async_remove_orphaned_entities,
     get_blu_trv_device_info,
     get_device_entry_gen,
-    get_virtual_component_ids,
     is_block_momentary_input,
     is_rpc_momentary_input,
+    is_view_for_platform,
 )
 
 PARALLEL_UPDATES = 0
@@ -73,6 +73,17 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
         return bool(self.attribute_value)
 
 
+class RpcPresenceBinarySensor(RpcBinarySensor):
+    """Represent a RPC binary sensor entity for presence component."""
+
+    @property
+    def available(self) -> bool:
+        """Available."""
+        available = super().available
+
+        return available and self.coordinator.device.config[self.key]["enable"]
+
+
 class RpcBluTrvBinarySensor(RpcBinarySensor):
     """Represent a RPC BluTrv binary sensor."""
 
@@ -87,8 +98,9 @@ class RpcBluTrvBinarySensor(RpcBinarySensor):
 
         super().__init__(coordinator, key, attribute, description)
         ble_addr: str = coordinator.device.config[key]["addr"]
+        fw_ver = coordinator.device.status[key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            coordinator.device.config[key], ble_addr, coordinator.mac
+            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
         )
 
 
@@ -145,21 +157,18 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
         key="input|input",
         name="Input",
         device_class=BinarySensorDeviceClass.POWER,
-        entity_registry_enabled_default=False,
         removal_condition=is_block_momentary_input,
     ),
     ("relay", "input"): BlockBinarySensorDescription(
         key="relay|input",
         name="Input",
         device_class=BinarySensorDeviceClass.POWER,
-        entity_registry_enabled_default=False,
         removal_condition=is_block_momentary_input,
     ),
     ("device", "input"): BlockBinarySensorDescription(
         key="device|input",
         name="Input",
         device_class=BinarySensorDeviceClass.POWER,
-        entity_registry_enabled_default=False,
         removal_condition=is_block_momentary_input,
     ),
     ("sensor", "extInput"): BlockBinarySensorDescription(
@@ -189,7 +198,6 @@ RPC_SENSORS: Final = {
         key="input",
         sub_key="state",
         device_class=BinarySensorDeviceClass.POWER,
-        entity_registry_enabled_default=False,
         removal_condition=is_rpc_momentary_input,
     ),
     "cloud": RpcBinarySensorDescription(
@@ -258,9 +266,21 @@ RPC_SENSORS: Final = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "boolean": RpcBinarySensorDescription(
+    "boolean_generic": RpcBinarySensorDescription(
         key="boolean",
         sub_key="value",
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, BINARY_SENSOR_PLATFORM
+        ),
+        role="generic",
+    ),
+    "boolean_has_power": RpcBinarySensorDescription(
+        key="boolean",
+        sub_key="value",
+        device_class=BinarySensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        role="has_power",
+        models={MODEL_FRANKEVER_WATER_VALVE},
     ),
     "calibration": RpcBinarySensorDescription(
         key="blutrv",
@@ -282,6 +302,32 @@ RPC_SENSORS: Final = {
         sub_key="mute",
         name="Mute",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "flood_cable_unplugged": RpcBinarySensorDescription(
+        key="flood",
+        sub_key="errors",
+        value=lambda status, _: False
+        if status is None
+        else "cable_unplugged" in status,
+        name="Cable unplugged",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported=lambda status: status.get("alarm") is not None,
+    ),
+    "presence_num_objects": RpcBinarySensorDescription(
+        key="presence",
+        sub_key="num_objects",
+        value=lambda status, _: bool(status),
+        name="Occupancy",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        entity_class=RpcPresenceBinarySensor,
+    ),
+    "presencezone_state": RpcBinarySensorDescription(
+        key="presencezone",
+        sub_key="value",
+        name="Occupancy",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        entity_class=RpcPresenceBinarySensor,
     ),
 }
 
@@ -309,18 +355,12 @@ async def async_setup_entry(
                 hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
             )
 
-            # the user can remove virtual components from the device configuration, so
-            # we need to remove orphaned entities
-            virtual_binary_sensor_ids = get_virtual_component_ids(
-                coordinator.device.config, BINARY_SENSOR_PLATFORM
-            )
             async_remove_orphaned_entities(
                 hass,
                 config_entry.entry_id,
                 coordinator.mac,
                 BINARY_SENSOR_PLATFORM,
-                virtual_binary_sensor_ids,
-                "boolean",
+                coordinator.device.status,
             )
         return
 

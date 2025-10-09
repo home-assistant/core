@@ -11,6 +11,7 @@ from aioshelly.const import BLU_TRV_IDENTIFIER, MODEL_BLU_GATEWAY_G3, RPC_GENERA
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.button import (
+    DOMAIN as BUTTON_PLATFORM,
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
@@ -21,12 +22,27 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
-from .const import DOMAIN, LOGGER, SHELLY_GAS_MODELS
+from .const import DOMAIN, LOGGER, MODEL_FRANKEVER_WATER_VALVE, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .entity import get_entity_block_device_info, get_entity_rpc_device_info
-from .utils import get_blu_trv_device_info, get_device_entry_gen, get_rpc_key_ids
+from .entity import (
+    RpcEntityDescription,
+    ShellyRpcAttributeEntity,
+    async_setup_entry_rpc,
+    get_entity_block_device_info,
+    get_entity_rpc_device_info,
+    rpc_call,
+)
+from .utils import (
+    async_remove_orphaned_entities,
+    format_ble_addr,
+    get_blu_trv_device_info,
+    get_device_entry_gen,
+    get_rpc_key_ids,
+    get_rpc_key_instances,
+    get_rpc_role_by_key,
+    get_virtual_component_ids,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -40,6 +56,11 @@ class ShellyButtonDescription[
     press_action: str
 
     supported: Callable[[_ShellyCoordinatorT], bool] = lambda _: True
+
+
+@dataclass(frozen=True, kw_only=True)
+class RpcButtonDescription(RpcEntityDescription, ButtonEntityDescription):
+    """Class to describe a RPC button."""
 
 
 BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
@@ -87,6 +108,25 @@ BLU_TRV_BUTTONS: Final[list[ShellyButtonDescription]] = [
     ),
 ]
 
+RPC_VIRTUAL_BUTTONS = {
+    "button_generic": RpcButtonDescription(
+        key="button",
+        role="generic",
+    ),
+    "button_open": RpcButtonDescription(
+        key="button",
+        entity_registry_enabled_default=False,
+        role="open",
+        models={MODEL_FRANKEVER_WATER_VALVE},
+    ),
+    "button_close": RpcButtonDescription(
+        key="button",
+        entity_registry_enabled_default=False,
+        role="close",
+        models={MODEL_FRANKEVER_WATER_VALVE},
+    ),
+}
+
 
 @callback
 def async_migrate_unique_ids(
@@ -97,12 +137,10 @@ def async_migrate_unique_ids(
     if not entity_entry.entity_id.startswith("button"):
         return None
 
-    device_name = slugify(coordinator.device.name)
-
     for key in ("reboot", "self_test", "mute", "unmute"):
-        old_unique_id = f"{device_name}_{key}"
+        old_unique_id = f"{coordinator.mac}_{key}"
         if entity_entry.unique_id == old_unique_id:
-            new_unique_id = f"{coordinator.mac}_{key}"
+            new_unique_id = f"{coordinator.mac}-{key}"
             LOGGER.debug(
                 "Migrating unique_id for %s entity from [%s] to [%s]",
                 entity_entry.entity_id,
@@ -114,6 +152,48 @@ def async_migrate_unique_ids(
                     old_unique_id, new_unique_id
                 )
             }
+
+    if not isinstance(coordinator, ShellyRpcCoordinator):
+        return None
+
+    if blutrv_key_ids := get_rpc_key_ids(coordinator.device.status, BLU_TRV_IDENTIFIER):
+        for _id in blutrv_key_ids:
+            key = f"{BLU_TRV_IDENTIFIER}:{_id}"
+            ble_addr: str = coordinator.device.config[key]["addr"]
+            old_unique_id = f"{ble_addr}_calibrate"
+            if entity_entry.unique_id == old_unique_id:
+                new_unique_id = f"{format_ble_addr(ble_addr)}-{key}-calibrate"
+                LOGGER.debug(
+                    "Migrating unique_id for %s entity from [%s] to [%s]",
+                    entity_entry.entity_id,
+                    old_unique_id,
+                    new_unique_id,
+                )
+                return {
+                    "new_unique_id": entity_entry.unique_id.replace(
+                        old_unique_id, new_unique_id
+                    )
+                }
+
+    if virtual_button_keys := get_rpc_key_instances(
+        coordinator.device.config, "button"
+    ):
+        for key in virtual_button_keys:
+            old_unique_id = f"{coordinator.mac}-{key}"
+            if entity_entry.unique_id == old_unique_id:
+                role = get_rpc_role_by_key(coordinator.device.config, key)
+                new_unique_id = f"{coordinator.mac}-{key}-button_{role}"
+                LOGGER.debug(
+                    "Migrating unique_id for %s entity from [%s] to [%s]",
+                    entity_entry.entity_id,
+                    old_unique_id,
+                    new_unique_id,
+                )
+                return {
+                    "new_unique_id": entity_entry.unique_id.replace(
+                        old_unique_id, new_unique_id
+                    )
+                }
 
     return None
 
@@ -146,10 +226,17 @@ async def async_setup_entry(
         if button.supported(coordinator)
     )
 
-    if blutrv_key_ids := get_rpc_key_ids(coordinator.device.status, BLU_TRV_IDENTIFIER):
-        if TYPE_CHECKING:
-            assert isinstance(coordinator, ShellyRpcCoordinator)
+    if not isinstance(coordinator, ShellyRpcCoordinator):
+        async_add_entities(entities)
+        return
 
+    # add virtual buttons
+    async_setup_entry_rpc(
+        hass, config_entry, async_add_entities, RPC_VIRTUAL_BUTTONS, RpcVirtualButton
+    )
+
+    # add BLU TRV buttons
+    if blutrv_key_ids := get_rpc_key_ids(coordinator.device.status, BLU_TRV_IDENTIFIER):
         entities.extend(
             ShellyBluTrvButton(coordinator, button, id_)
             for id_ in blutrv_key_ids
@@ -158,6 +245,19 @@ async def async_setup_entry(
         )
 
     async_add_entities(entities)
+
+    # the user can remove virtual components from the device configuration, so
+    # we need to remove orphaned entities
+    virtual_button_component_ids = get_virtual_component_ids(
+        coordinator.device.config, BUTTON_PLATFORM
+    )
+    async_remove_orphaned_entities(
+        hass,
+        config_entry.entry_id,
+        coordinator.mac,
+        BUTTON_PLATFORM,
+        virtual_button_component_ids,
+    )
 
 
 class ShellyBaseButton(
@@ -226,7 +326,7 @@ class ShellyButton(ShellyBaseButton):
         """Initialize Shelly button."""
         super().__init__(coordinator, description)
 
-        self._attr_unique_id = f"{coordinator.mac}_{description.key}"
+        self._attr_unique_id = f"{coordinator.mac}-{description.key}"
         if isinstance(coordinator, ShellyBlockCoordinator):
             self._attr_device_info = get_entity_block_device_info(coordinator)
         else:
@@ -254,11 +354,14 @@ class ShellyBluTrvButton(ShellyBaseButton):
         """Initialize."""
         super().__init__(coordinator, description)
 
-        config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
+        key = f"{BLU_TRV_IDENTIFIER}:{id_}"
+        config = coordinator.device.config[key]
         ble_addr: str = config["addr"]
-        self._attr_unique_id = f"{ble_addr}_{description.key}"
+        fw_ver = coordinator.device.status[key].get("fw_ver")
+
+        self._attr_unique_id = f"{format_ble_addr(ble_addr)}-{key}-{description.key}"
         self._attr_device_info = get_blu_trv_device_info(
-            config, ble_addr, coordinator.mac
+            config, ble_addr, coordinator.mac, fw_ver
         )
         self._id = id_
 
@@ -270,3 +373,18 @@ class ShellyBluTrvButton(ShellyBaseButton):
             assert method is not None
 
         await method(self._id)
+
+
+class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
+    """Defines a Shelly RPC virtual component button."""
+
+    entity_description: RpcButtonDescription
+    _id: int
+
+    @rpc_call
+    async def async_press(self) -> None:
+        """Triggers the Shelly button press service."""
+        if TYPE_CHECKING:
+            assert isinstance(self.coordinator, ShellyRpcCoordinator)
+
+        await self.coordinator.device.button_trigger(self._id, "single_push")

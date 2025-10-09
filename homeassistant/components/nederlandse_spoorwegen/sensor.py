@@ -2,25 +2,35 @@
 
 from __future__ import annotations
 
+import datetime as dt
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
-import ns_api
-from ns_api import RequestParametersError
+from ns_api import NSAPI, Trip
 import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt as dt_util
+from homeassistant.util.dt import parse_time
+
+from . import NSConfigEntry
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,66 +60,102 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the departure sensor."""
 
-    nsapi = ns_api.NSAPI(config[CONF_API_KEY])
-
-    try:
-        stations = nsapi.get_stations()
-    except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.HTTPError,
-    ) as error:
-        _LOGGER.error("Could not connect to the internet: %s", error)
-        raise PlatformNotReady from error
-    except RequestParametersError as error:
-        _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Nederlandse Spoorwegen",
+            },
+        )
         return
 
-    sensors = []
-    for departure in config.get(CONF_ROUTES, {}):
-        if not valid_stations(
-            stations,
-            [departure.get(CONF_FROM), departure.get(CONF_VIA), departure.get(CONF_TO)],
-        ):
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.4.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Nederlandse Spoorwegen",
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: NSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the departure sensor from a config entry."""
+
+    client = config_entry.runtime_data
+
+    for subentry in config_entry.subentries.values():
+        if subentry.subentry_type != "route":
             continue
-        sensors.append(
-            NSDepartureSensor(
-                nsapi,
-                departure.get(CONF_NAME),
-                departure.get(CONF_FROM),
-                departure.get(CONF_TO),
-                departure.get(CONF_VIA),
-                departure.get(CONF_TIME),
-            )
+
+        async_add_entities(
+            [
+                NSDepartureSensor(
+                    client,
+                    subentry.data[CONF_NAME],
+                    subentry.data[CONF_FROM],
+                    subentry.data[CONF_TO],
+                    subentry.data.get(CONF_VIA),
+                    parse_time(subentry.data[CONF_TIME])
+                    if CONF_TIME in subentry.data
+                    else None,
+                )
+            ],
+            config_subentry_id=subentry.subentry_id,
+            update_before_add=True,
         )
-    add_entities(sensors, True)
-
-
-def valid_stations(stations, given_stations):
-    """Verify the existence of the given station codes."""
-    for station in given_stations:
-        if station is None:
-            continue
-        if not any(s.code == station.upper() for s in stations):
-            _LOGGER.warning("Station '%s' is not a valid station", station)
-            return False
-    return True
 
 
 class NSDepartureSensor(SensorEntity):
     """Implementation of a NS Departure Sensor."""
 
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_attribution = "Data provided by NS"
     _attr_icon = "mdi:train"
 
-    def __init__(self, nsapi, name, departure, heading, via, time):
+    def __init__(
+        self,
+        nsapi: NSAPI,
+        name: str,
+        departure: str,
+        heading: str,
+        via: str | None,
+        time: dt.time | None,
+    ) -> None:
         """Initialize the sensor."""
         self._nsapi = nsapi
         self._name = name
@@ -117,23 +163,17 @@ class NSDepartureSensor(SensorEntity):
         self._via = via
         self._heading = heading
         self._time = time
-        self._state = None
-        self._trips = None
-        self._first_trip = None
-        self._next_trip = None
+        self._trips: list[Trip] | None = None
+        self._first_trip: Trip | None = None
+        self._next_trip: Trip | None = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
-        """Return the next departure time."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if not self._trips or self._first_trip is None:
             return None
@@ -203,6 +243,7 @@ class NSDepartureSensor(SensorEntity):
         ):
             attributes["arrival_delay"] = True
 
+        assert self._next_trip is not None
         # Next attributes
         if self._next_trip.departure_time_actual is not None:
             attributes["next"] = self._next_trip.departure_time_actual.strftime("%H:%M")
@@ -224,7 +265,7 @@ class NSDepartureSensor(SensorEntity):
             (datetime.now() + timedelta(minutes=30)).time() < self._time
             or (datetime.now() - timedelta(minutes=30)).time() > self._time
         ):
-            self._state = None
+            self._attr_native_value = None
             self._trips = None
             self._first_trip = None
             return
@@ -264,7 +305,7 @@ class NSDepartureSensor(SensorEntity):
                 if len(filtered_times) > 0:
                     sorted_times = sorted(filtered_times, key=lambda x: x[1])
                     self._first_trip = self._trips[sorted_times[0][0]]
-                    self._state = sorted_times[0][1].strftime("%H:%M")
+                    self._attr_native_value = sorted_times[0][1]
 
                     # Filter again to remove trains that leave at the exact same time.
                     filtered_times = [
@@ -281,7 +322,7 @@ class NSDepartureSensor(SensorEntity):
 
                 else:
                     self._first_trip = None
-                    self._state = None
+                    self._attr_native_value = None
 
         except (
             requests.exceptions.ConnectionError,

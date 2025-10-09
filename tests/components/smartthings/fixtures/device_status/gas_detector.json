@@ -1,0 +1,25 @@
+{
+  "components": {
+    "main": {
+      "momentary": {},
+      "gasDetector": {
+        "gas": {
+          "value": "clear",
+          "timestamp": "2025-10-02T03:18:27.139Z"
+        }
+      },
+      "signalStrength": {
+        "rssi": {
+          "value": -71,
+          "unit": "dBm",
+          "timestamp": "2025-10-07T04:17:08.419Z"
+        },
+        "lqi": {
+          "value": 148,
+          "timestamp": "2025-10-07T04:32:08.512Z"
+        }
+      },
+      "refresh": {}
+    }
+  }
+}
