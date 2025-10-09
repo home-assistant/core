@@ -7,9 +7,13 @@ import pytest
 
 from homeassistant.components.homeassistant_hardware.const import DATA_COMPONENT
 from homeassistant.components.homeassistant_hardware.helpers import (
+    async_firmware_update_context,
+    async_is_firmware_update_in_progress,
     async_notify_firmware_info,
     async_register_firmware_info_callback,
     async_register_firmware_info_provider,
+    async_register_firmware_update_in_progress,
+    async_unregister_firmware_update_in_progress,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
@@ -183,3 +187,73 @@ async def test_dispatcher_callback_error_handling(
 
     assert callback1.mock_calls == [call(FIRMWARE_INFO_EZSP)]
     assert callback2.mock_calls == [call(FIRMWARE_INFO_EZSP)]
+
+
+async def test_firmware_update_tracking(hass: HomeAssistant) -> None:
+    """Test firmware update tracking API."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
+    device_path = "/dev/ttyUSB0"
+
+    assert not async_is_firmware_update_in_progress(hass, device_path)
+
+    # Register an update in progress
+    async_register_firmware_update_in_progress(hass, device_path, "zha")
+    assert async_is_firmware_update_in_progress(hass, device_path)
+
+    with pytest.raises(ValueError, match="Firmware update already in progress"):
+        async_register_firmware_update_in_progress(hass, device_path, "skyconnect")
+
+    assert async_is_firmware_update_in_progress(hass, device_path)
+
+    # Unregister the update with correct domain
+    async_unregister_firmware_update_in_progress(hass, device_path, "zha")
+    assert not async_is_firmware_update_in_progress(hass, device_path)
+
+    # Test unregistering with wrong domain should raise an error
+    async_register_firmware_update_in_progress(hass, device_path, "zha")
+    with pytest.raises(ValueError, match="is owned by zha, not skyconnect"):
+        async_unregister_firmware_update_in_progress(hass, device_path, "skyconnect")
+
+    # Still registered to zha
+    assert async_is_firmware_update_in_progress(hass, device_path)
+    async_unregister_firmware_update_in_progress(hass, device_path, "zha")
+    assert not async_is_firmware_update_in_progress(hass, device_path)
+
+
+async def test_firmware_update_context_manager(hass: HomeAssistant) -> None:
+    """Test firmware update progress context manager."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
+    device_path = "/dev/ttyUSB0"
+
+    # Initially no updates in progress
+    assert not async_is_firmware_update_in_progress(hass, device_path)
+
+    # Test successful completion
+    async with async_firmware_update_context(hass, device_path, "zha"):
+        assert async_is_firmware_update_in_progress(hass, device_path)
+
+    # Should be cleaned up after context
+    assert not async_is_firmware_update_in_progress(hass, device_path)
+
+    # Test exception handling
+    with pytest.raises(ValueError, match="test error"):  # noqa: PT012
+        async with async_firmware_update_context(hass, device_path, "zha"):
+            assert async_is_firmware_update_in_progress(hass, device_path)
+            raise ValueError("test error")
+
+    # Should still be cleaned up after exception
+    assert not async_is_firmware_update_in_progress(hass, device_path)
+
+    # Test concurrent context manager attempts should fail
+    async with async_firmware_update_context(hass, device_path, "zha"):
+        assert async_is_firmware_update_in_progress(hass, device_path)
+
+        # Second context manager should fail to register
+        with pytest.raises(ValueError, match="Firmware update already in progress"):
+            async with async_firmware_update_context(hass, device_path, "skyconnect"):
+                pytest.fail("We should not enter this context manager")
+
+    # Should be cleaned up after first context
+    assert not async_is_firmware_update_in_progress(hass, device_path)
