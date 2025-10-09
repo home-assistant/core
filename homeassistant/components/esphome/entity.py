@@ -90,7 +90,7 @@ def async_static_info_updated(
 
         # Create new entity if it doesn't exist
         if not old_info:
-            entity = entity_type(entry_data, platform.domain, info, state_type)
+            entity = entity_type(entry_data, info, state_type)
             add_entities.append(entity)
             continue
 
@@ -112,7 +112,7 @@ def async_static_info_updated(
                 old_info.device_id,
                 info.device_id,
             )
-            entity = entity_type(entry_data, platform.domain, info, state_type)
+            entity = entity_type(entry_data, info, state_type)
             add_entities.append(entity)
             continue
 
@@ -162,7 +162,7 @@ def async_static_info_updated(
         entry_data.async_signal_entity_removal(info_type, old_info.device_id, info.key)
 
         # Create new entity with the new device_id
-        add_entities.append(entity_type(entry_data, platform.domain, info, state_type))
+        add_entities.append(entity_type(entry_data, info, state_type))
 
     # Anything still in current_infos is now gone
     if current_infos:
@@ -329,7 +329,6 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
     def __init__(
         self,
         entry_data: RuntimeEntryData,
-        domain: str,  # Kept for backwards compatibility but not used
         entity_info: EntityInfo,
         state_type: type[_StateT],
     ) -> None:
