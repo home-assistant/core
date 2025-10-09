@@ -96,7 +96,7 @@ def handle_sending_exception(
         # call with brackets: @handle_sending_exception(...)
         return decorator
 
-    # Aufruf ohne Klammern: @handle_sending_exception
+    # call without brackets: @handle_sending_exception
     return decorator(_func)
 
 
