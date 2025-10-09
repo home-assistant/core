@@ -447,13 +447,13 @@
         "name": "State of charge (SoC)"
       },
       "tlx_pac_to_local_load": {
-        "name": "Local load Power"
+        "name": "Local load power"
       },
       "tlx_pac_to_user_total": {
-        "name": "Import Power"
+        "name": "Import power"
       },
       "tlx_pac_to_grid_total": {
-        "name": "Export Power"
+        "name": "Export power"
       },
       "tlx_system_production_today": {
         "name": "System production today"
@@ -484,39 +484,6 @@
       },
       "tlx_p_self": {
         "name": "Self Power"
-      },
-      "tlx_grid_voltage_r": {
-        "name": "Grid voltage R"
-      },
-      "tlx_grid_voltage_s": {
-        "name": "Grid voltage S"
-      },
-      "tlx_grid_voltage_t": {
-        "name": "Grid voltage T"
-      },
-      "tlx_grid_current_r": {
-        "name": "Grid current R"
-      },
-      "tlx_grid_current_s": {
-        "name": "Grid current S"
-      },
-      "tlx_grid_current_t": {
-        "name": "Grid current T"
-      },
-      "tlx_battery_voltage": {
-        "name": "Battery voltage"
-      },
-      "tlx_battery_current": {
-        "name": "Battery current"
-      },
-      "tlx_battery_power": {
-        "name": "Battery power"
-      },
-      "tlx_load_power": {
-        "name": "Load power"
-      },
-      "tlx_grid_power": {
-        "name": "Grid power"
       },
       "total_money_today": {
         "name": "Total money today"
