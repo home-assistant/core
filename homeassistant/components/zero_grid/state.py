@@ -33,6 +33,13 @@ class ControllableLoadState:
         self.last_toggled: datetime | None = None
         self.last_throttled: datetime | None = None
         self.current_load_amps: float = 0.0
+        self.expected_load_amps: float = 0.0  # What we planned for this load to consume
+        self.last_expected_update: datetime | None = (
+            None  # When we last updated the expected consumption
+        )
+        self.consumption_variance: float = (
+            0.0  # Difference between expected and actual consumption
+        )
 
 
 class State:

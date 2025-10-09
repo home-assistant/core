@@ -29,3 +29,14 @@ class Config:
     allow_grid_import: bool = False
     allow_solar_consumption: bool = False
     controllable_loads: dict[str, ControllableLoadConfig] = {}
+
+    # Reactive power management settings
+    variance_detection_threshold: float = (
+        1.0  # Minimum variance in amps to trigger reallocation
+    )
+    variance_detection_delay_seconds: int = (
+        30  # How long to wait before considering variance stable
+    )
+    enable_reactive_reallocation: bool = (
+        True  # Whether to enable reactive power reallocation
+    )

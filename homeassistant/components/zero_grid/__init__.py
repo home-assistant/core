@@ -94,6 +94,17 @@ def parse_config(domain_config):
     )
     CONFIG.allow_solar_consumption = CONFIG.solar_generation_kw_entity is not None
 
+    # Reactive power management settings
+    CONFIG.variance_detection_threshold = domain_config.get(
+        "variance_detection_threshold", 1.0
+    )
+    CONFIG.variance_detection_delay_seconds = domain_config.get(
+        "variance_detection_delay_seconds", 30
+    )
+    CONFIG.enable_reactive_reallocation = domain_config.get(
+        "enable_reactive_reallocation", True
+    )
+
     control_options = domain_config.get("controllable_loads", [])
     for priority, control in enumerate(control_options):
         control_config = ControllableLoadConfig()
@@ -252,9 +263,17 @@ def subscribe_to_entity_changes(hass: HomeAssistant):
 
         await recalculate_load_control(hass)
 
+        # Check for consumption variance and potentially trigger reallocation
+        if CONFIG.enable_reactive_reallocation:
+            await check_consumption_variance_and_reallocate(hass)
+
     async def state_time_listener(now: datetime) -> None:
         _LOGGER.debug("Time listener fired")
         await recalculate_load_control(hass)
+
+        # Check for consumption variance and potentially trigger reallocation
+        if CONFIG.enable_reactive_reallocation:
+            await check_consumption_variance_and_reallocate(hass)
 
     _LOGGER.debug("Subscribing... %s", entity_ids)
     async_track_state_change_event(hass, entity_ids, state_automation_listener)
@@ -264,13 +283,61 @@ def subscribe_to_entity_changes(hass: HomeAssistant):
 
 
 @bind_hass
-async def recalculate_load_control(hass: HomeAssistant):
-    """The core of the load control algorithm."""
-    now = datetime.now()
-    new_plan = PlanState()
+async def check_consumption_variance_and_reallocate(hass: HomeAssistant):
+    """Check if loads are consuming less than expected and trigger reallocation."""
+    if not CONFIG.enable_reactive_reallocation:
+        return
 
-    # Determine how much power we have to work with
-    # Grid power is what is left of the house fuse after house consumption
+    now = datetime.now()
+    total_unused_power = 0.0
+    loads_with_unused_power = []
+
+    for load_name, load_state in STATE.controllable_loads.items():
+        plan_state = PLAN.controllable_loads.get(load_name)
+        if not plan_state or not plan_state.is_on:
+            continue
+
+        # Calculate the variance between expected and actual consumption
+        expected_consumption = plan_state.expected_load_amps
+        actual_consumption = load_state.current_load_amps
+        variance = expected_consumption - actual_consumption
+
+        # Update variance tracking
+        load_state.consumption_variance = variance
+        load_state.expected_load_amps = expected_consumption
+
+        # Check if this load has significant unused power
+        if (
+            variance >= CONFIG.variance_detection_threshold
+            and load_state.last_expected_update is not None
+            and (now - load_state.last_expected_update).total_seconds()
+            >= CONFIG.variance_detection_delay_seconds
+        ):
+            total_unused_power += variance
+            loads_with_unused_power.append(load_name)
+            _LOGGER.info(
+                "Load %s is using %f A less than expected (%f A), freeing %f A for reallocation",
+                load_name,
+                actual_consumption,
+                expected_consumption,
+                variance,
+            )
+
+    # If we have significant unused power, trigger reallocation
+    if total_unused_power >= CONFIG.variance_detection_threshold:
+        _LOGGER.info(
+            "Total unused power detected: %f A from loads %s - triggering reallocation",
+            total_unused_power,
+            loads_with_unused_power,
+        )
+        # Add the unused power to our available budget and recalculate
+        await recalculate_load_control(hass)
+
+
+@bind_hass
+async def calculate_effective_available_power():
+    """Calculate available power including power freed by underperforming loads."""
+    # Start with the base available power calculation
     safety_margin_amps = CONFIG.hysteresis_amps
     grid_available_amps = CONFIG.max_house_load_amps - STATE.house_consumption_amps
 
@@ -284,13 +351,50 @@ async def recalculate_load_control(hass: HomeAssistant):
         # Safety check to not blow house fuse
         solar_available_amps = min(solar_available_amps, grid_available_amps)
 
-    available_amps = 0.0
+    base_available_amps = 0.0
     if CONFIG.allow_grid_import and STATE.allow_grid_import:
-        available_amps = grid_available_amps - safety_margin_amps  # Can use grid power
+        base_available_amps = grid_available_amps - safety_margin_amps
     elif CONFIG.allow_solar_consumption and solar_available_amps > 0:
-        available_amps = (
-            solar_available_amps - safety_margin_amps
-        )  # Can only use solar power
+        base_available_amps = solar_available_amps - safety_margin_amps
+
+    # Calculate additional power available from loads consuming less than expected
+    reactive_available_amps = 0.0
+    if CONFIG.enable_reactive_reallocation:
+        for load_name, load_state in STATE.controllable_loads.items():
+            plan_state = PLAN.controllable_loads.get(load_name)
+            if (
+                plan_state
+                and plan_state.is_on
+                and load_state.consumption_variance
+                >= CONFIG.variance_detection_threshold
+            ):
+                reactive_available_amps += load_state.consumption_variance
+                _LOGGER.debug(
+                    "Adding %f A reactive power from underperforming load %s",
+                    load_state.consumption_variance,
+                    load_name,
+                )
+
+    total_available_amps = base_available_amps + reactive_available_amps
+    _LOGGER.debug(
+        "Effective available power: base=%f A, reactive=%f A, total=%f A",
+        base_available_amps,
+        reactive_available_amps,
+        total_available_amps,
+    )
+
+    return total_available_amps
+
+
+@bind_hass
+@bind_hass
+async def recalculate_load_control(hass: HomeAssistant):
+    """The core of the load control algorithm."""
+    now = datetime.now()
+    new_plan = PlanState()
+
+    # Calculate effective available power (including reactive reallocation)
+    available_amps = await calculate_effective_available_power()
 
     new_plan.available_amps = available_amps
     hass.states.async_set("zero_grid.enable_load_control", str(True))
@@ -299,21 +403,24 @@ async def recalculate_load_control(hass: HomeAssistant):
 
     # If the available load we have to play with has not changed meaningfully, do nothing
     # Exception: always recalculate if available power is zero/negative (safety)
+    # Also always recalculate if reactive reallocation is enabled (to pick up variance changes)
     available_amps_delta = abs(PLAN.available_amps - available_amps)
     if (
-        available_amps_delta < CONFIG.hysteresis_amps
+        not CONFIG.enable_reactive_reallocation
+        and available_amps_delta < CONFIG.hysteresis_amps
         and available_amps > 0
         and PLAN.available_amps > 0
     ):
         return
 
     # Build priority list (lower number == more important)
-    # Always process in priority order - the overload logic will handle shedding appropriately
     prioritised_loads = sorted(
         CONFIG.controllable_loads.copy(),
         key=lambda k: CONFIG.controllable_loads[k].priority,
     )
     _LOGGER.debug("Priority: %s", prioritised_loads)
+
+    safety_margin_amps = CONFIG.hysteresis_amps
     overload = (
         STATE.house_consumption_amps > CONFIG.max_house_load_amps - safety_margin_amps
     )
@@ -321,8 +428,8 @@ async def recalculate_load_control(hass: HomeAssistant):
     # Track power freed up by loads that get turned off during this planning cycle
     freed_power_this_cycle = 0.0
 
-    # Loop over controllable loads and deterimine if they should be on or not
-    for load_index, load_name in enumerate(prioritised_loads):  # pylint: disable=consider-using-dict-items
+    # Loop over controllable loads and determine if they should be on or not
+    for load_index, load_name in enumerate(prioritised_loads):
         config = CONFIG.controllable_loads[load_name]
         state = STATE.controllable_loads[load_name]
         previous_plan = PLAN.controllable_loads[load_name]
@@ -516,10 +623,6 @@ async def recalculate_load_control(hass: HomeAssistant):
             will_consume_amps = previous_plan.expected_load_amps
             _LOGGER.debug("Unable to throttle load %s due to rate limit", load_name)
 
-        # plan.expected_load_amps = will_consume_amps
-        # new_plan.used_amps += will_consume_amps
-        # available_amps -= will_consume_amps
-
     hass.states.async_set("zero_grid.controlled_load", str(new_plan.used_amps))
 
     # Post-planning adjustment: throttle down lower-priority loads to make room for higher-priority loads
@@ -619,10 +722,9 @@ async def recalculate_load_control(hass: HomeAssistant):
                 plan_load.throttle_amps = 0
 
     _LOGGER.debug(
-        "Planning complete: initial_available=%f, planned_used=%f, final_available=%f",
+        "Planning complete: initial_available=%f, planned_used=%f",
         new_plan.available_amps,
         new_plan.used_amps,
-        available_amps,
     )
 
     await execute_plan(hass, new_plan)
@@ -800,7 +902,11 @@ async def execute_plan(hass: HomeAssistant, plan: PlanState):
                 "Skipping throttle for %s: new_plan.is_on=%s", load_name, new_plan.is_on
             )
 
-        # Update current plan with new plan (deep copy to avoid reference issues)
+        # Update expected consumption tracking for reactive reallocation
+        if CONFIG.enable_reactive_reallocation:
+            # Update expected consumption in state for variance tracking
+            state.expected_load_amps = new_plan.expected_load_amps
+            state.last_expected_update = now
         PLAN.available_amps = plan.available_amps
         PLAN.used_amps = plan.used_amps
         # Deep copy the controllable loads to avoid reference sharing between PLAN and new_plan
