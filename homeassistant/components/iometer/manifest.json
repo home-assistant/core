@@ -7,6 +7,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["iometer==0.1.0"],
+  "requirements": ["iometer==0.2.0"],
   "zeroconf": ["_iometer._tcp.local."]
 }
