@@ -2,7 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up your DALI Center gateway integration. This will discover available gateways on your network."
+        "title": "Set up Dali Center Gateway",
+        "description": "**Two-step process:**\n\n1. **Click SUBMIT** to start discovery (searches for up to 3 minutes)\n2. **Short press the RESET button** on your DALI gateway device **ONCE**\n\nThe gateway will respond immediately after the button press.\nEnsure the gateway is powered and on the same network."
       },
       "discovery": {
         "title": "Select DALI gateway",
