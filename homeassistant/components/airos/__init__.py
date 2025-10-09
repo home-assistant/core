@@ -109,7 +109,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
                 if old_device_id and entity_entry.unique_id.startswith(old_device_id):
                     suffix = entity_entry.unique_id.removeprefix(old_device_id)
                     new_unique_id = f"{mac_adress}{suffix}"
-                    _LOGGER.info("Migrating unique_id to %s", new_unique_id)
                     return {"new_unique_id": new_unique_id}
                 return None
 
