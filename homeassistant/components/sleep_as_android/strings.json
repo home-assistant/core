@@ -117,6 +117,17 @@
             }
           }
         }
+      },
+      "jet_lag_prevention": {
+        "name": "Jet lag prevention",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "jet_lag_start": "[%key:component::sleep_as_android::entity::event::lullaby::state_attributes::event_type::state::start%]",
+              "jet_lag_stop": "[%key:common::state::stopped%]"
+            }
+          }
+        }
       }
     },
     "sensor": {
