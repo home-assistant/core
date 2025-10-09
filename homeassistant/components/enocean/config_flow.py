@@ -17,42 +17,35 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from . import dongle
-from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
+from .const import (
+    CONF_ENOCEAN_DEVICE_ID,
+    CONF_ENOCEAN_DEVICE_NAME,
+    CONF_ENOCEAN_DEVICE_TYPE_ID,
+    CONF_ENOCEAN_DEVICES,
+    CONF_ENOCEAN_SENDER_ID,
+    DOMAIN,
+    ENOCEAN_DEFAULT_DEVICE_ID,
+    ENOCEAN_DEFAULT_DEVICE_NAME,
+    ENOCEAN_DEVICE_TYPE_ID,
+    ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED,
+    ENOCEAN_ERROR_DEVICE_NAME_EMPTY,
+    ENOCEAN_ERROR_INVALID_DEVICE_ID,
+    ENOCEAN_ERROR_INVALID_SENDER_ID,
+    ENOCEAN_MENU_OPTION_ADD_DEVICE,
+    ENOCEAN_MENU_OPTION_DELETE_DEVICE,
+    ENOCEAN_MENU_OPTION_SELECT_DEVICE,
+    ENOCEAN_STEP_ID_ADD_DEVICE,
+    ENOCEAN_STEP_ID_DELETE_DEVICE,
+    ENOCEAN_STEP_ID_EDIT_DEVICE,
+    ENOCEAN_STEP_ID_INIT,
+    ENOCEAN_STEP_ID_SELECT_DEVICE,
+    ERROR_INVALID_DONGLE_PATH,
+    LOGGER,
+)
 from .supported_device_type import (
     EnOceanSupportedDeviceType,
     get_supported_enocean_device_types,
 )
-
-# config
-CONF_ENOCEAN_DEVICES = "devices"
-CONF_ENOCEAN_DEVICE_ID = "id"
-CONF_ENOCEAN_DEVICE_NAME = "name"
-CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS = "manage_device_command"
-CONF_ENOCEAN_DEVICE_TYPE_ID = "device_type_id"
-CONF_ENOCEAN_SENDER_ID = "sender_id"
-
-# step ids
-ENOCEAN_STEP_ID_INIT = "init"
-ENOCEAN_STEP_ID_ADD_DEVICE = "add_device"
-ENOCEAN_STEP_ID_EDIT_DEVICE = "edit_device"
-ENOCEAN_STEP_ID_DELETE_DEVICE = "delete_device"
-ENOCEAN_STEP_ID_SELECT_DEVICE = "select_device_to_edit"
-
-# menu options
-ENOCEAN_MENU_OPTION_ADD_DEVICE = "add_device"
-ENOCEAN_MENU_OPTION_DELETE_DEVICE = "delete_device"
-ENOCEAN_MENU_OPTION_SELECT_DEVICE = "select_device_to_edit"
-
-# errors
-ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED = "device_already_configured"
-ENOCEAN_ERROR_DEVICE_NAME_EMPTY = "device_name_empty"
-ENOCEAN_ERROR_INVALID_DEVICE_ID = "invalid_device_id"
-ENOCEAN_ERROR_INVALID_SENDER_ID = "invalid_sender_id"
-
-# others
-ENOCEAN_DEFAULT_DEVICE_ID = "00:00:00:00"
-ENOCEAN_DEFAULT_DEVICE_NAME = "EnOcean device"
-ENOCEAN_DEVICE_TYPE_ID = "device_type_id"
 
 
 class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
