@@ -608,6 +608,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfPressure.KPA,
         UnitOfPressure.MBAR,
         UnitOfPressure.MMHG,
+        UnitOfPressure.MPA,
         UnitOfPressure.PA,
     ),
     SensorDeviceClass.SPEED: (
