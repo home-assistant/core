@@ -120,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _ensure_port_is_unused(hass: HomeAssistant, device_path: str) -> None:
+def _raise_if_port_in_use(hass: HomeAssistant, device_path: str) -> None:
     """Ensure that the specified serial port is not in use by a firmware update."""
     if async_is_firmware_update_in_progress(hass, device_path):
         raise ConfigEntryNotReady(
@@ -163,7 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Check if firmware update is in progress for this device
     device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-    _ensure_port_is_unused(hass, device_path)
+    _raise_if_port_in_use(hass, device_path)
 
     try:
         await zha_gateway.async_initialize()
@@ -181,7 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady from exc
     except Exception as exc:
         _LOGGER.debug("Failed to set up ZHA", exc_info=exc)
-        _ensure_port_is_unused(hass, device_path)
+        _raise_if_port_in_use(hass, device_path)
 
         if (
             not device_path.startswith("socket://")
