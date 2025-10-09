@@ -54,7 +54,8 @@
             "top": "Top",
             "middle": "Middle",
             "focus": "Focus",
-            "diffuse": "Diffuse"
+            "diffuse": "Diffuse",
+            "sleep": "Sleep"
           }
         },
         "fan_modes": {
@@ -73,7 +74,10 @@
             "drying": "Drying",
             "fan": "Fan",
             "heating": "Heating",
-            "preheating": "Preheating"
+            "preheating": "Preheating",
+            "underfloor_heating": "Underfloor heating",
+            "heating_and_underfloor_heating": "Heating and underfloor heating",
+            "cooling_and_underfloor_cooling": "Cooling and underfloor cooling"
           }
         },
         "hvac_modes": {
@@ -250,7 +254,10 @@
         "dry": "Dry",
         "fan_only": "Fan only",
         "heat_cool": "Heat/cool",
-        "heat": "Heat"
+        "heat": "Heat",
+        "underfloor_heat": "Underfloor heat",
+        "heat_and_underfloor_heat": "Heat and underfloor heat",
+        "cool_and_underfloor_cool": "Cool and underfloor cool"
       }
     }
   },

@@ -28,6 +28,14 @@ class HVACMode(StrEnum):
     # Only the fan is on, not fan and another mode like cool
     FAN_ONLY = "fan_only"
 
+    # Underfloor Heating
+    UNDERFLOOR_HEAT = "underfloor_heat"
+
+    # Heating + Underfloor Heating
+    HEAT_AND_UNDERFLOOR_HEAT = "heat_and_underfloor_heat"
+
+    # Cooling + Underfloor Cooling
+    COOL_AND_UNDERFLOOR_COOL = "cool_and_underfloor_cool"
 
 HVAC_MODES = [cls.value for cls in HVACMode]
 
@@ -66,6 +74,7 @@ FAN_TOP = "top"
 FAN_MIDDLE = "middle"
 FAN_FOCUS = "focus"
 FAN_DIFFUSE = "diffuse"
+FAN_SLEEP = "sleep"
 
 
 # Possible swing state
@@ -91,6 +100,9 @@ class HVACAction(StrEnum):
     IDLE = "idle"
     OFF = "off"
     PREHEATING = "preheating"
+    UNDERFLOOR_HEATING = "underfloor_heating"
+    HEATING_AND_UNDERFLOOR_HEATING = "heating_and_underfloor_heating"
+    COOLING_AND_UNDERFLOOR_COOLING = "cooling_and_underfloor_cooling"
 
 
 CURRENT_HVAC_ACTIONS = [cls.value for cls in HVACAction]

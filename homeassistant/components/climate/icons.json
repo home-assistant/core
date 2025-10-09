@@ -14,7 +14,8 @@
             "medium": "mdi:speedometer-medium",
             "middle": "mdi:speedometer-medium",
             "off": "mdi:fan-off",
-            "on": "mdi:fan"
+            "on": "mdi:fan",
+            "sleep": "mdi:bed"
           }
         },
         "hvac_action": {
@@ -27,7 +28,10 @@
             "heating": "mdi:fire",
             "idle": "mdi:clock-outline",
             "off": "mdi:power",
-            "preheating": "mdi:heat-wave"
+            "preheating": "mdi:heat-wave",
+            "underfloor_heating": "mdi:heat-wave",
+            "heat_and_underfloor_heating": "mdi:heat-wave",
+            "cool_and_underfloor_cooling": "mdi:snowflake"
           }
         },
         "preset_mode": {
