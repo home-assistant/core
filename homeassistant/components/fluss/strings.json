@@ -7,7 +7,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "Available in the profile page of the Fluss+ app."
+          "api_key": "The API key found in the profile page of the Fluss+ app."
         }
       }
     },
