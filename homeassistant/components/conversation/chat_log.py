@@ -569,17 +569,9 @@ class ChatLog:
         if llm_api:
             prompt_parts.append(llm_api.api_prompt)
 
-        llm_api_ids = (
-            (
-                [api.id for api in llm_api.api.llm_apis]
-                if isinstance(llm_api.api, llm.MergedAPI)
-                else [llm_api.api.id]
-            )
-            if llm_api
-            else []
-        )
-
-        if llm.LLM_API_ASSIST not in llm_api_ids:
+        # Append current date and time to the prompt if the corresponding tool is not provided
+        llm_tools: list[llm.Tool] = llm_api.tools if llm_api else []
+        if not any(tool.name.endswith("GetDateTime") for tool in llm_tools):
             prompt_parts.append(
                 await self._async_expand_prompt_template(
                     llm_context,
