@@ -569,6 +569,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "84E657*",
     },
     {
+        "domain": "pooldose",
+        "hostname": "kommspot",
+    },
+    {
         "domain": "powerwall",
         "hostname": "1118431-*",
     },

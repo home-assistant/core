@@ -155,7 +155,7 @@ async def test_camera_stream(hass: HomeAssistant) -> None:
     )
 
     trt = trait.CameraStreamTrait(
-        hass, State("camera.bla", camera.STATE_IDLE, {}), BASIC_CONFIG
+        hass, State("camera.bla", camera.CameraState.IDLE, {}), BASIC_CONFIG
     )
 
     assert trt.sync_attributes() == {
@@ -665,10 +665,10 @@ async def test_startstop_lawn_mower(hass: HomeAssistant) -> None:
     [
         (
             cover.DOMAIN,
-            cover.STATE_OPEN,
-            cover.STATE_CLOSED,
-            cover.STATE_OPENING,
-            cover.STATE_CLOSING,
+            cover.CoverState.OPEN,
+            cover.CoverState.CLOSED,
+            cover.CoverState.OPENING,
+            cover.CoverState.CLOSING,
             CoverEntityFeature.STOP
             | CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE,
@@ -789,10 +789,10 @@ async def test_startstop_cover_valve(
     [
         (
             cover.DOMAIN,
-            cover.STATE_OPEN,
-            cover.STATE_CLOSED,
-            cover.STATE_OPENING,
-            cover.STATE_CLOSING,
+            cover.CoverState.OPEN,
+            cover.CoverState.CLOSED,
+            cover.CoverState.OPENING,
+            cover.CoverState.CLOSING,
             CoverEntityFeature.STOP
             | CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE,
@@ -3202,7 +3202,7 @@ async def test_openclose_cover_valve_unknown_state(
             cover.DOMAIN,
             cover.SERVICE_SET_COVER_POSITION,
             CoverEntityFeature.SET_POSITION,
-            cover.STATE_OPEN,
+            cover.CoverState.OPEN,
         ),
         (
             valve.DOMAIN,
@@ -3251,7 +3251,7 @@ async def test_openclose_cover_valve_assumed_state(
     [
         (
             cover.DOMAIN,
-            cover.STATE_OPEN,
+            cover.CoverState.OPEN,
         ),
         (
             valve.DOMAIN,
@@ -3298,8 +3298,8 @@ async def test_openclose_cover_valve_query_only(
     [
         (
             cover.DOMAIN,
-            cover.STATE_OPEN,
-            cover.STATE_CLOSED,
+            cover.CoverState.OPEN,
+            cover.CoverState.CLOSED,
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
             cover.SERVICE_OPEN_COVER,
             cover.SERVICE_CLOSE_COVER,
@@ -3400,7 +3400,7 @@ async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None
         hass,
         State(
             "cover.bla",
-            cover.STATE_OPEN,
+            cover.CoverState.OPEN,
             {
                 ATTR_DEVICE_CLASS: device_class,
                 ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
