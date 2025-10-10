@@ -182,7 +182,7 @@ class BaseUnitConverter:
 class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
     """Convert carbon monoxide ratio to mass per volume.
 
-    Using SATP (Standard Ambient Temperature and Pressure) conditions.
+    Using ambient temperature of 20°C and pressure of 1 ATM.
     """
 
     UNIT_CLASS = "carbon_monoxide"
