@@ -57,7 +57,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteData]):
             update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )
-        self.config_entry = config_entry
         self.route_id = route_id
         self.nsapi = NSAPI(config_entry.data[CONF_API_KEY])
         self.route_config = NSRouteData(
