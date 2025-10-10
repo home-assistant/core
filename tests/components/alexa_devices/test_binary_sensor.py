@@ -11,10 +11,12 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
@@ -137,3 +139,51 @@ async def test_dynamic_device(
 
     assert (state := hass.states.get(entity_id_2))
     assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "bluetooth",
+        "babyCryDetectionState",
+        "beepingApplianceDetectionState",
+        "coughDetectionState",
+        "dogBarkDetectionState",
+        "waterSoundsDetectionState",
+    ],
+)
+async def test_deprecated_sensor_removal(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    key: str,
+) -> None:
+    """Test deprecated sensors are removed."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, mock_config_entry.entry_id)},
+        name=mock_config_entry.title,
+        manufacturer="Amazon",
+        model="Echo Dot",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+    entity = entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        unique_id=f"{TEST_DEVICE_1_SN}-{key}",
+        device_id=device.id,
+        config_entry=mock_config_entry,
+        has_entity_name=True,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity2 = entity_registry.async_get(entity.entity_id)
+    assert entity2 is None
