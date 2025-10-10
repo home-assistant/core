@@ -173,7 +173,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.1
 
 # homeassistant.components.alexa_devices
-aioamazondevices==6.2.9
+aioamazondevices==6.4.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -615,7 +615,7 @@ bring-api==1.1.0
 broadlink==0.19.0
 
 # homeassistant.components.brother
-brother==5.1.0
+brother==5.1.1
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -2256,7 +2256,7 @@ renault-api==0.4.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.16.1
+reolink-aio==0.16.2
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2335,7 +2335,7 @@ sentry-sdk==1.45.1
 sfrbox-api==0.0.12
 
 # homeassistant.components.sharkiq
-sharkiq==1.4.0
+sharkiq==1.4.2
 
 # homeassistant.components.simplefin
 simplefin4py==0.0.18
@@ -2578,7 +2578,7 @@ vilfo-api-client==0.5.0
 voip-utils==0.3.4
 
 # homeassistant.components.volvo
-volvocarsapi==0.4.2
+volvocarsapi==0.4.3
 
 # homeassistant.components.verisure
 vsure==2.6.7

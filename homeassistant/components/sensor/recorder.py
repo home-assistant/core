@@ -854,6 +854,10 @@ def _update_issues(
             SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)
         )
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        state_unit_class = _get_unit_class(
+            state.attributes.get(ATTR_DEVICE_CLASS),
+            state_unit,
+        )
 
         if metadata := metadatas.get(entity_id):
             if numeric and state_class is None:
@@ -875,7 +879,9 @@ def _update_issues(
                         {
                             "statistic_id": entity_id,
                             "state_unit": state_unit,
+                            "state_unit_class": state_unit_class,
                             "metadata_unit": metadata_unit,
+                            "metadata_unit_class": metadata[1]["unit_class"],
                             "supported_unit": metadata_unit,
                         },
                     )
@@ -889,7 +895,9 @@ def _update_issues(
                     {
                         "statistic_id": entity_id,
                         "state_unit": state_unit,
+                        "state_unit_class": state_unit_class,
                         "metadata_unit": metadata_unit,
+                        "metadata_unit_class": metadata[1]["unit_class"],
                         "supported_unit": valid_units_str,
                     },
                 )
