@@ -71,9 +71,8 @@ async def async_setup_entry(
     for device in devices:
         device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
         device_type = get_supported_enocean_device_types()[device_type_id]
-        eep = device_type.eep
 
-        if eep == "A5-38-08_EltakoFUD61":
+        if device_type.unique_id == "Eltako_FUD61NPN":
             device_id = from_hex_string(device["id"])
             sender_id = 0
             if device["sender_id"] != "":
@@ -96,7 +95,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-    _attr_brightness = 50
+    _attr_brightness: int | None = None
     _attr_is_on = False
 
     def __init__(
@@ -109,12 +108,13 @@ class EnOceanLight(EnOceanEntity, LightEntity):
     ) -> None:
         """Initialize the EnOcean light source."""
         super().__init__(dev_id, dev_name, dev_type, name)
-        self._on_state = False
-        self._brightness = 50
+        self._attr_is_on = False
+        self._attr_brightness = None
         self._sender_id = sender_id
         self._attr_unique_id = (
             f"{to_hex_string(dev_id).upper()}-{Platform.LIGHT.value}-0"
         )
+        self._attr_should_poll = False
 
     @property
     def brightness(self) -> int | None:
@@ -123,18 +123,20 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         This method is optional. Removing it indicates to Home Assistant
         that brightness is not supported for this light.
         """
-        return self._brightness
+        return self._attr_brightness
 
     @property
     def is_on(self) -> bool | None:
         """If light is on."""
-        return self._on_state
+        return self._attr_is_on
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light source on or sets a specific dimmer value."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             self._attr_brightness = brightness
 
+        if self._attr_brightness is None:
+            self._attr_brightness = 255
         bval = math.floor(self._attr_brightness / 256.0 * 100.0)
         if bval == 0:
             bval = 1
@@ -159,7 +161,9 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         We only care about the 4BS (0xA5).
         """
         if packet.data[0] == 0xA5 and packet.data[1] == 0x02:
+            # _LOGGER.info("Received light packet: %s", packet)
             val = packet.data[2]
             self._attr_brightness = math.floor(val / 100.0 * 256.0)
             self._attr_is_on = bool(val != 0)
+            # _LOGGER.info("Setting state to %s", self._attr_is_on)
             self.schedule_update_ha_state()
