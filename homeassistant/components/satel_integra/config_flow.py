@@ -158,7 +158,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                 subentries.append(
                     {
                         "subentry_type": SUBENTRY_TYPE_PARTITION,
-                        "title": partition_data[CONF_NAME],
+                        "title": f"{partition_data[CONF_NAME]} ({partition_number})",
                         "unique_id": f"{SUBENTRY_TYPE_PARTITION}_{partition_number}",
                         "data": {
                             CONF_NAME: partition_data[CONF_NAME],
@@ -174,7 +174,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                 subentries.append(
                     {
                         "subentry_type": SUBENTRY_TYPE_ZONE,
-                        "title": zone_data[CONF_NAME],
+                        "title": f"{zone_data[CONF_NAME]} ({zone_number})",
                         "unique_id": f"{SUBENTRY_TYPE_ZONE}_{zone_number}",
                         "data": {
                             CONF_NAME: zone_data[CONF_NAME],
@@ -192,7 +192,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                 subentries.append(
                     {
                         "subentry_type": SUBENTRY_TYPE_OUTPUT,
-                        "title": output_data[CONF_NAME],
+                        "title": f"{output_data[CONF_NAME]} ({output_number})",
                         "unique_id": f"{SUBENTRY_TYPE_OUTPUT}_{output_number}",
                         "data": {
                             CONF_NAME: output_data[CONF_NAME],
@@ -210,7 +210,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                 subentries.append(
                     {
                         "subentry_type": SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-                        "title": switchable_output_data[CONF_NAME],
+                        "title": f"{switchable_output_data[CONF_NAME]} ({switchable_output_number})",
                         "unique_id": f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}_{switchable_output_number}",
                         "data": {
                             CONF_NAME: switchable_output_data[CONF_NAME],
@@ -279,7 +279,9 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input, unique_id=unique_id
+                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_PARTITION_NUMBER]})",
+                    data=user_input,
+                    unique_id=unique_id,
                 )
 
         return self.async_show_form(
@@ -304,7 +306,7 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=user_input[CONF_NAME],
+                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_PARTITION_NUMBER]})",
                 data_updates=user_input,
             )
 
@@ -338,7 +340,9 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input, unique_id=unique_id
+                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_ZONE_NUMBER]})",
+                    data=user_input,
+                    unique_id=unique_id,
                 )
 
         return self.async_show_form(
@@ -363,7 +367,7 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=user_input[CONF_NAME],
+                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_ZONE_NUMBER]})",
                 data_updates=user_input,
             )
 
@@ -396,7 +400,9 @@ class OutputSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input, unique_id=unique_id
+                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_OUTPUT_NUMBER]})",
+                    data=user_input,
+                    unique_id=unique_id,
                 )
 
         return self.async_show_form(
@@ -421,7 +427,7 @@ class OutputSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=user_input[CONF_NAME],
+                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_OUTPUT_NUMBER]})",
                 data_updates=user_input,
             )
 
@@ -454,7 +460,9 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input, unique_id=unique_id
+                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]})",
+                    data=user_input,
+                    unique_id=unique_id,
                 )
 
         return self.async_show_form(
@@ -479,7 +487,7 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=user_input[CONF_NAME],
+                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]})",
                 data_updates=user_input,
             )
 
