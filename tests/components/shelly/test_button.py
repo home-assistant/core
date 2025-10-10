@@ -219,7 +219,7 @@ async def test_rpc_blu_trv_button(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert mock_blu_trv.trigger_blu_trv_calibration.call_count == 1
+    mock_blu_trv.trigger_blu_trv_calibration.assert_called_once_with(200)
 
 
 @pytest.mark.parametrize(
