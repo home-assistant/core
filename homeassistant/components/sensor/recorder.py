@@ -294,7 +294,7 @@ def _normalize_states(
         # Check if the unit class has changed
         if (
             (new_unit_class := _get_unit_class(device_class, state_unit)) != unit_class
-            and (new_converter := _get_unit_converter(unit_class))
+            and (new_converter := _get_unit_converter(new_unit_class))
             and state_unit in new_converter.VALID_UNITS
             and statistics_unit in new_converter.VALID_UNITS
         ):

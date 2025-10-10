@@ -4048,9 +4048,11 @@ async def test_compile_hourly_statistics_equivalent_units_2(
         "device_class",
         "unit_1",
         "unit_2",
+        "unit_3",
         "unit_class_1",
         "unit_class_2",
-        "factor",
+        "factor_2",
+        "factor_3",
         "mean1",
         "mean2",
         "min",
@@ -4061,8 +4063,10 @@ async def test_compile_hourly_statistics_equivalent_units_2(
             "power",
             "kW",
             "kW",
+            "kW",
             "power",
             "power",
+            1,
             1,
             13.050847,
             13.333333,
@@ -4073,8 +4077,10 @@ async def test_compile_hourly_statistics_equivalent_units_2(
             "carbon_monoxide",
             "ppm",
             "ppm",
+            "ppm",
             "unitless",
             "carbon_monoxide",
+            1,
             1,
             13.050847,
             13.333333,
@@ -4085,9 +4091,26 @@ async def test_compile_hourly_statistics_equivalent_units_2(
         (
             "carbon_monoxide",
             "ppm",
+            "ppm",
             "mg/m³",
             "unitless",
             "carbon_monoxide",
+            1,
+            1.145609,
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
+        # Valid change of unit class from unitless to carbon_monoxide
+        (
+            "carbon_monoxide",
+            "ppm",
+            "mg/m³",
+            "mg/m³",
+            "unitless",
+            "carbon_monoxide",
+            1.145609,
             1.145609,
             13.050847,
             13.333333,
@@ -4098,9 +4121,26 @@ async def test_compile_hourly_statistics_equivalent_units_2(
         (
             "carbon_monoxide",
             "mg/m³",
+            "mg/m³",
             "ppm",
             "concentration",
             "carbon_monoxide",
+            1,
+            1 / 1.145609,
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
+        # Valid change of unit class from concentration to carbon_monoxide
+        (
+            "carbon_monoxide",
+            "mg/m³",
+            "ppm",
+            "ppm",
+            "concentration",
+            "carbon_monoxide",
+            1 / 1.145609,
             1 / 1.145609,
             13.050847,
             13.333333,
@@ -4115,9 +4155,11 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     device_class,
     unit_1,
     unit_2,
+    unit_3,
     unit_class_1,
     unit_class_2,
-    factor,
+    factor_2,
+    factor_3,
     mean1,
     mean2,
     min,
@@ -4178,15 +4220,17 @@ async def test_compile_hourly_statistics_changing_device_class_1(
         ]
     }
 
-    # Update device class and record additional states in the original UoM
+    # Update device class and record additional states in a different UoM
     attributes["device_class"] = device_class
+    attributes["unit_of_measurement"] = unit_2
+    seq = [x * factor_2 for x in (-10, 15, 30)]
     with freeze_time(zero) as freezer:
         four, _states = await async_record_states(
-            hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
+            hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes, seq
         )
         states["sensor.test1"] += _states["sensor.test1"]
         four, _states = await async_record_states(
-            hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
+            hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes, seq
         )
     await async_wait_recording_done(hass)
     states["sensor.test1"] += _states["sensor.test1"]
@@ -4202,7 +4246,7 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
-            "display_unit_of_measurement": unit_1,
+            "display_unit_of_measurement": unit_2,
             "has_mean": True,
             "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
@@ -4218,9 +4262,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             {
                 "start": process_timestamp(zero).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
-                "mean": pytest.approx(mean1),
-                "min": pytest.approx(min),
-                "max": pytest.approx(max),
+                "mean": pytest.approx(mean1 * factor_2),
+                "min": pytest.approx(min * factor_2),
+                "max": pytest.approx(max * factor_2),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -4228,9 +4272,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             {
                 "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=15)).timestamp(),
-                "mean": pytest.approx(mean2),
-                "min": pytest.approx(min),
-                "max": pytest.approx(max),
+                "mean": pytest.approx(mean2 * factor_2),
+                "min": pytest.approx(min * factor_2),
+                "max": pytest.approx(max * factor_2),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -4239,8 +4283,8 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     }
 
     # Update device class and record additional states in a different UoM
-    attributes["unit_of_measurement"] = unit_2
-    seq = [x * factor for x in (-10, 15, 30)]
+    attributes["unit_of_measurement"] = unit_3
+    seq = [x * factor_3 for x in (-10, 15, 30)]
     with freeze_time(zero) as freezer:
         four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=15), "sensor.test1", attributes, seq
@@ -4263,7 +4307,7 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
-            "display_unit_of_measurement": unit_2,
+            "display_unit_of_measurement": unit_3,
             "has_mean": True,
             "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
@@ -4279,9 +4323,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             {
                 "start": process_timestamp(zero).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
-                "mean": pytest.approx(mean1 * factor),
-                "min": pytest.approx(min * factor),
-                "max": pytest.approx(max * factor),
+                "mean": pytest.approx(mean1 * factor_3),
+                "min": pytest.approx(min * factor_3),
+                "max": pytest.approx(max * factor_3),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -4289,9 +4333,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             {
                 "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=15)).timestamp(),
-                "mean": pytest.approx(mean2 * factor),
-                "min": pytest.approx(min * factor),
-                "max": pytest.approx(max * factor),
+                "mean": pytest.approx(mean2 * factor_3),
+                "min": pytest.approx(min * factor_3),
+                "max": pytest.approx(max * factor_3),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -4299,9 +4343,9 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             {
                 "start": process_timestamp(zero + timedelta(minutes=20)).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=25)).timestamp(),
-                "mean": pytest.approx(mean2 * factor),
-                "min": pytest.approx(min * factor),
-                "max": pytest.approx(max * factor),
+                "mean": pytest.approx(mean2 * factor_3),
+                "min": pytest.approx(min * factor_3),
+                "max": pytest.approx(max * factor_3),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
