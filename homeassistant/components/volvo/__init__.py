@@ -37,8 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
     """Set up Volvo from a config entry."""
 
     api = await _async_auth_and_create_api(hass, entry)
-    vehicle = await _async_load_vehicle(api)
-    context = VolvoContext(api, vehicle)
+    context = await _async_create_context(api)
 
     # Order is important! Faster intervals must come first.
     # Different interval coordinators are in place to keep the number
@@ -50,10 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
         VolvoSlowIntervalCoordinator(hass, entry, context),
         VolvoVerySlowIntervalCoordinator(hass, entry, context),
     )
-
     await asyncio.gather(*(c.async_config_entry_first_refresh() for c in coordinators))
 
-    entry.runtime_data = VolvoRuntimeData(coordinators)
+    entry.runtime_data = VolvoRuntimeData(coordinators, context)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -88,6 +86,12 @@ async def _async_auth_and_create_api(
     return api
 
 
+async def _async_create_context(api: VolvoCarsApi) -> VolvoContext:
+    vehicle = await _async_load_vehicle(api)
+    supported_commands = await _async_load_supported_commands(api)
+    return VolvoContext(api, vehicle, supported_commands)
+
+
 async def _async_load_vehicle(api: VolvoCarsApi) -> VolvoCarsVehicle:
     try:
         vehicle = await api.async_get_vehicle_details()
@@ -102,3 +106,16 @@ async def _async_load_vehicle(api: VolvoCarsApi) -> VolvoCarsVehicle:
         raise ConfigEntryError(translation_domain=DOMAIN, translation_key="no_vehicle")
 
     return vehicle
+
+
+async def _async_load_supported_commands(api: VolvoCarsApi) -> list[str]:
+    try:
+        commands = await api.async_get_commands()
+    except VolvoAuthException as ex:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="unauthorized",
+            translation_placeholders={"message": ex.message},
+        ) from ex
+
+    return [c.command for c in commands if c is not None]

@@ -187,6 +187,23 @@
         "name": "Window rear right"
       }
     },
+    "button": {
+      "climatization_start": {
+        "name": "Start climatization"
+      },
+      "climatization_stop": {
+        "name": "Stop climatization"
+      },
+      "flash": {
+        "name": "Flash"
+      },
+      "honk": {
+        "name": "Honk"
+      },
+      "honk_flash": {
+        "name": "Honk & flash"
+      }
+    },
     "sensor": {
       "availability": {
         "name": "Car connection",
@@ -307,6 +324,9 @@
     }
   },
   "exceptions": {
+    "command_failure": {
+      "message": "Command {command} failed. Status: {status}. Message: {message}"
+    },
     "no_vehicle": {
       "message": "Unable to retrieve vehicle details."
     },
