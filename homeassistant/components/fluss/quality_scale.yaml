@@ -32,10 +32,7 @@ rules:
   entity-translations: done
   entity-device-class: done
   devices: done
-  entity-category: 
-    status: exempt
-    comment: |
-      Not used in this context
+  entity-category: done
   entity-disabled-by-default:
     status: exempt
     comment: |
