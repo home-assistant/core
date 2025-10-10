@@ -18,9 +18,6 @@ DATA_COMPONENT: HassKey[HardwareInfoDispatcher] = HassKey(DOMAIN)
 
 ZHA_DOMAIN = "zha"
 OTBR_DOMAIN = "otbr"
-YELLOW_DOMAIN = "homeassistant_yellow"
-
-YELLOW_RADIO_PATH = "/dev/ttyAMA1"
 
 HARDWARE_INTEGRATION_DOMAINS = {
     "homeassistant_sky_connect",
