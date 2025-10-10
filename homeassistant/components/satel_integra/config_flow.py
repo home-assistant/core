@@ -91,6 +91,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Satel Integra config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
