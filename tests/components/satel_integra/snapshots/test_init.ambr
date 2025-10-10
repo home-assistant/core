@@ -1,0 +1,69 @@
+# serializer version: 1
+# name: test_config_flow_migration_version_1_2
+  ConfigEntrySnapshot({
+    'data': dict({
+      'host': '192.168.0.2',
+      'port': 7094,
+    }),
+    'disabled_by': None,
+    'discovery_keys': dict({
+    }),
+    'domain': 'satel_integra',
+    'entry_id': <ANY>,
+    'minor_version': 2,
+    'options': dict({
+      'code': '1234',
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'subentries': list([
+      dict({
+        'data': dict({
+          'arm_home_mode': 1,
+          'name': 'Home',
+          'partition_number': 1,
+        }),
+        'subentry_id': 'ID_PARTITION',
+        'subentry_type': 'partition',
+        'title': 'Home (1) (1)',
+        'unique_id': 'partition_1',
+      }),
+      dict({
+        'data': dict({
+          'name': 'Zone',
+          'type': <BinarySensorDeviceClass.MOTION: 'motion'>,
+          'zone_number': 1,
+        }),
+        'subentry_id': 'ID_ZONE',
+        'subentry_type': 'zone',
+        'title': 'Zone (1) (1)',
+        'unique_id': 'zone_1',
+      }),
+      dict({
+        'data': dict({
+          'name': 'Output',
+          'output_number': 1,
+          'type': <BinarySensorDeviceClass.SAFETY: 'safety'>,
+        }),
+        'subentry_id': 'ID_OUTPUT',
+        'subentry_type': 'output',
+        'title': 'Output (1) (1)',
+        'unique_id': 'output_1',
+      }),
+      dict({
+        'data': dict({
+          'name': 'Switchable Output',
+          'switchable_output_number': 1,
+        }),
+        'subentry_id': 'ID_SWITCHABLE_OUTPUT',
+        'subentry_type': 'switchable_output',
+        'title': 'Switchable Output (1) (1)',
+        'unique_id': 'switchable_output_1',
+      }),
+    ]),
+    'title': '192.168.0.2',
+    'unique_id': None,
+    'version': 1,
+  })
+# ---
