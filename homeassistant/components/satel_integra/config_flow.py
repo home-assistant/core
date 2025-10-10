@@ -90,8 +90,8 @@ SWITCHABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Satel Integra config flow."""
 
-    VERSION = 1
-    MINOR_VERSION = 2
+    VERSION = 2
+    MINOR_VERSION = 1
 
     @staticmethod
     @callback

@@ -19,8 +19,10 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.typing import ConfigType
 
+from .config_flow import SatelConfigFlow
 from .const import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
@@ -257,10 +259,11 @@ async def async_migrate_entry(
         config_entry.minor_version,
     )
 
-    if config_entry.version > 1:
+    if config_entry.version > SatelConfigFlow.VERSION:
         # This means the user has downgraded from a future version
         return False
 
+    # 1.2 Migrate subentries to include configured numbers to title
     if config_entry.version == 1 and config_entry.minor_version == 1:
         for subentry in config_entry.subentries.values():
             property_map = {
@@ -277,6 +280,21 @@ async def async_migrate_entry(
             )
 
         hass.config_entries.async_update_entry(config_entry, minor_version=2)
+
+    # 2.1 Migrate all entity unique IDs to replace "satel" prefix with config entry ID, allows multiple entries to be configured
+    if config_entry.version == 1:
+
+        @callback
+        def migrate_unique_id(entity_entry: RegistryEntry) -> dict[str, str]:
+            """Migrate the unique ID to a new format."""
+            return {
+                "new_unique_id": entity_entry.unique_id.replace(
+                    "satel", config_entry.entry_id
+                )
+            }
+
+        await async_migrate_entries(hass, config_entry.entry_id, migrate_unique_id)
+        hass.config_entries.async_update_entry(config_entry, version=2, minor_version=1)
 
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",
