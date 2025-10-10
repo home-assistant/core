@@ -10,6 +10,31 @@
       "zigbee_type": {
         "default": "mdi:zigbee"
       }
+    },
+    "switch": {
+      "disable_led": {
+        "default": "mdi:led-off"
+      },
+      "auto_zigbee_update": {
+        "default": "mdi:autorenew"
+      },
+      "night_mode": {
+        "default": "mdi:lightbulb-night"
+      },
+      "vpn_enabled": {
+        "default": "mdi:shield-lock"
+      }
+    },
+    "button": {
+      "zigbee_pairing_mode": {
+        "default": "mdi:signal-variant"
+      },
+      "reconnect_zigbee_router": {
+        "default": "mdi:connection"
+      },
+      "zigbee_flash_mode": {
+        "default": "mdi:memory-arrow-down"
+      }
     }
   }
 }
