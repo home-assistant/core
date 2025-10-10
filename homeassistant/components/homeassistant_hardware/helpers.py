@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 import logging
 from typing import TYPE_CHECKING, Protocol, TypedDict
 
+from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.components.usb import (
     USBDevice,
     async_get_usb_matchers_for_device,
@@ -15,9 +16,10 @@ from homeassistant.components.usb import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
+from homeassistant.exceptions import HomeAssistantError
 
 from . import DATA_COMPONENT
-from .const import HARDWARE_INTEGRATION_DOMAINS
+from .const import HARDWARE_INTEGRATION_DOMAINS, YELLOW_DOMAIN
 
 if TYPE_CHECKING:
     from .util import FirmwareInfo
@@ -29,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 class HardwareFirmwareDiscoveryInfo(TypedDict):
     """Data for triggering hardware integration discovery via firmware notification."""
 
-    usb_device: USBDevice
+    usb_device: USBDevice | None
     firmware_info: FirmwareInfo
 
 
@@ -148,13 +150,22 @@ class HardwareInfoDispatcher:
             usb_device_from_path, firmware_info.device
         )
 
-        if usb_device is None:
-            _LOGGER.debug("No USB device found for device %s", firmware_info.device)
-            return
+        hardware_domain: str | None
 
-        hardware_domain = await async_get_hardware_domain_for_usb_device(
-            self.hass, usb_device
-        )
+        if usb_device is None:
+            # Yellow does not have a USB device and needs to be handled explicitly
+            try:
+                yellow_hardware.async_info(self.hass)
+            except HomeAssistantError:
+                _LOGGER.debug("No USB device found for device %s", firmware_info.device)
+                return
+            else:
+                hardware_domain = YELLOW_DOMAIN
+        else:
+            # Other devices need to be checked against USB matchers
+            hardware_domain = await async_get_hardware_domain_for_usb_device(
+                self.hass, usb_device
+            )
 
         if hardware_domain is None:
             _LOGGER.debug("No hardware integration found for device %s", usb_device)
