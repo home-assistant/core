@@ -1,4 +1,4 @@
-"""Tests for the Nintendo Switch Parental Controls integration."""
+"""Tests for the Nintendo Switch parental controls integration."""
 
 from homeassistant.core import HomeAssistant
 

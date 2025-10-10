@@ -1,4 +1,4 @@
-"""Base entity definition for Nintendo Parental."""
+"""Base entity definition for Nintendo parental controls."""
 
 from __future__ import annotations
 

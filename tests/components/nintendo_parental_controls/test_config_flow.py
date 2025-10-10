@@ -1,11 +1,14 @@
-"""Test the Nintendo Switch Parental Controls config flow."""
+"""Test the Nintendo Switch parental controls config flow."""
 
 from unittest.mock import AsyncMock
 
 from pynintendoparental.exceptions import InvalidSessionTokenException
 
 from homeassistant import config_entries
-from homeassistant.components.nintendo_parental.const import CONF_SESSION_TOKEN, DOMAIN
+from homeassistant.components.nintendo_parental_controls.const import (
+    CONF_SESSION_TOKEN,
+    DOMAIN,
+)
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

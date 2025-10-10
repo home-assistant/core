@@ -441,7 +441,7 @@ FLOWS = {
         "nightscout",
         "niko_home_control",
         "nina",
-        "nintendo_parental",
+        "nintendo_parental_controls",
         "nmap_tracker",
         "nmbs",
         "nobo_hub",

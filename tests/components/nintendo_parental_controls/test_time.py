@@ -30,7 +30,8 @@ async def test_time(
 ) -> None:
     """Test time platform."""
     with patch(
-        "homeassistant.components.nintendo_parental._PLATFORMS", [Platform.TIME]
+        "homeassistant.components.nintendo_parental_controls._PLATFORMS",
+        [Platform.TIME],
     ):
         await setup_integration(hass, mock_config_entry)
 
@@ -45,7 +46,8 @@ async def test_set_time(
 ) -> None:
     """Test time platform service validation errors."""
     with patch(
-        "homeassistant.components.nintendo_parental._PLATFORMS", [Platform.TIME]
+        "homeassistant.components.nintendo_parental_controls._PLATFORMS",
+        [Platform.TIME],
     ):
         await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
@@ -67,7 +69,8 @@ async def test_set_time_service_exceptions(
     """Test time platform service validation errors."""
     mock_nintendo_device.set_bedtime_alarm.side_effect = BedtimeOutOfRangeError(None)
     with patch(
-        "homeassistant.components.nintendo_parental._PLATFORMS", [Platform.TIME]
+        "homeassistant.components.nintendo_parental_controls._PLATFORMS",
+        [Platform.TIME],
     ):
         await setup_integration(hass, mock_config_entry)
     with pytest.raises(ServiceValidationError) as err:

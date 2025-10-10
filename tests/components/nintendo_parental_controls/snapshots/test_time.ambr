@@ -25,11 +25,11 @@
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bedtime alarm',
-    'platform': 'nintendo_parental',
+    'platform': 'nintendo_parental_controls',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': <NintendoParentalTime.BEDTIME_ALARM: 'bedtime_alarm'>,
+    'translation_key': <NintendoParentalControlsTime.BEDTIME_ALARM: 'bedtime_alarm'>,
     'unique_id': 'testdevid_bedtime_alarm',
     'unit_of_measurement': None,
   })
