@@ -3,7 +3,11 @@
 from homeassistant.const import Platform
 
 DOMAIN = "volvo"
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+]
 
 API_NONE_VALUE = "UNSPECIFIED"
 CONF_VIN = "vin"

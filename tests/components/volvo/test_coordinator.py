@@ -13,6 +13,7 @@ from volvocarsapi.models import (
     VolvoCarsValueField,
 )
 
+from homeassistant.components.volvo.const import DOMAIN
 from homeassistant.components.volvo.coordinator import VERY_SLOW_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -123,7 +124,7 @@ async def test_update_coordinator_all_error(
     freezer.tick(timedelta(minutes=VERY_SLOW_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    for state in hass.states.async_all():
+    for state in hass.states.async_all(domain_filter=DOMAIN):
         assert state.state == STATE_UNAVAILABLE
 
 
