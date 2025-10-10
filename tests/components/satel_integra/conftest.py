@@ -1,7 +1,7 @@
 """Satel Integra tests configuration."""
 
 from collections.abc import Generator
-from copy import deepcopy
+from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -59,6 +59,8 @@ def mock_config_entry() -> MockConfigEntry:
         data=MOCK_CONFIG_DATA,
         options=MOCK_CONFIG_OPTIONS,
         entry_id="SATEL_INTEGRA_CONFIG_ENTRY_1",
+        version=1,
+        minor_version=2,
     )
 
 
@@ -67,7 +69,7 @@ def mock_config_entry_with_subentries(
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Mock satel configuration entry."""
-    mock_config_entry.subentries = deepcopy(
+    mock_config_entry.subentries = MappingProxyType(
         {
             MOCK_PARTITION_SUBENTRY.subentry_id: MOCK_PARTITION_SUBENTRY,
             MOCK_ZONE_SUBENTRY.subentry_id: MOCK_ZONE_SUBENTRY,
