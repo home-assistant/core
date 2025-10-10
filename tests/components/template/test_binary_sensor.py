@@ -1192,6 +1192,128 @@ async def test_template_with_trigger_templated_auto_off(
         (
             1,
             ConfigurationStyle.TRIGGER,
+            _BEER_TRIGGER_VALUE_TEMPLATE,
+            {
+                "device_class": "motion",
+                "delay_on": "00:00:02",
+                "auto_off": "00:00:01",
+            },
+        )
+    ],
+)
+@pytest.mark.usefixtures("setup_binary_sensor")
+async def test_template_trigger_delay_on_and_auto_off(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test binary sensor template with delay_on, auto_off, and multiple triggers."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    await hass.async_block_till_done()
+
+    # State should still be unknown
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+    last_state = STATE_UNKNOWN
+
+    for _ in range(5):
+        # Now wait and trigger again to test that the 2 second on_delay is not recreated
+        freezer.tick(timedelta(seconds=1))
+        hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(TEST_ENTITY_ID)
+        assert state.state == last_state
+
+        # Now wait for the on delay
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(TEST_ENTITY_ID)
+        assert state.state == STATE_ON
+
+        # Now wait for the auto-off
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(TEST_ENTITY_ID)
+        assert state.state == STATE_OFF
+
+        # Now wait to trigger again
+        freezer.tick(timedelta(seconds=1))
+        hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+        await hass.async_block_till_done()
+
+        # State should still be off
+        state = hass.states.get(TEST_ENTITY_ID)
+        assert state.state == STATE_OFF
+
+        last_state = STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("count", "style", "state_template", "extra_config"),
+    [
+        (
+            1,
+            ConfigurationStyle.MODERN,
+            "{{ states('binary_sensor.test_state') }}",
+            {
+                "device_class": "motion",
+                "delay_on": "00:00:02",
+            },
+        )
+    ],
+)
+@pytest.mark.usefixtures("setup_binary_sensor")
+async def test_template_multiple_states_delay_on(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test binary sensor template with delay_on and multiple state changes."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
+    # State should be off
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    for _ in range(5):
+        # Now wait for the on delay
+        freezer.tick(timedelta(seconds=2))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(TEST_ENTITY_ID)
+        assert state.state == STATE_ON
+
+        freezer.tick(timedelta(seconds=1))
+        hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
+        await hass.async_block_till_done()
+
+        freezer.tick(timedelta(seconds=1))
+        hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+        await hass.async_block_till_done()
+
+        # State should still be off
+        state = hass.states.get(TEST_ENTITY_ID)
+        assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("count", "style", "state_template", "extra_config"),
+    [
+        (
+            1,
+            ConfigurationStyle.TRIGGER,
             "{{ True }}",
             {
                 "device_class": "motion",
