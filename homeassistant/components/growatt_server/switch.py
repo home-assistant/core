@@ -55,23 +55,16 @@ async def async_setup_entry(
     """Set up Growatt switch entities."""
     runtime_data = entry.runtime_data
 
-    entities: list[GrowattSwitch] = []
-
     # Add switch entities for each MIN device (only supported with V1 API)
-    for device_coordinator in runtime_data.devices.values():
+    async_add_entities(
+        GrowattSwitch(device_coordinator, description)
+        for device_coordinator in runtime_data.devices.values()
         if (
             device_coordinator.device_type == "min"
             and device_coordinator.api_version == "v1"
-        ):
-            entities.extend(
-                GrowattSwitch(
-                    coordinator=device_coordinator,
-                    description=description,
-                )
-                for description in MIN_SWITCH_TYPES
-            )
-
-    async_add_entities(entities)
+        )
+        for description in MIN_SWITCH_TYPES
+    )
 
 
 class GrowattSwitch(CoordinatorEntity[GrowattCoordinator], SwitchEntity):
