@@ -14,6 +14,8 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
     ResetTarget,
+)
+from homeassistant.components.usb import (
     usb_service_info_from_device,
     usb_unique_id_from_service_info,
 )
@@ -151,6 +153,7 @@ class HomeAssistantConnectZBT2ConfigFlow(
         self, fw_discovery_info: HardwareFirmwareDiscoveryInfo
     ) -> ConfigFlowResult:
         """Handle import from ZHA/OTBR firmware notification."""
+        assert fw_discovery_info["usb_device"] is not None
         usb_info = usb_service_info_from_device(fw_discovery_info["usb_device"])
         unique_id = usb_unique_id_from_service_info(usb_info)
 

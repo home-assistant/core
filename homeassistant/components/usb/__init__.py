@@ -45,6 +45,8 @@ from .utils import (
     usb_device_from_path,  # noqa: F401
     usb_device_from_port,  # noqa: F401
     usb_device_matches_matcher,
+    usb_service_info_from_device,  # noqa: F401
+    usb_unique_id_from_service_info,  # noqa: F401
 )
 
 _LOGGER = logging.getLogger(__name__)

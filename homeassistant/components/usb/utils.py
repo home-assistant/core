@@ -9,6 +9,7 @@ import os
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
 
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.loader import USBMatcher
 
 from .models import USBDevice
@@ -97,3 +98,25 @@ def usb_device_matches_matcher(device: USBDevice, matcher: USBMatcher) -> bool:
         return False
 
     return True
+
+
+def usb_unique_id_from_service_info(usb_info: UsbServiceInfo) -> str:
+    """Generate a unique ID from USB service info."""
+    return (
+        f"{usb_info.vid}:{usb_info.pid}_"
+        f"{usb_info.serial_number}_"
+        f"{usb_info.manufacturer}_"
+        f"{usb_info.description}"
+    )
+
+
+def usb_service_info_from_device(usb_device: USBDevice) -> UsbServiceInfo:
+    """Convert a USBDevice to UsbServiceInfo."""
+    return UsbServiceInfo(
+        device=usb_device.device,
+        vid=usb_device.vid,
+        pid=usb_device.pid,
+        serial_number=usb_device.serial_number,
+        manufacturer=usb_device.manufacturer,
+        description=usb_device.description,
+    )
