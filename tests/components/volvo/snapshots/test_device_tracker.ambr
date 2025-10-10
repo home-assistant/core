@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_setup[switch.mock_title_auto_zigbee_update-entry]
+# name: test_device_tracker[ex30_2024][device_tracker.volvo_ex30_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10,9 +10,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.mock_title_auto_zigbee_update',
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.volvo_ex30_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22,33 +22,36 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Auto Zigbee update',
-    'platform': 'smlight',
+    'original_name': None,
+    'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'auto_zigbee_update',
-    'unique_id': 'aa:bb:cc:dd:ee:ff-auto_zigbee_update',
+    'translation_key': 'location',
+    'unique_id': 'yv1abcdefg1234567_location',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[switch.mock_title_auto_zigbee_update-state]
+# name: test_device_tracker[ex30_2024][device_tracker.volvo_ex30_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Title Auto Zigbee update',
+      'friendly_name': 'Volvo EX30 None',
+      'gps_accuracy': 0,
+      'latitude': 57.72537482589284,
+      'longitude': 11.849843629550225,
+      'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_title_auto_zigbee_update',
+    'entity_id': 'device_tracker.volvo_ex30_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'not_home',
   })
 # ---
-# name: test_switch_setup[switch.mock_title_disable_leds-entry]
+# name: test_device_tracker[s90_diesel_2018][device_tracker.volvo_s90_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,9 +62,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.mock_title_disable_leds',
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.volvo_s90_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,33 +74,36 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Disable LEDs',
-    'platform': 'smlight',
+    'original_name': None,
+    'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'disable_led',
-    'unique_id': 'aa:bb:cc:dd:ee:ff-disable_led',
+    'translation_key': 'location',
+    'unique_id': 'yv1abcdefg1234567_location',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[switch.mock_title_disable_leds-state]
+# name: test_device_tracker[s90_diesel_2018][device_tracker.volvo_s90_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Title Disable LEDs',
+      'friendly_name': 'Volvo S90 None',
+      'gps_accuracy': 0,
+      'latitude': 57.72537482589284,
+      'longitude': 11.849843629550225,
+      'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_title_disable_leds',
+    'entity_id': 'device_tracker.volvo_s90_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'not_home',
   })
 # ---
-# name: test_switch_setup[switch.mock_title_led_night_mode-entry]
+# name: test_device_tracker[xc40_electric_2024][device_tracker.volvo_xc40_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -108,9 +114,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.mock_title_led_night_mode',
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.volvo_xc40_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -120,33 +126,36 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'LED night mode',
-    'platform': 'smlight',
+    'original_name': None,
+    'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'night_mode',
-    'unique_id': 'aa:bb:cc:dd:ee:ff-night_mode',
+    'translation_key': 'location',
+    'unique_id': 'yv1abcdefg1234567_location',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[switch.mock_title_led_night_mode-state]
+# name: test_device_tracker[xc40_electric_2024][device_tracker.volvo_xc40_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Title LED night mode',
+      'friendly_name': 'Volvo XC40 None',
+      'gps_accuracy': 0,
+      'latitude': 57.72537482589284,
+      'longitude': 11.849843629550225,
+      'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_title_led_night_mode',
+    'entity_id': 'device_tracker.volvo_xc40_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'not_home',
   })
 # ---
-# name: test_switch_setup[switch.mock_title_vpn_enabled-entry]
+# name: test_device_tracker[xc90_petrol_2019][device_tracker.volvo_xc90_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -157,9 +166,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.mock_title_vpn_enabled',
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.volvo_xc90_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -169,29 +178,32 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'VPN enabled',
-    'platform': 'smlight',
+    'original_name': None,
+    'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vpn_enabled',
-    'unique_id': 'aa:bb:cc:dd:ee:ff-vpn_enabled',
+    'translation_key': 'location',
+    'unique_id': 'yv1abcdefg1234567_location',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[switch.mock_title_vpn_enabled-state]
+# name: test_device_tracker[xc90_petrol_2019][device_tracker.volvo_xc90_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Title VPN enabled',
+      'friendly_name': 'Volvo XC90 None',
+      'gps_accuracy': 0,
+      'latitude': 57.72537482589284,
+      'longitude': 11.849843629550225,
+      'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_title_vpn_enabled',
+    'entity_id': 'device_tracker.volvo_xc90_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'not_home',
   })
 # ---
