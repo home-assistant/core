@@ -97,15 +97,17 @@ class VolvoLock(VolvoEntity, LockEntity):
             result = await self.coordinator.context.api.async_execute_command(command)
         except VolvoApiException as ex:
             _LOGGER.debug("Lock '%s' error", command)
-            self._reset_and_raise(command, message=ex.message, exception=ex)
+            error = self._reset_and_create_error(command, message=ex.message)
+            raise error from ex
 
         status = result.invoke_status if result else ""
         _LOGGER.debug("Lock '%s' result: %s", command, status)
 
         if status.upper() not in ("COMPLETED", "DELIVERED"):
-            self._reset_and_raise(
+            error = self._reset_and_create_error(
                 command, status=status, message=result.message if result else ""
             )
+            raise error
 
         api_field = cast(
             VolvoCarsValue,
@@ -122,19 +124,14 @@ class VolvoLock(VolvoEntity, LockEntity):
         self._attr_is_locked = locked
         self.async_write_ha_state()
 
-    def _reset_and_raise(
-        self,
-        command: str,
-        *,
-        status: str = "",
-        message: str = "",
-        exception: Exception | None = None,
-    ) -> None:
+    def _reset_and_create_error(
+        self, command: str, *, status: str = "", message: str = ""
+    ) -> HomeAssistantError:
         self._attr_is_locking = False
         self._attr_is_unlocking = False
         self.async_write_ha_state()
 
-        error = HomeAssistantError(
+        return HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="lock_failure",
             translation_placeholders={
@@ -143,8 +140,3 @@ class VolvoLock(VolvoEntity, LockEntity):
                 "message": message,
             },
         )
-
-        if exception:
-            raise error from exception
-
-        raise error
