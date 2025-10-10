@@ -4403,8 +4403,6 @@ async def test_compile_hourly_statistics_changing_device_class_2(
     """Test compiling hourly statistics where device class changes from one hour to the next.
 
     In this test, the device class is first set to a specific device class, then set to None.
-
-    Changing device class may influence the unit class.
     """
     zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
