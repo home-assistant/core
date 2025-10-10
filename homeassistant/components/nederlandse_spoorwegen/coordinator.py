@@ -226,7 +226,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, NSRouteData]]):
                 future_trips.append(trip)
         return future_trips
 
-    def _find_next_trip(self, future_trips, first_trip) -> Trip | None:
+    def _find_next_trip(self, future_trips: list[Trip], first_trip: Trip) -> Trip | None:
         """Find the next trip with a different departure time than the first trip."""
         next_trip = None
         if len(future_trips) > 1:
