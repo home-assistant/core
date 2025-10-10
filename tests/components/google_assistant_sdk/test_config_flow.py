@@ -162,20 +162,13 @@ async def test_reconfigure(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
+    setup_credentials: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test the reconfiguration flow updates the existing config entry."""
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
-    )
-    await hass.async_block_till_done()
+    result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -207,18 +200,12 @@ async def test_reconfigure(
         },
     )
 
-    with patch(
-        "homeassistant.components.google_assistant_sdk.async_setup_entry",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reconfigure_successful"
 
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.unique_id is None
     assert "token" in config_entry.data
     # Verify access token is refreshed
