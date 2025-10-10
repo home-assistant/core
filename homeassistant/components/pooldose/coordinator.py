@@ -62,7 +62,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[StructuredValuesDict]):
         if status != RequestStatus.SUCCESS:
             raise UpdateFailed(f"API returned status: {status}")
 
-        if instant_values is None:
+        if not instant_values:
             raise UpdateFailed("No data received from API")
 
         _LOGGER.debug("Instant values structured: %s", instant_values)
