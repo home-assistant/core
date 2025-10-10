@@ -151,7 +151,7 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
             if map_.name == option:
                 await self._send_command(
                     RoborockCommand.LOAD_MULTI_MAP,
-                    self.api,
+                    self.cloud_api,
                     [map_id],
                 )
                 # Update the current map id manually so that nothing gets broken
