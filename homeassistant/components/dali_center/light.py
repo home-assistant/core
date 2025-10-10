@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from propcache.api import cached_property
 from PySrDaliGateway import Device
 from PySrDaliGateway.helper import is_light_device
 from PySrDaliGateway.types import LightStatus
@@ -48,40 +47,44 @@ async def async_setup_entry(
 
     gateway.on_light_status = _on_light_status
 
-    _LOGGER.debug("Setting up light platform: %d devices", len(devices))
-
-    added_entities: set[str] = set()
-    new_lights: list[DaliCenterLight] = []
-    for device in devices:
-        if device.dev_id in added_entities:
-            continue
-        if is_light_device(device.dev_type):
-            new_lights.append(DaliCenterLight(device))
-            added_entities.add(device.dev_id)
-
-    if new_lights:
-        async_add_entities(new_lights)
+    new_lights = [
+        DaliCenterLight(device)
+        for device in devices
+        if is_light_device(device.dev_type)
+    ]
+    async_add_entities(new_lights)
+    _LOGGER.debug("Setting up light platform: %d devices", len(new_lights))
 
 
 class DaliCenterLight(LightEntity):
     """Representation of a DALI Center Light."""
 
     _attr_has_entity_name = True
+    _attr_name = None
+    _attr_is_on: bool | None = None
+    _attr_brightness: int | None = None
+    _white_level: int | None = None
+    _attr_color_mode: ColorMode | str | None = None
+    _attr_color_temp_kelvin: int | None = None
+    _attr_hs_color: tuple[float, float] | None = None
+    _attr_rgbw_color: tuple[int, int, int, int] | None = None
 
     def __init__(self, light: Device) -> None:
         """Initialize the light entity."""
 
         self._light = light
-        self._attr_name = None
         self._attr_unique_id = light.unique_id
         self._attr_available = light.status == "online"
-        self._attr_is_on: bool | None = None
-        self._attr_brightness: int | None = None
-        self._white_level: int | None = None
-        self._attr_color_mode: ColorMode | str | None = None
-        self._attr_color_temp_kelvin: int | None = None
-        self._attr_hs_color: tuple[float, float] | None = None
-        self._attr_rgbw_color: tuple[int, int, int, int] | None = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, light.dev_id)},
+            name=light.name,
+            manufacturer=MANUFACTURER,
+            model=light.model,
+            via_device=(DOMAIN, light.gw_sn),
+        )
+        self._attr_min_color_temp_kelvin = 1000
+        self._attr_max_color_temp_kelvin = 8000
+
         self._determine_features()
 
     def _determine_features(self) -> None:
@@ -97,27 +100,6 @@ class DaliCenterLight(LightEntity):
             self._attr_color_mode = ColorMode.BRIGHTNESS
         supported_modes.add(self._attr_color_mode)
         self._attr_supported_color_modes = supported_modes
-
-    @cached_property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._light.dev_id)},
-            name=self._light.name,
-            manufacturer=MANUFACTURER,
-            model=self._light.model,
-            via_device=(DOMAIN, self._light.gw_sn),
-        )
-
-    @property
-    def min_color_temp_kelvin(self) -> int:
-        """Return minimum color temperature in Kelvin."""
-        return 1000
-
-    @property
-    def max_color_temp_kelvin(self) -> int:
-        """Return maximum color temperature in Kelvin."""
-        return 8000
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -137,13 +119,11 @@ class DaliCenterLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        del kwargs  # Unused parameter
         self._light.turn_off()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
 
-        # Handle device-specific updates
         signal = f"dali_center_update_{self._attr_unique_id}"
         self.async_on_remove(
             async_dispatcher_connect(self.hass, signal, self._handle_device_update)
