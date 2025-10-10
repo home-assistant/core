@@ -80,6 +80,7 @@ from .storage.const import (
     CONF_IGNORE_AUTO_MODE,
     CONF_TARGET_TEMPERATURE,
 )
+from .storage.entity_store_schema import ConfClimateFanSpeedMode, ConfSetpointShiftMode
 from .storage.util import ConfigExtractor
 
 ATTR_COMMAND_VALUE = "command_value"
@@ -254,12 +255,14 @@ def _create_climate_ui(xknx: XKNX, conf: ConfigExtractor, name: str) -> XknxClim
     if _sps_dpt := conf.get_dpt(CONF_TARGET_TEMPERATURE, CONF_GA_SETPOINT_SHIFT):
         sps_mode = (
             SetpointShiftMode.DPT6010
-            if _sps_dpt == "6.010"
+            if _sps_dpt == ConfSetpointShiftMode.COUNT
             else SetpointShiftMode.DPT9002
         )
     _fan_speed_dpt = conf.get_dpt(CONF_GA_FAN_SPEED)
     fan_speed_mode = (
-        FanSpeedMode.STEP if _fan_speed_dpt == "5.010" else FanSpeedMode.PERCENT
+        FanSpeedMode.STEP
+        if _fan_speed_dpt == ConfClimateFanSpeedMode.STEPS
+        else FanSpeedMode.PERCENT
     )
 
     return XknxClimate(

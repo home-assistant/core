@@ -344,15 +344,7 @@ class ConfSetpointShiftMode(StrEnum):
 
 
 @unique
-class ActiveMode(StrEnum):
-    """Enum for active mode."""
-
-    BINARY = "1"
-    VALVE = "5.001"
-
-
-@unique
-class ClimateFanSpeedMode(StrEnum):
+class ConfClimateFanSpeedMode(StrEnum):
     """Enum for climate fan speed mode."""
 
     PERCENTAGE = "5.001"
@@ -463,7 +455,7 @@ CLIMATE_KNX_SCHEMA = vol.Schema(
             )
         ),
         "section_fan": KNXSectionFlat(collapsible=True),
-        vol.Optional(CONF_GA_FAN_SPEED): GASelector(dpt=ClimateFanSpeedMode),
+        vol.Optional(CONF_GA_FAN_SPEED): GASelector(dpt=ConfClimateFanSpeedMode),
         vol.Required(ClimateConf.FAN_MAX_STEP, default=3): AllSerializeFirst(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(min=1, max=100, step=1)
