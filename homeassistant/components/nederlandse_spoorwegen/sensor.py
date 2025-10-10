@@ -37,7 +37,7 @@ from .const import (
     DOMAIN,
     INTEGRATION_TITLE,
 )
-from .coordinator import NSDataUpdateCoordinator, NSRouteData
+from .coordinator import NSDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,32 +114,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the departure sensor from a config entry."""
 
-    coordinator = config_entry.runtime_data
+    coordinators_manager = config_entry.runtime_data
 
     entities = []
     for subentry in config_entry.subentries.values():
         if subentry.subentry_type != "route":
             continue
 
-        # Register route with coordinator
-        time_str = None
-        if CONF_TIME in subentry.data:
-            time_obj = parse_time(subentry.data[CONF_TIME])
-            if time_obj:
-                time_str = (
-                    datetime.today()
-                    .replace(hour=time_obj.hour, minute=time_obj.minute)
-                    .strftime("%d-%m-%Y %H:%M")
-                )
-
-        route_data = NSRouteData(
-            departure=subentry.data[CONF_FROM],
-            destination=subentry.data[CONF_TO],
-            via=subentry.data.get(CONF_VIA),
-            time=time_str,
-        )
-
-        coordinator.add_route(subentry.subentry_id, route_data)
+        # Get the coordinator for this specific route
+        coordinator = coordinators_manager.get_coordinator(subentry.subentry_id)
+        if not coordinator:
+            _LOGGER.error("No coordinator found for route %s", subentry.subentry_id)
+            continue
 
         entities.append(
             NSDepartureSensor(
@@ -195,7 +181,7 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
     @property
     def native_value(self) -> datetime | None:
         """Return the native value of the sensor."""
-        route_data = self.coordinator.get_route_data(self._subentry_id)
+        route_data = self.coordinator.data
         if not route_data or not route_data.first_trip:
             return None
 
@@ -207,15 +193,12 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            super().available
-            and self.coordinator.get_route_data(self._subentry_id) is not None
-        )
+        return super().available and self.coordinator.data is not None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        route_data = self.coordinator.get_route_data(self._subentry_id)
+        route_data = self.coordinator.data
         if not route_data:
             return None
 

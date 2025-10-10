@@ -4,20 +4,16 @@ from __future__ import annotations
 
 import logging
 
-from ns_api import RequestParametersError
-import requests
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from .coordinator import NSDataUpdateCoordinator
+from .coordinators import NSCoordinatorsManager
 
 _LOGGER = logging.getLogger(__name__)
 
 
-type NSConfigEntry = ConfigEntry[NSDataUpdateCoordinator]
+type NSConfigEntry = ConfigEntry[NSCoordinatorsManager]
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -25,24 +21,13 @@ PLATFORMS = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Set up Nederlandse Spoorwegen from a config entry."""
 
-    coordinator = NSDataUpdateCoordinator(hass, entry)
+    # Create the coordinators manager
+    coordinators_manager = NSCoordinatorsManager(hass, entry)
 
-    # Test the API connection before proceeding
-    try:
-        await coordinator.get_stations()
-    except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.HTTPError,
-    ) as error:
-        _LOGGER.error("Could not connect to the internet: %s", error)
-        raise ConfigEntryNotReady from error
-    except RequestParametersError as error:
-        _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
-        raise ConfigEntryNotReady from error
+    # Set up all coordinators for existing routes
+    await coordinators_manager.async_setup()
 
-    await coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = coordinator
+    entry.runtime_data = coordinators_manager
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
@@ -57,4 +42,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: NSConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Unload a config entry."""
+    # Unload all coordinators
+    await entry.runtime_data.async_unload_all()
+
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

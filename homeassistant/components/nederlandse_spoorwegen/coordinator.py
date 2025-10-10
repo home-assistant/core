@@ -39,63 +39,55 @@ class NSRouteData:
     error: str | None = None
 
 
-class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, NSRouteData]]):
-    """Class to manage fetching Nederlandse Spoorwegen data from the API."""
+class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteData]):
+    """Class to manage fetching Nederlandse Spoorwegen data from the API for a single route."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-        """Initialize the coordinator."""
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        route_id: str,
+        route_data: dict[str, str],
+    ) -> None:
+        """Initialize the coordinator for a specific route."""
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
+            name=f"{DOMAIN}_{route_id}",
             update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )
         self.config_entry = config_entry
+        self.route_id = route_id
         self.nsapi = NSAPI(config_entry.data[CONF_API_KEY])
-        self._route_configs: dict[str, NSRouteData] = {}
+        self.route_config = NSRouteData(
+            departure=route_data.get("from", ""),
+            destination=route_data.get("to", ""),
+            via=route_data.get("via"),
+            time=route_data.get("time"),
+        )
         self.stations: list[Station] = []
 
-    def add_route(self, route_id: str, route_data: NSRouteData) -> None:
-        """Add a route for data fetching."""
-        self._route_configs[route_id] = route_data
-
-    def remove_route(self, route_id: str) -> None:
-        """Remove a route."""
-        self._route_configs.pop(route_id, None)
-
-    async def _async_update_data(self) -> dict[str, NSRouteData]:
-        """Fetch data from NS API."""
-        if not self._route_configs:
-            return {}
-
-        updated_data = {}
-
-        for route_id, route_config in self._route_configs.items():
-            try:
-                route_data = await self._get_trips_for_route(route_config)
-                updated_data[route_id] = route_data
-            except (
-                ConnectionError,
-                Timeout,
-                HTTPError,
-                ValueError,
-                UpdateFailed,
-            ) as err:
-                _LOGGER.error("Error fetching data for route %s: %s", route_id, err)
-                # Keep existing data if available, otherwise create error state
-                if self.data and route_id in self.data:
-                    updated_data[route_id] = self.data[route_id]
-                else:
-                    updated_data[route_id] = NSRouteData(
-                        departure=route_config.departure,
-                        destination=route_config.destination,
-                        via=route_config.via,
-                        time=route_config.time,
-                        error=str(err),
-                    )
-
-        return updated_data
+    async def _async_update_data(self) -> NSRouteData:
+        """Fetch data from NS API for this specific route."""
+        try:
+            return await self._get_trips_for_route(self.route_config)
+        except (
+            ConnectionError,
+            Timeout,
+            HTTPError,
+            ValueError,
+            UpdateFailed,
+        ) as err:
+            _LOGGER.error("Error fetching data for route %s: %s", self.route_id, err)
+            # Return error state
+            return NSRouteData(
+                departure=self.route_config.departure,
+                destination=self.route_config.destination,
+                via=self.route_config.via,
+                time=self.route_config.time,
+                error=str(err),
+            )
 
     async def _get_trips_for_route(self, route_config: NSRouteData) -> NSRouteData:
         """Get_get_trips_for_route route."""
@@ -132,6 +124,23 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, NSRouteData]]):
             error=error,
         )
 
+    def _get_time_from_route(self, time_str: str | None) -> str:
+        """Combine today's date with a time string if needed."""
+        if not time_str:
+            return _now_nl().strftime("%d-%m-%Y %H:%M")
+        try:
+            # If time_str matches %H:%M or %H:%M:%S, combine with today
+            if len(time_str.split(":")) in (2, 3):
+                today = _now_nl().strftime("%d-%m-%Y")
+                return f"{today} {time_str[:5]}"
+            # Otherwise, assume it's a full date-time string
+            datetime.strptime(time_str, "%d-%m-%Y %H:%M")
+        except ValueError:
+            # Fallback: use current date and time
+            return _now_nl().strftime("%d-%m-%Y %H:%M")
+        else:
+            return time_str
+
     async def _get_trips(
         self,
         departure: str,
@@ -141,8 +150,8 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, NSRouteData]]):
     ) -> list[Trip]:
         """Get trips from NS API, sorted by departure time."""
 
-        # ns_api expects Dutch local time strings; default to current NL time
-        time_str = time if time else _now_nl().strftime("%d-%m-%Y %H:%M")
+        # Convert time to full date-time string if needed and default to Dutch local time if not provided
+        time_str = self._get_time_from_route(time)
 
         try:
             trips = await self.hass.async_add_executor_job(
@@ -226,7 +235,9 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, NSRouteData]]):
                 future_trips.append(trip)
         return future_trips
 
-    def _find_next_trip(self, future_trips: list[Trip], first_trip: Trip) -> Trip | None:
+    def _find_next_trip(
+        self, future_trips: list[Trip], first_trip: Trip
+    ) -> Trip | None:
         """Find the next trip with a different departure time than the first trip."""
         next_trip = None
         if len(future_trips) > 1:
@@ -245,7 +256,3 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, NSRouteData]]):
                     next_trip = trip
                     break
         return next_trip
-
-    def get_route_data(self, route_id: str) -> NSRouteData | None:
-        """Get data for a specific route."""
-        return self.data.get(route_id) if self.data else None
