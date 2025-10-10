@@ -16,11 +16,14 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
+    NotifyEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,19 +37,31 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> ProwlNotificationService:
     """Get the Prowl notification service."""
-    prowl = await hass.async_add_executor_job(
-        partial(prowlpy.Prowl, apikey=config[CONF_API_KEY])
+    return await hass.async_add_executor_job(
+        partial(ProwlNotificationService, hass, config[CONF_API_KEY])
     )
-    return ProwlNotificationService(hass, prowl)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the notify entities."""
+    prowl = ProwlNotificationEntity(hass, entry.title, entry.data[CONF_API_KEY])
+    async_add_entities([prowl])
 
 
 class ProwlNotificationService(BaseNotificationService):
-    """Implement the notification service for Prowl."""
+    """Implement the notification service for Prowl.
 
-    def __init__(self, hass: HomeAssistant, prowl: prowlpy.Prowl) -> None:
+    This class is used for legacy configuration via configuration.yaml
+    """
+
+    def __init__(self, hass: HomeAssistant, api_key: str) -> None:
         """Initialize the service."""
         self._hass = hass
-        self._prowl = prowl
+        self._prowl = prowlpy.Prowl(api_key)
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
@@ -64,6 +79,50 @@ class ProwlNotificationService(BaseNotificationService):
                         description=message,
                         priority=data.get("priority", 0),
                         url=data.get("url"),
+                    )
+                )
+        except TimeoutError as ex:
+            _LOGGER.error("Timeout accessing Prowl API")
+            raise HomeAssistantError("Timeout accessing Prowl API") from ex
+        except prowlpy.APIError as ex:
+            if str(ex).startswith("Invalid API key"):
+                _LOGGER.error("Invalid API key for Prowl service")
+                raise HomeAssistantError("Invalid API key for Prowl service") from ex
+            if str(ex).startswith("Not accepted"):
+                _LOGGER.error("Prowl returned: exceeded rate limit")
+                raise HomeAssistantError(
+                    "Prowl service reported: exceeded rate limit"
+                ) from ex
+            _LOGGER.error("Unexpected error when calling Prowl API: %s", str(ex))
+            raise HomeAssistantError("Unexpected error when calling Prowl API") from ex
+
+
+class ProwlNotificationEntity(NotifyEntity):
+    """Implement the notification service for Prowl.
+
+    This class is used for Prowl config entries.
+    """
+
+    def __init__(self, hass: HomeAssistant, name: str, api_key: str) -> None:
+        """Initialize the service."""
+        self._hass = hass
+        self._prowl = prowlpy.Prowl(api_key)
+        self._attr_name = name
+        self._attr_unique_id = name
+
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send the message."""
+        _LOGGER.debug("Sending Prowl notification from entity %s", self.name)
+        try:
+            async with asyncio.timeout(10):
+                await self._hass.async_add_executor_job(
+                    partial(
+                        self._prowl.send,
+                        application="Home-Assistant",
+                        event=title or ATTR_TITLE_DEFAULT,
+                        description=message,
+                        priority=0,
+                        url=None,
                     )
                 )
         except TimeoutError as ex:
