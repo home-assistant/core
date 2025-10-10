@@ -73,42 +73,6 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=config_entry,
         )
 
-    def _calculate_epv_today(self, data: dict) -> dict:
-        """Calculate total solar generation today from individual PV inputs.
-
-        Args:
-            data: Device data dictionary
-
-        Returns:
-            Updated data dictionary with epvToday calculated if needed
-        """
-        # Calculate epvToday if not present but individual PV inputs are available
-        if "epvToday" not in data or data["epvToday"] in (None, ""):
-            # Check if we have individual PV input data
-            if any(
-                f"epv{i}Today" in data and data[f"epv{i}Today"] not in (None, "")
-                for i in range(1, 5)
-            ):
-                total_pv_today = 0.0
-                for i in range(1, 5):
-                    pv_key = f"epv{i}Today"
-                    if pv_key in data and data[pv_key] not in (None, ""):
-                        try:
-                            total_pv_today += float(data[pv_key])
-                        except (ValueError, TypeError):
-                            _LOGGER.warning(
-                                "Invalid PV value for %s: %s", pv_key, data[pv_key]
-                            )
-
-                data["epvToday"] = total_pv_today
-                _LOGGER.debug(
-                    "Calculated epvToday = %s from sum of individual PV inputs for device %s",
-                    total_pv_today,
-                    self.device_id,
-                )
-
-        return data
-
     def _sync_update_data(self) -> dict[str, Any]:
         """Update data via library synchronously."""
         _LOGGER.debug("Updating data for %s (%s)", self.device_id, self.device_type)
@@ -155,19 +119,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise UpdateFailed(f"Error fetching min device data: {err}") from err
 
             min_info = {**min_details, **min_settings, **min_energy}
-
-            # Calculate epvToday if not present
-            min_info = self._calculate_epv_today(min_info)
-
             self.data = min_info
             _LOGGER.debug("min_info for device %s: %r", self.device_id, min_info)
         elif self.device_type == "tlx":
             tlx_info = self.api.tlx_detail(self.device_id)
             tlx_data = tlx_info["data"]
-
-            # Calculate epvToday if not present
-            tlx_data = self._calculate_epv_today(tlx_data)
-
             self.data = tlx_data
             _LOGGER.debug("tlx_info for device %s: %r", self.device_id, tlx_info)
         elif self.device_type == "storage":
