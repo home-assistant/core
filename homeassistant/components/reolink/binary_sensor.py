@@ -62,7 +62,7 @@ class ReolinkIndexBinarySensorEntityDescription(
     BinarySensorEntityDescription,
     ReolinkEntityDescription,
 ):
-    """A class that describes binary sensor entities with a extra index."""
+    """A class that describes binary sensor entities with an extra index."""
 
     value: Callable[[Host, int, int], bool | None]
     supported: Callable[[Host, int, int], bool] = lambda api, ch, idx: True
@@ -436,7 +436,7 @@ class ReolinkSmartAIBinarySensorEntity(
 class ReolinkIndexBinarySensorEntity(
     ReolinkChannelCoordinatorEntity, BinarySensorEntity
 ):
-    """Binary-sensor class for Reolink IP camera with a extra index."""
+    """Binary-sensor class for Reolink IP camera with an extra index."""
 
     entity_description: ReolinkIndexBinarySensorEntityDescription
 
