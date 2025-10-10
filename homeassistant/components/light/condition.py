@@ -1,6 +1,6 @@
 """Provides conditions for lights."""
 
-from typing import Any, Final, override
+from typing import TYPE_CHECKING, Any, Final, override
 
 import voluptuous as vol
 
@@ -50,9 +50,10 @@ class StateCondition(Condition):
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
         self._hass = hass
-        assert config.target
+        if TYPE_CHECKING:
+            assert config.target
+            assert config.options
         self._target = config.target
-        assert config.options
         self._state = config.options[CONF_STATE]
         self._behavior = config.options[ATTR_BEHAVIOR]
 
