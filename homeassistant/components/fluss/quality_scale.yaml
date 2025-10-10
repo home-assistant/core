@@ -36,7 +36,7 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: |
-      No used, no sensor
+      Not needed
   discovery: done
   stale-devices: todo
   diagnostics: todo
