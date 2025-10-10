@@ -30,8 +30,8 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if self._api is None:
             _LOGGER.debug("Initiating device authorization")
+            self._api = ActronNeoAPI()
             try:
-                self._api = ActronNeoAPI()
                 device_code_response = await self._api.request_device_code()
             except ActronNeoAuthError as err:
                 _LOGGER.error("OAuth2 flow failed: %s", err)
