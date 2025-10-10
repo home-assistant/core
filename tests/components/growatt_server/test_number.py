@@ -3,10 +3,12 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from growattServer import GrowattV1ApiError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.growatt_server.coordinator import SCAN_INTERVAL
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -17,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 DOMAIN = "growatt_server"
 
@@ -41,33 +43,6 @@ async def test_number_entities(
 ) -> None:
     """Test that number entities are created for MIN devices."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_number_entity_values(
-    hass: HomeAssistant,
-) -> None:
-    """Test that number entities have correct values."""
-    # Check entity values
-    charge_power_state = hass.states.get("number.min123456_battery_charge_power_limit")
-    assert charge_power_state is not None
-    assert float(charge_power_state.state) == 50.0
-
-    charge_soc_state = hass.states.get("number.min123456_battery_charge_soc_limit")
-    assert charge_soc_state is not None
-    assert float(charge_soc_state.state) == 10.0
-
-    discharge_power_state = hass.states.get(
-        "number.min123456_battery_discharge_power_limit"
-    )
-    assert discharge_power_state is not None
-    assert float(discharge_power_state.state) == 80.0
-
-    discharge_soc_state = hass.states.get(
-        "number.min123456_battery_discharge_soc_limit"
-    )
-    assert discharge_soc_state is not None
-    assert float(discharge_soc_state.state) == 20.0
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -101,7 +76,7 @@ async def test_set_number_value_api_error(
     # Mock API to raise error
     mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError("API Error")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="Error while setting parameter"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -141,13 +116,13 @@ async def test_number_entity_attributes(
 async def test_number_device_registry(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that number entities are associated with the correct device."""
     # Get the device from device registry
     device = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
     assert device is not None
-    assert device.manufacturer == "Growatt"
-    assert device.name == "MIN123456"
+    assert device == snapshot
 
     # Verify number entity is associated with the device
     entity_entry = entity_registry.async_get(
@@ -254,12 +229,12 @@ async def test_no_number_entities_for_non_min_devices(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that number entities are not created for non-MIN devices."""
-    # Mock a different device type (not MIN) - type 8 is TLX
+    # Mock a different device type (not MIN) - type 7 is MIN, type 8 is non-MIN
     mock_growatt_v1_api.device_list.return_value = {
         "devices": [
             {
                 "device_sn": "TLX123456",
-                "type": 8,  # TLX device type
+                "type": 8,  # Non-MIN device type (MIN is type 7)
             }
         ]
     }
@@ -326,13 +301,19 @@ async def test_float_to_int_conversion(
     )
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_coordinator_data_update(
     hass: HomeAssistant,
     mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that number state updates when coordinator data changes."""
+    # Set up integration
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     # Initial state should be 50 (based on mock data)
     state = hass.states.get("number.min123456_battery_charge_power_limit")
     assert state is not None
@@ -347,10 +328,10 @@ async def test_number_coordinator_data_update(
         "wdisChargeSOCLowLimit": 20,
     }
 
-    # Trigger a refresh
-    runtime_data = mock_config_entry.runtime_data
-    device_coordinator = runtime_data.devices["MIN123456"]
-    await device_coordinator.async_refresh()
+    # Advance time to trigger coordinator refresh
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # State should now be 75
     state = hass.states.get("number.min123456_battery_charge_power_limit")
