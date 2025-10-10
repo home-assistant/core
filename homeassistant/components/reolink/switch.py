@@ -60,6 +60,18 @@ class ReolinkChimeSwitchEntityDescription(
     value: Callable[[Chime], bool | None]
 
 
+@dataclass(frozen=True, kw_only=True)
+class ReolinkSwitchIndexEntityDescription(
+    SwitchEntityDescription,
+    ReolinkChannelEntityDescription,
+):
+    """A class that describes switch entities with an extra index."""
+
+    method: Callable[[Host, int, int, bool], Any]
+    value: Callable[[Host, int, int], bool | None]
+    placeholder: Callable[[Host, int, int], str]
+
+
 SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="ir_lights",
@@ -304,6 +316,15 @@ CHIME_SWITCH_ENTITIES = (
     ),
 )
 
+RULE_SWITCH_ENTITY = ReolinkSwitchIndexEntityDescription(
+    key="rule",
+    cmd_key="rules",
+    translation_key="rule",
+    placeholder=lambda api, ch, idx: api.baichuan.rule_name(ch, idx),
+    value=lambda api, ch, idx: api.baichuan.rule_enabled(ch, idx),
+    method=lambda api, ch, idx, value: (api.baichuan.set_rule_enabled(ch, idx, value)),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -335,6 +356,11 @@ async def async_setup_entry(
         for entity_description in CHIME_SWITCH_ENTITIES
         for chime in reolink_data.host.api.chime_list
         if chime.channel is None
+    )
+    entities.extend(
+        ReolinkIndexSwitchEntity(reolink_data, channel, rule_id, RULE_SWITCH_ENTITY)
+        for channel in reolink_data.host.api.channels
+        for rule_id in reolink_data.host.api.baichuan.rule_ids(channel)
     )
 
     async_add_entities(entities)
@@ -468,4 +494,47 @@ class ReolinkHostChimeSwitchEntity(ReolinkHostChimeCoordinatorEntity, SwitchEnti
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(self._chime, False)
+        self.async_write_ha_state()
+
+
+class ReolinkIndexSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
+    """Base switch entity class for Reolink IP camera with an extra index."""
+
+    entity_description: ReolinkSwitchIndexEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        channel: int,
+        index: int,
+        entity_description: ReolinkSwitchIndexEntityDescription,
+    ) -> None:
+        """Initialize Reolink switch entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
+        self._index = index
+        self._attr_translation_placeholders = {
+            "name": entity_description.placeholder(self._host.api, self._channel, index)
+        }
+        self._attr_unique_id = f"{self._attr_unique_id}_{index}"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if switch is on."""
+        return self.entity_description.value(self._host.api, self._channel, self._index)
+
+    @raise_translated_error
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        await self.entity_description.method(
+            self._host.api, self._channel, self._index, True
+        )
+        self.async_write_ha_state()
+
+    @raise_translated_error
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        await self.entity_description.method(
+            self._host.api, self._channel, self._index, False
+        )
         self.async_write_ha_state()

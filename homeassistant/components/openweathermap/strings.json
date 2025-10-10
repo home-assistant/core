@@ -41,6 +41,46 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "dew_point": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::dew_point::name%]"
+      },
+      "feels_like_temperature": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::apparent_temperature::name%]"
+      },
+      "wind_gust": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::wind_gust_speed::name%]"
+      },
+      "clouds": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::cloud_coverage::name%]"
+      },
+      "rain": {
+        "name": "Rain intensity"
+      },
+      "snow": {
+        "name": "Snow intensity"
+      },
+      "precipitation_kind": {
+        "name": "Precipitation kind"
+      },
+      "uv_index": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::uv_index::name%]"
+      },
+      "visibility_distance": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::visibility::name%]"
+      },
+      "condition": {
+        "name": "Condition"
+      },
+      "weather": {
+        "name": "[%key:component::weather::title%]"
+      },
+      "weather_code": {
+        "name": "Weather code"
+      }
+    }
+  },
   "issues": {
     "deprecated_v25": {
       "title": "OpenWeatherMap API V2.5 deprecated",
