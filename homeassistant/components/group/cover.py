@@ -19,7 +19,6 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
@@ -283,12 +282,10 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_is_closed = True
         self._attr_is_closing = False
         self._attr_is_opening = False
-        self._attr_assumed_state = False
+        self._update_assumed_state_from_members()
         for entity_id in self._entity_ids:
             if not (state := self.hass.states.get(entity_id)):
                 continue
-            if state.attributes.get(ATTR_ASSUMED_STATE):
-                self._attr_assumed_state = True
             if state.state == CoverState.OPEN:
                 self._attr_is_closed = False
                 continue
