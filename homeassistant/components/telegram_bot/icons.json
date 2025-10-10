@@ -33,6 +33,9 @@
     "edit_message": {
       "service": "mdi:pencil"
     },
+    "edit_message_media": {
+      "service": "mdi:pencil"
+    },
     "edit_caption": {
       "service": "mdi:pencil"
     },

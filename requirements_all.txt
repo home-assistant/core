@@ -1270,7 +1270,7 @@ insteon-frontend-home-assistant==0.5.0
 intellifire4py==4.1.9
 
 # homeassistant.components.iometer
-iometer==0.1.0
+iometer==0.2.0
 
 # homeassistant.components.iotty
 iottycloud==0.3.0
@@ -1319,7 +1319,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.8.24.205840
+knx-frontend==2025.10.9.185845
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2209,7 +2209,7 @@ pynetio==0.1.9.1
 # homeassistant.components.nina
 pynina==0.3.6
 
-# homeassistant.components.nintendo_parental
+# homeassistant.components.nintendo_parental_controls
 pynintendoparental==1.1.1
 
 # homeassistant.components.nobo_hub
@@ -2541,7 +2541,7 @@ python-overseerr==0.7.1
 python-picnic-api2==1.3.1
 
 # homeassistant.components.pooldose
-python-pooldose==0.5.0
+python-pooldose==0.7.0
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -3183,7 +3183,7 @@ xbox-webapi==2.1.0
 xiaomi-ble==1.2.0
 
 # homeassistant.components.knx
-xknx==3.9.0
+xknx==3.9.1
 
 # homeassistant.components.knx
 xknxproject==3.8.2

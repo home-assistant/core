@@ -1,4 +1,4 @@
-"""Config flow for the Nintendo Switch Parental Controls integration."""
+"""Config flow for the Nintendo Switch parental controls integration."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Nintendo Switch Parental Controls."""
+    """Handle a config flow for Nintendo Switch parental controls."""
 
     def __init__(self) -> None:
         """Initialize a new config flow instance."""

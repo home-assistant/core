@@ -1,4 +1,4 @@
-"""The Nintendo Switch Parental Controls integration."""
+"""The Nintendo Switch parental controls integration."""
 
 from __future__ import annotations
 
@@ -14,15 +14,15 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SESSION_TOKEN, DOMAIN
-from .coordinator import NintendoParentalConfigEntry, NintendoUpdateCoordinator
+from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.TIME]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: NintendoParentalConfigEntry
+    hass: HomeAssistant, entry: NintendoParentalControlsConfigEntry
 ) -> bool:
-    """Set up Nintendo Switch Parental Controls from a config entry."""
+    """Set up Nintendo Switch parental controls from a config entry."""
     try:
         nintendo_auth = await Authenticator.complete_login(
             auth=None,
@@ -45,7 +45,7 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
-    hass: HomeAssistant, entry: NintendoParentalConfigEntry
+    hass: HomeAssistant, entry: NintendoParentalControlsConfigEntry
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
