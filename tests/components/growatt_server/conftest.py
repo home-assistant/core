@@ -139,7 +139,7 @@ def mock_growatt_classic_api():
 
 
 @pytest.fixture
-def mock_config_entry():
+def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry (V1 API with token auth).
 
     This is the primary config entry used by most tests. For Classic API tests,

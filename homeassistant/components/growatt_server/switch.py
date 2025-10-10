@@ -120,8 +120,7 @@ class GrowattSwitch(CoordinatorEntity[GrowattCoordinator], SwitchEntity):
         parameter_id = (
             self.entity_description.write_key or self.entity_description.api_key
         )
-        # Convert boolean to API format (1 or 0)
-        api_value = 1 if state else 0
+        api_value = int(state)
 
         try:
             # Use V1 API to write parameter
