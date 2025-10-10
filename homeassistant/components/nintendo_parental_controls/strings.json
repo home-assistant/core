@@ -43,6 +43,9 @@
       "bedtime_alarm": {
         "name": "Bedtime alarm"
       }
+    },
+    "switch": {
+      "suspend_software": "Suspend software"
     }
   },
   "exceptions": {
