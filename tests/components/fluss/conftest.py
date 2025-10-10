@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        domain="fluss",
+        domain=DOMAIN,
         title="Fluss Integration",
         data={CONF_API_KEY: "test_api_key"},
         unique_id="test_unique_id",
