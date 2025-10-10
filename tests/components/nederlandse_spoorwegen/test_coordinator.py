@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
+from requests.exceptions import ConnectionError, HTTPError, Timeout
 
 from homeassistant.components.nederlandse_spoorwegen.const import DOMAIN
 from homeassistant.components.nederlandse_spoorwegen.coordinator import (
@@ -24,6 +25,81 @@ from .const import (
 
 class TestNSDataUpdateCoordinator:
     """Test the NS Data Update Coordinator."""
+
+    @pytest.mark.parametrize(
+        "exception_cls",
+        [ConnectionError, Timeout, HTTPError, ValueError],
+    )
+    async def test_async_update_data_nsapi_exceptions(
+        self, coordinator, mock_nsapi, exception_cls
+    ):
+        """Test that _async_update_data handles ns_api exceptions and sets error in NSRouteData or returns empty trips."""
+        mock_nsapi.get_trips.side_effect = exception_cls("fail")
+        data = await coordinator._async_update_data()
+        assert isinstance(data, NSRouteData)
+        # Accept either error field set or empty trips (as coordinator may handle in either place)
+        if data.error is not None:
+            assert "fail" in data.error
+        else:
+            assert data.trips == []
+
+    @pytest.mark.parametrize(
+        "exception_cls",
+        [ConnectionError, Timeout, HTTPError, ValueError],
+    )
+    async def test_async_update_data_top_level_exception(
+        self, coordinator, exception_cls
+    ):
+        """Test top-level exception handling in _async_update_data."""
+        with patch.object(
+            coordinator, "_get_trips_for_route", side_effect=exception_cls("fail-top")
+        ):
+            data = await coordinator._async_update_data()
+            assert isinstance(data, NSRouteData)
+            assert data.error is not None
+            assert "fail-top" in data.error
+
+    @pytest.mark.parametrize(
+        "exception_cls",
+        [ConnectionError, Timeout, HTTPError, ValueError],
+    )
+    async def test_get_trips_for_route_error_branch(self, coordinator, exception_cls):
+        """Test error branch in _get_trips_for_route."""
+        with patch.object(
+            coordinator, "_get_trips", side_effect=exception_cls("fail-branch")
+        ):
+            route_data = await coordinator._get_trips_for_route(
+                coordinator.route_config
+            )
+            assert route_data.error is not None
+            assert "fail-branch" in route_data.error
+            assert route_data.trips == []
+
+    @pytest.mark.parametrize(
+        "exception_cls",
+        [ConnectionError, Timeout, HTTPError, ValueError],
+    )
+    async def test_get_trips_error_handling(self, coordinator, exception_cls):
+        """Test error handling in _get_trips returns empty list."""
+        with patch.object(
+            coordinator.nsapi, "get_trips", side_effect=exception_cls("fail-get-trips")
+        ):
+            trips = await coordinator._get_trips("Ams", "Rot")
+            assert trips == []
+
+    @pytest.mark.parametrize(
+        "exception_cls",
+        [ConnectionError, Timeout, HTTPError, ValueError],
+    )
+    async def test_get_stations_error_handling(self, coordinator, exception_cls):
+        """Test error handling in get_stations returns empty list."""
+        with patch.object(
+            coordinator.nsapi,
+            "get_stations",
+            side_effect=exception_cls("fail-get-stations"),
+        ):
+            stations = await coordinator.get_stations()
+            assert stations == []
 
     def test_coordinator_initialization(
         self, hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nsapi

@@ -12,7 +12,7 @@ from requests.exceptions import ConnectionError, HTTPError, Timeout
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import AMS_TZ, DOMAIN, SCAN_INTERVAL
@@ -71,16 +71,14 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteData]):
     async def _async_update_data(self) -> NSRouteData:
         """Fetch data from NS API for this specific route."""
         try:
-            return await self._get_trips_for_route(self.route_config)
+            route_data = await self._get_trips_for_route(self.route_config)
         except (
             ConnectionError,
             Timeout,
             HTTPError,
             ValueError,
-            UpdateFailed,
         ) as err:
             _LOGGER.error("Error fetching data for route %s: %s", self.route_id, err)
-            # Return error state
             return NSRouteData(
                 departure=self.route_config.departure,
                 destination=self.route_config.destination,
@@ -88,6 +86,18 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteData]):
                 time=self.route_config.time,
                 error=str(err),
             )
+        if route_data.error:
+            _LOGGER.error(
+                "Error fetching data for route %s: %s", self.route_id, route_data.error
+            )
+            return NSRouteData(
+                departure=self.route_config.departure,
+                destination=self.route_config.destination,
+                via=self.route_config.via,
+                time=self.route_config.time,
+                error=route_data.error,
+            )
+        return route_data
 
     async def _get_trips_for_route(self, route_config: NSRouteData) -> NSRouteData:
         """Get_get_trips_for_route route."""
