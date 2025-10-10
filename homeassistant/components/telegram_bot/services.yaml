@@ -746,6 +746,77 @@ edit_message:
       selector:
         object:
 
+edit_message_media:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    message_id:
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    chat_id:
+      required: true
+      example: 12345
+      selector:
+        text:
+    timeout:
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    media_type:
+      selector:
+        select:
+          options:
+            - "animation"
+            - "audio"
+            - "document"
+            - "photo"
+            - "video"
+          translation_key: "media_type"
+    url:
+      example: "http://example.org/path/to/the/image.png"
+      selector:
+        text:
+    file:
+      example: "/path/to/the/image.png"
+      selector:
+        text:
+    caption:
+      example: Document Title xy
+      selector:
+        text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
+    username:
+      example: myuser
+      selector:
+        text:
+    password:
+      example: myuser_pwd
+      selector:
+        text:
+          type: password
+    verify_ssl:
+      selector:
+        boolean:
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+
 edit_caption:
   fields:
     config_entry_id:
