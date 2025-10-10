@@ -2592,12 +2592,10 @@ def _async_import_statistics(
     statistics: Iterable[StatisticData],
 ) -> None:
     """Validate timestamps and insert an import_statistics job in the queue."""
-    if "has_mean" not in metadata and "mean_type" not in metadata:
-        raise HomeAssistantError("mean_type must be specified in metadata")
     if "mean_type" not in metadata:
         metadata["mean_type"] = (  # type: ignore[unreachable]
             StatisticMeanType.ARITHMETIC
-            if metadata.pop("has_mean")
+            if metadata.pop("has_mean", False)
             else StatisticMeanType.NONE
         )
 

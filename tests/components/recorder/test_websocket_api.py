@@ -3651,10 +3651,11 @@ async def test_get_statistics_metadata(
 @pytest.mark.parametrize(
     ("external_metadata_extra_2"),
     [
+        # Neither has_mean nor mean_type interpreted as False/None
+        {},
         {"has_mean": False},
-        {
-            "mean_type": int(StatisticMeanType.NONE)
-        },  # The WS API accepts integer, not enum
+        # The WS API accepts integer, not enum
+        {"mean_type": int(StatisticMeanType.NONE)},
     ],
 )
 @pytest.mark.parametrize(
