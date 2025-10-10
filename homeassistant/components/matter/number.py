@@ -280,6 +280,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnLevel,),
+        not_device_type=(device_types.Speaker,),
         # allow None value to account for 'default' value
         allow_none_value=True,
     ),

@@ -50,6 +50,10 @@ from .common import (
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
     MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
     MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
+    MOCK_NUMBER_SUBENTRY_DATA_CUSTOM_UNIT,
+    MOCK_NUMBER_SUBENTRY_DATA_DEVICE_CLASS_UNIT,
+    MOCK_NUMBER_SUBENTRY_DATA_NO_UNIT,
+    MOCK_SELECT_SUBENTRY_DATA,
     MOCK_SENSOR_SUBENTRY_DATA_SINGLE,
     MOCK_SENSOR_SUBENTRY_DATA_SINGLE_LAST_RESET_TEMPLATE,
     MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS,
@@ -3456,6 +3460,119 @@ async def test_migrate_of_incompatible_config_entry(
             id="notify_with_entity_name",
         ),
         pytest.param(
+            MOCK_NUMBER_SUBENTRY_DATA_CUSTOM_UNIT,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Speed"},
+            {"unit_of_measurement": "bla"},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "min": 0,
+                "max": 10,
+                "step": 2,
+                "mode": "box",
+                "value_template": "{{ value_json.value }}",
+                "retain": False,
+            },
+            (
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic#invalid",
+                        "state_topic": "test-topic",
+                    },
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic",
+                        "min": "10",
+                        "max": "1",
+                    },
+                    {"max": "max_below_min", "min": "max_below_min"},
+                ),
+            ),
+            "Milk notifier Speed",
+            id="number_custom_unit",
+        ),
+        pytest.param(
+            MOCK_NUMBER_SUBENTRY_DATA_DEVICE_CLASS_UNIT,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Speed"},
+            {"device_class": "carbon_monoxide", "unit_of_measurement": "ppm"},
+            (
+                (
+                    {
+                        "device_class": "carbon_monoxide",
+                        "unit_of_measurement": "bla",
+                    },
+                    {"unit_of_measurement": "invalid_uom"},
+                ),
+            ),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "min": 0,
+                "max": 10,
+                "step": 2,
+                "mode": "slider",
+                "value_template": "{{ value_json.value }}",
+                "retain": False,
+            },
+            (),
+            "Milk notifier Speed",
+            id="number_device_class_unit",
+        ),
+        pytest.param(
+            MOCK_NUMBER_SUBENTRY_DATA_NO_UNIT,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Speed"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "min": 0,
+                "max": 10,
+                "step": 2,
+                "mode": "auto",
+                "value_template": "{{ value_json.value }}",
+                "retain": False,
+            },
+            (),
+            "Milk notifier Speed",
+            id="number_no_unit",
+        ),
+        pytest.param(
+            MOCK_SELECT_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Mode"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "options": ["beer", "milk"],
+                "value_template": "{{ value_json.value }}",
+                "retain": False,
+            },
+            (),
+            "Milk notifier Mode",
+            id="select",
+        ),
+        pytest.param(
             MOCK_SENSOR_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Energy"},
@@ -4720,6 +4837,7 @@ async def test_subentry_reconfigure_update_device_properties(
             "advanced_settings": {"sw_version": "1.1"},
             "model": "Beer bottle XL",
             "model_id": "bn003",
+            "manufacturer": "Beer Masters",
             "configuration_url": "https://example.com",
             "mqtt_settings": {"qos": 1},
         },
@@ -4742,6 +4860,7 @@ async def test_subentry_reconfigure_update_device_properties(
     assert device["model"] == "Beer bottle XL"
     assert device["model_id"] == "bn003"
     assert device["sw_version"] == "1.1"
+    assert device["manufacturer"] == "Beer Masters"
     assert device["mqtt_settings"]["qos"] == 1
     assert "qos" not in device
 
