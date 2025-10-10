@@ -96,10 +96,10 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Publish a message to a topic."""
-        await self.publish(message=message, title=title)
+        await self._publish(message=message, title=title)
 
     async def publish(self, **kwargs: Any) -> None:
-        """Publish a message to a topic."""
+        """Publish a message to a topic via ntfy.publish action."""
 
         params: dict[str, Any] = kwargs
         delay: timedelta | None = params.get("delay")
@@ -115,8 +115,13 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                     translation_domain=DOMAIN,
                     translation_key="delay_no_call",
                 )
+        await self._publish(**params)
+        self._set_state()
 
-        msg = Message(topic=self.topic, **params)
+    async def _publish(self, **kwargs: Any) -> None:
+        """Publish a message to a topic."""
+
+        msg = Message(topic=self.topic, **kwargs)
         try:
             await self.ntfy.publish(msg)
         except NtfyUnauthorizedAuthenticationError as e:
