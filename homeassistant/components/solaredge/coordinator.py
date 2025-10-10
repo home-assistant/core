@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import EnergyConverter
 
 from .const import (
     CONF_SITE_ID,
@@ -401,6 +402,7 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
                 name=f"{self.title} {display_name}",
                 source=DOMAIN,
                 statistic_id=statistic_id,
+                unit_class=EnergyConverter.UNIT_CLASS,
                 unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             )
             statistic_sum = last_sums[statistic_id]
