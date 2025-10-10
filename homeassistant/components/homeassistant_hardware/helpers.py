@@ -15,7 +15,6 @@ from homeassistant.components.usb import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
-from homeassistant.helpers import discovery_flow
 
 from . import DATA_COMPONENT
 from .const import HARDWARE_INTEGRATION_DOMAINS
@@ -167,8 +166,7 @@ class HardwareInfoDispatcher:
             firmware_info.device,
         )
 
-        discovery_flow.async_create_flow(
-            self.hass,
+        await self.hass.config_entries.flow.async_init(
             hardware_domain,
             context={"source": SOURCE_IMPORT},
             data=HardwareFirmwareDiscoveryInfo(
