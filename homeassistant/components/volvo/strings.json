@@ -204,6 +204,14 @@
         "name": "Honk & flash"
       }
     },
+    "lock": {
+      "lock": {
+        "name": "Central lock"
+      },
+      "lock_reduced_guard": {
+        "name": "Reduced guard lock"
+      }
+    },
     "sensor": {
       "availability": {
         "name": "Car connection",
@@ -326,6 +334,9 @@
   "exceptions": {
     "command_failure": {
       "message": "Command {command} failed. Status: {status}. Message: {message}"
+    },
+    "lock_failure": {
+      "message": "Failed to {command} vehicle. Status: {status}. Message: {message}"
     },
     "no_vehicle": {
       "message": "Unable to retrieve vehicle details."
