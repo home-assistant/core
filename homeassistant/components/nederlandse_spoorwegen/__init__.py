@@ -32,17 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
                 hass, entry, subentry_id, dict(subentry.data)
             )
 
-            try:
-                await coordinator.async_config_entry_first_refresh()
-            except (ConnectionError, Timeout, HTTPError, ValueError) as err:
-                _LOGGER.error(
-                    "Failed to initialize coordinator for route %s: %s",
-                    subentry_id,
-                    err,
-                )
-                raise ConfigEntryNotReady(
-                    f"Unable to connect to NS API for route {subentry_id}"
-                ) from err
+            await coordinator.async_config_entry_first_refresh()
 
             coordinators[subentry_id] = coordinator
             _LOGGER.debug("Added coordinator for route %s", subentry_id)
