@@ -26,6 +26,7 @@ from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
     get_virtual_component_ids,
+    is_view_for_platform,
 )
 
 PARALLEL_UPDATES = 0
@@ -37,9 +38,13 @@ class RpcSelectDescription(RpcEntityDescription, SelectEntityDescription):
 
 
 RPC_SELECT_ENTITIES: Final = {
-    "enum": RpcSelectDescription(
+    "enum_generic": RpcSelectDescription(
         key="enum",
         sub_key="value",
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, SELECT_PLATFORM
+        ),
+        role="generic",
     ),
 }
 

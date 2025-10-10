@@ -356,6 +356,72 @@ MOCK_SUBENTRY_FAN_COMPONENT = {
         "speed_range_min": 1,
     },
 }
+MOCK_SUBENTRY_IMAGE_COMPONENT_DATA = {
+    "24402bcbd5b64a54bc32695a5ef752bf": {
+        "platform": "image",
+        "name": "Merchandise",
+        "entity_category": None,
+        "image_topic": "test-topic",
+        "content_type": "image/jpeg",
+        "image_encoding": "b64",
+        "entity_picture": "https://example.com/24402bcbd5b64a54bc32695a5ef752bf",
+    },
+}
+MOCK_SUBENTRY_IMAGE_COMPONENT_URL = {
+    "326104eb58af48c9ab1f887cded499bb": {
+        "platform": "image",
+        "name": "Merchandise",
+        "entity_category": None,
+        "url_topic": "test-topic",
+        "url_template": "{{ value_json.value }}",
+        "entity_picture": "https://example.com/326104eb58af48c9ab1f887cded499bb",
+    },
+}
+MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT = {
+    "8131babc5e8d4f44b82e0761d39091a2": {
+        "platform": "light",
+        "name": "Basic light",
+        "on_command_type": "last",
+        "optimistic": True,
+        "payload_off": "OFF",
+        "payload_on": "ON",
+        "command_topic": "test-topic",
+        "entity_category": None,
+        "schema": "basic",
+        "state_topic": "test-topic",
+        "color_temp_kelvin": True,
+        "state_value_template": "{{ value_json.value }}",
+        "brightness_scale": 255,
+        "max_kelvin": 6535,
+        "min_kelvin": 2000,
+        "white_scale": 255,
+        "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
+    },
+}
+MOCK_SUBENTRY_LOCK_COMPONENT = {
+    "3faf1318016c46c5aea26707eeb6f100": {
+        "platform": "lock",
+        "name": "Lock",
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "code_format": "^\\d{4}$",
+        "payload_open": "OPEN",
+        "payload_lock": "LOCK",
+        "payload_unlock": "UNLOCK",
+        "payload_reset": "None",
+        "state_jammed": "JAMMED",
+        "state_locked": "LOCKED",
+        "state_locking": "LOCKING",
+        "state_unlocked": "UNLOCKED",
+        "state_unlocking": "UNLOCKING",
+        "retain": False,
+        "entity_category": None,
+        "entity_picture": "https://example.com/3faf1318016c46c5aea26707eeb6f100",
+        "optimistic": True,
+    },
+}
 MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
     "363a7ecad6be4a19b939a016ea93e994": {
         "platform": "notify",
@@ -387,32 +453,84 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
         "retain": False,
     },
 }
-
-MOCK_SUBENTRY_LOCK_COMPONENT = {
-    "3faf1318016c46c5aea26707eeb6f100": {
-        "platform": "lock",
-        "name": "Lock",
-        "command_topic": "test-topic",
-        "state_topic": "test-topic",
-        "command_template": "{{ value }}",
-        "value_template": "{{ value_json.value }}",
-        "code_format": "^\\d{4}$",
-        "payload_open": "OPEN",
-        "payload_lock": "LOCK",
-        "payload_unlock": "UNLOCK",
-        "payload_reset": "None",
-        "state_jammed": "JAMMED",
-        "state_locked": "LOCKED",
-        "state_locking": "LOCKING",
-        "state_unlocked": "UNLOCKED",
-        "state_unlocking": "UNLOCKING",
-        "retain": False,
-        "entity_category": None,
-        "entity_picture": "https://example.com/3faf1318016c46c5aea26707eeb6f100",
-        "optimistic": True,
+MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA = {
+    "b10b531e15244425a74bb0abb1e9d2c6": {
+        "platform": "notify",
+        "name": "Test",
+        "command_topic": "bad#topic",
     },
 }
-
+MOCK_SUBENTRY_NUMBER_COMPONENT_CUSTOM_UNIT = {
+    "f9261f6feed443e7b7d5f3fbe2a47413": {
+        "platform": "number",
+        "name": "Speed",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "box",
+        "unit_of_measurement": "bla",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47413",
+    },
+}
+MOCK_SUBENTRY_NUMBER_COMPONENT_DEVICE_CLASS_UNIT = {
+    "f9261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "number",
+        "name": "Speed",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "slider",
+        "device_class": "carbon_monoxide",
+        "unit_of_measurement": "ppm",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
+MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT = {
+    "f9261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "number",
+        "name": "Speed",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "auto",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
+MOCK_SUBENTRY_SELECT_COMPONENT = {
+    "fa261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "select",
+        "name": "Mode",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "options": ["beer", "milk"],
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/fa261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
 MOCK_SUBENTRY_SENSOR_COMPONENT = {
     "e9261f6feed443e7b7d5f3fbe2a47412": {
         "platform": "sensor",
@@ -464,35 +582,6 @@ MOCK_SUBENTRY_SWITCH_COMPONENT = {
     },
 }
 
-MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT = {
-    "8131babc5e8d4f44b82e0761d39091a2": {
-        "platform": "light",
-        "name": "Basic light",
-        "on_command_type": "last",
-        "optimistic": True,
-        "payload_off": "OFF",
-        "payload_on": "ON",
-        "command_topic": "test-topic",
-        "entity_category": None,
-        "schema": "basic",
-        "state_topic": "test-topic",
-        "color_temp_kelvin": True,
-        "state_value_template": "{{ value_json.value }}",
-        "brightness_scale": 255,
-        "max_kelvin": 6535,
-        "min_kelvin": 2000,
-        "white_scale": 255,
-        "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
-    },
-}
-MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA = {
-    "b10b531e15244425a74bb0abb1e9d2c6": {
-        "platform": "notify",
-        "name": "Test",
-        "command_topic": "bad#topic",
-    },
-}
-
 MOCK_SUBENTRY_AVAILABILITY_DATA = {
     "availability": {
         "availability_topic": "test/availability",
@@ -508,6 +597,7 @@ MOCK_SUBENTRY_DEVICE_DATA = {
     "hw_version": "2.1 rev a",
     "model": "Model XL",
     "model_id": "mn002",
+    "manufacturer": "Milk Masters",
     "configuration_url": "https://example.com",
 }
 
@@ -556,13 +646,13 @@ MOCK_FAN_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_FAN_COMPONENT,
 }
-MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
-    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
-    "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
-}
-MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME = {
+MOCK_IMAGE_SUBENTRY_DATA_IMAGE_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
-    "components": MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME,
+    "components": MOCK_SUBENTRY_IMAGE_COMPONENT_DATA,
+}
+MOCK_IMAGE_SUBENTRY_DATA_IMAGE_URL = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_IMAGE_COMPONENT_URL,
 }
 MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
@@ -571,6 +661,30 @@ MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE = {
 MOCK_LOCK_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_LOCK_COMPONENT,
+}
+MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
+    "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
+}
+MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME,
+}
+MOCK_NUMBER_SUBENTRY_DATA_CUSTOM_UNIT = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_CUSTOM_UNIT,
+}
+MOCK_NUMBER_SUBENTRY_DATA_DEVICE_CLASS_UNIT = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_DEVICE_CLASS_UNIT,
+}
+MOCK_NUMBER_SUBENTRY_DATA_NO_UNIT = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT,
+}
+MOCK_SELECT_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_SELECT_COMPONENT,
 }
 MOCK_SENSOR_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},

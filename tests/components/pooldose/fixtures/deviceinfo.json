@@ -10,6 +10,6 @@
   "SW_VERSION": "2.10",
   "API_VERSION": "v1/",
   "FW_CODE": "539187",
-  "MAC": "AA:BB:CC:DD:EE:FF",
+  "MAC": "",
   "IP": "192.168.1.100"
 }

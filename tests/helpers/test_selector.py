@@ -1,5 +1,7 @@
 """Test selectors."""
 
+from collections.abc import Callable, Iterable
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from enum import Enum
 from typing import Any
 
@@ -42,7 +44,11 @@ def test_invalid_base_schema(schema) -> None:
 
 
 def _test_selector(
-    selector_type, schema, valid_selections, invalid_selections, converter=None
+    selector_type: str,
+    schema: dict,
+    valid_selections: Iterable[Any],
+    invalid_selections: Iterable[Any],
+    converter: Callable[[Any], Any] | None = None,
 ):
     """Help test a selector."""
 
@@ -648,7 +654,38 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
     [
-        ({}, ("abc123",), ()),
+        ({}, ("abc123", None, {"key": "value"}), ()),
+        ({"multiple": False}, ("abc123", None, {"key": "value"}), ()),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": False,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            (
+                {"name": "abc123", "percentage": 3},
+                {"name": "abc123"},
+            ),
+            (
+                "abc123",
+                None,
+                {"name": "abc123", "percentage": "nope"},
+                [
+                    {"name": "abc123", "percentage": 3},
+                    {"name": "def987", "percentage": 5},
+                ],
+                [{"name": "abc123"}],
+            ),
+        ),
         (
             {
                 "fields": {
@@ -664,15 +701,94 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
                 "label_field": "name",
                 "description_field": "percentage",
             },
-            (),
-            (),
+            (
+                [
+                    {"name": "abc123", "percentage": 3},
+                    {"name": "def987", "percentage": 5},
+                ],
+                [{"name": "abc123"}],
+            ),
+            (
+                "abc123",
+                None,
+                [{"name": "abc123", "percentage": "nope"}],
+                [{"name": "abc123", "percentage": 3, "not_exist": 5}],
+            ),
         ),
     ],
-    [],
 )
 def test_object_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test object selector."""
     _test_selector("object", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "raises"),
+    [
+        ({}, does_not_raise()),
+        ({"multiple": False}, does_not_raise()),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": selector.TextSelector(),
+                    },
+                    "percentage": {
+                        "selector": selector.NumberSelector(),
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"not_exist": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            pytest.raises(vol.Invalid),
+        ),
+        ({"multiple": "False"}, pytest.raises(vol.Invalid)),
+    ],
+)
+def test_object_selector_validate_schema(
+    schema: dict, raises: AbstractContextManager
+) -> None:
+    """Test object selector schemas."""
+    # Validate selector configuration
+
+    with raises:
+        selector.validate_selector({"object": schema})
 
 
 @pytest.mark.parametrize(
