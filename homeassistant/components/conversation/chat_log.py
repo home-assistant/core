@@ -514,7 +514,7 @@ class ChatLog:
         """Set the LLM system prompt."""
         llm_api: llm.APIInstance | None = None
 
-        if user_llm_hass_api is None:
+        if not user_llm_hass_api:
             pass
         elif isinstance(user_llm_hass_api, llm.API):
             llm_api = await user_llm_hass_api.async_get_api_instance(llm_context)

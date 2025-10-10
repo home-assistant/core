@@ -1,6 +1,7 @@
 """Test the Home Assistant SkyConnect config flow."""
 
-from unittest.mock import Mock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
@@ -27,6 +28,26 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from .common import USB_DATA_SKY, USB_DATA_ZBT1
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="supervisor")
+def mock_supervisor_fixture() -> Generator[None]:
+    """Mock Supervisor."""
+    with patch(
+        "homeassistant.components.homeassistant_hardware.firmware_config_flow.is_hassio",
+        return_value=True,
+    ):
+        yield
+
+
+@pytest.fixture(name="setup_entry", autouse=True)
+def setup_entry_fixture() -> Generator[AsyncMock]:
+    """Mock entry setup."""
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.mark.parametrize(
@@ -70,30 +91,20 @@ async def test_config_flow_zigbee(
         step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
-        if next_step_id == "start_otbr_addon":
-            next_step_id = "pre_confirm_otbr"
-
-        return await getattr(self, f"async_step_{next_step_id}")(user_input={})
+        self._probed_firmware_info = FirmwareInfo(
+            device=usb_data.device,
+            firmware_type=expected_installed_firmware_type,
+            firmware_version=fw_version,
+            owners=[],
+            source="probe",
+        )
+        return await getattr(self, f"async_step_{next_step_id}")()
 
     with (
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._ensure_thread_addon_setup",
-            return_value=None,
-        ),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._install_firmware_step",
             autospec=True,
             side_effect=mock_install_firmware_step,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
-            return_value=FirmwareInfo(
-                device=usb_data.device,
-                firmware_type=fw_type,
-                firmware_version=fw_version,
-                owners=[],
-                source="probe",
-            ),
         ),
     ):
         pick_result = await hass.config_entries.flow.async_configure(
@@ -133,6 +144,7 @@ async def test_config_flow_zigbee(
     assert zha_flow["step_id"] == "confirm"
 
 
+@pytest.mark.usefixtures("addon_installed", "supervisor")
 @pytest.mark.parametrize(
     ("usb_data", "model"),
     [
@@ -150,6 +162,7 @@ async def test_config_flow_thread(
     usb_data: UsbServiceInfo,
     model: str,
     hass: HomeAssistant,
+    start_addon: AsyncMock,
 ) -> None:
     """Test the config flow for SkyConnect with Thread."""
     fw_type = ApplicationType.SPINEL
@@ -174,44 +187,39 @@ async def test_config_flow_thread(
         step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
-        if next_step_id == "start_otbr_addon":
-            next_step_id = "pre_confirm_otbr"
-
-        return await getattr(self, f"async_step_{next_step_id}")(user_input={})
+        self._probed_firmware_info = FirmwareInfo(
+            device=usb_data.device,
+            firmware_type=expected_installed_firmware_type,
+            firmware_version=fw_version,
+            owners=[],
+            source="probe",
+        )
+        return await getattr(self, f"async_step_{next_step_id}")()
 
     with (
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._ensure_thread_addon_setup",
-            return_value=None,
-        ),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._install_firmware_step",
             autospec=True,
             side_effect=mock_install_firmware_step,
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
-            return_value=FirmwareInfo(
-                device=usb_data.device,
-                firmware_type=fw_type,
-                firmware_version=fw_version,
-                owners=[],
-                source="probe",
-            ),
-        ),
     ):
-        confirm_result = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
         )
 
-        assert confirm_result["type"] is FlowResultType.FORM
-        assert confirm_result["step_id"] == ("confirm_otbr")
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "start_otbr_addon"
+
+        # Make sure the flow continues when the progress task is done.
+        await hass.async_block_till_done()
 
         create_result = await hass.config_entries.flow.async_configure(
-            confirm_result["flow_id"], user_input={}
+            result["flow_id"]
         )
 
+    assert start_addon.call_count == 1
+    assert start_addon.call_args == call("core_openthread_border_router")
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = create_result["result"]
     assert config_entry.data == {
@@ -279,10 +287,14 @@ async def test_options_flow(
         step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
-        if next_step_id == "start_otbr_addon":
-            next_step_id = "pre_confirm_otbr"
-
-        return await getattr(self, f"async_step_{next_step_id}")(user_input={})
+        self._probed_firmware_info = FirmwareInfo(
+            device=usb_data.device,
+            firmware_type=expected_installed_firmware_type,
+            firmware_version="7.4.4.0 build 0",
+            owners=[],
+            source="probe",
+        )
+        return await getattr(self, f"async_step_{next_step_id}")()
 
     with (
         patch(
@@ -290,23 +302,9 @@ async def test_options_flow(
             return_value=[],
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow._ensure_thread_addon_setup",
-            return_value=None,
-        ),
-        patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow._install_firmware_step",
             autospec=True,
             side_effect=mock_install_firmware_step,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
-            return_value=FirmwareInfo(
-                device=usb_data.device,
-                firmware_type=ApplicationType.EZSP,
-                firmware_version="7.4.4.0 build 0",
-                owners=[],
-                source="probe",
-            ),
         ),
     ):
         pick_result = await hass.config_entries.options.async_configure(

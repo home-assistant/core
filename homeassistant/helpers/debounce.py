@@ -85,11 +85,8 @@ class Debouncer[_R_co]:
 
             return False
 
-        # Locked means a call is in progress. Any call is good, so abort.
-        if self._execute_lock.locked():
-            return False
-
-        if not self.immediate:
+        # If not immediate or in progress, we schedule a call for later.
+        if not self.immediate or self._execute_lock.locked():
             self._execute_at_end_of_timer = True
             self._schedule_timer()
             return False

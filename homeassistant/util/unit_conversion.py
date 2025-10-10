@@ -168,20 +168,6 @@ class BaseUnitConverter:
         return (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
 
 
-class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
-    """Convert carbon monoxide ratio to mass per volume."""
-
-    UNIT_CLASS = "carbon_monoxide"
-    _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_PARTS_PER_MILLION: 1,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1.145609,
-    }
-    VALID_UNITS = {
-        CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    }
-
-
 class DataRateConverter(BaseUnitConverter):
     """Utility to convert data rate values."""
 
@@ -740,6 +726,8 @@ class UnitlessRatioConverter(BaseUnitConverter):
     }
     VALID_UNITS = {
         None,
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         PERCENTAGE,
     }
 
