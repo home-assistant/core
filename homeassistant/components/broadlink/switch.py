@@ -176,12 +176,13 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
 class BroadlinkRMSwitch(BroadlinkSwitch):
     """Representation of a Broadlink RM switch."""
 
-    def __init__(self, device, config):
+    def __init__(self, device, config) -> None:
         """Initialize the switch."""
         super().__init__(
             device, config.get(CONF_COMMAND_ON), config.get(CONF_COMMAND_OFF)
         )
         self._attr_name = config[CONF_NAME]
+        self._attr_unique_id = f"{device.unique_id}-{config[CONF_NAME]}"
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
