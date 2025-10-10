@@ -1,0 +1,136 @@
+{
+  "version": 2,
+  "minor_version": 2,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "climate": {
+        "knx_es_01K76NGZRMJA74CBRQF9KXNPE8": {
+          "entity": {
+            "name": "direct_indi-op_heat-cool",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "ga_temperature_current": {
+              "state": "0/0/1",
+              "passive": []
+            },
+            "default_controller_mode": "cool",
+            "fan_max_step": 4,
+            "fan_zero_mode": "auto",
+            "sync_state": true,
+            "target_temperature": {
+              "ga_temperature_target": {
+                "write": "0/1/1",
+                "state": "0/1/2",
+                "passive": []
+              },
+              "min_temp": 10.0,
+              "max_temp": 24.0,
+              "temperature_step": 0.1
+            },
+            "ga_operation_mode_comfort": {
+              "write": "0/2/1",
+              "passive": []
+            },
+            "ga_operation_mode_protection": {
+              "write": "0/2/4",
+              "passive": []
+            },
+            "ga_operation_mode_economy": {
+              "write": "0/2/2",
+              "passive": []
+            },
+            "ga_operation_mode_standby": {
+              "write": "0/2/3",
+              "passive": []
+            },
+            "ga_heat_cool": {
+              "write": "0/3/1",
+              "state": "0/3/2",
+              "passive": []
+            },
+            "ga_on_off": {
+              "write": "0/4/1",
+              "state": "0/4/2",
+              "passive": []
+            },
+            "on_off_invert": true
+          }
+        },
+        "knx_es_01K76NGZRMJA74CBRQF9KXNPE9": {
+          "entity": {
+            "name": "sps_op-mode_contr-mode",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "ga_temperature_current": {
+              "state": "1/0/1",
+              "passive": []
+            },
+            "ga_humidity_current": {
+              "state": "1/0/2",
+              "passive": []
+            },
+            "target_temperature": {
+              "ga_temperature_target": {
+                "state": "1/1/0",
+                "passive": []
+              },
+              "ga_setpoint_shift": {
+                "write": "1/1/1",
+                "dpt": "9.002",
+                "state": "1/1/2",
+                "passive": []
+              },
+              "setpoint_shift_min": -8.0,
+              "setpoint_shift_max": 8.0,
+              "temperature_step": 0.5
+            },
+            "ga_active": {
+              "state": "1/1/3",
+              "passive": []
+            },
+            "ga_valve": {
+              "state": "1/1/4",
+              "passive": []
+            },
+            "ignore_auto_mode": true,
+            "ga_operation_mode": {
+              "write": "1/2/1",
+              "state": "1/2/2",
+              "passive": []
+            },
+            "ga_controller_mode": {
+              "write": "1/3/1",
+              "state": "1/3/2",
+              "passive": []
+            },
+            "default_controller_mode": "heat",
+            "ga_fan_speed": {
+              "write": "1/4/1",
+              "dpt": "5.001",
+              "state": "1/4/2",
+              "passive": []
+            },
+            "fan_max_step": 4,
+            "fan_zero_mode": "auto",
+            "ga_fan_swing": {
+              "write": "1/4/3",
+              "state": "1/4/4",
+              "passive": []
+            },
+            "ga_fan_swing_horizontal": {
+              "write": "1/4/5",
+              "state": "1/4/6",
+              "passive": []
+            },
+            "sync_state": "init"
+          }
+        }
+      }
+    }
+  }
+}

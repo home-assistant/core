@@ -464,12 +464,11 @@ CLIMATE_KNX_SCHEMA = vol.Schema(
         ),
         "section_fan": KNXSectionFlat(collapsible=True),
         vol.Optional(CONF_GA_FAN_SPEED): GASelector(dpt=ClimateFanSpeedMode),
-        vol.Required(ClimateConf.FAN_MAX_STEP, default=3): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=1,
-                max=100,
-                step=1,
-            )
+        vol.Required(ClimateConf.FAN_MAX_STEP, default=3): AllSerializeFirst(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(min=1, max=100, step=1)
+            ),
+            vol.Coerce(int),
         ),
         vol.Required(
             ClimateConf.FAN_ZERO_MODE, default=FanZeroMode.OFF

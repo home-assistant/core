@@ -45,6 +45,7 @@ from .const import (
     CONF_SYNC_STATE,
     CONTROLLER_MODES,
     CURRENT_HVAC_ACTIONS,
+    DOMAIN,
     KNX_MODULE_KEY,
     ClimateConf,
 )
@@ -680,14 +681,14 @@ class KnxUiClimate(_KnxClimate, KnxUiEntity):
             unique_id=unique_id,
             entity_config=config[CONF_ENTITY],
         )
-        conf = ConfigExtractor(config)
+        knx_conf = ConfigExtractor(config[DOMAIN])
         self._device = _create_climate_ui(
-            knx_module.xknx, conf, config[CONF_ENTITY][CONF_NAME]
+            knx_module.xknx, knx_conf, config[CONF_ENTITY][CONF_NAME]
         )
 
-        default_hvac_mode: HVACMode = config[ClimateConf.DEFAULT_CONTROLLER_MODE]
-        fan_max_step = config[ClimateConf.FAN_MAX_STEP]
-        fan_zero_mode: str = config[ClimateConf.FAN_ZERO_MODE]
+        default_hvac_mode = HVACMode(knx_conf.get(ClimateConf.DEFAULT_CONTROLLER_MODE))
+        fan_max_step = knx_conf.get(ClimateConf.FAN_MAX_STEP)
+        fan_zero_mode = knx_conf.get(ClimateConf.FAN_ZERO_MODE)
         self._init_from_device_config(
             device=self._device,
             default_hvac_mode=default_hvac_mode,
