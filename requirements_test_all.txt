@@ -735,7 +735,7 @@ dynalite-devices==0.1.47
 dynalite-panel==0.0.4
 
 # homeassistant.components.dynamic_dns
-dynamicdns==0.1.0rc3
+dynamicdns==0.1.1
 
 # homeassistant.components.rainforest_eagle
 eagle100==0.1.1
