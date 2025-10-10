@@ -13,11 +13,13 @@ from fluss_api import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
 from .const import LOGGER, UPDATE_INTERVAL_TIMEDELTA
+
+type FlussConfigEntry = ConfigEntry[FlussDataUpdateCoordinator]
 
 
 class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -27,7 +29,7 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self, hass: HomeAssistant, config_entry: FlussConfigEntry, api_key: str
     ) -> None:
         """Initialize the coordinator."""
-        self.api = FlussApiClient(api_key, async_get_clientsession(hass))
+        self.api = FlussApiClient(api_key, session=async_get_clientsession(hass))
         super().__init__(
             hass,
             LOGGER,
