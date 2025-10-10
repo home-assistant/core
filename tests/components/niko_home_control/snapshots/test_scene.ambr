@@ -39,13 +39,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'scene None',
       'icon': 'mdi:palette',
-      'last_activated': None,
     }),
     'context': <ANY>,
     'entity_id': 'scene.scene_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-10-10T21:00:00+00:00',
   })
 # ---

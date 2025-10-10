@@ -4,6 +4,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_freezer import freezer as FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
@@ -22,8 +23,10 @@ async def test_entities(
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test all entities."""
+    freezer.move_to("2025-10-10 21:00:00")
     with patch(
         "homeassistant.components.niko_home_control.PLATFORMS", [Platform.SCENE]
     ):
@@ -78,15 +81,15 @@ async def test_updating(
     entity_id = scene_entities[0].entity_id
 
     # Capture current state (could be unknown or a timestamp depending on implementation)
-    before = hass.states.get(entity_id).attributes
+    before = hass.states.get(entity_id)
+    assert before is not None
 
     # Simulate a device-originated update for the scene (controller callback)
     await find_update_callback(mock_niko_home_control_connection, scene.id)(0)
     await hass.async_block_till_done()
 
-    after = hass.states.get(entity_id).attributes
-
+    after = hass.states.get(entity_id)
     assert after is not None
     # If integration records activation on updates, state should change and be a valid ISO timestamp
-    if after["last_activated"] != before["last_activated"]:
-        datetime.fromisoformat(after["last_activated"])
+    if after.state != before.state:
+        datetime.fromisoformat(after.state)
