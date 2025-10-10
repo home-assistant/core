@@ -20,7 +20,7 @@ async def test_user_flow_oauth2_success(hass: HomeAssistant, mock_actron_api: As
     )
 
     # Should start with a progress step
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "user"
     assert result["progress_action"] == "wait_for_authorization"
     assert result["description_placeholders"] is not None
