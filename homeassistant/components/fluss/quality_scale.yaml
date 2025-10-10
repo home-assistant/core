@@ -25,10 +25,7 @@ rules:
   docs-installation-parameters: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: 
-    status: exempt
-    comment: |
-      No Sensor file.
+  parallel-updates: todo
   reauthentication-flow: todo
   test-coverage: todo
   # Gold
