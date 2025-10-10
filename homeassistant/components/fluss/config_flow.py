@@ -32,9 +32,11 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             api_key = user_input[CONF_API_KEY]
-            self._async_abort_entries_match()
+            self._async_abort_entries_match({CONF_API_KEY: api_key})
             try:
-                FlussApiClient(api_key, session=async_get_clientsession(self.hass))
+                FlussApiClient(
+                    user_input[CONF_API_KEY], session=async_get_clientsession(self.hass)
+                )
             except FlussApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
             except FlussApiClientAuthenticationError:
