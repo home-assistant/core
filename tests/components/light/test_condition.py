@@ -66,6 +66,33 @@ async def label_entities(hass: HomeAssistant) -> None:
     ]
 
 
+async def setup_automation_with_light_condition(
+    hass: HomeAssistant,
+    *,
+    target: dict,
+    behavior: str,
+    condition_state: str,
+) -> None:
+    """Set up automation with light state condition."""
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    CONF_CONDITION: "light.state",
+                    CONF_TARGET: target,
+                    CONF_OPTIONS: {"behavior": behavior, CONF_STATE: condition_state},
+                },
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+
 async def has_calls_after_trigger(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> bool:
@@ -95,24 +122,11 @@ async def test_light_state_condition_behavior_one(
     for entity_id in label_entities:
         hass.states.async_set(entity_id, reverse_state)
 
-    await async_setup_component(
+    await setup_automation_with_light_condition(
         hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {
-                    CONF_CONDITION: "light.state",
-                    CONF_TARGET: {
-                        ATTR_LABEL_ID: "test_label",
-                    },
-                    CONF_OPTIONS: {"behavior": "one", CONF_STATE: condition_state},
-                },
-                "action": {
-                    "service": "test.automation",
-                },
-            }
-        },
+        target={ATTR_LABEL_ID: "test_label"},
+        behavior="one",
+        condition_state=condition_state,
     )
 
     # No lights on the condition state
@@ -151,24 +165,11 @@ async def test_light_state_condition_behavior_any(
     for entity_id in label_entities:
         hass.states.async_set(entity_id, reverse_state)
 
-    await async_setup_component(
+    await setup_automation_with_light_condition(
         hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {
-                    CONF_CONDITION: "light.state",
-                    CONF_TARGET: {
-                        ATTR_LABEL_ID: "test_label",
-                    },
-                    CONF_OPTIONS: {"behavior": "any", CONF_STATE: condition_state},
-                },
-                "action": {
-                    "service": "test.automation",
-                },
-            }
-        },
+        target={ATTR_LABEL_ID: "test_label"},
+        behavior="any",
+        condition_state=condition_state,
     )
 
     # Set state for two switches to ensure that they don't impact the condition
@@ -215,24 +216,11 @@ async def test_light_state_condition_behavior_all(
     for entity_id in label_entities:
         hass.states.async_set(entity_id, reverse_state)
 
-    await async_setup_component(
+    await setup_automation_with_light_condition(
         hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {
-                    CONF_CONDITION: "light.state",
-                    CONF_TARGET: {
-                        ATTR_LABEL_ID: "test_label",
-                    },
-                    CONF_OPTIONS: {"behavior": "all", CONF_STATE: condition_state},
-                },
-                "action": {
-                    "service": "test.automation",
-                },
-            }
-        },
+        target={ATTR_LABEL_ID: "test_label"},
+        behavior="all",
+        condition_state=condition_state,
     )
 
     # No lights on the condition state
