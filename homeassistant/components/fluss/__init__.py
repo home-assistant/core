@@ -28,11 +28,4 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: FlussConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
-        return False
-
-    coordinator = entry.runtime_data
-    await coordinator.api.close()
-
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
