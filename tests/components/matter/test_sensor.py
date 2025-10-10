@@ -241,14 +241,14 @@ async def test_thermostat_outdoor(
 ) -> None:
     """Test OutdoorTemperature."""
     # OutdoorTemperature
-    state = hass.states.get("sensor.longan_link_hvac_outdoor_temperature")
+    state = hass.states.get("sensor.longan_link_hvac_outdoor_temperature_north")
     assert state
     assert state.state == "12.5"
 
     set_node_attribute(matter_node, 1, 513, 1, -550)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.longan_link_hvac_outdoor_temperature")
+    state = hass.states.get("sensor.longan_link_hvac_outdoor_temperature_north")
     assert state
     assert state.state == "-5.5"
 

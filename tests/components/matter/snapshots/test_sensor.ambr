@@ -3597,7 +3597,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_fancy_button-entry]
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_fancy_button-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3612,7 +3612,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_generic_switch_fancy_button',
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_fancy_button',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3624,7 +3624,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fancy Button',
+    'original_name': 'Current switch position (Fancy Button)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3634,14 +3634,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_fancy_button-state]
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_fancy_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Generic Switch Fancy Button',
+      'friendly_name': 'Mock Generic Switch Current switch position (Fancy Button)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_generic_switch_fancy_button',
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_fancy_button',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3987,7 +3987,7 @@
     'state': 'stopped',
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_config-entry]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_config-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4002,7 +4002,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inovelli_config',
+    'entity_id': 'sensor.inovelli_current_switch_position_config',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4014,7 +4014,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Config',
+    'original_name': 'Current switch position (Config)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4024,21 +4024,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_config-state]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_config-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Config',
+      'friendly_name': 'Inovelli Current switch position (Config)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inovelli_config',
+    'entity_id': 'sensor.inovelli_current_switch_position_config',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_down-entry]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4053,7 +4053,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inovelli_down',
+    'entity_id': 'sensor.inovelli_current_switch_position_down',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4065,7 +4065,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Down',
+    'original_name': 'Current switch position (Down)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4075,21 +4075,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_down-state]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Down',
+      'friendly_name': 'Inovelli Current switch position (Down)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inovelli_down',
+    'entity_id': 'sensor.inovelli_current_switch_position_down',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_up-entry]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4104,7 +4104,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inovelli_up',
+    'entity_id': 'sensor.inovelli_current_switch_position_up',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4116,7 +4116,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Up',
+    'original_name': 'Current switch position (Up)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4126,14 +4126,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_up-state]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Up',
+      'friendly_name': 'Inovelli Current switch position (Up)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inovelli_up',
+    'entity_id': 'sensor.inovelli_current_switch_position_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6956,7 +6956,7 @@
     'state': '21.0',
   })
 # ---
-# name: test_sensors[thermostat][sensor.longan_link_hvac_outdoor_temperature-entry]
+# name: test_sensors[thermostat][sensor.longan_link_hvac_outdoor_temperature_north-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6971,7 +6971,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.longan_link_hvac_outdoor_temperature',
+    'entity_id': 'sensor.longan_link_hvac_outdoor_temperature_north',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6986,7 +6986,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Outdoor temperature',
+    'original_name': 'Outdoor temperature (North)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6996,23 +6996,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[thermostat][sensor.longan_link_hvac_outdoor_temperature-state]
+# name: test_sensors[thermostat][sensor.longan_link_hvac_outdoor_temperature_north-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Longan link HVAC Outdoor temperature',
+      'friendly_name': 'Longan link HVAC Outdoor temperature (North)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.longan_link_hvac_outdoor_temperature',
+    'entity_id': 'sensor.longan_link_hvac_outdoor_temperature_north',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12.5',
   })
 # ---
-# name: test_sensors[thermostat][sensor.longan_link_hvac_temperature-entry]
+# name: test_sensors[thermostat][sensor.longan_link_hvac_temperature_north-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7027,7 +7027,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.longan_link_hvac_temperature',
+    'entity_id': 'sensor.longan_link_hvac_temperature_north',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7042,7 +7042,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Temperature',
+    'original_name': 'Temperature (North)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7052,16 +7052,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[thermostat][sensor.longan_link_hvac_temperature-state]
+# name: test_sensors[thermostat][sensor.longan_link_hvac_temperature_north-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Longan link HVAC Temperature',
+      'friendly_name': 'Longan link HVAC Temperature (North)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.longan_link_hvac_temperature',
+    'entity_id': 'sensor.longan_link_hvac_temperature_north',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -7234,7 +7234,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-entry]
+# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position_north-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7247,7 +7247,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position',
+    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position_north',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7259,7 +7259,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Target opening position',
+    'original_name': 'Target opening position (North)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7269,14 +7269,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-state]
+# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position_north-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Longan link WNCV DA01 Target opening position',
+      'friendly_name': 'Longan link WNCV DA01 Target opening position (North)',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position',
+    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position_north',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

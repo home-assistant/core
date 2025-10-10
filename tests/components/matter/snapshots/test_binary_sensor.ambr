@@ -1222,7 +1222,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[thermostat][binary_sensor.longan_link_hvac_occupancy-entry]
+# name: test_binary_sensors[thermostat][binary_sensor.longan_link_hvac_occupancy_north-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1235,7 +1235,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.longan_link_hvac_occupancy',
+    'entity_id': 'binary_sensor.longan_link_hvac_occupancy_north',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1247,7 +1247,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
-    'original_name': 'Occupancy',
+    'original_name': 'Occupancy (North)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1257,14 +1257,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[thermostat][binary_sensor.longan_link_hvac_occupancy-state]
+# name: test_binary_sensors[thermostat][binary_sensor.longan_link_hvac_occupancy_north-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
-      'friendly_name': 'Longan link HVAC Occupancy',
+      'friendly_name': 'Longan link HVAC Occupancy (North)',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.longan_link_hvac_occupancy',
+    'entity_id': 'binary_sensor.longan_link_hvac_occupancy_north',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from enum import StrEnum
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, Concatenate, cast
@@ -54,8 +55,79 @@ def catch_matter_error[_R, **P](
     return wrapper
 
 
+# Enumeration defining where to place entity labels or tags in the entity name.
+class LabelPlacement(StrEnum):
+    """Enum for label placement options."""
+
+    APPEND = "append"
+    IGNORE = "ignore"
+    RENAME = "rename"
+
+
 @dataclass(frozen=True)
-class MatterEntityDescription(EntityDescription):
+class MatterEntityLabeling(EntityDescription):
+    """Data structure for labeling Information."""
+
+    # A label can be used to modify an entity's name by appending the text
+    # or replacing the name. This class holds the information needed to do that.
+
+    # Where to place the Label text in the entity name.
+    # Can be "RENAME", "APPEND", "IGNORE". APPEND is the default.
+
+    label_placement: LabelPlacement = LabelPlacement.APPEND
+
+    # Priority-ordered default set of labels used for locating the name modifier
+    # Can override this set in an entity's discovery schema.
+    # Always uses lower case for matching.
+    default_label_list: tuple[str, ...] | None = (
+        "label",
+        "button",
+        "orientation",
+        "name",
+    )
+
+    # When labels are matched, use the concatenator string to join them.
+    # Examples: ", " or "-" or " " (space).
+    # if set to None or empty string, then only the first match is used.
+    label_concatenator: str | None = ", "
+
+    def find_matching_labels(self, entity: MatterEntity) -> list[str]:
+        """Find all labels for a Matter entity."""
+
+        user_label_list: list[clusters.UserLabel.Structs.LabelStruct] = (
+            entity.get_matter_attribute_value(clusters.UserLabel.Attributes.LabelList)
+            or []
+        )
+        fixed_label_list: list[clusters.FixedLabel.Structs.LabelStruct] = (
+            entity.get_matter_attribute_value(clusters.FixedLabel.Attributes.LabelList)
+            or []
+        )
+
+        found_labels: list[str] = [
+            lbl.value
+            for label in self.default_label_list or []
+            for lbl in (*user_label_list, *fixed_label_list)
+            if lbl.label.lower() == label.lower()
+        ]
+        return found_labels
+
+    def get_name_modifier(self, entity: MatterEntity) -> str | None:
+        """Get the name modifier for the entity."""
+
+        found_labels = self.find_matching_labels(entity)
+
+        if found_labels:
+            return (
+                self.label_concatenator.join(found_labels)
+                if self.label_concatenator
+                else found_labels[0]
+            )
+
+        return None
+
+
+@dataclass(frozen=True)
+class MatterEntityDescription(MatterEntityLabeling):
     """Describe the Matter entity."""
 
     # convert the value from the primary attribute to the value used by HA
@@ -101,37 +173,43 @@ class MatterEntity(Entity):
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
         self._attr_available = self._endpoint.node.available
+
         # mark endpoint postfix if the device has the primary attribute on multiple endpoints
-        if not self._endpoint.node.is_bridge_device and any(
-            ep
-            for ep in self._endpoint.node.endpoints.values()
-            if ep != self._endpoint
-            and ep.has_attribute(None, entity_info.primary_attribute)
+        # this will get overwritten if an explicit name is set below and label_placement is "AFTER"
+        if (
+            not self._endpoint.node.is_bridge_device
+            and self._entity_info.entity_description.label_placement
+            != LabelPlacement.IGNORE
+            and any(
+                ep
+                for ep in self._endpoint.node.endpoints.values()
+                if ep != self._endpoint
+                and ep.has_cluster(entity_info.primary_attribute.cluster_id)
+            )
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
             if self._platform_translation_key and not self.translation_key:
                 self._attr_translation_key = self._platform_translation_key
 
-        # prefer the label attribute for the entity name
-        # Matter has a way for users and/or vendors to specify a name for an endpoint
-        # which is always preferred over a standard HA (generated) name
-        for attr in (
-            clusters.FixedLabel.Attributes.LabelList,
-            clusters.UserLabel.Attributes.LabelList,
+        # Matter labels can be used to modify the entity name
+        # by appending the text or replacing the name.
+        # This is controlled by the entity_description.label_placement setting.
+        # The text is derived from the labels defined on the device.
+        # If label_placement is "ignore" or no labels are found, then
+        # the entity name is not modified.
+        name_modifier = self._entity_info.entity_description.get_name_modifier(self)
+        if (
+            name_modifier
+            and self._entity_info.entity_description.label_placement
+            == LabelPlacement.RENAME
         ):
-            if not (labels := self.get_matter_attribute_value(attr)):
-                continue
-            for label in labels:
-                if label.label not in ["Label", "Button"]:
-                    continue
-                # fixed or user label found: use it
-                label_value: str = label.value
-                # in the case the label is only the label id, use it as postfix only
-                if label_value.isnumeric():
-                    self._name_postfix = label_value
-                else:
-                    self._attr_name = label_value
-                break
+            self._attr_name = name_modifier
+        elif (
+            name_modifier
+            and self._entity_info.entity_description.label_placement
+            == LabelPlacement.APPEND
+        ):
+            self._name_postfix = name_modifier
 
         # make sure to update the attributes once
         self._update_from_device()
