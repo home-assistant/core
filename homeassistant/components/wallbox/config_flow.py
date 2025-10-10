@@ -6,14 +6,12 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
-from wallbox import Wallbox
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_STATION, DOMAIN
-from .coordinator import InvalidAuth, async_validate_input
 
 COMPONENT_DOMAIN = DOMAIN
 
@@ -31,9 +29,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    wallbox = Wallbox(data["username"], data["password"])
-
-    await async_validate_input(hass, wallbox)
 
     # Return info that you want to store in the config entry.
     return {"title": "Wallbox Portal"}
@@ -60,20 +55,15 @@ class WallboxConfigFlow(ConfigFlow, domain=COMPONENT_DOMAIN):
 
         errors = {}
 
-        try:
-            await self.async_set_unique_id(user_input["station"])
-            if self.source != SOURCE_REAUTH:
-                self._abort_if_unique_id_configured()
-                info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=info["title"], data=user_input)
-            reauth_entry = self._get_reauth_entry()
-            if user_input["station"] == reauth_entry.data[CONF_STATION]:
-                return self.async_update_reload_and_abort(reauth_entry, data=user_input)
-            errors["base"] = "reauth_invalid"
-        except ConnectionError:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
+        await self.async_set_unique_id(user_input["station"])
+        if self.source != SOURCE_REAUTH:
+            self._abort_if_unique_id_configured()
+            info = await validate_input(self.hass, user_input)
+            return self.async_create_entry(title=info["title"], data=user_input)
+        reauth_entry = self._get_reauth_entry()
+        if user_input["station"] == reauth_entry.data[CONF_STATION]:
+            return self.async_update_reload_and_abort(reauth_entry, data=user_input)
+        errors["base"] = "reauth_invalid"
 
         return self.async_show_form(
             step_id="user",
