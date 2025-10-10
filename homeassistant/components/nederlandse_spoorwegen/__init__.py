@@ -4,30 +4,32 @@ from __future__ import annotations
 
 import logging
 
-from ns_api import NSAPI, RequestParametersError
+from ns_api import RequestParametersError
 import requests
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+
+from .coordinator import NSDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-type NSConfigEntry = ConfigEntry[NSAPI]
+type NSConfigEntry = ConfigEntry[NSDataUpdateCoordinator]
 
 PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Set up Nederlandse Spoorwegen from a config entry."""
-    api_key = entry.data[CONF_API_KEY]
 
-    client = NSAPI(api_key)
+    coordinator = NSDataUpdateCoordinator(hass, entry)
 
+    # Test the API connection before proceeding
     try:
-        await hass.async_add_executor_job(client.get_stations)
+        await coordinator.get_stations()
     except (
         requests.exceptions.ConnectionError,
         requests.exceptions.HTTPError,
@@ -38,7 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
         _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
         raise ConfigEntryNotReady from error
 
-    entry.runtime_data = client
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
