@@ -157,6 +157,206 @@
     'state': '0',
   })
 # ---
+# name: test_cury_sensor_entity[sensor.test_name_left_slot_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_name_left_slot_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Left slot level',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vial_level',
+    'unique_id': '123456789ABC-cury:0-cury_left_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_cury_sensor_entity[sensor.test_name_left_slot_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Left slot level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_left_slot_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '27',
+  })
+# ---
+# name: test_cury_sensor_entity[sensor.test_name_left_slot_vial-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_name_left_slot_vial',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Left slot vial',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vial_name',
+    'unique_id': '123456789ABC-cury:0-cury_left_vial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cury_sensor_entity[sensor.test_name_left_slot_vial-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Left slot vial',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_left_slot_vial',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Forest Dream',
+  })
+# ---
+# name: test_cury_sensor_entity[sensor.test_name_right_slot_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_name_right_slot_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Right slot level',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vial_level',
+    'unique_id': '123456789ABC-cury:0-cury_right_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_cury_sensor_entity[sensor.test_name_right_slot_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Right slot level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_right_slot_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '84',
+  })
+# ---
+# name: test_cury_sensor_entity[sensor.test_name_right_slot_vial-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_name_right_slot_vial',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Right slot vial',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vial_name',
+    'unique_id': '123456789ABC-cury:0-cury_right_vial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cury_sensor_entity[sensor.test_name_right_slot_vial-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Right slot vial',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_right_slot_vial',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Velvet Rose',
+  })
+# ---
 # name: test_rpc_shelly_ev_sensors[sensor.test_name_charger_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -339,7 +539,7 @@
     'state': '5.0',
   })
 # ---
-# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_consumed_energy-entry]
+# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -354,7 +554,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_test_switch_0_consumed_energy',
+    'entity_id': 'sensor.test_name_test_switch_0_energy_consumed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -372,7 +572,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'test switch_0 consumed energy',
+    'original_name': 'test switch_0 energy consumed',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -382,23 +582,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_consumed_energy-state]
+# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test name test switch_0 consumed energy',
+      'friendly_name': 'Test name test switch_0 energy consumed',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_test_switch_0_consumed_energy',
+    'entity_id': 'sensor.test_name_test_switch_0_energy_consumed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1135.80246',
   })
 # ---
-# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_returned_energy-entry]
+# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_energy_returned-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -413,7 +613,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_test_switch_0_returned_energy',
+    'entity_id': 'sensor.test_name_test_switch_0_energy_returned',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -431,7 +631,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'test switch_0 returned energy',
+    'original_name': 'test switch_0 energy returned',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -441,23 +641,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_returned_energy-state]
+# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test name test switch_0 returned energy',
+      'friendly_name': 'Test name test switch_0 energy returned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_test_switch_0_returned_energy',
+    'entity_id': 'sensor.test_name_test_switch_0_energy_returned',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '98.76543',
   })
 # ---
-# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_total_energy-entry]
+# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -472,7 +672,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_test_switch_0_total_energy',
+    'entity_id': 'sensor.test_name_test_switch_0_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -490,7 +690,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'test switch_0 total energy',
+    'original_name': 'test switch_0 energy',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -500,16 +700,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_total_energy-state]
+# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test name test switch_0 total energy',
+      'friendly_name': 'Test name test switch_0 energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_test_switch_0_total_energy',
+    'entity_id': 'sensor.test_name_test_switch_0_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -26,6 +26,7 @@ from aioshelly.const import (
     MODEL_VINTAGE_V2,
     MODEL_WALL_DISPLAY,
     MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_XL,
 )
 
 from homeassistant.components.number import NumberMode
@@ -261,6 +262,7 @@ GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"
 DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_WALL_DISPLAY,
     MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_XL,
     MODEL_MOTION,
     MODEL_MOTION_2,
     MODEL_VALVE,
@@ -268,15 +270,7 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 
 CONF_GEN = "gen"
 
-VIRTUAL_COMPONENTS = (
-    "boolean",
-    "button",
-    "enum",
-    "input",
-    "number",
-    "presencezone",
-    "text",
-)
+VIRTUAL_COMPONENTS = ("boolean", "button", "enum", "number", "text")
 VIRTUAL_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
     "button": {"types": ["button"], "modes": ["button"]},
@@ -308,3 +302,11 @@ DEVICE_UNIT_MAP = {
 MAX_SCRIPT_SIZE = 5120
 
 All_LIGHT_TYPES = ("cct", "light", "rgb", "rgbw")
+
+# Shelly-X specific models
+MODEL_NEO_WATER_VALVE = "NeoWaterValve"
+MODEL_FRANKEVER_WATER_VALVE = "WaterValve"
+MODEL_LINKEDGO_ST802_THERMOSTAT = "ST-802"
+MODEL_LINKEDGO_ST1820_THERMOSTAT = "ST1820"
+MODEL_TOP_EV_CHARGER_EVE01 = "EVE01"
+MODEL_FRANKEVER_IRRIGATION_CONTROLLER = "Irrigation"
