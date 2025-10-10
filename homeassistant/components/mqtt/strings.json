@@ -346,6 +346,7 @@
             "mode_state_template": "Operation mode value template",
             "on_command_type": "ON command type",
             "optimistic": "Optimistic",
+            "options": "Set options",
             "payload_off": "Payload \"off\"",
             "payload_on": "Payload \"on\"",
             "payload_press": "Payload \"press\"",
@@ -393,6 +394,7 @@
             "mode_state_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the operation mode state. [Learn more.]({url}#mode_state_template)",
             "on_command_type": "Defines when the payload \"on\" is sent. Using \"Last\" (the default) will send any style (brightness, color, etc) topics first and then a payload \"on\" to the command topic. Using \"First\" will send the payload \"on\" and then any style topics. Using \"Brightness\" will only send brightness commands instead of the payload \"on\" to turn the light on.",
             "optimistic": "Flag that defines if the {platform} entity works in optimistic mode. [Learn more.]({url}#optimistic)",
+            "options": "List of options that can be selected.",
             "payload_off": "The payload that represents the \"off\" state.",
             "payload_on": "The payload that represents the \"on\" state.",
             "payload_press": "The payload to send when the button is triggered.",
@@ -1334,6 +1336,7 @@
         "lock": "[%key:component::lock::title%]",
         "notify": "[%key:component::notify::title%]",
         "number": "[%key:component::number::title%]",
+        "select": "[%key:component::select::title%]",
         "sensor": "[%key:component::sensor::title%]",
         "switch": "[%key:component::switch::title%]"
       }
