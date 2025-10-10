@@ -70,7 +70,7 @@ async def test_set_time_service_exceptions(
         "homeassistant.components.nintendo_parental._PLATFORMS", [Platform.TIME]
     ):
         await setup_integration(hass, mock_config_entry)
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             TIME_DOMAIN,
             SERVICE_SET_VALUE,
@@ -79,3 +79,4 @@ async def test_set_time_service_exceptions(
             blocking=True,
         )
     assert len(mock_nintendo_device.set_bedtime_alarm.mock_calls) == 1
+    assert err.value.translation_key == "bedtime_alarm_out_of_range"
