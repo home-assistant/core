@@ -8,6 +8,11 @@ from contextlib import asynccontextmanager
 import logging
 from typing import TYPE_CHECKING, Protocol, TypedDict
 
+from homeassistant.components.usb import (
+    USBDevice,
+    async_get_usb_matchers_for_device,
+    usb_device_from_path,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
@@ -15,8 +20,6 @@ from . import DATA_COMPONENT
 from .const import HARDWARE_INTEGRATION_DOMAINS
 
 if TYPE_CHECKING:
-    from homeassistant.components.usb import USBDevice
-
     from .util import FirmwareInfo
 
 
@@ -61,13 +64,6 @@ async def async_get_hardware_domain_for_usb_device(
     hass: HomeAssistant, usb_device: USBDevice
 ) -> str | None:
     """Identify which hardware domain should handle a USB device."""
-
-    # If the USB integration is not available, we cannot check USB matchers
-    if "usb" not in hass.config.components:
-        return None
-
-    from homeassistant.components.usb import async_get_usb_matchers_for_device
-
     matched = async_get_usb_matchers_for_device(hass, usb_device)
     hw_domains = {match["domain"] for match in matched} & HARDWARE_INTEGRATION_DOMAINS
 
@@ -148,15 +144,14 @@ class HardwareInfoDispatcher:
         USB matchers, then triggers an import flow for only that integration.
         """
 
-        if "usb" not in self.hass.config.components:
-            _LOGGER.debug("USB integration is unavailable, cannot trigger discovery")
-            return
-
-        from homeassistant.components.usb import usb_device_from_path  # noqa: PLC0415
-
         usb_device = await self.hass.async_add_executor_job(
             usb_device_from_path, firmware_info.device
         )
+
+        if usb_device is None:
+            _LOGGER.debug("Cannot find USB for path %s", firmware_info.device)
+            return
+
         hardware_domain = await async_get_hardware_domain_for_usb_device(
             self.hass, usb_device
         )
