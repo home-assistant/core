@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WattsVisionConfigEntry
@@ -111,7 +112,9 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
             await self.coordinator.async_refresh_device(self.device_id)
 
         except RuntimeError as err:
-            _LOGGER.error("Error setting temperature for %s: %s", self.device_id, err)
+            raise HomeAssistantError(
+                f"Error setting temperature for {self.device_id}: {err}"
+            ) from err
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -127,7 +130,9 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
                 self.device_id,
             )
         except (ValueError, RuntimeError) as err:
-            _LOGGER.error("Error setting HVAC mode for %s: %s", self.device_id, err)
+            raise HomeAssistantError(
+                f"Error setting HVAC mode for {self.device_id}: {err}"
+            ) from err
 
         await asyncio.sleep(UPDATE_DELAY_AFTER_COMMAND)
         await self.coordinator.async_refresh_device(self.device_id)
