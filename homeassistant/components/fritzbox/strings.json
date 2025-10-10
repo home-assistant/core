@@ -58,7 +58,9 @@
       "holiday_active": { "name": "Holiday mode" },
       "lock": { "name": "Button lock on device" },
       "summer_active": { "name": "Summer mode" },
-      "window_open": { "name": "Open window detected" }
+      "window_open": { "name": "Open window detected" },
+      "adaptive_heating_active": { "name": "Adaptive heating active" },
+      "adaptive_heating_running": { "name": "Adaptive heating running" }
     },
     "climate": {
       "thermostat": {

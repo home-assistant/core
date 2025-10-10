@@ -21,6 +21,20 @@
           "on": "mdi:window-open",
           "off": "mdi:window-closed"
         }
+      },
+      "adaptive_heating_active": {
+        "default": "mdi:radiator-off",
+        "state": {
+          "on": "mdi:radiator-on",
+          "off": "mdi:radiator-off"
+        }
+      },
+      "adaptive_heating_running": {
+        "default": "mdi:radiator-off",
+        "state": {
+          "on": "mdi:radiator-on",
+          "off": "mdi:radiator-off"
+        }
       }
     },
     "climate": {

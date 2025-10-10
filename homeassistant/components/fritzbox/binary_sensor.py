@@ -81,6 +81,18 @@ BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
         suitable=lambda device: device.window_open is not None,
         is_on=lambda device: device.window_open,
     ),
+    FritzBinarySensorEntityDescription(
+        key="adaptive_heating_active",
+        translation_key="adaptive_heating_active",
+        suitable=lambda device: device.adaptive_heating_active is not None,
+        is_on=lambda device: device.adaptive_heating_active,
+    ),
+    FritzBinarySensorEntityDescription(
+        key="adaptive_heating_running",
+        translation_key="adaptive_heating_running",
+        suitable=lambda device: device.adaptive_heating_running is not None,
+        is_on=lambda device: device.adaptive_heating_running,
+    ),
 )
 
 

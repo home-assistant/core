@@ -49,6 +49,8 @@
 # name: test_setup[climate.fake_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'adaptive_heating_active': False,
+      'adaptive_heating_running': False,
       'battery_level': 23,
       'battery_low': True,
       'current_temperature': 18.0,

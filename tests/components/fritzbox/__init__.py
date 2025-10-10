@@ -109,6 +109,8 @@ class FritzDeviceClimateMock(FritzEntityBaseMock):
     summer_active = False
     target_temperature = 19.5
     window_open = "fake_window"
+    adaptive_heating_active = False
+    adaptive_heating_running = False
     nextchange_temperature = 22.0
     nextchange_endperiod = 1726855200
 

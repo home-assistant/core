@@ -1,4 +1,100 @@
 # serializer version: 1
+# name: test_setup[binary_sensor.fake_name_adaptive_heating_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.fake_name_adaptive_heating_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Adaptive heating active',
+    'platform': 'fritzbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'adaptive_heating_active',
+    'unique_id': '12345 1234567_adaptive_heating_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_adaptive_heating_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'fake_name Adaptive heating active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.fake_name_adaptive_heating_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_adaptive_heating_running-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.fake_name_adaptive_heating_running',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Adaptive heating running',
+    'platform': 'fritzbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'adaptive_heating_running',
+    'unique_id': '12345 1234567_adaptive_heating_running',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_adaptive_heating_running-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'fake_name Adaptive heating running',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.fake_name_adaptive_heating_running',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_setup[binary_sensor.fake_name_alarm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
