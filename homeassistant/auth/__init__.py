@@ -195,6 +195,7 @@ class AuthManager:
 
     async def async_setup(self) -> None:
         """Set up the auth manager."""
+        await asyncio.sleep(0)
         hass = self.hass
         hass.async_add_shutdown_job(
             HassJob(
