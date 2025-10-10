@@ -25,9 +25,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
                 options=[
                     SelectOptionDict(
                         value=key.value,
-                        label=conf.name,
+                        label=PROVIDERS[key].name,
                     )
-                    for key, conf in PROVIDERS.items()
+                    for key in Provider
                 ],
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key="providers",
