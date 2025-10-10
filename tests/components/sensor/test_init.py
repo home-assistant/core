@@ -3065,7 +3065,6 @@ def test_device_class_converters_are_complete() -> None:
     no_converter_device_classes = {
         SensorDeviceClass.AQI,
         SensorDeviceClass.BATTERY,
-        SensorDeviceClass.CO,
         SensorDeviceClass.CO2,
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,

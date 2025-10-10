@@ -20,6 +20,8 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
 )
 from homeassistant.components.recorder.statistics import (
+    _PRIMARY_UNIT_CONVERTERS,
+    _SECONDARY_UNIT_CONVERTERS,
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     PlatformCompiledStatistics,
     _generate_max_mean_min_statistic_in_sub_period_stmt,
@@ -63,7 +65,6 @@ from .common import (
 
 from tests.common import MockPlatform, MockUser, mock_platform
 from tests.typing import RecorderInstanceContextManager, WebSocketGenerator
-from tests.util.test_unit_conversion import _ALL_CONVERTERS
 
 POWER_SENSOR_KW_ATTRIBUTES = {
     "device_class": "power",
@@ -114,7 +115,13 @@ async def _setup_mock_domain(
 def test_converters_align_with_sensor() -> None:
     """Ensure STATISTIC_UNIT_TO_UNIT_CONVERTER is aligned with UNIT_CONVERTERS."""
     for converter in UNIT_CONVERTERS.values():
-        assert converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
+        assert (
+            converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
+            or converter in _SECONDARY_UNIT_CONVERTERS
+        )
+
+    for converter in _SECONDARY_UNIT_CONVERTERS:
+        assert converter not in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
 
     for converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
         assert converter in UNIT_CONVERTERS.values()
@@ -3998,7 +4005,7 @@ def test_STATISTIC_UNIT_TO_UNIT_CONVERTER(uom: str) -> None:
     if other := next(
         (
             c
-            for c in _ALL_CONVERTERS
+            for c in _PRIMARY_UNIT_CONVERTERS
             if unit_converter is not c and uom in c.VALID_UNITS
         ),
         None,
