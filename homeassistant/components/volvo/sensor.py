@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import cast
 
 from volvocarsapi.models import (
     VolvoCarsApiBaseModel,
@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import API_NONE_VALUE, DATA_BATTERY_CAPACITY
 from .coordinator import VolvoConfigEntry
@@ -49,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 class VolvoSensorDescription(VolvoEntityDescription, SensorEntityDescription):
     """Describes a Volvo sensor entity."""
 
-    value_fn: Callable[[VolvoCarsApiBaseModel], Any] | None = None
+    value_fn: Callable[[VolvoCarsApiBaseModel], StateType] | None = None
 
 
 def _availability_status(field: VolvoCarsApiBaseModel) -> str:
