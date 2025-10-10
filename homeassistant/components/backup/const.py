@@ -18,12 +18,12 @@ LOGGER = getLogger(__package__)
 EXCLUDE_FROM_BACKUP = [
     "**/__pycache__/*",
     "**/.DS_Store",
+    "**/backups/*.tar",
+    "**/tmp_backups/*.tar",
     ".HA_RESTORE",
     "*.db-shm",
     "*.log.*",
     "*.log",
-    "backups/*.tar",
-    "tmp_backups/*.tar",
     "OZW_Log.txt",
     "tts/*",
 ]
