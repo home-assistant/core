@@ -27,16 +27,13 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     CONF_BROWSE_LIMIT,
-    CONF_FLOW_TYPE,
     CONF_HTTPS,
+    CONF_SERVER_LIST,
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
     DEFAULT_PORT,
@@ -100,6 +97,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_HOST: server.host,
                     CONF_PORT: int(server.port),
                     "uuid": server.uuid,
+                    "name": server.name,
                 }
 
                 _LOGGER.debug(
@@ -149,49 +147,55 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return None
 
-    async def async_step_flow_type(
+    async def async_step_choose_server(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose manual or discover flow."""
-        _options: list = []
-        _discovered_title = "Discovered LMS: "
         _chosen_host: str
 
         if user_input:
-            if user_input[CONF_FLOW_TYPE] != "Manual":
-                _chosen_host = user_input[CONF_FLOW_TYPE].removeprefix(
-                    _discovered_title
-                )
-                for _server in self.discovered_servers:
-                    if _chosen_host == _server[CONF_HOST]:
-                        self.chosen_server[CONF_HOST] = _chosen_host
-                        self.chosen_server[CONF_PORT] = _server[CONF_PORT]
-                        self.chosen_server[CONF_HTTPS] = False
-                return await self.async_step_edit_discovered()
-            return await self.async_step_edit()
+            _chosen_host = user_input[CONF_SERVER_LIST]
+            for _server in self.discovered_servers:
+                if _chosen_host == _server[CONF_HOST]:
+                    self.chosen_server[CONF_HOST] = _chosen_host
+                    self.chosen_server[CONF_PORT] = _server[CONF_PORT]
+                    self.chosen_server[CONF_HTTPS] = False
+            return await self.async_step_edit_discovered()
 
-        _options.extend(
-            _discovered_title + _server[CONF_HOST]
+        _options = {
+            _server[CONF_HOST]: f"{_server['name']} ({_server[CONF_HOST]})"
             for _server in self.discovered_servers
-        )
-
-        _options.append("Manual")
-
+        }
         return self.async_show_form(
-            step_id="flow_type",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_FLOW_TYPE): SelectSelector(
-                        SelectSelectorConfig(
-                            mode=SelectSelectorMode.LIST,
-                            options=_options,
-                        )
-                    ),
-                }
-            ),
+            step_id="choose_server",
+            data_schema=vol.Schema({vol.Required(CONF_SERVER_LIST): vol.In(_options)}),
         )
 
     async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by the user."""
+
+        return self.async_show_menu(
+            step_id="user", menu_options=["start_discovery", "edit"]
+        )
+
+    async def async_step_discovery_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a failed discovery."""
+
+        return self.async_show_menu(
+            step_id="discovery_failed", menu_options=["edit", "cancel"]
+        )
+
+    async def async_step_cancel(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Cancel the config flow."""
+        return
+
+    async def async_step_start_discovery(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
@@ -203,18 +207,16 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             self.discovery_task.cancel()
             self.discovery_task = None
             # Sleep to allow task cancellation to complete
+
             await asyncio.sleep(0.1)
+
             return self.async_show_progress_done(
-                next_step_id="flow_type" if self.discovered_servers else "edit"
+                next_step_id="choose_server" if self.discovered_servers else "edit"
             )
 
         return self.async_show_progress(
-            step_id="user",
-            progress_action="discover",
-            description_placeholders={
-                "status": "Attempting to discover new LMS servers",
-                "hint": "This will take about 5 seconds.",
-            },
+            step_id="start_discovery",
+            progress_action="start_discovery",
             progress_task=self.discovery_task,
         )
 
@@ -234,11 +236,6 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="edit",
-            description_placeholders={
-                "desc": "No new LMS was discovered.  Please enter connection information manually."
-                if not self.discovered_servers
-                else ""
-            },
             data_schema=FULL_EDIT_SCHEMA,
             errors=errors,
         )
@@ -267,7 +264,8 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="edit_discovered",
             description_placeholders={
-                "desc": f"LMS Host: {self.chosen_server[CONF_HOST]}, Port: {self.chosen_server[CONF_PORT]}"
+                "host": self.chosen_server[CONF_HOST],
+                "port": self.chosen_server[CONF_PORT],
             },
             data_schema=SHORT_EDIT_SCHEMA,
             errors=errors,

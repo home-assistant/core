@@ -2,21 +2,32 @@
   "config": {
     "progress": {
       "title": "Lyrion Music Server",
-      "description": "Discovering Lyrion Music Server on the network.",
-      "discover": "{status}\n\n{hint}"
+      "start_discovery": "Attempting to discover new LMS servers\n\nThis will take about 5 seconds"
     },
     "flow_title": "{host}",
     "step": {
-      "flow_type": {
+      "user": {
+        "title": "Lyrion Music Server Configuration",
+        "menu_options": {
+          "start_discovery": "Discover new Lyrion Music Servers",
+          "edit": "Enter configuration manually"
+        }
+      },
+      "discovery_failed": {
+        "title": "Discovery failed",
+        "menu_options": {
+          "edit": "Enter configuration manually",
+          "cancel": "Exit LMS configuration"
+        }
+      },
+      "choose_server": {
+        "title": "Discovered Servers",
         "data": {
-          "flow_type": "Configured discovered LMS or add manually?"
-        },
-        "description": "Setup can configure a discovered LMS, or you can enter new details manually",
-        "title": "Lyrion Music Server"
+          "server_list": "Choose discovered server to configure"
+        }
       },
       "edit": {
         "title": "Edit connection information",
-        "description": "{desc}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -34,7 +45,7 @@
       },
       "edit_discovered": {
         "title": "Edit additional connection information",
-        "description": "{desc}",
+        "description": "LMS Host: {host}, Port {port}",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
