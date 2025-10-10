@@ -6,6 +6,9 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from anthropic import RateLimitError
 from anthropic.types import (
+    CitationsDelta,
+    CitationsWebSearchResultLocation,
+    CitationWebSearchResultLocationParam,
     InputJSONDelta,
     Message,
     MessageDeltaUsage,
@@ -17,13 +20,17 @@ from anthropic.types import (
     RawMessageStopEvent,
     RawMessageStreamEvent,
     RedactedThinkingBlock,
+    ServerToolUseBlock,
     SignatureDelta,
     TextBlock,
+    TextCitation,
     TextDelta,
     ThinkingBlock,
     ThinkingDelta,
     ToolUseBlock,
     Usage,
+    WebSearchResultBlock,
+    WebSearchToolResultBlock,
 )
 from anthropic.types.raw_message_delta_event import Delta
 from freezegun import freeze_time
@@ -33,6 +40,7 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
+from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -78,15 +86,25 @@ def create_messages(
 
 
 def create_content_block(
-    index: int, text_parts: list[str]
+    index: int, text_parts: list[str], citations: list[TextCitation] | None = None
 ) -> list[RawMessageStreamEvent]:
     """Create a text content block with the specified deltas."""
     return [
         RawContentBlockStartEvent(
             type="content_block_start",
-            content_block=TextBlock(text="", type="text"),
+            content_block=TextBlock(
+                text="", type="text", citations=[] if citations else None
+            ),
             index=index,
         ),
+        *[
+            RawContentBlockDeltaEvent(
+                delta=CitationsDelta(citation=citation, type="citations_delta"),
+                index=index,
+                type="content_block_delta",
+            )
+            for citation in (citations or [])
+        ],
         *[
             RawContentBlockDeltaEvent(
                 delta=TextDelta(text=text_part, type="text_delta"),
@@ -170,6 +188,46 @@ def create_tool_use_block(
             )
             for json_part in json_parts
         ],
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_web_search_block(
+    index: int, id: str, query_parts: list[str]
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool use block for web search."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=ServerToolUseBlock(
+                type="server_tool_use", id=id, input={}, name="web_search"
+            ),
+            index=index,
+        ),
+        *[
+            RawContentBlockDeltaEvent(
+                delta=InputJSONDelta(type="input_json_delta", partial_json=query_part),
+                index=index,
+                type="content_block_delta",
+            )
+            for query_part in query_parts
+        ],
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_web_search_result_block(
+    index: int, id: str, results: list[WebSearchResultBlock]
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool result block for web search results."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=WebSearchToolResultBlock(
+                type="web_search_tool_result", tool_use_id=id, content=results
+            ),
+            index=index,
+        ),
         RawContentBlockStopEvent(index=index, type="content_block_stop"),
     ]
 
@@ -850,6 +908,119 @@ async def test_extended_thinking_tool_call(
     assert mock_create.mock_calls[1][2]["messages"] == snapshot
 
 
+async def test_web_search(
+    hass: HomeAssistant,
+    mock_config_entry_with_web_search: MockConfigEntry,
+    mock_init_component,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test web search."""
+    web_search_results = [
+        WebSearchResultBlock(
+            type="web_search_result",
+            title="Today's News - Example.com",
+            url="https://www.example.com/todays-news",
+            page_age="2 days ago",
+            encrypted_content="ABCDEFG",
+        ),
+        WebSearchResultBlock(
+            type="web_search_result",
+            title="Breaking News - NewsSite.com",
+            url="https://www.newssite.com/breaking-news",
+            page_age=None,
+            encrypted_content="ABCDEFG",
+        ),
+    ]
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                [
+                    *create_thinking_block(
+                        0,
+                        [
+                            "The user is",
+                            " asking about today's news, which",
+                            " requires current, real-time information",
+                            ". This is clearly something that requires recent",
+                            " information beyond my knowledge cutoff.",
+                            " I should use the web",
+                            "_search tool to fin",
+                            "d today's news.",
+                        ],
+                    ),
+                    *create_content_block(
+                        1, ["To get today's news, I'll perform a web search"]
+                    ),
+                    *create_web_search_block(
+                        2,
+                        "srvtoolu_12345ABC",
+                        ["", '{"que', 'ry"', ": \"today's", ' news"}'],
+                    ),
+                    *create_web_search_result_block(
+                        3, "srvtoolu_12345ABC", web_search_results
+                    ),
+                    *create_content_block(
+                        4,
+                        ["Here's what I found on the web about today's news:\n", "1. "],
+                    ),
+                    *create_content_block(
+                        5,
+                        ["New Home Assistant release"],
+                        citations=[
+                            CitationsWebSearchResultLocation(
+                                type="web_search_result_location",
+                                cited_text="This release iterates on some of the features we introduced in the last couple of releases, but also...",
+                                encrypted_index="AAA==",
+                                title="Home Assistant Release",
+                                url="https://www.example.com/todays-news",
+                            )
+                        ],
+                    ),
+                    *create_content_block(6, ["\n2. "]),
+                    *create_content_block(
+                        7,
+                        ["Something incredible happened"],
+                        citations=[
+                            CitationsWebSearchResultLocation(
+                                type="web_search_result_location",
+                                cited_text="Breaking news from around the world today includes major events in technology, politics, and culture...",
+                                encrypted_index="AQE=",
+                                title="Breaking News",
+                                url="https://www.newssite.com/breaking-news",
+                            ),
+                            CitationsWebSearchResultLocation(
+                                type="web_search_result_location",
+                                cited_text="Well, this happened...",
+                                encrypted_index="AgI=",
+                                title="Breaking News",
+                                url="https://www.newssite.com/breaking-news",
+                            ),
+                        ],
+                    ),
+                    *create_content_block(
+                        8, ["\nThose are the main headlines making news today."]
+                    ),
+                ]
+            ),
+        ),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "What's on the news today?",
+            None,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+
+
 @pytest.mark.parametrize(
     "content",
     [
@@ -927,6 +1098,93 @@ async def test_extended_thinking_tool_call(
             conversation.chat_log.AssistantContent(
                 agent_id="conversation.claude_conversation",
                 content="Should I add milk to the shopping list?",
+            ),
+        ],
+        [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+            conversation.chat_log.UserContent("What's on the news today?"),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                content="To get today's news, I'll perform a web search",
+                thinking_content="The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
+                native=ThinkingBlock(
+                    signature="ErU/V+ayA==", thinking="", type="thinking"
+                ),
+                tool_calls=[
+                    llm.ToolInput(
+                        id="srvtoolu_12345ABC",
+                        tool_name="web_search",
+                        tool_args={"query": "today's news"},
+                        external=True,
+                    ),
+                ],
+            ),
+            conversation.chat_log.ToolResultContent(
+                agent_id="conversation.claude_conversation",
+                tool_call_id="srvtoolu_12345ABC",
+                tool_name="web_search",
+                tool_result={
+                    "content": [
+                        {
+                            "type": "web_search_result",
+                            "title": "Today's News - Example.com",
+                            "url": "https://www.example.com/todays-news",
+                            "page_age": "2 days ago",
+                            "encrypted_content": "ABCDEFG",
+                        },
+                        {
+                            "type": "web_search_result",
+                            "title": "Breaking News - NewsSite.com",
+                            "url": "https://www.newssite.com/breaking-news",
+                            "page_age": None,
+                            "encrypted_content": "ABCDEFG",
+                        },
+                    ]
+                },
+            ),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                content="Here's what I found on the web about today's news:\n"
+                "1. New Home Assistant release\n"
+                "2. Something incredible happened\n"
+                "Those are the main headlines making news today.",
+                native=ContentDetails(
+                    citation_details=[
+                        CitationDetails(
+                            index=54,
+                            length=26,
+                            citations=[
+                                CitationWebSearchResultLocationParam(
+                                    type="web_search_result_location",
+                                    cited_text="This release iterates on some of the features we introduced in the last couple of releases, but also...",
+                                    encrypted_index="AAA==",
+                                    title="Home Assistant Release",
+                                    url="https://www.example.com/todays-news",
+                                ),
+                            ],
+                        ),
+                        CitationDetails(
+                            index=84,
+                            length=29,
+                            citations=[
+                                CitationWebSearchResultLocationParam(
+                                    type="web_search_result_location",
+                                    cited_text="Breaking news from around the world today includes major events in technology, politics, and culture...",
+                                    encrypted_index="AQE=",
+                                    title="Breaking News",
+                                    url="https://www.newssite.com/breaking-news",
+                                ),
+                                CitationWebSearchResultLocationParam(
+                                    type="web_search_result_location",
+                                    cited_text="Well, this happened...",
+                                    encrypted_index="AgI=",
+                                    title="Breaking News",
+                                    url="https://www.newssite.com/breaking-news",
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
             ),
         ],
     ],
