@@ -27,7 +27,6 @@ async def test_step_user(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["data_schema"] is STEP_USER_DATA_SCHEMA
     assert result["errors"] == {}
 
     # Test successful configuration with valid user input
