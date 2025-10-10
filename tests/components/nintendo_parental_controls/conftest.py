@@ -79,7 +79,7 @@ def mock_nintendo_client(
     mock_client_instance.devices = {"testdevid": mock_nintendo_device}
     # Now patch the NintendoParental class in the coordinator with our mock instance
     with patch(
-        "homeassistant.components.nintendo_parental.coordinator.NintendoParental",
+        "homeassistant.components.nintendo_parental_controls.coordinator.NintendoParental",
         autospec=True,
     ) as mock_client_class:
         mock_client_class.return_value = mock_client_instance

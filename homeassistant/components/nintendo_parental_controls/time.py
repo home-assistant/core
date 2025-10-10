@@ -26,24 +26,24 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-class NintendoParentalTime(StrEnum):
+class NintendoParentalControlsTime(StrEnum):
     """Store keys for Nintendo Parental time."""
 
     BEDTIME_ALARM = "bedtime_alarm"
 
 
 @dataclass(kw_only=True, frozen=True)
-class NintendoParentalTimeEntityDescription(TimeEntityDescription):
+class NintendoParentalControlsTimeEntityDescription(TimeEntityDescription):
     """Description for Nintendo Parental time entities."""
 
     value_fn: Callable[[Device], time | None]
     set_value_fn: Callable[[Device, time], Coroutine[Any, Any, None]]
 
 
-TIME_DESCRIPTIONS: tuple[NintendoParentalTimeEntityDescription, ...] = (
-    NintendoParentalTimeEntityDescription(
-        key=NintendoParentalTime.BEDTIME_ALARM,
-        translation_key=NintendoParentalTime.BEDTIME_ALARM,
+TIME_DESCRIPTIONS: tuple[NintendoParentalControlsTimeEntityDescription, ...] = (
+    NintendoParentalControlsTimeEntityDescription(
+        key=NintendoParentalControlsTime.BEDTIME_ALARM,
+        translation_key=NintendoParentalControlsTime.BEDTIME_ALARM,
         value_fn=lambda device: device.bedtime_alarm,
         set_value_fn=lambda device, value: device.set_bedtime_alarm(value=value),
     ),
@@ -57,22 +57,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the time platform."""
     async_add_devices(
-        NintendoParentalTimeEntity(entry.runtime_data, device, entity)
+        NintendoParentalControlsTimeEntity(entry.runtime_data, device, entity)
         for device in entry.runtime_data.api.devices.values()
         for entity in TIME_DESCRIPTIONS
     )
 
 
-class NintendoParentalTimeEntity(NintendoDevice, TimeEntity):
+class NintendoParentalControlsTimeEntity(NintendoDevice, TimeEntity):
     """Represent a single time entity."""
 
-    entity_description: NintendoParentalTimeEntityDescription
+    entity_description: NintendoParentalControlsTimeEntityDescription
 
     def __init__(
         self,
         coordinator: NintendoUpdateCoordinator,
         device: Device,
-        description: NintendoParentalTimeEntityDescription,
+        description: NintendoParentalControlsTimeEntityDescription,
     ) -> None:
         """Initialize the time entity."""
         super().__init__(coordinator=coordinator, device=device, key=description.key)
