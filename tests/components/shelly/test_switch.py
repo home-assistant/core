@@ -4,7 +4,7 @@ from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import MODEL_1PM, MODEL_GAS, MODEL_MOTION
+from aioshelly.const import MODEL_1PM, MODEL_MOTION
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -556,23 +556,6 @@ async def test_rpc_auth_error(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == entry.entry_id
-
-
-async def test_remove_gas_valve_switch(
-    hass: HomeAssistant,
-    mock_block_device: Mock,
-    entity_registry: EntityRegistry,
-) -> None:
-    """Test removing deprecated switch entity for Shelly Gas Valve."""
-    entity_id = register_entity(
-        hass,
-        SWITCH_DOMAIN,
-        "test_name_valve",
-        "valve_0-valve",
-    )
-    await init_integration(hass, 1, MODEL_GAS)
-
-    assert entity_registry.async_get(entity_id) is None
 
 
 async def test_wall_display_relay_mode(
