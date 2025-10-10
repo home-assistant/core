@@ -2250,7 +2250,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.4.2
+renault-api==0.4.3
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
