@@ -18,25 +18,7 @@
         }),
       }),
       'results': dict({
-        'after_shkia_date': dict({
-          'date': dict({
-            'day': 21,
-            'month': 10,
-            'year': 5785,
-          }),
-          'diaspora': False,
-          'nusach': 'sephardi',
-        }),
-        'after_tzais_date': dict({
-          'date': dict({
-            'day': 21,
-            'month': 10,
-            'year': 5785,
-          }),
-          'diaspora': False,
-          'nusach': 'sephardi',
-        }),
-        'daytime_date': dict({
+        'dateinfo': dict({
           'date': dict({
             'day': 21,
             'month': 10,
@@ -48,7 +30,7 @@
         'zmanim': dict({
           'candle_lighting_offset': 40,
           'date': dict({
-            '__type': "<class 'freezegun.api.FakeDate'>",
+            '__type': "<class 'datetime.date'>",
             'isoformat': '2025-05-19',
           }),
           'havdalah_offset': 0,
@@ -92,25 +74,7 @@
         }),
       }),
       'results': dict({
-        'after_shkia_date': dict({
-          'date': dict({
-            'day': 21,
-            'month': 10,
-            'year': 5785,
-          }),
-          'diaspora': True,
-          'nusach': 'sephardi',
-        }),
-        'after_tzais_date': dict({
-          'date': dict({
-            'day': 21,
-            'month': 10,
-            'year': 5785,
-          }),
-          'diaspora': True,
-          'nusach': 'sephardi',
-        }),
-        'daytime_date': dict({
+        'dateinfo': dict({
           'date': dict({
             'day': 21,
             'month': 10,
@@ -122,7 +86,7 @@
         'zmanim': dict({
           'candle_lighting_offset': 18,
           'date': dict({
-            '__type': "<class 'freezegun.api.FakeDate'>",
+            '__type': "<class 'datetime.date'>",
             'isoformat': '2025-05-19',
           }),
           'havdalah_offset': 0,
@@ -166,25 +130,7 @@
         }),
       }),
       'results': dict({
-        'after_shkia_date': dict({
-          'date': dict({
-            'day': 21,
-            'month': 10,
-            'year': 5785,
-          }),
-          'diaspora': False,
-          'nusach': 'sephardi',
-        }),
-        'after_tzais_date': dict({
-          'date': dict({
-            'day': 21,
-            'month': 10,
-            'year': 5785,
-          }),
-          'diaspora': False,
-          'nusach': 'sephardi',
-        }),
-        'daytime_date': dict({
+        'dateinfo': dict({
           'date': dict({
             'day': 21,
             'month': 10,
@@ -196,7 +142,7 @@
         'zmanim': dict({
           'candle_lighting_offset': 18,
           'date': dict({
-            '__type': "<class 'freezegun.api.FakeDate'>",
+            '__type': "<class 'datetime.date'>",
             'isoformat': '2025-05-19',
           }),
           'havdalah_offset': 0,

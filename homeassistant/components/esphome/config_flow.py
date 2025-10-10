@@ -22,19 +22,23 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
+    SOURCE_ESPHOME,
     SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    FlowType,
     OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, FlowResultType
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -51,11 +55,13 @@ from .const import (
     DOMAIN,
 )
 from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboard_info
+from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry
 from .manager import async_replace_device
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
+ERROR_INVALID_PASSWORD_AUTH = "invalid_auth"
 _LOGGER = logging.getLogger(__name__)
 
 ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
@@ -73,6 +79,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow."""
         self._host: str | None = None
+        self._connected_address: str | None = None
         self.__name: str | None = None
         self._port: int | None = None
         self._password: str | None = None
@@ -136,7 +143,22 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             self._password = ""
             return await self._async_authenticate_or_add()
 
+        if error == ERROR_INVALID_PASSWORD_AUTH or (
+            error is None and self._device_info and self._device_info.uses_password
+        ):
+            return await self.async_step_authenticate()
+
         if error is None and entry_data.get(CONF_NOISE_PSK):
+            # Device was configured with encryption but now connects without it.
+            # Check if it's the same device before offering to remove encryption.
+            if self._reauth_entry.unique_id and self._device_mac:
+                expected_mac = format_mac(self._reauth_entry.unique_id)
+                actual_mac = format_mac(self._device_mac)
+                if expected_mac != actual_mac:
+                    # Different device at the same IP - do not offer to remove encryption
+                    return self._async_abort_wrong_device(
+                        self._reauth_entry, expected_mac, actual_mac
+                    )
             return await self.async_step_reauth_encryption_removed_confirm()
         return await self.async_step_reauth_confirm()
 
@@ -159,7 +181,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle reauthorization flow."""
         errors = {}
 
-        if await self._retrieve_encryption_key_from_dashboard():
+        if (
+            await self._retrieve_encryption_key_from_storage()
+            or await self._retrieve_encryption_key_from_dashboard()
+        ):
             error = await self.fetch_device_info()
             if error is None:
                 return await self._async_authenticate_or_add()
@@ -226,9 +251,12 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 response = await self.fetch_device_info()
                 self._noise_psk = None
 
+            # Try to retrieve an existing key from dashboard or storage.
             if (
                 self._device_name
                 and await self._retrieve_encryption_key_from_dashboard()
+            ) or (
+                self._device_mac and await self._retrieve_encryption_key_from_storage()
             ):
                 response = await self.fetch_device_info()
 
@@ -284,6 +312,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._name = discovery_info.properties.get("friendly_name", device_name)
         self._host = discovery_info.host
         self._port = discovery_info.port
+        self._device_mac = mac_address
         self._noise_required = bool(discovery_info.properties.get("api_encryption"))
 
         # Check if already configured
@@ -308,10 +337,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             # Don't call _fetch_device_info() for ignored entries
             raise AbortFlow("already_configured")
         configured_host: str | None = entry.data.get(CONF_HOST)
-        configured_port: int | None = entry.data.get(CONF_PORT)
-        if configured_host == host and configured_port == port:
+        configured_port: int = entry.data.get(CONF_PORT, DEFAULT_PORT)
+        # When port is None (from DHCP discovery), only compare hosts
+        if configured_host == host and (port is None or configured_port == port):
             # Don't probe to verify the mac is correct since
-            # the host and port matches.
+            # the host matches (and port matches if provided).
             raise AbortFlow("already_configured")
         configured_psk: str | None = entry.data.get(CONF_NOISE_PSK)
         await self._fetch_device_info(host, port or configured_port, configured_psk)
@@ -473,18 +503,55 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.hass.config_entries.async_remove(
             self._entry_with_name_conflict.entry_id
         )
-        return self._async_create_entry()
+        return await self._async_create_entry()
 
-    @callback
-    def _async_create_entry(self) -> ConfigFlowResult:
+    async def _async_create_entry(self) -> ConfigFlowResult:
         """Create the config entry."""
         assert self._name is not None
+        assert self._device_info is not None
+
+        # Check if Z-Wave capabilities are present and start discovery flow
+        next_flow_id: str | None = None
+        if self._device_info.zwave_proxy_feature_flags:
+            assert self._connected_address is not None
+            assert self._port is not None
+
+            # Start Z-Wave discovery flow and get the flow ID
+            zwave_result = await self.hass.config_entries.flow.async_init(
+                "zwave_js",
+                context={
+                    "source": SOURCE_ESPHOME,
+                    "discovery_key": discovery_flow.DiscoveryKey(
+                        domain=DOMAIN,
+                        key=self._device_info.mac_address,
+                        version=1,
+                    ),
+                },
+                data=ESPHomeServiceInfo(
+                    name=self._device_info.name,
+                    zwave_home_id=self._device_info.zwave_home_id or None,
+                    ip_address=self._connected_address,
+                    port=self._port,
+                    noise_psk=self._noise_psk,
+                ),
+            )
+            if zwave_result["type"] in (
+                FlowResultType.ABORT,
+                FlowResultType.CREATE_ENTRY,
+            ):
+                _LOGGER.debug(
+                    "Unable to continue created Z-Wave JS config flow: %s", zwave_result
+                )
+            else:
+                next_flow_id = zwave_result["flow_id"]
+
         return self.async_create_entry(
             title=self._name,
             data=self._async_make_config_data(),
             options={
                 CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
             },
+            next_flow=(FlowType.CONFIG_FLOW, next_flow_id) if next_flow_id else None,
         )
 
     @callback
@@ -499,6 +566,28 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_DEVICE_NAME: self._device_name,
         }
 
+    @callback
+    def _async_abort_wrong_device(
+        self, entry: ConfigEntry, expected_mac: str, actual_mac: str
+    ) -> ConfigFlowResult:
+        """Abort flow because a different device was found at the IP address."""
+        assert self._host is not None
+        assert self._device_name is not None
+        if self.source == SOURCE_RECONFIGURE:
+            reason = "reconfigure_unique_id_changed"
+        else:
+            reason = "reauth_unique_id_changed"
+        return self.async_abort(
+            reason=reason,
+            description_placeholders={
+                "name": entry.data.get(CONF_DEVICE_NAME, entry.title),
+                "host": self._host,
+                "expected_mac": expected_mac,
+                "unexpected_mac": actual_mac,
+                "unexpected_device_name": self._device_name,
+            },
+        )
+
     async def _async_validated_connection(self) -> ConfigFlowResult:
         """Handle validated connection."""
         if self.source == SOURCE_RECONFIGURE:
@@ -509,7 +598,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             if entry.data.get(CONF_DEVICE_NAME) == self._device_name:
                 self._entry_with_name_conflict = entry
                 return await self.async_step_name_conflict()
-        return self._async_create_entry()
+        return await self._async_create_entry()
 
     async def _async_reauth_validated_connection(self) -> ConfigFlowResult:
         """Handle reauth validated connection."""
@@ -530,17 +619,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # Reauth was triggered a while ago, and since than
         # a new device resides at the same IP address.
         assert self._device_name is not None
-        return self.async_abort(
-            reason="reauth_unique_id_changed",
-            description_placeholders={
-                "name": self._reauth_entry.data.get(
-                    CONF_DEVICE_NAME, self._reauth_entry.title
-                ),
-                "host": self._host,
-                "expected_mac": format_mac(self._reauth_entry.unique_id),
-                "unexpected_mac": format_mac(self.unique_id),
-                "unexpected_device_name": self._device_name,
-            },
+        return self._async_abort_wrong_device(
+            self._reauth_entry,
+            format_mac(self._reauth_entry.unique_id),
+            format_mac(self.unique_id),
         )
 
     async def _async_reconfig_validated_connection(self) -> ConfigFlowResult:
@@ -580,17 +662,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if self._reconfig_entry.data.get(CONF_DEVICE_NAME) == self._device_name:
             self._entry_with_name_conflict = self._reconfig_entry
             return await self.async_step_name_conflict()
-        return self.async_abort(
-            reason="reconfigure_unique_id_changed",
-            description_placeholders={
-                "name": self._reconfig_entry.data.get(
-                    CONF_DEVICE_NAME, self._reconfig_entry.title
-                ),
-                "host": self._host,
-                "expected_mac": format_mac(self._reconfig_entry.unique_id),
-                "unexpected_mac": format_mac(self.unique_id),
-                "unexpected_device_name": self._device_name,
-            },
+        return self._async_abort_wrong_device(
+            self._reconfig_entry,
+            format_mac(self._reconfig_entry.unique_id),
+            format_mac(self.unique_id),
         )
 
     async def async_step_encryption_key(
@@ -663,13 +738,16 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         cli = APIClient(
             host,
             port or DEFAULT_PORT,
-            "",
+            self._password or "",
             zeroconf_instance=zeroconf_instance,
             noise_psk=noise_psk,
         )
         try:
             await cli.connect()
             self._device_info = await cli.device_info()
+            self._connected_address = cli.connected_address
+        except InvalidAuthAPIError:
+            return ERROR_INVALID_PASSWORD_AUTH
         except RequiresEncryptionAPIError:
             return ERROR_REQUIRES_ENCRYPTION_KEY
         except InvalidEncryptionKeyAPIError as ex:
@@ -771,6 +849,26 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._noise_psk = noise_psk
         return True
+
+    async def _retrieve_encryption_key_from_storage(self) -> bool:
+        """Try to retrieve the encryption key from storage.
+
+        Return boolean if a key was retrieved.
+        """
+        # Try to get MAC address from current flow state or reauth entry
+        mac_address = self._device_mac
+        if mac_address is None and self._reauth_entry is not None:
+            # In reauth flow, get MAC from the existing entry's unique_id
+            mac_address = self._reauth_entry.unique_id
+
+        assert mac_address is not None
+
+        storage = await async_get_encryption_key_storage(self.hass)
+        if stored_key := await storage.async_get_key(mac_address):
+            self._noise_psk = stored_key
+            return True
+
+        return False
 
     @staticmethod
     @callback

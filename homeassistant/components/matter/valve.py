@@ -21,7 +21,6 @@ from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 ValveConfigurationAndControl = clusters.ValveConfigurationAndControl
-
 ValveStateEnum = ValveConfigurationAndControl.Enums.ValveStateEnum
 
 
@@ -52,9 +51,12 @@ class MatterValve(MatterEntity, ValveEntity):
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
-        await self.send_device_command(
-            ValveConfigurationAndControl.Commands.Open(targetLevel=position)
-        )
+        if position > 0:
+            await self.send_device_command(
+                ValveConfigurationAndControl.Commands.Open(targetLevel=position)
+            )
+            return
+        await self.send_device_command(ValveConfigurationAndControl.Commands.Close())
 
     @callback
     def _update_from_device(self) -> None:

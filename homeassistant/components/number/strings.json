@@ -22,7 +22,7 @@
           "name": "Mode",
           "state": {
             "auto": "Automatic",
-            "box": "Box",
+            "box": "Input field",
             "slider": "Slider"
           }
         },
@@ -30,6 +30,9 @@
           "name": "Step"
         }
       }
+    },
+    "absolute_humidity": {
+      "name": "[%key:component::sensor::entity_component::absolute_humidity::name%]"
     },
     "apparent_power": {
       "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
@@ -108,6 +111,9 @@
     },
     "pm1": {
       "name": "[%key:component::sensor::entity_component::pm1::name%]"
+    },
+    "pm4": {
+      "name": "[%key:component::sensor::entity_component::pm4::name%]"
     },
     "pm10": {
       "name": "[%key:component::sensor::entity_component::pm10::name%]"

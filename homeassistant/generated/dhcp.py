@@ -27,6 +27,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "E84F25*",
     },
     {
+        "domain": "aladdin_connect",
+        "hostname": "gdocntl-*",
+    },
+    {
         "domain": "august",
         "hostname": "connect",
         "macaddress": "D86162*",
@@ -538,6 +542,30 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "playstation_network",
         "macaddress": "D44B5E*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "F8D0AC*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "E86E3A*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "FC0FE6*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "9C37CB*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "84E657*",
+    },
+    {
+        "domain": "pooldose",
+        "hostname": "kommspot",
     },
     {
         "domain": "powerwall",

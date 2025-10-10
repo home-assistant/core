@@ -16,7 +16,6 @@ from homeassistant.components.habitica.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
@@ -88,7 +87,6 @@ async def test_form_login(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
         result["flow_id"],
         user_input=MOCK_DATA_LOGIN_STEP,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-user"
@@ -96,7 +94,6 @@ async def test_form_login(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
         CONF_API_USER: TEST_API_USER,
         CONF_API_KEY: TEST_API_KEY,
         CONF_URL: DEFAULT_URL,
-        CONF_NAME: "test-user",
         CONF_VERIFY_SSL: True,
     }
     assert result["result"].unique_id == TEST_API_USER
@@ -151,7 +148,6 @@ async def test_form_login_errors(
         CONF_API_USER: TEST_API_USER,
         CONF_API_KEY: TEST_API_KEY,
         CONF_URL: DEFAULT_URL,
-        CONF_NAME: "test-user",
         CONF_VERIFY_SSL: True,
     }
     assert result["result"].unique_id == TEST_API_USER
@@ -211,7 +207,6 @@ async def test_form_advanced(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         result["flow_id"],
         user_input=MOCK_DATA_ADVANCED_STEP,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-user"
@@ -219,7 +214,6 @@ async def test_form_advanced(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         CONF_API_USER: TEST_API_USER,
         CONF_API_KEY: TEST_API_KEY,
         CONF_URL: DEFAULT_URL,
-        CONF_NAME: "test-user",
         CONF_VERIFY_SSL: True,
     }
     assert result["result"].unique_id == TEST_API_USER
@@ -275,7 +269,6 @@ async def test_form_advanced_errors(
         CONF_API_USER: TEST_API_USER,
         CONF_API_KEY: TEST_API_KEY,
         CONF_URL: DEFAULT_URL,
-        CONF_NAME: "test-user",
         CONF_VERIFY_SSL: True,
     }
     assert result["result"].unique_id == TEST_API_USER
@@ -333,8 +326,6 @@ async def test_flow_reauth(
         result["flow_id"],
         user_input,
     )
-
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -404,8 +395,6 @@ async def test_flow_reauth_errors(
         result["flow_id"], user_input
     )
 
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
@@ -416,8 +405,6 @@ async def test_flow_reauth_errors(
         result["flow_id"],
         user_input=USER_INPUT_REAUTH_API_KEY,
     )
-
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -451,8 +438,6 @@ async def test_flow_reauth_unique_id_mismatch(hass: HomeAssistant) -> None:
         USER_INPUT_REAUTH_LOGIN,
     )
 
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
 
@@ -473,8 +458,6 @@ async def test_flow_reconfigure(
         result["flow_id"],
         USER_INPUT_RECONFIGURE,
     )
-
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -512,8 +495,6 @@ async def test_flow_reconfigure_errors(
         USER_INPUT_RECONFIGURE,
     )
 
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
@@ -523,8 +504,6 @@ async def test_flow_reconfigure_errors(
         result["flow_id"],
         user_input=USER_INPUT_RECONFIGURE,
     )
-
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"

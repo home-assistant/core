@@ -40,7 +40,6 @@ async def test_generic_alarm_control_panel_requires_code(
             object_id="myalarm_control_panel",
             key=1,
             name="my alarm_control_panel",
-            unique_id="my_alarm_control_panel",
             supported_features=EspHomeACPFeatures.ARM_AWAY
             | EspHomeACPFeatures.ARM_CUSTOM_BYPASS
             | EspHomeACPFeatures.ARM_HOME
@@ -73,7 +72,7 @@ async def test_generic_alarm_control_panel_requires_code(
         blocking=True,
     )
     mock_client.alarm_control_panel_command.assert_has_calls(
-        [call(1, AlarmControlPanelCommand.ARM_AWAY, "1234")]
+        [call(1, AlarmControlPanelCommand.ARM_AWAY, "1234", device_id=0)]
     )
     mock_client.alarm_control_panel_command.reset_mock()
 
@@ -87,7 +86,7 @@ async def test_generic_alarm_control_panel_requires_code(
         blocking=True,
     )
     mock_client.alarm_control_panel_command.assert_has_calls(
-        [call(1, AlarmControlPanelCommand.ARM_CUSTOM_BYPASS, "1234")]
+        [call(1, AlarmControlPanelCommand.ARM_CUSTOM_BYPASS, "1234", device_id=0)]
     )
     mock_client.alarm_control_panel_command.reset_mock()
 
@@ -101,7 +100,7 @@ async def test_generic_alarm_control_panel_requires_code(
         blocking=True,
     )
     mock_client.alarm_control_panel_command.assert_has_calls(
-        [call(1, AlarmControlPanelCommand.ARM_HOME, "1234")]
+        [call(1, AlarmControlPanelCommand.ARM_HOME, "1234", device_id=0)]
     )
     mock_client.alarm_control_panel_command.reset_mock()
 
@@ -115,7 +114,7 @@ async def test_generic_alarm_control_panel_requires_code(
         blocking=True,
     )
     mock_client.alarm_control_panel_command.assert_has_calls(
-        [call(1, AlarmControlPanelCommand.ARM_NIGHT, "1234")]
+        [call(1, AlarmControlPanelCommand.ARM_NIGHT, "1234", device_id=0)]
     )
     mock_client.alarm_control_panel_command.reset_mock()
 
@@ -129,7 +128,7 @@ async def test_generic_alarm_control_panel_requires_code(
         blocking=True,
     )
     mock_client.alarm_control_panel_command.assert_has_calls(
-        [call(1, AlarmControlPanelCommand.ARM_VACATION, "1234")]
+        [call(1, AlarmControlPanelCommand.ARM_VACATION, "1234", device_id=0)]
     )
     mock_client.alarm_control_panel_command.reset_mock()
 
@@ -143,7 +142,7 @@ async def test_generic_alarm_control_panel_requires_code(
         blocking=True,
     )
     mock_client.alarm_control_panel_command.assert_has_calls(
-        [call(1, AlarmControlPanelCommand.TRIGGER, "1234")]
+        [call(1, AlarmControlPanelCommand.TRIGGER, "1234", device_id=0)]
     )
     mock_client.alarm_control_panel_command.reset_mock()
 
@@ -157,7 +156,7 @@ async def test_generic_alarm_control_panel_requires_code(
         blocking=True,
     )
     mock_client.alarm_control_panel_command.assert_has_calls(
-        [call(1, AlarmControlPanelCommand.DISARM, "1234")]
+        [call(1, AlarmControlPanelCommand.DISARM, "1234", device_id=0)]
     )
     mock_client.alarm_control_panel_command.reset_mock()
 
@@ -173,7 +172,6 @@ async def test_generic_alarm_control_panel_no_code(
             object_id="myalarm_control_panel",
             key=1,
             name="my alarm_control_panel",
-            unique_id="my_alarm_control_panel",
             supported_features=EspHomeACPFeatures.ARM_AWAY
             | EspHomeACPFeatures.ARM_CUSTOM_BYPASS
             | EspHomeACPFeatures.ARM_HOME
@@ -203,7 +201,7 @@ async def test_generic_alarm_control_panel_no_code(
         blocking=True,
     )
     mock_client.alarm_control_panel_command.assert_has_calls(
-        [call(1, AlarmControlPanelCommand.DISARM, None)]
+        [call(1, AlarmControlPanelCommand.DISARM, None, device_id=0)]
     )
     mock_client.alarm_control_panel_command.reset_mock()
 
@@ -219,7 +217,6 @@ async def test_generic_alarm_control_panel_missing_state(
             object_id="myalarm_control_panel",
             key=1,
             name="my alarm_control_panel",
-            unique_id="my_alarm_control_panel",
             supported_features=EspHomeACPFeatures.ARM_AWAY
             | EspHomeACPFeatures.ARM_CUSTOM_BYPASS
             | EspHomeACPFeatures.ARM_HOME

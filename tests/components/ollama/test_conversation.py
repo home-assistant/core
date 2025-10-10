@@ -15,7 +15,12 @@ from homeassistant.components.conversation import trace
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent, llm
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    intent,
+    llm,
+)
 
 from tests.common import MockConfigEntry
 
@@ -68,7 +73,7 @@ async def test_chat(
         args = mock_chat.call_args.kwargs
         prompt = args["messages"][0]["content"]
 
-        assert args["model"] == "test model"
+        assert args["model"] == "test_model:latest"
         assert args["messages"] == [
             Message(role="system", content=prompt),
             Message(role="user", content="test message"),
@@ -128,7 +133,7 @@ async def test_chat_stream(
         args = mock_chat.call_args.kwargs
         prompt = args["messages"][0]["content"]
 
-        assert args["model"] == "test model"
+        assert args["model"] == "test_model:latest"
         assert args["messages"] == [
             Message(role="system", content=prompt),
             Message(role="user", content="test message"),
@@ -138,6 +143,70 @@ async def test_chat_stream(
             result
         )
         assert result.response.speech["plain"]["speech"] == "test response"
+
+
+async def test_thinking_content(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that thinking content is retained in multi-turn conversation."""
+
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
+            ollama.CONF_THINK: True,
+        },
+    )
+
+    conversation_id = "conversation_id_1234"
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        return_value=stream_generator(
+            {
+                "message": {
+                    "role": "assistant",
+                    "content": "test response",
+                    "thinking": "test thinking",
+                },
+                "done": True,
+                "done_reason": "stop",
+            },
+        ),
+    ) as mock_chat:
+        await conversation.async_converse(
+            hass,
+            "test message",
+            conversation_id,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+        await conversation.async_converse(
+            hass,
+            "test message 2",
+            conversation_id,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+        assert mock_chat.call_count == 2
+        assert mock_chat.call_args.kwargs["messages"][1:] == [
+            Message(role="user", content="test message"),
+            Message(
+                role="assistant",
+                content="test response",
+                thinking="test thinking",
+            ),
+            Message(role="user", content="test message 2"),
+        ]
 
 
 async def test_template_variables(
@@ -158,6 +227,7 @@ async def test_template_variables(
                 "The user name is {{ user_name }}. "
                 "The user id is {{ llm_context.context.user_id }}."
             ),
+            ollama.CONF_MODEL: "test_model:latest",
         },
     )
     with (
@@ -206,7 +276,7 @@ async def test_template_variables(
         ),
     ],
 )
-@patch("homeassistant.components.ollama.conversation.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.ollama.entity.llm.AssistAPI._async_get_tools")
 async def test_function_call(
     mock_get_tools,
     hass: HomeAssistant,
@@ -293,7 +363,7 @@ async def test_function_call(
     )
 
 
-@patch("homeassistant.components.ollama.conversation.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.ollama.entity.llm.AssistAPI._async_get_tools")
 async def test_function_exception(
     mock_get_tools,
     hass: HomeAssistant,
@@ -524,7 +594,9 @@ async def test_message_history_unlimited(
     ):
         subentry = next(iter(mock_config_entry.subentries.values()))
         hass.config_entries.async_update_subentry(
-            mock_config_entry, subentry, data={ollama.CONF_MAX_HISTORY: 0}
+            mock_config_entry,
+            subentry,
+            data={**subentry.data, ollama.CONF_MAX_HISTORY: 0},
         )
         for i in range(100):
             result = await conversation.async_converse(
@@ -573,6 +645,7 @@ async def test_template_error(
         mock_config_entry,
         subentry,
         data={
+            **subentry.data,
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
@@ -593,6 +666,8 @@ async def test_conversation_agent(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test OllamaConversationEntity."""
     agent = conversation.get_agent_manager(hass).async_get_agent(
@@ -603,6 +678,23 @@ async def test_conversation_agent(
     state = hass.states.get("conversation.ollama_conversation")
     assert state
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
+    entity_entry = entity_registry.async_get("conversation.ollama_conversation")
+    assert entity_entry
+    subentry = mock_config_entry.subentries.get(entity_entry.unique_id)
+    assert subentry
+
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry
+
+    assert device_entry.identifiers == {(ollama.DOMAIN, subentry.subentry_id)}
+    assert device_entry.name == subentry.title
+    assert device_entry.manufacturer == "Ollama"
+    assert device_entry.entry_type == dr.DeviceEntryType.SERVICE
+
+    model, _, version = subentry.data[ollama.CONF_MODEL].partition(":")
+    assert device_entry.model == model
+    assert device_entry.sw_version == version
 
 
 async def test_conversation_agent_with_assist(
@@ -679,6 +771,7 @@ async def test_reasoning_filter(
         mock_config_entry,
         subentry,
         data={
+            **subentry.data,
             ollama.CONF_THINK: think,
         },
     )

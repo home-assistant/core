@@ -14,23 +14,39 @@
       "user": {
         "data": {
           "db_url": "Database URL",
-          "name": "[%key:common::config_flow::data::name%]",
-          "query": "Select query",
-          "column": "Column",
-          "unit_of_measurement": "Unit of measurement",
-          "value_template": "Value template",
-          "device_class": "Device class",
-          "state_class": "State class"
+          "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
           "db_url": "Leave empty to use Home Assistant Recorder database",
-          "name": "Name that will be used for config entry and also the sensor",
+          "name": "Name that will be used for config entry and also the sensor"
+        }
+      },
+      "options": {
+        "data": {
+          "query": "Select query",
+          "column": "Column"
+        },
+        "data_description": {
           "query": "Query to run, needs to start with 'SELECT'",
-          "column": "Column for returned query to present as state",
-          "unit_of_measurement": "The unit of measurement for the sensor (optional)",
-          "value_template": "Template to extract a value from the payload (optional)",
-          "device_class": "The type/class of the sensor to set the icon in the frontend",
-          "state_class": "The state class of the sensor"
+          "column": "Column for returned query to present as state"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "Advanced options",
+            "description": "Provide additional configuration to the sensor",
+            "data": {
+              "unit_of_measurement": "Unit of measurement",
+              "value_template": "Value template",
+              "device_class": "Device class",
+              "state_class": "State class"
+            },
+            "data_description": {
+              "unit_of_measurement": "The unit of measurement for the sensor (optional)",
+              "value_template": "Template to extract a value from the payload (optional)",
+              "device_class": "The type/class of the sensor to set the icon in the frontend",
+              "state_class": "The state class of the sensor"
+            }
+          }
         }
       }
     }
@@ -39,24 +55,30 @@
     "step": {
       "init": {
         "data": {
-          "db_url": "[%key:component::sql::config::step::user::data::db_url%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "query": "[%key:component::sql::config::step::user::data::query%]",
-          "column": "[%key:component::sql::config::step::user::data::column%]",
-          "unit_of_measurement": "[%key:component::sql::config::step::user::data::unit_of_measurement%]",
-          "value_template": "[%key:component::sql::config::step::user::data::value_template%]",
-          "device_class": "[%key:component::sql::config::step::user::data::device_class%]",
-          "state_class": "[%key:component::sql::config::step::user::data::state_class%]"
+          "query": "[%key:component::sql::config::step::options::data::query%]",
+          "column": "[%key:component::sql::config::step::options::data::column%]"
         },
         "data_description": {
-          "db_url": "[%key:component::sql::config::step::user::data_description::db_url%]",
-          "name": "[%key:component::sql::config::step::user::data_description::name%]",
-          "query": "[%key:component::sql::config::step::user::data_description::query%]",
-          "column": "[%key:component::sql::config::step::user::data_description::column%]",
-          "unit_of_measurement": "[%key:component::sql::config::step::user::data_description::unit_of_measurement%]",
-          "value_template": "[%key:component::sql::config::step::user::data_description::value_template%]",
-          "device_class": "[%key:component::sql::config::step::user::data_description::device_class%]",
-          "state_class": "[%key:component::sql::config::step::user::data_description::state_class%]"
+          "query": "[%key:component::sql::config::step::options::data_description::query%]",
+          "column": "[%key:component::sql::config::step::options::data_description::column%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::sql::config::step::options::sections::advanced_options::name%]",
+            "description": "[%key:component::sql::config::step::options::sections::advanced_options::name%]",
+            "data": {
+              "unit_of_measurement": "[%key:component::sql::config::step::options::sections::advanced_options::data::unit_of_measurement%]",
+              "value_template": "[%key:component::sql::config::step::options::sections::advanced_options::data::value_template%]",
+              "device_class": "[%key:component::sql::config::step::options::sections::advanced_options::data::device_class%]",
+              "state_class": "[%key:component::sql::config::step::options::sections::advanced_options::data::state_class%]"
+            },
+            "data_description": {
+              "unit_of_measurement": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::unit_of_measurement%]",
+              "value_template": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::value_template%]",
+              "device_class": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::device_class%]",
+              "state_class": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::state_class%]"
+            }
+          }
         }
       }
     },
@@ -71,10 +93,13 @@
   "selector": {
     "device_class": {
       "options": {
+        "absolute_humidity": "[%key:component::sensor::entity_component::absolute_humidity::name%]",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
         "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
+        "area": "[%key:component::sensor::entity_component::area::name%]",
         "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
         "battery": "[%key:component::sensor::entity_component::battery::name%]",
+        "blood_glucose_concentration": "[%key:component::sensor::entity_component::blood_glucose_concentration::name%]",
         "carbon_dioxide": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
         "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
         "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
@@ -85,6 +110,7 @@
         "distance": "[%key:component::sensor::entity_component::distance::name%]",
         "duration": "[%key:component::sensor::entity_component::duration::name%]",
         "energy": "[%key:component::sensor::entity_component::energy::name%]",
+        "energy_distance": "[%key:component::sensor::entity_component::energy_distance::name%]",
         "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
         "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
         "gas": "[%key:component::sensor::entity_component::gas::name%]",
@@ -99,6 +125,7 @@
         "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
         "ph": "[%key:component::sensor::entity_component::ph::name%]",
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
         "power": "[%key:component::sensor::entity_component::power::name%]",
@@ -115,13 +142,14 @@
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
         "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
-        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
+        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
         "volume": "[%key:component::sensor::entity_component::volume::name%]",
         "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",
         "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
         "water": "[%key:component::sensor::entity_component::water::name%]",
         "weight": "[%key:component::sensor::entity_component::weight::name%]",
+        "wind_direction": "[%key:component::sensor::entity_component::wind_direction::name%]",
         "wind_speed": "[%key:component::sensor::entity_component::wind_speed::name%]"
       }
     },
@@ -138,6 +166,10 @@
     "entity_id_query_does_full_table_scan": {
       "title": "SQL query does full table scan",
       "description": "The query `{query}` contains the keyword `entity_id` but does not reference the `states_meta` table. This will cause a full table scan and database instability. Please check the documentation and use `states_meta.entity_id` instead."
+    },
+    "platform_yaml_not_supported": {
+      "title": "Platform YAML is not supported in SQL",
+      "description": "Platform YAML setup is not supported.\nChange from configuring it in the `sensor:` key to using the `sql:` key directly in configuration.yaml.\nTo see the detailed documentation, select Learn more."
     }
   }
 }

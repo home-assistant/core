@@ -1098,7 +1098,9 @@ def test_deprecated_function_is_hassio(
         (
             "homeassistant.components.hassio",
             logging.WARNING,
-            "is_hassio is a deprecated function which will be removed in HA Core 2025.11. Use homeassistant.helpers.hassio.is_hassio instead",
+            "The deprecated function is_hassio was called. It will be "
+            "removed in HA Core 2025.11. Use homeassistant.helpers"
+            ".hassio.is_hassio instead",
         )
     ]
 
@@ -1114,7 +1116,9 @@ def test_deprecated_function_get_supervisor_ip(
         (
             "homeassistant.helpers.hassio",
             logging.WARNING,
-            "get_supervisor_ip is a deprecated function which will be removed in HA Core 2025.11. Use homeassistant.helpers.hassio.get_supervisor_ip instead",
+            "The deprecated function get_supervisor_ip was called. It will "
+            "be removed in HA Core 2025.11. Use homeassistant.helpers"
+            ".hassio.get_supervisor_ip instead",
         )
     ]
 

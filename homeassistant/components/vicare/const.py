@@ -19,6 +19,7 @@ PLATFORMS = [
 UNSUPPORTED_DEVICES = [
     "Heatbox1",
     "Heatbox2_SRC",
+    "E3_TCU10_x07",
     "E3_TCU41_x04",
     "E3_FloorHeatingCircuitChannel",
     "E3_FloorHeatingCircuitDistributorBox",
@@ -33,12 +34,13 @@ CONF_HEATING_TYPE = "heating_type"
 
 DEFAULT_CACHE_DURATION = 60
 
+VICARE_BAR = "bar"
+VICARE_CUBIC_METER = "cubicMeter"
+VICARE_KW = "kilowatt"
+VICARE_KWH = "kilowattHour"
 VICARE_PERCENT = "percent"
 VICARE_W = "watt"
-VICARE_KW = "kilowatt"
 VICARE_WH = "wattHour"
-VICARE_KWH = "kilowattHour"
-VICARE_CUBIC_METER = "cubicMeter"
 
 
 class HeatingType(enum.Enum):

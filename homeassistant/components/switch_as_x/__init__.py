@@ -10,8 +10,11 @@ from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.helper_integration import (
+    async_handle_source_entity_changes,
+    async_remove_helper_config_entry_from_source_device,
+)
 
 from .const import CONF_INVERT, CONF_TARGET_DOMAIN
 
@@ -19,24 +22,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_add_to_device(
-    hass: HomeAssistant, entry: ConfigEntry, entity_id: str
-) -> str | None:
-    """Add our config entry to the tracked entity's device."""
+def async_get_parent_device_id(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get the parent device id."""
     registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-    device_id = None
 
-    if (
-        not (wrapped_switch := registry.async_get(entity_id))
-        or not (device_id := wrapped_switch.device_id)
-        or not (device_registry.async_get(device_id))
-    ):
-        return device_id
+    if not (wrapped_switch := registry.async_get(entity_id)):
+        return None
 
-    device_registry.async_update_device(device_id, add_config_entry_id=entry.entry_id)
-
-    return device_id
+    return wrapped_switch.device_id
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -59,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             options={**entry.options, CONF_ENTITY_ID: source_entity_id},
         )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
     async def source_entity_removed() -> None:
         # The source entity has been removed, we remove the config entry because
@@ -68,14 +62,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         async_handle_source_entity_changes(
             hass,
+            add_helper_config_entry_to_device=False,
             helper_config_entry_id=entry.entry_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
-            source_device_id=async_add_to_device(hass, entry, entity_id),
+            source_device_id=async_get_parent_device_id(hass, entity_id),
             source_entity_id_or_uuid=entry.options[CONF_ENTITY_ID],
             source_entity_removed=source_entity_removed,
         )
     )
-    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options[CONF_TARGET_DOMAIN],)
@@ -96,8 +90,18 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         options = {**config_entry.options}
         if config_entry.minor_version < 2:
             options.setdefault(CONF_INVERT, False)
+        if config_entry.version < 3:
+            # Remove the switch_as_x config entry from the source device
+            if source_device_id := async_get_parent_device_id(
+                hass, options[CONF_ENTITY_ID]
+            ):
+                async_remove_helper_config_entry_from_source_device(
+                    hass,
+                    helper_config_entry_id=config_entry.entry_id,
+                    source_device_id=source_device_id,
+                )
         hass.config_entries.async_update_entry(
-            config_entry, options=options, minor_version=2
+            config_entry, options=options, minor_version=3
         )
 
     _LOGGER.debug(
@@ -107,11 +111,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     )
 
     return True
-
-
-async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener, called when the config entry options are changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

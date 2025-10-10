@@ -66,6 +66,7 @@
       }
     },
     "error": {
+      "telegram_error": "Error from Telegram: {error_message}",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "invalid_proxy_url": "{proxy_url_error}",
       "no_url_available": "URL is required since you have not configured an external URL in Home Assistant",
@@ -130,6 +131,28 @@
         "html": "HTML",
         "plain_text": "Plain text"
       }
+    },
+    "authentication": {
+      "options": {
+        "basic": "Basic",
+        "digest": "Digest",
+        "bearer_token": "Bearer token"
+      }
+    },
+    "chat_action": {
+      "options": {
+        "typing": "Typing",
+        "upload_photo": "Uploading photo",
+        "record_video": "Recording video",
+        "upload_video": "Uploading video",
+        "record_voice": "Recording voice",
+        "upload_voice": "Uploading voice",
+        "upload_document": "Uploading document",
+        "choose_sticker": "Choosing sticker",
+        "find_location": "Finding location",
+        "record_video_note": "Recording video note",
+        "upload_video_note": "Uploading video note"
+      }
     }
   },
   "services": {
@@ -191,6 +214,28 @@
         }
       }
     },
+    "send_chat_action": {
+      "name": "Send chat action",
+      "description": "Sends a chat action.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to send the chat action."
+        },
+        "chat_action": {
+          "name": "Chat action",
+          "description": "Chat action to be sent."
+        },
+        "target": {
+          "name": "Target",
+          "description": "An array of pre-authorized chat IDs to send the chat action to. If not present, first allowed chat ID is the default."
+        },
+        "message_thread_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
+        }
+      }
+    },
     "send_photo": {
       "name": "Send photo",
       "description": "Sends a photo.",
@@ -213,15 +258,15 @@
         },
         "username": {
           "name": "[%key:common::config_flow::data::username%]",
-          "description": "Username for a URL which require HTTP authentication."
+          "description": "Username for a URL that requires 'Basic' or 'Digest' authentication."
         },
         "password": {
           "name": "[%key:common::config_flow::data::password%]",
-          "description": "Password (or bearer token) for a URL which require HTTP authentication."
+          "description": "Password (or bearer token) for a URL that requires authentication."
         },
         "authentication": {
           "name": "Authentication method",
-          "description": "Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`."
+          "description": "Define which authentication method to use. Set to 'Basic' for HTTP basic authentication, 'Digest' for HTTP digest authentication, or 'Bearer token' for OAuth 2.0 bearer token authentication."
         },
         "target": {
           "name": "Target",
@@ -943,10 +988,6 @@
     "deprecated_yaml_import_issue_error": {
       "title": "YAML import failed due to invalid {error_field}",
       "description": "Configuring {integration_title} using YAML is being removed but there was an error while importing your existing configuration ({telegram_bot}): {error_message}.\nSetup will not proceed.\n\nVerify that your {telegram_bot} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
-    },
-    "proxy_params_auth_deprecation": {
-      "title": "{telegram_bot}: Proxy authentication should be moved to the URL",
-      "description": "Authentication details for the the proxy configured in the {telegram_bot} integration should be moved into the {proxy_url} instead. Please update your configuration and restart Home Assistant to fix this issue.\n\nThe {proxy_params} config key will be removed in a future release."
     }
   }
 }
