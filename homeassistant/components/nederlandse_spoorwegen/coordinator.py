@@ -204,7 +204,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, NSRouteData]]):
 
         return first_trip, next_trip
 
-    def _remove_trips_in_the_past(self, trips) -> list[Trip]:
+    def _remove_trips_in_the_past(self, trips: list[Trip]) -> list[Trip]:
         """Filter out trips that have already departed."""
         # Compare against Dutch local time to align with ns_api timezone handling
         now = _now_nl()
