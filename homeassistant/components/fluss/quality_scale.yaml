@@ -29,10 +29,7 @@ rules:
     status: exempt
     comment: |
       No Sensor file.
-  reauthentication-flow: 
-    status: exempt
-    comment: |
-      Uses an api key
+  reauthentication-flow: todo
   test-coverage: todo
   # Gold
   entity-translations: done
