@@ -160,10 +160,11 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_config_entry_classic():
+def mock_config_entry_classic() -> MockConfigEntry:
     """Return a mocked config entry for Classic API (password auth).
 
     Use this for tests that specifically need to test Classic API behavior.
+    Most tests use the default mock_config_entry (V1 API) instead.
     """
     return MockConfigEntry(
         domain=DOMAIN,
