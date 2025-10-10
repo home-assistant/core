@@ -75,7 +75,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
     try:
         await coordinator.async_setup()
     except UpdateFailed as ex:
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key=ex.translation_key,
+            translation_placeholders=ex.translation_placeholders,
+        ) from ex
     entry.runtime_data = coordinator
 
     appliances_identifiers = {
