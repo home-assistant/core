@@ -15,9 +15,11 @@ from homeassistant.components.number import (
 from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+DOMAIN = "growatt_server"
 
 
 @pytest.fixture(autouse=True)
@@ -30,37 +32,22 @@ async def number_only() -> AsyncGenerator[None]:
         yield
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_number_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_growatt_api,
-    mock_get_device_list,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that number entities are created for MIN devices."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_number_entity_values(
     hass: HomeAssistant,
-    mock_growatt_api,
-    mock_get_device_list,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that number entities have correct values."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     # Check entity values
     charge_power_state = hass.states.get("number.min123456_battery_charge_power_limit")
     assert charge_power_state is not None
@@ -83,19 +70,12 @@ async def test_number_entity_values(
     assert float(discharge_soc_state.state) == 20.0
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_set_number_value_success(
     hass: HomeAssistant,
-    mock_growatt_api,
-    mock_get_device_list,
-    mock_config_entry: MockConfigEntry,
+    mock_growatt_v1_api,
 ) -> None:
     """Test setting a number entity value successfully."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -107,26 +87,19 @@ async def test_set_number_value_success(
     )
 
     # Verify API was called with correct parameters
-    mock_growatt_api.min_write_parameter.assert_called_once_with(
+    mock_growatt_v1_api.min_write_parameter.assert_called_once_with(
         "MIN123456", "charge_power", 75
     )
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_set_number_value_api_error(
     hass: HomeAssistant,
-    mock_growatt_api,
-    mock_get_device_list,
-    mock_config_entry: MockConfigEntry,
+    mock_growatt_v1_api,
 ) -> None:
     """Test handling API error when setting number value."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     # Mock API to raise error
-    mock_growatt_api.min_write_parameter.side_effect = GrowattV1ApiError("API Error")
+    mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError("API Error")
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -140,20 +113,12 @@ async def test_set_number_value_api_error(
         )
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_number_entity_attributes(
     hass: HomeAssistant,
-    mock_growatt_api,
-    mock_get_device_list,
-    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test number entity attributes."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     # Check entity registry attributes
     entity_entry = entity_registry.async_get(
         "number.min123456_battery_charge_power_limit"
@@ -172,19 +137,32 @@ async def test_number_entity_attributes(
     assert state.attributes["friendly_name"] == "MIN123456 Battery charge power limit"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_number_device_registry(
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that number entities are associated with the correct device."""
+    # Get the device from device registry
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    assert device is not None
+    assert device.manufacturer == "Growatt"
+    assert device.name == "MIN123456"
+
+    # Verify number entity is associated with the device
+    entity_entry = entity_registry.async_get(
+        "number.min123456_battery_charge_power_limit"
+    )
+    assert entity_entry is not None
+    assert entity_entry.device_id == device.id
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_all_number_entities_service_calls(
     hass: HomeAssistant,
-    mock_growatt_api,
-    mock_get_device_list,
-    mock_config_entry: MockConfigEntry,
+    mock_growatt_v1_api,
 ) -> None:
     """Test service calls work for all number entities."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     # Test all four number entities
     test_cases = [
         ("number.min123456_battery_charge_power_limit", "charge_power", 75),
@@ -194,7 +172,7 @@ async def test_all_number_entities_service_calls(
     ]
 
     for entity_id, expected_write_key, test_value in test_cases:
-        mock_growatt_api.reset_mock()
+        mock_growatt_v1_api.reset_mock()
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -204,24 +182,17 @@ async def test_all_number_entities_service_calls(
         )
 
         # Verify API was called with correct parameters
-        mock_growatt_api.min_write_parameter.assert_called_once_with(
+        mock_growatt_v1_api.min_write_parameter.assert_called_once_with(
             "MIN123456", expected_write_key, test_value
         )
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_number_boundary_values(
     hass: HomeAssistant,
-    mock_growatt_api,
-    mock_get_device_list,
-    mock_config_entry: MockConfigEntry,
+    mock_growatt_v1_api,
 ) -> None:
     """Test setting boundary values for number entities."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     # Test minimum value
     await hass.services.async_call(
         NUMBER_DOMAIN,
@@ -230,12 +201,12 @@ async def test_number_boundary_values(
         blocking=True,
     )
 
-    mock_growatt_api.min_write_parameter.assert_called_with(
+    mock_growatt_v1_api.min_write_parameter.assert_called_with(
         "MIN123456", "charge_power", 0
     )
 
     # Test maximum value
-    mock_growatt_api.reset_mock()
+    mock_growatt_v1_api.reset_mock()
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -243,7 +214,7 @@ async def test_number_boundary_values(
         blocking=True,
     )
 
-    mock_growatt_api.min_write_parameter.assert_called_with(
+    mock_growatt_v1_api.min_write_parameter.assert_called_with(
         "MIN123456", "charge_power", 100
     )
 
@@ -251,13 +222,12 @@ async def test_number_boundary_values(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_missing_data(
     hass: HomeAssistant,
-    mock_growatt_api,
-    mock_get_device_list,
+    mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test number entity when coordinator data is missing."""
     # Set up API with missing data for one entity
-    mock_growatt_api.min_detail.return_value = {
+    mock_growatt_v1_api.min_detail.return_value = {
         "deviceSn": "MIN123456",
         # Missing 'chargePowerCommand' key to test None case
         "wchargeSOCLowLimit": 10,
@@ -279,20 +249,23 @@ async def test_number_missing_data(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_no_number_entities_for_non_min_devices(
     hass: HomeAssistant,
-    mock_growatt_api,
-    mock_get_device_list,
+    mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that number entities are not created for non-MIN devices."""
-    # Mock a different device type (not MIN)
-    mock_get_device_list.return_value = (
-        [{"deviceSn": "TLX123456", "deviceType": "tlx"}],
-        "12345",
-    )
+    # Mock a different device type (not MIN) - type 8 is TLX
+    mock_growatt_v1_api.device_list.return_value = {
+        "devices": [
+            {
+                "device_sn": "TLX123456",
+                "type": 8,  # TLX device type
+            }
+        ]
+    }
 
     # Mock TLX API response to prevent coordinator errors
-    mock_growatt_api.tlx_detail.return_value = {"data": {}}
+    mock_growatt_v1_api.tlx_detail.return_value = {"data": {}}
 
     mock_config_entry.add_to_hass(hass)
 
@@ -308,18 +281,35 @@ async def test_no_number_entities_for_non_min_devices(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_float_to_int_conversion(
+async def test_no_number_entities_for_classic_api(
     hass: HomeAssistant,
-    mock_growatt_api,
-    mock_get_device_list,
-    mock_config_entry: MockConfigEntry,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that float values are converted to integers when setting."""
-    mock_config_entry.add_to_hass(hass)
+    """Test that number entities are not created for Classic API."""
+    # Mock device list to return no devices
+    mock_growatt_classic_api.device_list.return_value = []
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_config_entry_classic.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry_classic.entry_id)
     await hass.async_block_till_done()
 
+    # Should have no number entities for classic API (no devices)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry_classic.entry_id
+    )
+    number_entities = [entry for entry in entity_entries if entry.domain == "number"]
+    assert len(number_entities) == 0
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_float_to_int_conversion(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+) -> None:
+    """Test that float values are converted to integers when setting."""
     # Test setting a float value gets converted to int
     await hass.services.async_call(
         NUMBER_DOMAIN,
@@ -329,8 +319,40 @@ async def test_float_to_int_conversion(
     )
 
     # Verify API was called with integer value
-    mock_growatt_api.min_write_parameter.assert_called_once_with(
+    mock_growatt_v1_api.min_write_parameter.assert_called_once_with(
         "MIN123456",
         "charge_power",
         75,  # Should be converted to int
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_number_coordinator_data_update(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that number state updates when coordinator data changes."""
+    # Initial state should be 50 (based on mock data)
+    state = hass.states.get("number.min123456_battery_charge_power_limit")
+    assert state is not None
+    assert float(state.state) == 50.0
+
+    # Change mock data and trigger coordinator update
+    mock_growatt_v1_api.min_detail.return_value = {
+        "deviceSn": "MIN123456",
+        "chargePowerCommand": 75,  # Changed value
+        "wchargeSOCLowLimit": 10,
+        "disChargePowerCommand": 80,
+        "wdisChargeSOCLowLimit": 20,
+    }
+
+    # Trigger a refresh
+    runtime_data = mock_config_entry.runtime_data
+    device_coordinator = runtime_data.devices["MIN123456"]
+    await device_coordinator.async_refresh()
+
+    # State should now be 75
+    state = hass.states.get("number.min123456_battery_charge_power_limit")
+    assert state is not None
+    assert float(state.state) == 75.0
