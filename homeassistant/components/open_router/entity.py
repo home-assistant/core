@@ -190,7 +190,7 @@ async def async_prepare_files_for_prompt(
 
             if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
                 raise HomeAssistantError(
-                    "Only images and PDF are supported by the OpenRouter API,"
+                    "Only images and PDF are supported by the OpenRouter API, "
                     f"`{file_path}` is not an image file or PDF"
                 )
 
@@ -266,8 +266,6 @@ class OpenRouterEntity(Entity):
             assert last_message["role"] == "user" and isinstance(
                 last_message["content"], str
             )
-            LOGGER.warning("Last content: %s", last_content)
-            LOGGER.warning("Last message: %s", last_message)
             # Encode files with base64 and append them to the text prompt
             files = await async_prepare_files_for_prompt(
                 self.hass,
