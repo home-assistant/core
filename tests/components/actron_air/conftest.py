@@ -12,15 +12,11 @@ def mock_actron_api() -> Generator[AsyncMock]:
     """Mock the Actron Air API class."""
     with (
         patch(
-            "homeassistant.components.actron_air.coordinator.ActronNeoAPI",
+            "homeassistant.components.actron_air.ActronNeoAPI",
             autospec=True,
         ) as mock_api,
         patch(
             "homeassistant.components.actron_air.config_flow.ActronNeoAPI",
-            new=mock_api,
-        ),
-        patch(
-            "homeassistant.components.actron_air.ActronNeoAPI",
             new=mock_api,
         ),
     ):
