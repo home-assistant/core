@@ -774,9 +774,8 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         await super().async_added_to_hass()
 
         # recover last value from cache when adding entity
-        last_value = await self.async_get_last_state()
         last_data = await self.async_get_last_sensor_data()
-        if last_value and last_data and last_value.state != STATE_UNKNOWN:
+        if last_data:
             self._attr_native_value = last_data.native_value
 
     @property
