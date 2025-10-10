@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from fluss_api import FlussApiClient
 import pytest
 
+from homeassistant.components.fluss.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
