@@ -26,14 +26,11 @@
       }
     },
     "button": {
-      "zigbee_pairing_mode": {
-        "default": "mdi:signal-variant"
+      "zigbee_flash_mode": {
+        "default": "mdi:memory-arrow-down"
       },
       "reconnect_zigbee_router": {
         "default": "mdi:connection"
-      },
-      "zigbee_flash_mode": {
-        "default": "mdi:memory-arrow-down"
       }
     }
   }
