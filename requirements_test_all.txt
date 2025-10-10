@@ -408,7 +408,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==1.2.1
+aiovodafone==2.0.1
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
