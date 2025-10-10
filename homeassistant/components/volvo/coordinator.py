@@ -126,7 +126,9 @@ class VolvoBaseIntervalCoordinator(VolvoBaseCoordinator[CoordinatorData]):
             self._api_calls = await self._async_determine_api_calls()
         except VolvoAuthException as err:
             raise ConfigEntryAuthFailed(
-                f"Authentication failed. {err.message}"
+                translation_domain=DOMAIN,
+                translation_key="unauthorized",
+                translation_placeholders={"message": err.message},
             ) from err
         except VolvoApiException as err:
             raise ConfigEntryNotReady from err
@@ -163,7 +165,9 @@ class VolvoBaseIntervalCoordinator(VolvoBaseCoordinator[CoordinatorData]):
                     result.message,
                 )
                 raise ConfigEntryAuthFailed(
-                    f"Authentication failed. {result.message}"
+                    translation_domain=DOMAIN,
+                    translation_key="unauthorized",
+                    translation_placeholders={"message": result.message},
                 ) from result
 
             if isinstance(result, VolvoApiException):
