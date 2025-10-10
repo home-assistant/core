@@ -42,6 +42,11 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.SWITCH, async_add_entities)
 
 
+@dataclass(frozen=True)
+class MatterSwitchEntityDescription(SwitchEntityDescription, MatterEntityDescription):
+    """Describe Matter Switch entities."""
+
+
 class MatterSwitch(MatterEntity, SwitchEntity):
     """Representation of a Matter switch."""
 
@@ -168,7 +173,7 @@ class MatterNumericSwitch(MatterSwitch):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=SwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterPlug",
             device_class=SwitchDeviceClass.OUTLET,
             name=None,
@@ -179,7 +184,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=SwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterPowerToggle",
             device_class=SwitchDeviceClass.SWITCH,
             translation_key="power",
@@ -207,7 +212,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=SwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterSwitch",
             device_class=SwitchDeviceClass.OUTLET,
             name=None,
