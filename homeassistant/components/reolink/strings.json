@@ -1019,6 +1019,9 @@
       "manual_record": {
         "name": "Manual record"
       },
+      "rule": {
+        "name": "Surveillance rule {name}"
+      },
       "pre_record": {
         "name": "Pre-recording"
       },
