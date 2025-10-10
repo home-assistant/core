@@ -191,5 +191,196 @@
       "allowVolumeBrowserForRegularUsers": true,
       "enableHostManagementFeatures": true
     }
+  },
+  {
+    "AMTDeviceGUID": "4c4c4544-004b-3910-8037-b6c04f504633",
+    "AuthorizedTeams": [1],
+    "AuthorizedUsers": [1],
+    "AzureCredentials": {
+      "ApplicationID": "eag7cdo9-o09l-9i83-9dO9-f0b23oe78db4",
+      "AuthenticationKey": "cOrXoK/1D35w8YQ8nH1/8ZGwzz45JIYD5jxHKXEQknk=",
+      "TenantID": "34ddc78d-4fel-2358-8cc1-df84c8o839f5"
+    },
+    "ComposeSyntaxMaxVersion": "3.5",
+    "ContainerEngine": "podman",
+    "EdgeCheckinInterval": 90,
+    "EdgeID": "edge-offline-01",
+    "EdgeKey": "f3a6d201-6d6f-4f37-ae6b-0fcbefd3d1b9",
+    "EnableGPUManagement": false,
+    "Gpus": [],
+    "GroupId": 3,
+    "Heartbeat": false,
+    "Id": 42,
+    "IsEdgeDevice": false,
+    "Kubernetes": {
+      "Configuration": {
+        "AllowNoneIngressClass": false,
+        "EnableResourceOverCommit": false,
+        "IngressAvailabilityPerNamespace": false,
+        "IngressClasses": [
+          {
+            "Blocked": false,
+            "BlockedNamespaces": [],
+            "Name": "public",
+            "Type": "nginx"
+          }
+        ],
+        "ResourceOverCommitPercentage": 25,
+        "RestrictDefaultNamespace": false,
+        "StorageClasses": [
+          {
+            "AccessModes": ["ReadWriteOnce"],
+            "AllowVolumeExpansion": false,
+            "Name": "standard",
+            "Provisioner": "kubernetes.io/no-provisioner"
+          }
+        ],
+        "UseLoadBalancer": false,
+        "UseServerMetrics": false
+      },
+      "Flags": {
+        "IsServerIngressClassDetected": false,
+        "IsServerMetricsDetected": false,
+        "IsServerStorageDetected": true
+      },
+      "Snapshots": [
+        {
+          "DiagnosticsData": {
+            "DNS": {
+              "additionalProp1": "string",
+              "additionalProp2": "string",
+              "additionalProp3": "string"
+            },
+            "Log": "string",
+            "Proxy": {
+              "additionalProp1": "string",
+              "additionalProp2": "string",
+              "additionalProp3": "string"
+            },
+            "Telnet": {
+              "additionalProp1": "string",
+              "additionalProp2": "string",
+              "additionalProp3": "string"
+            }
+          },
+          "KubernetesVersion": "1.28.3",
+          "NodeCount": 2,
+          "Time": 1726512000,
+          "TotalCPU": 6,
+          "TotalMemory": 16384
+        }
+      ]
+    },
+    "Name": "my-edge-offline",
+    "PostInitMigrations": {
+      "MigrateGPUs": true,
+      "MigrateIngresses": true
+    },
+    "PublicURL": "podman-offline.mydomain.tld:2375",
+    "Snapshots": [
+      {
+        "ContainerCount": 7,
+        "DiagnosticsData": {
+          "DNS": {
+            "additionalProp1": "string",
+            "additionalProp2": "string",
+            "additionalProp3": "string"
+          },
+          "Log": "string",
+          "Proxy": {
+            "additionalProp1": "string",
+            "additionalProp2": "string",
+            "additionalProp3": "string"
+          },
+          "Telnet": {
+            "additionalProp1": "string",
+            "additionalProp2": "string",
+            "additionalProp3": "string"
+          }
+        },
+        "DockerSnapshotRaw": {
+          "LayerCount": 12,
+          "SizeBytes": 482344960
+        },
+        "DockerVersion": "25.0.1",
+        "GpuUseAll": false,
+        "GpuUseList": [],
+        "HealthyContainerCount": 4,
+        "ImageCount": 18,
+        "IsPodman": false,
+        "NodeCount": 1,
+        "RunningContainerCount": 3,
+        "ServiceCount": 4,
+        "StackCount": 2,
+        "StoppedContainerCount": 4,
+        "Swarm": false,
+        "Time": 1726604800,
+        "TotalCPU": 4,
+        "TotalMemory": 8192,
+        "UnhealthyContainerCount": 1,
+        "VolumeCount": 6
+      }
+    ],
+    "Status": 2,
+    "TLS": true,
+    "TLSCACert": "string",
+    "TLSCert": "string",
+    "TLSConfig": {
+      "TLS": true,
+      "TLSCACert": "/data/tls/ca.pem",
+      "TLSCert": "/data/tls/cert.pem",
+      "TLSKey": "/data/tls/key.pem",
+      "TLSSkipVerify": false
+    },
+    "TLSKey": "string",
+    "TagIds": [1],
+    "Tags": ["string"],
+    "TeamAccessPolicies": {
+      "additionalProp1": {
+        "RoleId": 1
+      },
+      "additionalProp2": {
+        "RoleId": 1
+      },
+      "additionalProp3": {
+        "RoleId": 1
+      }
+    },
+    "Type": 2,
+    "URL": "podman-offline.mydomain.tld:2375",
+    "UserAccessPolicies": {
+      "additionalProp1": {
+        "RoleId": 1
+      },
+      "additionalProp2": {
+        "RoleId": 1
+      },
+      "additionalProp3": {
+        "RoleId": 1
+      }
+    },
+    "UserTrusted": true,
+    "agent": {
+      "version": "2.1.4"
+    },
+    "edge": {
+      "CommandInterval": 300,
+      "PingInterval": 180,
+      "SnapshotInterval": 900,
+      "asyncMode": false
+    },
+    "lastCheckInDate": 1726601100,
+    "queryDate": 1726604700,
+    "securitySettings": {
+      "allowBindMountsForRegularUsers": false,
+      "allowContainerCapabilitiesForRegularUsers": false,
+      "allowDeviceMappingForRegularUsers": false,
+      "allowHostNamespaceForRegularUsers": false,
+      "allowPrivilegedModeForRegularUsers": false,
+      "allowStackManagementForRegularUsers": false,
+      "allowSysctlSettingForRegularUsers": false,
+      "allowVolumeBrowserForRegularUsers": false,
+      "enableHostManagementFeatures": false
+    }
   }
 ]
