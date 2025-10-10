@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_user_flow_oauth2_success(hass: HomeAssistant, mock_actron_api) -> None:
+async def test_user_flow_oauth2_success(hass: HomeAssistant, mock_actron_api: AsyncMock) -> None:
     """Test successful OAuth2 device code flow."""
     # Start the config flow
     result = await hass.config_entries.flow.async_init(
