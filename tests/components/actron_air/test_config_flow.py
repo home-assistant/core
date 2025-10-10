@@ -16,7 +16,7 @@ async def test_user_flow_oauth2_success(hass: HomeAssistant, mock_actron_api) ->
     """Test successful OAuth2 device code flow."""
     # Start the config flow
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     # Should start with a progress step
