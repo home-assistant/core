@@ -39,7 +39,7 @@ habluetooth==5.7.0
 hass-nabucasa==1.2.0
 hassil==3.2.0
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20251001.0
+home-assistant-frontend==20251001.2
 home-assistant-intents==2025.10.1
 httpx==0.28.1
 ifaddr==0.2.0
@@ -50,7 +50,7 @@ orjson==3.11.3
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==11.3.0
-propcache==0.4.0
+propcache==0.4.1
 psutil-home-assistant==0.0.1
 PyJWT==2.10.1
 pymicro-vad==1.0.1

@@ -458,6 +458,7 @@ SUBENTRY_PLATFORMS = [
     Platform.LOCK,
     Platform.NOTIFY,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -1141,6 +1142,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Platform.LOCK.value: None,
     Platform.NOTIFY.value: None,
     Platform.NUMBER.value: validate_number_platform_config,
+    Platform.SELECT: None,
     Platform.SENSOR.value: validate_sensor_platform_config,
     Platform.SWITCH.value: None,
 }
@@ -1367,6 +1369,7 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             custom_filtering=True,
         ),
     },
+    Platform.SELECT.value: {},
     Platform.SENSOR.value: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=SENSOR_DEVICE_CLASS_SELECTOR, required=False
@@ -3101,6 +3104,34 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             required=False,
             default=DEFAULT_PAYLOAD_RESET,
         ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+    },
+    Platform.SELECT.value: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_OPTIONS: PlatformField(selector=OPTIONS_SELECTOR, required=True),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
     Platform.SENSOR.value: {

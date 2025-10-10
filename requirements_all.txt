@@ -1186,7 +1186,7 @@ hole==0.9.0
 holidays==0.82
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251001.0
+home-assistant-frontend==20251001.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.10.1
@@ -2710,7 +2710,7 @@ renault-api==0.4.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.16.1
+reolink-aio==0.16.2
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2810,7 +2810,7 @@ sentry-sdk==1.45.1
 sfrbox-api==0.0.12
 
 # homeassistant.components.sharkiq
-sharkiq==1.4.0
+sharkiq==1.4.2
 
 # homeassistant.components.aquostv
 sharp_aquos_rc==0.3.2
@@ -2853,6 +2853,9 @@ soco==0.30.12
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
+
+# homeassistant.components.solaredge
+solaredge-web==0.0.1
 
 # homeassistant.components.solarlog
 solarlog_cli==0.6.0
