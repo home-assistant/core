@@ -200,7 +200,7 @@ class ActronZoneClimate(BaseClimateEntity):
         super().__init__(coordinator, zone.title)
         serial_number = coordinator.serial_number
         self._zone_id: int = zone.zone_id
-        self._attr_unique_id: str = f"{self._serial_number}_zone_{zone.zone_id}"
+        self._attr_unique_id: str = f"{serial_number}_zone_{zone.zone_id}"
         self._attr_device_info: DeviceInfo = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=zone.title,
