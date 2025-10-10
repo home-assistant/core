@@ -107,6 +107,8 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             return None
         if self.device_class is SensorDeviceClass.TIMESTAMP:
             return dt_util.utc_from_timestamp(state_float)
+        if isinstance(state_float, float):
+            return f"{state_float:.{self._static_info.accuracy_decimals}f}"
         return state_float
 
 
