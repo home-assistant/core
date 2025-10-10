@@ -155,7 +155,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PLANT_ID: "plant_123",
             "name": "Test Plant",
         },
-        unique_id="12345",
+        unique_id="plant_123",
     )
 
 
