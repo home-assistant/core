@@ -67,7 +67,7 @@ async def test_turn_on_switch_success(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {"entity_id": "switch.min123456_charge_from_grid"},
+        {ATTR_ENTITY_ID: "switch.min123456_charge_from_grid"},
         blocking=True,
     )
 
