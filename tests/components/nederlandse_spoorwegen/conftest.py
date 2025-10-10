@@ -12,10 +12,25 @@ from homeassistant.components.nederlandse_spoorwegen.const import (
     CONF_VIA,
     DOMAIN,
 )
+from homeassistant.components.nederlandse_spoorwegen.coordinator import (
+    NSDataUpdateCoordinator,
+)
+from homeassistant.components.nederlandse_spoorwegen.coordinators import (
+    NSCoordinatorsManager,
+)
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.core import HomeAssistant
 
-from .const import API_KEY
+from .const import (
+    API_KEY,
+    INTEGRATION_TITLE,
+    SUBENTRY_ID_1,
+    SUBENTRY_ID_2,
+    SUBENTRY_TYPE_ROUTE,
+    TEST_ROUTE_TITLE_1,
+    TEST_ROUTE_TITLE_2,
+)
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -57,7 +72,7 @@ def mock_nsapi() -> Generator[AsyncMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Mock config entry."""
     return MockConfigEntry(
-        title="Nederlandse Spoorwegen",
+        title=INTEGRATION_TITLE,
         data={CONF_API_KEY: API_KEY},
         domain=DOMAIN,
         subentries_data=[
@@ -68,10 +83,67 @@ def mock_config_entry() -> MockConfigEntry:
                     CONF_TO: "Rot",
                     CONF_VIA: "Ht",
                 },
-                subentry_type="route",
+                subentry_type=SUBENTRY_TYPE_ROUTE,
                 title="Test Route",
                 unique_id=None,
-                subentry_id="01K721DZPMEN39R5DK0ATBMSY8",
+                subentry_id=SUBENTRY_ID_1,
             ),
         ],
     )
+
+
+@pytest.fixture
+def coordinator(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nsapi
+) -> NSDataUpdateCoordinator:
+    """Return a coordinator instance using existing mock_config_entry fixture."""
+    # Use the route data from the existing mock_config_entry
+    subentry = list(mock_config_entry.subentries.values())[0]
+    return NSDataUpdateCoordinator(
+        hass=hass,
+        config_entry=mock_config_entry,
+        route_id=subentry.subentry_id,
+        route_data=dict(subentry.data),
+    )
+
+
+@pytest.fixture
+def mock_config_entry_with_multiple_routes() -> MockConfigEntry:
+    """Mock config entry with multiple routes using existing patterns."""
+    return MockConfigEntry(
+        title=INTEGRATION_TITLE,
+        data={CONF_API_KEY: API_KEY},
+        domain=DOMAIN,
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={
+                    CONF_NAME: TEST_ROUTE_TITLE_1,
+                    CONF_FROM: "Ams",
+                    CONF_TO: "Rot",
+                },
+                subentry_type=SUBENTRY_TYPE_ROUTE,
+                title=TEST_ROUTE_TITLE_1,
+                unique_id=None,
+                subentry_id=SUBENTRY_ID_1,
+            ),
+            ConfigSubentryDataWithId(
+                data={
+                    CONF_NAME: TEST_ROUTE_TITLE_2,
+                    CONF_FROM: "Hag",
+                    CONF_TO: "Utr",
+                },
+                subentry_type=SUBENTRY_TYPE_ROUTE,
+                title=TEST_ROUTE_TITLE_2,
+                unique_id=None,
+                subentry_id=SUBENTRY_ID_2,
+            ),
+        ],
+    )
+
+
+@pytest.fixture
+def manager(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> NSCoordinatorsManager:
+    """Return a coordinators manager instance."""
+    return NSCoordinatorsManager(hass, mock_config_entry)

@@ -128,18 +128,25 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteData]):
         """Combine today's date with a time string if needed."""
         if not time_str:
             return _now_nl().strftime("%d-%m-%Y %H:%M")
+
         try:
-            # If time_str matches %H:%M or %H:%M:%S, combine with today
-            if len(time_str.split(":")) in (2, 3):
-                today = _now_nl().strftime("%d-%m-%Y")
-                return f"{today} {time_str[:5]}"
-            # Otherwise, assume it's a full date-time string
-            datetime.strptime(time_str, "%d-%m-%Y %H:%M")
+            # First, try to parse as a full date-time string and extract only the time
+            parsed_datetime = datetime.strptime(time_str, "%d-%m-%Y %H:%M")
         except ValueError:
+            try:
+                # If that fails, check if it's a time-only string (HH:MM or HH:MM:SS)
+                if len(time_str.split(":")) in (2, 3) and " " not in time_str:
+                    today = _now_nl().strftime("%d-%m-%Y")
+                    return f"{today} {time_str[:5]}"
+            except (ValueError, IndexError):
+                pass
             # Fallback: use current date and time
             return _now_nl().strftime("%d-%m-%Y %H:%M")
         else:
-            return time_str
+            # Extract time and combine with today's date
+            time_only = parsed_datetime.strftime("%H:%M")
+            today = _now_nl().strftime("%d-%m-%Y")
+            return f"{today} {time_only}"
 
     async def _get_trips(
         self,
