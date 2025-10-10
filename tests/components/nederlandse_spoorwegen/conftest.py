@@ -39,7 +39,7 @@ def mock_nsapi() -> Generator[AsyncMock]:
             autospec=True,
         ) as mock_nsapi,
         patch(
-            "homeassistant.components.nederlandse_spoorwegen.NSAPI",
+            "homeassistant.components.nederlandse_spoorwegen.coordinator.NSAPI",
             new=mock_nsapi,
         ),
     ):
