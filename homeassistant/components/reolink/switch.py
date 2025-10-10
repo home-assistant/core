@@ -65,7 +65,7 @@ class ReolinkSwitchIndexEntityDescription(
     SwitchEntityDescription,
     ReolinkChannelEntityDescription,
 ):
-    """A class that describes switch entities with a extra index."""
+    """A class that describes switch entities with an extra index."""
 
     method: Callable[[Host, int, int, bool], Any]
     value: Callable[[Host, int, int], bool | None]
@@ -498,7 +498,7 @@ class ReolinkHostChimeSwitchEntity(ReolinkHostChimeCoordinatorEntity, SwitchEnti
 
 
 class ReolinkIndexSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
-    """Base switch entity class for Reolink IP camera with extra index."""
+    """Base switch entity class for Reolink IP camera with an extra index."""
 
     entity_description: ReolinkSwitchIndexEntityDescription
 
