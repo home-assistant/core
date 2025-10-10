@@ -55,12 +55,12 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirNeoACSystem]):
         self.system = system
         self.serial_number = system["serial"]
         self.api = api
-        self.status: ActronAirNeoStatus = self.api.state_manager.get_status(
+        self.status = self.api.state_manager.get_status(
             self.serial_number
         )
         self.last_seen = dt_util.utcnow()
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> ActronAirNeoStatus:
         """Fetch updates and merge incremental changes into the full state."""
         await self.api.update_status()
         self.status = self.api.state_manager.get_status(self.serial_number)
