@@ -27,7 +27,7 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self, hass: HomeAssistant, config_entry: ConfigEntry, api_key: str
     ) -> None:
         """Initialize the coordinator."""
-        self.api = FlussApiClient(api_key)
+        self.api = FlussApiClient(api_key, async_get_clientsession(hass))
         super().__init__(
             hass,
             LOGGER,
