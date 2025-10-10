@@ -2,6 +2,7 @@
   "domain": "prowl",
   "name": "Prowl",
   "codeowners": [],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/prowl",
   "integration_type": "service",
   "iot_class": "cloud_push",
