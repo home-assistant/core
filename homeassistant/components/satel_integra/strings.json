@@ -24,6 +24,7 @@
   },
   "config_subentries": {
     "partition": {
+      "entry_type": "Partition",
       "initiate_flow": {
         "user": "Add partition"
       },
@@ -57,6 +58,7 @@
       }
     },
     "zone": {
+      "entry_type": "Zone",
       "initiate_flow": {
         "user": "Add zone"
       },
@@ -91,6 +93,7 @@
       }
     },
     "output": {
+      "entry_type": "Output",
       "initiate_flow": {
         "user": "Add output"
       },
@@ -125,6 +128,7 @@
       }
     },
     "switchable_output": {
+      "entry_type": "Switchable output",
       "initiate_flow": {
         "user": "Add switchable output"
       },

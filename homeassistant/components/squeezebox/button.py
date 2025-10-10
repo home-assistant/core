@@ -132,7 +132,9 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, _player_discovered)
+        async_dispatcher_connect(
+            hass, SIGNAL_PLAYER_DISCOVERED + entry.entry_id, _player_discovered
+        )
     )
 
 

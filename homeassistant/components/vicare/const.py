@@ -34,12 +34,13 @@ CONF_HEATING_TYPE = "heating_type"
 
 DEFAULT_CACHE_DURATION = 60
 
+VICARE_BAR = "bar"
+VICARE_CUBIC_METER = "cubicMeter"
+VICARE_KW = "kilowatt"
+VICARE_KWH = "kilowattHour"
 VICARE_PERCENT = "percent"
 VICARE_W = "watt"
-VICARE_KW = "kilowatt"
 VICARE_WH = "wattHour"
-VICARE_KWH = "kilowattHour"
-VICARE_CUBIC_METER = "cubicMeter"
 
 
 class HeatingType(enum.Enum):
