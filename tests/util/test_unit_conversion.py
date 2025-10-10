@@ -119,7 +119,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     CarbonMonoxideConcentrationConverter: (
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         CONCENTRATION_PARTS_PER_MILLION,
-        1.144882,
+        1.16441,
     ),
     ConductivityConverter: (
         UnitOfConductivity.MICROSIEMENS_PER_CM,
@@ -291,13 +291,13 @@ _CONVERTED_VALUE: dict[
         (
             1,
             CONCENTRATION_PARTS_PER_MILLION,
-            1.144882,
+            1.16441,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         ),
         (
             120,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-            104.81429,
+            103.05655,
             CONCENTRATION_PARTS_PER_MILLION,
         ),
     ],

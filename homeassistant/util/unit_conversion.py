@@ -93,13 +93,13 @@ _CUBIC_FOOT_TO_CUBIC_METER = pow(_FOOT_TO_M, 3)
 
 # Gas concentration conversion constants
 _IDEAL_GAS_CONSTANT = 8.31446261815324  # m3⋅Pa⋅K⁻¹⋅mol⁻¹
-# Standard Ambient Temperature and Pressure constants
-_SATP_TEMPERATURE = 298.15  # K (25 °C)
-_SATP_PRESSURE = 101325  # Pa (1 atm)
-_SATP_IDEAL_GAS_MOLAR_VOLUME = (  # m3⋅mol⁻¹
-    _IDEAL_GAS_CONSTANT * _SATP_TEMPERATURE / _SATP_PRESSURE
+# Ambient constants based on European Commission recommendations (20 °C and 1013mb)
+_AMBIENT_TEMPERATURE = 293.15  # K (20 °C)
+_AMBIENT_PRESSURE = 101325  # Pa (1 atm)
+_AMBIENT_IDEAL_GAS_MOLAR_VOLUME = (  # m3⋅mol⁻¹
+    _IDEAL_GAS_CONSTANT * _AMBIENT_TEMPERATURE / _AMBIENT_PRESSURE
 )
-# Molar masses in g/mol
+# Molar masses in g⋅mol⁻¹
 _CARBON_MONOXIDE_MOLAR_MASS = 28.01
 
 
@@ -189,7 +189,7 @@ class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_MILLION: 1e6,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: (
-            _CARBON_MONOXIDE_MOLAR_MASS / _SATP_IDEAL_GAS_MOLAR_VOLUME * 1e3
+            _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e3
         ),
     }
     VALID_UNITS = {
