@@ -46,6 +46,7 @@ async def async_setup_entry(
                     switchable_output_num,
                     switchable_output_name,
                     config_entry.options.get(CONF_CODE),
+                    config_entry.entry_id,
                 ),
             ],
             config_subentry_id=subentry.subentry_id,
@@ -57,10 +58,10 @@ class SatelIntegraSwitch(SwitchEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, controller, device_number, device_name, code):
+    def __init__(self, controller, device_number, device_name, code, config_entry_id):
         """Initialize the binary_sensor."""
         self._device_number = device_number
-        self._attr_unique_id = f"satel_switch_{device_number}"
+        self._attr_unique_id = f"{config_entry_id}_switch_{device_number}"
         self._name = device_name
         self._state = False
         self._code = code
