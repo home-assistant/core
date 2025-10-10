@@ -1,6 +1,5 @@
 """Test the satel integra config flow."""
 
-from types import MappingProxyType
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -234,7 +233,7 @@ async def test_subentry_creation(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    user_input: MappingProxyType[str, Any],
+    user_input: dict[str, Any],
     subentry: ConfigSubentry,
 ) -> None:
     """Test partitions options flow."""
@@ -253,7 +252,7 @@ async def test_subentry_creation(
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        dict(user_input),
+        user_input,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
