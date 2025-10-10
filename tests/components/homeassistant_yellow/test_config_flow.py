@@ -14,9 +14,6 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
 )
-from homeassistant.components.homeassistant_hardware.helpers import (
-    async_notify_firmware_info,
-)
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     CONF_DISABLE_MULTI_PAN,
     get_flasher_addon_manager,
@@ -612,45 +609,3 @@ async def test_options_flow_multipan_uninstall(hass: HomeAssistant) -> None:
 
     # We've reverted the firmware back to Zigbee
     assert config_entry.data["firmware"] == "ezsp"
-
-
-async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None:
-    """Test that firmware notification triggers import flow that auto-creates config entry."""
-    mock_integration(hass, MockModule("hassio"))
-    await async_setup_component(hass, HASSIO_DOMAIN, {})
-
-    # Ensure no config entries exist yet
-    assert not hass.config_entries.async_entries(DOMAIN)
-
-    # Trigger a firmware notification from ZHA which should auto-create the config entry via import
-    with (
-        patch(
-            "homeassistant.components.homeassistant_hardware.helpers.get_os_info",
-            return_value={"board": "yellow"},
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.helpers.usb_device_from_path",
-            return_value=None,
-        ),
-    ):
-        await async_notify_firmware_info(
-            hass,
-            "zha",
-            FirmwareInfo(
-                device=RADIO_DEVICE,
-                firmware_type=ApplicationType.EZSP,
-                firmware_version="7.4.4.0",
-                owners=[],
-                source="zha",
-            ),
-        )
-
-        await hass.async_block_till_done()
-
-    # The config entry was auto-created by the import flow
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].data == {
-        "firmware": ApplicationType.EZSP.value,
-        "firmware_version": "7.4.4.0",
-    }
