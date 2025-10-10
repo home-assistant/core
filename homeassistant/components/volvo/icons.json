@@ -324,6 +324,9 @@
           "dc": "mdi:current-dc"
         }
       },
+      "direction": {
+        "default": "mdi:compass-outline"
+      },
       "distance_to_empty_battery": {
         "default": "mdi:battery-outline"
       },
