@@ -9,14 +9,14 @@ from enum import StrEnum
 import logging
 from typing import Any
 
-from pynintendoparental.exceptions import InputValidationError
+from pynintendoparental.exceptions import BedtimeOutOfRangeError
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import BEDTIME_ALARM_DISABLE, BEDTIME_ALARM_MAX, BEDTIME_ALARM_MIN, DOMAIN
 from .coordinator import NintendoParentalConfigEntry, NintendoUpdateCoordinator
 from .entity import Device, NintendoDevice
 
@@ -87,9 +87,14 @@ class NintendoParentalTimeEntity(NintendoDevice, TimeEntity):
         """Update the value."""
         try:
             await self.entity_description.set_value_fn(self._device, value)
-        except InputValidationError as exc:
+        except BedtimeOutOfRangeError as exc:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key=exc.error_key,
-                translation_placeholders={"value": value.strftime("%H:%M")},
+                translation_key="bedtime_alarm_out_of_range",
+                translation_placeholders={
+                    "VALUE": value.strftime("%H:%M"),
+                    "BEDTIME_ALARM_MAX": BEDTIME_ALARM_MAX,
+                    "BEDTIME_ALARM_MIN": BEDTIME_ALARM_MIN,
+                    "BEDTIME_ALARM_DISABLE": BEDTIME_ALARM_DISABLE,
+                },
             ) from exc
