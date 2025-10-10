@@ -22,7 +22,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
     """Test user step, including initial form and successful configuration."""
     # Test initial form display when no user input is provided
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
