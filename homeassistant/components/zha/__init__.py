@@ -13,6 +13,7 @@ from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 
 from homeassistant.components.homeassistant_hardware.helpers import (
+    async_is_firmware_update_in_progress,
     async_notify_firmware_info,
     async_register_firmware_info_provider,
 )
@@ -119,6 +120,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def _raise_if_port_in_use(hass: HomeAssistant, device_path: str) -> None:
+    """Ensure that the specified serial port is not in use by a firmware update."""
+    if async_is_firmware_update_in_progress(hass, device_path):
+        raise ConfigEntryNotReady(
+            f"Firmware update in progress for device {device_path}"
+        )
+
+
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up ZHA.
 
@@ -152,6 +161,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     _LOGGER.debug("Trigger cache: %s", zha_lib_data.device_trigger_cache)
 
+    # Check if firmware update is in progress for this device
+    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+    _raise_if_port_in_use(hass, device_path)
+
     try:
         await zha_gateway.async_initialize()
     except NetworkSettingsInconsistent as exc:
@@ -168,7 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady from exc
     except Exception as exc:
         _LOGGER.debug("Failed to set up ZHA", exc_info=exc)
-        device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+        _raise_if_port_in_use(hass, device_path)
 
         if (
             not device_path.startswith("socket://")
