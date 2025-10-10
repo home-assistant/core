@@ -38,11 +38,19 @@
       "time_remaining": {
         "name": "Screen time remaining"
       }
+    },
+    "time": {
+      "bedtime_alarm": {
+        "name": "Bedtime alarm"
+      }
     }
   },
   "exceptions": {
     "auth_expired": {
       "message": "Authentication token expired."
+    },
+    "bedtime_alarm_out_of_range": {
+      "message": "{value} not accepted. Bedtime Alarm must be between {bedtime_alarm_min} and {bedtime_alarm_max}. To disable, set to {bedtime_alarm_disable}."
     }
   }
 }
