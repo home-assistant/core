@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import base64
 from collections.abc import AsyncGenerator, Callable
 import json
+from mimetypes import guess_file_type
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 import openai
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
+    ChatCompletionContentPartImageParam,
     ChatCompletionFunctionToolParam,
     ChatCompletionMessage,
     ChatCompletionMessageFunctionToolCallParam,
@@ -26,6 +30,7 @@ from voluptuous_openapi import convert
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_MODEL
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
@@ -165,6 +170,43 @@ async def _transform_response(
     yield data
 
 
+async def async_prepare_files_for_prompt(
+    hass: HomeAssistant, files: list[tuple[Path, str | None]]
+) -> list[ChatCompletionContentPartImageParam]:
+    """Append files to a prompt.
+
+    Caller needs to ensure that the files are allowed.
+    """
+
+    def append_files_to_content() -> list[ChatCompletionContentPartImageParam]:
+        content: list[ChatCompletionContentPartImageParam] = []
+
+        for file_path, mime_type in files:
+            if not file_path.exists():
+                raise HomeAssistantError(f"`{file_path}` does not exist")
+
+            if mime_type is None:
+                mime_type = guess_file_type(file_path)[0]
+
+            if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
+                raise HomeAssistantError(
+                    "Only images and PDF are supported by the OpenRouter API,"
+                    f"`{file_path}` is not an image file or PDF"
+                )
+
+            base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:{mime_type};base64,{base64_file}"},
+                }
+            )
+
+        return content
+
+    return await hass.async_add_executor_job(append_files_to_content)
+
+
 class OpenRouterEntity(Entity):
     """Base entity for Open Router."""
 
@@ -215,6 +257,26 @@ class OpenRouterEntity(Entity):
             for content in chat_log.content
             if (m := _convert_content_to_chat_message(content))
         ]
+
+        last_content = chat_log.content[-1]
+
+        # Handle attachments by adding them to the last user message
+        if last_content.role == "user" and last_content.attachments:
+            last_message: ChatCompletionMessageParam = model_args["messages"][-1]
+            assert last_message["role"] == "user" and isinstance(
+                last_message["content"], str
+            )
+            LOGGER.warning("Last content: %s", last_content)
+            LOGGER.warning("Last message: %s", last_message)
+            # Encode files with base64 and append them to the text prompt
+            files = await async_prepare_files_for_prompt(
+                self.hass,
+                [(a.path, a.mime_type) for a in last_content.attachments],
+            )
+            last_message["content"] = [
+                {"type": "text", "text": last_message["content"]},
+                *files,
+            ]
 
         if structure:
             if TYPE_CHECKING:
