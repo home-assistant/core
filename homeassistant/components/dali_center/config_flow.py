@@ -24,7 +24,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_gateways: list[DaliGatewayType] = []
+        self._discovered_gateways: dict[str, DaliGatewayType] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -46,10 +46,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if discovery_info and "selected_gateway" in discovery_info:
             selected_sn = discovery_info["selected_gateway"]
-            selected_gateway: DaliGatewayType | None = next(
-                (gw for gw in self._discovered_gateways if gw["gw_sn"] == selected_sn),
-                None,
-            )
+            selected_gateway = self._discovered_gateways.get(selected_sn)
 
             if selected_gateway:
                 await self.async_set_unique_id(selected_gateway["gw_sn"])
@@ -80,9 +77,11 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
                     for entry in self.hass.config_entries.async_entries(DOMAIN)
                 }
 
-                self._discovered_gateways = [
-                    gw for gw in discovered if gw["gw_sn"] not in configured_gateways
-                ]
+                self._discovered_gateways = {
+                    gw["gw_sn"]: gw
+                    for gw in discovered
+                    if gw["gw_sn"] not in configured_gateways
+                }
 
         if not self._discovered_gateways:
             return self.async_show_form(
@@ -92,8 +91,8 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         gateway_options = {
-            gw["gw_sn"]: f"{gw['gw_sn']} ({gw['gw_ip']})"
-            for gw in self._discovered_gateways
+            sn: f"{sn} ({gateway['gw_ip']})"
+            for sn, gateway in self._discovered_gateways.items()
         }
 
         return self.async_show_form(
