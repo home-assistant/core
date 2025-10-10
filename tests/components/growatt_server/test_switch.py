@@ -3,12 +3,15 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from growattServer import GrowattV1ApiError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.growatt_server.coordinator import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -21,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 DOMAIN = "growatt_server"
 
@@ -45,17 +48,6 @@ async def test_switch_entities(
 ) -> None:
     """Test that switch entities are created for MIN devices."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_switch_entity_values(
-    hass: HomeAssistant,
-) -> None:
-    """Test that switch entities have correct values."""
-    # Check entity value (should be ON based on mock data value "1")
-    ac_charge_state = hass.states.get("switch.min123456_charge_from_grid")
-    assert ac_charge_state is not None
-    assert ac_charge_state.state == STATE_ON
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -105,7 +97,7 @@ async def test_turn_on_switch_api_error(
     # Mock API to raise error
     mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError("API Error")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="Error while setting switch state"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -123,7 +115,7 @@ async def test_turn_off_switch_api_error(
     # Mock API to raise error
     mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError("API Error")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="Error while setting switch state"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -154,13 +146,13 @@ async def test_switch_entity_attributes(
 async def test_switch_device_registry(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that switch entities are associated with the correct device."""
     # Get the device from device registry
     device = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
     assert device is not None
-    assert device.manufacturer == "Growatt"
-    assert device.name == "MIN123456"
+    assert device == snapshot
 
     # Verify switch entity is associated with the device
     entity_entry = entity_registry.async_get("switch.min123456_charge_from_grid")
@@ -168,13 +160,19 @@ async def test_switch_device_registry(
     assert entity_entry.device_id == device.id
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch_state_handling_integer_values(
     hass: HomeAssistant,
-    mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
+    mock_growatt_v1_api,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test switch state handling with integer values from API."""
+    # Set up integration
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     # Should interpret 1 as ON (from default mock data)
     state = hass.states.get("switch.min123456_charge_from_grid")
     assert state is not None
@@ -186,12 +184,12 @@ async def test_switch_state_handling_integer_values(
         "acChargeEnable": 0,  # Integer value
     }
 
-    # Trigger a refresh
-    runtime_data = mock_config_entry.runtime_data
-    device_coordinator = runtime_data.devices["MIN123456"]
-    await device_coordinator.async_refresh()
+    # Advance time to trigger coordinator refresh
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Should interpret "0" as OFF
+    # Should interpret 0 as OFF
     state = hass.states.get("switch.min123456_charge_from_grid")
     assert state is not None
     assert state.state == STATE_OFF
@@ -229,12 +227,12 @@ async def test_no_switch_entities_for_non_min_devices(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that switch entities are not created for non-MIN devices."""
-    # Mock a different device type (not MIN) - type 8 is TLX
+    # Mock a different device type (not MIN) - type 7 is MIN, type 8 is non-MIN
     mock_growatt_v1_api.device_list.return_value = {
         "devices": [
             {
                 "device_sn": "TLX123456",
-                "type": 8,  # TLX device type
+                "type": 8,  # Non-MIN device type (MIN is type 7)
             }
         ]
     }
@@ -277,32 +275,3 @@ async def test_no_switch_entities_for_classic_api(
     )
     switch_entities = [entry for entry in entity_entries if entry.domain == "switch"]
     assert len(switch_entities) == 0
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_switch_coordinator_data_update(
-    hass: HomeAssistant,
-    mock_growatt_v1_api,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that switch state updates when coordinator data changes."""
-    # Initial state should be ON (based on mock data)
-    state = hass.states.get("switch.min123456_charge_from_grid")
-    assert state is not None
-    assert state.state == STATE_ON
-
-    # Change mock data and trigger coordinator update
-    mock_growatt_v1_api.min_detail.return_value = {
-        "deviceSn": "MIN123456",
-        "acChargeEnable": 0,  # Changed to OFF (integer, as real API returns)
-    }
-
-    # Trigger a refresh
-    runtime_data = mock_config_entry.runtime_data
-    device_coordinator = runtime_data.devices["MIN123456"]
-    await device_coordinator.async_refresh()
-
-    # State should now be OFF
-    state = hass.states.get("switch.min123456_charge_from_grid")
-    assert state is not None
-    assert state.state == STATE_OFF
