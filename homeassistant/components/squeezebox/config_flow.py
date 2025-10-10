@@ -185,15 +185,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a failed discovery."""
 
-        return self.async_show_menu(
-            step_id="discovery_failed", menu_options=["edit", "cancel"]
-        )
-
-    async def async_step_cancel(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Cancel the config flow."""
-        return
+        return self.async_show_menu(step_id="discovery_failed", menu_options=["edit"])
 
     async def async_step_start_discovery(
         self, user_input: dict[str, Any] | None = None
@@ -211,7 +203,9 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             await asyncio.sleep(0.1)
 
             return self.async_show_progress_done(
-                next_step_id="choose_server" if self.discovered_servers else "edit"
+                next_step_id="choose_server"
+                if self.discovered_servers
+                else "discovery_failed"
             )
 
         return self.async_show_progress(

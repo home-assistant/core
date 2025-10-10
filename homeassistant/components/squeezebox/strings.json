@@ -15,9 +15,9 @@
       },
       "discovery_failed": {
         "title": "Discovery failed",
+        "description": "No LMS were discovered on the network.",
         "menu_options": {
-          "edit": "Enter configuration manually",
-          "cancel": "Exit LMS configuration"
+          "edit": "Enter configuration manually"
         }
       },
       "choose_server": {
