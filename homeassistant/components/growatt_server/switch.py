@@ -124,7 +124,6 @@ class GrowattSwitch(CoordinatorEntity[GrowattCoordinator], SwitchEntity):
                 api_value,
             )
         except GrowattV1ApiError as e:
-            _LOGGER.error("Error while setting switch state: %s", e)
             raise HomeAssistantError(f"Error while setting switch state: {e}") from e
 
         # If no exception was raised, the write was successful
