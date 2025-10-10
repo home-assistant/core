@@ -44,7 +44,6 @@ from homeassistant.util.unit_conversion import (
     AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
-    CarbonMonoxideConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -79,7 +78,6 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         AreaConverter,
         BloodGlucoseConcentrationConverter,
         MassVolumeConcentrationConverter,
-        CarbonMonoxideConcentrationConverter,
         ConductivityConverter,
         DataRateConverter,
         DistanceConverter,
@@ -115,11 +113,6 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
         18,
-    ),
-    CarbonMonoxideConcentrationConverter: (
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_PARTS_PER_MILLION,
-        1.145609,
     ),
     ConductivityConverter: (
         UnitOfConductivity.MICROSIEMENS_PER_CM,
@@ -287,63 +280,7 @@ _CONVERTED_VALUE: dict[
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         ),
     ],
-    CarbonMonoxideConcentrationConverter: [
-        (
-            1,
-            CONCENTRATION_PARTS_PER_MILLION,
-            1.145609,
-            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-        ),
-        (
-            120,
-            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-            104.74778,
-            CONCENTRATION_PARTS_PER_MILLION,
-        ),
-    ],
     ConductivityConverter: [
-        # Deprecated to deprecated
-        (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
-        (5, UnitOfConductivity.SIEMENS, 5e6, UnitOfConductivity.MICROSIEMENS),
-        (5, UnitOfConductivity.MILLISIEMENS, 5e3, UnitOfConductivity.MICROSIEMENS),
-        (5, UnitOfConductivity.MILLISIEMENS, 5e-3, UnitOfConductivity.SIEMENS),
-        (5e6, UnitOfConductivity.MICROSIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
-        (5e6, UnitOfConductivity.MICROSIEMENS, 5, UnitOfConductivity.SIEMENS),
-        # Deprecated to new
-        (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS_PER_CM),
-        (5, UnitOfConductivity.SIEMENS, 5e6, UnitOfConductivity.MICROSIEMENS_PER_CM),
-        (
-            5,
-            UnitOfConductivity.MILLISIEMENS,
-            5e3,
-            UnitOfConductivity.MICROSIEMENS_PER_CM,
-        ),
-        (5, UnitOfConductivity.MILLISIEMENS, 5e-3, UnitOfConductivity.SIEMENS_PER_CM),
-        (
-            5e6,
-            UnitOfConductivity.MICROSIEMENS,
-            5e3,
-            UnitOfConductivity.MILLISIEMENS_PER_CM,
-        ),
-        (5e6, UnitOfConductivity.MICROSIEMENS, 5, UnitOfConductivity.SIEMENS_PER_CM),
-        # New to deprecated
-        (5, UnitOfConductivity.SIEMENS_PER_CM, 5e3, UnitOfConductivity.MILLISIEMENS),
-        (5, UnitOfConductivity.SIEMENS_PER_CM, 5e6, UnitOfConductivity.MICROSIEMENS),
-        (
-            5,
-            UnitOfConductivity.MILLISIEMENS_PER_CM,
-            5e3,
-            UnitOfConductivity.MICROSIEMENS,
-        ),
-        (5, UnitOfConductivity.MILLISIEMENS_PER_CM, 5e-3, UnitOfConductivity.SIEMENS),
-        (
-            5e6,
-            UnitOfConductivity.MICROSIEMENS_PER_CM,
-            5e3,
-            UnitOfConductivity.MILLISIEMENS,
-        ),
-        (5e6, UnitOfConductivity.MICROSIEMENS_PER_CM, 5, UnitOfConductivity.SIEMENS),
-        # New to new
         (
             5,
             UnitOfConductivity.SIEMENS_PER_CM,
