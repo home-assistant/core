@@ -8,20 +8,16 @@ from contextlib import asynccontextmanager
 import logging
 from typing import TYPE_CHECKING, Protocol, TypedDict
 
-from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
-from homeassistant.components.usb import (
-    USBDevice,
-    async_get_usb_matchers_for_device,
-    usb_device_from_path,
-)
+from homeassistant.components.hassio import get_os_info
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
-from homeassistant.exceptions import HomeAssistantError
 
 from . import DATA_COMPONENT
 from .const import HARDWARE_INTEGRATION_DOMAINS, YELLOW_DOMAIN
 
 if TYPE_CHECKING:
+    from homeassistant.components.usb import USBDevice
+
     from .util import FirmwareInfo
 
 
@@ -66,6 +62,13 @@ async def async_get_hardware_domain_for_usb_device(
     hass: HomeAssistant, usb_device: USBDevice
 ) -> str | None:
     """Identify which hardware domain should handle a USB device."""
+
+    # If the USB integration is not available, we cannot check USB matchers
+    if "usb" not in hass.config.components:
+        return None
+
+    from homeassistant.components.usb import async_get_usb_matchers_for_device  # noqa: PLC0415
+
     matched = async_get_usb_matchers_for_device(hass, usb_device)
     hw_domains = {match["domain"] for match in matched} & HARDWARE_INTEGRATION_DOMAINS
 
@@ -146,21 +149,26 @@ class HardwareInfoDispatcher:
         USB matchers, then triggers an import flow for only that integration.
         """
 
-        usb_device = await self.hass.async_add_executor_job(
-            usb_device_from_path, firmware_info.device
-        )
+        # If the USB integration is not available, we cannot check USB matchers
+        if "usb" in self.hass.config.components:
+            from homeassistant.components.usb import usb_device_from_path  # noqa: PLC0415
+
+            usb_device = await self.hass.async_add_executor_job(
+                usb_device_from_path, firmware_info.device
+            )
+        else:
+            usb_device = None
 
         hardware_domain: str | None
 
         if usb_device is None:
             # Yellow does not have a USB device and needs to be handled explicitly
-            try:
-                yellow_hardware.async_info(self.hass)
-            except HomeAssistantError:
+            os_info = get_os_info(self.hass) or {}
+
+            if os_info is None or os_info.get("board") != "yellow":
                 _LOGGER.debug("No USB device found for device %s", firmware_info.device)
                 return
-            else:
-                hardware_domain = YELLOW_DOMAIN
+            hardware_domain = YELLOW_DOMAIN
         else:
             # Other devices need to be checked against USB matchers
             hardware_domain = await async_get_hardware_domain_for_usb_device(
