@@ -91,6 +91,17 @@ _GALLON_TO_CUBIC_METER = 231 * pow(_IN_TO_M, 3)  # US gallon is 231 cubic inches
 _FLUID_OUNCE_TO_CUBIC_METER = _GALLON_TO_CUBIC_METER / 128  # 128 fl. oz. in a US gallon
 _CUBIC_FOOT_TO_CUBIC_METER = pow(_FOOT_TO_M, 3)
 
+# Gas concentration conversion constants
+_IDEAL_GAS_CONSTANT = 8.31446261815324  # m3⋅Pa⋅K⁻¹⋅mol⁻¹
+# Ambient constants based on European Commission recommendations (20 °C and 1013mb)
+_AMBIENT_TEMPERATURE = 293.15  # K (20 °C)
+_AMBIENT_PRESSURE = 101325  # Pa (1 atm)
+_AMBIENT_IDEAL_GAS_MOLAR_VOLUME = (  # m3⋅mol⁻¹
+    _IDEAL_GAS_CONSTANT * _AMBIENT_TEMPERATURE / _AMBIENT_PRESSURE
+)
+# Molar masses in g⋅mol⁻¹
+_CARBON_MONOXIDE_MOLAR_MASS = 28.01
+
 
 class BaseUnitConverter:
     """Define the format of a conversion utility."""
@@ -169,14 +180,17 @@ class BaseUnitConverter:
 
 
 class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
-    """Convert carbon monoxide ratio to mass per volume."""
+    """Convert carbon monoxide ratio to mass per volume.
+
+    Using ambient temperature of 20°C and pressure of 1 ATM.
+    """
 
     UNIT_CLASS = "carbon_monoxide"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_PARTS_PER_MILLION: 1,
-        # concentration (mg/m3) = 0.0409 x concentration (ppm) x molecular weight
-        # Carbon monoxide molecular weight: 28.01 g/mol
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 0.0409 * 28.01,
+        CONCENTRATION_PARTS_PER_MILLION: 1e6,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: (
+            _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e3
+        ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_MILLION,
@@ -742,6 +756,8 @@ class UnitlessRatioConverter(BaseUnitConverter):
     }
     VALID_UNITS = {
         None,
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         PERCENTAGE,
     }
 

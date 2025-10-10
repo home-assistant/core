@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**.",
+        "data": {
+          "api_token": "Access token"
+        },
+        "data_description": {
+          "api_token": "The link copied from the Nintendo website"
+        }
+      },
+      "reauth_confirm": {
+        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**.",
+        "data": {
+          "api_token": "Access token"
+        },
+        "data_description": {
+          "api_token": "The link copied from the Nintendo website"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "playing_time": {
+        "name": "Used screen time"
+      },
+      "time_remaining": {
+        "name": "Screen time remaining"
+      }
+    },
+    "time": {
+      "bedtime_alarm": {
+        "name": "Bedtime alarm"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_expired": {
+      "message": "Authentication token expired."
+    },
+    "bedtime_alarm_out_of_range": {
+      "message": "{value} not accepted. Bedtime Alarm must be between {bedtime_alarm_min} and {bedtime_alarm_max}. To disable, set to {bedtime_alarm_disable}."
+    }
+  }
+}
