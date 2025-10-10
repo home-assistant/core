@@ -94,7 +94,7 @@ class MatterLightEntityDescription(LightEntityDescription, MatterEntityDescripti
 class MatterLight(MatterEntity, LightEntity):
     """Representation of a Matter light."""
 
-    entity_description: LightEntityDescription
+    entity_description: MatterLightEntityDescription
     _supports_brightness = False
     _supports_color = False
     _supports_color_temperature = False

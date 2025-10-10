@@ -45,7 +45,7 @@ class MatterValve(MatterEntity, ValveEntity):
     """Representation of a Matter Valve."""
 
     _feature_map: int | None = None
-    entity_description: ValveEntityDescription
+    entity_description: MatterValveEntityDescription
     _platform_translation_key = "valve"
 
     async def async_open_valve(self) -> None:

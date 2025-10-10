@@ -52,7 +52,7 @@ async def async_setup_entry(
 
 
 @dataclass(frozen=True)
-class MatterWatterHeaterEntityDescription(
+class MatterWaterHeaterEntityDescription(
     WaterHeaterEntityDescription, MatterEntityDescription
 ):
     """Describe Matter Water Heater entities."""
@@ -179,7 +179,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.WATER_HEATER,
-        entity_description=MatterWatterHeaterEntityDescription(
+        entity_description=MatterWaterHeaterEntityDescription(
             key="MatterWaterHeater",
             name=None,
         ),
