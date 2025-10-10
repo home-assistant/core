@@ -461,6 +461,10 @@ async def test_hassio_discovery_flow_yellow(
             "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
             "Home Assistant Connect ZBT-1 (Silicon Labs Multiprotocol)",
         ),
+        (
+            "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE58A94-if00",
+            "Home Assistant Connect ZBT-2 (Silicon Labs Multiprotocol)",
+        ),
     ],
 )
 @pytest.mark.usefixtures("get_border_agent_id")
