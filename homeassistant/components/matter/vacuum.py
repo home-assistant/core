@@ -73,7 +73,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     _supported_run_modes: (
         dict[int, clusters.RvcRunMode.Structs.ModeOptionStruct] | None
     ) = None
-    entity_description: StateVacuumEntityDescription
+    entity_description: MatterStateVacuumEntityDescription
     _platform_translation_key = "vacuum"
 
     def _get_run_mode_by_tag(

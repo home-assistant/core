@@ -1,9 +1,10 @@
 """Common fixtures for the Nintendo Switch Parental Controls tests."""
 
 from collections.abc import Generator
-from datetime import datetime
+from datetime import datetime, time
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pynintendoparental import NintendoParental
 from pynintendoparental.device import Device
 import pytest
 
@@ -30,9 +31,11 @@ def mock_nintendo_device() -> Device:
     mock = AsyncMock(spec=Device)
     mock.device_id = "testdevid"
     mock.name = "Home Assistant Test"
-    mock.extra = {"device": {"firmwareVersion": {"displayedVersion": "99.99.99"}}}
+    mock.extra = {"firmwareVersion": {"displayedVersion": "99.99.99"}}
     mock.limit_time = 120
     mock.today_playing_time = 110
+    mock.bedtime_alarm = time(hour=19)
+    mock.set_bedtime_alarm.return_value = None
     return mock
 
 
@@ -68,23 +71,21 @@ def mock_nintendo_authenticator() -> Generator[MagicMock]:
 
 @pytest.fixture
 def mock_nintendo_client(
-    mock_nintendo_device: Device,
+    mock_nintendo_device: Device, mock_nintendo_authenticator: MagicMock
 ) -> Generator[AsyncMock]:
     """Mock a Nintendo client."""
-    with (
-        patch(
-            "homeassistant.components.nintendo_parental.NintendoParental",
-            autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.nintendo_parental.config_flow.NintendoParental",
-            new=mock_client,
-        ),
-    ):
-        client = mock_client.return_value
-        client.update.return_value = True
-        client.devices.return_value = {"testdevid": mock_nintendo_device}
-        yield client
+    # Create a mock instance with our device(s) first
+    mock_client_instance = AsyncMock(spec=NintendoParental)
+    mock_client_instance.devices = {"testdevid": mock_nintendo_device}
+    # Now patch the NintendoParental class in the coordinator with our mock instance
+    with patch(
+        "homeassistant.components.nintendo_parental.coordinator.NintendoParental",
+        autospec=True,
+    ) as mock_client_class:
+        mock_client_class.return_value = mock_client_instance
+        mock_client_instance.update.return_value = None
+
+        yield mock_client_instance
 
 
 @pytest.fixture
