@@ -1148,21 +1148,21 @@ class NumberSelector(Selector[NumberSelectorConfig]):
         return value
 
 
-class ObjectSelectorField(TypedDict):
+class ObjectSelectorField(TypedDict, total=False):
     """Class to represent an object selector fields dict."""
 
     label: str
     required: bool
-    selector: dict[str, Any]
+    selector: Required[dict[str, Any]]
 
 
-class ObjectSelectorConfig(BaseSelectorConfig):
+class ObjectSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an object selector config."""
 
     fields: dict[str, ObjectSelectorField]
     multiple: bool
     label_field: str
-    description_field: bool
+    description_field: str
     translation_key: str
 
 
@@ -1176,7 +1176,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         {
             vol.Optional("fields"): {
                 str: {
-                    vol.Required("selector"): dict,
+                    vol.Required("selector"): validate_selector,
                     vol.Optional("required"): bool,
                     vol.Optional("label"): str,
                 }
@@ -1194,6 +1194,28 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
+        if "fields" not in self.config:
+            # Return data if no fields are defined
+            return data
+
+        if not isinstance(data, (list, dict)):
+            raise vol.Invalid("Value should be a dict or a list of dicts")
+        if isinstance(data, list) and not self.config["multiple"]:
+            raise vol.Invalid("Value should not be a list")
+
+        test_data = data if isinstance(data, list) else [data]
+
+        for _config in test_data:
+            for field, field_data in self.config["fields"].items():
+                if field_data.get("required") and field not in _config:
+                    raise vol.Invalid(f"Field {field} is required")
+                if field in _config:
+                    selector(field_data["selector"])(_config[field])  # type: ignore[operator]
+
+            for key in _config:
+                if key not in self.config["fields"]:
+                    raise vol.Invalid(f"Field {key} is not allowed")
+
         return data
 
 

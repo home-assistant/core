@@ -23,13 +23,25 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.shelly.const import RPC_COVER_UPDATE_TIME_SEC
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, mock_polling_rpc_update, mutate_rpc_device_status
+from . import (
+    init_integration,
+    mock_polling_rpc_update,
+    mutate_rpc_device_status,
+    patch_platforms,
+)
 
 ROLLER_BLOCK_ID = 1
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.COVER]):
+        yield
 
 
 async def test_block_device_services(
@@ -417,3 +429,20 @@ async def test_update_position_no_movement(
     assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
+
+
+async def test_rpc_not_initialized_update(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test update not called when device is not initialized."""
+    entity_id = "cover.test_name_test_cover_0"
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == CoverState.OPEN
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE

@@ -80,6 +80,7 @@ async def test_user_key_read_only(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"]
     assert result2["errors"]["base"] == "not_main_key"
 
 
@@ -107,6 +108,7 @@ async def test_exception_thrown(hass: HomeAssistant, exception, error_key) -> No
         )
 
     assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"]
     assert result2["errors"]["base"] == error_key
 
 
@@ -125,6 +127,7 @@ async def test_api_error(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
             {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY},
         )
 
+    assert result2["errors"]
     assert result2["errors"]["base"] == "unknown"
     assert "test error from API." in caplog.text
 
@@ -227,6 +230,7 @@ async def test_reauthentication_failure(
 
     assert result2["step_id"] == "reauth_confirm"
     assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"]
     assert result2["errors"]["base"] == "unknown"
 
 
@@ -299,6 +303,7 @@ async def test_reauthentication_failure_account_not_matching(
 
     assert result2["step_id"] == "reauth_confirm"
     assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"]
     assert result2["errors"]["base"] == "reauth_failed_matching_account"
 
 
@@ -374,6 +379,7 @@ async def test_reconfigure_failed(
         )
 
     assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"]
     assert result2["errors"]["base"] == "invalid_api_key"
 
     new_key = "u0242ac120003-new"

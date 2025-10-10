@@ -149,8 +149,18 @@
           "off": "mdi:lock-off"
         }
       },
+      "speaker_mute": {
+        "default": "mdi:volume-high",
+        "state": {
+          "on": "mdi:volume-mute",
+          "off": "mdi:volume-high"
+        }
+      },
       "evse_charging_switch": {
         "default": "mdi:ev-station"
+      },
+      "privacy_mode_button": {
+        "default": "mdi:shield-lock"
       }
     }
   }

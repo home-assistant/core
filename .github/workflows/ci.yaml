@@ -37,10 +37,10 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 7
+  CACHE_VERSION: 8
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2025.10"
+  HA_SHORT_VERSION: "2025.11"
   DEFAULT_PYTHON: "3.13"
   ALL_PYTHON_VERSIONS: "['3.13']"
   # 10.3 is the oldest supported version
@@ -61,6 +61,9 @@ env:
   POSTGRESQL_VERSIONS: "['postgres:12.14','postgres:15.2']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   UV_CACHE_DIR: /tmp/uv-cache
+  APT_CACHE_BASE: /home/runner/work/apt
+  APT_CACHE_DIR: /home/runner/work/apt/cache
+  APT_LIST_CACHE_DIR: /home/runner/work/apt/lists
   SQLALCHEMY_WARN_20: 1
   PYTHONASYNCIODEBUG: 1
   HASS_CI: 1
@@ -72,12 +75,14 @@ concurrency:
 jobs:
   info:
     name: Collect information & changes data
+    runs-on: &runs-on-ubuntu ubuntu-24.04
     outputs:
       # In case of issues with the partial run, use the following line instead:
       # test_full_suite: 'true'
       core: ${{ steps.core.outputs.changes }}
       integrations_glob: ${{ steps.info.outputs.integrations_glob }}
       integrations: ${{ steps.integrations.outputs.changes }}
+      apt_cache_key: ${{ steps.generate_apt_cache_key.outputs.key }}
       pre-commit_cache_key: ${{ steps.generate_pre-commit_cache_key.outputs.key }}
       python_cache_key: ${{ steps.generate_python_cache_key.outputs.key }}
       requirements: ${{ steps.core.outputs.requirements }}
@@ -91,10 +96,10 @@ jobs:
       tests: ${{ steps.info.outputs.tests }}
       lint_only: ${{ steps.info.outputs.lint_only }}
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
-    runs-on: ubuntu-24.04
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
+      - &checkout
+        name: Check out code from GitHub
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: |
@@ -111,8 +116,12 @@ jobs:
         run: >-
           echo "key=pre-commit-${{ env.CACHE_VERSION }}-${{
             hashFiles('.pre-commit-config.yaml') }}"  >> $GITHUB_OUTPUT
+      - name: Generate partial apt restore key
+        id: generate_apt_cache_key
+        run: |
+          echo "key=$(lsb_release -rs)-apt-${{ env.CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}" >> $GITHUB_OUTPUT
       - name: Filter for core changes
-        uses: dorny/paths-filter@v3.0.2
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: core
         with:
           filters: .core_files.yaml
@@ -127,7 +136,7 @@ jobs:
           echo "Result:"
           cat .integration_paths.yaml
       - name: Filter for integration changes
-        uses: dorny/paths-filter@v3.0.2
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: integrations
         with:
           filters: .integration_paths.yaml
@@ -237,28 +246,27 @@ jobs:
 
   pre-commit:
     name: Prepare pre-commit base
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    needs: [info]
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
-    needs:
-      - info
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+      - *checkout
+      - &setup-python-default
+        name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v6.0.0
+        uses: &actions-setup-python actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v4.2.4
+        uses: &actions-cache actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: venv
-          key: >-
+          key: &key-pre-commit-venv >-
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
               needs.info.outputs.pre-commit_cache_key }}
       - name: Create Python virtual environment
@@ -271,11 +279,11 @@ jobs:
           uv pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v4.2.4
+        uses: *actions-cache
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           lookup-only: true
-          key: >-
+          key: &key-pre-commit-env >-
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
       - name: Install pre-commit dependencies
@@ -286,37 +294,29 @@ jobs:
 
   lint-ruff-format:
     name: Check ruff-format
-    runs-on: ubuntu-24.04
-    needs:
+    runs-on: *runs-on-ubuntu
+    needs: &needs-pre-commit
       - info
       - pre-commit
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v6.0.0
-        id: python
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore base Python virtual environment
+      - *checkout
+      - *setup-python-default
+      - &cache-restore-pre-commit-venv
+        name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.4
+        uses: &actions-cache-restore actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: venv
           fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Restore pre-commit environment from cache
+          key: *key-pre-commit-venv
+      - &cache-restore-pre-commit-env
+        name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.2.4
+        uses: *actions-cache-restore
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-              needs.info.outputs.pre-commit_cache_key }}
+          key: *key-pre-commit-env
       - name: Run ruff-format
         run: |
           . venv/bin/activate
@@ -326,37 +326,13 @@ jobs:
 
   lint-ruff:
     name: Check ruff
-    runs-on: ubuntu-24.04
-    needs:
-      - info
-      - pre-commit
+    runs-on: *runs-on-ubuntu
+    needs: *needs-pre-commit
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v6.0.0
-        id: python
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Restore pre-commit environment from cache
-        id: cache-precommit
-        uses: actions/cache/restore@v4.2.4
-        with:
-          path: ${{ env.PRE_COMMIT_CACHE }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-              needs.info.outputs.pre-commit_cache_key }}
+      - *checkout
+      - *setup-python-default
+      - *cache-restore-pre-commit-venv
+      - *cache-restore-pre-commit-env
       - name: Run ruff
         run: |
           . venv/bin/activate
@@ -366,37 +342,13 @@ jobs:
 
   lint-other:
     name: Check other linters
-    runs-on: ubuntu-24.04
-    needs:
-      - info
-      - pre-commit
+    runs-on: *runs-on-ubuntu
+    needs: *needs-pre-commit
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v6.0.0
-        id: python
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Restore pre-commit environment from cache
-        id: cache-precommit
-        uses: actions/cache/restore@v4.2.4
-        with:
-          path: ${{ env.PRE_COMMIT_CACHE }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-              needs.info.outputs.pre-commit_cache_key }}
+      - *checkout
+      - *setup-python-default
+      - *cache-restore-pre-commit-venv
+      - *cache-restore-pre-commit-env
 
       - name: Register yamllint problem matcher
         run: |
@@ -446,9 +398,8 @@ jobs:
 
   lint-hadolint:
     name: Check ${{ matrix.file }}
-    runs-on: ubuntu-24.04
-    needs:
-      - info
+    runs-on: *runs-on-ubuntu
+    needs: [info]
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -461,8 +412,7 @@ jobs:
           - Dockerfile.dev
           - script/hassfest/docker/Dockerfile
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
+      - *checkout
       - name: Register hadolint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
@@ -473,18 +423,18 @@ jobs:
 
   base:
     name: Prepare dependencies
-    runs-on: ubuntu-24.04
-    needs: info
+    runs-on: *runs-on-ubuntu
+    needs: [info]
     timeout-minutes: 60
     strategy:
       matrix:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ matrix.python-version }}
+      - *checkout
+      - &setup-python-matrix
+        name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v6.0.0
+        uses: *actions-setup-python
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -497,15 +447,15 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v4.2.4
+        uses: *actions-cache
         with:
           path: venv
-          key: >-
+          key: &key-python-venv >-
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v4.2.4
+        uses: *actions-cache
         with:
           path: ${{ env.UV_CACHE_DIR }}
           key: >-
@@ -515,16 +465,38 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-uv-${{
             env.UV_CACHE_VERSION }}-${{ steps.generate-uv-key.outputs.version }}-${{
             env.HA_SHORT_VERSION }}-
+      - name: Check if apt cache exists
+        id: cache-apt-check
+        uses: *actions-cache
+        with:
+          lookup-only: ${{ steps.cache-venv.outputs.cache-hit == 'true' }}
+          path: &path-apt-cache |
+            ${{ env.APT_CACHE_DIR }}
+            ${{ env.APT_LIST_CACHE_DIR }}
+          key: &key-apt-cache >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+        if: |
+          steps.cache-venv.outputs.cache-hit != 'true'
+          || steps.cache-apt-check.outputs.cache-hit != 'true'
         timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          if [[ "${{ steps.cache-apt-check.outputs.cache-hit }}" != 'true' ]]; then
+            mkdir -p ${{ env.APT_CACHE_DIR }}
+            mkdir -p ${{ env.APT_LIST_CACHE_DIR }}
+          fi
+
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
             libturbojpeg \
+            libxml2-utils \
             libavcodec-dev \
             libavdevice-dev \
             libavfilter-dev \
@@ -534,6 +506,18 @@ jobs:
             libswresample-dev \
             libswscale-dev \
             libudev-dev
+
+          if [[ "${{ steps.cache-apt-check.outputs.cache-hit }}" != 'true' ]]; then
+            sudo chmod -R 755 ${{ env.APT_CACHE_BASE }}
+          fi
+      - name: Save apt cache
+        if: steps.cache-apt-check.outputs.cache-hit != 'true'
+        uses: &actions-cache-save actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ${{ env.APT_CACHE_DIR }}
+            ${{ env.APT_LIST_CACHE_DIR }}
+          key: *key-apt-cache
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -553,7 +537,7 @@ jobs:
           python --version
           uv pip freeze >> pip_freeze.txt
       - name: Upload pip_freeze artifact
-        uses: actions/upload-artifact@v4.6.2
+        uses: &actions-upload-artifact actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: pip-freeze-${{ matrix.python-version }}
           path: pip_freeze.txt
@@ -563,45 +547,50 @@ jobs:
       - name: Remove generated requirements_all
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: rm requirements_all_pytest.txt requirements_all_wheels_*.txt
-      - name: Check dirty
+      - &check-dirty
+        name: Check dirty
         run: |
           ./script/check_dirty
 
   hassfest:
     name: Check hassfest
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    needs: &needs-base
+      - info
+      - base
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
-    needs:
-      - info
-      - base
     steps:
+      - &cache-restore-apt
+        name: Restore apt cache
+        uses: *actions-cache-restore
+        with:
+          path: *path-apt-cache
+          fail-on-cache-miss: true
+          key: *key-apt-cache
       - name: Install additional OS dependencies
         timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             libturbojpeg
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
+      - *checkout
+      - *setup-python-default
+      - &cache-restore-python-default
+        name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.4
+        uses: *actions-cache-restore
         with:
           path: venv
           fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          key: *key-python-venv
       - name: Run hassfest
         run: |
           . venv/bin/activate
@@ -609,32 +598,16 @@ jobs:
 
   gen-requirements-all:
     name: Check all requirements
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    needs: *needs-base
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
-    needs:
-      - info
-      - base
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+      - *checkout
+      - *setup-python-default
+      - *cache-restore-python-default
       - name: Run gen_requirements_all.py
         run: |
           . venv/bin/activate
@@ -642,29 +615,24 @@ jobs:
 
   dependency-review:
     name: Dependency review
-    runs-on: ubuntu-24.04
-    needs:
-      - info
-      - base
+    runs-on: *runs-on-ubuntu
+    needs: *needs-base
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && needs.info.outputs.requirements == 'true'
       && github.event_name == 'pull_request'
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
+      - *checkout
       - name: Dependency review
-        uses: actions/dependency-review-action@v4.7.3
+        uses: actions/dependency-review-action@56339e523c0409420f6c2c9a2f4292bbb3c07dd3 # v4.8.0
         with:
           license-check: false # We use our own license audit checks
 
   audit-licenses:
     name: Audit licenses
-    runs-on: ubuntu-24.04
-    needs:
-      - info
-      - base
+    runs-on: *runs-on-ubuntu
+    needs: *needs-base
     if: |
       (github.event.inputs.pylint-only != 'true'
         && github.event.inputs.mypy-only != 'true'
@@ -675,29 +643,22 @@ jobs:
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ matrix.python-version }}
-        id: python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - *checkout
+      - *setup-python-matrix
+      - &cache-restore-python-matrix
+        name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.4
+        uses: *actions-cache-restore
         with:
           path: venv
           fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          key: *key-python-venv
       - name: Extract license data
         run: |
           . venv/bin/activate
           python -m script.licenses extract --output-file=licenses-${{ matrix.python-version }}.json
       - name: Upload licenses
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: licenses-${{ github.run_number }}-${{ matrix.python-version }}
           path: licenses-${{ matrix.python-version }}.json
@@ -708,34 +669,19 @@ jobs:
 
   pylint:
     name: Check pylint
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    needs: *needs-base
     timeout-minutes: 20
     if: |
       github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
       || github.event.inputs.pylint-only == 'true'
-    needs:
-      - info
-      - base
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
-      - name: Register pylint problem matcher
+      - *checkout
+      - *setup-python-default
+      - *cache-restore-python-default
+      - &problem-matcher-pylint
+        name: Register pylint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
       - name: Run pylint (fully)
@@ -754,37 +700,19 @@ jobs:
 
   pylint-tests:
     name: Check pylint on tests
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    needs: *needs-base
     timeout-minutes: 20
     if: |
       (github.event.inputs.mypy-only != 'true'
         && github.event.inputs.audit-licenses-only != 'true'
         || github.event.inputs.pylint-only == 'true')
       && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
-    needs:
-      - info
-      - base
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
-      - name: Register pylint problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pylint.json"
+      - *checkout
+      - *setup-python-default
+      - *cache-restore-python-default
+      - *problem-matcher-pylint
       - name: Run pylint (fully)
         if: needs.info.outputs.test_full_suite == 'true'
         run: |
@@ -801,41 +729,25 @@ jobs:
 
   mypy:
     name: Check mypy
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    needs: *needs-base
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
       || github.event.inputs.mypy-only == 'true'
-    needs:
-      - info
-      - base
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
+      - *checkout
+      - *setup-python-default
       - name: Generate partial mypy restore key
         id: generate-mypy-key
         run: |
-          mypy_version=$(cat requirements_test.txt | grep mypy | cut -d '=' -f 3)
+          mypy_version=$(cat requirements_test.txt | grep 'mypy.*=' | cut -d '=' -f 3)
           echo "version=$mypy_version" >> $GITHUB_OUTPUT
           echo "key=mypy-${{ env.MYPY_CACHE_VERSION }}-$mypy_version-${{
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
-      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+      - *cache-restore-python-default
       - name: Restore mypy cache
-        uses: actions/cache@v4.2.4
+        uses: *actions-cache
         with:
           path: .mypy_cache
           key: >-
@@ -863,7 +775,8 @@ jobs:
           mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   prepare-pytest-full:
-    runs-on: ubuntu-24.04
+    name: Split tests for full run
+    runs-on: *runs-on-ubuntu
     if: |
       needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
@@ -876,51 +789,39 @@ jobs:
       - lint-ruff
       - lint-ruff-format
       - mypy
-    name: Split tests for full run
     steps:
+      - *cache-restore-apt
       - name: Install additional OS dependencies
         timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
             libturbojpeg \
             libgammu-dev
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+      - *checkout
+      - *setup-python-default
+      - *cache-restore-python-default
       - name: Run split_tests.py
         run: |
           . venv/bin/activate
           python -m script.split_tests ${{ needs.info.outputs.test_group_count }} tests
       - name: Upload pytest_buckets
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: pytest_buckets
           path: pytest_buckets.txt
           overwrite: true
 
   pytest-full:
-    runs-on: ubuntu-24.04
-    if: |
-      needs.info.outputs.lint_only != 'true'
-      && needs.info.outputs.test_full_suite == 'true'
+    name: Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
+    runs-on: *runs-on-ubuntu
     needs:
       - info
       - base
@@ -931,53 +832,48 @@ jobs:
       - lint-ruff-format
       - mypy
       - prepare-pytest-full
+    if: |
+      needs.info.outputs.lint_only != 'true'
+      && needs.info.outputs.test_full_suite == 'true'
     strategy:
       fail-fast: false
       matrix:
-        group: ${{ fromJson(needs.info.outputs.test_groups) }}
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
-    name: >-
-      Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
+        group: ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
+      - *cache-restore-apt
       - name: Install additional OS dependencies
         timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
             libturbojpeg \
             libgammu-dev \
             libxml2-utils
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ matrix.python-version }}
-        id: python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
-      - name: Register Python problem matcher
+      - *checkout
+      - *setup-python-matrix
+      - *cache-restore-python-matrix
+      - &problem-matcher-python
+        name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
+      - &problem-matcher-pytest-slow
+        name: Register pytest slow test problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Download pytest_buckets
-        uses: actions/download-artifact@v5.0.0
+        uses: &actions-download-artifact actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: pytest_buckets
-      - name: Compile English translations
+      - &compile-english-translations
+        name: Compile English translations
         run: |
           . venv/bin/activate
           python3 -m script.translations develop --all
@@ -1013,19 +909,20 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-full.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
-      - name: Beautify test results
+      - &beautify-test-results
+        name: Beautify test results
         # For easier identification of parsing errors
         if: needs.info.outputs.skip_coverage != 'true'
         run: |
@@ -1033,18 +930,17 @@ jobs:
           mv "junit.xml-tmp" "junit.xml"
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: test-results-full-${{ matrix.python-version }}-${{ matrix.group }}
           path: junit.xml
       - name: Remove pytest_buckets
         run: rm pytest_buckets.txt
-      - name: Check dirty
-        run: |
-          ./script/check_dirty
+      - *check-dirty
 
   pytest-mariadb:
-    runs-on: ubuntu-24.04
+    name: Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
+    runs-on: *runs-on-ubuntu
     services:
       mariadb:
         image: ${{ matrix.mariadb-group }}
@@ -1053,9 +949,6 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: password
         options: --health-cmd="mysqladmin ping -uroot -ppassword" --health-interval=5s --health-timeout=2s --health-retries=3
-    if: |
-      needs.info.outputs.lint_only != 'true'
-      && needs.info.outputs.mariadb_groups != '[]'
     needs:
       - info
       - base
@@ -1065,56 +958,41 @@ jobs:
       - lint-ruff
       - lint-ruff-format
       - mypy
+    if: |
+      needs.info.outputs.lint_only != 'true'
+      && needs.info.outputs.mariadb_groups != '[]'
     strategy:
       fail-fast: false
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
-    name: >-
-      Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
     steps:
+      - *cache-restore-apt
       - name: Install additional OS dependencies
         timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
             libturbojpeg \
             libmariadb-dev-compat \
             libxml2-utils
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ matrix.python-version }}
-        id: python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
-      - name: Register Python problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
+      - *checkout
+      - *setup-python-matrix
+      - *cache-restore-python-matrix
+      - *problem-matcher-python
+      - *problem-matcher-pytest-slow
       - name: Install SQL Python libraries
         run: |
           . venv/bin/activate
           uv pip install mysqlclient sqlalchemy_utils
-      - name: Compile English translations
-        run: |
-          . venv/bin/activate
-          python3 -m script.translations develop --all
+      - *compile-english-translations
       - name: Run pytest (partially)
         timeout-minutes: 20
         id: pytest-partial
@@ -1153,7 +1031,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1161,31 +1039,25 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
           path: coverage.xml
           overwrite: true
-      - name: Beautify test results
-        # For easier identification of parsing errors
-        if: needs.info.outputs.skip_coverage != 'true'
-        run: |
-          xmllint --format "junit.xml" > "junit.xml-tmp"
-          mv "junit.xml-tmp" "junit.xml"
+      - *beautify-test-results
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: test-results-mariadb-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
           path: junit.xml
-      - name: Check dirty
-        run: |
-          ./script/check_dirty
+      - *check-dirty
 
   pytest-postgres:
-    runs-on: ubuntu-24.04
+    name: Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
+    runs-on: *runs-on-ubuntu
     services:
       postgres:
         image: ${{ matrix.postgresql-group }}
@@ -1194,9 +1066,6 @@ jobs:
         env:
           POSTGRES_PASSWORD: password
         options: --health-cmd="pg_isready -hlocalhost -Upostgres" --health-interval=5s --health-timeout=2s --health-retries=3
-    if: |
-      needs.info.outputs.lint_only != 'true'
-      && needs.info.outputs.postgresql_groups != '[]'
     needs:
       - info
       - base
@@ -1206,20 +1075,26 @@ jobs:
       - lint-ruff
       - lint-ruff-format
       - mypy
+    if: |
+      needs.info.outputs.lint_only != 'true'
+      && needs.info.outputs.postgresql_groups != '[]'
     strategy:
       fail-fast: false
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
-    name: >-
-      Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
     steps:
+      - *cache-restore-apt
       - name: Install additional OS dependencies
         timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
             libturbojpeg \
@@ -1227,37 +1102,16 @@ jobs:
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get -y install \
             postgresql-server-dev-14
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ matrix.python-version }}
-        id: python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
-      - name: Register Python problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
+      - *checkout
+      - *setup-python-matrix
+      - *cache-restore-python-matrix
+      - *problem-matcher-python
+      - *problem-matcher-pytest-slow
       - name: Install SQL Python libraries
         run: |
           . venv/bin/activate
           uv pip install psycopg2 sqlalchemy_utils
-      - name: Compile English translations
-        run: |
-          . venv/bin/activate
-          python3 -m script.translations develop --all
+      - *compile-english-translations
       - name: Run pytest (partially)
         timeout-minutes: 20
         id: pytest-partial
@@ -1297,7 +1151,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1305,60 +1159,49 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
           path: coverage.xml
           overwrite: true
-      - name: Beautify test results
-        # For easier identification of parsing errors
-        if: needs.info.outputs.skip_coverage != 'true'
-        run: |
-          xmllint --format "junit.xml" > "junit.xml-tmp"
-          mv "junit.xml-tmp" "junit.xml"
+      - *beautify-test-results
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: test-results-postgres-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
           path: junit.xml
-      - name: Check dirty
-        run: |
-          ./script/check_dirty
+      - *check-dirty
 
   coverage-full:
     name: Upload test coverage to Codecov (full suite)
-    if: needs.info.outputs.skip_coverage != 'true'
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
     needs:
       - info
       - pytest-full
       - pytest-postgres
       - pytest-mariadb
     timeout-minutes: 10
+    if: needs.info.outputs.skip_coverage != 'true'
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
+      - *checkout
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v5.0.0
+        uses: *actions-download-artifact
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v5.5.1
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
         with:
           fail_ci_if_error: true
           flags: full-suite
           token: ${{ secrets.CODECOV_TOKEN }}
 
   pytest-partial:
-    runs-on: ubuntu-24.04
-    if: |
-      needs.info.outputs.lint_only != 'true'
-      && needs.info.outputs.tests_glob
-      && needs.info.outputs.test_full_suite == 'false'
+    name: Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
+    runs-on: *runs-on-ubuntu
     needs:
       - info
       - base
@@ -1368,52 +1211,38 @@ jobs:
       - lint-ruff
       - lint-ruff-format
       - mypy
+    if: |
+      needs.info.outputs.lint_only != 'true'
+      && needs.info.outputs.tests_glob
+      && needs.info.outputs.test_full_suite == 'false'
     strategy:
       fail-fast: false
       matrix:
-        group: ${{ fromJson(needs.info.outputs.test_groups) }}
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
-    name: >-
-      Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
+        group: ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
+      - *cache-restore-apt
       - name: Install additional OS dependencies
         timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
             libturbojpeg \
             libgammu-dev \
             libxml2-utils
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
-      - name: Set up Python ${{ matrix.python-version }}
-        id: python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
-      - name: Register Python problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
-      - name: Compile English translations
-        run: |
-          . venv/bin/activate
-          python3 -m script.translations develop --all
+      - *checkout
+      - *setup-python-matrix
+      - *cache-restore-python-matrix
+      - *problem-matcher-python
+      - *problem-matcher-pytest-slow
+      - *compile-english-translations
       - name: Run pytest
         timeout-minutes: 10
         id: pytest-partial
@@ -1453,62 +1282,51 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
-      - name: Beautify test results
-        # For easier identification of parsing errors
-        if: needs.info.outputs.skip_coverage != 'true'
-        run: |
-          xmllint --format "junit.xml" > "junit.xml-tmp"
-          mv "junit.xml-tmp" "junit.xml"
+      - *beautify-test-results
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
-        uses: actions/upload-artifact@v4.6.2
+        uses: *actions-upload-artifact
         with:
           name: test-results-partial-${{ matrix.python-version }}-${{ matrix.group }}
           path: junit.xml
-      - name: Check dirty
-        run: |
-          ./script/check_dirty
+      - *check-dirty
 
   coverage-partial:
     name: Upload test coverage to Codecov (partial suite)
     if: needs.info.outputs.skip_coverage != 'true'
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    timeout-minutes: 10
     needs:
       - info
       - pytest-partial
-    timeout-minutes: 10
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v5.0.0
+      - *checkout
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v5.0.0
+        uses: *actions-download-artifact
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v5.5.1
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
   upload-test-results:
     name: Upload test results to Codecov
-    # codecov/test-results-action currently doesn't support tokenless uploads
-    # therefore we can't run it on forks
-    if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork) && needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
     needs:
       - info
       - pytest-partial
@@ -1516,13 +1334,18 @@ jobs:
       - pytest-postgres
       - pytest-mariadb
     timeout-minutes: 10
+    # codecov/test-results-action currently doesn't support tokenless uploads
+    # therefore we can't run it on forks
+    if: |
+      (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork)
+      && needs.info.outputs.skip_coverage != 'true' && !cancelled()
     steps:
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v5.0.0
+        uses: *actions-download-artifact
         with:
           pattern: test-results-*
       - name: Upload test results to Codecov
-        uses: codecov/test-results-action@v1
+        uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
         with:
           fail_ci_if_error: true
           verbose: true
