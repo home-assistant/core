@@ -948,7 +948,7 @@ async def test_climate_ui_create(
     knx: KNXTestKit,
     create_ui_entity: KnxEntityGenerator,
 ) -> None:
-    """Test creating a light."""
+    """Test creating a climate entity."""
     await knx.setup_integration()
     await create_ui_entity(
         platform=Platform.CLIMATE,
@@ -985,7 +985,9 @@ async def test_climate_ui_load(knx: KNXTestKit) -> None:
     await knx.assert_read("0/2/4", response=False, ignore_order=True)  # protection
 
     # sps_op-mode_contr-mode
-    await knx.assert_read("1/0/1", response=RAW_FLOAT_20_0, ignore_order=True)  # curre
+    await knx.assert_read(
+        "1/0/1", response=RAW_FLOAT_20_0, ignore_order=True
+    )  # current
     await knx.assert_read("1/1/0", response=RAW_FLOAT_21_0, ignore_order=True)  # target
     await knx.assert_read(
         "1/1/2", response=RAW_FLOAT_MINUS_1_0, ignore_order=True
