@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from asyncio import sleep as asyncio_sleep
-from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import cast
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
@@ -33,7 +32,6 @@ from aiohomeconnect.model.error import (
     UnauthorizedError,
 )
 from aiohomeconnect.model.program import EnumerateProgram, ProgramDefinitionOption
-from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -259,28 +257,12 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         self.data = HomeConnectApplianceData.empty(appliance)
         self._execution_tracker: list[float] = []
 
-    @cached_property
-    def context_listeners(self) -> dict[EventKey, list[CALLBACK_TYPE]]:
-        """Return a dict of all listeners registered for a given context."""
-        listeners: dict[EventKey, list[CALLBACK_TYPE]] = defaultdict(list)
-        for listener, context in list(self._listeners.values()):
-            if isinstance(context, EventKey):
-                listeners[context].append(listener)
-        return listeners
-
-    @callback
-    def async_add_listener(
-        self, update_callback: CALLBACK_TYPE, context: Any = None
-    ) -> Callable[[], None]:
-        """Listen for data updates."""
-        remove_listener = super().async_add_listener(update_callback, context)
-        self.__dict__.pop("context_listeners", None)
-
-        def remove_listener_and_invalidate_context_listeners() -> None:
-            remove_listener()
-            self.__dict__.pop("context_listeners", None)
-
-        return remove_listener_and_invalidate_context_listeners
+    def _get_listeners_for_event_key(self, event_key: EventKey) -> list[CALLBACK_TYPE]:
+        return [
+            listener
+            for listener, context in list(self._listeners.values())
+            if context == event_key
+        ]
 
     async def event_listener(self, event_message: EventMessage) -> None:
         """Match event with listener for event type."""
@@ -386,7 +368,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
     def _call_event_listener(self, event_message: EventMessage) -> None:
         """Call listener for event."""
         for event in event_message.data.items:
-            for listener in self.context_listeners.get(event.key, []):
+            for listener in self._get_listeners_for_event_key(event.key):
                 listener()
 
     @callback
@@ -577,10 +559,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 )
         options_to_notify.update(options)
         for option_key in options_to_notify:
-            for listener in self.context_listeners.get(
-                EventKey(option_key),
-                [],
-            ):
+            for listener in self._get_listeners_for_event_key(EventKey(option_key)):
                 listener()
 
     def refreshed_too_often_recently(self) -> bool:
