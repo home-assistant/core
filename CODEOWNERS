@@ -1065,6 +1065,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/nilu/ @hfurubotten
 /homeassistant/components/nina/ @DeerMaximum
 /tests/components/nina/ @DeerMaximum
+/homeassistant/components/nintendo_parental/ @pantherale0
+/tests/components/nintendo_parental/ @pantherale0
 /homeassistant/components/nissan_leaf/ @filcole
 /homeassistant/components/noaa_tides/ @jdelaney72
 /homeassistant/components/nobo_hub/ @echoromeo @oyvindwe
@@ -1411,8 +1413,8 @@ build.json @home-assistant/supervisor
 /tests/components/sfr_box/ @epenet
 /homeassistant/components/sftp_storage/ @maretodoric
 /tests/components/sftp_storage/ @maretodoric
-/homeassistant/components/sharkiq/ @JeffResc @funkybunch
-/tests/components/sharkiq/ @JeffResc @funkybunch
+/homeassistant/components/sharkiq/ @JeffResc @funkybunch @TheOneOgre
+/tests/components/sharkiq/ @JeffResc @funkybunch @TheOneOgre
 /homeassistant/components/shell_command/ @home-assistant/core
 /tests/components/shell_command/ @home-assistant/core
 /homeassistant/components/shelly/ @bieniu @thecode @chemelli74 @bdraco

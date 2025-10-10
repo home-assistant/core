@@ -336,8 +336,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "obihai": {"homeassistant": {"pyobihai"}},
     # https://github.com/iamkubi/pydactyl
     "pterodactyl": {"homeassistant": {"py-dactyl"}},
-    # https://github.com/markusressel/raspyrfm-client
-    "raspyrfm": {"homeassistant": {"raspyrfm-client"}},
     # https://github.com/sstallion/sensorpush-api
     "sensorpush_cloud": {
         "homeassistant": {"sensorpush-api"},

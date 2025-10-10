@@ -20,6 +20,7 @@ from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import EnergyConverter
 
 from tests.common import MockConfigEntry
 from tests.components.recorder.common import async_wait_recording_done
@@ -188,6 +189,7 @@ async def test_coordinator_migration(
         name="Opower pge elec 111111 consumption",
         source=DOMAIN,
         statistic_id=statistic_id,
+        unit_class=EnergyConverter.UNIT_CLASS,
         unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     )
     statistics_to_add = [
