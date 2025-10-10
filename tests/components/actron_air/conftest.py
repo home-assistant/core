@@ -23,14 +23,12 @@ def mock_actron_api() -> Generator[AsyncMock]:
         api = mock_api.return_value
 
         # Mock device code request
-        api.request_device_code = AsyncMock(
-            return_value={
+        api.request_device_code.return_value = {
                 "device_code": "test_device_code",
                 "user_code": "ABC123",
                 "verification_uri_complete": "https://example.com/device",
                 "expires_in": 1800,
             }
-        )
 
         # Mock successful token polling (with a small delay to test progress)
         async def slow_poll_for_token(device_code):
