@@ -92,9 +92,9 @@ class NintendoParentalTimeEntity(NintendoDevice, TimeEntity):
                 translation_domain=DOMAIN,
                 translation_key="bedtime_alarm_out_of_range",
                 translation_placeholders={
-                    "VALUE": value.strftime("%H:%M"),
-                    "BEDTIME_ALARM_MAX": BEDTIME_ALARM_MAX,
-                    "BEDTIME_ALARM_MIN": BEDTIME_ALARM_MIN,
-                    "BEDTIME_ALARM_DISABLE": BEDTIME_ALARM_DISABLE,
+                    "value": value.strftime("%H:%M"),
+                    "bedtime_alarm_max": BEDTIME_ALARM_MAX,
+                    "bedtime_alarm_min": BEDTIME_ALARM_MIN,
+                    "bedtime_alarm_disable": BEDTIME_ALARM_DISABLE,
                 },
             ) from exc

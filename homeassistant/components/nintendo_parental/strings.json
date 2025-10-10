@@ -50,7 +50,7 @@
       "message": "Authentication token expired."
     },
     "bedtime_alarm_out_of_range": {
-      "message": "{VALUE} not accepted. Bedtime Alarm must be between {BEDTIME_ALARM_MIN} and {BEDTIME_ALARM_MAX}. To disable, set to {BEDTIME_ALARM_DISABLE}."
+      "message": "{value} not accepted. Bedtime Alarm must be between {bedtime_alarm_min} and {bedtime_alarm_max}. To disable, set to {bedtime_alarm_disable}."
     }
   }
 }
