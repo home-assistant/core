@@ -22,9 +22,12 @@ from .entity import Device, NintendoDevice
 
 PARALLEL_UPDATES = 0
 
+
 class NintendoParentalSwitch(StrEnum):
     """Store keys for Nintendo Parental Controls switches."""
+
     SUSPEND_SOFTWARE = "suspend_software"
+
 
 @dataclass(kw_only=True, frozen=True)
 class NintendoParentalControlsSwitchEntityDescription(SwitchEntityDescription):
@@ -34,6 +37,7 @@ class NintendoParentalControlsSwitchEntityDescription(SwitchEntityDescription):
     turn_on_fn: Callable[[Device], Coroutine[Any, Any, None]]
     turn_off_fn: Callable[[Device], Coroutine[Any, Any, None]]
 
+
 SWITCH_DESCRIPTIONS: tuple[NintendoParentalControlsSwitchEntityDescription, ...] = (
     NintendoParentalControlsSwitchEntityDescription(
         key=NintendoParentalSwitch.SUSPEND_SOFTWARE,
@@ -41,9 +45,12 @@ SWITCH_DESCRIPTIONS: tuple[NintendoParentalControlsSwitchEntityDescription, ...]
         device_class=SwitchDeviceClass.SWITCH,
         is_on=lambda device: device.forced_termination_mode,
         turn_off_fn=lambda device: device.set_restriction_mode(RestrictionMode.ALARM),
-        turn_on_fn=lambda device: device.set_restriction_mode(RestrictionMode.FORCED_TERMINATION)
+        turn_on_fn=lambda device: device.set_restriction_mode(
+            RestrictionMode.FORCED_TERMINATION
+        ),
     ),
 )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -57,17 +64,18 @@ async def async_setup_entry(
         for switch in SWITCH_DESCRIPTIONS
     )
 
+
 class NintendoParentalControlsSwitchEntity(NintendoDevice, SwitchEntity):
     """Represent a single switch."""
 
     entity_description: NintendoParentalControlsSwitchEntityDescription
 
     def __init__(
-            self,
-            coordinator: NintendoUpdateCoordinator,
-            device: Device,
-            description: NintendoParentalControlsSwitchEntityDescription
-        ) -> None:
+        self,
+        coordinator: NintendoUpdateCoordinator,
+        device: Device,
+        description: NintendoParentalControlsSwitchEntityDescription,
+    ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator=coordinator, device=device, key=description.key)
         self.entity_description = description

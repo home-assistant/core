@@ -34,6 +34,7 @@ async def test_switch(
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
+
 async def test_suspend_software(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
