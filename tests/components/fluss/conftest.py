@@ -21,7 +21,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Fluss Integration",
         data={CONF_API_KEY: "test_api_key"},
-        unique_id="test_unique_id",
+        unique_id="test_api_key",
     )
 
 
