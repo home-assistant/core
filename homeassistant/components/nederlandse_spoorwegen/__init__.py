@@ -4,30 +4,50 @@ from __future__ import annotations
 
 import logging
 
+from requests.exceptions import ConnectionError, HTTPError, Timeout
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from .coordinators import NSCoordinatorsManager
+from .coordinator import NSDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-type NSConfigEntry = ConfigEntry[NSCoordinatorsManager]
+type NSConfigEntry = ConfigEntry[dict[str, NSDataUpdateCoordinator]]
 
 PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Set up Nederlandse Spoorwegen from a config entry."""
+    coordinators: dict[str, NSDataUpdateCoordinator] = {}
 
-    # Create the coordinators manager
-    coordinators_manager = NSCoordinatorsManager(hass, entry)
+    # Set up coordinators for all existing routes
+    for subentry_id, subentry in entry.subentries.items():
+        if subentry.subentry_type == "route":
+            coordinator = NSDataUpdateCoordinator(
+                hass, entry, subentry_id, dict(subentry.data)
+            )
 
-    # Set up all coordinators for existing routes
-    await coordinators_manager.async_setup()
+            try:
+                await coordinator.async_config_entry_first_refresh()
+            except (ConnectionError, Timeout, HTTPError, ValueError) as err:
+                _LOGGER.error(
+                    "Failed to initialize coordinator for route %s: %s",
+                    subentry_id,
+                    err,
+                )
+                raise ConfigEntryNotReady(
+                    f"Unable to connect to NS API for route {subentry_id}"
+                ) from err
 
-    entry.runtime_data = coordinators_manager
+            coordinators[subentry_id] = coordinator
+            _LOGGER.debug("Added coordinator for route %s", subentry_id)
+
+    entry.runtime_data = coordinators
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
@@ -42,7 +62,4 @@ async def async_reload_entry(hass: HomeAssistant, entry: NSConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Unload a config entry."""
-    # Unload all coordinators
-    await entry.runtime_data.async_unload_all()
-
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

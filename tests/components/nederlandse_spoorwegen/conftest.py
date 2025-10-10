@@ -15,9 +15,6 @@ from homeassistant.components.nederlandse_spoorwegen.const import (
 from homeassistant.components.nederlandse_spoorwegen.coordinator import (
     NSDataUpdateCoordinator,
 )
-from homeassistant.components.nederlandse_spoorwegen.coordinators import (
-    NSCoordinatorsManager,
-)
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -139,11 +136,3 @@ def mock_config_entry_with_multiple_routes() -> MockConfigEntry:
             ),
         ],
     )
-
-
-@pytest.fixture
-def manager(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> NSCoordinatorsManager:
-    """Return a coordinators manager instance."""
-    return NSCoordinatorsManager(hass, mock_config_entry)

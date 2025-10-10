@@ -114,7 +114,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the departure sensor from a config entry."""
 
-    coordinators_manager = config_entry.runtime_data
+    coordinators = config_entry.runtime_data
 
     entities = []
     for subentry in config_entry.subentries.values():
@@ -122,7 +122,7 @@ async def async_setup_entry(
             continue
 
         # Get the coordinator for this specific route
-        coordinator = coordinators_manager.get_coordinator(subentry.subentry_id)
+        coordinator = coordinators.get(subentry.subentry_id)
         if not coordinator:
             _LOGGER.error("No coordinator found for route %s", subentry.subentry_id)
             continue
