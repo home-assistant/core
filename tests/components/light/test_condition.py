@@ -124,7 +124,7 @@ async def test_light_state_condition_behavior_one(
 
     await setup_automation_with_light_condition(
         hass,
-        target={ATTR_LABEL_ID: "test_label"},
+        target={ATTR_LABEL_ID: "test_label", "entity_id": "light.nonexistent"},
         behavior="one",
         condition_state=condition_state,
     )
@@ -167,7 +167,7 @@ async def test_light_state_condition_behavior_any(
 
     await setup_automation_with_light_condition(
         hass,
-        target={ATTR_LABEL_ID: "test_label"},
+        target={ATTR_LABEL_ID: "test_label", "entity_id": "light.nonexistent"},
         behavior="any",
         condition_state=condition_state,
     )
@@ -218,7 +218,7 @@ async def test_light_state_condition_behavior_all(
 
     await setup_automation_with_light_condition(
         hass,
-        target={ATTR_LABEL_ID: "test_label"},
+        target={ATTR_LABEL_ID: "test_label", "entity_id": "light.nonexistent"},
         behavior="all",
         condition_state=condition_state,
     )
