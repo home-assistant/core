@@ -1,7 +1,5 @@
 """The tests for Satel Integra integration."""
 
-from types import MappingProxyType
-
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.satel_integra import (
     CONF_ARM_HOME_MODE,
@@ -27,13 +25,11 @@ MOCK_PARTITION_SUBENTRY = ConfigSubentry(
     subentry_id="ID_PARTITION",
     unique_id="partition_1",
     title="Home (1)",
-    data=MappingProxyType(
-        {
-            CONF_NAME: "Home",
-            CONF_ARM_HOME_MODE: 1,
-            CONF_PARTITION_NUMBER: 1,
-        }
-    ),
+    data={
+        CONF_NAME: "Home",
+        CONF_ARM_HOME_MODE: 1,
+        CONF_PARTITION_NUMBER: 1,
+    },
 )
 
 MOCK_ZONE_SUBENTRY = ConfigSubentry(
@@ -41,13 +37,11 @@ MOCK_ZONE_SUBENTRY = ConfigSubentry(
     subentry_id="ID_ZONE",
     unique_id="zone_1",
     title="Zone (1)",
-    data=MappingProxyType(
-        {
-            CONF_NAME: "Zone",
-            CONF_ZONE_TYPE: BinarySensorDeviceClass.MOTION,
-            CONF_ZONE_NUMBER: 1,
-        }
-    ),
+    data={
+        CONF_NAME: "Zone",
+        CONF_ZONE_TYPE: BinarySensorDeviceClass.MOTION,
+        CONF_ZONE_NUMBER: 1,
+    },
 )
 
 MOCK_OUTPUT_SUBENTRY = ConfigSubentry(
@@ -55,13 +49,11 @@ MOCK_OUTPUT_SUBENTRY = ConfigSubentry(
     subentry_id="ID_OUTPUT",
     unique_id="output_1",
     title="Output (1)",
-    data=MappingProxyType(
-        {
-            CONF_NAME: "Output",
-            CONF_ZONE_TYPE: BinarySensorDeviceClass.SAFETY,
-            CONF_OUTPUT_NUMBER: 1,
-        }
-    ),
+    data={
+        CONF_NAME: "Output",
+        CONF_ZONE_TYPE: BinarySensorDeviceClass.SAFETY,
+        CONF_OUTPUT_NUMBER: 1,
+    },
 )
 
 MOCK_SWITCHABLE_OUTPUT_SUBENTRY = ConfigSubentry(
@@ -69,10 +61,8 @@ MOCK_SWITCHABLE_OUTPUT_SUBENTRY = ConfigSubentry(
     subentry_id="ID_SWITCHABLE_OUTPUT",
     unique_id="switchable_output_1",
     title="Switchable Output (1)",
-    data=MappingProxyType(
-        {
-            CONF_NAME: "Switchable Output",
-            CONF_SWITCHABLE_OUTPUT_NUMBER: 1,
-        }
-    ),
+    data={
+        CONF_NAME: "Switchable Output",
+        CONF_SWITCHABLE_OUTPUT_NUMBER: 1,
+    },
 )

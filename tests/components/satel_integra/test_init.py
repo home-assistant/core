@@ -1,6 +1,6 @@
 """Test init of Satel Integra integration."""
 
-from types import MappingProxyType
+from copy import deepcopy
 from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
@@ -36,7 +36,7 @@ async def test_config_flow_migration_version_1_2(
         version=1,
         minor_version=1,
     )
-    config_entry.subentries = MappingProxyType(
+    config_entry.subentries = deepcopy(
         {
             MOCK_PARTITION_SUBENTRY.subentry_id: MOCK_PARTITION_SUBENTRY,
             MOCK_ZONE_SUBENTRY.subentry_id: MOCK_ZONE_SUBENTRY,
