@@ -17,9 +17,8 @@ state:
       default: any
       selector:
         select:
-          translation_key: "trigger_behavior"
+          translation_key: trigger_behavior
           options:
             - first
             - last
             - any
-          translation_key: behavior

@@ -67,7 +67,7 @@ class StateCondition(Condition):
 
     @override
     async def async_get_checker(self) -> ConditionCheckerType:
-        """Wrap action method with zone based condition."""
+        """Get the condition checker."""
 
         def check_any_match_state(entity_ids: set[str]) -> bool:
             """Test if any entity match the state."""

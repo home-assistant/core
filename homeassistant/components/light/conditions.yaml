@@ -11,12 +11,13 @@ state:
           options:
             - "off"
             - "on"
+          translation_key: state
     behavior:
       required: true
       default: any
       selector:
         select:
-          translation_key: "condition_behavior"
+          translation_key: condition_behavior
           options:
             - one
             - all
