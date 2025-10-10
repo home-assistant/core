@@ -20,8 +20,10 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SANDBOX = "sandbox"
+CONF_EU_DOMAIN = "eu_domain"
 
 DEFAULT_SANDBOX = False
+DEFAULT_EU_DOMAIN = False
 
 MESSAGE_RECEIVED = f"{DOMAIN}_message_received"
 
@@ -31,6 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_API_KEY): cv.string,
                 vol.Required(CONF_DOMAIN): cv.string,
+                vol.Optional(CONF_EU_DOMAIN, default=DEFAULT_EU_DOMAIN): cv.boolean,
                 vol.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,
             }
         )
