@@ -1310,7 +1310,7 @@ kaiterra-async-client==1.0.0
 keba-kecontact==1.3.0
 
 # homeassistant.components.kegtron
-kegtron-ble==0.4.0
+kegtron-ble==1.0.2
 
 # homeassistant.components.kiwi
 kiwiki-client==0.1.1
