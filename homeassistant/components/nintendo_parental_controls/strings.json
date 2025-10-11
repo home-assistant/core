@@ -45,7 +45,9 @@
       }
     },
     "switch": {
-      "suspend_software": "Suspend software"
+      "suspend_software": {
+        "name": "Suspend software"
+      }
     }
   },
   "exceptions": {

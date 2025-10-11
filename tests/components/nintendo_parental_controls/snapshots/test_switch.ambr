@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch[switch.home_assistant_test_none-entry]
+# name: test_switch[switch.home_assistant_test_suspend_software-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.home_assistant_test_none',
+    'entity_id': 'switch.home_assistant_test_suspend_software',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Suspend software',
     'platform': 'nintendo_parental_controls',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -34,14 +34,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[switch.home_assistant_test_none-state]
+# name: test_switch[switch.home_assistant_test_suspend_software-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Home Assistant Test None',
+      'friendly_name': 'Home Assistant Test Suspend software',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.home_assistant_test_none',
+    'entity_id': 'switch.home_assistant_test_suspend_software',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
