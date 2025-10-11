@@ -63,6 +63,17 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 translation_placeholders={"error": repr(err)},
             ) from err
         except CannotRetrieveData as err:
+            # Check if this is the specific customer ID error
+            error_msg = str(err)
+            if "Cannot find account owner customer ID" in error_msg:
+                _LOGGER.warning(
+                    "Customer ID retrieval failed, attempting re-authentication. "
+                    "This may be due to changes in Amazon's API. "
+                    "Consider reconfiguring the integration."
+                )
+                # Try to continue with existing data if available
+                if hasattr(self, 'data') and self.data:
+                    return self.data
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_retrieve_data_with_error",

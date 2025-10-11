@@ -79,6 +79,28 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
             "Migration to version %s.%s successful", entry.version, entry.minor_version
         )
 
+    # Handle customer ID migration for aioamazondevices 6.4.0 compatibility
+    if entry.version == 1 and entry.minor_version < 4:
+        from .utils import get_fallback_user_id
+        
+        login_data = entry.data.get(CONF_LOGIN_DATA, {})
+        if not login_data.get("customer_info", {}).get("user_id"):
+            fallback_user_id = get_fallback_user_id(
+                entry.data[CONF_USERNAME], 
+                login_data
+            )
+            new_data = entry.data.copy()
+            new_data[CONF_LOGIN_DATA] = login_data.copy()
+            new_data[CONF_LOGIN_DATA]["customer_info"] = {"user_id": fallback_user_id}
+            
+            hass.config_entries.async_update_entry(
+                entry, data=new_data, version=1, minor_version=4
+            )
+            _LOGGER.info(
+                "Migrated customer_info for aioamazondevices 6.4.0 compatibility"
+            )
+            return True
+
     return True
 
 

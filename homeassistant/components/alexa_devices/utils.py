@@ -81,3 +81,12 @@ async def async_remove_dnd_from_virtual_group(
         if entity_id and is_group:
             entity_registry.async_remove(entity_id)
             _LOGGER.debug("Removed DND switch from virtual group %s", entity_id)
+
+
+def get_fallback_user_id(username: str, login_data: dict[str, Any] | None = None) -> str:
+    """Get a fallback user ID when customer_info is not available."""
+    if login_data and login_data.get("customer_info", {}).get("user_id"):
+        return login_data["customer_info"]["user_id"]
+    
+    # Use username as fallback, but ensure it's a valid unique identifier
+    return f"alexa_user_{username.replace('@', '_').replace('.', '_')}"

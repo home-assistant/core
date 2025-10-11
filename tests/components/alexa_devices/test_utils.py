@@ -6,7 +6,8 @@ from aioamazondevices.const import SPEAKER_GROUP_FAMILY, SPEAKER_GROUP_MODEL
 from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
 import pytest
 
-from homeassistant.components.alexa_devices.const import DOMAIN
+from homeassistant.components.alexa_devices.const import CONF_LOGIN_DATA, DOMAIN
+from homeassistant.components.alexa_devices.utils import get_fallback_user_id
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
@@ -134,3 +135,48 @@ async def test_alexa_dnd_group_removal(
     await hass.async_block_till_done()
 
     assert not hass.states.get(entity.entity_id)
+
+
+def test_get_fallback_user_id_with_existing_data() -> None:
+    """Test get_fallback_user_id with existing login data."""
+    login_data = {
+        "customer_info": {
+            "user_id": "existing_user_123"
+        }
+    }
+    
+    result = get_fallback_user_id("test@example.com", login_data)
+    assert result == "existing_user_123"
+
+
+def test_get_fallback_user_id_without_existing_data() -> None:
+    """Test get_fallback_user_id without existing login data."""
+    result = get_fallback_user_id("test@example.com", None)
+    assert result == "alexa_user_test_example_com"
+
+
+def test_get_fallback_user_id_with_empty_login_data() -> None:
+    """Test get_fallback_user_id with empty login data."""
+    login_data = {}
+    result = get_fallback_user_id("user@domain.com", login_data)
+    assert result == "alexa_user_user_domain_com"
+
+
+def test_get_fallback_user_id_with_special_characters() -> None:
+    """Test get_fallback_user_id handles special characters correctly."""
+    result = get_fallback_user_id("test.user+tag@example.co.uk", None)
+    # Should replace @ and . with _
+    assert result == "alexa_user_test_user+tag_example_co_uk"
+
+
+def test_get_fallback_user_id_with_incomplete_customer_info() -> None:
+    """Test get_fallback_user_id with customer_info but no user_id."""
+    login_data = {
+        "customer_info": {
+            # user_id is missing
+            "name": "Test User"
+        }
+    }
+    result = get_fallback_user_id("test@example.com", login_data)
+    # Should fall back to username-based ID
+    assert result == "alexa_user_test_example_com"

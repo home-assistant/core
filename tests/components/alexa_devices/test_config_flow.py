@@ -24,6 +24,83 @@ from .const import TEST_CODE, TEST_PASSWORD, TEST_USERNAME
 from tests.common import MockConfigEntry
 
 
+async def test_flow_with_missing_customer_info(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test flow when customer_info is missing from API response."""
+    # Mock API response without customer_info (simulating the bug)
+    mock_amazon_devices_client.login_mode_interactive.return_value = {
+        CONF_SITE: "https://www.amazon.com",
+        # customer_info is intentionally missing
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_CODE: TEST_CODE,
+        },
+    )
+
+    # Should succeed with fallback customer_info
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_USERNAME
+    assert "customer_info" in result["data"][CONF_LOGIN_DATA]
+    assert result["data"][CONF_LOGIN_DATA]["customer_info"]["user_id"] is not None
+    # Unique ID should be set to the fallback value
+    assert result["result"].unique_id is not None
+
+
+async def test_flow_with_incomplete_customer_info(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test flow when customer_info exists but user_id is missing."""
+    # Mock API response with incomplete customer_info
+    mock_amazon_devices_client.login_mode_interactive.return_value = {
+        CONF_SITE: "https://www.amazon.com",
+        "customer_info": {
+            # user_id is missing
+            "name": "Test User",
+        },
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_CODE: TEST_CODE,
+        },
+    )
+
+    # Should succeed with fallback user_id
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_USERNAME
+    assert "customer_info" in result["data"][CONF_LOGIN_DATA]
+    assert result["data"][CONF_LOGIN_DATA]["customer_info"]["user_id"] is not None
+    # Unique ID should be set to the fallback value
+    assert result["result"].unique_id is not None
+
+
 async def test_full_flow(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
