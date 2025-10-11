@@ -106,7 +106,7 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._set_options()
-        self._async_write_ha_state()
+        super()._handle_coordinator_update()
 
     def _set_options(self) -> None:
         sorted_values = sorted(
@@ -152,7 +152,7 @@ class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._set_options()
-        self._async_write_ha_state()
+        super()._handle_coordinator_update()
 
     def _set_options(self) -> None:
         sorted_values = sorted(
@@ -210,7 +210,7 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._set_options()
-        self._async_write_ha_state()
+        super()._handle_coordinator_update()
 
     def _set_options(self) -> None:
         sorted_values = sorted(
