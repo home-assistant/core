@@ -117,6 +117,18 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_getter=lambda api: len(api.getDeviceErrors()) > 0,
     ),
+    ViCareBinarySensorEntityDescription(
+        key="mounting_mode",
+        translation_key="mounting_mode",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_getter=lambda api: api.getMountingMode(),
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="childlock_mode",
+        translation_key="childlock_mode",
+        device_class=BinarySensorDeviceClass.SAFETY,
+        value_getter=lambda api: api.getChildLock() != "active",
+    ),
 )
 
 

@@ -66,6 +66,12 @@
       },
       "one_time_charge": {
         "name": "One-time charge"
+      },
+      "mounting_mode": {
+        "name": "Mounting mode"
+      },
+      "child_lock_mode": {
+        "name": "Child lock mode"
       }
     },
     "button": {
@@ -496,6 +502,12 @@
       },
       "fuel_need": {
         "name": "Fuel need"
+      },
+      "zigbee_signal_strength": {
+        "name": "Signal strength"
+      },
+      "valve_position": {
+        "name": "Valve position"
       }
     },
     "water_heater": {
