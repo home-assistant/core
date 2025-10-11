@@ -20,9 +20,6 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
     BaseFirmwareConfigFlow,
     BaseFirmwareOptionsFlow,
 )
-from homeassistant.components.homeassistant_hardware.helpers import (
-    HardwareFirmwareDiscoveryInfo,
-)
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     OptionsFlowHandler as MultiprotocolOptionsFlowHandler,
     SerialPortSettings as MultiprotocolSerialPortSettings,
@@ -164,15 +161,6 @@ class HomeAssistantYellowConfigFlow(
                 context={"source": SOURCE_HARDWARE},
                 data=ZHA_HW_DISCOVERY_DATA,
             )
-
-        return self._async_flow_finished()
-
-    async def async_step_import(
-        self, fw_discovery_info: HardwareFirmwareDiscoveryInfo
-    ) -> ConfigFlowResult:
-        """Handle import from ZHA/OTBR firmware notification."""
-        self._hardware_name = BOARD_NAME
-        self._probed_firmware_info = fw_discovery_info["firmware_info"]
 
         return self._async_flow_finished()
 
