@@ -127,7 +127,11 @@ MOCK_BLOCKS = [
         ),
     ),
     Mock(
-        sensor_ids={"mode": "color", "effect": 0},
+        sensor_ids={
+            "output": mock_light_set_state()["ison"],
+            "mode": "color",
+            "effect": 0,
+        },
         channel="0",
         output=mock_light_set_state()["ison"],
         colorTemp=mock_light_set_state()["temp"],
