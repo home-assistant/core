@@ -30,56 +30,11 @@ def handle_ir_turn_off(session: FoscamCamera) -> None:
     session.close_infra_led()
 
 
-def handle_pet_detect_turn_on(session: FoscamCamera) -> None:
+def set_motion_detection(session: FoscamCamera, field: str, enabled: bool) -> None:
     """Turns on pet detection."""
     ret, config = session.get_motion_detect_config()
     if not ret:
-        config["petEnable"] = 1
-        session.set_motion_detect_config(config)
-
-
-def handle_pet_detect_turn_off(session: FoscamCamera) -> None:
-    """Turns off pet detection."""
-
-    ret, config = session.get_motion_detect_config()
-    if not ret:
-        config["petEnable"] = 0
-        session.set_motion_detect_config(config)
-
-
-def handle_car_detect_turn_on(session: FoscamCamera) -> None:
-    """Turns on vehicle detection."""
-
-    ret, config = session.get_motion_detect_config()
-    if not ret:
-        config["carEnable"] = 1
-        session.set_motion_detect_config(config)
-
-
-def handle_car_detect_turn_off(session: FoscamCamera) -> None:
-    """Turns off vehicle detection."""
-
-    ret, config = session.get_motion_detect_config()
-    if not ret:
-        config["carEnable"] = 0
-        session.set_motion_detect_config(config)
-
-
-def handle_human_detect_turn_on(session: FoscamCamera) -> None:
-    """Turns on human detection."""
-
-    ret, config = session.get_motion_detect_config()
-    if not ret:
-        config["humanEnable"] = 1
-        session.set_motion_detect_config(config)
-
-
-def handle_human_detect_turn_off(session: FoscamCamera) -> None:
-    """Turns off human detection."""
-
-    ret, config = session.get_motion_detect_config()
-    if not ret:
-        config["humanEnable"] = 0
+        config[field] = int(enabled)
         session.set_motion_detect_config(config)
 
 
@@ -168,26 +123,26 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
     ),
     FoscamSwitchEntityDescription(
         key="pet_detection",
-        translation_key="pet_detection_switch",
+        translation_key="pet_detection",
         native_value_fn=lambda data: data.is_pet_detection_on,
-        turn_off_fn=handle_pet_detect_turn_off,
-        turn_on_fn=handle_pet_detect_turn_on,
+        turn_off_fn=lambda session: set_motion_detection(session, "petEnable", False),
+        turn_on_fn=lambda session: set_motion_detection(session, "petEnable", True),
         exists_fn=lambda coordinator: coordinator.data.supports_pet_adjustment,
     ),
     FoscamSwitchEntityDescription(
         key="car_detection",
-        translation_key="car_detection_switch",
+        translation_key="car_detection",
         native_value_fn=lambda data: data.is_car_detection_on,
-        turn_off_fn=handle_car_detect_turn_off,
-        turn_on_fn=handle_car_detect_turn_on,
+        turn_off_fn=lambda session: set_motion_detection(session, "carEnable", False),
+        turn_on_fn=lambda session: set_motion_detection(session, "carEnable", True),
         exists_fn=lambda coordinator: coordinator.data.supports_car_adjustment,
     ),
     FoscamSwitchEntityDescription(
         key="human_detection",
-        translation_key="human_detection_switch",
+        translation_key="human_detection",
         native_value_fn=lambda data: data.is_human_detection_on,
-        turn_off_fn=handle_human_detect_turn_off,
-        turn_on_fn=handle_human_detect_turn_on,
+        turn_off_fn=lambda session: set_motion_detection(session, "humanEnable", False),
+        turn_on_fn=lambda session: set_motion_detection(session, "humanEnable", True),
     ),
 ]
 
