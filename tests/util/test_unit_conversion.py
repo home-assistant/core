@@ -298,7 +298,7 @@ _CONVERTED_VALUE: dict[
         (
             1,
             CONCENTRATION_PARTS_PER_MILLION,
-            1145.609,
+            1164.41,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
         # MILLIGRAMS_PER_CUBIC_METER to other units
@@ -318,7 +318,7 @@ _CONVERTED_VALUE: dict[
         (
             120000,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            104.74778,
+            103.05655,
             CONCENTRATION_PARTS_PER_MILLION,
         ),
         (
