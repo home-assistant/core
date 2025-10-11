@@ -6555,7 +6555,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_active_current-entry]
+# name: test_sensors[solar_power][sensor.mock_solar_inverter_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6570,7 +6570,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_active_current',
+    'entity_id': 'sensor.mock_solar_inverter_active_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6598,23 +6598,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_active_current-state]
+# name: test_sensors[solar_power][sensor.mock_solar_inverter_active_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'SolarPower Active current',
+      'friendly_name': 'Mock solar inverter Active current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_active_current',
+    'entity_id': 'sensor.mock_solar_inverter_active_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-3.62',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_energy_exported-entry]
+# name: test_sensors[solar_power][sensor.mock_solar_inverter_energy_exported-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6629,7 +6629,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_energy_exported',
+    'entity_id': 'sensor.mock_solar_inverter_energy_exported',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6657,23 +6657,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_energy_exported-state]
+# name: test_sensors[solar_power][sensor.mock_solar_inverter_energy_exported-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'SolarPower Energy exported',
+      'friendly_name': 'Mock solar inverter Energy exported',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_energy_exported',
+    'entity_id': 'sensor.mock_solar_inverter_energy_exported',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '42.279',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_power-entry]
+# name: test_sensors[solar_power][sensor.mock_solar_inverter_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6688,7 +6688,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_power',
+    'entity_id': 'sensor.mock_solar_inverter_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6716,23 +6716,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_power-state]
+# name: test_sensors[solar_power][sensor.mock_solar_inverter_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'SolarPower Power',
+      'friendly_name': 'Mock solar inverter Power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_power',
+    'entity_id': 'sensor.mock_solar_inverter_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-850.0',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_voltage-entry]
+# name: test_sensors[solar_power][sensor.mock_solar_inverter_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6747,7 +6747,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_voltage',
+    'entity_id': 'sensor.mock_solar_inverter_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6775,16 +6775,16 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_voltage-state]
+# name: test_sensors[solar_power][sensor.mock_solar_inverter_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'SolarPower Voltage',
+      'friendly_name': 'Mock solar inverter Voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_voltage',
+    'entity_id': 'sensor.mock_solar_inverter_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
