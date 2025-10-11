@@ -69,7 +69,6 @@ def async_get_hardware_domain_for_usb_device(
     hw_domains = {match["domain"] for match in matched} & HARDWARE_INTEGRATION_DOMAINS
 
     if not hw_domains:
-        _LOGGER.debug("No hardware integration matches USB device %r", usb_device)
         return None
 
     # We can never have two hardware integrations overlap in discovery
