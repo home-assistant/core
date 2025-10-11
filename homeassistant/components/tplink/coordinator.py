@@ -86,6 +86,10 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 },
             ) from ex
         except KasaException as ex:
+            # Request renegotiation after smartdevice connection failures,
+            # suppresses upstream error logging on repeated device timeouts
+            # when the device has been unplugged.
+            setattr(self.device, "_last_update_time", None)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="device_error",
