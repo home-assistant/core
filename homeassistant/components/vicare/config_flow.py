@@ -45,6 +45,8 @@ USER_SCHEMA = REAUTH_SCHEMA.extend(
     }
 )
 
+VIESSMANN_DEVELOPER_PORTAL = "https://app.developer.viessmann-climatesolutions.com"
+
 
 class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ViCare."""
@@ -70,6 +72,9 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            description_placeholders={
+                "viessmann_developer_portal": VIESSMANN_DEVELOPER_PORTAL
+            },
             data_schema=USER_SCHEMA,
             errors=errors,
         )
