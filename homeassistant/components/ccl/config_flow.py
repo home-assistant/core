@@ -27,7 +27,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             webhook_id = DOMAIN + secrets.token_hex(4)
 
-            url = URL(get_url(self.hass))
+            url = URL(get_url(self.hass, prefer_cloud=True))
             assert url.host
 
             host = url.host
