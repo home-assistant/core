@@ -47,7 +47,6 @@ CHARGER_CONNECTIONS = "connections"
 CHARGER_ECO_SMART_KEY = "ecosmart"
 CHARGER_ECO_SMART_STATUS_KEY = "enabled"
 CHARGER_ECO_SMART_MODE_KEY = "mode"
-CHARGER_WALLBOX_OBJECT = "wallbox"
 
 
 class ChargerStatus(StrEnum):

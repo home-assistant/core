@@ -105,6 +105,23 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
     return require_authentication
 
 
+def _validate(wallbox: Wallbox) -> None:
+    """Authenticate using Wallbox API."""
+    try:
+        wallbox.authenticate()
+    except requests.exceptions.HTTPError as wallbox_connection_error:
+        if wallbox_connection_error.response.status_code == 403:
+            raise InvalidAuth(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from wallbox_connection_error
+        raise ConnectionError from wallbox_connection_error
+
+
+async def async_validate_input(hass: HomeAssistant, wallbox: Wallbox) -> None:
+    """Get new sensor data for Wallbox component."""
+    await hass.async_add_executor_job(_validate, wallbox)
+
+
 class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Wallbox Coordinator class."""
 

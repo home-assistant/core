@@ -1,6 +1,6 @@
 """Test the Wallbox config flow."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.wallbox.const import (
@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import setup_integration
+from .conftest import http_403_error, http_404_error, setup_integration
 from .const import (
     WALLBOX_AUTHORISATION_RESPONSE,
     WALLBOX_AUTHORISATION_RESPONSE_UNAUTHORISED,
@@ -42,6 +42,62 @@ async def test_show_set_form(hass: HomeAssistant, mock_wallbox) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+
+async def test_form_cannot_authenticate(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(side_effect=http_403_error),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
+            new=Mock(side_effect=http_403_error),
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "station": "12345",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(side_effect=http_404_error),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
+            new=Mock(side_effect=http_404_error),
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "station": "12345",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_validate_input(hass: HomeAssistant) -> None:
