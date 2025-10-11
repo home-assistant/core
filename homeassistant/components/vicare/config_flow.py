@@ -23,6 +23,7 @@ from .const import (
     DEFAULT_HEATING_TYPE,
     DOMAIN,
     VICARE_NAME,
+    VIESSMANN_DEVELOPER_PORTAL,
     HeatingType,
 )
 from .utils import login
@@ -44,8 +45,6 @@ USER_SCHEMA = REAUTH_SCHEMA.extend(
         ),
     }
 )
-
-VIESSMANN_DEVELOPER_PORTAL = "https://app.developer.viessmann-climatesolutions.com"
 
 
 class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
