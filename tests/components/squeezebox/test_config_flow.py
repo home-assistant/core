@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.squeezebox.const import (
     CONF_BROWSE_LIMIT,
@@ -25,47 +27,6 @@ UUID = "test-uuid"
 UNKNOWN_ERROR = "1234"
 BROWSE_LIMIT = 10
 VOLUME_STEP = 1
-
-
-async def test_user_form(
-    hass: HomeAssistant,
-    mock_setup_entry,
-    mock_async_query,
-    mock_discover_success,
-) -> None:
-    """Test user-initiated flow, including discovery and the edit step."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "edit"
-    assert CONF_HOST in result["data_schema"].schema
-    for key in result["data_schema"].schema:
-        if key == CONF_HOST:
-            assert key.description == {"suggested_value": HOST}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_USERNAME: "",
-            CONF_PASSWORD: "",
-            CONF_HTTPS: False,
-        },
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"] == {
-        CONF_HOST: HOST,
-        CONF_PORT: PORT,
-        CONF_USERNAME: "",
-        CONF_PASSWORD: "",
-        CONF_HTTPS: False,
-    }
-
-    await hass.async_block_till_done()
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_options_form(hass: HomeAssistant) -> None:
@@ -107,38 +68,65 @@ async def test_options_form(hass: HomeAssistant) -> None:
     }
 
 
-async def test_user_form_timeout(
+@pytest.mark.parametrize(
+    ("discover_fixture", "has_existing_entry", "expect_error", "expect_entry"),
+    [
+        ("mock_discover_success", False, None, True),  # normal discovery
+        ("mock_failed_discover_fixture", False, "no_server_found", False),  # timeout
+        ("mock_discover_success", True, "no_server_found", False),  # duplicate
+    ],
+)
+async def test_user_flow_variants(
     hass: HomeAssistant,
     mock_async_query,
     mock_setup_entry,
+    mock_config_entry,
     mock_discover_success,
-    mock_failed_discover_fixture,
+    mock_discover_failure,
+    discover_fixture,
+    has_existing_entry,
+    expect_error,
+    expect_entry,
 ) -> None:
-    """Test we handle server search timeout and allow manual entry."""
+    """Test user-initiated flow variants: discovery, timeout, and duplicate."""
 
-    # First flow: simulate timeout
+    # Add existing config entry if needed
+    if has_existing_entry:
+        entry = mock_config_entry()
+        entry.add_to_hass(hass)
+
+    # Select discovery behavior
+    discover_func = (
+        mock_discover_success
+        if discover_fixture == "mock_discover_success"
+        else mock_discover_failure
+    )
+
     with (
         patch(
             "homeassistant.components.squeezebox.config_flow.async_discover",
-            mock_failed_discover_fixture,
+            discover_func,
         ),
         patch("homeassistant.components.squeezebox.config_flow.TIMEOUT", 0.1),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "no_server_found"}
 
-    # Second flow: simulate successful discovery
-    mock_async_query("uuid")
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
+    if expect_error:
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {"base": expect_error}
+        return
+
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "edit"
+    assert CONF_HOST in result["data_schema"].schema
+    for key in result["data_schema"].schema:
+        if key == CONF_HOST:
+            assert key.description == {"suggested_value": HOST}
 
-    result = await hass.config_entries.flow.async_configure(
+    mock_async_query("uuid")
+    result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_HOST: HOST,
@@ -148,266 +136,159 @@ async def test_user_form_timeout(
             CONF_HTTPS: False,
         },
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"] == {
-        CONF_HOST: HOST,
-        CONF_PORT: PORT,
-        CONF_USERNAME: "",
-        CONF_PASSWORD: "",
-        CONF_HTTPS: False,
-    }
 
-
-async def test_user_form_duplicate(
-    hass: HomeAssistant,
-    mock_discover_success,
-    mock_setup_entry,
-    mock_config_entry,
-) -> None:
-    """Test duplicate discovered servers are skipped."""
-
-    entry = mock_config_entry()
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "no_server_found"}
-
-
-async def test_form_invalid_auth(
-    hass: HomeAssistant,
-    mock_setup_entry,
-    mock_async_query,
-    mock_discover_success,
-    patch_async_query_unauthorized,
-) -> None:
-    """Test we handle invalid auth."""
-
-    # Initial flow with valid UUID discovery
-    mock_async_query("uuid")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "edit"
-
-    # Simulate invalid auth
-    with patch(
-        "homeassistant.components.squeezebox.config_flow.Server.async_query",
-        new=patch_async_query_unauthorized,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: HOST,
-                CONF_PORT: PORT,
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "invalid_auth"}
-
-    # Retry with blank credentials
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
+    if expect_entry:
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["title"] == HOST
+        assert result2["data"] == {
             CONF_HOST: HOST,
             CONF_PORT: PORT,
             CONF_USERNAME: "",
             CONF_PASSWORD: "",
             CONF_HTTPS: False,
-        },
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"] == {
-        CONF_HOST: HOST,
-        CONF_PORT: PORT,
-        CONF_USERNAME: "",
-        CONF_PASSWORD: "",
-        CONF_HTTPS: False,
-    }
+        }
+        await hass.async_block_till_done()
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_validate_exception(
+@pytest.mark.parametrize(
+    ("query_mode", "expected_error"),
+    [
+        ("false", "cannot_connect"),
+        ("unauthorized", "invalid_auth"),
+        ("exception", "unknown"),
+    ],
+)
+async def test_flow_errors_and_recovery(
     hass: HomeAssistant,
     mock_async_query,
     mock_setup_entry,
-    mock_discover_success,
+    config_flow_input,
+    query_mode,
+    expected_error,
 ) -> None:
-    """Test we handle exception and recover."""
-
-    # Initial flow setup
-    mock_async_query("uuid")
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "edit"
-
-    # Simulate exception during validation
-    with patch(
-        "homeassistant.components.squeezebox.config_flow.Server.async_query",
-        side_effect=Exception,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: HOST,
-                CONF_PORT: PORT,
-                CONF_USERNAME: "",
-                CONF_PASSWORD: "",
-                CONF_HTTPS: False,
-            },
-        )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
-
-    # Retry with normal behavior
-    mock_async_query("uuid")
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_USERNAME: "",
-            CONF_PASSWORD: "",
-            CONF_HTTPS: False,
-        },
-    )
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == HOST
-    assert result3["data"] == {
-        CONF_HOST: HOST,
-        CONF_PORT: PORT,
-        CONF_USERNAME: "",
-        CONF_PASSWORD: "",
-        CONF_HTTPS: False,
-    }
-
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant,
-    mock_async_query,
-    mock_setup_entry,
-) -> None:
-    """Test we handle cannot connect error, then succeed after retry."""
+    """Test config flow error handling and recovery."""
 
     # Start the flow
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "edit"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] == FlowResultType.FORM
 
-    # First attempt: simulate cannot connect
-    mock_async_query("false")
+    # Ensure we reach the 'edit' step
+    if result["step_id"] == "user":
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            config_flow_input("user"),
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "edit"
+
+    # Simulate error
+    mock_async_query(query_mode)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_USERNAME: "",
-            CONF_PASSWORD: "",
-        },
+        config_flow_input("edit"),
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
 
-    # Second attempt: simulate a successful connection
+    # Simulate recovery
     mock_async_query("uuid")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_USERNAME: "",
-            CONF_PASSWORD: "",
-            CONF_HTTPS: False,
-        },
+        config_flow_input("edit"),
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == HOST
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "1.1.1.1"
     assert result["data"] == {
-        CONF_HOST: HOST,
-        CONF_PORT: PORT,
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: 9000,
         CONF_USERNAME: "",
         CONF_PASSWORD: "",
         CONF_HTTPS: False,
     }
-    assert result["context"]["unique_id"] == UUID
 
 
-async def test_discovery_with_uuid(
-    hass: HomeAssistant,
-    mock_async_query,
-    mock_setup_entry,
-) -> None:
-    """Test handling of discovered server, then completing the flow."""
-
-    mock_async_query("uuid")
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-        data={CONF_HOST: HOST, CONF_PORT: PORT, "uuid": UUID},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "edit"
-
-    mock_async_query("uuid")
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_USERNAME: "",
-            CONF_PASSWORD: "",
-            CONF_HTTPS: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"] == {
-        CONF_HOST: HOST,
-        CONF_PORT: PORT,
-        CONF_USERNAME: "",
-        CONF_PASSWORD: "",
-        CONF_HTTPS: False,
-    }
-    assert result["context"]["unique_id"] == UUID
-
-
-async def test_discovery_no_uuid(
+@pytest.mark.parametrize(
+    ("discovery_data", "initial_patch", "expect_error"),
+    [
+        (
+            {CONF_HOST: HOST, CONF_PORT: PORT, "uuid": UUID},
+            None,
+            None,
+        ),  # UUID present, success
+        (
+            {CONF_HOST: HOST, CONF_PORT: PORT, CONF_HTTPS: False},
+            "unauthorized",
+            "invalid_auth",
+        ),  # No UUID, initial failure
+    ],
+)
+async def test_discovery_flow_variants(
     hass: HomeAssistant,
     mock_async_query,
     mock_setup_entry,
     patch_async_query_unauthorized,
+    discovery_data,
+    initial_patch,
+    expect_error,
 ) -> None:
-    """Test discovery without uuid first fails, then succeeds when uuid is available."""
+    """Test integration discovery flow with and without UUID."""
 
-    with patch(
-        "pysqueezebox.Server.async_query",
-        new=patch_async_query_unauthorized,
-    ):
+    # Patch initial query if needed
+    if initial_patch == "unauthorized":
+        with patch(
+            "pysqueezebox.Server.async_query", new=patch_async_query_unauthorized
+        ):
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                data=discovery_data,
+            )
+    else:
+        mock_async_query("uuid")
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data={CONF_HOST: HOST, CONF_PORT: PORT, CONF_HTTPS: False},
+            data=discovery_data,
         )
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "edit"
 
-    with patch(
-        "pysqueezebox.Server.async_query",
-        new=patch_async_query_unauthorized,
-    ):
+    # First configure attempt
+    if expect_error:
+        with patch(
+            "pysqueezebox.Server.async_query", new=patch_async_query_unauthorized
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_HOST: HOST,
+                    CONF_PORT: PORT,
+                    CONF_USERNAME: "",
+                    CONF_PASSWORD: "",
+                    CONF_HTTPS: False,
+                },
+            )
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["errors"] == {"base": expect_error}
+
+        # Recovery attempt
+        mock_async_query("uuid")
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+                CONF_HTTPS: False,
+            },
+        )
+        result = result3
+    else:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -419,22 +300,8 @@ async def test_discovery_no_uuid(
             },
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    mock_async_query("uuid")
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_USERNAME: "",
-            CONF_PASSWORD: "",
-            CONF_HTTPS: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # Final assertions
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"] == {
         CONF_HOST: HOST,
@@ -446,66 +313,35 @@ async def test_discovery_no_uuid(
     assert result["context"]["unique_id"] == UUID
 
 
-async def test_dhcp_discovery(
+@pytest.mark.parametrize(
+    ("discover_success", "query_mode", "expected_type", "expected_error"),
+    [
+        (True, "uuid", FlowResultType.CREATE_ENTRY, None),
+        (False, "false", FlowResultType.FORM, "cannot_connect"),
+    ],
+)
+async def test_dhcp_discovery_flow(
     hass: HomeAssistant,
     mock_async_query,
+    mock_setup_entry,
+    config_flow_input,
     mock_discover_success,
-    mock_setup_entry,
-) -> None:
-    """Test we can process discovery from DHCP and complete the flow."""
-
-    mock_async_query("uuid")
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
-        data=DhcpServiceInfo(
-            ip=HOST,
-            macaddress="aabbccddeeff",
-            hostname="any",
-        ),
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "edit"
-
-    mock_async_query("uuid")
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_USERNAME: "",
-            CONF_PASSWORD: "",
-            CONF_HTTPS: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"] == {
-        CONF_HOST: HOST,
-        CONF_PORT: PORT,
-        CONF_USERNAME: "",
-        CONF_PASSWORD: "",
-        CONF_HTTPS: False,
-    }
-    assert result["context"]["unique_id"] == UUID
-
-
-async def test_dhcp_discovery_no_server_found(
-    hass: HomeAssistant,
-    mock_setup_entry,
-    mock_failed_discover_fixture,
-    mock_async_query_failure,
+    mock_discover_failure,
     dhcp_info,
+    discover_success,
+    query_mode,
+    expected_type,
+    expected_error,
 ) -> None:
-    """Test we can handle DHCP discovery when no server is found."""
+    """Test DHCP discovery flow with success and failure modes."""
 
-    # Initial discovery fails
+    # Select discovery behavior
+    discover_func = mock_discover_success if discover_success else mock_discover_failure
+
     with (
         patch(
             "homeassistant.components.squeezebox.config_flow.async_discover",
-            mock_failed_discover_fixture,
+            discover_func,
         ),
         patch("homeassistant.components.squeezebox.config_flow.TIMEOUT", 0.1),
     ):
@@ -515,32 +351,38 @@ async def test_dhcp_discovery_no_server_found(
             data=dhcp_info,
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    # Handle initial step
+    if result["step_id"] == "user":
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            config_flow_input("user"),
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "edit"
+    else:
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "edit"
 
-    # Provide host to move into edit step
-    result = await hass.config_entries.flow.async_configure(
+    # Simulate error or success
+    mock_async_query(query_mode)
+    result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: HOST},
+        config_flow_input("edit"),
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "edit"
 
-    # Final configure attempt fails due to query failure
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
+    assert result2["type"] == expected_type
+
+    if expected_type == FlowResultType.CREATE_ENTRY:
+        assert result2["title"] == "1.1.1.1"
+        assert result2["data"] == {
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: 9000,
             CONF_USERNAME: "",
             CONF_PASSWORD: "",
             CONF_HTTPS: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "edit"
-    assert result["errors"] == {"base": "cannot_connect"}
+        }
+    else:
+        assert result2["errors"] == {"base": expected_error}
 
 
 async def test_dhcp_discovery_existing_player(

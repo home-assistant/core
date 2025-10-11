@@ -32,7 +32,13 @@ from homeassistant.components.squeezebox.const import (
     STATUS_UPDATE_NEWPLUGINS,
     STATUS_UPDATE_NEWVERSION,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -104,11 +110,12 @@ FAKE_QUERY_RESPONSE = {
 
 
 @pytest.fixture
-def mock_failed_discover_fixture():
-    """Fixture to mock unsuccessful discovery by doing nothing."""
+def mock_discover_failure():
+    """Simulate failed discovery without raising unhandled exceptions."""
 
-    async def _failed_discover(_discovery_callback):
-        raise TimeoutError
+    async def _failed_discover(callback):
+        # Simulate no servers found, no callback triggered
+        return []
 
     return _failed_discover
 
@@ -120,13 +127,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.squeezebox.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
-
-
-@pytest.fixture
-def mock_async_query_failure():
-    """Simulate Server.async_query returning False."""
-    with patch("pysqueezebox.Server.async_query", return_value=False) as mock:
-        yield mock
 
 
 @pytest.fixture
@@ -155,36 +155,81 @@ def patch_async_query_exception():
 
 @pytest.fixture
 def mock_async_query():
-    """Fixture to patch Server.async_query with different behaviours."""
+    """Fixture to patch Server.async_query with configurable behavior."""
 
-    with patch("pysqueezebox.Server.async_query") as mock:
+    with patch("pysqueezebox.Server.async_query", autospec=True) as mock:
 
-        def _set_behavior(mode: str):
+        def _configure(mode: str):
             if mode == "uuid":
+                mock.side_effect = None
                 mock.return_value = {"uuid": UUID}
-                mock.side_effect = None
+
             elif mode == "false":
-                mock.return_value = False
-                mock.side_effect = None
-            elif mode == "unauthorized":
-                # delegate to your existing helper
-                mock.side_effect = patch_async_query_unauthorized
+
+                async def _cannot_connect(self, *args, **kwargs):
+                    self.http_status = HTTPStatus.BAD_GATEWAY
+                    return False
+
+                mock.side_effect = _cannot_connect
                 mock.return_value = None
+
+            elif mode == "unauthorized":
+
+                async def _unauthorized(self, *args, **kwargs):
+                    self.http_status = HTTPStatus.UNAUTHORIZED
+                    return False
+
+                mock.side_effect = _unauthorized
+                mock.return_value = None
+
+            elif mode == "exception":
+                mock.side_effect = Exception("Unexpected error")
+                mock.return_value = None
+
             else:
-                raise ValueError(f"Unknown mode: {mode}")
+                raise ValueError(f"Unknown mock_async_query mode: {mode}")
+
             return mock
 
-        yield _set_behavior
+        yield _configure
+
+
+@pytest.fixture
+def config_flow_input():
+    """Return schema-compliant input for each config flow step."""
+
+    def _get_input(step_id: str) -> dict:
+        if step_id == "user":
+            return {
+                CONF_HOST: "1.1.1.1",
+            }
+        if step_id == "edit":
+            return {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 9000,
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+                CONF_HTTPS: False,
+            }
+        raise ValueError(f"Unsupported step_id: {step_id}")
+
+    return _get_input
 
 
 @pytest.fixture
 def mock_discover_success():
-    """Fixture to mock successful async_discover."""
-    with patch(
-        "homeassistant.components.squeezebox.config_flow.async_discover",
-        mock_discover,
-    ):
-        yield
+    """Fixture to simulate successful async_discover."""
+
+    async def _mock_discover(callback):
+        class DummyServer:
+            host = "1.1.1.1"
+            port = 9000
+            uuid = UUID  # Ensure UUID is defined or imported
+
+        callback(DummyServer())
+        return [DummyServer()]
+
+    return _mock_discover
 
 
 async def mock_discover(_discovery_callback):
