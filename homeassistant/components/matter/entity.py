@@ -79,12 +79,7 @@ class MatterEntityLabeling(EntityDescription):
     # Priority-ordered default set of labels used for locating the name modifier
     # Can override this set in an entity's discovery schema.
     # Always uses lower case for matching.
-    default_label_list: tuple[str, ...] | None = (
-        "label",
-        "button",
-        "orientation",
-        "name",
-    )
+    default_label_list: tuple[str, ...] | None = None
 
     # When labels are matched, use the concatenator string to join them.
     # Examples: ", " or "-" or " " (space).

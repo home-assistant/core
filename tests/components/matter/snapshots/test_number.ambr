@@ -1269,7 +1269,7 @@
     'state': '0.5',
   })
 # ---
-# name: test_numbers[multi_endpoint_light][number.inovelli_on_level_1-entry]
+# name: test_numbers[multi_endpoint_light][number.inovelli_on_level_dimmablelight-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1287,7 +1287,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.inovelli_on_level_1',
+    'entity_id': 'number.inovelli_on_level_dimmablelight',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1299,7 +1299,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'On level (1)',
+    'original_name': 'On level (DimmableLight)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1309,24 +1309,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[multi_endpoint_light][number.inovelli_on_level_1-state]
+# name: test_numbers[multi_endpoint_light][number.inovelli_on_level_dimmablelight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli On level (1)',
+      'friendly_name': 'Inovelli On level (DimmableLight)',
       'max': 255,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.inovelli_on_level_1',
+    'entity_id': 'number.inovelli_on_level_dimmablelight',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '137',
   })
 # ---
-# name: test_numbers[multi_endpoint_light][number.inovelli_on_level_6-entry]
+# name: test_numbers[multi_endpoint_light][number.inovelli_on_level_led_bar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1344,7 +1344,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.inovelli_on_level_6',
+    'entity_id': 'number.inovelli_on_level_led_bar',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1356,7 +1356,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'On level (6)',
+    'original_name': 'On level (LED Bar)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1366,24 +1366,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[multi_endpoint_light][number.inovelli_on_level_6-state]
+# name: test_numbers[multi_endpoint_light][number.inovelli_on_level_led_bar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli On level (6)',
+      'friendly_name': 'Inovelli On level (LED Bar)',
       'max': 255,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.inovelli_on_level_6',
+    'entity_id': 'number.inovelli_on_level_led_bar',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '254',
   })
 # ---
-# name: test_numbers[multi_endpoint_light][number.inovelli_on_off_transition_time_1-entry]
+# name: test_numbers[multi_endpoint_light][number.inovelli_on_off_transition_time_dimmablelight-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1401,7 +1401,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.inovelli_on_off_transition_time_1',
+    'entity_id': 'number.inovelli_on_off_transition_time_dimmablelight',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1413,7 +1413,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'On/Off transition time (1)',
+    'original_name': 'On/Off transition time (DimmableLight)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1423,10 +1423,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[multi_endpoint_light][number.inovelli_on_off_transition_time_1-state]
+# name: test_numbers[multi_endpoint_light][number.inovelli_on_off_transition_time_dimmablelight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli On/Off transition time (1)',
+      'friendly_name': 'Inovelli On/Off transition time (DimmableLight)',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -1434,7 +1434,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.inovelli_on_off_transition_time_1',
+    'entity_id': 'number.inovelli_on_off_transition_time_dimmablelight',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

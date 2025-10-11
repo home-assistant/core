@@ -29,7 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity, MatterEntityDescription
+from .entity import LabelPlacement, MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -173,6 +173,11 @@ DISCOVERY_SCHEMAS = [
             ha_to_device=lambda x: None if x == 255 else int(x),
             native_step=1,
             native_unit_of_measurement=None,
+            label_placement=LabelPlacement.APPEND,
+            default_label_list=(
+                "label",
+                "devicetype",
+            ),
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnLevel,),
@@ -193,6 +198,8 @@ DISCOVERY_SCHEMAS = [
             native_step=0.1,
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
+            label_placement=LabelPlacement.APPEND,
+            default_label_list=("label",),
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnTransitionTime,),
@@ -212,6 +219,8 @@ DISCOVERY_SCHEMAS = [
             native_step=0.1,
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
+            label_placement=LabelPlacement.APPEND,
+            default_label_list=("label",),  # Used by Inovelli VTM30 / VTM31
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OffTransitionTime,),
@@ -231,6 +240,11 @@ DISCOVERY_SCHEMAS = [
             native_step=0.1,
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
+            label_placement=LabelPlacement.APPEND,
+            default_label_list=(
+                "label",  # Used by Inovelli VTM30 / VTM31
+                "devicetype",  # Used by Inovelli VTM35
+            ),
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnOffTransitionTime,),

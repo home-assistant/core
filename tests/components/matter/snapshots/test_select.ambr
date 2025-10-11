@@ -1393,7 +1393,7 @@
     'state': 'Lemon',
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_1-entry]
+# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_dimmablelight-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1413,7 +1413,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.inovelli_power_on_behavior_on_startup_1',
+    'entity_id': 'select.inovelli_power_on_behavior_on_startup_dimmablelight',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1425,7 +1425,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior on startup (1)',
+    'original_name': 'Power-on behavior on startup (DimmableLight)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1435,10 +1435,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_1-state]
+# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_dimmablelight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Power-on behavior on startup (1)',
+      'friendly_name': 'Inovelli Power-on behavior on startup (DimmableLight)',
       'options': list([
         'on',
         'off',
@@ -1447,14 +1447,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.inovelli_power_on_behavior_on_startup_1',
+    'entity_id': 'select.inovelli_power_on_behavior_on_startup_dimmablelight',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'previous',
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_6-entry]
+# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_led_bar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1474,7 +1474,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.inovelli_power_on_behavior_on_startup_6',
+    'entity_id': 'select.inovelli_power_on_behavior_on_startup_led_bar',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1486,7 +1486,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior on startup (6)',
+    'original_name': 'Power-on behavior on startup (LED Bar)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1496,10 +1496,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_6-state]
+# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_led_bar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Power-on behavior on startup (6)',
+      'friendly_name': 'Inovelli Power-on behavior on startup (LED Bar)',
       'options': list([
         'on',
         'off',
@@ -1508,7 +1508,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.inovelli_power_on_behavior_on_startup_6',
+    'entity_id': 'select.inovelli_power_on_behavior_on_startup_led_bar',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2676,7 +2676,7 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[thermostat][select.longan_link_hvac_temperature_display_mode_north-entry]
+# name: test_selects[thermostat][select.longan_link_hvac_temperature_display_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2694,7 +2694,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.longan_link_hvac_temperature_display_mode_north',
+    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2706,7 +2706,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature display mode (North)',
+    'original_name': 'Temperature display mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2716,17 +2716,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[thermostat][select.longan_link_hvac_temperature_display_mode_north-state]
+# name: test_selects[thermostat][select.longan_link_hvac_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Longan link HVAC Temperature display mode (North)',
+      'friendly_name': 'Longan link HVAC Temperature display mode',
       'options': list([
         'Celsius',
         'Fahrenheit',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.longan_link_hvac_temperature_display_mode_north',
+    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
