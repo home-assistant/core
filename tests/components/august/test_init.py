@@ -290,20 +290,14 @@ async def test_oauth_migration_on_legacy_entry(hass: HomeAssistant) -> None:
 
 async def test_oauth_implementation_not_available(hass: HomeAssistant) -> None:
     """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
-    # Set up client credentials
     await mock_client_credentials(hass)
-
-    # Create a config entry with OAuth
     entry = await mock_august_config_entry(hass)
 
-    # Mock the OAuth implementation getter to raise ValueError
     with patch(
         "homeassistant.components.august.config_entry_oauth2_flow.async_get_config_entry_implementation",
         side_effect=ValueError("Implementation not available"),
     ):
-        # Try to setup the entry - should raise ConfigEntryNotReady
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # Entry should be in setup_retry state (ConfigEntryNotReady)
     assert entry.state is ConfigEntryState.SETUP_RETRY
