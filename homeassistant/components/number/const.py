@@ -124,7 +124,7 @@ class NumberDeviceClass(StrEnum):
     CO = "carbon_monoxide"
     """Carbon Monoxide gas concentration.
 
-    Unit of measurement: `ppm` (parts per million), mg/m³
+    Unit of measurement: `ppm` (parts per million), `mg/m³`
     """
 
     CO2 = "carbon_dioxide"

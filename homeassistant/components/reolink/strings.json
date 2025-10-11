@@ -132,10 +132,6 @@
       "title": "Reolink firmware update required",
       "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running an old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The firmware can be updated by pressing \"install\" in the more info dialog of the update entity of \"{name}\" from within Home Assistant. Alternatively, the latest firmware can be downloaded from the [Reolink download center]({download_link})."
     },
-    "hub_switch_deprecated": {
-      "title": "Reolink Home Hub switches deprecated",
-      "description": "The redundant 'Record', 'Email on event', 'FTP upload', 'Push notifications', and 'Buzzer on event' switches on the Reolink Home Hub are deprecated since the new firmware no longer supports these. Please use the equally named switches under each of the camera devices connected to the Home Hub instead. To remove this issue, please adjust automations accordingly and disable the switch entities mentioned."
-    },
     "password_too_long": {
       "title": "Reolink password too long",
       "description": "The password for \"{name}\" is more than 31 characters long, this is no longer compatible with the Reolink API. Please change the password using the Reolink app/client to a password with is shorter than 32 characters. After changing the password, fill in the new password in the Reolink Re-authentication flow to continue using this integration. The latest version of the Reolink app/client also has a password limit of 31 characters."
@@ -201,6 +197,13 @@
       },
       "vehicle": {
         "name": "Vehicle",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "non-motor_vehicle": {
+        "name": "Bicycle",
         "state": {
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
@@ -535,8 +538,17 @@
       "floodlight_brightness": {
         "name": "Floodlight turn on brightness"
       },
+      "floodlight_event_brightness": {
+        "name": "Floodlight event brightness"
+      },
       "ir_brightness": {
         "name": "Infrared light brightness"
+      },
+      "floodlight_event_on_time": {
+        "name": "Floodlight event on time"
+      },
+      "floodlight_event_flash_time": {
+        "name": "Floodlight event flash time"
       },
       "volume": {
         "name": "Volume"
@@ -570,6 +582,9 @@
       },
       "ai_vehicle_sensitivity": {
         "name": "AI vehicle sensitivity"
+      },
+      "ai_non_motor_vehicle_sensitivity": {
+        "name": "AI bicycle sensitivity"
       },
       "ai_package_sensitivity": {
         "name": "AI package sensitivity"
@@ -606,6 +621,9 @@
       },
       "ai_vehicle_delay": {
         "name": "AI vehicle delay"
+      },
+      "ai_non_motor_vehicle_delay": {
+        "name": "AI bicycle delay"
       },
       "ai_package_delay": {
         "name": "AI package delay"
@@ -681,6 +699,14 @@
           "schedule": "Schedule",
           "adaptive": "Adaptive",
           "autoadaptive": "Auto adaptive"
+        }
+      },
+      "floodlight_event_mode": {
+        "name": "Floodlight event mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "flash": "Flash"
         }
       },
       "day_night_mode": {
@@ -923,6 +949,29 @@
       },
       "sd_storage": {
         "name": "SD {hdd_index} storage"
+      },
+      "person_type": {
+        "name": "Person type",
+        "state": {
+          "man": "Man",
+          "woman": "Woman"
+        }
+      },
+      "vehicle_type": {
+        "name": "Vehicle type",
+        "state": {
+          "sedan": "Sedan",
+          "suv": "SUV",
+          "pickup_truck": "Pickup truck",
+          "motorcycle": "Motorcycle"
+        }
+      },
+      "animal_type": {
+        "name": "Animal type",
+        "state": {
+          "dog": "Dog",
+          "cat": "Cat"
+        }
       }
     },
     "siren": {
@@ -969,6 +1018,9 @@
       },
       "manual_record": {
         "name": "Manual record"
+      },
+      "rule": {
+        "name": "Surveillance rule {name}"
       },
       "pre_record": {
         "name": "Pre-recording"

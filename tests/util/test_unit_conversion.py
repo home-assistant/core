@@ -119,7 +119,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     CarbonMonoxideConcentrationConverter: (
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         CONCENTRATION_PARTS_PER_MILLION,
-        1.145609,
+        1.16441,
     ),
     ConductivityConverter: (
         UnitOfConductivity.MICROSIEMENS_PER_CM,
@@ -291,59 +291,17 @@ _CONVERTED_VALUE: dict[
         (
             1,
             CONCENTRATION_PARTS_PER_MILLION,
-            1.145609,
+            1.16441,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         ),
         (
             120,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-            104.74778,
+            103.05655,
             CONCENTRATION_PARTS_PER_MILLION,
         ),
     ],
     ConductivityConverter: [
-        # Deprecated to deprecated
-        (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
-        (5, UnitOfConductivity.SIEMENS, 5e6, UnitOfConductivity.MICROSIEMENS),
-        (5, UnitOfConductivity.MILLISIEMENS, 5e3, UnitOfConductivity.MICROSIEMENS),
-        (5, UnitOfConductivity.MILLISIEMENS, 5e-3, UnitOfConductivity.SIEMENS),
-        (5e6, UnitOfConductivity.MICROSIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
-        (5e6, UnitOfConductivity.MICROSIEMENS, 5, UnitOfConductivity.SIEMENS),
-        # Deprecated to new
-        (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS_PER_CM),
-        (5, UnitOfConductivity.SIEMENS, 5e6, UnitOfConductivity.MICROSIEMENS_PER_CM),
-        (
-            5,
-            UnitOfConductivity.MILLISIEMENS,
-            5e3,
-            UnitOfConductivity.MICROSIEMENS_PER_CM,
-        ),
-        (5, UnitOfConductivity.MILLISIEMENS, 5e-3, UnitOfConductivity.SIEMENS_PER_CM),
-        (
-            5e6,
-            UnitOfConductivity.MICROSIEMENS,
-            5e3,
-            UnitOfConductivity.MILLISIEMENS_PER_CM,
-        ),
-        (5e6, UnitOfConductivity.MICROSIEMENS, 5, UnitOfConductivity.SIEMENS_PER_CM),
-        # New to deprecated
-        (5, UnitOfConductivity.SIEMENS_PER_CM, 5e3, UnitOfConductivity.MILLISIEMENS),
-        (5, UnitOfConductivity.SIEMENS_PER_CM, 5e6, UnitOfConductivity.MICROSIEMENS),
-        (
-            5,
-            UnitOfConductivity.MILLISIEMENS_PER_CM,
-            5e3,
-            UnitOfConductivity.MICROSIEMENS,
-        ),
-        (5, UnitOfConductivity.MILLISIEMENS_PER_CM, 5e-3, UnitOfConductivity.SIEMENS),
-        (
-            5e6,
-            UnitOfConductivity.MICROSIEMENS_PER_CM,
-            5e3,
-            UnitOfConductivity.MILLISIEMENS,
-        ),
-        (5e6, UnitOfConductivity.MICROSIEMENS_PER_CM, 5, UnitOfConductivity.SIEMENS),
-        # New to new
         (
             5,
             UnitOfConductivity.SIEMENS_PER_CM,

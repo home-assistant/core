@@ -35,6 +35,7 @@ import voluptuous as vol
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -194,47 +195,50 @@ QUERY_STATISTICS_SUMMARY_SUM = (
     .label("rownum"),
 )
 
+_PRIMARY_UNIT_CONVERTERS: list[type[BaseUnitConverter]] = [
+    ApparentPowerConverter,
+    AreaConverter,
+    BloodGlucoseConcentrationConverter,
+    ConductivityConverter,
+    DataRateConverter,
+    DistanceConverter,
+    DurationConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
+    EnergyConverter,
+    EnergyDistanceConverter,
+    InformationConverter,
+    MassConverter,
+    MassVolumeConcentrationConverter,
+    PowerConverter,
+    PressureConverter,
+    ReactiveEnergyConverter,
+    ReactivePowerConverter,
+    SpeedConverter,
+    TemperatureConverter,
+    UnitlessRatioConverter,
+    VolumeConverter,
+    VolumeFlowRateConverter,
+]
+
+_SECONDARY_UNIT_CONVERTERS: list[type[BaseUnitConverter]] = [
+    CarbonMonoxideConcentrationConverter,
+]
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
-    **dict.fromkeys(ApparentPowerConverter.VALID_UNITS, ApparentPowerConverter),
-    **dict.fromkeys(AreaConverter.VALID_UNITS, AreaConverter),
-    **dict.fromkeys(
-        BloodGlucoseConcentrationConverter.VALID_UNITS,
-        BloodGlucoseConcentrationConverter,
-    ),
-    **dict.fromkeys(
-        MassVolumeConcentrationConverter.VALID_UNITS, MassVolumeConcentrationConverter
-    ),
-    **dict.fromkeys(
-        CarbonMonoxideConcentrationConverter.VALID_UNITS,
-        CarbonMonoxideConcentrationConverter,
-    ),
-    **dict.fromkeys(ConductivityConverter.VALID_UNITS, ConductivityConverter),
-    **dict.fromkeys(DataRateConverter.VALID_UNITS, DataRateConverter),
-    **dict.fromkeys(DistanceConverter.VALID_UNITS, DistanceConverter),
-    **dict.fromkeys(DurationConverter.VALID_UNITS, DurationConverter),
-    **dict.fromkeys(ElectricCurrentConverter.VALID_UNITS, ElectricCurrentConverter),
-    **dict.fromkeys(ElectricPotentialConverter.VALID_UNITS, ElectricPotentialConverter),
-    **dict.fromkeys(EnergyConverter.VALID_UNITS, EnergyConverter),
-    **dict.fromkeys(EnergyDistanceConverter.VALID_UNITS, EnergyDistanceConverter),
-    **dict.fromkeys(InformationConverter.VALID_UNITS, InformationConverter),
-    **dict.fromkeys(MassConverter.VALID_UNITS, MassConverter),
-    **dict.fromkeys(PowerConverter.VALID_UNITS, PowerConverter),
-    **dict.fromkeys(PressureConverter.VALID_UNITS, PressureConverter),
-    **dict.fromkeys(ReactiveEnergyConverter.VALID_UNITS, ReactiveEnergyConverter),
-    **dict.fromkeys(ReactivePowerConverter.VALID_UNITS, ReactivePowerConverter),
-    **dict.fromkeys(SpeedConverter.VALID_UNITS, SpeedConverter),
-    **dict.fromkeys(TemperatureConverter.VALID_UNITS, TemperatureConverter),
-    **dict.fromkeys(UnitlessRatioConverter.VALID_UNITS, UnitlessRatioConverter),
-    **dict.fromkeys(VolumeConverter.VALID_UNITS, VolumeConverter),
-    **dict.fromkeys(VolumeFlowRateConverter.VALID_UNITS, VolumeFlowRateConverter),
+    unit: conv for conv in _PRIMARY_UNIT_CONVERTERS for unit in conv.VALID_UNITS
 }
+"""Map of units to unit converter.
 
+This map includes units which can be converted without knowing the unit class.
+"""
 
-UNIT_CLASSES = {
-    unit: converter.UNIT_CLASS
-    for unit, converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.items()
+UNIT_CLASS_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    conv.UNIT_CLASS: conv
+    for conv in chain(_PRIMARY_UNIT_CONVERTERS, _SECONDARY_UNIT_CONVERTERS)
 }
+"""Map of unit class to converter."""
+
 
 DATA_SHORT_TERM_STATISTICS_RUN_CACHE = "recorder_short_term_statistics_run_cache"
 
@@ -320,14 +324,32 @@ class StatisticsRow(BaseStatisticsRow, total=False):
     change: float | None
 
 
+def _get_unit_converter(
+    unit_class: str | None, from_unit: str | None
+) -> type[BaseUnitConverter] | None:
+    """Return the unit converter for the given unit class and unit.
+
+    The unit converter is determined from the unit class and unit if the unit class
+    and unit match, otherwise from the unit.
+    """
+    if (
+        conv := UNIT_CLASS_TO_UNIT_CONVERTER.get(unit_class)
+    ) is not None and from_unit in conv.VALID_UNITS:
+        return conv
+    if (conv := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(from_unit)) is not None:
+        return conv
+    return None
+
+
 def get_display_unit(
     hass: HomeAssistant,
     statistic_id: str,
+    unit_class: str | None,
     statistic_unit: str | None,
 ) -> str | None:
     """Return the unit which the statistic will be displayed in."""
 
-    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
+    if (converter := _get_unit_converter(unit_class, statistic_unit)) is None:
         return statistic_unit
 
     state_unit: str | None = statistic_unit
@@ -342,13 +364,14 @@ def get_display_unit(
 
 
 def _get_statistic_to_display_unit_converter(
+    unit_class: str | None,
     statistic_unit: str | None,
     state_unit: str | None,
     requested_units: dict[str, str] | None,
     allow_none: bool = True,
 ) -> Callable[[float | None], float | None] | Callable[[float], float] | None:
     """Prepare a converter from the statistics unit to display unit."""
-    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
+    if (converter := _get_unit_converter(unit_class, statistic_unit)) is None:
         return None
 
     display_unit: str | None
@@ -372,24 +395,25 @@ def _get_statistic_to_display_unit_converter(
     return converter.converter_factory(from_unit=statistic_unit, to_unit=display_unit)
 
 
-def _get_display_to_statistic_unit_converter(
+def _get_display_to_statistic_unit_converter_func(
+    unit_class: str | None,
     display_unit: str | None,
     statistic_unit: str | None,
 ) -> Callable[[float], float] | None:
     """Prepare a converter from the display unit to the statistics unit."""
     if (
         display_unit == statistic_unit
-        or (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None
+        or (converter := _get_unit_converter(unit_class, statistic_unit)) is None
     ):
         return None
     return converter.converter_factory(from_unit=display_unit, to_unit=statistic_unit)
 
 
-def _get_unit_converter(
-    from_unit: str, to_unit: str
+def _get_unit_converter_func(
+    unit_class: str | None, from_unit: str, to_unit: str
 ) -> Callable[[float | None], float | None] | None:
     """Prepare a converter from a unit to another unit."""
-    for conv in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
+    if (conv := _get_unit_converter(unit_class, from_unit)) is not None:
         if from_unit in conv.VALID_UNITS and to_unit in conv.VALID_UNITS:
             if from_unit == to_unit:
                 return None
@@ -399,9 +423,11 @@ def _get_unit_converter(
     raise HomeAssistantError
 
 
-def can_convert_units(from_unit: str | None, to_unit: str | None) -> bool:
+def can_convert_units(
+    unit_class: str | None, from_unit: str | None, to_unit: str | None
+) -> bool:
     """Return True if it's possible to convert from from_unit to to_unit."""
-    for converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
+    if (converter := _get_unit_converter(unit_class, from_unit)) is not None:
         if from_unit in converter.VALID_UNITS and to_unit in converter.VALID_UNITS:
             return True
     return False
@@ -868,18 +894,71 @@ def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
         instance.statistics_meta_manager.delete(session, statistic_ids)
 
 
+@callback
+def async_update_statistics_metadata(
+    hass: HomeAssistant,
+    statistic_id: str,
+    *,
+    new_statistic_id: str | UndefinedType = UNDEFINED,
+    new_unit_class: str | None | UndefinedType = UNDEFINED,
+    new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+    on_done: Callable[[], None] | None = None,
+    _called_from_ws_api: bool = False,
+) -> None:
+    """Update statistics metadata for a statistic_id."""
+    if new_unit_of_measurement is not UNDEFINED and new_unit_class is UNDEFINED:
+        if not _called_from_ws_api:
+            report_usage(
+                (
+                    "doesn't specify unit_class when calling "
+                    "async_update_statistics_metadata"
+                ),
+                breaks_in_ha_version="2026.11",
+                exclude_integrations={DOMAIN},
+            )
+
+        unit = new_unit_of_measurement
+        if unit in STATISTIC_UNIT_TO_UNIT_CONVERTER:
+            new_unit_class = STATISTIC_UNIT_TO_UNIT_CONVERTER[unit].UNIT_CLASS
+        else:
+            new_unit_class = None
+
+    if TYPE_CHECKING:
+        # After the above check, new_unit_class is guaranteed to not be UNDEFINED
+        assert new_unit_class is not UNDEFINED
+
+    if new_unit_of_measurement is not UNDEFINED and new_unit_class is not None:
+        if (converter := UNIT_CLASS_TO_UNIT_CONVERTER.get(new_unit_class)) is None:
+            raise HomeAssistantError(f"Unsupported unit_class: '{new_unit_class}'")
+
+        if new_unit_of_measurement not in converter.VALID_UNITS:
+            raise HomeAssistantError(
+                f"Unsupported unit_of_measurement '{new_unit_of_measurement}' "
+                f"for unit_class '{new_unit_class}'"
+            )
+
+    get_instance(hass).async_update_statistics_metadata(
+        statistic_id,
+        new_statistic_id=new_statistic_id,
+        new_unit_class=new_unit_class,
+        new_unit_of_measurement=new_unit_of_measurement,
+        on_done=on_done,
+    )
+
+
 def update_statistics_metadata(
     instance: Recorder,
     statistic_id: str,
     new_statistic_id: str | None | UndefinedType,
+    new_unit_class: str | None | UndefinedType,
     new_unit_of_measurement: str | None | UndefinedType,
 ) -> None:
     """Update statistics metadata for a statistic_id."""
     statistics_meta_manager = instance.statistics_meta_manager
-    if new_unit_of_measurement is not UNDEFINED:
+    if new_unit_class is not UNDEFINED and new_unit_of_measurement is not UNDEFINED:
         with session_scope(session=instance.get_session()) as session:
             statistics_meta_manager.update_unit_of_measurement(
-                session, statistic_id, new_unit_of_measurement
+                session, statistic_id, new_unit_class, new_unit_of_measurement
             )
     if new_statistic_id is not UNDEFINED and new_statistic_id is not None:
         with session_scope(
@@ -931,13 +1010,16 @@ def _statistic_by_id_from_metadata(
     return {
         meta["statistic_id"]: {
             "display_unit_of_measurement": get_display_unit(
-                hass, meta["statistic_id"], meta["unit_of_measurement"]
+                hass,
+                meta["statistic_id"],
+                meta["unit_class"],
+                meta["unit_of_measurement"],
             ),
             "mean_type": meta["mean_type"],
             "has_sum": meta["has_sum"],
             "name": meta["name"],
             "source": meta["source"],
-            "unit_class": UNIT_CLASSES.get(meta["unit_of_measurement"]),
+            "unit_class": meta["unit_class"],
             "unit_of_measurement": meta["unit_of_measurement"],
         }
         for _, meta in metadata.values()
@@ -1013,7 +1095,7 @@ def list_statistic_ids(
                     "has_sum": meta["has_sum"],
                     "name": meta["name"],
                     "source": meta["source"],
-                    "unit_class": UNIT_CLASSES.get(meta["unit_of_measurement"]),
+                    "unit_class": meta["unit_class"],
                     "unit_of_measurement": meta["unit_of_measurement"],
                 }
 
@@ -1749,10 +1831,13 @@ def statistic_during_period(
             else:
                 result["change"] = None
 
+    unit_class = metadata[1]["unit_class"]
     state_unit = unit = metadata[1]["unit_of_measurement"]
     if state := hass.states.get(statistic_id):
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-    convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
+    convert = _get_statistic_to_display_unit_converter(
+        unit_class, unit, state_unit, units
+    )
 
     if not convert:
         return result
@@ -1835,10 +1920,13 @@ def _augment_result_with_change(
             metadata_by_id = _metadata[row.metadata_id]
             statistic_id = metadata_by_id["statistic_id"]
 
+            unit_class = metadata_by_id["unit_class"]
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
                 state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
+            convert = _get_statistic_to_display_unit_converter(
+                unit_class, unit, state_unit, units
+            )
 
             if convert is not None:
                 prev_sums[statistic_id] = convert(row.sum)
@@ -2431,11 +2519,12 @@ def _sorted_statistics_to_dict(
         metadata_by_id = metadata[meta_id]
         statistic_id = metadata_by_id["statistic_id"]
         if convert_units:
+            unit_class = metadata_by_id["unit_class"]
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
                 state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             convert = _get_statistic_to_display_unit_converter(
-                unit, state_unit, units, allow_none=False
+                unit_class, unit, state_unit, units, allow_none=False
             )
         else:
             convert = None
@@ -2506,6 +2595,27 @@ def _async_import_statistics(
     statistics: Iterable[StatisticData],
 ) -> None:
     """Validate timestamps and insert an import_statistics job in the queue."""
+    # If unit class is not set, we try to set it based on the unit of measurement
+    # Note: This can't happen from the type checker's perspective, but we need
+    # to guard against custom integrations that have not been updated to set
+    # the unit_class.
+    if "unit_class" not in metadata:
+        unit = metadata["unit_of_measurement"]  # type: ignore[unreachable]
+        if unit in STATISTIC_UNIT_TO_UNIT_CONVERTER:
+            metadata["unit_class"] = STATISTIC_UNIT_TO_UNIT_CONVERTER[unit].UNIT_CLASS
+        else:
+            metadata["unit_class"] = None
+
+    if (unit_class := metadata["unit_class"]) is not None:
+        if (converter := UNIT_CLASS_TO_UNIT_CONVERTER.get(unit_class)) is None:
+            raise HomeAssistantError(f"Unsupported unit_class: '{unit_class}'")
+
+        if metadata["unit_of_measurement"] not in converter.VALID_UNITS:
+            raise HomeAssistantError(
+                f"Unsupported unit_of_measurement '{metadata['unit_of_measurement']}' "
+                f"for unit_class '{unit_class}'"
+            )
+
     for statistic in statistics:
         start = statistic["start"]
         if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
@@ -2537,6 +2647,8 @@ def async_import_statistics(
     hass: HomeAssistant,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
+    *,
+    _called_from_ws_api: bool = False,
 ) -> None:
     """Import hourly statistics from an internal source.
 
@@ -2549,6 +2661,13 @@ def async_import_statistics(
     if not metadata["source"] or metadata["source"] != DOMAIN:
         raise HomeAssistantError("Invalid source")
 
+    if "unit_class" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
+        report_usage(  # type: ignore[unreachable]
+            "doesn't specify unit_class when calling async_import_statistics",
+            breaks_in_ha_version="2026.11",
+            exclude_integrations={DOMAIN},
+        )
+
     _async_import_statistics(hass, metadata, statistics)
 
 
@@ -2557,6 +2676,8 @@ def async_add_external_statistics(
     hass: HomeAssistant,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
+    *,
+    _called_from_ws_api: bool = False,
 ) -> None:
     """Add hourly statistics from an external source.
 
@@ -2570,6 +2691,13 @@ def async_add_external_statistics(
     domain, _object_id = split_statistic_id(metadata["statistic_id"])
     if not metadata["source"] or metadata["source"] != domain:
         raise HomeAssistantError("Invalid source")
+
+    if "unit_class" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
+        report_usage(  # type: ignore[unreachable]
+            "doesn't specify unit_class when calling async_add_external_statistics",
+            breaks_in_ha_version="2026.11",
+            exclude_integrations={DOMAIN},
+        )
 
     _async_import_statistics(hass, metadata, statistics)
 
@@ -2704,9 +2832,10 @@ def adjust_statistics(
         if statistic_id not in metadata:
             return True
 
+        unit_class = metadata[statistic_id][1]["unit_class"]
         statistic_unit = metadata[statistic_id][1]["unit_of_measurement"]
-        if convert := _get_display_to_statistic_unit_converter(
-            adjustment_unit, statistic_unit
+        if convert := _get_display_to_statistic_unit_converter_func(
+            unit_class, adjustment_unit, statistic_unit
         ):
             sum_adjustment = convert(sum_adjustment)
 
@@ -2774,8 +2903,9 @@ def change_statistics_unit(
             return
 
         metadata_id = metadata[0]
+        unit_class = metadata[1]["unit_class"]
 
-        if not (convert := _get_unit_converter(old_unit, new_unit)):
+        if not (convert := _get_unit_converter_func(unit_class, old_unit, new_unit)):
             _LOGGER.warning(
                 "Statistics unit of measurement for %s is already %s",
                 statistic_id,
@@ -2791,12 +2921,14 @@ def change_statistics_unit(
             _change_statistics_unit_for_table(session, table, metadata_id, convert)
 
         statistics_meta_manager.update_unit_of_measurement(
-            session, statistic_id, new_unit
+            session,
+            statistic_id,
+            unit_class,
+            new_unit,
         )
 
 
-@callback
-def async_change_statistics_unit(
+async def async_change_statistics_unit(
     hass: HomeAssistant,
     statistic_id: str,
     *,
@@ -2804,7 +2936,17 @@ def async_change_statistics_unit(
     old_unit_of_measurement: str,
 ) -> None:
     """Change statistics unit for a statistic_id."""
-    if not can_convert_units(old_unit_of_measurement, new_unit_of_measurement):
+    metadatas = await get_instance(hass).async_add_executor_job(
+        partial(get_metadata, hass, statistic_ids={statistic_id})
+    )
+    if statistic_id not in metadatas:
+        raise HomeAssistantError(f"No metadata found for {statistic_id}")
+
+    metadata = metadatas[statistic_id][1]
+
+    if not can_convert_units(
+        metadata["unit_class"], old_unit_of_measurement, new_unit_of_measurement
+    ):
         raise HomeAssistantError(
             f"Can't convert {old_unit_of_measurement} to {new_unit_of_measurement}"
         )
