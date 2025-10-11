@@ -337,7 +337,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_1-entry]
+# name: test_lights[multi_endpoint_light][light.inovelli_light_dimmablelight-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -354,7 +354,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.inovelli_light_1',
+    'entity_id': 'light.inovelli_light_dimmablelight',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -366,7 +366,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Light (1)',
+    'original_name': 'Light (DimmableLight)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -376,26 +376,26 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_1-state]
+# name: test_lights[multi_endpoint_light][light.inovelli_light_dimmablelight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'friendly_name': 'Inovelli Light (1)',
+      'friendly_name': 'Inovelli Light (DimmableLight)',
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 32>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.inovelli_light_1',
+    'entity_id': 'light.inovelli_light_dimmablelight',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_6-entry]
+# name: test_lights[multi_endpoint_light][light.inovelli_light_led_bar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -418,7 +418,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.inovelli_light_6',
+    'entity_id': 'light.inovelli_light_led_bar',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -430,7 +430,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Light (6)',
+    'original_name': 'Light (LED Bar)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -440,14 +440,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_6-state]
+# name: test_lights[multi_endpoint_light][light.inovelli_light_led_bar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
       'color_temp': None,
       'color_temp_kelvin': None,
-      'friendly_name': 'Inovelli Light (6)',
+      'friendly_name': 'Inovelli Light (LED Bar)',
       'hs_color': None,
       'max_color_temp_kelvin': 6535,
       'max_mireds': 500,
@@ -463,7 +463,7 @@
       'xy_color': None,
     }),
     'context': <ANY>,
-    'entity_id': 'light.inovelli_light_6',
+    'entity_id': 'light.inovelli_light_led_bar',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
