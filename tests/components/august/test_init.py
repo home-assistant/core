@@ -1,6 +1,6 @@
 """The tests for the august platform."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from aiohttp import ClientResponseError
 import pytest
@@ -33,6 +33,8 @@ from .mocks import (
     _mock_inoperative_august_lock_detail,
     _mock_lock_with_offline_key,
     _mock_operative_august_lock_detail,
+    mock_august_config_entry,
+    mock_client_credentials,
 )
 
 from tests.common import MockConfigEntry
@@ -284,3 +286,24 @@ async def test_oauth_migration_on_legacy_entry(hass: HomeAssistant) -> None:
     assert len(flows) == 1
     assert flows[0]["step_id"] == "pick_implementation"
     assert flows[0]["context"]["source"] == "reauth"
+
+
+async def test_oauth_implementation_not_available(hass: HomeAssistant) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    # Set up client credentials
+    await mock_client_credentials(hass)
+
+    # Create a config entry with OAuth
+    entry = await mock_august_config_entry(hass)
+
+    # Mock the OAuth implementation getter to raise ValueError
+    with patch(
+        "homeassistant.components.august.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        side_effect=ValueError("Implementation not available"),
+    ):
+        # Try to setup the entry - should raise ConfigEntryNotReady
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Entry should be in setup_retry state (ConfigEntryNotReady)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
