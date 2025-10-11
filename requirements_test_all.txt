@@ -1138,7 +1138,7 @@ jsonpath==0.82.2
 justnimbus==0.7.4
 
 # homeassistant.components.kegtron
-kegtron-ble==0.4.0
+kegtron-ble==1.0.2
 
 # homeassistant.components.knocki
 knocki==0.4.2
