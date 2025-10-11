@@ -98,7 +98,7 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
 
     @property
     def options(self) -> list[str]:
-        """Return a set of selectable options."""
+        """Return a list of selectable options."""
         sorted_values = sorted(
             self.coordinator.data.presets.values(), key=lambda preset: preset.name
         )
@@ -139,7 +139,7 @@ class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
 
     @property
     def options(self) -> list[str]:
-        """Return a set of selectable options."""
+        """Return a list of selectable options."""
         sorted_values = sorted(
             self.coordinator.data.playlists.values(), key=lambda playlist: playlist.name
         )
@@ -186,13 +186,16 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
         """Return the current selected color palette."""
         if not self.coordinator.data.palettes:
             return None
-        return self.coordinator.data.palettes[
-            int(self.coordinator.data.state.segments[self._segment].palette_id)
-        ].name
+        if (segment := self.coordinator.data.state.segments.get(self._segment)) is None:
+            return None
+        palette_id = int(segment.palette_id)
+        if (palette := self.coordinator.data.palettes.get(palette_id)) is None:
+            return None
+        return palette.name
 
     @property
     def options(self) -> list[str]:
-        """Return a set of selectable options."""
+        """Return a list of selectable options."""
         sorted_values = sorted(
             self.coordinator.data.palettes.values(), key=lambda palette: palette.name
         )
