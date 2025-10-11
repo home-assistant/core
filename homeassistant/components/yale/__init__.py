@@ -27,7 +27,7 @@ type YaleConfigEntry = ConfigEntry[YaleData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
-    """Set up yale from a config entry."""
+    """Set up Yale from a config entry."""
     session = async_create_yale_clientsession(hass)
     try:
         implementation = (
