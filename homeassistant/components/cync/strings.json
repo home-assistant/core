@@ -23,9 +23,11 @@
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Cync integration needs to re-authenticate for {email}",
         "data": {
+          "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
+          "email": "Your Cync account's email address",
           "password": "Your Cync account's password"
         }
       }

@@ -34,8 +34,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 STEP_TWO_FACTOR_SCHEMA = vol.Schema({vol.Required(CONF_TWO_FACTOR_CODE): str})
 
-STEP_REAUTH_CONFIRM_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
-
 
 class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cync."""
@@ -109,7 +107,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required and prompts for their password."""
+        """Dialog that informs the user that reauth is required and prompts for their Cync credentials."""
         errors: dict[str, str] = {}
 
         reauth_entry = self._get_reauth_entry()
@@ -117,7 +115,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             self.cync_auth = Auth(
                 async_get_clientsession(self.hass),
-                username=reauth_entry.title,
+                username=user_input[CONF_EMAIL],
                 password=user_input[CONF_PASSWORD],
             )
             try:
@@ -136,7 +134,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_REAUTH_CONFIRM_SCHEMA,
+            data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
             description_placeholders={CONF_EMAIL: reauth_entry.title},
         )
@@ -158,7 +156,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=config_data
+                entry=self._get_reauth_entry(), title=user_email, data=config_data
             )
 
         self._abort_if_unique_id_configured()

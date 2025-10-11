@@ -117,6 +117,7 @@ async def test_form_reauth_success(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
@@ -164,6 +165,7 @@ async def test_form_reauth_unique_id_mismatch(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
@@ -363,6 +365,7 @@ async def test_form_reauth_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
@@ -377,6 +380,7 @@ async def test_form_reauth_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
