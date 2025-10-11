@@ -33,27 +33,27 @@ async def test_numbers(
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 13, 543, tzinfo=UTC))
     await init_integration(hass, "number", printer=printer, job=job)
 
-    state = hass.states.get("number.octoprint_set_tool0_temp")
+    state = hass.states.get("number.octoprint_extruder_temperature")
     assert state is not None
-    assert state.state == "37.83"
-    assert state.name == "OctoPrint set tool0 temp"
+    assert state.state == "37.83136" # Verify that the entity performs no rounding
+    assert state.name == "OctoPrint Extruder temperature"
     assert state.attributes.get("unit_of_measurement") == UnitOfTemperature.CELSIUS
     assert state.attributes.get("min") == 0
     assert state.attributes.get("max") == 300
     assert state.attributes.get("step") == 1
-    entry = entity_registry.async_get("number.octoprint_set_tool0_temp")
-    assert entry.unique_id == "set-tool0-temp-uuid"
+    entry = entity_registry.async_get("number.octoprint_extruder_temperature")
+    assert entry.unique_id == "uuid_tool0_temperature" # Verify that unique_id uses the API name
 
-    state = hass.states.get("number.octoprint_set_bed_temp")
+    state = hass.states.get("number.octoprint_bed_temperature")
     assert state is not None
     assert state.state == "60.0"
-    assert state.name == "OctoPrint set bed temp"
+    assert state.name == "OctoPrint Bed temperature"
     assert state.attributes.get("unit_of_measurement") == UnitOfTemperature.CELSIUS
     assert state.attributes.get("min") == 0
     assert state.attributes.get("max") == 300
     assert state.attributes.get("step") == 1
-    entry = entity_registry.async_get("number.octoprint_set_bed_temp")
-    assert entry.unique_id == "set-bed-temp-uuid"
+    entry = entity_registry.async_get("number.octoprint_bed_temperature")
+    assert entry.unique_id == "uuid_bed_temperature"
 
 
 async def test_numbers_no_target_temp(
@@ -75,19 +75,19 @@ async def test_numbers_no_target_temp(
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 0))
     await init_integration(hass, "number", printer=printer)
 
-    state = hass.states.get("number.octoprint_set_tool0_temp")
+    state = hass.states.get("number.octoprint_extruder_temperature")
     assert state is not None
     assert state.state == STATE_UNKNOWN
-    assert state.name == "OctoPrint set tool0 temp"
-    entry = entity_registry.async_get("number.octoprint_set_tool0_temp")
-    assert entry.unique_id == "set-tool0-temp-uuid"
+    assert state.name == "OctoPrint Extruder temperature"
+    entry = entity_registry.async_get("number.octoprint_extruder_temperature")
+    assert entry.unique_id == "uuid_tool0_temperature"
 
-    state = hass.states.get("number.octoprint_set_bed_temp")
+    state = hass.states.get("number.octoprint_bed_temperature")
     assert state is not None
     assert state.state == STATE_UNKNOWN
-    assert state.name == "OctoPrint set bed temp"
-    entry = entity_registry.async_get("number.octoprint_set_bed_temp")
-    assert entry.unique_id == "set-bed-temp-uuid"
+    assert state.name == "OctoPrint Bed temperature"
+    entry = entity_registry.async_get("number.octoprint_bed_temperature")
+    assert entry.unique_id == "uuid_bed_temperature"
 
 
 async def test_set_tool_temp(
@@ -110,13 +110,13 @@ async def test_set_tool_temp(
         "pyoctoprintapi.OctoprintClient.set_tool_temperature"
     ) as mock_set_tool_temp:
         entity_component = hass.data[number.DOMAIN]
-        entity = entity_component.get_entity("number.octoprint_set_tool0_temp")
+        entity = entity_component.get_entity("number.octoprint_extruder_temperature")
         assert entity is not None
 
-        await entity.async_set_native_value(200.0)
+        await entity.async_set_native_value(200.4)
 
         assert len(mock_set_tool_temp.mock_calls) == 1
-        # Verify that we pass int to the API
+        # Verify that we pass integer, expected by the pyoctoprintapi
         mock_set_tool_temp.assert_called_with("tool0", 200)
 
 
@@ -140,13 +140,13 @@ async def test_set_bed_temp(
         "pyoctoprintapi.OctoprintClient.set_bed_temperature"
     ) as mock_set_bed_temp:
         entity_component = hass.data[number.DOMAIN]
-        entity = entity_component.get_entity("number.octoprint_set_bed_temp")
+        entity = entity_component.get_entity("number.octoprint_bed_temperature")
         assert entity is not None
 
-        await entity.async_set_native_value(80.0)
+        await entity.async_set_native_value(80.6)
 
         assert len(mock_set_bed_temp.mock_calls) == 1
-        # Verify that we pass int to the API
+        # Verify that we pass integer, expected by the pyoctoprintapi, and that it's rounded down
         mock_set_bed_temp.assert_called_with(80)
 
 
@@ -161,10 +161,10 @@ async def test_numbers_printer_disconnected(
     await init_integration(hass, "number", printer=None, job=job)
 
     # When printer is disconnected, no number entities should be created
-    state = hass.states.get("number.octoprint_set_tool0_temp")
+    state = hass.states.get("number.octoprint_tool0_temperature")
     assert state is None
 
-    state = hass.states.get("number.octoprint_set_bed_temp")
+    state = hass.states.get("number.octoprint_bed_temperature")
     assert state is None
 
 
