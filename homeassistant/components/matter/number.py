@@ -80,9 +80,7 @@ class MatterNumber(MatterEntity, NumberEntity):
         sendvalue = int(value)
         if value_convert := self.entity_description.ha_to_device:
             sendvalue = value_convert(value)
-        await self.write_attribute(
-            value=sendvalue,
-        )
+        await self.write_attribute(value=sendvalue)
 
     @callback
     def _update_from_device(self) -> None:
@@ -178,6 +176,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnLevel,),
+        not_device_type=(device_types.Speaker,),
         # allow None value to account for 'default' value
         allow_none_value=True,
     ),
@@ -435,6 +434,37 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterNumber,
         required_attributes=(
             custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOn,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="DoorLockWrongCodeEntryLimit",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="wrong_code_entry_limit",
+            native_max_value=255,
+            native_min_value=1,
+            native_step=1,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.DoorLock.Attributes.WrongCodeEntryLimit,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="DoorLockUserCodeTemporaryDisableTime",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="user_code_temporary_disable_time",
+            native_max_value=255,
+            native_min_value=1,
+            native_step=1,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.DoorLock.Attributes.UserCodeTemporaryDisableTime,
         ),
     ),
 ]

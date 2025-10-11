@@ -152,6 +152,7 @@ PUMP_CONTROL_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: None,
 }
 
+HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
 
 
@@ -308,7 +309,7 @@ DISCOVERY_SCHEMAS = [
             key="TemperatureSensor",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
-            device_to_ha=lambda x: x / 100,
+            device_to_ha=lambda x: x / TEMPERATURE_SCALING_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
@@ -344,13 +345,14 @@ DISCOVERY_SCHEMAS = [
             key="HumiditySensor",
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.HUMIDITY,
-            device_to_ha=lambda x: x / 100,
+            device_to_ha=lambda x: x / HUMIDITY_SCALING_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
         required_attributes=(
             clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue,
         ),
+        allow_multi=True,  # also used for climate entity
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1135,7 +1137,7 @@ DISCOVERY_SCHEMAS = [
             key="ThermostatLocalTemperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
-            device_to_ha=lambda x: x / 100,
+            device_to_ha=lambda x: x / TEMPERATURE_SCALING_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
