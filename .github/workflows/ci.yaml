@@ -37,7 +37,7 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 8
+  CACHE_VERSION: 9
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
   HA_SHORT_VERSION: "2025.11"
@@ -525,7 +525,7 @@ jobs:
           . venv/bin/activate
           python --version
           pip install "$(grep '^uv' < requirements.txt)"
-          uv pip install -U "pip>=21.3.1" setuptools wheel
+          uv pip install -U "pip>=25.2"
           uv pip install -r requirements.txt
           python -m script.gen_requirements_all ci
           uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
