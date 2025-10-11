@@ -79,10 +79,7 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
         super().__init__(coordinator=coordinator)
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_preset"
-        sorted_values = sorted(
-            coordinator.data.presets.values(), key=lambda preset: preset.name
-        )
-        self._attr_options = [preset.name for preset in sorted_values]
+        self._set_options()
 
     @property
     def available(self) -> bool:
@@ -105,6 +102,18 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
         """Set WLED segment to the selected preset."""
         await self.coordinator.wled.preset(preset=option)
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._set_options()
+        self._async_write_ha_state()
+
+    def _set_options(self) -> None:
+        sorted_values = sorted(
+            self.coordinator.data.presets.values(), key=lambda preset: preset.name
+        )
+        self._attr_options = [preset.name for preset in sorted_values]
+
 
 class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
     """Define a WLED Playlist select."""
@@ -116,10 +125,7 @@ class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
         super().__init__(coordinator=coordinator)
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_playlist"
-        sorted_values = sorted(
-            coordinator.data.playlists.values(), key=lambda playlist: playlist.name
-        )
-        self._attr_options = [playlist.name for playlist in sorted_values]
+        self._set_options()
 
     @property
     def available(self) -> bool:
@@ -142,6 +148,18 @@ class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
         """Set WLED segment to the selected playlist."""
         await self.coordinator.wled.playlist(playlist=option)
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._set_options()
+        self._async_write_ha_state()
+
+    def _set_options(self) -> None:
+        sorted_values = sorted(
+            self.coordinator.data.playlists.values(), key=lambda playlist: playlist.name
+        )
+        self._attr_options = [playlist.name for playlist in sorted_values]
+
 
 class WLEDPaletteSelect(WLEDEntity, SelectEntity):
     """Defines a WLED Palette select."""
@@ -161,11 +179,8 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
             self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_palette_{segment}"
-        sorted_values = sorted(
-            coordinator.data.palettes.values(), key=lambda palette: palette.name
-        )
-        self._attr_options = [palette.name for palette in sorted_values]
         self._segment = segment
+        self._set_options()
 
     @property
     def available(self) -> bool:
@@ -180,6 +195,8 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected color palette."""
+        if not self.coordinator.data.palettes:
+            return None
         return self.coordinator.data.palettes[
             int(self.coordinator.data.state.segments[self._segment].palette_id)
         ].name
@@ -188,6 +205,18 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set WLED segment to the selected color palette."""
         await self.coordinator.wled.segment(segment_id=self._segment, palette=option)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._set_options()
+        self._async_write_ha_state()
+
+    def _set_options(self) -> None:
+        sorted_values = sorted(
+            self.coordinator.data.palettes.values(), key=lambda palette: palette.name
+        )
+        self._attr_options = [palette.name for palette in sorted_values]
 
 
 @callback
