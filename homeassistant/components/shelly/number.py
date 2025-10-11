@@ -24,7 +24,16 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import CONF_SLEEP_PERIOD, DOMAIN, LOGGER, VIRTUAL_NUMBER_MODE_MAP
+from .const import (
+    CONF_SLEEP_PERIOD,
+    DOMAIN,
+    LOGGER,
+    MODEL_FRANKEVER_WATER_VALVE,
+    MODEL_LINKEDGO_ST802_THERMOSTAT,
+    MODEL_LINKEDGO_ST1820_THERMOSTAT,
+    MODEL_TOP_EV_CHARGER_EVE01,
+    VIRTUAL_NUMBER_MODE_MAP,
+)
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -63,6 +72,7 @@ class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
     min_fn: Callable[[dict], float] | None = None
     step_fn: Callable[[dict], float] | None = None
     mode_fn: Callable[[dict], NumberMode] | None = None
+    slot: str | None = None
     method: str
 
 
@@ -110,6 +120,22 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
             assert method is not None
 
         await method(self._id, value)
+
+
+class RpcCuryIntensityNumber(RpcNumber):
+    """Represent a RPC Cury Intensity entity."""
+
+    @rpc_call
+    async def async_set_native_value(self, value: float) -> None:
+        """Change the value."""
+        method = getattr(self.coordinator.device, self.entity_description.method)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        await method(
+            self._id, slot=self.entity_description.slot, intensity=round(value)
+        )
 
 
 class RpcBluTrvNumber(RpcNumber):
@@ -183,7 +209,7 @@ RPC_NUMBERS: Final = {
         method="blu_trv_set_external_temperature",
         entity_class=RpcBluTrvExtTempNumber,
     ),
-    "number": RpcNumberDescription(
+    "number_generic": RpcNumberDescription(
         key="number",
         sub_key="value",
         removal_condition=lambda config, _status, key: not is_view_for_platform(
@@ -197,6 +223,58 @@ RPC_NUMBERS: Final = {
         step_fn=lambda config: config["meta"]["ui"].get("step"),
         unit=get_virtual_component_unit,
         method="number_set",
+        role="generic",
+    ),
+    "number_current_limit": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: NumberMode.SLIDER,
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
+        unit=get_virtual_component_unit,
+        method="number_set",
+        role="current_limit",
+        models={MODEL_TOP_EV_CHARGER_EVE01},
+    ),
+    "number_position": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: NumberMode.SLIDER,
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
+        unit=get_virtual_component_unit,
+        method="number_set",
+        role="position",
+        models={MODEL_FRANKEVER_WATER_VALVE},
+    ),
+    "number_target_humidity": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: NumberMode.SLIDER,
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
+        unit=get_virtual_component_unit,
+        method="number_set",
+        role="target_humidity",
+        models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
+    ),
+    "number_target_temperature": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: NumberMode.SLIDER,
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
+        unit=get_virtual_component_unit,
+        method="number_set",
+        role="target_temperature",
+        models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
     "valve_position": RpcNumberDescription(
         key="blutrv",
@@ -212,6 +290,38 @@ RPC_NUMBERS: Final = {
         removal_condition=lambda config, _status, key: config[key].get("enable", True)
         is True,
         entity_class=RpcBluTrvNumber,
+    ),
+    "left_slot_intensity": RpcNumberDescription(
+        key="cury",
+        sub_key="slots",
+        name="Left slot intensity",
+        value=lambda status, _: status["left"]["intensity"],
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        native_unit_of_measurement=PERCENTAGE,
+        method="cury_set",
+        slot="left",
+        available=lambda status: (left := status["left"]) is not None
+        and left.get("vial", {}).get("level", -1) != -1,
+        entity_class=RpcCuryIntensityNumber,
+    ),
+    "right_slot_intensity": RpcNumberDescription(
+        key="cury",
+        sub_key="slots",
+        name="Right slot intensity",
+        value=lambda status, _: status["right"]["intensity"],
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        native_unit_of_measurement=PERCENTAGE,
+        method="cury_set",
+        slot="right",
+        available=lambda status: (right := status["right"]) is not None
+        and right.get("vial", {}).get("level", -1) != -1,
+        entity_class=RpcCuryIntensityNumber,
     ),
 }
 
