@@ -71,7 +71,7 @@
         "name": "Mounting mode"
       },
       "child_lock_mode": {
-        "name": "Child lock mode"
+        "name": "Child safety lock"
       }
     },
     "button": {
