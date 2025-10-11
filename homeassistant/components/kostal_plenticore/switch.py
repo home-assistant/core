@@ -58,19 +58,6 @@ SWITCH_SETTINGS_DATA = [
     ),
 ]
 
-EXCESS_AC_ENERGY_SETTINGS_DATA = PlenticoreSwitchEntityDescription(
-    module_id="devices:local",
-    key="EnergyMgmt:AcStorage",
-    name="Store Excess Energy from Local Generation",
-    is_on="1",
-    on_value="1",
-    on_label="On",
-    off_value="0",
-    off_label="Off",
-    installer_required=True,
-    entity_registry_enabled_default=False,
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -116,51 +103,6 @@ async def async_setup_entry(
                 plenticore.device_info,
             )
         )
-
-    # add excess AC energy switch if supported
-    excess_energy_settings = await plenticore.client.get_setting_values(
-        "devices:local",
-        (
-            "EnergySensor:SensorPosition",
-            "Battery:Type",
-            "EnergySensor:InstalledSensor",
-        ),
-    )
-
-    try:
-        sensor_position = int(
-            excess_energy_settings["devices:local"]["EnergySensor:SensorPosition"]
-        )
-        battery_type = int(excess_energy_settings["devices:local"]["Battery:Type"])
-        installed_sensor = int(
-            excess_energy_settings["devices:local"]["EnergySensor:InstalledSensor"]
-        )
-    except ValueError:
-        _LOGGER.warning(
-            "Failed to retrieve excess energy settings: %s", excess_energy_settings
-        )
-    else:
-        if sensor_position == 2 and battery_type > 0 and installed_sensor > 0:
-            # this settings is only available if
-            # - energy sensor is installed
-            # - energy sensor is positioned at the grid connection
-            # - a battery is installed
-            entities.append(
-                PlenticoreDataSwitch(
-                    settings_data_update_coordinator,
-                    EXCESS_AC_ENERGY_SETTINGS_DATA,
-                    entry.entry_id,
-                    entry.title,
-                    plenticore.device_info,
-                )
-            )
-        else:
-            _LOGGER.debug(
-                "Skipping excess energy switch, not supported (Sensor position: %d, Battery type: %d, Installed sensor: %d)",
-                sensor_position,
-                battery_type,
-                installed_sensor,
-            )
 
     # add shadow management switches for strings which support it
     string_count_setting = await plenticore.client.get_setting_values(

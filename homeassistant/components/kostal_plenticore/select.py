@@ -25,20 +25,6 @@ class PlenticoreSelectEntityDescription(SelectEntityDescription):
     module_id: str
 
 
-SELECT_SETTINGS_DATA = [
-    PlenticoreSelectEntityDescription(
-        module_id="devices:local",
-        key="battery_charge",
-        name="Battery Charging / Usage mode",
-        options=[
-            "None",
-            "Battery:SmartBatteryControl:Enable",
-            "Battery:TimeControl:Enable",
-        ],
-    )
-]
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PlenticoreConfigEntry,
@@ -53,27 +39,78 @@ async def async_setup_entry(
     )
 
     entities = []
-    for description in SELECT_SETTINGS_DATA:
-        assert description.options is not None
-        if description.module_id not in available_settings_data:
-            continue
-        needed_data_ids = {
-            data_id for data_id in description.options if data_id != "None"
-        }
-        available_data_ids = {
-            setting.id for setting in available_settings_data[description.module_id]
-        }
-        if not needed_data_ids <= available_data_ids:
-            continue
-        entities.append(
-            PlenticoreDataSelect(
-                select_data_update_coordinator,
-                description,
-                entry_id=entry.entry_id,
-                platform_name=entry.title,
-                device_info=plenticore.device_info,
-            )
+
+    # Add option for battery mode selection
+    if (
+        device_local_data_ids := available_settings_data.get("devices:local")
+    ) is not None:
+        options = ["None"]
+
+        if any(
+            setting.id == "Battery:SmartBatteryControl:Enable"
+            for setting in device_local_data_ids
+        ):
+            options.append("Battery:SmartBatteryControl:Enable")
+
+        if any(
+            setting.id == "Battery:TimeControl:Enable"
+            for setting in device_local_data_ids
+        ):
+            options.append("Battery:TimeControl:Enable")
+
+        battery_mode_settings = await plenticore.client.get_setting_values(
+            "devices:local",
+            (
+                "Battery:Type",
+                "EnergySensor:SensorPosition",
+                "EnergySensor:InstalledSensor",
+            ),
         )
+
+        try:
+            sensor_position = int(
+                battery_mode_settings["devices:local"]["EnergySensor:SensorPosition"]
+            )
+            battery_type = int(battery_mode_settings["devices:local"]["Battery:Type"])
+            installed_sensor = int(
+                battery_mode_settings["devices:local"]["EnergySensor:InstalledSensor"]
+            )
+        except ValueError:
+            _LOGGER.warning(
+                "Failed to retrieve battery mode settings: %s", battery_mode_settings
+            )
+        else:
+            if sensor_position == 2 and battery_type > 0 and installed_sensor > 0:
+                # This option is only available if
+                # - energy sensor is installed
+                # - energy sensor is positioned at the grid connection
+                # - a battery is installed
+                # It is added to this selection because it is mutually exclusive to the other modes
+                # and only one of these modes can be active at a time.
+                options.append("EnergyMgmt:AcStorage")
+            else:
+                _LOGGER.debug(
+                    "Skipping excess energy switch, not supported (Sensor position: %d, Battery type: %d, Installed sensor: %d)",
+                    sensor_position,
+                    battery_type,
+                    installed_sensor,
+                )
+
+        if len(options) > 1:
+            entities.append(
+                PlenticoreDataSelect(
+                    select_data_update_coordinator,
+                    PlenticoreSelectEntityDescription(
+                        module_id="devices:local",
+                        key="battery_charge",
+                        name="Battery Charging / Usage mode",
+                        options=options,
+                    ),
+                    entry_id=entry.entry_id,
+                    platform_name=entry.title,
+                    device_info=plenticore.device_info,
+                )
+            )
 
     async_add_entities(entities)
 
