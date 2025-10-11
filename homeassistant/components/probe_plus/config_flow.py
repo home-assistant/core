@@ -73,7 +73,7 @@ class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=discovery.title,
                 data={
                     CONF_ADDRESS: discovery.discovery_info.address,
-                    CONF_MODEL: discovery.discovery_info.name
+                    CONF_MODEL: discovery.discovery_info.name,
                 },
             )
         self._set_confirm_only()
@@ -96,10 +96,7 @@ class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery = self._discovered_devices[address]
             return self.async_create_entry(
                 title=discovery.title,
-                data={
-                    **user_input,
-                    CONF_MODEL: discovery.discovery_info.name
-                },
+                data={**user_input, CONF_MODEL: discovery.discovery_info.name},
             )
 
         current_addresses = self._async_current_ids()
