@@ -922,7 +922,7 @@ async def test_coordinator_updates(
         supervisor_client.refresh_updates.assert_not_called()
 
     async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
-    await hass.async_block_till_done(True)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Scheduled refresh, no update refresh call
     supervisor_client.refresh_updates.assert_not_called()
@@ -944,7 +944,7 @@ async def test_coordinator_updates(
     async_fire_time_changed(
         hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
-    await hass.async_block_till_done(True)
+    await hass.async_block_till_done(wait_background_tasks=True)
     supervisor_client.refresh_updates.assert_called_once()
 
     supervisor_client.refresh_updates.reset_mock()

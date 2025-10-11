@@ -125,7 +125,7 @@ async def test_sensors_attributes_pro(hass: HomeAssistant, canary) -> None:
 
     future = utcnow() + timedelta(seconds=30)
     async_fire_time_changed(hass, future)
-    await hass.async_block_till_done(True)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state2 = hass.states.get(entity_id)
     assert state2
@@ -140,7 +140,7 @@ async def test_sensors_attributes_pro(hass: HomeAssistant, canary) -> None:
 
     future += timedelta(seconds=30)
     async_fire_time_changed(hass, future)
-    await hass.async_block_till_done(True)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state3 = hass.states.get(entity_id)
     assert state3
