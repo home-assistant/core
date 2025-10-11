@@ -151,7 +151,7 @@ async def test_form_reauth_unique_id_mismatch(
     mock_added_config_entry: MockConfigEntry,
     auth_client: MagicMock,
 ) -> None:
-    """Test we handle re-authentication with two-factor."""
+    """Test we handle a unique ID mismatch when re-authenticating."""
     mock_added_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
@@ -371,8 +371,7 @@ async def test_form_reauth_errors(
     assert result["errors"] == {"base": error_string}
     assert result["step_id"] == "reauth_confirm"
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
+    # Make sure the config flow tests finish with FlowResultType.ABORT so
     # we can show the config flow is able to recover from an error.
     auth_client.login.side_effect = None
     result = await hass.config_entries.flow.async_configure(
