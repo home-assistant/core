@@ -83,6 +83,7 @@ def mock_plenticore() -> Generator[Plenticore]:
 
         plenticore.client.get_process_data = AsyncMock()
         plenticore.client.get_settings = AsyncMock()
+        plenticore.client.get_setting_values = AsyncMock()
 
         yield plenticore
 

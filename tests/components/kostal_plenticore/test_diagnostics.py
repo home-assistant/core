@@ -38,6 +38,19 @@ async def test_entry_diagnostics(
         ]
     }
 
+    mock_plenticore.client.get_setting_values.side_effect = [
+        {"devices:local": {"Properties:StringCnt": "2"}},
+        {
+            "devices:local": {
+                "EnergySensor:SensorPosition": "2",
+                "EnergySensor:InstalledSensor": "1",
+                "Battery:Type": "1",
+                "Properties:String0Features": "1",
+                "Properties:String1Features": "1",
+            }
+        },
+    ]
+
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, init_integration
     ) == {
@@ -68,6 +81,16 @@ async def test_entry_diagnostics(
                     "min='5' max='100' default=None access='readwrite' unit='%' id='Battery:MinSoc' type='byte'"
                 ]
             },
+        },
+        "configuration": {
+            "devices:local": {
+                "EnergySensor:SensorPosition": "2",
+                "EnergySensor:InstalledSensor": "1",
+                "Battery:Type": "1",
+                "Properties:String0Features": "1",
+                "Properties:String1Features": "1",
+            },
+            "string_count": 2,
         },
         "device": {
             "configuration_url": "http://192.168.1.2",
