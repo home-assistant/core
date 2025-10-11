@@ -139,6 +139,8 @@ def translation_value_validator(value: Any) -> str:
         raise vol.Invalid("the string should not contain combined translations")
     if string_value != string_value.strip():
         raise vol.Invalid("the string should not contain leading or trailing spaces")
+    if "://" in string_value:
+        raise vol.Invalid("the string should not contain URLs")
     return string_value
 
 
