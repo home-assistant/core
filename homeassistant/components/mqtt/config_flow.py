@@ -109,6 +109,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     EntityCategory,
+    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, async_get_hass, callback
@@ -417,7 +418,6 @@ from .const import (
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
     VALUES_ON_COMMAND_TYPE,
-    Platform,
 )
 from .models import MqttAvailabilityData, MqttDeviceData, MqttSubentryData
 from .util import (
