@@ -60,7 +60,8 @@ type HardwareFirmwareInfoModule = (
 )
 
 
-async def async_get_hardware_domain_for_usb_device(
+@hass_callback
+def async_get_hardware_domain_for_usb_device(
     hass: HomeAssistant, usb_device: USBDevice
 ) -> str | None:
     """Identify which hardware domain should handle a USB device."""
@@ -152,7 +153,7 @@ class HardwareInfoDispatcher:
             _LOGGER.debug("Cannot find USB for path %s", firmware_info.device)
             return
 
-        hardware_domain = await async_get_hardware_domain_for_usb_device(
+        hardware_domain = async_get_hardware_domain_for_usb_device(
             self.hass, usb_device
         )
 
