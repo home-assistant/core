@@ -6555,7 +6555,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[solar_power][sensor.mock_solar_inverter_active_current-entry]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6598,7 +6598,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.mock_solar_inverter_active_current-state]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_active_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -6614,7 +6614,7 @@
     'state': '-3.62',
   })
 # ---
-# name: test_sensors[solar_power][sensor.mock_solar_inverter_energy_exported-entry]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_energy_exported-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6657,7 +6657,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.mock_solar_inverter_energy_exported-state]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_energy_exported-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -6673,7 +6673,7 @@
     'state': '42.279',
   })
 # ---
-# name: test_sensors[solar_power][sensor.mock_solar_inverter_power-entry]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6716,7 +6716,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.mock_solar_inverter_power-state]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -6732,7 +6732,7 @@
     'state': '-850.0',
   })
 # ---
-# name: test_sensors[solar_power][sensor.mock_solar_inverter_voltage-entry]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6775,7 +6775,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.mock_solar_inverter_voltage-state]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
