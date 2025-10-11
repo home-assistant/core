@@ -70,6 +70,14 @@
       "speak_volume": {
         "name": "Speak volume"
       }
+    },
+    "event": {
+      "motion_detect_event": {
+        "name": "Motion detect event"
+      },
+      "sound_detect_event": {
+        "name": "Sound detect event"
+      }
     }
   },
   "services": {

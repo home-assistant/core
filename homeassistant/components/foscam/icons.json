@@ -47,6 +47,14 @@
       "speak_volume": {
         "default": "mdi:account-voice"
       }
+    },
+    "event": {
+      "motion_detect_event": {
+        "default": "mdi:eye-circle"
+      },
+      "sound_detect_event": {
+        "default": "mdi:volume-vibrate"
+      }
     }
   }
 }
