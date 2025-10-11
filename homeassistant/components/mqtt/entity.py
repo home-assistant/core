@@ -69,10 +69,6 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     AVAILABILITY_ALL,
     AVAILABILITY_ANY,
-    CONF_AVAILABILITY,
-    CONF_AVAILABILITY_MODE,
-    CONF_AVAILABILITY_TEMPLATE,
-    CONF_AVAILABILITY_TOPIC,
     CONF_CONFIGURATION_URL,
     CONF_CONNECTIONS,
     CONF_DEFAULT_ENTITY_ID,
@@ -99,6 +95,7 @@ from .const import (
     DEFAULT_ENCODING,
     DOMAIN,
     MQTT_CONNECTION_STATE,
+    MQTTConf,
 )
 from .debug_info import log_message
 from .discovery import (
@@ -600,25 +597,27 @@ class MqttAvailabilityMixin(Entity):
     def _availability_setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup."""
         self._avail_topics: dict[str, dict[str, Any]] = {}
-        if CONF_AVAILABILITY_TOPIC in config:
-            self._avail_topics[config[CONF_AVAILABILITY_TOPIC]] = {
+        if MQTTConf.AVAILABILITY_TOPIC in config:
+            self._avail_topics[config[MQTTConf.AVAILABILITY_TOPIC]] = {
                 CONF_PAYLOAD_AVAILABLE: config[CONF_PAYLOAD_AVAILABLE],
                 CONF_PAYLOAD_NOT_AVAILABLE: config[CONF_PAYLOAD_NOT_AVAILABLE],
-                CONF_AVAILABILITY_TEMPLATE: config.get(CONF_AVAILABILITY_TEMPLATE),
+                MQTTConf.AVAILABILITY_TEMPLATE: config.get(
+                    MQTTConf.AVAILABILITY_TEMPLATE
+                ),
             }
 
-        if CONF_AVAILABILITY in config:
+        if MQTTConf.AVAILABILITY in config:
             avail: dict[str, Any]
-            for avail in config[CONF_AVAILABILITY]:
+            for avail in config[MQTTConf.AVAILABILITY]:
                 self._avail_topics[avail[CONF_TOPIC]] = {
                     CONF_PAYLOAD_AVAILABLE: avail[CONF_PAYLOAD_AVAILABLE],
                     CONF_PAYLOAD_NOT_AVAILABLE: avail[CONF_PAYLOAD_NOT_AVAILABLE],
-                    CONF_AVAILABILITY_TEMPLATE: avail.get(CONF_VALUE_TEMPLATE),
+                    MQTTConf.AVAILABILITY_TEMPLATE: avail.get(CONF_VALUE_TEMPLATE),
                 }
 
         for avail_topic_conf in self._avail_topics.values():
-            if template := avail_topic_conf[CONF_AVAILABILITY_TEMPLATE]:
-                avail_topic_conf[CONF_AVAILABILITY_TEMPLATE] = MqttValueTemplate(
+            if template := avail_topic_conf[MQTTConf.AVAILABILITY_TEMPLATE]:
+                avail_topic_conf[MQTTConf.AVAILABILITY_TEMPLATE] = MqttValueTemplate(
                     template, entity=self
                 ).async_render_with_possible_json_value
 
@@ -656,7 +655,7 @@ class MqttAvailabilityMixin(Entity):
         """Handle a new received MQTT availability message."""
         topic = msg.topic
         avail_topic = self._avail_topics[topic]
-        template = avail_topic[CONF_AVAILABILITY_TEMPLATE]
+        template = avail_topic[MQTTConf.AVAILABILITY_TEMPLATE]
         payload = template(msg.payload) if template else msg.payload
 
         if payload == avail_topic[CONF_PAYLOAD_AVAILABLE]:
@@ -692,9 +691,9 @@ class MqttAvailabilityMixin(Entity):
             return False
         if not self._avail_topics:
             return True
-        if self._avail_config[CONF_AVAILABILITY_MODE] == AVAILABILITY_ALL:
+        if self._avail_config[MQTTConf.AVAILABILITY_MODE] == AVAILABILITY_ALL:
             return all(self._available.values())
-        if self._avail_config[CONF_AVAILABILITY_MODE] == AVAILABILITY_ANY:
+        if self._avail_config[MQTTConf.AVAILABILITY_MODE] == AVAILABILITY_ANY:
             return any(self._available.values())
         return self._available_latest
 

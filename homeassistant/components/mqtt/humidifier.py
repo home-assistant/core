@@ -39,8 +39,6 @@ from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from . import subscription
 from .config import MQTT_RW_SCHEMA
 from .const import (
-    CONF_ACTION_TEMPLATE,
-    CONF_ACTION_TOPIC,
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_CURRENT_HUMIDITY_TEMPLATE,
@@ -48,6 +46,7 @@ from .const import (
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_NONE,
+    MQTTConf,
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
@@ -117,9 +116,9 @@ def valid_humidity_range_configuration(config: ConfigType) -> ConfigType:
 
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_ACTION_TEMPLATE): cv.template,
-        vol.Optional(CONF_ACTION_TOPIC): valid_subscribe_topic,
-        # CONF_AVAIALABLE_MODES_LIST and CONF_MODE_COMMAND_TOPIC must be used together
+        vol.Optional(MQTTConf.ACTION_TEMPLATE.value): cv.template,
+        vol.Optional(MQTTConf.ACTION_TOPIC.value): valid_subscribe_topic,
+        # MQTTConf.AVAIALABLE_MODES_LIST and CONF_MODE_COMMAND_TOPIC must be used together
         vol.Inclusive(
             CONF_AVAILABLE_MODES_LIST, "available_modes", default=[]
         ): cv.ensure_list,
@@ -169,7 +168,7 @@ DISCOVERY_SCHEMA = vol.All(
 )
 
 TOPICS = (
-    CONF_ACTION_TOPIC,
+    MQTTConf.ACTION_TOPIC,
     CONF_STATE_TOPIC,
     CONF_COMMAND_TOPIC,
     CONF_CURRENT_HUMIDITY_TOPIC,
@@ -259,7 +258,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         }
 
         value_templates: dict[str, Template | None] = {
-            ATTR_ACTION: config.get(CONF_ACTION_TEMPLATE),
+            ATTR_ACTION: config.get(MQTTConf.ACTION_TEMPLATE),
             ATTR_CURRENT_HUMIDITY: config.get(CONF_CURRENT_HUMIDITY_TEMPLATE),
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
             ATTR_HUMIDITY: config.get(CONF_TARGET_HUMIDITY_STATE_TEMPLATE),
@@ -398,7 +397,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         """(Re)Subscribe to topics."""
         self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
         self.add_subscription(
-            CONF_ACTION_TOPIC, self._action_received, {"_attr_action"}
+            MQTTConf.ACTION_TOPIC, self._action_received, {"_attr_action"}
         )
         self.add_subscription(
             CONF_CURRENT_HUMIDITY_TOPIC,

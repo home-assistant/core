@@ -24,10 +24,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     AVAILABILITY_LATEST,
     AVAILABILITY_MODES,
-    CONF_AVAILABILITY,
-    CONF_AVAILABILITY_MODE,
-    CONF_AVAILABILITY_TEMPLATE,
-    CONF_AVAILABILITY_TOPIC,
     CONF_COMMAND_TOPIC,
     CONF_COMPONENTS,
     CONF_CONFIGURATION_URL,
@@ -58,15 +54,16 @@ from .const import (
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     ENTITY_PLATFORMS,
     SUPPORTED_COMPONENTS,
+    MQTTConf,
 )
 from .util import valid_publish_topic, valid_qos_schema, valid_subscribe_topic
 
 # Device discovery options that are also available at entity component level
 SHARED_OPTIONS = [
-    CONF_AVAILABILITY,
-    CONF_AVAILABILITY_MODE,
-    CONF_AVAILABILITY_TEMPLATE,
-    CONF_AVAILABILITY_TOPIC,
+    MQTTConf.AVAILABILITY,
+    MQTTConf.AVAILABILITY_MODE,
+    MQTTConf.AVAILABILITY_TEMPLATE,
+    MQTTConf.AVAILABILITY_TOPIC,
     CONF_COMMAND_TOPIC,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
@@ -85,8 +82,10 @@ MQTT_ORIGIN_INFO_SCHEMA = vol.All(
 
 _MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
-        vol.Exclusive(CONF_AVAILABILITY_TOPIC, "availability"): valid_subscribe_topic,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+        vol.Exclusive(
+            MQTTConf.AVAILABILITY_TOPIC.value, "availability"
+        ): valid_subscribe_topic,
+        vol.Optional(MQTTConf.AVAILABILITY_TEMPLATE.value): cv.template,
         vol.Optional(
             CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
         ): cv.string,
@@ -98,10 +97,10 @@ _MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
 
 _MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_AVAILABILITY_MODE, default=AVAILABILITY_LATEST): vol.All(
-            cv.string, vol.In(AVAILABILITY_MODES)
-        ),
-        vol.Exclusive(CONF_AVAILABILITY, "availability"): vol.All(
+        vol.Optional(
+            MQTTConf.AVAILABILITY_MODE.value, default=AVAILABILITY_LATEST
+        ): vol.All(cv.string, vol.In(AVAILABILITY_MODES)),
+        vol.Exclusive(MQTTConf.AVAILABILITY.value, "availability"): vol.All(
             cv.ensure_list,
             [
                 {

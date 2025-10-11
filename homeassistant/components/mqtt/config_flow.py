@@ -146,10 +146,6 @@ from .const import (
     ATTR_QOS,
     ATTR_RETAIN,
     ATTR_TOPIC,
-    CONF_ACTION_TEMPLATE,
-    CONF_ACTION_TOPIC,
-    CONF_AVAILABILITY_TEMPLATE,
-    CONF_AVAILABILITY_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BLUE_TEMPLATE,
     CONF_BRIGHTNESS_COMMAND_TEMPLATE,
@@ -414,6 +410,7 @@ from .const import (
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
     VALUES_ON_COMMAND_TYPE,
+    MQTTConf,
     Platform,
 )
 from .models import MqttAvailabilityData, MqttDeviceData, MqttSubentryData
@@ -553,8 +550,8 @@ ENTITY_CATEGORY_SELECTOR = SelectSelector(
 )
 SUBENTRY_AVAILABILITY_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_AVAILABILITY_TOPIC): TEXT_SELECTOR,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): TEMPLATE_SELECTOR,
+        vol.Optional(MQTTConf.AVAILABILITY_TOPIC.value): TEXT_SELECTOR,
+        vol.Optional(MQTTConf.AVAILABILITY_TEMPLATE.value): TEMPLATE_SELECTOR,
         vol.Optional(
             CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
         ): TEXT_SELECTOR,
@@ -1241,7 +1238,7 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             selector=BOOLEAN_SELECTOR,
             required=False,
             exclude_from_config=True,
-            default=lambda config: bool(config.get(CONF_ACTION_TOPIC)),
+            default=lambda config: bool(config.get(MQTTConf.ACTION_TOPIC.value)),
         ),
         "climate_feature_target_temperature": PlatformField(
             selector=TARGET_TEMPERATURE_FEATURE_SELECTOR,
@@ -1588,7 +1585,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             selector=BOOLEAN_SELECTOR, required=False, validator=validate(bool)
         ),
         # current action settings
-        CONF_ACTION_TOPIC: PlatformField(
+        MQTTConf.ACTION_TOPIC.value: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
             validator=valid_subscribe_topic,
@@ -1596,7 +1593,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="climate_action_settings",
             conditions=({"climate_feature_action": True},),
         ),
-        CONF_ACTION_TEMPLATE: PlatformField(
+        MQTTConf.ACTION_TEMPLATE.value: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
             validator=validate(cv.template),

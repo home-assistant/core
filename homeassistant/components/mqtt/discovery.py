@@ -38,12 +38,12 @@ from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
-    CONF_AVAILABILITY,
     CONF_COMPONENTS,
     CONF_ORIGIN,
     CONF_TOPIC,
     DOMAIN,
     SUPPORTED_COMPONENTS,
+    MQTTConf,
 )
 from .models import DATA_MQTT, MqttComponentConfig, MqttOriginInfo, ReceiveMessage
 from .schemas import DEVICE_DISCOVERY_SCHEMA, MQTT_ORIGIN_INFO_SCHEMA, SHARED_OPTIONS
@@ -186,8 +186,10 @@ def _replace_all_abbreviations(
 
     _replace_abbreviations(discovery_payload, ABBREVIATIONS, ABBREVIATIONS_SET)
 
-    if CONF_AVAILABILITY in discovery_payload:
-        for availability_conf in cv.ensure_list(discovery_payload[CONF_AVAILABILITY]):
+    if MQTTConf.AVAILABILITY in discovery_payload:
+        for availability_conf in cv.ensure_list(
+            discovery_payload[MQTTConf.AVAILABILITY]
+        ):
             _replace_abbreviations(availability_conf, ABBREVIATIONS, ABBREVIATIONS_SET)
 
     if component_only:
@@ -224,8 +226,10 @@ def _replace_topic_base(discovery_payload: MQTTDiscoveryPayload) -> None:
                 discovery_payload[key] = f"{base}{value[1:]}"
             if value[-1] == TOPIC_BASE and key.endswith("topic"):
                 discovery_payload[key] = f"{value[:-1]}{base}"
-    if discovery_payload.get(CONF_AVAILABILITY):
-        for availability_conf in cv.ensure_list(discovery_payload[CONF_AVAILABILITY]):
+    if discovery_payload.get(MQTTConf.AVAILABILITY):
+        for availability_conf in cv.ensure_list(
+            discovery_payload[MQTTConf.AVAILABILITY]
+        ):
             if not isinstance(availability_conf, dict):
                 continue
             if topic := str(availability_conf.get(CONF_TOPIC)):
@@ -332,10 +336,10 @@ def _merge_common_device_options(
     """Merge common device options with the component config options.
 
     Common options are:
-        CONF_AVAILABILITY,
-        CONF_AVAILABILITY_MODE,
-        CONF_AVAILABILITY_TEMPLATE,
-        CONF_AVAILABILITY_TOPIC,
+        MQTTConf.AVAILABILITY,
+        MQTTConf.AVAILABILITY_MODE,
+        MQTTConf.AVAILABILITY_TEMPLATE,
+        MQTTConf.AVAILABILITY_TOPIC,
         CONF_COMMAND_TOPIC,
         CONF_PAYLOAD_AVAILABLE,
         CONF_PAYLOAD_NOT_AVAILABLE,

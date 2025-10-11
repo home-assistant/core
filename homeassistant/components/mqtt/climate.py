@@ -54,8 +54,6 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from . import subscription
 from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import (
-    CONF_ACTION_TEMPLATE,
-    CONF_ACTION_TOPIC,
     CONF_CURRENT_HUMIDITY_TEMPLATE,
     CONF_CURRENT_HUMIDITY_TOPIC,
     CONF_CURRENT_TEMP_TEMPLATE,
@@ -114,6 +112,7 @@ from .const import (
     DEFAULT_CLIMATE_INITIAL_TEMPERATURE,
     DEFAULT_OPTIMISTIC,
     PAYLOAD_NONE,
+    MQTTConf,
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
@@ -163,7 +162,7 @@ VALUE_TEMPLATE_KEYS = (
     CONF_FAN_MODE_STATE_TEMPLATE,
     CONF_HUMIDITY_STATE_TEMPLATE,
     CONF_MODE_STATE_TEMPLATE,
-    CONF_ACTION_TEMPLATE,
+    MQTTConf.ACTION_TEMPLATE,
     CONF_PRESET_MODE_VALUE_TEMPLATE,
     CONF_SWING_HORIZONTAL_MODE_STATE_TEMPLATE,
     CONF_SWING_MODE_STATE_TEMPLATE,
@@ -187,7 +186,7 @@ COMMAND_TEMPLATE_KEYS = {
 
 
 TOPIC_KEYS = (
-    CONF_ACTION_TOPIC,
+    MQTTConf.ACTION_TOPIC,
     CONF_CURRENT_HUMIDITY_TOPIC,
     CONF_CURRENT_TEMP_TOPIC,
     CONF_FAN_MODE_COMMAND_TOPIC,
@@ -297,8 +296,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
             vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_ACTION_TEMPLATE): cv.template,
-        vol.Optional(CONF_ACTION_TOPIC): valid_subscribe_topic,
+        vol.Optional(MQTTConf.ACTION_TEMPLATE.value): cv.template,
+        vol.Optional(MQTTConf.ACTION_TOPIC.value): valid_subscribe_topic,
         # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST
         # must be used together
         vol.Inclusive(
@@ -669,7 +668,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     @callback
     def _handle_action_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving action via MQTT."""
-        payload = self.render_template(msg, CONF_ACTION_TEMPLATE)
+        payload = self.render_template(msg, MQTTConf.ACTION_TEMPLATE)
         if not payload:
             _LOGGER.debug(
                 "Invalid %s action: %s, ignoring",
@@ -729,7 +728,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         """(Re)Subscribe to topics."""
         # add subscriptions for MqttClimate
         self.add_subscription(
-            CONF_ACTION_TOPIC,
+            MQTTConf.ACTION_TOPIC,
             self._handle_action_received,
             {"_attr_hvac_action"},
         )

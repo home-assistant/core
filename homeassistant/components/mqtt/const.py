@@ -1,5 +1,6 @@
 """Constants used by multiple MQTT modules."""
 
+from enum import StrEnum
 import logging
 
 import jinja2
@@ -26,10 +27,18 @@ AVAILABILITY_MODES = [AVAILABILITY_ALL, AVAILABILITY_ANY, AVAILABILITY_LATEST]
 CONF_PAYLOAD_AVAILABLE = "payload_available"
 CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
 
-CONF_AVAILABILITY = "availability"
-CONF_AVAILABILITY_MODE = "availability_mode"
-CONF_AVAILABILITY_TEMPLATE = "availability_template"
-CONF_AVAILABILITY_TOPIC = "availability_topic"
+
+class MQTTConf(StrEnum):
+    """MQTT specific config values."""
+
+    ACTION_TEMPLATE = "action_template"
+    ACTION_TOPIC = "action_topic"
+    AVAILABILITY = "availability"
+    AVAILABILITY_MODE = "availability_mode"
+    AVAILABILITY_TEMPLATE = "availability_template"
+    AVAILABILITY_TOPIC = "availability_topic"
+
+
 CONF_BROKER = "broker"
 CONF_BIRTH_MESSAGE = "birth_message"
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
@@ -61,8 +70,6 @@ CONF_WS_HEADERS = "ws_headers"
 CONF_WILL_MESSAGE = "will_message"
 CONF_PAYLOAD_RESET = "payload_reset"
 CONF_SUPPORTED_FEATURES = "supported_features"
-CONF_ACTION_TEMPLATE = "action_template"
-CONF_ACTION_TOPIC = "action_topic"
 CONF_BLUE_TEMPLATE = "blue_template"
 CONF_BRIGHTNESS_COMMAND_TEMPLATE = "brightness_command_template"
 CONF_BRIGHTNESS_COMMAND_TOPIC = "brightness_command_topic"
