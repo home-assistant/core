@@ -18,6 +18,16 @@
         "data_description": {
           "two_factor_code": "The two-factor code sent to your Cync account's email"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Cync integration needs to re-authenticate for {email}",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Your Cync account's password"
+        }
       }
     },
     "error": {
@@ -26,7 +36,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "An incorrect user was provided by Cync for your email address. Please consult your Cync app"
     }
   }
 }
