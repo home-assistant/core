@@ -617,6 +617,16 @@ async def mock_rpc_device():
                 {}, RpcUpdateType.INITIALIZED
             )
 
+        current_pos_iterator = iter(range(50, -1, -10))  # from 50 to 0 in steps of 10
+
+        async def cover_get_status(cover_id: int):
+            current_pos = next(current_pos_iterator)
+            return {
+                "state": "closing" if current_pos > 0 else "closed",
+                "current_pos": current_pos,
+                "pos_control": True,
+            }
+
         device = _mock_rpc_device()
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
@@ -624,6 +634,9 @@ async def mock_rpc_device():
         rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
         rpc_device_mock.return_value.mock_online = Mock(side_effect=online)
         rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
+        rpc_device_mock.return_value.cover_get_status = AsyncMock(
+            side_effect=cover_get_status
+        )
 
         yield rpc_device_mock.return_value
 
