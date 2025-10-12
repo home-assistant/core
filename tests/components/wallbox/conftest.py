@@ -1,5 +1,6 @@
 """Test fixtures for the Wallbox integration."""
 
+from datetime import datetime, timedelta
 from http import HTTPStatus
 from unittest.mock import MagicMock, Mock, patch
 
@@ -10,6 +11,10 @@ from homeassistant.components.wallbox.const import (
     CHARGER_DATA_POST_L1_KEY,
     CHARGER_DATA_POST_L2_KEY,
     CHARGER_ENERGY_PRICE_KEY,
+    CHARGER_JWT_REFRESH_TOKEN,
+    CHARGER_JWT_REFRESH_TTL,
+    CHARGER_JWT_TOKEN,
+    CHARGER_JWT_TTL,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_CHARGING_CURRENT_POST_KEY,
     CHARGER_MAX_ICP_CURRENT_KEY,
@@ -45,6 +50,16 @@ def entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_STATION: "12345",
         },
         entry_id="testEntry",
+        options={
+            CHARGER_JWT_TOKEN: "test_token",
+            CHARGER_JWT_REFRESH_TOKEN: "test_refresh_token",
+            CHARGER_JWT_TTL: (
+                datetime.timestamp(datetime.now() + timedelta(hours=1)) * 1000
+            ),
+            CHARGER_JWT_REFRESH_TTL: (
+                datetime.timestamp(datetime.now() + timedelta(hours=1)) * 1000
+            ),
+        },
     )
     entry.add_to_hass(hass)
     return entry

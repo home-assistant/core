@@ -2,19 +2,21 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from wallbox import Wallbox
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .const import UPDATE_INTERVAL
-from .coordinator import (
-    InvalidAuth,
-    WallboxConfigEntry,
-    WallboxCoordinator,
-    async_validate_input,
+from .const import (
+    CHARGER_JWT_REFRESH_TOKEN,
+    CHARGER_JWT_REFRESH_TTL,
+    CHARGER_JWT_TOKEN,
+    CHARGER_JWT_TTL,
+    UPDATE_INTERVAL,
 )
+from .coordinator import WallboxConfigEntry, WallboxCoordinator
 
 PLATFORMS = [
     Platform.LOCK,
@@ -32,10 +34,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> b
         entry.data[CONF_PASSWORD],
         jwtTokenDrift=UPDATE_INTERVAL,
     )
-    try:
-        await async_validate_input(hass, wallbox)
-    except InvalidAuth as ex:
-        raise ConfigEntryAuthFailed from ex
+
+    if entry.options.get(CHARGER_JWT_TOKEN) and (
+        entry.options.get(CHARGER_JWT_TTL, 0) / 1000
+    ) > datetime.timestamp(datetime.now()):
+        wallbox.jwtToken = entry.options.get(CHARGER_JWT_TOKEN)
+        wallbox.jwtRefreshToken = entry.options.get(CHARGER_JWT_REFRESH_TOKEN)
+        wallbox.jwtTokenTtl = entry.options.get(CHARGER_JWT_TTL)
+        wallbox.jwtRefreshTokenTtl = entry.options.get(CHARGER_JWT_REFRESH_TTL)
+        wallbox.headers["Authorization"] = (
+            f"Bearer {entry.options.get(CHARGER_JWT_TOKEN)}"
+        )
+
+        hass.config_entries.async_update_entry(entry, options={})
 
     wallbox_coordinator = WallboxCoordinator(hass, entry, wallbox)
     await wallbox_coordinator.async_config_entry_first_refresh()
