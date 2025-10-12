@@ -3,17 +3,17 @@
 from unittest.mock import patch
 
 from fritzconnection.core.exceptions import (
+    FritzActionFailedError,
     FritzConnectionException,
     FritzServiceError,
-    FritzActionFailedError,
 )
 import pytest
 from voluptuous import MultipleInvalid
 
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.fritz.services import (
-    SERVICE_SET_GUEST_WIFI_PW,
     SERVICE_DIAL,
+    SERVICE_SET_GUEST_WIFI_PW,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr

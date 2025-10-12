@@ -4,9 +4,9 @@ import logging
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
+    FritzActionFailedError,
     FritzConnectionException,
     FritzServiceError,
-    FritzActionFailedError,
 )
 from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH
 import voluptuous as vol
