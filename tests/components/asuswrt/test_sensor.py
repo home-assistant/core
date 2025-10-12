@@ -44,13 +44,13 @@ from .conftest import make_async_get_data_side_effect
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-SENSORS_DEFAULT = [*SENSORS_LOAD_AVG, *SENSORS_RATES]
+SENSORS_DEFAULT = [*SENSORS_BYTES, *SENSORS_RATES]
 
-SENSORS_ALL_LEGACY = [*SENSORS_DEFAULT, *SENSORS_TEMPERATURES_LEGACY]
+SENSORS_ALL_LEGACY = [*SENSORS_DEFAULT, *SENSORS_LOAD_AVG, *SENSORS_TEMPERATURES_LEGACY]
 SENSORS_ALL_HTTP = [
-    *SENSORS_BYTES,
-    *SENSORS_CPU,
     *SENSORS_DEFAULT,
+    *SENSORS_CPU,
+    *SENSORS_LOAD_AVG,
     *SENSORS_MEMORY,
     *SENSORS_TEMPERATURES,
     *SENSORS_UPTIME,
@@ -144,7 +144,9 @@ async def _test_sensors(
     assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_HOME
     assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
     assert hass.states.get(f"{sensor_prefix}_sensor_rx_rates").state == "160.0"
+    assert hass.states.get(f"{sensor_prefix}_sensor_rx_bytes").state == "60.0"
     assert hass.states.get(f"{sensor_prefix}_sensor_tx_rates").state == "80.0"
+    assert hass.states.get(f"{sensor_prefix}_sensor_tx_bytes").state == "50.0"
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
 
     # remove first tracked device
@@ -607,7 +609,7 @@ async def test_decorator_errors(
     mock_available_temps,
 ) -> None:
     """Test AsusWRT sensors are unavailable on decorator type check error."""
-    sensors = [*SENSORS_TEMPERATURES_LEGACY]
+    sensors = [*SENSORS_BYTES, *SENSORS_TEMPERATURES_LEGACY]
     config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_TELNET, sensors)
     config_entry.add_to_hass(hass)
 

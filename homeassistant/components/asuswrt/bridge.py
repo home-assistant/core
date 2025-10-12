@@ -282,6 +282,10 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         """Return a dictionary of available sensors for this bridge."""
         sensors_temperatures = await self._get_available_temperature_sensors()
         return {
+            SENSORS_TYPE_BYTES: {
+                KEY_SENSORS: SENSORS_BYTES,
+                KEY_METHOD: self._get_bytes,
+            },
             SENSORS_TYPE_LOAD_AVG: {
                 KEY_SENSORS: SENSORS_LOAD_AVG,
                 KEY_METHOD: self._get_load_avg,
@@ -300,6 +304,11 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         """Check which temperature information is available on the router."""
         availability = await self._api.async_find_temperature_commands()
         return [SENSORS_TEMPERATURES_LEGACY[i] for i in range(3) if availability[i]]
+
+    @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_BYTES)
+    async def _get_bytes(self) -> Any:
+        """Fetch byte information from the router."""
+        return await self._api.async_get_bytes_total()
 
     @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_RATES)
     async def _get_rates(self) -> Any:
