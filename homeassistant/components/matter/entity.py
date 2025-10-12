@@ -47,6 +47,7 @@ LOGGER = logging.getLogger(__name__)
 # sw version (attributeKey 0/40/10)
 LABELING_BLOCKLIST = (
     (5020, 65376, "1.0.0", "1.0.0"),  # Zemismart MT25B roller shade motor
+    (4895, 8192, "1.0", "v2.0"),  # Logan Link HVAC
 )
 
 
