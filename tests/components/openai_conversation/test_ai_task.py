@@ -213,12 +213,14 @@ async def test_generate_data_with_attachments(
 
 @pytest.mark.usefixtures("mock_init_component")
 @freeze_time("2025-06-14 22:59:00")
+@pytest.mark.parametrize("image_model", ["gpt-image-1", "gpt-image-1-mini"])
 async def test_generate_image(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_stream: AsyncMock,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
+    image_model: str,
 ) -> None:
     """Test AI Task image generation."""
     entity_id = "ai_task.openai_ai_task"
@@ -232,6 +234,12 @@ async def test_generate_image(
             if entry.subentry_type == "ai_task_data"
         )
     )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        ai_task_entry,
+        data={"image_model": image_model},
+    )
+    await hass.async_block_till_done()
     assert entity_entry is not None
     assert entity_entry.config_entry_id == mock_config_entry.entry_id
     assert entity_entry.config_subentry_id == ai_task_entry.subentry_id
@@ -258,7 +266,7 @@ async def test_generate_image(
     assert result["width"] == 1536
     assert result["revised_prompt"] == "Mock revised prompt."
     assert result["mime_type"] == "image/png"
-    assert result["model"] == "gpt-image-1"
+    assert result["model"] == image_model
 
     mock_upload_media.assert_called_once()
     image_data = mock_upload_media.call_args[0][1]

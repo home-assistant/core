@@ -14,6 +14,7 @@ from homeassistant.components.openai_conversation.config_flow import (
 from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REASONING_EFFORT,
@@ -917,6 +918,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "gpt-4o",
+        CONF_IMAGE_MODEL: "gpt-image-1",
         CONF_MAX_TOKENS: 200,
         CONF_TEMPERATURE: 0.5,
         CONF_TOP_P: 0.9,

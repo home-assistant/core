@@ -67,6 +67,7 @@ from homeassistant.util import slugify
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
@@ -82,6 +83,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
@@ -516,13 +518,15 @@ class OpenAIBaseLLMEntity(Entity):
             model_args.setdefault("include", []).append("code_interpreter_call.outputs")  # type: ignore[union-attr]
 
         if force_image:
-            tools.append(
-                ImageGeneration(
-                    type="image_generation",
-                    input_fidelity="high",
-                    output_format="png",
-                )
+            image_model = options.get(CONF_IMAGE_MODEL, RECOMMENDED_IMAGE_MODEL)
+            image_tool = ImageGeneration(
+                type="image_generation",
+                model=image_model,
+                output_format="png",
             )
+            if image_model == "gpt-image-1":
+                image_tool["input_fidelity"] = "high"
+            tools.append(image_tool)
             model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")
             model_args["store"] = True  # Avoid sending image data back and forth
 

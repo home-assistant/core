@@ -50,6 +50,7 @@
           "data": {
             "code_interpreter": "Enable code interpreter tool",
             "reasoning_effort": "Reasoning effort",
+            "image_model": "Image generation model",
             "web_search": "Enable web search",
             "search_context_size": "Search context size",
             "user_location": "Include home location"
@@ -57,6 +58,7 @@
           "data_description": {
             "code_interpreter": "This tool, also known as the python tool to the model, allows it to run code to answer questions",
             "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt",
+            "image_model": "The model to use when generating images",
             "web_search": "Allow the model to search the web for the latest information before generating a response",
             "search_context_size": "High level guidance for the amount of context window space to use for the search",
             "user_location": "Refine search results based on geography"
@@ -97,12 +99,14 @@
           "title": "[%key:component::openai_conversation::config_subentries::conversation::step::model::title%]",
           "data": {
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::reasoning_effort%]",
+            "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::image_model%]",
             "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::web_search%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::search_context_size%]",
             "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::user_location%]"
           },
           "data_description": {
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::reasoning_effort%]",
+            "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::image_model%]",
             "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::web_search%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::search_context_size%]",
             "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::user_location%]"

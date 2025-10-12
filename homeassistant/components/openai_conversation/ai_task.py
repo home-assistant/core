@@ -16,7 +16,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
-from .const import CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL, UNSUPPORTED_IMAGE_MODELS
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_IMAGE_MODEL,
+    RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_IMAGE_MODEL,
+    UNSUPPORTED_IMAGE_MODELS,
+)
 from .entity import OpenAIBaseLLMEntity
 
 if TYPE_CHECKING:
@@ -142,7 +148,7 @@ class OpenAITaskEntity(
             mime_type=mime_type,
             width=int(width) if width else None,
             height=int(height) if height else None,
-            model="gpt-image-1",
+            model=self.subentry.data.get(CONF_IMAGE_MODEL, RECOMMENDED_IMAGE_MODEL),
             revised_prompt=image_call.revised_prompt
             if hasattr(image_call, "revised_prompt")
             else None,
