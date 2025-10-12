@@ -15,7 +15,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 FAKE_CONFIG = {
-    CONF_STATION: "ON/s1234567",
+    CONF_STATION: "123",
     CONF_LANGUAGE: "English",
     CONF_LATITUDE: 42.42,
     CONF_LONGITUDE: -42.42,
@@ -80,7 +80,7 @@ async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=FAKE_CONFIG,
-        unique_id="ON/s1234567-english",
+        unique_id="123-english",
     )
     entry.add_to_hass(hass)
 
