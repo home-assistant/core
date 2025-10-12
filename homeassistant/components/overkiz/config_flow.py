@@ -179,11 +179,18 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                     Server.THERMOR_COZYTOUCH,
                 }:
                     description_placeholders["unsupported_device"] = "CozyTouch"
-
                 # Somfy Protect accounts are not supported since they don't use
                 # the Overkiz API server. Login will return unknown user.
-                else:
+                elif user_input[CONF_HUB] in {
+                    Server.SOMFY_AMERICA,
+                    Server.SOMFY_DEVELOPER_MODE,
+                    Server.SOMFY_EUROPE,
+                    Server.SOMFY_OCEANIA,
+                }:
                     description_placeholders["unsupported_device"] = "Somfy Protect"
+                # Fallback for other unknown devices
+                else:
+                    description_placeholders["unsupported_device"] = "Unknown"
 
                 errors["base"] = "unsupported_hardware"
             except Exception:  # noqa: BLE001
