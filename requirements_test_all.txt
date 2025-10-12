@@ -173,7 +173,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.1
 
 # homeassistant.components.alexa_devices
-aioamazondevices==6.4.1
+aioamazondevices==6.4.3
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -235,7 +235,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.13.0
+aioesphomeapi==41.14.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -777,7 +777,7 @@ energyzero==2.1.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.11.3
+env-canada==0.12.1
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1461,7 +1461,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.8
+plugwise==1.8.0
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
@@ -2474,7 +2474,7 @@ thermopro-ble==0.13.1
 thinqconnect==1.0.8
 
 # homeassistant.components.tilt_ble
-tilt-ble==0.3.1
+tilt-ble==1.0.1
 
 # homeassistant.components.tilt_pi
 tilt-pi==0.2.1
