@@ -1,6 +1,6 @@
 """Test Kostal Plenticore number."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -32,8 +32,30 @@ def mock_plenticore_client() -> Generator[ApiClient]:
         yield plenticore_client_class.return_value
 
 
+DEFAULT_SETTING_VALUES = {
+    "devices:local": {
+        "Properties:StringCnt": "2",
+        "EnergySensor:SensorPosition": "1",
+        "EnergySensor:InstalledSensor": "1",
+        "Battery:Type": "0",
+        "Properties:String0Features": "1",
+        "Properties:String1Features": "1",
+        "Properties:SerialNo": "42",
+        "Branding:ProductName1": "PLENTICORE",
+        "Branding:ProductName2": "plus 10",
+        "Properties:VersionIOC": "01.45",
+        "Properties:VersionMC": " 01.46",
+        "Battery:MinSoc": "5",
+        "Battery:MinHomeComsumption": "50",
+    },
+    "scb:network": {"Hostname": "scb"},
+}
+
+
 @pytest.fixture
-def mock_get_setting_values(mock_plenticore_client: ApiClient) -> list:
+def mock_get_setting_values(
+    mock_plenticore_client: ApiClient,
+) -> dict[str, dict[str, str]]:
     """Add a setting value to the given Plenticore client.
 
     Returns a list with setting values which can be extended by test cases.
@@ -73,21 +95,38 @@ def mock_get_setting_values(mock_plenticore_client: ApiClient) -> list:
         ],
     }
 
-    # this values are always retrieved by the integration on startup
-    setting_values = [
-        {
-            "devices:local": {
-                "Properties:SerialNo": "42",
-                "Branding:ProductName1": "PLENTICORE",
-                "Branding:ProductName2": "plus 10",
-                "Properties:VersionIOC": "01.45",
-                "Properties:VersionMC": " 01.46",
-            },
-            "scb:network": {"Hostname": "scb"},
-        }
-    ]
+    # Add default settings values - this values are always retrieved by the integration on startup
+    setting_values = DEFAULT_SETTING_VALUES.copy()
 
-    mock_plenticore_client.get_setting_values.side_effect = setting_values
+    def default_settings_data(*args):
+        # the get_setting_values method can be called with different argument types and numbers
+        match args:
+            case (str() as module_id, str() as data_id):
+                request = {module_id: [data_id]}
+            case (str() as module_id, Iterable() as data_ids):
+                request = {module_id: data_ids}
+            case ({},):
+                request = args[0]
+            case _:
+                raise NotImplementedError
+
+        result = {}
+        for module_id, data_ids in request.items():
+            if (values := setting_values.get(module_id)) is not None:
+                result[module_id] = {}
+                for data_id in data_ids:
+                    if data_id in values:
+                        result[module_id][data_id] = values[data_id]
+                    else:
+                        raise ValueError(
+                            f"Missing data_id {data_id} in module {module_id}"
+                        )
+            else:
+                raise ValueError(f"Missing module_id {module_id}")
+
+        return result
+
+    mock_plenticore_client.get_setting_values.side_effect = default_settings_data
 
     return setting_values
 
@@ -98,7 +137,7 @@ async def test_setup_all_entries(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
-    mock_get_setting_values: list,
+    mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test if all available entries are setup."""
 
@@ -119,7 +158,7 @@ async def test_setup_no_entries(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
-    mock_get_setting_values: list,
+    mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test that no entries are setup if Plenticore does not provide data."""
 
@@ -152,11 +191,11 @@ async def test_number_has_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
-    mock_get_setting_values: list,
+    mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test if number has a value if data is provided on update."""
 
-    mock_get_setting_values.append({"devices:local": {"Battery:MinSoc": "42"}})
+    mock_get_setting_values["devices:local"]["Battery:MinSoc"] = "42"
 
     mock_config_entry.add_to_hass(hass)
 
@@ -177,9 +216,11 @@ async def test_number_is_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
-    mock_get_setting_values: list,
+    mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test if number is unavailable if no data is provided on update."""
+
+    del mock_get_setting_values["devices:local"]["Battery:MinSoc"]
 
     mock_config_entry.add_to_hass(hass)
 
@@ -198,11 +239,11 @@ async def test_set_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
-    mock_get_setting_values: list,
+    mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test if a new value could be set."""
 
-    mock_get_setting_values.append({"devices:local": {"Battery:MinSoc": "42"}})
+    mock_get_setting_values["devices:local"]["Battery:MinSoc"] = "42"
 
     mock_config_entry.add_to_hass(hass)
 
