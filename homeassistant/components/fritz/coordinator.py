@@ -622,7 +622,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         )
 
     async def async_trigger_dial(
-        self, number: str, max_ring_seconds: float
+        self, number: str, max_ring_seconds: int
     ) -> None:
         """Trigger service to dial a number."""
         try:

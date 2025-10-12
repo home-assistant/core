@@ -37,5 +37,4 @@ dial:
         number:
           min: 1
           max: 300
-          step: 1
           unit_of_measurement: seconds

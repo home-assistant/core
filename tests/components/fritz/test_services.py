@@ -176,10 +176,10 @@ async def test_service_dial(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DIAL,
-            {"device_id": device.id, "number": "1234567890", "max_ring_seconds": 10.0},
+            {"device_id": device.id, "number": "1234567890", "max_ring_seconds": 10},
         )
         assert mock_async_trigger_dial.called
-        assert mock_async_trigger_dial.call_args.kwargs == {"max_ring_seconds": 10.0}
+        assert mock_async_trigger_dial.call_args.kwargs == {"max_ring_seconds": 10}
         assert mock_async_trigger_dial.call_args.args == ("1234567890",)
 
 
@@ -256,7 +256,7 @@ async def test_service_dial_wrong_parameter(
                 {
                     "device_id": device.id,
                     "number": "1234567890",
-                    "max_ring_seconds": 0.0,
+                    "max_ring_seconds": 0,
                 },
             )
         assert not mock_async_trigger_dial.called

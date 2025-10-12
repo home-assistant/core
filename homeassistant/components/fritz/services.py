@@ -33,9 +33,7 @@ SERVICE_SCHEMA_DIAL = vol.Schema(
     {
         vol.Required("device_id"): str,
         vol.Required("number"): str,
-        vol.Optional("max_ring_seconds"): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=300)
-        ),
+        vol.Required("max_ring_seconds"): vol.Range(min=1, max=300),
     }
 )
 
