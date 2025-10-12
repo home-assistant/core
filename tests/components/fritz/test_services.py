@@ -165,15 +165,6 @@ async def test_service_dial(
         "homeassistant.components.fritz.coordinator.AvmWrapper.async_trigger_dial"
     ) as mock_async_trigger_dial:
         await hass.services.async_call(
-            DOMAIN, SERVICE_DIAL, {"device_id": device.id, "number": "1234567890"}
-        )
-        assert mock_async_trigger_dial.called
-        assert mock_async_trigger_dial.call_args.kwargs == {"max_ring_seconds": None}
-        assert mock_async_trigger_dial.call_args.args == ("1234567890",)
-    with patch(
-        "homeassistant.components.fritz.coordinator.AvmWrapper.async_trigger_dial"
-    ) as mock_async_trigger_dial:
-        await hass.services.async_call(
             DOMAIN,
             SERVICE_DIAL,
             {"device_id": device.id, "number": "1234567890", "max_ring_seconds": 10},
@@ -207,7 +198,9 @@ async def test_service_dial_unknown_parameter(
         side_effect=FritzServiceError("boom"),
     ) as mock_async_trigger_dial:
         await hass.services.async_call(
-            DOMAIN, SERVICE_DIAL, {"device_id": device.id, "number": "1234567890"}
+            DOMAIN,
+            SERVICE_DIAL,
+            {"device_id": device.id, "number": "1234567890", "max_ring_seconds": 10},
         )
         assert mock_async_trigger_dial.called
         assert "HomeAssistantError: Action or parameter unknown" in caplog.text
@@ -286,7 +279,9 @@ async def test_service_dial_service_not_supported(
         side_effect=FritzConnectionException("boom"),
     ) as mock_async_trigger_dial:
         await hass.services.async_call(
-            DOMAIN, SERVICE_DIAL, {"device_id": device.id, "number": "1234567890"}
+            DOMAIN,
+            SERVICE_DIAL,
+            {"device_id": device.id, "number": "1234567890", "max_ring_seconds": 10},
         )
         assert mock_async_trigger_dial.called
         assert "HomeAssistantError: Action not supported" in caplog.text
@@ -316,7 +311,9 @@ async def test_service_dial_failed(
         side_effect=FritzActionFailedError("boom"),
     ) as mock_async_trigger_dial:
         await hass.services.async_call(
-            DOMAIN, SERVICE_DIAL, {"device_id": device.id, "number": "1234567890"}
+            DOMAIN,
+            SERVICE_DIAL,
+            {"device_id": device.id, "number": "1234567890", "max_ring_seconds": 10},
         )
         assert mock_async_trigger_dial.called
         assert (
@@ -337,7 +334,9 @@ async def test_service_dial_unloaded(
         "homeassistant.components.fritz.coordinator.AvmWrapper.async_trigger_dial"
     ) as mock_async_trigger_dial:
         await hass.services.async_call(
-            DOMAIN, SERVICE_DIAL, {"device_id": "12345678", "number": "1234567890"}
+            DOMAIN,
+            SERVICE_DIAL,
+            {"device_id": "12345678", "number": "1234567890", "max_ring_seconds": 10},
         )
         assert not mock_async_trigger_dial.called
         assert (

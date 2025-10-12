@@ -79,7 +79,9 @@ async def _async_dial(service_call: ServiceCall) -> None:
     target_entry_ids = await async_extract_config_entry_ids(service_call)
     target_entries: list[FritzConfigEntry] = [
         loaded_entry
-        for loaded_entry in service_call.hass.config_entries.async_loaded_entries(DOMAIN)
+        for loaded_entry in service_call.hass.config_entries.async_loaded_entries(
+            DOMAIN
+        )
         if loaded_entry.entry_id in target_entry_ids
     ]
 

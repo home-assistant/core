@@ -621,9 +621,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             self.fritz_guest_wifi.set_password, password, length
         )
 
-    async def async_trigger_dial(
-        self, number: str, max_ring_seconds: int
-    ) -> None:
+    async def async_trigger_dial(self, number: str, max_ring_seconds: int) -> None:
         """Trigger service to dial a number."""
         try:
             await self.hass.async_add_executor_job(self.fritz_call.dial, number)
