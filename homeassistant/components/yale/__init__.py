@@ -27,13 +27,16 @@ type YaleConfigEntry = ConfigEntry[YaleData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
-    """Set up yale from a config entry."""
+    """Set up Yale from a config entry."""
     session = async_create_yale_clientsession(hass)
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+    try:
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
-    )
+    except ValueError as err:
+        raise ConfigEntryNotReady("OAuth implementation not available") from err
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     yale_gateway = YaleGateway(Path(hass.config.config_dir), session, oauth_session)
     try:
