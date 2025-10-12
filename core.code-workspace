@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../frontend"
+		}
+	],
+	"settings": {
+		"remote.autoForwardPortsFallback": 0
+	}
+}
