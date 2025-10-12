@@ -2054,7 +2054,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.5
+pyheos==1.0.6
 
 # homeassistant.components.hive
 pyhive-integration==1.0.2
