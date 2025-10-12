@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
-from .const import DATA_ENOCEAN, ENOCEAN_DONGLE
 from .entity import EnOceanEntity
 from .supported_device_type import (
     EnOceanSupportedDeviceType,
@@ -156,8 +155,6 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
             self.onoff = 0
             if self._channel in ("A0", "B0", "AB0"):
                 self._attr_on = True
-                enocean_dongle = self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
-                _LOGGER.warning("Chip id: %s", enocean_dongle.chip_id)
         elif action == 0x15:
             self.which = 10
             self.onoff = 1

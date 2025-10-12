@@ -4,6 +4,8 @@ from copy import deepcopy
 from typing import Any
 
 from enocean.utils import from_hex_string, to_hex_string
+
+# from home_assistant_enocean.enocean_id import EnOceanID
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -23,10 +25,12 @@ from .const import (
     CONF_ENOCEAN_DEVICE_TYPE_ID,
     CONF_ENOCEAN_DEVICES,
     CONF_ENOCEAN_SENDER_ID,
+    DATA_ENOCEAN,
     DOMAIN,
     ENOCEAN_DEFAULT_DEVICE_ID,
     ENOCEAN_DEFAULT_DEVICE_NAME,
     ENOCEAN_DEVICE_TYPE_ID,
+    ENOCEAN_DONGLE,
     ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED,
     ENOCEAN_ERROR_DEVICE_NAME_EMPTY,
     ENOCEAN_ERROR_INVALID_DEVICE_ID,
@@ -150,6 +154,8 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlow):
     """Handle an option flow for EnOcean."""
 
+    # id: EnOceanID = None
+
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Show menu displaying the options."""
         devices = self.config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
@@ -263,7 +269,13 @@ class OptionsFlowHandler(OptionsFlow):
                     # For now, the list of sender_ids will be empty. For a
                     # later version, it shall be pre-filled with the dongles # chip ID and its base IDs. (FUTURE WORK, requires update # of EnOcean lib)
                     # Hence the use of a SelectSelector.
-                    selector.SelectSelectorConfig(options=[], custom_value=True)
+                    selector.SelectSelectorConfig(
+                        options=[
+                            self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].base_id,
+                            self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].chip_id,
+                        ],
+                        custom_value=True,
+                    )
                 ),
             }
         )

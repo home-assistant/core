@@ -81,9 +81,18 @@ class EnOceanDongle:
         """Get the dongle's chip id (REQUIRES UPDATE OF ENOCEAN LIBRARY)."""
         return self._chip_id
 
+    def valid_sender_ids(self):
+        """Return a list of valid sender ids (currently only the base id)."""
+        valid_senders = [self._chip_id]
+        # base_id_int = int(self._base_id.replace(":", ""), 16)
+        # for i in range(1, 255):
+        #     id_string
+        #     valid_senders.append(to_hex_string(base_id_int + i))
+        valid_senders.append(self._base_id)
+
     @property
     def chip_version(self):
-        """Get the dongle's base id."""
+        """Get the dongle's chip version."""
         return self._chip_version
 
     @property

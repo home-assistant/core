@@ -396,7 +396,13 @@ _supported_enocean_device_types: dict[str, EnOceanSupportedDeviceType] = {
         unique_id="Eltako_FUD61NPN",
         eep="A5-38-08",
         manufacturer="Eltako",
-        model="FUD61NPN",
+        model="FUD61NPN-230V Wireless universal dimmer",
+    ),
+    "Eltako_FLD61": EnOceanSupportedDeviceType(
+        unique_id="Eltako_FLD61",
+        eep="A5-38-08",
+        manufacturer="Eltako",
+        model="FLD61 PWM LED dimmer switch for LEDs 12-36V DC, up to 4A",
     ),
     "Eltako_FT55": EnOceanSupportedDeviceType(
         unique_id="Eltako_FT55",
@@ -448,6 +454,12 @@ _supported_enocean_device_types: dict[str, EnOceanSupportedDeviceType] = {
         eep="D2-01-09",
         manufacturer="Permundo",
         model="PSC234 (switch and power monitor)",
+    ),
+    "NodOn_PIR-2-1-01": EnOceanSupportedDeviceType(
+        unique_id="NodOn_PIR-2-1-01",
+        eep="A5-07-03",
+        manufacturer="NodOn",
+        model="PIR-2-1-01 Motion Sensor (NOT TESTED)",
     ),
 }
 
