@@ -2315,8 +2315,10 @@ async def test_state_classes_with_invalid_unit_of_measurement(
         (date(2012, 11, 10), "non-numeric"),
         ("inf", "non-finite"),
         (math.inf, "non-finite"),
+        (float("inf"), "non-finite"),  # pylint: disable=consider-math-not-float
         ("nan", "non-finite"),
         (math.nan, "non-finite"),
+        (float("nan"), "non-finite"),  # pylint: disable=consider-math-not-float
     ],
 )
 async def test_non_numeric_validation_error(
