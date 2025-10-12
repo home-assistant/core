@@ -474,8 +474,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
 REST_SENSORS: Final = {
     "rssi": RestSensorDescription(
         key="rssi",
-        name="RSSI",
-        translation_key="rssi",
+        name="Signal strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         value=lambda status, _: status["wifi_sta"]["rssi"],
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -1313,8 +1312,7 @@ RPC_SENSORS: Final = {
     "rssi": RpcSensorDescription(
         key="wifi",
         sub_key="rssi",
-        name="RSSI",
-        translation_key="rssi",
+        name="Signal strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
