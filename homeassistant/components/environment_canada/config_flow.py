@@ -8,11 +8,11 @@ import aiohttp
 from env_canada import ECWeather, ec_exc
 from env_canada.ec_weather import get_ec_sites_list
 import voluptuous as vol
-
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -101,7 +101,12 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Optional(CONF_STATION): SelectSelector(
                     SelectSelectorConfig(
-                        options=station_codes,
+                        options=[
+                            SelectOptionDict(
+                                value=station["value"], label=station["label"]
+                            )
+                            for station in station_codes
+                        ],
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
