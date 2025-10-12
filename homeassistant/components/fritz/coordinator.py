@@ -622,12 +622,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         )
 
     async def async_trigger_dial(
-        self, number: str, max_ring_seconds: float | None = None
+        self, number: str, max_ring_seconds: float
     ) -> None:
         """Trigger service to dial a number."""
-        await self.hass.async_add_executor_job(self.fritz_call.dial, number)
-        if max_ring_seconds is not None:
+        try:
+            await self.hass.async_add_executor_job(self.fritz_call.dial, number)
             await asyncio.sleep(max_ring_seconds)
+        finally:
             await self.hass.async_add_executor_job(self.fritz_call.hangup)
 
     async def async_trigger_cleanup(self) -> None:

@@ -32,10 +32,10 @@ dial:
         text:
     max_ring_seconds:
       default: 15
-      required: false
+      required: true
       selector:
         number:
-          min: 0.1
-          max: 360
-          step: 0.1
+          min: 1
+          max: 300
+          step: 1
           unit_of_measurement: seconds
