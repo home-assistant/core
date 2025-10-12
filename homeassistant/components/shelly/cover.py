@@ -269,6 +269,8 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
     def _update_callback(self) -> None:
         """Handle device update. Use a task when opening/closing is in progress."""
         super()._update_callback()
+        if not self.coordinator.device.initialized:
+            return
         if self.is_closing or self.is_opening:
             self.launch_update_task()
 

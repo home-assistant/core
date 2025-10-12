@@ -136,7 +136,7 @@ def _create_sensor(xknx: XKNX, config: ConfigType) -> XknxSensor:
         name=config[CONF_NAME],
         group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
         sync_state=config[SensorSchema.CONF_SYNC_STATE],
-        always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
+        always_callback=True,
         value_type=config[CONF_TYPE],
     )
 
@@ -159,7 +159,7 @@ class KNXSensor(KnxYamlEntity, SensorEntity):
                 SensorDeviceClass, self._device.ha_device_class()
             )
 
-        self._attr_force_update = self._device.always_callback
+        self._attr_force_update = config[SensorSchema.CONF_ALWAYS_CALLBACK]
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.sensor_value.group_address_state)
         self._attr_native_unit_of_measurement = self._device.unit_of_measurement()
