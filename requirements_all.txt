@@ -119,7 +119,7 @@ RtmAPI==0.7.2
 SQLAlchemy==2.0.41
 
 # homeassistant.components.tis_control
-TISApi==0.1.6
+TISApi==0.1.7
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
