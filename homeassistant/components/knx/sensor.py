@@ -171,9 +171,14 @@ class KNXSensor(KnxYamlEntity, RestoreSensor):
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         if (
-            last_state := await self.async_get_last_state()
-        ) and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            self._attr_native_value = last_state.state
+            (last_state := await self.async_get_last_state())
+            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            and (
+                (last_sensor_data := await self.async_get_last_sensor_data())
+                is not None
+            )
+        ):
+            self._attr_native_value = last_sensor_data.native_value
             self._attr_extra_state_attributes.update(last_state.attributes)
         await super().async_added_to_hass()
 

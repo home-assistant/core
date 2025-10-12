@@ -16,7 +16,7 @@ from .conftest import KNXTestKit
 from tests.common import (
     async_capture_events,
     async_fire_time_changed,
-    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
 )
 
 
@@ -57,8 +57,11 @@ async def test_sensor_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
     RAW_FLOAT_21_0 = (0x0C, 0x1A)
     RESTORED_STATE = "21.0"
     RESTORED_STATE_ATTRIBUTES = {ATTR_SOURCE: knx.INDIVIDUAL_ADDRESS}
-    fake_state = State("sensor.test", RESTORED_STATE, RESTORED_STATE_ATTRIBUTES)
-    mock_restore_cache(hass, (fake_state,))
+    fake_state = State(
+        "sensor.test", "ignored in favour of native_value", RESTORED_STATE_ATTRIBUTES
+    )
+    extra_data = {"native_value": RESTORED_STATE, "native_unit_of_measurement": "°C"}
+    mock_restore_cache_with_extra_data(hass, [(fake_state, extra_data)])
 
     await knx.setup_integration(
         {
