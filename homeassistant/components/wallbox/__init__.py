@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from wallbox import Wallbox
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -16,7 +14,7 @@ from .const import (
     CHARGER_JWT_TTL,
     UPDATE_INTERVAL,
 )
-from .coordinator import WallboxConfigEntry, WallboxCoordinator
+from .coordinator import WallboxConfigEntry, WallboxCoordinator, check_token_validity
 
 PLATFORMS = [
     Platform.LOCK,
@@ -35,9 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> b
         jwtTokenDrift=UPDATE_INTERVAL,
     )
 
-    if entry.options.get(CHARGER_JWT_TOKEN) and (
-        entry.options.get(CHARGER_JWT_TTL, 0) / 1000
-    ) > datetime.timestamp(datetime.now()):
+    if entry.options.get(CHARGER_JWT_TOKEN) and check_token_validity(
+        jwtTokenTTL=entry.options.get(CHARGER_JWT_TTL, 0), jwtTokenDrift=UPDATE_INTERVAL
+    ):
         wallbox.jwtToken = entry.options.get(CHARGER_JWT_TOKEN)
         wallbox.jwtRefreshToken = entry.options.get(CHARGER_JWT_REFRESH_TOKEN)
         wallbox.jwtTokenTtl = entry.options.get(CHARGER_JWT_TTL)
@@ -45,8 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> b
         wallbox.headers["Authorization"] = (
             f"Bearer {entry.options.get(CHARGER_JWT_TOKEN)}"
         )
-
-        hass.config_entries.async_update_entry(entry, options={})
 
     wallbox_coordinator = WallboxCoordinator(hass, entry, wallbox)
     await wallbox_coordinator.async_config_entry_first_refresh()

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 from typing import Any, Concatenate
@@ -27,6 +27,10 @@ from .const import (
     CHARGER_ECO_SMART_STATUS_KEY,
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_FEATURES_KEY,
+    CHARGER_JWT_REFRESH_TOKEN,
+    CHARGER_JWT_REFRESH_TTL,
+    CHARGER_JWT_TOKEN,
+    CHARGER_JWT_TTL,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     CHARGER_MAX_CHARGING_CURRENT_POST_KEY,
@@ -86,27 +90,25 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
 ) -> Callable[Concatenate[_WallboxCoordinatorT, _P], Any]:
     """Authenticate with decorator using Wallbox API."""
 
-    def require_authentication(
+    async def require_authentication(
         self: _WallboxCoordinatorT, *args: _P.args, **kwargs: _P.kwargs
     ) -> Any:
         """Authenticate using Wallbox API."""
-        try:
-            self.authenticate()
-            return func(self, *args, **kwargs)
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN, translation_key="invalid_auth"
-                ) from wallbox_connection_error
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="api_failed"
-            ) from wallbox_connection_error
+        await self.async_authenticate()
+        return await func(self, *args, **kwargs)
 
     return require_authentication
 
 
+def check_token_validity(jwtTokenTTL: int, jwtTokenDrift: int) -> bool:
+    """Check if the jwtToken is still valid in order to reuse if possible."""
+    return round((jwtTokenTTL / 1000) - jwtTokenDrift, 0) > datetime.timestamp(
+        datetime.now()
+    )
+
+
 def _validate(wallbox: Wallbox) -> None:
-    """Authenticate using Wallbox API."""
+    """Authenticate using Wallbox API to check if the used credentials are valid."""
     try:
         wallbox.authenticate()
     except requests.exceptions.HTTPError as wallbox_connection_error:
@@ -142,11 +144,37 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
-    def authenticate(self) -> None:
-        """Authenticate using Wallbox API."""
-        self._wallbox.authenticate()
+    def _authenticate(self) -> dict[str, str]:
+        """Authenticate using Wallbox API. First check token validity."""
+        options = dict(self.config_entry.options)
+        if not check_token_validity(
+            jwtTokenTTL=options.get(CHARGER_JWT_TTL, 0),
+            jwtTokenDrift=UPDATE_INTERVAL,
+        ):
+            try:
+                self._wallbox.authenticate()
+                options[CHARGER_JWT_TOKEN] = self._wallbox.jwtToken
+                options[CHARGER_JWT_REFRESH_TOKEN] = self._wallbox.jwtRefreshToken
+                options[CHARGER_JWT_TTL] = self._wallbox.jwtTokenTtl
+                options[CHARGER_JWT_REFRESH_TTL] = self._wallbox.jwtRefreshTokenTtl
+            except requests.exceptions.HTTPError as wallbox_connection_error:
+                if (
+                    wallbox_connection_error.response.status_code
+                    == HTTPStatus.FORBIDDEN
+                ):
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN, translation_key="invalid_auth"
+                    ) from wallbox_connection_error
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="api_failed"
+                ) from wallbox_connection_error
+        return options
 
-    @_require_authentication
+    async def async_authenticate(self) -> None:
+        """Authenticate using Wallbox API."""
+        options = await self.hass.async_add_executor_job(self._authenticate)
+        self.hass.config_entries.async_update_entry(self.config_entry, options=options)
+
     def _get_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
         try:
@@ -208,6 +236,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN, translation_key="api_failed"
             ) from wallbox_connection_error
 
+    @_require_authentication
     async def _async_update_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component. Set update interval to be UPDATE_INTERVAL * #wallbox chargers configured, this is necessary due to rate limitations."""
 
@@ -217,7 +246,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         return await self.hass.async_add_executor_job(self._get_data)
 
-    @_require_authentication
     def _set_charging_current(
         self, charging_current: float
     ) -> dict[str, dict[str, dict[str, Any]]]:
@@ -246,6 +274,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN, translation_key="api_failed"
             ) from wallbox_connection_error
 
+    @_require_authentication
     async def async_set_charging_current(self, charging_current: float) -> None:
         """Set maximum charging current for Wallbox."""
         data = await self.hass.async_add_executor_job(
@@ -253,7 +282,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.async_set_updated_data(data)
 
-    @_require_authentication
     def _set_icp_current(self, icp_current: float) -> dict[str, Any]:
         """Set maximum icp current for Wallbox."""
         try:
@@ -276,6 +304,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN, translation_key="api_failed"
             ) from wallbox_connection_error
 
+    @_require_authentication
     async def async_set_icp_current(self, icp_current: float) -> None:
         """Set maximum icp current for Wallbox."""
         data = await self.hass.async_add_executor_job(
@@ -283,7 +312,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.async_set_updated_data(data)
 
-    @_require_authentication
     def _set_energy_cost(self, energy_cost: float) -> dict[str, Any]:
         """Set energy cost for Wallbox."""
         try:
@@ -300,6 +328,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN, translation_key="api_failed"
             ) from wallbox_connection_error
 
+    @_require_authentication
     async def async_set_energy_cost(self, energy_cost: float) -> None:
         """Set energy cost for Wallbox."""
         data = await self.hass.async_add_executor_job(
@@ -307,7 +336,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.async_set_updated_data(data)
 
-    @_require_authentication
     def _set_lock_unlock(self, lock: bool) -> dict[str, dict[str, dict[str, Any]]]:
         """Set wallbox to locked or unlocked."""
         try:
@@ -335,12 +363,12 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN, translation_key="api_failed"
             ) from wallbox_connection_error
 
+    @_require_authentication
     async def async_set_lock_unlock(self, lock: bool) -> None:
         """Set wallbox to locked or unlocked."""
         data = await self.hass.async_add_executor_job(self._set_lock_unlock, lock)
         self.async_set_updated_data(data)
 
-    @_require_authentication
     def _pause_charger(self, pause: bool) -> None:
         """Set wallbox to pause or resume."""
         try:
@@ -357,12 +385,12 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN, translation_key="api_failed"
             ) from wallbox_connection_error
 
+    @_require_authentication
     async def async_pause_charger(self, pause: bool) -> None:
         """Set wallbox to pause or resume."""
         await self.hass.async_add_executor_job(self._pause_charger, pause)
         await self.async_request_refresh()
 
-    @_require_authentication
     def _set_eco_smart(self, option: str) -> None:
         """Set wallbox solar charging mode."""
         try:
@@ -381,6 +409,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN, translation_key="api_failed"
             ) from wallbox_connection_error
 
+    @_require_authentication
     async def async_set_eco_smart(self, option: str) -> None:
         """Set wallbox solar charging mode."""
 

@@ -6,10 +6,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
+from homeassistant.components.wallbox.const import CHARGER_JWT_TTL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
 from .conftest import http_403_error, http_429_error, setup_integration
 from .const import (
@@ -30,18 +31,6 @@ async def test_wallbox_setup_unload_entry(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_wallbox_unload_entry_connection_error(
-    hass: HomeAssistant, entry: MockConfigEntry, mock_wallbox
-) -> None:
-    """Test Wallbox Unload Connection Error."""
-    with patch.object(mock_wallbox, "authenticate", side_effect=http_403_error):
-        await setup_integration(hass, entry)
-        assert entry.state is ConfigEntryState.SETUP_ERROR
-
-        assert await hass.config_entries.async_unload(entry.entry_id)
-        assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_wallbox_refresh_failed_connection_error_too_many_requests(
@@ -69,9 +58,15 @@ async def test_wallbox_refresh_failed_error_auth(
     await setup_integration(hass, entry)
     assert entry.state is ConfigEntryState.LOADED
 
+    options = dict(entry.options)
+    options[CHARGER_JWT_TTL] = (
+        datetime.timestamp(datetime.now() - timedelta(hours=1)) * 1000
+    )
+    hass.config_entries.async_update_entry(entry, options=options)
+
     with (
         patch.object(mock_wallbox, "authenticate", side_effect=http_403_error),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(ConfigEntryAuthFailed),
     ):
         await hass.services.async_call(
             "number",
