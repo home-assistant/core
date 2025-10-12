@@ -35,6 +35,7 @@ from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_get_current_platform,
 )
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -54,6 +55,8 @@ from .const import (
     POSITION_BELOW,
     POSITION_IN_RANGE,
     POSITION_UNKNOWN,
+    SERVICE_SET_LOWER_THRESHOLD,
+    SERVICE_SET_UPPER_THRESHOLD,
     TYPE_LOWER,
     TYPE_RANGE,
     TYPE_UPPER,
@@ -107,10 +110,24 @@ async def async_setup_entry(
     unique_id = config_entry.entry_id
     upper = config_entry.options[CONF_UPPER]
 
+    # Register entity services
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_LOWER_THRESHOLD,
+        {vol.Required("value"): vol.Coerce(float)},
+        "async_set_lower_threshold",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_UPPER_THRESHOLD,
+        {vol.Required("value"): vol.Coerce(float)},
+        "async_set_upper_threshold",
+    )
+
     async_add_entities(
         [
             ThresholdSensor(
                 hass,
+                config_entry=config_entry,
                 entity_id=entity_id,
                 name=name,
                 lower=lower,
@@ -174,6 +191,7 @@ class ThresholdSensor(BinarySensorEntity):
         self,
         hass: HomeAssistant,
         *,
+        config_entry: ConfigEntry | None = None,
         entity_id: str,
         name: str,
         lower: float | None,
@@ -184,6 +202,7 @@ class ThresholdSensor(BinarySensorEntity):
     ) -> None:
         """Initialize the Threshold sensor."""
         self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
+        self._config_entry = config_entry
         self._attr_unique_id = unique_id
         if entity_id:  # Guard against empty entity_id in preview mode
             self.device_entry = async_entity_id_to_device(
@@ -265,16 +284,18 @@ class ThresholdSensor(BinarySensorEntity):
         }
 
     @callback
-    def _update_state(self) -> None:
+    def _update_state(self, *, apply_hysteresis: bool = True) -> None:
         """Update the state."""
+
+        hysteresis = self._hysteresis if apply_hysteresis else 0
 
         def below(sensor_value: float, threshold: float) -> bool:
             """Determine if the sensor value is below a threshold."""
-            return sensor_value < (threshold - self._hysteresis)
+            return sensor_value < (threshold - hysteresis)
 
         def above(sensor_value: float, threshold: float) -> bool:
             """Determine if the sensor value is above a threshold."""
-            return sensor_value > (threshold + self._hysteresis)
+            return sensor_value > (threshold + hysteresis)
 
         if self.sensor_value is None:
             self._state_position = POSITION_UNKNOWN
@@ -349,3 +370,34 @@ class ThresholdSensor(BinarySensorEntity):
 
         self._async_setup_sensor()
         return self._call_on_remove_callbacks
+
+    def _set_thresholds(
+        self, lower_threshold: float | None, upper_threshold: float | None
+    ) -> None:
+        """Set the thresholds."""
+        self._threshold_lower = lower_threshold
+        self._threshold_upper = upper_threshold
+        self.threshold_type = _threshold_type(
+            self._threshold_lower, self._threshold_upper
+        )
+
+        # Persist to config entry options
+        self.hass.config_entries.async_update_entry(
+            self._config_entry,
+            options={
+                **self._config_entry.options,
+                CONF_LOWER: lower_threshold,
+                CONF_UPPER: upper_threshold,
+            },
+        )
+
+        self._update_state(apply_hysteresis=False)
+        self.async_write_ha_state()
+
+    async def async_set_lower_threshold(self, value: float) -> None:
+        """Set the lower threshold to a specific value."""
+        self._set_thresholds(value, getattr(self, "_threshold_upper", None))
+
+    async def async_set_upper_threshold(self, value: float) -> None:
+        """Set the upper threshold to a specific value."""
+        self._set_thresholds(getattr(self, "_threshold_lower", None), value)

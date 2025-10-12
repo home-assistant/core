@@ -22,6 +22,9 @@ POSITION_BELOW: Final = "below"
 POSITION_IN_RANGE: Final = "in_range"
 POSITION_UNKNOWN: Final = "unknown"
 
+SERVICE_SET_LOWER_THRESHOLD: Final = "set_lower_threshold"
+SERVICE_SET_UPPER_THRESHOLD: Final = "set_upper_threshold"
+
 TYPE_LOWER: Final = "lower"
 TYPE_RANGE: Final = "range"
 TYPE_UPPER: Final = "upper"

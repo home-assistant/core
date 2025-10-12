@@ -585,3 +585,215 @@ async def test_device_id(
     utility_meter_entity = entity_registry.async_get("binary_sensor.threshold")
     assert utility_meter_entity is not None
     assert utility_meter_entity.device_id == source_entity.device_id
+
+
+async def test_set_lower_threshold_service(hass: HomeAssistant) -> None:
+    """Test the set_lower_threshold service."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: "sensor.test_monitored",
+            CONF_HYSTERESIS: 0.0,
+            CONF_LOWER: 10.0,
+            CONF_NAME: "Test Threshold",
+            CONF_UPPER: None,
+        },
+        title="Test Threshold",
+    )
+    config_entry.add_to_hass(hass)
+
+    # Setup the sensor being monitored
+    hass.states.async_set("sensor.test_monitored", 15)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Initial state should be OFF (15 is above lower threshold of 10)
+    state = hass.states.get("binary_sensor.test_threshold")
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_LOWER] == 10.0
+
+    # Call the service to set lower threshold to 20
+    await hass.services.async_call(
+        DOMAIN,
+        "set_lower_threshold",
+        {"entity_id": "binary_sensor.test_threshold", "value": 20.0},
+        blocking=True,
+    )
+
+    # State should now be ON (15 is below new lower threshold of 20)
+    state = hass.states.get("binary_sensor.test_threshold")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_LOWER] == 20.0
+
+    # Verify config entry was updated
+    assert config_entry.options[CONF_LOWER] == 20.0
+
+
+async def test_set_upper_threshold_service(hass: HomeAssistant) -> None:
+    """Test the set_upper_threshold service."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: "sensor.test_monitored",
+            CONF_HYSTERESIS: 0.0,
+            CONF_LOWER: None,
+            CONF_NAME: "Test Threshold",
+            CONF_UPPER: 30.0,
+        },
+        title="Test Threshold",
+    )
+    config_entry.add_to_hass(hass)
+
+    # Setup the sensor being monitored
+    hass.states.async_set("sensor.test_monitored", 25)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Initial state should be OFF (25 is below upper threshold of 30)
+    state = hass.states.get("binary_sensor.test_threshold")
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_UPPER] == 30.0
+
+    # Call the service to set upper threshold to 20
+    await hass.services.async_call(
+        DOMAIN,
+        "set_upper_threshold",
+        {"entity_id": "binary_sensor.test_threshold", "value": 20.0},
+        blocking=True,
+    )
+
+    # State should now be ON (25 is above new upper threshold of 20)
+    state = hass.states.get("binary_sensor.test_threshold")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_UPPER] == 20.0
+
+    # Verify config entry was updated
+    assert config_entry.options[CONF_UPPER] == 20.0
+
+
+async def test_set_threshold_no_hysteresis(hass: HomeAssistant) -> None:
+    """Test that setting threshold updates state immediately without hysteresis."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: "sensor.test_monitored",
+            CONF_HYSTERESIS: 10.0,
+            CONF_LOWER: 100.0,
+            CONF_NAME: "Test Threshold",
+            CONF_UPPER: None,
+        },
+        title="Test Threshold",
+    )
+    config_entry.add_to_hass(hass)
+
+    # Setup the sensor at exactly the threshold
+    hass.states.async_set("sensor.test_monitored", 100)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Initial state - at threshold, should be OFF (not below threshold - hysteresis/2)
+    state = hass.states.get("binary_sensor.test_threshold")
+    assert state.state == STATE_OFF
+
+    # Set lower threshold to exactly the current sensor value
+    # With hysteresis, normally this would stay in dead zone
+    # But service should update immediately without hysteresis
+    await hass.services.async_call(
+        DOMAIN,
+        "set_lower_threshold",
+        {"entity_id": "binary_sensor.test_threshold", "value": 100.0},
+        blocking=True,
+    )
+
+    # State should be OFF (100 is not less than 100)
+    state = hass.states.get("binary_sensor.test_threshold")
+    assert state.state == STATE_OFF
+
+    # Now set to 101 - sensor value (100) is below threshold (101)
+    await hass.services.async_call(
+        DOMAIN,
+        "set_lower_threshold",
+        {"entity_id": "binary_sensor.test_threshold", "value": 101.0},
+        blocking=True,
+    )
+
+    # State should immediately be ON without hysteresis
+    state = hass.states.get("binary_sensor.test_threshold")
+    assert state.state == STATE_ON
+
+
+async def test_set_threshold_on_range_type(hass: HomeAssistant) -> None:
+    """Test setting thresholds on a range-type threshold sensor."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: "sensor.test_monitored",
+            CONF_HYSTERESIS: 0.0,
+            CONF_LOWER: 10.0,
+            CONF_NAME: "Test Threshold",
+            CONF_UPPER: 30.0,
+        },
+        title="Test Threshold",
+    )
+    config_entry.add_to_hass(hass)
+
+    # Setup the sensor in the middle of the range
+    hass.states.async_set("sensor.test_monitored", 20)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Initial state should be ON (20 is in range [10, 30])
+    state = hass.states.get("binary_sensor.test_threshold")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_TYPE] == TYPE_RANGE
+
+    # Set lower threshold to 25 - sensor value (20) is now below range
+    await hass.services.async_call(
+        DOMAIN,
+        "set_lower_threshold",
+        {"entity_id": "binary_sensor.test_threshold", "value": 25.0},
+        blocking=True,
+    )
+
+    # State should now be OFF (20 is below [25, 30])
+    state = hass.states.get("binary_sensor.test_threshold")
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_LOWER] == 25.0
+    assert state.attributes[ATTR_POSITION] == POSITION_BELOW
+
+    # Set upper threshold to 35 - sensor value (20) is now in range [25, 35]
+    # But 20 < 25, so still below
+    await hass.services.async_call(
+        DOMAIN,
+        "set_upper_threshold",
+        {"entity_id": "binary_sensor.test_threshold", "value": 35.0},
+        blocking=True,
+    )
+
+    # State should still be OFF (20 is below [25, 35])
+    state = hass.states.get("binary_sensor.test_threshold")
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_UPPER] == 35.0
+    assert state.attributes[ATTR_POSITION] == POSITION_BELOW
+
+    # Now set lower threshold to 15 - sensor value (20) is now in range [15, 35]
+    await hass.services.async_call(
+        DOMAIN,
+        "set_lower_threshold",
+        {"entity_id": "binary_sensor.test_threshold", "value": 15.0},
+        blocking=True,
+    )
+
+    # State should now be ON (20 is in range [15, 35])
+    state = hass.states.get("binary_sensor.test_threshold")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_LOWER] == 15.0
+    assert state.attributes[ATTR_POSITION] == POSITION_IN_RANGE
