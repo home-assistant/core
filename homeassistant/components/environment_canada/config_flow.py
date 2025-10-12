@@ -5,10 +5,9 @@ from typing import Any
 import xml.etree.ElementTree as ET
 
 import aiohttp
+from env_canada import ECWeather, ec_exc
 from env_canada.ec_weather import get_ec_sites_list
 import voluptuous as vol
-
-from env_canada import ECWeather, ec_exc
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
