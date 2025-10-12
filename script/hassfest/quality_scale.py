@@ -176,7 +176,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "aseko_pool_live",
     "assist_pipeline",
     "asterisk_mbox",
-    "asuswrt",
     "atag",
     "aten_pe",
     "atome",
