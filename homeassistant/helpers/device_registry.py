@@ -298,6 +298,21 @@ def format_mac(mac: str) -> str:
     return mac
 
 
+def format_zigbee_ieee(ieee: str) -> str:
+    """Format a zigbee ieee address string."""
+    to_test = ieee
+
+    if len(to_test) == 23 and to_test.count(":") == 7:
+        return to_test.lower()
+
+    if len(to_test) == 16 and to_test.count(":") == 0:
+        # no : included
+        return ":".join(to_test.lower()[i : i + 2] for i in range(0, 16, 2))
+
+    # Not sure how formatted, return original
+    return ieee
+
+
 def _normalize_connections(
     connections: Iterable[tuple[str, str]],
 ) -> set[tuple[str, str]]:

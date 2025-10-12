@@ -22,6 +22,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.device_registry import format_zigbee_ieee
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util.dt import utcnow
 
@@ -2713,6 +2714,27 @@ async def test_format_mac(
             connections={(dr.CONNECTION_NETWORK_MAC, invalid)},
         )
         assert list(invalid_mac_entry.connections)[0][1] == invalid
+
+
+async def test_format_zigbee_ieee() -> None:
+    """Make sure we normalize zigbee ieee addresses."""
+    for valid in (
+        "1234567890ABCDEF",
+        "1234567890abcdef",
+        "12:34:56:78:90:ab:cd:ef",
+    ):
+        assert format_zigbee_ieee(valid) == "12:34:56:78:90:ab:cd:ef"
+
+    for invalid in (
+        "invalid_mac",
+        "1234567890ABCDE",  # 1 less char
+        "1234567890ABCDEFF",  # 1 extra char
+        "12:34:56:78:90:ab:cdef",  # not enough :
+        "12:34:56:78:90:ab:cd:e:f",  # too many :
+        "1234.5678.90ab.cdef",  # wrong format
+        "123456:78abc:def",  # invalid
+    ):
+        assert format_zigbee_ieee(invalid) == invalid
 
 
 async def test_update(
