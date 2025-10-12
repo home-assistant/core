@@ -516,6 +516,29 @@ async def test_form_image_http_exceptions(
 
 
 @respx.mock
+@pytest.mark.usefixtures("fakeimg_png")
+async def test_form_image_http_302(
+    hass: HomeAssistant,
+    user_flow: ConfigFlowResult,
+    mock_create_stream: _patch[MagicMock],
+    fakeimgbytes_png: bytes,
+) -> None:
+    """Test we handle image http 302 (temporary redirect)."""
+    respx.get("http://127.0.0.1/testurl/1").side_effect = [
+        httpx.Response(
+            status_code=302, headers={"Location": "http://127.0.0.1/testurl/2"}
+        )
+    ]
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        TESTDATA,
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "user_confirm"
+
+
+@respx.mock
 async def test_form_stream_invalidimage(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
