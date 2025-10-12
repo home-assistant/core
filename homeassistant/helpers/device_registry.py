@@ -318,7 +318,11 @@ def _normalize_connections(
 ) -> set[tuple[str, str]]:
     """Normalize connections to ensure we can match mac addresses."""
     return {
-        (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
+        (key, format_mac(value))
+        if key == CONNECTION_NETWORK_MAC
+        else (key, format_zigbee_ieee(value))
+        if key == CONNECTION_ZIGBEE
+        else (key, value)
         for key, value in connections
     }
 
@@ -332,6 +336,8 @@ def _normalize_connections_validator(
     for key, value in connections:
         if key == CONNECTION_NETWORK_MAC and format_mac(value) != value:
             raise ValueError(f"Invalid mac address format: {value}")
+        if key == CONNECTION_ZIGBEE and format_zigbee_ieee(value) != value:
+            raise ValueError(f"Invalid zigbee ieee address format: {value}")
 
 
 @attr.s(frozen=True, slots=True)
