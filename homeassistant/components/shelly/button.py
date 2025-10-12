@@ -390,14 +390,14 @@ RPC_BUTTONS = {
     ),
     "cury_left_boost": RpcButtonDescription(
         key="cury",
-        name="Left slot boost",
+        name="Left slot start boost",
         translation_key="cury_boost",
         slot="left",
         entity_class=ShellyCuryButton,
     ),
     "cury_right_boost": RpcButtonDescription(
         key="cury",
-        name="Right slot boost",
+        name="Right slot start boost",
         translation_key="cury_boost",
         slot="right",
         entity_class=ShellyCuryButton,
