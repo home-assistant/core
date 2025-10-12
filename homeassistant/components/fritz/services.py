@@ -95,8 +95,8 @@ async def _async_dial(service_call: ServiceCall) -> None:
         avm_wrapper = target_entry.runtime_data
         try:
             await avm_wrapper.async_trigger_dial(
-                service_call.data.get("number"),
-                max_ring_seconds=service_call.data.get("max_ring_seconds"),
+                service_call.data["number"],
+                max_ring_seconds=service_call.data["max_ring_seconds"],
             )
         except (FritzServiceError, FritzActionError) as ex:
             raise HomeAssistantError(
