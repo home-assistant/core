@@ -123,6 +123,7 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         translation_key="identification_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_getter=lambda api: api.getIdentification(),
+        entity_registry_enabled_default=False,
     ),
     ViCareBinarySensorEntityDescription(
         key="mounting_mode",
@@ -136,6 +137,7 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         translation_key="child_safety_lock_mode",
         device_class=BinarySensorDeviceClass.SAFETY,
         value_getter=lambda api: api.getChildLock() != "active",
+        entity_registry_enabled_default=False,
     ),
     ViCareBinarySensorEntityDescription(
         key="valve",
