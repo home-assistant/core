@@ -89,12 +89,12 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         """Initialize AutomowerEntity."""
         super().__init__(coordinator)
         self.mower_id = mower_id
+        parts = self.mower_attributes.system.model.split(maxsplit=2)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mower_id)},
-            manufacturer="Husqvarna",
-            model=self.mower_attributes.system.model.removeprefix(
-                "HUSQVARNA "
-            ).removeprefix("Husqvarna "),
+            manufacturer=parts[0],
+            model=parts[1],
+            model_id=parts[2],
             name=self.mower_attributes.system.name,
             serial_number=self.mower_attributes.system.serial_number,
             suggested_area="Garden",
