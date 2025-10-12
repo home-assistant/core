@@ -67,10 +67,13 @@
       "one_time_charge": {
         "name": "One-time charge"
       },
+      "identification_mode": {
+        "name": "Identification mode"
+      },
       "mounting_mode": {
         "name": "Mounting mode"
       },
-      "child_lock_mode": {
+      "child_safety_lock": {
         "name": "Child safety lock"
       }
     },

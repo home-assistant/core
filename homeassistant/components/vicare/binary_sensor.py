@@ -24,6 +24,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -118,14 +119,21 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         value_getter=lambda api: len(api.getDeviceErrors()) > 0,
     ),
     ViCareBinarySensorEntityDescription(
+        key="identification_mode",
+        translation_key="identification_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getIdentification(),
+    ),
+    ViCareBinarySensorEntityDescription(
         key="mounting_mode",
         translation_key="mounting_mode",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_getter=lambda api: api.getMountingMode(),
     ),
     ViCareBinarySensorEntityDescription(
-        key="child_lock_mode",
-        translation_key="child_lock_mode",
+        key="child_safety_lock_mode",
+        translation_key="child_safety_lock_mode",
         device_class=BinarySensorDeviceClass.SAFETY,
         value_getter=lambda api: api.getChildLock() != "active",
     ),
