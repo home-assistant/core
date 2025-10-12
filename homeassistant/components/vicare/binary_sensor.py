@@ -137,6 +137,12 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.SAFETY,
         value_getter=lambda api: api.getChildLock() != "active",
     ),
+    ViCareBinarySensorEntityDescription(
+        key="valve",
+        translation_key="valve",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value_getter=lambda api: api.isValveOpen(),
+    ),
 )
 
 

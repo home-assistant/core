@@ -956,6 +956,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_getter=lambda api: api.getValvePosition(),
+        entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="fuel_need",

@@ -21,6 +21,9 @@
       },
       "one_time_charge": {
         "default": "mdi:shower-head"
+      },
+      "valve": {
+        "default": "mdi:pipe-valve"
       }
     },
     "button": {
@@ -90,6 +93,9 @@
       },
       "ventilation_level": {
         "default": "mdi:fan"
+      },
+      "valve_position": {
+        "default": "mdi:pipe-valve"
       }
     }
   },

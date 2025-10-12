@@ -75,6 +75,9 @@
       },
       "child_safety_lock": {
         "name": "Child safety lock"
+      },
+      "valve": {
+        "name": "Valve"
       }
     },
     "button": {
