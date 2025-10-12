@@ -189,7 +189,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vial_level',
+    'translation_key': 'left_slot_level',
     'unique_id': '123456789ABC-cury:0-cury_left_level',
     'unit_of_measurement': '%',
   })
@@ -239,7 +239,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vial_name',
+    'translation_key': 'left_slot_vial',
     'unique_id': '123456789ABC-cury:0-cury_left_vial',
     'unit_of_measurement': None,
   })
@@ -289,7 +289,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vial_level',
+    'translation_key': 'right_slot_level',
     'unique_id': '123456789ABC-cury:0-cury_right_level',
     'unit_of_measurement': '%',
   })
@@ -339,7 +339,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vial_name',
+    'translation_key': 'right_slot_vial',
     'unique_id': '123456789ABC-cury:0-cury_right_vial',
     'unit_of_measurement': None,
   })
@@ -577,7 +577,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_consumed',
     'unique_id': '123456789ABC-switch:0-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -636,7 +636,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-switch:0-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })

@@ -152,7 +152,95 @@
       }
     },
     "sensor": {
+      "energy_with_channel_name": {
+        "name": "{channel_name} energy"
+      },
+      "power_with_channel_name": {
+        "name": "{channel_name} power"
+      },
+      "apparent_power_with_channel_name": {
+        "name": "{channel_name} apparent power"
+      },
+      "power_factor_with_channel_name": {
+        "name": "{channel_name} power factor"
+      },
+      "voltage_with_channel_name": {
+        "name": "{channel_name} voltage"
+      },
+      "current_with_channel_name": {
+        "name": "{channel_name} current"
+      },
+      "frequency_with_channel_name": {
+        "name": "{channel_name} frequency"
+      },
+      "temperature_with_channel_name": {
+        "name": "{channel_name} temperature"
+      },
+      "neutral_current": {
+        "name": "Neutral current"
+      },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
+      "energy_returned": {
+        "name": "Energy returned"
+      },
+      "energy_returned_with_channel_name": {
+        "name": "{channel_name} energy returned"
+      },
+      "energy_consumed": {
+        "name": "Energy consumed"
+      },
+      "energy_consumed_with_channel_name": {
+        "name": "{channel_name} energy consumed"
+      },
+      "gas_concentration": {
+        "name": "Gas concentration"
+      },
+      "tilt": {
+        "name": "Tilt"
+      },
+      "lamp_life": {
+        "name": "Lamp life"
+      },
+      "adc": {
+        "name": "ADC"
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "voltmeter": {
+        "name": "Voltmeter"
+      },
+      "voltmeter_value": {
+        "name": "Voltmeter value"
+      },
+      "analog": {
+        "name": "Analog"
+      },
+      "analog_value": {
+        "name": "Analog value"
+      },
+      "pulse_counter": {
+        "name": "Pulse counter"
+      },
+      "counter_value": {
+        "name": "Counter value"
+      },
+      "counter_frequency": {
+        "name": "Pulse counter frequency"
+      },
+      "counter_frequency_value": {
+        "name": "Pulse counter frequency value"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      },
       "charger_state": {
+        "name": "Charger state",
         "state": {
           "charger_charging": "[%key:common::state::charging%]",
           "charger_end": "Charge completed",
@@ -165,9 +253,11 @@
         }
       },
       "detected_objects": {
+        "name": "Detected objects",
         "unit_of_measurement": "objects"
       },
       "gas_detected": {
+        "name": "Gas detected",
         "state": {
           "none": "None",
           "mild": "Mild",
@@ -186,6 +276,7 @@
         }
       },
       "operation": {
+        "name": "Operation",
         "state": {
           "warmup": "Warm-up",
           "normal": "[%key:common::state::normal%]",
@@ -193,6 +284,7 @@
         }
       },
       "self_test": {
+        "name": "Self test",
         "state": {
           "not_completed": "Not completed",
           "completed": "Completed",
@@ -211,6 +303,7 @@
         }
       },
       "valve_status": {
+        "name": "Valve status",
         "state": {
           "checking": "Checking",
           "closed": "[%key:common::state::closed%]",
@@ -221,11 +314,33 @@
         }
       },
       "illuminance_level": {
+        "name": "Illuminance level",
         "state": {
           "dark": "Dark",
           "twilight": "Twilight",
           "bright": "Bright"
         }
+      },
+      "phase_a_voltage": {
+        "name": "Phase A voltage"
+      },
+      "phase_b_voltage": {
+        "name": "Phase B voltage"
+      },
+      "phase_c_voltage": {
+        "name": "Phase C voltage"
+      },
+      "left_slot_vial": {
+        "name": "Left slot vial"
+      },
+      "left_slot_level": {
+        "name": "Left slot level"
+      },
+      "right_slot_vial": {
+        "name": "Right slot vial"
+      },
+      "right_slot_level": {
+        "name": "Right slot level"
       }
     }
   },
