@@ -13,7 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TISConfigEntry
-from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -24,7 +23,7 @@ async def async_setup_entry(
     """Set up the TIS switches from a config entry."""
 
     # Retrieve the API instance that was created in the main __init__.py
-    tis_api: TISApi = hass.data[DOMAIN]["api"]
+    tis_api: TISApi = entry.runtime_data.api
 
     # Fetch all available switches from the TIS gateway.
     switch_dicts = await async_get_switches(tis_api)
