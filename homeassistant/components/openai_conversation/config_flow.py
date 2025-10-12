@@ -222,13 +222,17 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             step_schema[vol.Required(CONF_NAME, default=default_name)] = str
 
         if self._subentry_type == "conversation":
+            suggested_prompt = (
+                llm.DEFAULT_INSTRUCTIONS_PROMPT
+                + "When doing a web search, do not include source citations.\n"
+            )
             step_schema.update(
                 {
                     vol.Optional(
                         CONF_PROMPT,
                         description={
                             "suggested_value": options.get(
-                                CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                                CONF_PROMPT, suggested_prompt
                             )
                         },
                     ): TemplateSelector(),
