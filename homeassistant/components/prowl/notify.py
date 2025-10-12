@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from functools import partial
 import logging
 from typing import Any
 
+import httpx
 import prowlpy
 import voluptuous as vol
 
@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,9 +38,7 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> ProwlNotificationService:
     """Get the Prowl notification service."""
-    return await hass.async_add_executor_job(
-        partial(ProwlNotificationService, hass, config[CONF_API_KEY])
-    )
+    return ProwlNotificationService(hass, config[CONF_API_KEY], get_async_client(hass))
 
 
 async def async_setup_entry(
@@ -48,7 +47,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the notify entities."""
-    prowl = ProwlNotificationEntity(hass, entry.title, entry.data[CONF_API_KEY])
+    prowl = ProwlNotificationEntity(
+        hass, entry.title, entry.data[CONF_API_KEY], get_async_client(hass)
+    )
     async_add_entities([prowl])
 
 
@@ -58,10 +59,12 @@ class ProwlNotificationService(BaseNotificationService):
     This class is used for legacy configuration via configuration.yaml
     """
 
-    def __init__(self, hass: HomeAssistant, api_key: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api_key: str, httpx_client: httpx.AsyncClient
+    ) -> None:
         """Initialize the service."""
         self._hass = hass
-        self._prowl = prowlpy.Prowl(api_key)
+        self._prowl = prowlpy.AsyncProwl(api_key, client=httpx_client)
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
@@ -71,15 +74,12 @@ class ProwlNotificationService(BaseNotificationService):
 
         try:
             async with asyncio.timeout(10):
-                await self._hass.async_add_executor_job(
-                    partial(
-                        self._prowl.send,
-                        application="Home-Assistant",
-                        event=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-                        description=message,
-                        priority=data.get("priority", 0),
-                        url=data.get("url"),
-                    )
+                await self._prowl.post(
+                    application="Home-Assistant",
+                    event=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
+                    description=message,
+                    priority=data.get("priority", 0),
+                    url=data.get("url"),
                 )
         except TimeoutError as ex:
             _LOGGER.error("Timeout accessing Prowl API")
@@ -103,10 +103,16 @@ class ProwlNotificationEntity(NotifyEntity):
     This class is used for Prowl config entries.
     """
 
-    def __init__(self, hass: HomeAssistant, name: str, api_key: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        name: str,
+        api_key: str,
+        httpx_client: httpx.AsyncClient,
+    ) -> None:
         """Initialize the service."""
         self._hass = hass
-        self._prowl = prowlpy.Prowl(api_key)
+        self._prowl = prowlpy.AsyncProwl(api_key, client=httpx_client)
         self._attr_name = name
         self._attr_unique_id = name
 
@@ -115,15 +121,12 @@ class ProwlNotificationEntity(NotifyEntity):
         _LOGGER.debug("Sending Prowl notification from entity %s", self.name)
         try:
             async with asyncio.timeout(10):
-                await self._hass.async_add_executor_job(
-                    partial(
-                        self._prowl.send,
-                        application="Home-Assistant",
-                        event=title or ATTR_TITLE_DEFAULT,
-                        description=message,
-                        priority=0,
-                        url=None,
-                    )
+                await self._prowl.post(
+                    application="Home-Assistant",
+                    event=title or ATTR_TITLE_DEFAULT,
+                    description=message,
+                    priority=0,
+                    url=None,
                 )
         except TimeoutError as ex:
             _LOGGER.error("Timeout accessing Prowl API")
