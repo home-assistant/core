@@ -12,7 +12,11 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.selector import selector
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import CONF_STATION, CONF_TITLE, DOMAIN
 
@@ -95,13 +99,11 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Optional(CONF_STATION): selector(
-                    {
-                        "select": {
-                            "options": station_codes,
-                            "mode": "dropdown",
-                        }
-                    }
+                vol.Optional(CONF_STATION): SelectSelector(
+                    SelectSelectorConfig(
+                        options=station_codes,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
                 ),
                 vol.Optional(
                     CONF_LATITUDE, default=self.hass.config.latitude
