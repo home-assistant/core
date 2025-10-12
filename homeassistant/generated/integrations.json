@@ -3688,9 +3688,10 @@
     },
     "london_underground": {
       "name": "London Underground",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "lookin": {
       "name": "LOOKin",
@@ -4459,6 +4460,12 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
+    "nintendo_parental_controls": {
+      "name": "Nintendo Switch parental controls",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "nissan_leaf": {
       "name": "Nissan Leaf",
       "integration_type": "hub",
@@ -5178,7 +5185,7 @@
     "prowl": {
       "name": "Prowl",
       "integration_type": "service",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_push"
     },
     "proximity": {

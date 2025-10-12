@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Environment Canada: weather location and language",
-        "description": "Either a station ID or latitude/longitude must be specified. The default latitude/longitude used are the values configured in your Home Assistant installation. The closest weather station to the coordinates will be used if specifying coordinates. If a station code is used it must follow the format: PP/code, where PP is the two-letter province and code is the station ID. The list of station IDs can be found here: https://dd.weather.gc.ca/citypage_weather/docs/site_list_towns_en.csv. Weather information can be retrieved in either English or French.",
+        "title": "Environment Canada: Location and language",
+        "description": "You can specify a location using either a station code or latitude/longitude coordinates.\n\nDefault behavior: If no station code is entered, the system uses the latitude/longitude values configured in your Home Assistant installation.\n\nStation code format: Station codes follow the format \"s0000123\" or simply \"123\".\n\nFind station codes at https://dd.weather.gc.ca/today/citypage_weather/docs/site_list_towns_en.csv.",
         "data": {
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
-          "station": "Weather station ID",
+          "station": "Station code",
           "language": "Weather information language"
         }
       }
@@ -16,7 +16,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
-      "bad_station_id": "Station ID is invalid, missing, or not found in the station ID database",
+      "bad_station_id": "Station code is invalid, missing, or not found in the station code database",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "error_response": "Response from Environment Canada in error",
       "too_many_attempts": "Connections to Environment Canada are rate limited; Try again in 60 seconds",
