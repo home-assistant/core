@@ -119,15 +119,11 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    _transport: str | None
-    _serial_comport_list: list[str] | None
-    _serial_comport_default: str | None
-
     def __init__(self) -> None:
         """Initialise the config flow."""
-        self._transport = None
-        self._serial_comport_list = None
-        self._serial_comport_default = None
+        self._transport: str | None = None
+        self._serial_comport_list: list[str] | None = None
+        self._serial_comport_default: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
