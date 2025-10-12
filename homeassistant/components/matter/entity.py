@@ -37,6 +37,18 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
+# Due to variances in labeling implementations, some manufacturers
+# use generic labels that are not useful for naming.
+# This blocklist is used to filter out those labels.
+# The blocklist is a tuple of:
+# vendorid (attributeKey 0/40/2)
+# productid (attributeKey 0/40/4)
+# hw version (attributeKey 0/40/8)
+# sw version (attributeKey 0/40/10)
+LABELING_BLOCKLIST = (
+    (5020, 65376, "1.0.0", "1.0.0"),  # Zemismart MT25B roller shade motor
+)
+
 
 def catch_matter_error[_R, **P](
     func: Callable[Concatenate[MatterEntity, P], Coroutine[Any, Any, _R]],
@@ -89,6 +101,16 @@ class MatterEntityLabeling(EntityDescription):
     def find_matching_labels(self, entity: MatterEntity) -> list[str]:
         """Find all labels for a Matter entity."""
 
+        device_info = entity._endpoint.device_info  # noqa: SLF001
+        if (
+            device_info.vendorID,
+            device_info.productID,
+            device_info.hardwareVersionString,
+            device_info.softwareVersionString,
+        ) in LABELING_BLOCKLIST:
+            return []
+
+        # get the labels from the UserLabel and FixedLabel clusters
         user_label_list: list[clusters.UserLabel.Structs.LabelStruct] = (
             entity.get_matter_attribute_value(clusters.UserLabel.Attributes.LabelList)
             or []
