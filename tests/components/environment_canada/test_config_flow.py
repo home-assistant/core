@@ -155,3 +155,31 @@ async def test_lat_lon_not_specified(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
         assert result["title"] == FAKE_TITLE
+
+
+async def test_coordinates_without_station(hass: HomeAssistant) -> None:
+    """Test setup with coordinates but no station ID."""
+    with (
+        mocked_ec(),
+        mocked_stations(),
+        patch(
+            "homeassistant.components.environment_canada.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        # Config with coordinates but no station
+        config_no_station = {
+            CONF_LANGUAGE: "English",
+            CONF_LATITUDE: 42.42,
+            CONF_LONGITUDE: -42.42,
+        }
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], config_no_station
+        )
+        await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"] == FAKE_CONFIG
+        assert result["title"] == FAKE_TITLE
