@@ -38,6 +38,10 @@ TYPE_SPECIFY_COUNTRY = "specify_country_code"
 
 _LOGGER = logging.getLogger(__name__)
 
+DESCRIPTOR_PLACEHOLDER = {
+    "register_link": "https://electricitymaps.com/free-tier",
+}
+
 
 class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Co2signal."""
@@ -70,6 +74,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=data_schema,
+                description_placeholders=DESCRIPTOR_PLACEHOLDER,
             )
 
         data = {CONF_API_KEY: user_input[CONF_API_KEY]}
@@ -179,4 +184,5 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id=step_id,
             data_schema=data_schema,
             errors=errors,
+            description_placeholders=DESCRIPTOR_PLACEHOLDER,
         )
