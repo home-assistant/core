@@ -2722,6 +2722,7 @@ async def test_format_zigbee_ieee() -> None:
         "1234567890ABCDEF",
         "1234567890abcdef",
         "12:34:56:78:90:ab:cd:ef",
+        "12-34-56-78-90-ab-cd-ef",
     ):
         assert format_zigbee_ieee(valid) == "12:34:56:78:90:ab:cd:ef"
 

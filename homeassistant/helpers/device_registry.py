@@ -304,7 +304,8 @@ def format_zigbee_ieee(ieee: str) -> str:
 
     if len(to_test) == 23 and to_test.count(":") == 7:
         return to_test.lower()
-
+    if len(to_test) == 23 and to_test.count("-") == 7:
+        to_test = to_test.replace("-", "")
     if len(to_test) == 16 and to_test.count(":") == 0:
         # no : included
         return ":".join(to_test.lower()[i : i + 2] for i in range(0, 16, 2))
