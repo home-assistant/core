@@ -68,6 +68,7 @@
         "name": "State",
         "state": {
           "baseline": "Baseline",
+          "weaning_baseline": "Baseline (Weaning)",
           "level1": "Level 1",
           "level2": "Level 2",
           "level3": "Level 3",
