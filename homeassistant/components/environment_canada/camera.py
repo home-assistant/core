@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from env_canada import ECRadar
 import voluptuous as vol
 
+from env_canada import ECRadar
 from homeassistant.components.camera import Camera
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
@@ -58,6 +58,14 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECRadar]], Camera
         self._attr_device_info = coordinator.device_info
 
         self.content_type = "image/gif"
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        # Trigger coordinator refresh when entity is enabled
+        # since radar coordinator skips initial refresh during setup
+        if not self.coordinator.last_update_success:
+            await self.coordinator.async_request_refresh()
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
