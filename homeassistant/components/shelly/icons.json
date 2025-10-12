@@ -1,6 +1,9 @@
 {
   "entity": {
     "button": {
+      "cury_boost": {
+        "default": "mdi:trending-up"
+      },
       "mute": {
         "default": "mdi:volume-mute"
       },

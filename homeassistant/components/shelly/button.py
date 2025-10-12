@@ -216,7 +216,7 @@ async def async_setup_entry(
         config_entry.entry_id,
         coordinator.mac,
         BUTTON_PLATFORM,
-        virtual_button_component_ids,
+        virtual_button_component_ids + list(coordinator.device.status),
     )
 
 
@@ -333,6 +333,21 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
         await self.coordinator.device.trigger_blu_trv_calibration(self._id)
 
 
+class ShellyCuryButton(ShellyRpcAttributeEntity, ButtonEntity):
+    """Represent a Shelly Cury button."""
+
+    entity_description: RpcButtonDescription
+    _id: int
+
+    @rpc_call
+    async def async_press(self) -> None:
+        """Triggers the Shelly button press service."""
+        if TYPE_CHECKING:
+            assert isinstance(self.coordinator, ShellyRpcCoordinator)
+
+        await self.coordinator.device.cury_boost(self._id, self.entity_description.slot)
+
+
 class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
     """Defines a Shelly RPC virtual component button."""
 
@@ -372,5 +387,19 @@ RPC_BUTTONS = {
         entity_category=EntityCategory.CONFIG,
         entity_class=ShellyBluTrvButton,
         models={MODEL_BLU_GATEWAY_G3},
+    ),
+    "cury_left_boost": RpcButtonDescription(
+        key="cury",
+        name="Left slot boost",
+        translation_key="cury_boost",
+        slot="left",
+        entity_class=ShellyCuryButton,
+    ),
+    "cury_right_boost": RpcButtonDescription(
+        key="cury",
+        name="Right slot boost",
+        translation_key="cury_boost",
+        slot="right",
+        entity_class=ShellyCuryButton,
     ),
 }

@@ -327,6 +327,7 @@ class RpcEntityDescription(EntityDescription):
     entity_class: Callable | None = None
     role: str | None = None
     models: set[str] | None = None
+    slot: str | None = None
 
 
 @dataclass(frozen=True)
@@ -628,7 +629,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
         self.last_state: State | None = None
         self.coordinator = coordinator
         self.attribute = attribute
-        self.block: Block | None = block  # type: ignore[assignment]
+        self.block: Block | None = block
         self.entity_description = description
 
         self._attr_device_info = get_entity_block_device_info(coordinator, block)
