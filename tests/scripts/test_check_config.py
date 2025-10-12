@@ -616,7 +616,7 @@ def test_fail_on_warnings_with_json_combinations() -> None:
         ({"domain1": ["error"]}, {}, 1),
         ({}, {"domain1": ["warning"]}, 1),  # With --fail-on-warnings
         ({"d1": ["e1"]}, {"d2": ["w1"]}, 1),  # Errors still take precedence
-        ({"d1": ["e1"], "d2": ["e2"]}, {"d3": ["w1"]}, 2),  # Multiple errors > warnings
+        ({"d1": ["e1"], "d2": ["e2"]}, {"d3": ["w1"]}, 1),  # Multiple errors > warnings
     ]
 
     for errors, warnings, expected_exit in test_scenarios:
