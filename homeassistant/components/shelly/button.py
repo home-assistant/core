@@ -173,7 +173,7 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set buttons for device."""
+    """Set up button entities."""
     entry_data = config_entry.runtime_data
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
