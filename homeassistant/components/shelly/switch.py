@@ -264,20 +264,20 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up switches for device."""
+    """Set up switch entities."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        return async_setup_rpc_entry(hass, config_entry, async_add_entities)
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-    return async_setup_block_entry(hass, config_entry, async_add_entities)
+    return _async_setup_block_entry(hass, config_entry, async_add_entities)
 
 
 @callback
-def async_setup_block_entry(
+def _async_setup_block_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up entities for block device."""
+    """Set up entities for BLOCK device."""
     coordinator = config_entry.runtime_data.block
     assert coordinator
 
@@ -295,7 +295,7 @@ def async_setup_block_entry(
 
 
 @callback
-def async_setup_rpc_entry(
+def _async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,

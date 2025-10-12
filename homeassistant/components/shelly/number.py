@@ -19,7 +19,7 @@ from homeassistant.components.number import (
     RestoreNumber,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -331,30 +331,20 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up numbers for device."""
+    """Set up number entities."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        coordinator = config_entry.runtime_data.rpc
-        assert coordinator
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-        async_setup_entry_rpc(
-            hass, config_entry, async_add_entities, RPC_NUMBERS, RpcNumber
-        )
+    return _async_setup_block_entry(hass, config_entry, async_add_entities)
 
-        # the user can remove virtual components from the device configuration, so
-        # we need to remove orphaned entities
-        virtual_number_ids = get_virtual_component_ids(
-            coordinator.device.config, NUMBER_PLATFORM
-        )
-        async_remove_orphaned_entities(
-            hass,
-            config_entry.entry_id,
-            coordinator.mac,
-            NUMBER_PLATFORM,
-            virtual_number_ids,
-            "number",
-        )
-        return
 
+@callback
+def _async_setup_block_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for BLOCK device."""
     if config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_attribute_entities(
             hass,
@@ -363,6 +353,35 @@ async def async_setup_entry(
             NUMBERS,
             BlockSleepingNumber,
         )
+
+
+@callback
+def _async_setup_rpc_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for RPC device."""
+    coordinator = config_entry.runtime_data.rpc
+    assert coordinator
+
+    async_setup_entry_rpc(
+        hass, config_entry, async_add_entities, RPC_NUMBERS, RpcNumber
+    )
+
+    # the user can remove virtual components from the device configuration, so
+    # we need to remove orphaned entities
+    virtual_number_ids = get_virtual_component_ids(
+        coordinator.device.config, NUMBER_PLATFORM
+    )
+    async_remove_orphaned_entities(
+        hass,
+        config_entry.entry_id,
+        coordinator.mac,
+        NUMBER_PLATFORM,
+        virtual_number_ids,
+        "number",
+    )
 
 
 class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
