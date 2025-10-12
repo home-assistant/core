@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from env_canada import ECAirQuality, ECRadar, ECWeather
+
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
