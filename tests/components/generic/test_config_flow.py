@@ -516,7 +516,6 @@ async def test_form_image_http_exceptions(
 
 
 @respx.mock
-@pytest.mark.usefixtures("fakeimg_png")
 async def test_form_image_http_302(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
@@ -526,9 +525,12 @@ async def test_form_image_http_302(
     """Test we handle image http 302 (temporary redirect)."""
     respx.get("http://127.0.0.1/testurl/1").side_effect = [
         httpx.Response(
-            status_code=302, headers={"Location": "http://127.0.0.1/testurl/2"}
+            status_code=302, headers={"Location": "http://127.0.0.1/testurl2/1"}
         )
     ]
+    respx.get("http://127.0.0.1/testurl2/1", name="fake_img2").respond(
+        stream=fakeimgbytes_png
+    )
     result2 = await hass.config_entries.flow.async_configure(
         user_flow["flow_id"],
         TESTDATA,
