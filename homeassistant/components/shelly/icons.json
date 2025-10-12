@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "cury_boost": {
+        "default": "mdi:trending-up"
+      }
+    },
     "button": {
       "cury_boost": {
         "default": "mdi:trending-up"
