@@ -438,6 +438,54 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_all_entities_with_zigbee_devices[binary_sensor.model0_identification_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.model0_identification_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Identification mode',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'identification_mode',
+    'unique_id': 'gateway0_zigbee_################-identification_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities_with_zigbee_devices[binary_sensor.model0_identification_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Identification mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_identification_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_all_entities_with_zigbee_devices[binary_sensor.model0_mounting_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -481,54 +529,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_mounting_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_all_entities_with_zigbee_devices[binary_sensor.model0_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.model0_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'identification_mode',
-    'unique_id': 'gateway0_zigbee_################-identification_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities_with_zigbee_devices[binary_sensor.model0_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.model0_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -584,7 +584,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities_with_zigbee_devices[binary_sensor.model1_none-entry]
+# name: test_all_entities_with_zigbee_devices[binary_sensor.model1_identification_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -597,7 +597,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.model1_none',
+    'entity_id': 'binary_sensor.model1_identification_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -609,7 +609,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Identification mode',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -619,13 +619,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities_with_zigbee_devices[binary_sensor.model1_none-state]
+# name: test_all_entities_with_zigbee_devices[binary_sensor.model1_identification_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model1 None',
+      'friendly_name': 'model1 Identification mode',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.model1_none',
+    'entity_id': 'binary_sensor.model1_identification_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
