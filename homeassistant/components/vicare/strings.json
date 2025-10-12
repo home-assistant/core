@@ -506,9 +506,6 @@
       "fuel_need": {
         "name": "Fuel need"
       },
-      "zigbee_signal_strength": {
-        "name": "Signal strength"
-      },
       "valve_position": {
         "name": "Valve position"
       }
