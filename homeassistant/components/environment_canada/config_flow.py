@@ -8,6 +8,7 @@ import aiohttp
 from env_canada import ECWeather, ec_exc
 from env_canada.ec_weather import get_ec_sites_list
 import voluptuous as vol
+
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
