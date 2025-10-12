@@ -52,13 +52,17 @@ class EasyEnergyDataUpdateCoordinator(DataUpdateCoordinator[EasyEnergyData]):
     async def _async_update_data(self) -> EasyEnergyData:
         """Fetch data from easyEnergy."""
         today = dt_util.now().date()
+        energy_today = None
         gas_today = None
         energy_tomorrow = None
 
         try:
-            energy_today = await self.easyenergy.energy_prices(
-                start_date=today, end_date=today
-            )
+            try:
+                energy_today = await self.easyenergy.energy_prices(
+                    start_date=today, end_date=today
+                )
+            except EasyEnergyNoDataError:
+                LOGGER.debug("No data for energy prices for easyEnergy integration")
             try:
                 gas_today = await self.easyenergy.gas_prices(
                     start_date=today, end_date=today
