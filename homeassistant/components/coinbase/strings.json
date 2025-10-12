@@ -11,7 +11,7 @@
       },
       "reauth_confirm": {
         "title": "Update Coinbase API credentials",
-        "description": "Your current Coinbase API key appears to be for the deprecated v2 API. Please reconfigure with a new API key created for the v3 API.\nVisit {developer_url} to create new credentials for {account_name}.",
+        "description": "Your current Coinbase API key appears to be for the deprecated v2 API. Please reconfigure with a new API key created for the v3 API. Visit the [Developer Platform]({developer_url}) to create new credentials for {account_name}.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "api_token": "API secret"
