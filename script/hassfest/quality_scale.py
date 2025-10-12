@@ -616,7 +616,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "media_extractor",
     "mediaroom",
     "melcloud",
-    "melissa",
     "melnor",
     "meraki",
     "message_bird",
