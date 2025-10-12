@@ -70,17 +70,13 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         uri = urlparse(discovery_info.config["uri"])
-        for entry in self._async_current_entries(include_ignore=True):
-            if (
-                entry.data[CONF_HOST] == uri.hostname
-                and entry.data[CONF_PORT] == uri.port
-            ):
-                return self.async_update_reload_and_abort(
-                    entry,
-                    unique_id=discovery_info.uuid,
-                    reload_even_if_entry_is_unchanged=False,
-                    reason="already_configured",
-                )
+        for entry in self._iter_entries(uri.hostname, uri.port):
+            return self.async_update_reload_and_abort(
+                entry,
+                unique_id=discovery_info.uuid,
+                reload_even_if_entry_is_unchanged=False,
+                reason="already_configured",
+            )
 
         self._hassio_discovery = discovery_info
         self.context.update(
@@ -139,12 +135,8 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.context["title_placeholders"] = {"name": self._name}
 
-        for entry in self._async_current_entries(include_ignore=True):
-            if (
-                entry.data[CONF_HOST] == service.host
-                and entry.data[CONF_PORT] == service.port
-                and entry.source != SOURCE_HASSIO
-            ):
+        for entry in self._iter_entries(service.host, service.port):
+            if entry.source != SOURCE_HASSIO:
                 return self.async_update_reload_and_abort(
                     entry,
                     unique_id=unique_id,
@@ -176,3 +168,9 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: self._service.port,
             },
         )
+
+    def _iter_entries(self, host: str, port: int):
+        """Yield entries with matching host/port."""
+        for entry in self._async_current_entries(include_ignore=True):
+            if entry.data.get(CONF_HOST) == host and entry.data.get(CONF_PORT) == port:
+                yield entry
