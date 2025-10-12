@@ -171,9 +171,20 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
             except TooManyAttemptsBannedException:
                 errors["base"] = "too_many_attempts"
             except UnknownUserException:
+                # If the user has no supported CozyTouch devices on
+                # the Overkiz API server. Login will return unknown user.
+                if user_input[CONF_HUB] in {
+                    Server.ATLANTIC_COZYTOUCH,
+                    Server.SAUTER_COZYTOUCH,
+                    Server.THERMOR_COZYTOUCH,
+                }:
+                    description_placeholders["unsupported_device"] = "CozyTouch"
+
                 # Somfy Protect accounts are not supported since they don't use
                 # the Overkiz API server. Login will return unknown user.
-                description_placeholders["unsupported_device"] = "Somfy Protect"
+                else:
+                    description_placeholders["unsupported_device"] = "Somfy Protect"
+
                 errors["base"] = "unsupported_hardware"
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
