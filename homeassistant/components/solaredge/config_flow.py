@@ -5,17 +5,25 @@ from __future__ import annotations
 import socket
 from typing import Any
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError
 import aiosolaredge
+from solaredge_web import SolarEdgeWeb
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import slugify
 
-from .const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
+from .const import (
+    CONF_SECTION_API_AUTH,
+    CONF_SECTION_WEB_AUTH,
+    CONF_SITE_ID,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 
 
 class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -50,10 +58,33 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._errors[CONF_SITE_ID] = "site_not_active"
                 return False
         except (TimeoutError, ClientError, socket.gaierror):
-            self._errors[CONF_SITE_ID] = "could_not_connect"
+            self._errors[CONF_SITE_ID] = "cannot_connect"
             return False
         except KeyError:
             self._errors[CONF_SITE_ID] = "invalid_api_key"
+            return False
+        return True
+
+    async def _async_check_web_login(
+        self, site_id: str, username: str, password: str
+    ) -> bool:
+        """Validate the user input allows us to connect to the web service."""
+        api = SolarEdgeWeb(
+            username=username,
+            password=password,
+            site_id=site_id,
+            session=async_get_clientsession(self.hass),
+        )
+        try:
+            await api.async_get_equipment()
+        except ClientResponseError as err:
+            if err.status in (401, 403):
+                self._errors["base"] = "invalid_auth"
+            else:
+                self._errors["base"] = "cannot_connect"
+            return False
+        except (TimeoutError, ClientError):
+            self._errors["base"] = "cannot_connect"
             return False
         return True
 
@@ -64,19 +95,34 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
         self._errors = {}
         if user_input is not None:
             name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
-            if self._site_in_configuration_exists(user_input[CONF_SITE_ID]):
+            site_id = user_input[CONF_SITE_ID]
+            api_auth = user_input.get(CONF_SECTION_API_AUTH, {})
+            web_auth = user_input.get(CONF_SECTION_WEB_AUTH, {})
+            api_key = api_auth.get(CONF_API_KEY)
+            username = web_auth.get(CONF_USERNAME)
+
+            if self._site_in_configuration_exists(site_id):
                 self._errors[CONF_SITE_ID] = "already_configured"
+            elif not api_key and not username:
+                self._errors["base"] = "auth_missing"
             else:
-                site = user_input[CONF_SITE_ID]
-                api = user_input[CONF_API_KEY]
-                can_connect = await self._async_check_site(site, api)
-                if can_connect:
-                    return self.async_create_entry(
-                        title=name, data={CONF_SITE_ID: site, CONF_API_KEY: api}
+                api_key_ok = True
+                if api_key:
+                    api_key_ok = await self._async_check_site(site_id, api_key)
+
+                web_login_ok = True
+                if api_key_ok and username:
+                    web_login_ok = await self._async_check_web_login(
+                        site_id, username, web_auth[CONF_PASSWORD]
                     )
 
+                if api_key_ok and web_login_ok:
+                    data = {CONF_SITE_ID: site_id}
+                    data.update(api_auth)
+                    data.update(web_auth)
+                    return self.async_create_entry(title=name, data=data)
         else:
-            user_input = {CONF_NAME: DEFAULT_NAME, CONF_SITE_ID: "", CONF_API_KEY: ""}
+            user_input = {}
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -84,8 +130,43 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
                     ): str,
-                    vol.Required(CONF_SITE_ID, default=user_input[CONF_SITE_ID]): str,
-                    vol.Required(CONF_API_KEY, default=user_input[CONF_API_KEY]): str,
+                    vol.Required(
+                        CONF_SITE_ID, default=user_input.get(CONF_SITE_ID, "")
+                    ): str,
+                    vol.Optional(CONF_SECTION_API_AUTH): section(
+                        vol.Schema(
+                            {
+                                vol.Optional(
+                                    CONF_API_KEY,
+                                    default=user_input.get(
+                                        CONF_SECTION_API_AUTH, {}
+                                    ).get(CONF_API_KEY, ""),
+                                ): str,
+                            }
+                        ),
+                        options={"collapsed": False},
+                    ),
+                    vol.Optional(CONF_SECTION_WEB_AUTH): section(
+                        vol.Schema(
+                            {
+                                vol.Inclusive(
+                                    CONF_USERNAME,
+                                    "web_account",
+                                    default=user_input.get(
+                                        CONF_SECTION_WEB_AUTH, {}
+                                    ).get(CONF_USERNAME, ""),
+                                ): str,
+                                vol.Inclusive(
+                                    CONF_PASSWORD,
+                                    "web_account",
+                                    default=user_input.get(
+                                        CONF_SECTION_WEB_AUTH, {}
+                                    ).get(CONF_PASSWORD, ""),
+                                ): str,
+                            }
+                        ),
+                        options={"collapsed": False},
+                    ),
                 }
             ),
             errors=self._errors,

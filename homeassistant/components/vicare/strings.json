@@ -302,6 +302,9 @@
       "energy_summary_dhw_consumption_heating_lastsevendays": {
         "name": "DHW electricity consumption last seven days"
       },
+      "hydraulic_separator_temperature": {
+        "name": "Hydraulic separator temperature"
+      },
       "power_consumption_today": {
         "name": "Electricity consumption today"
       },
@@ -378,6 +381,9 @@
           "discharge": "[%key:common::state::discharging%]",
           "standby": "[%key:common::state::standby%]"
         }
+      },
+      "ess_charge_total": {
+        "name": "Battery charge total"
       },
       "ess_discharge_today": {
         "name": "Battery discharge today"

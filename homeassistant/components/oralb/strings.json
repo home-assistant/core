@@ -14,7 +14,7 @@
     },
     "abort": {
       "not_supported": "Device not supported",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "no_devices_found": "No devices found",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
@@ -22,7 +22,15 @@
   "entity": {
     "sensor": {
       "sector": {
-        "name": "Sector"
+        "name": "Sector",
+        "state": {
+          "no_sector": "No sector",
+          "sector_1": "Sector 1",
+          "sector_2": "Sector 2",
+          "sector_3": "Sector 3",
+          "sector_4": "Sector 4",
+          "success": "Success"
+        }
       },
       "number_of_sectors": {
         "name": "Number of sectors"
@@ -31,10 +39,48 @@
         "name": "Sector timer"
       },
       "pressure": {
-        "name": "Pressure"
+        "name": "Pressure",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "power_button_pressed": "Power button pressed",
+          "button_pressed": "Button pressed"
+        }
       },
       "mode": {
-        "name": "Brushing mode"
+        "name": "Brushing mode",
+        "state": {
+          "daily_clean": "Daily clean",
+          "sensitive": "Sensitive",
+          "gum_care": "Gum care",
+          "intense": "Intense",
+          "whitening": "Whiten",
+          "whiten": "[%key:component::oralb::entity::sensor::mode::state::whitening%]",
+          "tongue_cleaning": "Tongue clean",
+          "super_sensitive": "Super sensitive",
+          "massage": "Massage",
+          "deep_clean": "Deep clean",
+          "turbo": "Turbo",
+          "off": "[%key:common::state::off%]",
+          "settings": "Settings"
+        }
+      },
+      "toothbrush_state": {
+        "state": {
+          "initializing": "Initializing",
+          "idle": "[%key:common::state::idle%]",
+          "running": "Running",
+          "charging": "[%key:common::state::charging%]",
+          "setup": "Setup",
+          "flight_menu": "Flight menu",
+          "selection_menu": "Selection menu",
+          "off": "[%key:common::state::off%]",
+          "sleeping": "Sleeping",
+          "transport": "Transport",
+          "final_test": "Final test",
+          "pcb_test": "PCB test"
+        }
       }
     }
   }
