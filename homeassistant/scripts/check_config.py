@@ -94,13 +94,6 @@ def run(script_args: list) -> int:
     if unknown:
         print(color("red", "Unknown arguments:", ", ".join(unknown)))
 
-    if args.json and args.secrets:
-        print(
-            color(
-                "yellow", "Warning: --secrets flag is ignored when using --json output"
-            )
-        )
-
     config_dir = os.path.join(os.getcwd(), args.config)
 
     if not args.json:
@@ -118,10 +111,31 @@ def run(script_args: list) -> int:
             "warnings": res["warn"],
             "components": list(res["components"].keys()),
         }
+
+        # Include secrets information if requested
+        if args.secrets:
+            # Build list of missing secrets (referenced but not found)
+            missing_secrets = [
+                key for key, val in res["secrets"].items() if val is None
+            ]
+
+            # Build list of used secrets (found and used)
+            used_secrets = [
+                key for key, val in res["secrets"].items() if val is not None
+            ]
+
+            json_object["secrets"] = {
+                "secret_files": res["secret_cache"],
+                "used_secrets": used_secrets,
+                "missing_secrets": missing_secrets,
+                "total_secrets": len(res["secrets"]),
+                "total_missing": len(missing_secrets),
+            }
+
         print(json.dumps(json_object, indent=2))
 
         # Determine exit code for JSON mode
-        return len(res["except"]) + int(args.fail_on_warnings and res["warn"])
+        return 1 if res["except"] or (args.fail_on_warnings and res["warn"]) else 0
 
     domain_info: list[str] = []
     if args.info:
@@ -196,7 +210,7 @@ def run(script_args: list) -> int:
             print(" -", skey + ":", sval)
 
     # Determine final exit code
-    return len(res["except"]) + int(args.fail_on_warnings and res["warn"])
+    return 1 if res["except"] or (args.fail_on_warnings and res["warn"]) else 0
 
 
 def check(config_dir, secrets=False):

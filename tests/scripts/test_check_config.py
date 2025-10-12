@@ -404,12 +404,12 @@ def test_run_exit_code_logic() -> None:
             ["--json", "--fail-on-warnings"],
             1,
         ),  # Both, both flags
-        ({"d1": ["e1"], "d2": ["e2"]}, {}, [], 2),  # Multiple error domains, no flags
+        ({"d1": ["e1"], "d2": ["e2"]}, {}, [], 1),  # Multiple error domains, no flags
         (
             {"d1": ["e1"], "d2": ["e2"]},
             {"d3": ["w1"]},
             ["--fail-on-warnings"],
-            2,
+            1,
         ),  # Multiple errors + warnings
     ]
 
