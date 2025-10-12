@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 from env_canada import ECRadar
 import voluptuous as vol
 
