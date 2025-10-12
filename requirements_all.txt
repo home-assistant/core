@@ -384,7 +384,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.12.0
+aioshelly==13.13.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1545,7 +1545,7 @@ nextcord==3.1.0
 nextdns==4.1.0
 
 # homeassistant.components.niko_home_control
-nhc==0.6.1
+nhc==0.7.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.19.0
