@@ -60,7 +60,7 @@ async def test_all_entities_with_zigbee_devices(
 ) -> None:
     """Test all entities."""
     fixtures: list[Fixture] = [
-        Fixture({"type:radiator"}, "vicare/ZigbeeTrv.json"),
+        Fixture({"type:radiator"}, "vicare/ZigbeeTRV.json"),
         Fixture({"type:repeater"}, "vicare/ZigbeeRepeater.json"),
     ]
     with (
