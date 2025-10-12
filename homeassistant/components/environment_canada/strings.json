@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Environment Canada: Location and language",
-        "description": "You can specify a location using either a station code or latitude/longitude coordinates.\n\nDefault behavior: If no station code is entered, the system uses the latitude/longitude values configured in your Home Assistant installation.\n\nStation code format: Station codes follow the format \"s0000123\" or simply \"123\".\n\nFind station codes at https://dd.weather.gc.ca/today/citypage_weather/docs/site_list_towns_en.csv.",
+        "title": "Environment Canada: weather location and language",
+        "description": "Select a weather station from the dropdown, or specify coordinates to use the closest station. The default coordinates are from your Home Assistant installation. Weather information can be retrieved in English or French.",
         "data": {
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
-          "station": "Station code",
+          "station": "Weather station",
           "language": "Weather information language"
         }
       }
