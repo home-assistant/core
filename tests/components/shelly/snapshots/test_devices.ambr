@@ -826,7 +826,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_shelly_2pm_gen3_cover[sensor.test_name_uptime-entry]
+# name: test_shelly_2pm_gen3_cover[sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -839,7 +839,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_name_uptime',
+    'entity_id': 'sensor.test_name_last_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -851,24 +851,24 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Uptime',
+    'original_name': 'Last restart',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'uptime',
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_shelly_2pm_gen3_cover[sensor.test_name_uptime-state]
+# name: test_shelly_2pm_gen3_cover[sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Test name Uptime',
+      'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_uptime',
+    'entity_id': 'sensor.test_name_last_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2657,7 +2657,7 @@
     'state': '216.3',
   })
 # ---
-# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_uptime-entry]
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2670,7 +2670,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_name_uptime',
+    'entity_id': 'sensor.test_name_last_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2682,24 +2682,24 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Uptime',
+    'original_name': 'Last restart',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'uptime',
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_uptime-state]
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Test name Uptime',
+      'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_uptime',
+    'entity_id': 'sensor.test_name_last_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4872,7 +4872,7 @@
     'state': '11.116',
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_uptime-entry]
+# name: test_shelly_pro_3em[sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4885,7 +4885,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_name_uptime',
+    'entity_id': 'sensor.test_name_last_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4897,24 +4897,24 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Uptime',
+    'original_name': 'Last restart',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'uptime',
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_uptime-state]
+# name: test_shelly_pro_3em[sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Test name Uptime',
+      'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_uptime',
+    'entity_id': 'sensor.test_name_last_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5743,7 +5743,7 @@
     'state': '-275.149993896484',
   })
 # ---
-# name: test_wall_display_xl[sensor.test_name_uptime-entry]
+# name: test_wall_display_xl[sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5756,7 +5756,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_name_uptime',
+    'entity_id': 'sensor.test_name_last_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5768,24 +5768,24 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Uptime',
+    'original_name': 'Last restart',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'uptime',
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_wall_display_xl[sensor.test_name_uptime-state]
+# name: test_wall_display_xl[sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Test name Uptime',
+      'friendly_name': 'Test name Last restart',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_uptime',
+    'entity_id': 'sensor.test_name_last_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

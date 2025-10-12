@@ -484,8 +484,8 @@ REST_SENSORS: Final = {
     ),
     "uptime": RestSensorDescription(
         key="uptime",
-        name="Uptime",
-        translation_key="uptime",
+        name="Last restart",
+        translation_key="last_restart",
         value=lambda status, last: get_device_uptime(status["uptime"], last),
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
@@ -1324,8 +1324,8 @@ RPC_SENSORS: Final = {
     "uptime": RpcSensorDescription(
         key="sys",
         sub_key="uptime",
-        name="Uptime",
-        translation_key="uptime",
+        name="Last restart",
+        translation_key="last_restart",
         value=get_device_uptime,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
