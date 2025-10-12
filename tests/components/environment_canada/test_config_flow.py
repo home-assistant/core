@@ -21,6 +21,11 @@ FAKE_CONFIG = {
     CONF_LONGITUDE: -42.42,
 }
 FAKE_TITLE = "Universal title!"
+FAKE_STATIONS = [
+    {"label": "Toronto, ON", "value": "123"},
+    {"label": "Ottawa, ON", "value": "456"},
+    {"label": "Montreal, QC", "value": "789"},
+]
 
 
 def mocked_ec():
@@ -40,10 +45,19 @@ def mocked_ec():
     )
 
 
+def mocked_stations():
+    """Mock the station list."""
+    return patch(
+        "homeassistant.components.environment_canada.config_flow.get_ec_sites_list",
+        return_value=FAKE_STATIONS,
+    )
+
+
 async def test_create_entry(hass: HomeAssistant) -> None:
     """Test creating an entry."""
     with (
         mocked_ec(),
+        mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
             return_value=True,
@@ -72,6 +86,7 @@ async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
 
     with (
         mocked_ec(),
+        mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
             return_value=True,
@@ -101,9 +116,12 @@ async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
 async def test_exception_handling(hass: HomeAssistant, error) -> None:
     """Test exception handling."""
     exc, base_error = error
-    with patch(
-        "homeassistant.components.environment_canada.config_flow.ECWeather",
-        side_effect=exc,
+    with (
+        mocked_stations(),
+        patch(
+            "homeassistant.components.environment_canada.config_flow.ECWeather",
+            side_effect=exc,
+        ),
     ):
         flow = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -121,6 +139,7 @@ async def test_lat_lon_not_specified(hass: HomeAssistant) -> None:
     """Test that the import step works when coordinates are not specified."""
     with (
         mocked_ec(),
+        mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
             return_value=True,
