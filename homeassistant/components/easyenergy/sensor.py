@@ -63,7 +63,9 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
         service_type="today_energy_usage",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_today.current_usage_price if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.current_usage_price
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="next_hour_price",
@@ -72,49 +74,63 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.price_at_time(
             data.energy_today.utcnow() + timedelta(hours=1)
-        ) if data.energy_today else None,
+        )
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="average_price",
         translation_key="average_price",
         service_type="today_energy_usage",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_today.average_usage_price if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.average_usage_price
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="max_price",
         translation_key="max_price",
         service_type="today_energy_usage",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_today.extreme_usage_prices[1] if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.extreme_usage_prices[1]
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="min_price",
         translation_key="min_price",
         service_type="today_energy_usage",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_today.extreme_usage_prices[0] if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.extreme_usage_prices[0]
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="highest_price_time",
         translation_key="highest_price_time",
         service_type="today_energy_usage",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.energy_today.highest_usage_price_time if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.highest_usage_price_time
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="lowest_price_time",
         translation_key="lowest_price_time",
         service_type="today_energy_usage",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.energy_today.lowest_usage_price_time if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.lowest_usage_price_time
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="percentage_of_max",
         translation_key="percentage_of_max",
         service_type="today_energy_usage",
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: data.energy_today.pct_of_max_usage if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.pct_of_max_usage
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="current_hour_price",
@@ -122,7 +138,9 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
         service_type="today_energy_return",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_today.current_return_price if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.current_return_price
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="next_hour_price",
@@ -131,63 +149,81 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.price_at_time(
             data.energy_today.utcnow() + timedelta(hours=1), "return"
-        ) if data.energy_today else None,
+        )
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="average_price",
         translation_key="average_price",
         service_type="today_energy_return",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_today.average_return_price if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.average_return_price
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="max_price",
         translation_key="max_price",
         service_type="today_energy_return",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_today.extreme_return_prices[1] if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.extreme_return_prices[1]
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="min_price",
         translation_key="min_price",
         service_type="today_energy_return",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_today.extreme_return_prices[0] if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.extreme_return_prices[0]
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="highest_price_time",
         translation_key="highest_price_time",
         service_type="today_energy_return",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.energy_today.highest_return_price_time if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.highest_return_price_time
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="lowest_price_time",
         translation_key="lowest_price_time",
         service_type="today_energy_return",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.energy_today.lowest_return_price_time if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.lowest_return_price_time
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="percentage_of_max",
         translation_key="percentage_of_max",
         service_type="today_energy_return",
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: data.energy_today.pct_of_max_return if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.pct_of_max_return
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="hours_priced_equal_or_lower",
         translation_key="hours_priced_equal_or_lower",
         service_type="today_energy_usage",
         native_unit_of_measurement=UnitOfTime.HOURS,
-        value_fn=lambda data: data.energy_today.hours_priced_equal_or_lower_usage if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.hours_priced_equal_or_lower_usage
+        if data.energy_today
+        else None,
     ),
     EasyEnergySensorEntityDescription(
         key="hours_priced_equal_or_higher",
         translation_key="hours_priced_equal_or_higher",
         service_type="today_energy_return",
         native_unit_of_measurement=UnitOfTime.HOURS,
-        value_fn=lambda data: data.energy_today.hours_priced_equal_or_higher_return if data.energy_today else None,
+        value_fn=lambda data: data.energy_today.hours_priced_equal_or_higher_return
+        if data.energy_today
+        else None,
     ),
 )
 
