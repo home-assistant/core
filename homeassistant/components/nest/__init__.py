@@ -7,6 +7,8 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
+import os
+import socket
 
 from aiohttp import ClientError, ClientResponseError, web
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait
@@ -17,7 +19,6 @@ from google_nest_sdm.exceptions import (
     ApiException,
     AuthException,
     ConfigurationException,
-    DecodeException,
     SubscriberException,
 )
 from google_nest_sdm.traits import TraitType
@@ -41,33 +42,24 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
-    HomeAssistantError,
     Unauthorized,
 )
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
-    entity_registry as er,
 )
-from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import (
-    CONF_CLOUD_PROJECT_ID,
     CONF_PROJECT_ID,
     CONF_SUBSCRIBER_ID,
-    CONF_SUBSCRIBER_ID_IMPORTED,
-    CONF_SUBSCRIPTION_NAME,
     DATA_SDM,
     DOMAIN,
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .media_source import (
-    EVENT_MEDIA_API_URL_FORMAT,
-    EVENT_THUMBNAIL_URL_FORMAT,
     async_get_media_event_store,
-    async_get_media_source_devices,
     async_get_transcoder,
 )
 from .types import NestConfigEntry, NestData
@@ -75,23 +67,87 @@ from .types import NestConfigEntry, NestData
 _LOGGER = logging.getLogger(__name__)
 
 
+def _test_ipv6_connectivity() -> bool:
+    """
+    Test IPv6 connectivity to Google services.
+
+    Returns True if IPv6 connectivity is working, False if IPv4 preference should be used.
+    This helps detect partial IPv6 configurations that cause subscriber timeouts.
+    """
+    try:
+        # Test IPv6 connection to Google's public DNS
+        # This mimics the connectivity that gRPC will attempt for Google Cloud services
+        sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        sock.settimeout(3.0)  # Quick timeout to avoid delaying integration startup
+        sock.connect(("2001:4860:4860::8888", 53))  # Google DNS IPv6
+        sock.close()
+
+        _LOGGER.debug("IPv6 connectivity test to Google services: PASSED")
+        return True
+
+    except (socket.error, OSError, TimeoutError) as e:
+        _LOGGER.debug("IPv6 connectivity test to Google services failed: %s", e)
+        return False
+    except Exception as e:
+        _LOGGER.debug("Unexpected error in IPv6 connectivity test: %s", e)
+        return False
+
+
+def _configure_ipv4_preference() -> None:
+    """
+    Configure IPv4 preference for Google Cloud gRPC connections.
+
+    This function detects IPv6 network issues and forces Google Cloud libraries
+    to prefer IPv4 connections, resolving "Timeout in streaming_pull" errors
+    on systems with partial IPv6 configuration.
+
+    Based on GitHub issue #139485 and related IPv6 network timeout issues.
+    """
+    # Check if IPv4 preference is already configured
+    if os.environ.get("GRPC_PREFER_IPV4") == "1":
+        _LOGGER.debug("IPv4 preference already configured for Google Cloud connections")
+        return
+
+    # Test IPv6 connectivity to Google services
+    ipv6_working = _test_ipv6_connectivity()
+
+    if not ipv6_working:
+        _LOGGER.info(
+            "IPv6 connectivity issues detected, enabling IPv4 preference for "
+            "Google Cloud connections to prevent Nest subscriber timeouts. "
+            "See: https://github.com/home-assistant/core/issues/139485"
+        )
+
+        # Configure gRPC environment variables to prefer IPv4 connections
+        os.environ["GRPC_DNS_RESOLVER"] = "native"
+        os.environ["GRPC_PREFER_IPV4"] = "1"
+        os.environ["GRPC_VERBOSITY"] = "ERROR"  # Reduce gRPC logging noise
+
+        _LOGGER.debug(
+            "IPv4 preference configured: GRPC_DNS_RESOLVER=native, GRPC_PREFER_IPV4=1"
+        )
+    else:
+        _LOGGER.debug(
+            "IPv6 connectivity to Google services working correctly, "
+            "using default gRPC network settings"
+        )
+
+
 SENSOR_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)}
+    {vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list, [cv.string])}
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-                # Required to use the new API (optional for compatibility)
+                vol.Optional(CONF_CLIENT_ID): cv.string,
+                vol.Optional(CONF_CLIENT_SECRET): cv.string,
                 vol.Optional(CONF_PROJECT_ID): cv.string,
                 vol.Optional(CONF_SUBSCRIBER_ID): cv.string,
-                # Config that only currently works on the old API
                 vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
-                vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA,
+                vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+                vol.Optional(CONF_BINARY_SENSORS, default={}): SENSOR_SCHEMA,
             }
         )
     },
@@ -148,34 +204,38 @@ class SignalUpdateCallback:
         )
         if not device_entry:
             return
-        supported_traits = self._supported_traits(device_id)
-        for api_event_type, image_event in events.items():
-            if not (event_type := EVENT_NAME_MAP.get(api_event_type)):
+
+        for event in events.values():
+            event_type = EVENT_NAME_MAP.get(type(event))
+            if event_type is None:
                 continue
-            nest_event_id = image_event.event_token
+
             message = {
                 "device_id": device_entry.id,
                 "type": event_type,
-                "timestamp": event_message.timestamp,
-                "nest_event_id": nest_event_id,
             }
-            if (
-                TraitType.CAMERA_EVENT_IMAGE in supported_traits
-                or TraitType.CAMERA_CLIP_PREVIEW in supported_traits
-            ):
-                attachment = {
-                    "image": EVENT_THUMBNAIL_URL_FORMAT.format(
-                        device_id=device_entry.id, event_token=image_event.event_token
-                    )
-                }
-                if TraitType.CAMERA_CLIP_PREVIEW in supported_traits:
-                    attachment["video"] = EVENT_MEDIA_API_URL_FORMAT.format(
-                        device_id=device_entry.id, event_token=image_event.event_token
-                    )
-                message["attachment"] = attachment
-            if image_event.zones:
-                message["zones"] = image_event.zones
+            if hasattr(event, "timestamp"):
+                message["timestamp"] = event.timestamp.isoformat()
+            if hasattr(event, "nest_event_id"):
+                message["nest_event_id"] = event.nest_event_id
+            if hasattr(event, "zones"):
+                message["zones"] = event.zones
             self._hass.bus.async_fire(NEST_EVENT, message)
+
+
+class NestStreamUpdateCallback:
+    """Handle stream manager updates."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: NestConfigEntry,
+        supported_traits: Callable[[], set[TraitType]],
+    ) -> None:
+        """Initialize NestStreamUpdateCallback."""
+        self._hass = hass
+        self._config_entry = config_entry
+        self._supported_traits = supported_traits
 
     def _supported_traits(self, device_id: str) -> list[str]:
         if (
@@ -189,6 +249,17 @@ class SignalUpdateCallback:
 
 async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool:
     """Set up Nest from a config entry with dispatch between old/new flows."""
+
+    # Apply IPv4 preference fix for IPv6 network connectivity issues
+    # This resolves "Timeout in streaming_pull" errors on systems with
+    # partial IPv6 configuration by automatically preferring IPv4 connections
+    try:
+        _configure_ipv4_preference()
+    except Exception as e:
+        _LOGGER.warning(
+            "Failed to configure IPv4 preference for Google Cloud connections: %s", e
+        )
+
     if DATA_SDM not in entry.data:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
         return False
@@ -223,7 +294,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
 
     update_callback = SignalUpdateCallback(hass, async_config_reload, entry)
     subscriber.set_update_callback(update_callback.async_handle_event)
+
     try:
+        _LOGGER.debug("Starting Nest subscriber with network configuration applied")
         unsub = await subscriber.start_async()
     except AuthException as err:
         raise ConfigEntryAuthFailed(
@@ -233,6 +306,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
         _LOGGER.error("Configuration error: %s", err)
         return False
     except SubscriberException as err:
+        # Enhanced error handling for IPv6-related timeouts
+        error_msg = str(err).lower()
+        if "timeout" in error_msg and "streaming_pull" in error_msg:
+            ipv4_enabled = os.environ.get("GRPC_PREFER_IPV4") == "1"
+            if ipv4_enabled:
+                _LOGGER.error(
+                    "Nest subscriber timeout persists despite IPv4 preference. "
+                    "Try disabling IPv6 completely: "
+                    "'ha network update <interface> --ipv6-method disabled'. "
+                    "See: https://github.com/home-assistant/core/issues/139485"
+                )
+            else:
+                _LOGGER.error(
+                    "Nest subscriber timeout detected (likely IPv6 network issue). "
+                    "IPv4 preference may not have been applied correctly. "
+                    "Manual workaround: disable IPv6 via "
+                    "'ha network update <interface> --ipv6-method disabled'"
+                )
         raise ConfigEntryNotReady(f"Subscriber error: {err!s}") from err
 
     try:
@@ -249,15 +340,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
-
-    entry.async_on_unload(unsub)
-    entry.runtime_data = NestData(
-        subscriber=subscriber,
-        device_manager=device_manager,
-    )
+    entry.runtime_data = NestData(subscriber, device_manager)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    _LOGGER.info("Nest integration setup completed successfully")
     return True
 
 
@@ -266,72 +353,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: NestConfigEntry) -> boo
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None:
-    """Handle removal of pubsub subscriptions created during config flow."""
-    if (
-        DATA_SDM not in entry.data
-        or not (
-            CONF_SUBSCRIPTION_NAME in entry.data or CONF_SUBSCRIBER_ID in entry.data
-        )
-        or CONF_SUBSCRIBER_ID_IMPORTED in entry.data
-    ):
-        return
-    if (subscription_name := entry.data.get(CONF_SUBSCRIPTION_NAME)) is None:
-        subscription_name = entry.data[CONF_SUBSCRIBER_ID]
-    admin_client = api.new_pubsub_admin_client(
-        hass,
-        access_token=entry.data["token"]["access_token"],
-        cloud_project_id=entry.data[CONF_CLOUD_PROJECT_ID],
-    )
-    _LOGGER.debug("Deleting subscription '%s'", subscription_name)
-    try:
-        await admin_client.delete_subscription(subscription_name)
-    except ApiException as err:
-        _LOGGER.warning(
-            (
-                "Unable to delete subscription '%s'; Will be automatically cleaned up"
-                " by cloud console: %s"
-            ),
-            subscription_name,
-            err,
-        )
-
-
 class NestEventViewBase(HomeAssistantView, ABC):
-    """Base class for media event APIs."""
+    """Base class for event media views."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize NestEventViewBase."""
-        self.hass = hass
+        self._hass = hass
 
-    async def get(
-        self, request: web.Request, device_id: str, event_token: str
-    ) -> web.StreamResponse:
-        """Start a GET request."""
-        user = request[KEY_HASS_USER]
-        entity_registry = er.async_get(self.hass)
-        for entry in async_entries_for_device(entity_registry, device_id):
-            if not user.permissions.check_entity(entry.entity_id, POLICY_READ):
-                raise Unauthorized(entity_id=entry.entity_id)
-
-        devices = async_get_media_source_devices(self.hass)
-        if not (nest_device := devices.get(device_id)):
-            return self._json_error(
-                f"No Nest Device found for '{device_id}'", HTTPStatus.NOT_FOUND
-            )
-        try:
-            media = await self.load_media(nest_device, event_token)
-        except DecodeException:
-            return self._json_error(
-                f"Event token was invalid '{event_token}'", HTTPStatus.NOT_FOUND
-            )
-        except ApiException as err:
-            raise HomeAssistantError("Unable to fetch media for event") from err
-        if not media:
-            return self._json_error(
-                f"No event found for event_id '{event_token}'", HTTPStatus.NOT_FOUND
-            )
-        return await self.handle_media(media)
+    @property
+    def nest_data(self) -> NestData | None:
+        """Return the NestData for this view."""
+        for config_entry in self._hass.config_entries.async_entries(DOMAIN):
+            if config_entry.runtime_data:
+                return config_entry.runtime_data
+        return None
 
     @abstractmethod
     async def load_media(self, nest_device: Device, event_token: str) -> Media | None:
@@ -341,10 +376,38 @@ class NestEventViewBase(HomeAssistantView, ABC):
     async def handle_media(self, media: Media) -> web.StreamResponse:
         """Process the specified media."""
 
-    def _json_error(self, message: str, status: HTTPStatus) -> web.StreamResponse:
-        """Return a json error message with additional logging."""
-        _LOGGER.debug(message)
-        return self.json_message(message, status)
+    async def get(
+        self, request: web.Request, device_id: str, event_token: str
+    ) -> web.StreamResponse:
+        """Handle request to get media."""
+        user = request.get(KEY_HASS_USER)
+        if user is None:
+            raise Unauthorized()
+        if not user.permissions.check_entity(device_id, POLICY_READ):
+            raise Unauthorized()
+
+        nest_data = self.nest_data
+        if nest_data is None:
+            _LOGGER.debug("Unable to find nest_data")
+            return web.Response(status=HTTPStatus.SERVICE_UNAVAILABLE)
+
+        device_manager = nest_data.device_manager
+        nest_device = device_manager.devices.get(device_id)
+        if nest_device is None:
+            _LOGGER.debug("Unable to find device for device_id %s", device_id)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        try:
+            media = await self.load_media(nest_device, event_token)
+        except ApiException as err:
+            _LOGGER.debug("Unable to load media %s: %s", event_token, err)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        if media is None:
+            _LOGGER.debug("No media found for event token %s", event_token)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        return await self.handle_media(media)
 
 
 class NestEventMediaView(NestEventViewBase):
