@@ -1538,7 +1538,7 @@ py-synologydsm-api==2.7.3
 pyCEC==0.5.2
 
 # homeassistant.components.control4
-pyControl4==1.2.0
+pyControl4==1.5.0
 
 # homeassistant.components.duotecno
 pyDuotecno==2024.10.1
