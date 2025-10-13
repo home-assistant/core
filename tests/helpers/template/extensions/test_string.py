@@ -43,18 +43,18 @@ def test_slugify(hass: HomeAssistant) -> None:
 def test_urlencode(hass: HomeAssistant) -> None:
     """Test the urlencode method."""
     # Test with dictionary
-    tpl = template.Template(
-        "{% set dict = {'foo': 'x&y', 'bar': 42} %}{{ dict | urlencode }}",
-        hass,
+
+    result = render(
+        hass, "{% set dict = {'foo': 'x&y', 'bar': 42} %}{{ dict | urlencode }}"
     )
-    assert tpl.async_render() == "foo=x%26y&bar=42"
+    assert result == "foo=x%26y&bar=42"
 
     # Test with string
-    tpl = template.Template(
-        "{% set string = 'the quick brown fox = true' %}{{ string | urlencode }}",
-        hass,
+
+    result = render(
+        hass, "{% set string = 'the quick brown fox = true' %}{{ string | urlencode }}"
     )
-    assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
+    assert result == "the%20quick%20brown%20fox%20%3D%20true"
 
 
 def test_string_functions_with_non_string_input(hass: HomeAssistant) -> None:
@@ -128,8 +128,8 @@ def test_urlencode_various_types(hass: HomeAssistant) -> None:
     assert "num=123" in result
 
     # Test with special characters
-    tpl = template.Template(
-        "{% set data = {'special': 'a+b=c&d'} %}{{ data | urlencode }}",
-        hass,
+
+    result = render(
+        hass, "{% set data = {'special': 'a+b=c&d'} %}{{ data | urlencode }}"
     )
-    assert tpl.async_render() == "special=a%2Bb%3Dc%26d"
+    assert result == "special=a%2Bb%3Dc%26d"
