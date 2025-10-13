@@ -1652,8 +1652,10 @@ RPC_SENSORS: Final = {
     "object_phase_a_voltage": RpcSensorDescription(
         key="object",
         sub_key="value",
+        # Name will be removed later
         name="Phase A voltage",
-        translation_key="phase_a_voltage",
+        translation_key="voltage_with_channel_name",
+        translation_placeholders={"channel_name": "Phase A"},
         value=lambda status, _: float(status["phase_a"]["voltage"]),
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
@@ -1664,8 +1666,10 @@ RPC_SENSORS: Final = {
     "object_phase_b_voltage": RpcSensorDescription(
         key="object",
         sub_key="value",
+        # Name will be removed later
         name="Phase B voltage",
-        translation_key="phase_b_voltage",
+        translation_key="voltage_with_channel_name",
+        translation_placeholders={"channel_name": "Phase B"},
         value=lambda status, _: float(status["phase_b"]["voltage"]),
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
@@ -1676,8 +1680,10 @@ RPC_SENSORS: Final = {
     "object_phase_c_voltage": RpcSensorDescription(
         key="object",
         sub_key="value",
+        # Name will be removed later
         name="Phase C voltage",
-        translation_key="phase_c_voltage",
+        translation_key="voltage_with_channel_name",
+        translation_placeholders={"channel_name": "Phase C"},
         value=lambda status, _: float(status["phase_c"]["voltage"]),
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
