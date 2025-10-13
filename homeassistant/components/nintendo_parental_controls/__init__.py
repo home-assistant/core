@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_SESSION_TOKEN, DOMAIN
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.TIME]
+_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.TIME, Platform.SWITCH]
 
 
 async def async_setup_entry(
