@@ -17,16 +17,15 @@ from . import find_update_callback, setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.freeze_time("2025-10-10 21:00:00")
 async def test_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test all entities."""
-    freezer.move_to("2025-10-10 21:00:00")
     with patch(
         "homeassistant.components.niko_home_control.PLATFORMS", [Platform.SCENE]
     ):
