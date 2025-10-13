@@ -78,7 +78,7 @@ class LabelPlacement(StrEnum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MatterEntityLabeling(EntityDescription):
+class MatterEntityLabeling:
     """Data structure for labeling Information."""
 
     # A label can be used to modify an entity's name by appending the text
@@ -145,7 +145,7 @@ class MatterEntityLabeling(EntityDescription):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MatterEntityDescription(MatterEntityLabeling):
+class MatterEntityDescription(MatterEntityLabeling, EntityDescription):
     """Describe the Matter entity."""
 
     # convert the value from the primary attribute to the value used by HA
