@@ -10,6 +10,7 @@ from homeassistant.components.aws_s3.backup import (
     MULTIPART_MIN_PART_SIZE_BYTES,
     suggested_filenames,
 )
+from homeassistant.components.aws_s3.config_flow import S3ConfigFlow
 from homeassistant.components.aws_s3.const import DOMAIN
 from homeassistant.components.backup import AgentBackup
 
@@ -80,3 +81,10 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data=USER_INPUT,
     )
+
+
+@pytest.fixture(autouse=True)
+def clear_orphaned_flow_models():
+    """Clear down any orphaned models belonging to abandoned flows at the end of each test."""
+    yield
+    S3ConfigFlow._config_models.clear()
