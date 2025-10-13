@@ -33,7 +33,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.BUTTON, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterButtonEntityDescription(ButtonEntityDescription, MatterEntityDescription):
     """Describe Matter Button entities."""
 

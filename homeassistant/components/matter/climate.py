@@ -183,7 +183,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.CLIMATE, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterClimateEntityDescription(ClimateEntityDescription, MatterEntityDescription):
     """Describe Matter Climate entities."""
 

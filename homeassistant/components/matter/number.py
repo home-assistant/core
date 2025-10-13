@@ -44,7 +44,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.NUMBER, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterNumberEntityDescription(NumberEntityDescription, MatterEntityDescription):
     """Describe Matter Number Input entities."""
 
