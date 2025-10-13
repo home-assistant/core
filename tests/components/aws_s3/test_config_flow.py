@@ -524,3 +524,91 @@ async def test_explicit_flow_user_create(hass: HomeAssistant) -> None:
         assert result["title"] == USER_INPUT_VALID_EXPLICIT[CONF_BUCKET]
         assert result["result"].state == config_entries.ConfigEntryState.LOADED
 
+
+###############
+# REAUTH FLOWS
+###############
+
+
+async def test_bucket_flow_reauth_initial(hass: HomeAssistant) -> None:
+    """Test initial reauth bucket flow step returns correct schema and values."""
+    expected_keys = {
+        CONF_BUCKET,
+        CONF_ENDPOINT_URL,
+        CONF_AUTH_MODE,
+    }
+    data_values = {
+        k: v for k, v in USER_INPUT_VALID_IMPLICIT.items() if k in expected_keys
+    }
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_get_entry",
+        autospec=True,
+        side_effect=lambda *_: MockConfigEntry(data=USER_INPUT_VALID_IMPLICIT),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context=config_entries.ConfigFlowContext(
+                source=config_entries.SOURCE_REAUTH, entry_id="test"
+            ),
+        )
+        assert result["step_id"] == "bucket"
+        assert len(result["errors"]) == 0
+        assert result["type"] == FlowResultType.FORM
+        _validate_data_schema_output(
+            result["data_schema"],
+            expected_keys=expected_keys,
+            expected_readonly=expected_keys - {CONF_AUTH_MODE},
+            expected_values=data_values,
+            expected_types={
+                CONF_BUCKET: TextSelectorType.TEXT,
+                CONF_ENDPOINT_URL: TextSelectorType.URL,
+            },
+        )
+
+
+
+async def test_bucket_flow_reauth_update_implicit(hass: HomeAssistant) -> None:
+    """Test reauth bucket flow updates entry with implicit credentials."""
+    expected_keys = {
+        CONF_BUCKET,
+        CONF_ENDPOINT_URL,
+        CONF_AUTH_MODE,
+    }
+    user_input = {
+        k: v for k, v in USER_INPUT_VALID_IMPLICIT.items() if k in expected_keys
+    }
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_get_entry",
+        autospec=True,
+        side_effect=lambda *_: MockConfigEntry(data=USER_INPUT_VALID_IMPLICIT),
+    ):
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context=config_entries.ConfigFlowContext(
+                source=config_entries.SOURCE_REAUTH, entry_id="Test"
+            ),
+        )
+        with (
+            patch(
+                "homeassistant.components.aws_s3.config_model.S3ConfigModel.async_validate_access",
+                autospec=True,
+                return_value=AsyncMock(),
+                side_effect=lambda self, *_: _record_errors(self, {}),
+            ) as mock_validate,
+            patch(
+                "homeassistant.config_entries.ConfigEntries._async_update_entry",
+                autospec=True,
+                side_effect=lambda *_, **__: True,
+            ) as mock_update,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                flow["flow_id"], user_input=user_input
+            )
+            mock_validate.assert_called_once()
+            mock_update.assert_called_once()
+            assert not result.get("step_id")
+            assert not result.get("errors")
+            assert result["type"] == FlowResultType.ABORT
+            assert result["flow_id"] == flow["flow_id"]
+            assert result["reason"] == "reauth_successful"
+
