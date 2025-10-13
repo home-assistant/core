@@ -317,7 +317,7 @@ async def test_rpc_cover_position_update(
     entity_id = "cover.test_name_test_cover_0"
     await init_integration(hass, 2)
 
-    # Set initial state to closing, position 50 set by cover_get_status mock
+    # Set initial state to closing, position 50 set by update_cover_status mock
     mutate_rpc_device_status(
         monkeypatch, mock_rpc_device, "cover:0", "state", "closing"
     )
@@ -346,7 +346,7 @@ async def test_rpc_cover_position_update(
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
     assert state.state == CoverState.CLOSED
 
-    # Ensure update_position does not call cover_get_status when the cover is not moving
+    # Ensure update_position does not call update_cover_status when the cover is not moving
     await mock_polling_rpc_update(hass, freezer, RPC_COVER_UPDATE_TIME_SEC)
     mock_rpc_device.update_cover_status.assert_not_called()
 
@@ -371,9 +371,9 @@ async def test_rpc_not_initialized_update(
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
     mock_rpc_device.mock_update()
 
-    # wait for update interval to allow update_position to call cover_get_status
+    # wait for update interval to allow update_position to call update_cover_status
     await mock_polling_rpc_update(hass, freezer, RPC_COVER_UPDATE_TIME_SEC)
 
-    mock_rpc_device.cover_get_status.assert_not_called()
+    mock_rpc_device.update_cover_status.assert_not_called()
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
