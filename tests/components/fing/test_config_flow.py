@@ -9,10 +9,14 @@ from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import AsyncMock
+from tests.conftest import MockConfigEntry
 
-@pytest.mark.parametrize("api_type", ["new"])
+
 async def test_verify_connection_success(
-    hass: HomeAssistant, mock_config_entry, mocked_fing_agent
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_fing_agent: AsyncMock,
 ) -> None:
     """Test successful connection verification."""
     result = await hass.config_entries.flow.async_init(
@@ -23,15 +27,16 @@ async def test_verify_connection_success(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=dict(mock_config_entry.data)
+        result["flow_id"],
+        user_input={
+            CONF_IP_ADDRESS: "192.168.1.1",
+            CONF_PORT: "49090",
+            CONF_API_KEY: "test_key",
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_IP_ADDRESS: "192.168.1.1",
-        CONF_PORT: "49090",
-        CONF_API_KEY: "test_key",
-    }
+    assert result["data"] == dict(mock_config_entry.data)
 
     entry = result["result"]
     assert entry.unique_id == "0000000000XX"
@@ -40,7 +45,9 @@ async def test_verify_connection_success(
 
 @pytest.mark.parametrize("api_type", ["old"])
 async def test_verify_api_version_outdated(
-    hass: HomeAssistant, mock_config_entry, mocked_fing_agent
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_fing_agent: AsyncMock,
 ) -> None:
     """Test connection verification failure."""
     result = await hass.config_entries.flow.async_init(
@@ -48,7 +55,12 @@ async def test_verify_api_version_outdated(
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=dict(mock_config_entry.data)
+        result["flow_id"],
+        user_input={
+            CONF_IP_ADDRESS: "192.168.1.1",
+            CONF_PORT: "49090",
+            CONF_API_KEY: "test_key",
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -56,34 +68,32 @@ async def test_verify_api_version_outdated(
 
 
 @pytest.mark.parametrize(
-    ("api_type", "exception", "error"),
+    ("exception", "error"),
     [
-        ("new", httpx.NetworkError("Network error"), "cannot_connect"),
-        ("new", httpx.TimeoutException("Timeout error"), "timeout_connect"),
+        (httpx.NetworkError("Network error"), "cannot_connect"),
+        (httpx.TimeoutException("Timeout error"), "timeout_connect"),
         (
-            "new",
             httpx.HTTPStatusError(
                 "HTTP status error - 500", request=None, response=httpx.Response(500)
             ),
             "http_status_error",
         ),
         (
-            "new",
             httpx.HTTPStatusError(
                 "HTTP status error - 401", request=None, response=httpx.Response(401)
             ),
             "invalid_api_key",
         ),
-        ("new", httpx.HTTPError("HTTP error"), "unknown"),
-        ("new", httpx.InvalidURL("Invalid URL"), "url_error"),
-        ("new", httpx.CookieConflict("Cookie conflict"), "unknown"),
-        ("new", httpx.StreamError("Stream error"), "unknown"),
+        (httpx.HTTPError("HTTP error"), "unknown"),
+        (httpx.InvalidURL("Invalid URL"), "url_error"),
+        (httpx.CookieConflict("Cookie conflict"), "unknown"),
+        (httpx.StreamError("Stream error"), "unknown"),
     ],
 )
 async def test_http_error_handling(
     hass: HomeAssistant,
-    mock_config_entry,
-    mocked_fing_agent,
+    mock_config_entry: MockConfigEntry,
+    mocked_fing_agent: AsyncMock,
     error: str,
     exception: Exception,
 ) -> None:
@@ -93,7 +103,12 @@ async def test_http_error_handling(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=dict(mock_config_entry.data)
+        result["flow_id"],
+        user_input={
+            CONF_IP_ADDRESS: "192.168.1.1",
+            CONF_PORT: "49090",
+            CONF_API_KEY: "test_key",
+        },
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == error
@@ -102,37 +117,38 @@ async def test_http_error_handling(
     mocked_fing_agent.get_devices.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=dict(mock_config_entry.data)
+        result["flow_id"],
+        user_input={
+            CONF_IP_ADDRESS: "192.168.1.1",
+            CONF_PORT: "49090",
+            CONF_API_KEY: "test_key",
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_IP_ADDRESS: "192.168.1.1",
-        CONF_PORT: "49090",
-        CONF_API_KEY: "test_key",
-    }
+    assert result["data"] == dict(mock_config_entry.data)
 
 
-@pytest.mark.parametrize("api_type", ["new"])
 async def test_duplicate_entries(
-    hass: HomeAssistant, mock_config_entry, mocked_fing_agent
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_fing_agent: AsyncMock,
 ) -> None:
-    """Test successful connection verification."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=dict(mock_config_entry.data)
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
+    """Test detecting duplicate entries."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=dict(mock_config_entry.data)
+        result["flow_id"],
+        user_input={
+            CONF_IP_ADDRESS: "192.168.1.1",
+            CONF_PORT: "49090",
+            CONF_API_KEY: "test_key",
+        },
     )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

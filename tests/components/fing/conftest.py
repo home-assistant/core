@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from fing_agent_api.models import AgentInfoResponse, DeviceResponse
 import pytest
 
-from homeassistant.components.fing.const import DOMAIN
+from homeassistant.components.fing.const import DOMAIN, UPNP_AVAILABLE
 from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
 
 from tests.common import Generator, load_fixture, load_json_object_fixture
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(api_type: str) -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -24,9 +24,16 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_IP_ADDRESS: "192.168.1.1",
             CONF_PORT: "49090",
             CONF_API_KEY: "test_key",
+            UPNP_AVAILABLE: api_type == "new",
         },
         unique_id="test_agent_id",
     )
+
+
+@pytest.fixture
+def api_type() -> str:
+    """API type to load."""
+    return "new"
 
 
 @pytest.fixture

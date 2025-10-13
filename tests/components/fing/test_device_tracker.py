@@ -4,7 +4,6 @@ from datetime import timedelta
 
 from fing_agent_api.models import DeviceResponse
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 
 from homeassistant.components.fing.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -13,19 +12,19 @@ from homeassistant.helpers import entity_registry as er
 from . import init_integration
 
 from tests.common import (
+    AsyncMock,
     async_fire_time_changed,
     async_load_json_object_fixture,
     snapshot_platform,
 )
-from tests.conftest import SnapshotAssertion
+from tests.conftest import MockConfigEntry, SnapshotAssertion
 
 
-@pytest.mark.parametrize("api_type", ["new"])
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_config_entry,
-    mocked_fing_agent,
+    mock_config_entry: MockConfigEntry,
+    mocked_fing_agent: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities created by Fing with snapshot."""
@@ -34,11 +33,10 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
-@pytest.mark.parametrize("api_type", ["new"])
 async def test_new_device_found(
     hass: HomeAssistant,
-    mock_config_entry,
-    mocked_fing_agent,
+    mock_config_entry: MockConfigEntry,
+    mocked_fing_agent: AsyncMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:

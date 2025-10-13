@@ -8,10 +8,16 @@ from homeassistant.core import HomeAssistant
 
 from . import init_integration
 
+from tests.common import AsyncMock
+from tests.conftest import MockConfigEntry
+
 
 @pytest.mark.parametrize("api_type", ["new", "old"])
 async def test_setup_entry_new_api(
-    hass: HomeAssistant, mock_config_entry, mocked_fing_agent, api_type
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_fing_agent: AsyncMock,
+    api_type: str,
 ) -> None:
     """Test setup Fing Agent /w New API."""
     entry = await init_integration(hass, mock_config_entry, mocked_fing_agent)
@@ -25,7 +31,9 @@ async def test_setup_entry_new_api(
 
 @pytest.mark.parametrize("api_type", ["new"])
 async def test_unload_entry(
-    hass: HomeAssistant, mock_config_entry, mocked_fing_agent
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_fing_agent: AsyncMock,
 ) -> None:
     """Test unload of entry."""
     entry = await init_integration(hass, mock_config_entry, mocked_fing_agent)
