@@ -7312,17 +7312,22 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "victron_ble": {
-      "name": "Victron BLE",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
-    "victron_remote_monitoring": {
-      "name": "Victron Remote Monitoring",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+    "victron": {
+      "name": "Victron",
+      "integrations": {
+        "victron_ble": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Victron BLE"
+        },
+        "victron_remote_monitoring": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Victron Remote Monitoring"
+        }
+      }
     },
     "vilfo": {
       "name": "Vilfo Router",
