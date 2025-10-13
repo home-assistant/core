@@ -432,11 +432,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                     != result.get("description_placeholders")
                 )
             ):
-                # Tell frontend to reload the flow state.
-                self.hass.bus.async_fire_internal(
-                    EVENT_DATA_ENTRY_FLOW_PROGRESSED,
-                    {"handler": flow.handler, "flow_id": flow_id, "refresh": True},
-                )
+                flow.async_notify_flow_changed()
 
         return result
 
@@ -884,6 +880,17 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         self.hass.bus.async_fire_internal(
             EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE,
             {"handler": self.handler, "flow_id": self.flow_id, "progress": progress},
+        )
+
+    @callback
+    def async_notify_flow_changed(self) -> None:
+        """Notify listeners that the flow has changed.
+
+        This notifies listeners (such as the frontend) to reload the flow state.
+        """
+        self.hass.bus.async_fire_internal(
+            EVENT_DATA_ENTRY_FLOW_PROGRESSED,
+            {"handler": self.handler, "flow_id": self.flow_id, "refresh": True},
         )
 
     @callback
