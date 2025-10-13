@@ -194,6 +194,23 @@
         'unit': None,
         'value': 'AVAILABLE',
       }),
+      'location': dict({
+        'extra_data': dict({
+        }),
+        'geometry': dict({
+          'coordinates': '**REDACTED**',
+          'extra_data': dict({
+            'type': 'Point',
+          }),
+        }),
+        'properties': dict({
+          'extra_data': dict({
+          }),
+          'heading': '**REDACTED**',
+          'timestamp': '2024-12-30T15:00:00+00:00',
+        }),
+        'type': 'Feature',
+      }),
     }),
     'Volvo very slow interval coordinator': dict({
       'averageEnergyConsumption': dict({
