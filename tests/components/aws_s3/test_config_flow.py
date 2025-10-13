@@ -906,6 +906,57 @@ async def test_bucket_flow_reconfigure_initial(hass: HomeAssistant) -> None:
         )
 
 
+async def test_bucket_flow_reconfigure_validate_access_errors(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfigure bucket flow with access validation errors returns correct errors."""
+    expected_keys = {
+        CONF_BUCKET,
+        CONF_ENDPOINT_URL,
+        CONF_AUTH_MODE,
+    }
+    user_input = {
+        k: v for k, v in USER_INPUT_VALID_IMPLICIT.items() if k in expected_keys
+    }
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_get_entry",
+        autospec=True,
+        side_effect=lambda *_: MockConfigEntry(data=USER_INPUT_VALID_IMPLICIT),
+    ):
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context=config_entries.ConfigFlowContext(
+                source=config_entries.SOURCE_RECONFIGURE, entry_id="Test"
+            ),
+        )
+        errors = {
+            CONF_ENDPOINT_URL: "cannot_connect",
+            CONF_AUTH_MODE: "no_credentials_implicit",
+        }
+        with patch(
+            "homeassistant.components.aws_s3.config_model.S3ConfigModel.async_validate_access",
+            autospec=True,
+            return_value=AsyncMock(),
+            side_effect=lambda self, *_: _record_errors(self, errors),
+        ) as mock:
+            result = await hass.config_entries.flow.async_configure(
+                flow["flow_id"], user_input=user_input
+            )
+            mock.assert_called_once()
+            assert result["step_id"] == "bucket"
+            assert result["errors"] == errors
+            assert result["type"] == FlowResultType.FORM
+            _validate_data_schema_output(
+                result["data_schema"],
+                expected_keys=expected_keys,
+                expected_readonly=expected_keys - {CONF_AUTH_MODE},
+                expected_values=user_input,
+                expected_types={
+                    CONF_BUCKET: TextSelectorType.TEXT,
+                    CONF_ENDPOINT_URL: TextSelectorType.URL,
+                },
+            )
+
 
 async def test_bucket_flow_reconfigure_update_implicit(hass: HomeAssistant) -> None:
     """Test reconfigure bucket flow updates entry with implicit credentials."""
