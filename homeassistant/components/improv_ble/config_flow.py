@@ -152,7 +152,9 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             #    matcher will see new content and trigger discovery since we cleared
             #    the history
             # 3. No ongoing monitoring or callbacks - zero performance overhead
-            bluetooth.async_rediscover_address(self.hass, self._discovery_info.address)
+            bluetooth.async_clear_address_from_match_history(
+                self.hass, self._discovery_info.address
+            )
             raise AbortFlow("already_provisioned")
 
     @callback
