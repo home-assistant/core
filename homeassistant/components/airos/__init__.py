@@ -86,7 +86,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
         new_version = 2
         new_minor_version = 1
 
-        mac_adress = dr.format_mac(str(entry.unique_id))
+        mac_adress = dr.format_mac(entry.unique_id)
 
         device_registry = dr.async_get(hass)
         if device_entry := device_registry.async_get_device(
