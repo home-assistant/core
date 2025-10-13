@@ -1,5 +1,6 @@
 """Test the Improv via BLE config flow."""
 
+import asyncio
 from collections.abc import Callable
 from unittest.mock import patch
 
@@ -844,14 +845,6 @@ async def test_flow_chaining_with_next_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision"
 
-    # Complete provisioning successfully and simulate another integration discovering the device
-    # Use a future to control when provision completes
-    provision_future = hass.loop.create_future()
-
-    async def provision_with_delay(*args):
-        """Simulate a provision call that waits on a future."""
-        await provision_future
-
     with (
         patch(
             f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
@@ -859,7 +852,7 @@ async def test_flow_chaining_with_next_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
-            side_effect=provision_with_delay,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -870,8 +863,7 @@ async def test_flow_chaining_with_next_flow(hass: HomeAssistant) -> None:
         assert result["step_id"] == "do_provision"
 
         # Allow the provision task to actually start and create the future
-        await hass.async_block_till_done()
-
+        await asyncio.sleep(0)
         # Simulate another integration discovering the device and registering a flow
         # This happens while provision is waiting on the future
         improv_ble.async_register_next_flow(
@@ -879,7 +871,6 @@ async def test_flow_chaining_with_next_flow(hass: HomeAssistant) -> None:
         )
 
         # Now complete the provision
-        provision_future.set_result(None)
         await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -966,15 +957,6 @@ async def test_flow_chaining_with_redirect_url(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision"
 
-    # Complete provisioning successfully with redirect URL and ESPHome discovery
-    # Use a future to control when provision completes
-    provision_future = hass.loop.create_future()
-
-    async def provision_with_delay(*args):
-        """Simulate a provision call that waits on a future."""
-        await provision_future
-        return "http://device.local"
-
     with (
         patch(
             f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
@@ -982,7 +964,7 @@ async def test_flow_chaining_with_redirect_url(hass: HomeAssistant) -> None:
         ),
         patch(
             f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
-            side_effect=provision_with_delay,
+            return_value="http://blabla.local",
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -991,6 +973,8 @@ async def test_flow_chaining_with_redirect_url(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "provisioning"
         assert result["step_id"] == "do_provision"
+        # Allow the provision task to actually start and create the future
+        await asyncio.sleep(0)
 
         # Simulate ESPHome discovering the device and notifying Improv BLE
         # This happens while provision is still running
@@ -999,7 +983,6 @@ async def test_flow_chaining_with_redirect_url(hass: HomeAssistant) -> None:
         )
 
         # Now complete the provision
-        provision_future.set_result(None)
         await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
