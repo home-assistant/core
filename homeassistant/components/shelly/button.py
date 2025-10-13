@@ -62,6 +62,8 @@ class ShellyButtonDescription[
 class RpcButtonDescription(RpcEntityDescription, ButtonEntityDescription):
     """Class to describe a RPC button."""
 
+    slot: str | None = None
+
 
 BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ShellyButtonDescription[ShellyBlockCoordinator | ShellyRpcCoordinator](

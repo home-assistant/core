@@ -327,7 +327,6 @@ class RpcEntityDescription(EntityDescription):
     entity_class: Callable | None = None
     role: str | None = None
     models: set[str] | None = None
-    slot: str | None = None
 
 
 @dataclass(frozen=True)

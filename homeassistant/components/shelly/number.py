@@ -73,6 +73,7 @@ class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
     step_fn: Callable[[dict], float] | None = None
     mode_fn: Callable[[dict], NumberMode] | None = None
     method: str
+    slot: str | None = None
 
 
 class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
