@@ -48,14 +48,14 @@ rules:
   parallel-updates:
     status: exempt
     comment: This integration does not poll.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices:
     status: exempt
     comment: This integration does not have entities.
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: S3 is a cloud service that is not discovered on the network.
@@ -98,7 +98,7 @@ rules:
   icon-translations:
     status: exempt
     comment: This integration does not use icons.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: There are no issues which can be repaired.
