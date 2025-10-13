@@ -123,8 +123,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug("min_info for device %s: %r", self.device_id, min_info)
         elif self.device_type == "tlx":
             tlx_info = self.api.tlx_detail(self.device_id)
-            tlx_data = tlx_info["data"]
-            self.data = tlx_data
+            self.data = tlx_info["data"]
             _LOGGER.debug("tlx_info for device %s: %r", self.device_id, tlx_info)
         elif self.device_type == "storage":
             storage_info_detail = self.api.storage_params(self.device_id)
