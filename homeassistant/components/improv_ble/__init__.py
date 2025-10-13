@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.typing import ConfigType
 
 from .const import PROVISIONING_FUTURES
 
@@ -16,15 +14,14 @@ _LOGGER = logging.getLogger(__name__)
 __all__ = ["async_register_next_flow"]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Improv BLE component."""
-    hass.data[PROVISIONING_FUTURES] = {}
-    return True
+@callback
+def async_get_provisioning_futures(hass: HomeAssistant) -> dict:
+    """Get the provisioning futures registry, creating it if needed.
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up improv_ble from a config entry."""
-    raise NotImplementedError
+    This is a helper function for internal use and testing.
+    It ensures the registry exists without requiring async_setup to run first.
+    """
+    return hass.data.setdefault(PROVISIONING_FUTURES, {})
 
 
 def async_register_next_flow(hass: HomeAssistant, ble_mac: str, flow_id: str) -> None:
@@ -40,7 +37,7 @@ def async_register_next_flow(hass: HomeAssistant, ble_mac: str, flow_id: str) ->
         flow_id: Config flow ID to chain to
 
     """
-    registry = hass.data.get(PROVISIONING_FUTURES, {})
+    registry = async_get_provisioning_futures(hass)
     normalized_mac = format_mac(ble_mac)
 
     future = registry.get(normalized_mac)

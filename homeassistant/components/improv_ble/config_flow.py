@@ -32,7 +32,8 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN, PROVISIONING_FUTURES
+from . import async_get_provisioning_futures
+from .const import DOMAIN, PROVISIONING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -370,11 +371,13 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                 assert self._discovery_info is not None
                 ble_mac = format_mac(self._discovery_info.address)
                 future = self.hass.loop.create_future()
-                provisioning_futures = self.hass.data[PROVISIONING_FUTURES]
+                provisioning_futures = async_get_provisioning_futures(self.hass)
                 provisioning_futures[ble_mac] = future
 
                 try:
-                    next_flow_id = await asyncio.wait_for(future, timeout=10.0)
+                    next_flow_id = await asyncio.wait_for(
+                        future, timeout=PROVISIONING_TIMEOUT
+                    )
                 except TimeoutError:
                     _LOGGER.debug(
                         "Timeout waiting for next flow, proceeding with URL redirect"
