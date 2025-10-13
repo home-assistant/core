@@ -4,6 +4,7 @@
   "codeowners": ["@Tommatheussen"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/satel_integra",
+  "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["satel_integra"],
   "requirements": ["satel-integra==0.3.7"],
