@@ -480,7 +480,7 @@
         "name": "Lifetime batteries charged from grid"
       },
       "tlx_p_system": {
-        "name": "System Power"
+        "name": "System power"
       },
       "tlx_p_self": {
         "name": "Self power"
