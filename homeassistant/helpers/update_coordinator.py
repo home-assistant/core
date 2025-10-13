@@ -300,12 +300,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         to ensure that multiple retries do not cause log spam.
         """
         if self.config_entry is None:
-            report_usage(
-                "uses `async_config_entry_first_refresh`, which is only supported "
-                "for coordinators with a config entry",
-                breaks_in_ha_version="2025.11",
+            raise ConfigEntryError(
+                "Detected code that uses `async_config_entry_first_refresh`,"
+                " which is only supported for coordinators with a config entry"
             )
-        elif (
+        if (
             self.config_entry.state
             is not config_entries.ConfigEntryState.SETUP_IN_PROGRESS
         ):
