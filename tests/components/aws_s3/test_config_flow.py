@@ -237,3 +237,75 @@ async def test_bucket_flow_user_create_implicit(hass: HomeAssistant) -> None:
         assert result["title"] == USER_INPUT_VALID_IMPLICIT[CONF_BUCKET]
         assert result["result"].state == config_entries.ConfigEntryState.LOADED
 
+
+async def test_profile_flow_user_initial(hass: HomeAssistant) -> None:
+    """Test initial user profile flow step returns correct schema and values."""
+    bucket_expected_keys = {
+        CONF_BUCKET,
+        CONF_ENDPOINT_URL,
+        CONF_AUTH_MODE,
+    }
+    bucket_user_input = {
+        k: v for k, v in USER_INPUT_VALID_PROFILE.items() if k in bucket_expected_keys
+    }
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
+    )
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input=bucket_user_input
+    )
+    assert result["step_id"] == "profile"
+    assert len(result["errors"]) == 0
+    assert result["type"] == FlowResultType.FORM
+    _validate_data_schema_output(
+        result["data_schema"],
+        expected_keys={CONF_PROFILE_NAME},
+        expected_readonly=set({}),
+        expected_values={},
+        expected_types={CONF_PROFILE_NAME: TextSelectorType.TEXT},
+    )
+
+
+async def test_profile_flow_user_create(hass: HomeAssistant) -> None:
+    """Test user profile flow creates entry with profile credentials."""
+    bucket_expected_keys = {
+        CONF_BUCKET,
+        CONF_ENDPOINT_URL,
+        CONF_AUTH_MODE,
+    }
+    bucket_user_input = {
+        k: v for k, v in USER_INPUT_VALID_PROFILE.items() if k in bucket_expected_keys
+    }
+    profile_expected_keys = {
+        CONF_PROFILE_NAME,
+    }
+    profile_user_input = {
+        k: v for k, v in USER_INPUT_VALID_PROFILE.items() if k in profile_expected_keys
+    }
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
+    )
+    with patch(
+        "homeassistant.components.aws_s3.config_model.S3ConfigModel.async_validate_access",
+        autospec=True,
+        return_value=AsyncMock(),
+        side_effect=lambda self, *_: _record_errors(self, {}),
+    ) as mock:
+        await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input=bucket_user_input
+        )
+        mock.assert_not_called()
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input=profile_user_input
+        )
+        mock.assert_called()
+        assert not result.get("step_id")
+        assert not result.get("errors")
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["flow_id"] == flow["flow_id"]
+        assert result["data"] == USER_INPUT_VALID_PROFILE
+        assert result["title"] == USER_INPUT_VALID_PROFILE[CONF_BUCKET]
+        assert result["result"].state == config_entries.ConfigEntryState.LOADED
+
