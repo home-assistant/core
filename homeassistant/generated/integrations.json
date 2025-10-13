@@ -7313,7 +7313,7 @@
       "iot_class": "cloud_polling"
     },
     "victron_ble": {
-      "name": "Victron Bluetooth Low Energy",
+      "name": "Victron BLE",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"

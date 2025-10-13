@@ -1,6 +1,6 @@
 {
   "domain": "victron_ble",
-  "name": "Victron Bluetooth Low Energy",
+  "name": "Victron BLE",
   "bluetooth": [
     {
       "connectable": false,
