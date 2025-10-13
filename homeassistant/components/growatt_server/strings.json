@@ -461,6 +461,11 @@
       "total_maximum_output": {
         "name": "Maximum power"
       }
+    },
+    "switch": {
+      "ac_charge": {
+        "name": "Charge from grid"
+      }
     }
   }
 }
