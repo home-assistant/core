@@ -41,6 +41,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.const import ATTR_NAME, STATE_OFF
+from homeassistant.components.media_player import RepeatMode
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -112,6 +113,13 @@ QUEUE_OPTION_MAP = {
     MediaPlayerEnqueue.NEXT: QueueOption.NEXT,
     MediaPlayerEnqueue.PLAY: QueueOption.PLAY,
     MediaPlayerEnqueue.REPLACE: QueueOption.REPLACE,
+}
+
+REPEAT_MODE_MAPPING_TO_HA = {
+    MassRepeatMode.OFF: RepeatMode.OFF,
+    MassRepeatMode.ONE: RepeatMode.ONE,
+    MassRepeatMode.ALL: RepeatMode.ALL,
+    # UNKNOWN is intentionally not mapped - will return None
 }
 
 SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
@@ -670,7 +678,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         # player has an MA queue active (either its own queue or some group queue)
         self._attr_app_id = DOMAIN
         self._attr_shuffle = queue.shuffle_enabled
-        self._attr_repeat = queue.repeat_mode.value
+        self._attr_repeat = REPEAT_MODE_MAPPING_TO_HA.get(queue.repeat_mode)
         if not (cur_item := queue.current_item):
             # queue is empty
             return
