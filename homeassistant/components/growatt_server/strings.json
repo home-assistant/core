@@ -475,6 +475,11 @@
       "battery_discharge_soc_limit": {
         "name": "Battery discharge SOC limit"
       }
+    },
+    "switch": {
+      "ac_charge": {
+        "name": "Charge from grid"
+      }
     }
   }
 }
