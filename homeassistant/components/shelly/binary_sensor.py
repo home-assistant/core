@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, cast
 
+from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.binary_sensor import (
@@ -16,10 +17,11 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD, MODEL_FRANKEVER_WATER_VALVE
-from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,
@@ -35,6 +37,7 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
+    get_block_entity_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
     is_block_momentary_input,
@@ -417,6 +420,22 @@ class BlockSleepingBinarySensor(
     """Represent a block sleeping binary sensor."""
 
     entity_description: BlockBinarySensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block | None,
+        attribute: str,
+        description: BlockEntityDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        super().__init__(coordinator, block, attribute, description, entry)
+        # Temporary until translations are added
+        if block is not None:
+            self._attr_name = get_block_entity_name(
+                coordinator.device, block, description.name
+            )
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

@@ -26,7 +26,6 @@ from .utils import (
     async_remove_shelly_entity,
     get_block_channel_name,
     get_block_device_info,
-    get_block_entity_name,
     get_rpc_device_info,
     get_rpc_entity_name,
     get_rpc_key_instances,
@@ -653,9 +652,15 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
             self._attr_unique_id = (
                 f"{self.coordinator.mac}-{block.description}-{attribute}"
             )
-            self._attr_name = get_block_entity_name(
-                coordinator.device, block, description.name
-            )
+            if (
+                channel_name := get_block_channel_name(coordinator.device, block)
+            ) is not None:
+                self._attr_translation_placeholders = {"channel_name": channel_name}
+                if (
+                    translation_key := description.translation_key
+                    or description.device_class
+                ):
+                    self._attr_translation_key = f"{translation_key}_with_channel_name"
         elif entry is not None:
             self._attr_unique_id = entry.unique_id
 

@@ -136,6 +136,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         if coordinator.model in MODELS_SUPPORTING_LIGHT_TRANSITION:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
 
+        # Temporary until translations are added
         self._attr_name = get_block_entity_name(coordinator.device, block)
 
     @property

@@ -41,6 +41,7 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
+    get_block_entity_name,
     get_device_entry_gen,
     get_virtual_component_ids,
     is_block_exclude_from_relay,
@@ -368,6 +369,11 @@ class BlockSleepingMotionSwitch(
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, block, attribute, description, entry)
         self.last_state: State | None = None
+        # Temporary until translations are added
+        if block is not None:
+            self._attr_name = get_block_entity_name(
+                coordinator.device, block, description.name
+            )
 
     @property
     def is_on(self) -> bool | None:

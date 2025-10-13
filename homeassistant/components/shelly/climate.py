@@ -434,6 +434,7 @@ class BlockSleepingClimate(
 
         self._channel = cast(int, self._unique_id.split("_")[1])
 
+        # Temporary until translations are added
         self._attr_name = get_block_entity_name(coordinator.device, sensor_block)
 
     @property
