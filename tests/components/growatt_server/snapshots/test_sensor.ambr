@@ -2979,7 +2979,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
-    'original_name': 'Self Power',
+    'original_name': 'Self power',
     'platform': 'growatt_server',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2993,7 +2993,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'MIN123456 Self Power',
+      'friendly_name': 'MIN123456 Self power',
       'icon': 'mdi:solar-power',
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -3141,7 +3141,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
-    'original_name': 'System Power',
+    'original_name': 'System power',
     'platform': 'growatt_server',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3155,7 +3155,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'MIN123456 System Power',
+      'friendly_name': 'MIN123456 System power',
       'icon': 'mdi:solar-power',
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),

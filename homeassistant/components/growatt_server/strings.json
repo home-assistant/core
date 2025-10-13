@@ -24,6 +24,11 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "username": "Your Growatt account username",
+          "password": "Your Growatt account password",
+          "url": "Growatt server URL"
         }
       },
       "token_auth": {
@@ -31,11 +36,17 @@
         "description": "Token authentication is only supported for MIN/TLX devices. For other device types, please use username/password authentication.",
         "data": {
           "token": "API Token"
+        },
+        "data_description": {
+          "token": "API token from your Growatt account"
         }
       },
       "plant": {
         "data": {
           "plant_id": "Plant"
+        },
+        "data_description": {
+          "plant_id": "Select which plant to monitor"
         },
         "title": "Select your plant"
       }
