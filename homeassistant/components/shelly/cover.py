@@ -206,7 +206,6 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         super().__init__(coordinator, key, attribute, description)
         self._attr_unique_id: str = f"{coordinator.mac}-{key}"
         self._update_task: asyncio.Task | None = None
-        self._update_status: dict[str, Any] | None = None
         if self.status["pos_control"]:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
         if coordinator.device.config[key].get("slat", {}).get("enable"):
@@ -227,9 +226,6 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         """Position of the cover."""
         if not self.status["pos_control"]:
             return None
-
-        if self._update_status is not None:
-            return cast(int, self._update_status["current_pos"])
 
         return cast(int, self.status["current_pos"])
 
@@ -266,14 +262,11 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         """Update the cover position every second."""
         try:
             while self.is_closing or self.is_opening:
-                self._update_status = await self.coordinator.device.cover_get_status(
-                    self._id
-                )
+                await self.coordinator.device.update_cover_status(self._id)
                 self.async_write_ha_state()
                 await asyncio.sleep(RPC_COVER_UPDATE_TIME_SEC)
         finally:
             self._update_task = None
-            self._update_status = None
 
     def _update_callback(self) -> None:
         """Handle device update. Use a task when opening/closing is in progress."""

@@ -329,16 +329,16 @@ async def test_rpc_cover_position_update(
 
     # Simulate position updates during closing
     for position in range(40, -1, -10):
-        mock_rpc_device.cover_get_status.reset_mock()
+        mock_rpc_device.update_cover_status.reset_mock()
         await mock_polling_rpc_update(hass, freezer, RPC_COVER_UPDATE_TIME_SEC)
 
-        mock_rpc_device.cover_get_status.assert_called_once_with(0)
+        mock_rpc_device.update_cover_status.assert_called_once_with(0)
         assert (state := hass.states.get(entity_id))
         assert state.attributes[ATTR_CURRENT_POSITION] == position
         assert state.state == CoverState.CLOSING
 
     # Simulate cover reaching final position
-    mock_rpc_device.cover_get_status.reset_mock()
+    mock_rpc_device.update_cover_status.reset_mock()
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
     mock_rpc_device.mock_update()
 
@@ -348,7 +348,7 @@ async def test_rpc_cover_position_update(
 
     # Ensure update_position does not call cover_get_status when the cover is not moving
     await mock_polling_rpc_update(hass, freezer, RPC_COVER_UPDATE_TIME_SEC)
-    mock_rpc_device.cover_get_status.assert_not_called()
+    mock_rpc_device.update_cover_status.assert_not_called()
 
 
 async def test_rpc_not_initialized_update(
