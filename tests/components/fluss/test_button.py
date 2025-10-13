@@ -24,21 +24,12 @@ pytestmark = pytest.mark.usefixtures("init_integration")
 @pytest.mark.asyncio
 async def test_async_setup_entry_multiple_devices(
     hass: HomeAssistant,
-    mock_api_client: FlussApiClient,
-    init_integration: MockConfigEntry,
+    init_integration_multiple_devices: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup with multiple devices."""
-    mock_api_client.async_get_devices.return_value = {
-        "devices": [
-            {"deviceId": "2a303030sdj1", "deviceName": "Device 1"},
-            {"deviceId": "ape93k9302j2", "deviceName": "Device 2"},
-        ]
-    }
-
-    with patch("fluss_api.FlussApiClient", return_value=mock_api_client):
-        assert await async_setup_entry(hass, init_integration, MagicMock())
-        await hass.async_block_till_done()
+    assert await async_setup_entry(hass, init_integration_multiple_devices, MagicMock())
+    await hass.async_block_till_done()
 
     state1 = hass.states.get("button.device_1")
     assert state1
@@ -125,3 +116,5 @@ async def test_unload_entry(
     await hass.async_block_till_done()
     assert init_integration.state is ConfigEntryState.NOT_LOADED
     assert hass.states.get("button.test_device") is None
+
+
