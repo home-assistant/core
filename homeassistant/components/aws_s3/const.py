@@ -7,8 +7,13 @@ from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "aws_s3"
 
+CONF_AUTH_MODE = "auth_mode"
+CONF_AUTH_MODE_IMPLICIT = "implicit"
+CONF_AUTH_MODE_EXPLICIT = "explicit"
+CONF_AUTH_MODE_PROFILE = "profile"
 CONF_ACCESS_KEY_ID = "access_key_id"
 CONF_SECRET_ACCESS_KEY = "secret_access_key"
+CONF_PROFILE_NAME = "profile_name"
 CONF_ENDPOINT_URL = "endpoint_url"
 CONF_BUCKET = "bucket"
 
