@@ -48,7 +48,7 @@ async def test_last_reported(
     knx: KNXTestKit,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test KNX sensor with last_reported."""
+    """Test KNX sensor properly sets last_reported."""
 
     await knx.setup_integration(
         {
