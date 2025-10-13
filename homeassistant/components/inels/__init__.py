@@ -51,6 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> boo
         @callback
         def mqtt_message_received(msg: ReceiveMessage) -> None:
             """Handle iNELS mqtt messages."""
+            # Payload is always str at runtime since we don't set encoding=None
+            # HA uses UTF-8 by default
             callback_func(msg.topic, msg.payload)  # type: ignore[arg-type]
 
         topics = {
