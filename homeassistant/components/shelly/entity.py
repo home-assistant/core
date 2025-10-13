@@ -628,7 +628,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
         self.last_state: State | None = None
         self.coordinator = coordinator
         self.attribute = attribute
-        self.block: Block | None = block
+        self.block: Block | None = block  # type: ignore[assignment]
         self.entity_description = description
 
         self._attr_device_info = get_entity_block_device_info(coordinator, block)
