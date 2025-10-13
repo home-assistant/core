@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, time
 import logging
 
 from ns_api import NSAPI, Trip
@@ -62,7 +62,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
         self.departure = subentry.data["from"]
         self.destination = subentry.data["to"]
         self.via = subentry.data.get("via")
-        self.time = subentry.data.get("time")
+        self.departure_time = subentry.data.get("time")  # str | time | None
 
     async def _async_update_data(self) -> NSRouteResult:
         """Fetch data from NS API for this specific route."""
@@ -81,7 +81,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
             self.departure,
             self.destination,
             self.via,
-            self.time,
+            departure_time=self.departure_time,
         )
 
         # Filter out trips that have already departed (trips are already sorted)
@@ -97,15 +97,17 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
             error=None,
         )
 
-    def _get_time_from_route(self, time_str: str | None) -> str:
+    def _get_time_from_route(self, time_str: str | time | None) -> str:
         """Combine today's date with a time string if needed."""
         if not time_str:
             return _now_nl().strftime("%d-%m-%Y %H:%M")
         try:
-            # If that fails, check if it's a time-only string (HH:MM or HH:MM:SS)
-            if len(time_str.split(":")) in (2, 3) and " " not in time_str:
-                today = _now_nl().strftime("%d-%m-%Y")
-                return f"{today} {time_str[:5]}"
+            if isinstance(time_str, time):
+                return _now_nl().strftime("%d-%m-%Y ") + time_str.strftime("%H:%M")
+            if isinstance(time_str, str):
+                if len(time_str.split(":")) in (2, 3) and " " not in time_str:
+                    today = _now_nl().strftime("%d-%m-%Y")
+                    return f"{today} {time_str[:5]}"
         except (ValueError, IndexError):
             pass
         # Fallback: use current date and time
@@ -116,12 +118,12 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
         departure: str,
         destination: str,
         via: str | None = None,
-        time: str | None = None,
+        departure_time: str | time | None = None,
     ) -> list[Trip]:
         """Get trips from NS API, sorted by departure time."""
 
         # Convert time to full date-time string if needed and default to Dutch local time if not provided
-        time_str = self._get_time_from_route(time)
+        time_str = self._get_time_from_route(departure_time)
 
         trips = await self.hass.async_add_executor_job(
             self.nsapi.get_trips,

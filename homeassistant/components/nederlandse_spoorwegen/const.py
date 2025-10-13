@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 DOMAIN = "nederlandse_spoorwegen"
 INTEGRATION_TITLE = "Nederlandse Spoorwegen"
 SUBENTRY_TYPE_ROUTE = "route"
+ROUTE_MODEL = "Route"
 # Europe/Amsterdam timezone for Dutch rail API expectations
 AMS_TZ = ZoneInfo("Europe/Amsterdam")
 # Update every 2 minutes

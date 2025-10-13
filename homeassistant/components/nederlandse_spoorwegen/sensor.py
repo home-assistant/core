@@ -18,6 +18,7 @@ from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -34,6 +35,7 @@ from .const import (
     CONF_VIA,
     DOMAIN,
     INTEGRATION_TITLE,
+    ROUTE_MODEL,
 )
 from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
 
@@ -114,17 +116,17 @@ async def async_setup_entry(
 
     coordinators = config_entry.runtime_data
 
-    entities = []
     for subentry_id, coordinator in coordinators.items():
         # Build entity from coordinator fields directly
-        entities.append(
-            NSDepartureSensor(
-                subentry_id,
-                coordinator,
-            )
+        entity = NSDepartureSensor(
+            subentry_id,
+            coordinator,
         )
 
-    async_add_entities(entities, update_before_add=True)
+        # Add entity with proper subentry association
+        async_add_entities(
+            [entity], update_before_add=True, config_subentry_id=subentry_id
+        )
 
 
 class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
@@ -145,7 +147,11 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
         self._departure = coordinator.departure
         self._via = coordinator.via
         self._heading = coordinator.destination
-        self._time = parse_time(coordinator.time) if coordinator.time else None
+        self._time = (
+            parse_time(coordinator.departure_time)
+            if coordinator.departure_time
+            else None
+        )
         self._subentry_id = subentry_id
         self._attr_unique_id = f"{subentry_id}-actual_departure"
 
@@ -170,6 +176,16 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.data is not None
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info for this sensor."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._subentry_id)},
+            name=self._name,
+            manufacturer=INTEGRATION_TITLE,
+            model=ROUTE_MODEL,
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
