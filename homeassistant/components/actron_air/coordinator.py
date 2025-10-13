@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
 
 from actron_neo_api import ActronAirNeoACSystem, ActronAirNeoStatus, ActronNeoAPI
 
@@ -55,9 +54,7 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirNeoACSystem]):
         self.system = system
         self.serial_number = system["serial"]
         self.api = api
-        self.status = self.api.state_manager.get_status(
-            self.serial_number
-        )
+        self.status = self.api.state_manager.get_status(self.serial_number)
         self.last_seen = dt_util.utcnow()
 
     async def _async_update_data(self) -> ActronAirNeoStatus:
