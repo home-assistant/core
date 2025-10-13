@@ -109,6 +109,40 @@ async def test_binary_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_telegram_count(0)
 
 
+async def test_last_reported(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test KNX binary sensor properly sets last_reported."""
+
+    await knx.setup_integration(
+        {
+            BinarySensorSchema.PLATFORM: [
+                {
+                    CONF_NAME: "test",
+                    CONF_STATE_ADDRESS: "1/1/1",
+                    CONF_SYNC_STATE: False,
+                },
+            ]
+        }
+    )
+    events = async_capture_events(hass, "state_changed")
+
+    # receive initial telegram
+    await knx.receive_write("1/1/1", True)
+    first_reported = hass.states.get("binary_sensor.test").last_reported
+    assert len(events) == 1
+
+    # receive second telegram with identical payload
+    freezer.tick(1)
+    async_fire_time_changed(hass)
+    await knx.receive_write("1/1/1", True)
+
+    assert first_reported != hass.states.get("binary_sensor.test").last_reported
+    assert len(events) == 1, events  # last_reported shall not fire state_changed
+
+
 async def test_binary_sensor_ignore_internal_state(
     hass: HomeAssistant, knx: KNXTestKit
 ) -> None:
