@@ -161,7 +161,6 @@ class-const-naming-style = "any"
 # possibly-used-before-assignment - too many errors / not necessarily issues
 # ---
 # Pylint CodeStyle plugin
-# consider-math-not-float
 # consider-using-namedtuple-or-dataclass - too opinionated
 # consider-using-assignment-expr - decision to use := better left to devs
 disable = [
@@ -182,7 +181,6 @@ disable = [
   "too-many-boolean-expressions",
   "too-many-positional-arguments",
   "wrong-import-order",
-  "consider-math-not-float",
   "consider-using-namedtuple-or-dataclass",
   "consider-using-assignment-expr",
   "possibly-used-before-assignment",
