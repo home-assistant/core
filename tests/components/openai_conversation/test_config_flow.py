@@ -242,7 +242,7 @@ async def test_subentry_websearch_unsupported_reasoning_effort(
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "init"
 
     # Configure initial step
@@ -254,8 +254,7 @@ async def test_subentry_websearch_unsupported_reasoning_effort(
             CONF_LLM_HASS_API: ["assist"],
         },
     )
-    await hass.async_block_till_done()
-    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "advanced"
 
     # Configure advanced step
@@ -265,8 +264,7 @@ async def test_subentry_websearch_unsupported_reasoning_effort(
             CONF_CHAT_MODEL: "gpt-5",
         },
     )
-    await hass.async_block_till_done()
-    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "model"
 
     # Configure model step
@@ -277,7 +275,6 @@ async def test_subentry_websearch_unsupported_reasoning_effort(
             CONF_WEB_SEARCH: True,
         },
     )
-    await hass.async_block_till_done()
     assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["errors"] == {"web_search": "web_search_minimal_reasoning"}
 
