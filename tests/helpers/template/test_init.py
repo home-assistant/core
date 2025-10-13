@@ -1382,7 +1382,7 @@ def test_now(mock_is_safe, hass: HomeAssistant) -> None:
     """Test now method."""
     now = dt_util.now()
     with freeze_time(now):
-        info = template.Template("{{ now().isoformat() }}", hass).async_render_to_info()
+        info = render_to_info(hass, "{{ now().isoformat() }}")
         assert now.isoformat() == info.result()
 
     assert info.has_time is True
@@ -1396,9 +1396,7 @@ def test_utcnow(mock_is_safe, hass: HomeAssistant) -> None:
     """Test now method."""
     utcnow = dt_util.utcnow()
     with freeze_time(utcnow):
-        info = template.Template(
-            "{{ utcnow().isoformat() }}", hass
-        ).async_render_to_info()
+        info = render_to_info(hass, "{{ utcnow().isoformat() }}")
         assert utcnow.isoformat() == info.result()
 
     assert info.has_time is True
@@ -1451,9 +1449,7 @@ async def test_today_at(
     with pytest.raises(TemplateError):
         render(hass, "{{ today_at('bad') }}")
 
-    info = template.Template(
-        "{{ today_at('10:00').isoformat() }}", hass
-    ).async_render_to_info()
+    info = render_to_info(hass, "{{ today_at('10:00').isoformat() }}")
     assert info.has_time is True
 
     freezer.stop()
@@ -1556,7 +1552,7 @@ async def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
         )
         assert result == "2000-01-01 11:00:00+00:00"
 
-        info = template.Template(relative_time_template, hass).async_render_to_info()
+        info = render_to_info(hass, relative_time_template)
         assert info.has_time is True
 
 
@@ -1713,7 +1709,7 @@ async def test_time_since(mock_is_safe, hass: HomeAssistant) -> None:
         result = render(hass, '{{time_since("string")}}')
         assert result == "string"
 
-        info = template.Template(time_since_template, hass).async_render_to_info()
+        info = render_to_info(hass, time_since_template)
         assert info.has_time is True
 
 
@@ -1871,7 +1867,7 @@ async def test_time_until(mock_is_safe, hass: HomeAssistant) -> None:
         result = render(hass, '{{time_until("string")}}')
         assert result == "string"
 
-        info = template.Template(time_until_template, hass).async_render_to_info()
+        info = render_to_info(hass, time_until_template)
         assert info.has_time is True
 
 
@@ -3685,15 +3681,14 @@ def test_generate_select(hass: HomeAssistant) -> None:
 |join(",", attribute="entity_id") }}
         """
 
-    tmp = template.Template(template_str, hass)
-    info = tmp.async_render_to_info()
+    info = render_to_info(hass, template_str)
     assert_result_info(info, "", [], [])
     assert info.domains_lifecycle == {"sensor"}
 
     hass.states.async_set("sensor.test_sensor", "off", {"attr": "value"})
     hass.states.async_set("sensor.test_sensor_on", "on")
 
-    info = tmp.async_render_to_info()
+    info = render_to_info(hass, template_str)
     assert_result_info(
         info,
         "sensor.test_sensor",
@@ -3705,12 +3700,7 @@ def test_generate_select(hass: HomeAssistant) -> None:
 
 async def test_async_render_to_info_in_conditional(hass: HomeAssistant) -> None:
     """Test extract entities function with none entities stuff."""
-    template_str = """
-{{ states("sensor.xyz") == "dog" }}
-        """
-
-    tmp = template.Template(template_str, hass)
-    info = tmp.async_render_to_info()
+    info = render_to_info(hass, '{{ states("sensor.xyz") == "dog" }}')
     assert_result_info(info, False, ["sensor.xyz"], [])
 
     hass.states.async_set("sensor.xyz", "dog")
@@ -3725,8 +3715,7 @@ async def test_async_render_to_info_in_conditional(hass: HomeAssistant) -> None:
 {% endif %}
         """
 
-    tmp = template.Template(template_str, hass)
-    info = tmp.async_render_to_info()
+    info = render_to_info(hass, template_str)
     assert_result_info(info, True, ["sensor.xyz", "sensor.cow"], [])
 
     hass.states.async_set("sensor.xyz", "sheep")
@@ -3734,8 +3723,7 @@ async def test_async_render_to_info_in_conditional(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
 
-    tmp = template.Template(template_str, hass)
-    info = tmp.async_render_to_info()
+    info = render_to_info(hass, template_str)
     assert_result_info(info, "oink", ["sensor.xyz", "sensor.pig"], [])
 
 
@@ -4079,9 +4067,7 @@ async def test_lifecycle(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
 
-    tmp = template.Template("{{ states | count }}", hass)
-
-    info = tmp.async_render_to_info()
+    info = render_to_info(hass, "{{ states | count }}")
     assert info.all_states is False
     assert info.all_states_lifecycle is True
     assert info.rate_limit is None
@@ -4149,8 +4135,7 @@ async def test_lights(hass: HomeAssistant) -> None:
         states.append(f"light.sensor{i}")
         hass.states.async_set(f"light.sensor{i}", "on")
 
-    tmp = template.Template(tmpl, hass)
-    info = tmp.async_render_to_info()
+    info = render_to_info(hass, tmpl)
     assert info.entities == set()
     assert info.domains == {"light"}
 
