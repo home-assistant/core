@@ -19,6 +19,7 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfo,
     HaBluetoothConnector,
+    async_clear_address_from_match_history,
     async_process_advertisements,
     async_rediscover_address,
     async_track_unavailable,
@@ -1172,6 +1173,61 @@ async def test_rediscovery(
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 3
+        assert mock_config_flow.mock_calls[1][1][0] == "switchbot"
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_clear_address_from_match_history(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
+) -> None:
+    """Test clearing match history without re-triggering discovery."""
+    mock_bt = [
+        {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
+    ]
+    with (
+        patch(
+            "homeassistant.components.bluetooth.async_get_bluetooth",
+            return_value=mock_bt,
+        ),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
+        await async_setup_with_default_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
+        switchbot_adv = generate_advertisement_data(
+            local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+        )
+        switchbot_adv_2 = generate_advertisement_data(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={1: b"\x01"},
+        )
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
+
+        # Clear match history - should NOT trigger immediate rediscovery
+        async_clear_address_from_match_history(hass, "44:44:33:11:23:45")
+        await hass.async_block_till_done()
+
+        # No new discovery should have been triggered
+        assert len(mock_config_flow.mock_calls) == 1
+
+        # But when we inject new advertisement with different data, it should be discovered
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
+        await hass.async_block_till_done()
+
+        # Now discovery should happen because history was cleared and data changed
+        assert len(mock_config_flow.mock_calls) == 2
         assert mock_config_flow.mock_calls[1][1][0] == "switchbot"
 
 
