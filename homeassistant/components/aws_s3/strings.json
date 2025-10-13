@@ -1,30 +1,53 @@
 {
   "config": {
     "step": {
-      "user": {
+      "bucket": {
         "data": {
-          "access_key_id": "Access key ID",
-          "secret_access_key": "Secret access key",
           "bucket": "Bucket name",
-          "endpoint_url": "Endpoint URL"
+          "endpoint_url": "Endpoint URL",
+          "auth_mode": "AWS Authentication Type"
         },
         "data_description": {
-          "access_key_id": "Access key ID to connect to AWS S3 API",
-          "secret_access_key": "Secret access key to connect to AWS S3 API",
-          "bucket": "Bucket must already exist and be writable by the provided credentials.",
-          "endpoint_url": "Endpoint URL provided to [Boto3 Session]({boto3_docs_url}). Region-specific [AWS S3 endpoints]({aws_s3_docs_url}) are available in their docs."
+          "bucket": "Bucket must already exist and be writable once authenticated.",
+          "endpoint_url": "Endpoint URL provided to [Boto3 Session]({boto3_docs_url}). Region-specific [AWS S3 endpoints]({aws_s3_docs_url}) are available in their docs.",
+          "auth_mode": "See [Boto3 Credentials]({boto3_creds_url}) for more details."
         },
-        "title": "Add AWS S3 bucket"
+        "title": "AWS S3 bucket - Bucket Details"
+      },
+      "profile": {
+        "data": {
+          "profile_name": "AWS Profile Name"
+        },
+        "data_description": {
+          "profile_name": "The name of the AWS Profile to use to connect to AWS S3 API."
+        },
+        "title": "AWS S3 bucket - Named Profile"
+      },
+      "explicit": {
+        "data": {
+          "access_key_id": "Access key ID",
+          "secret_access_key": "Secret access key"
+        },
+        "data_description": {
+          "access_key_id": "Access key ID to connect to AWS S3 API.",
+          "secret_access_key": "Secret access key to connect to AWS S3 API."
+        },
+        "title": "AWS S3 bucket - IAM Credentials"
       }
     },
     "error": {
       "cannot_connect": "[%key:component::aws_s3::exceptions::cannot_connect::message%]",
       "invalid_bucket_name": "[%key:component::aws_s3::exceptions::invalid_bucket_name::message%]",
+      "invalid_credentials_explicit": "[%key:component::aws_s3::exceptions::invalid_credentials_explicit::message%]",
       "invalid_credentials": "[%key:component::aws_s3::exceptions::invalid_credentials::message%]",
+      "no_credentials_profile": "[%key:component::aws_s3::exceptions::no_credentials_profile::message%]",
+      "no_credentials_implicit": "[%key:component::aws_s3::exceptions::no_credentials_implicit::message%]",
       "invalid_endpoint_url": "Invalid endpoint URL. Please make sure it's a valid AWS S3 endpoint URL."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "exceptions": {
@@ -34,8 +57,26 @@
     "invalid_bucket_name": {
       "message": "Invalid bucket name"
     },
-    "invalid_credentials": {
+    "invalid_credentials_explicit": {
       "message": "Bucket cannot be accessed using provided combination of access key ID and secret access key."
+    },
+    "invalid_credentials": {
+      "message": "Bucket cannot be accessed using configured AWS credentials."
+    },
+    "no_credentials_implicit": {
+      "message": "Implicit AWS credentials not found."
+    },
+    "no_credentials_profile": {
+      "message": "Profile Name not found or not authenticated."
+    }
+  },
+  "selector": {
+    "auth_mode": {
+      "options": {
+        "implicit": "Implicit Authentication - i.e. Environment-Based.",
+        "profile": "Named Profile - i.e. Environment-Based but selecting a specific connection profile.",
+        "explicit": "IAM Credentials - i.e. IAM User Access Key ID and Secret Access Key."
+      }
     }
   }
 }
