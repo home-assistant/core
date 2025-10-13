@@ -126,6 +126,12 @@
         "state": {
           "on": "mdi:package-variant-closed-check"
         }
+      },
+      "io_input": {
+        "default": "mdi:electric-switch",
+        "state": {
+          "on": "mdi:electric-switch-closed"
+        }
       }
     },
     "button": {

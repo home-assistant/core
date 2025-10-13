@@ -57,6 +57,17 @@ class ReolinkSmartAIBinarySensorEntityDescription(
     supported: Callable[[Host, int, int], bool] = lambda api, ch, loc: True
 
 
+@dataclass(frozen=True, kw_only=True)
+class ReolinkIndexBinarySensorEntityDescription(
+    BinarySensorEntityDescription,
+    ReolinkEntityDescription,
+):
+    """A class that describes binary sensor entities with an extra index."""
+
+    value: Callable[[Host, int, int], bool | None]
+    supported: Callable[[Host, int, int], bool] = lambda api, ch, idx: True
+
+
 BINARY_PUSH_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key="motion",
@@ -282,6 +293,13 @@ BINARY_SMART_AI_SENSORS = (
     ),
 )
 
+BINARY_IO_INPUT_SENSOR = ReolinkIndexBinarySensorEntityDescription(
+    key="io_input",
+    cmd_id=677,
+    translation_key="io_input",
+    value=lambda api, ch, idx: api.baichuan.io_input_state(ch, idx),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -292,7 +310,7 @@ async def async_setup_entry(
     reolink_data: ReolinkData = config_entry.runtime_data
     api = reolink_data.host.api
 
-    entities: list[ReolinkBinarySensorEntity | ReolinkSmartAIBinarySensorEntity] = []
+    entities: list[BinarySensorEntity] = []
     for channel in api.channels:
         entities.extend(
             ReolinkPushBinarySensorEntity(reolink_data, channel, entity_description)
@@ -313,6 +331,12 @@ async def async_setup_entry(
                 channel, entity_description.smart_type
             )
             if entity_description.supported(api, channel, location)
+        )
+        entities.extend(
+            ReolinkIndexBinarySensorEntity(
+                reolink_data, channel, index, BINARY_IO_INPUT_SENSOR
+            )
+            for index in api.baichuan.io_inputs(channel)
         )
 
     async_add_entities(entities)
@@ -407,3 +431,31 @@ class ReolinkSmartAIBinarySensorEntity(
         return self.entity_description.value(
             self._host.api, self._channel, self._location
         )
+
+
+class ReolinkIndexBinarySensorEntity(
+    ReolinkChannelCoordinatorEntity, BinarySensorEntity
+):
+    """Binary-sensor class for Reolink IP camera with an extra index."""
+
+    entity_description: ReolinkIndexBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        channel: int,
+        index: int,
+        entity_description: ReolinkIndexBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize Reolink binary sensor."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
+        self._attr_unique_id = f"{self._attr_unique_id}_{index}"
+
+        self._index = index
+        self._attr_translation_placeholders = {"index": str(index)}
+
+    @property
+    def is_on(self) -> bool | None:
+        """State of the sensor."""
+        return self.entity_description.value(self._host.api, self._channel, self._index)
