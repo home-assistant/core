@@ -952,3 +952,42 @@ async def test_bucket_flow_reconfigure_update_implicit(hass: HomeAssistant) -> N
             assert result["flow_id"] == flow["flow_id"]
             assert result["reason"] == "reconfigure_successful"
 
+
+async def test_profile_flow_reconfigure_initial(hass: HomeAssistant) -> None:
+    """Test initial reconfigure profile flow step returns correct schema and values."""
+    bucket_expected_keys = {
+        CONF_BUCKET,
+        CONF_ENDPOINT_URL,
+        CONF_AUTH_MODE,
+    }
+    bucket_user_input = {
+        k: v for k, v in USER_INPUT_VALID_PROFILE.items() if k in bucket_expected_keys
+    }
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_get_entry",
+        autospec=True,
+        side_effect=lambda *_: MockConfigEntry(data=USER_INPUT_VALID_PROFILE),
+    ):
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context=config_entries.ConfigFlowContext(
+                source=config_entries.SOURCE_RECONFIGURE, entry_id="test"
+            ),
+        )
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input=bucket_user_input
+        )
+        assert result["step_id"] == "profile"
+        assert len(result["errors"]) == 0
+        assert result["type"] == FlowResultType.FORM
+        _validate_data_schema_output(
+            result["data_schema"],
+            expected_keys={CONF_PROFILE_NAME},
+            expected_readonly=set({}),
+            expected_values={
+                CONF_PROFILE_NAME: USER_INPUT_VALID_PROFILE[CONF_PROFILE_NAME]
+            },
+            expected_types={CONF_PROFILE_NAME: TextSelectorType.TEXT},
+        )
+
+
