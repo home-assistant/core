@@ -365,7 +365,7 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                     if err.error == Error.UNABLE_TO_CONNECT:
                         self._credentials = None
                         errors["base"] = "unable_to_connect"
-                        # Fall through to show form with error
+                        # Only for UNABLE_TO_CONNECT do we continue to show the form with an error
                     else:
                         self._provision_result = self.async_abort(reason="unknown")
                         return
@@ -402,8 +402,6 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     if next_flow_id:
                         _LOGGER.debug("Received next flow ID: %s", next_flow_id)
-
-                    if next_flow_id:
                         self._provision_result = self.async_abort(
                             reason="provision_successful",
                             next_flow=(FlowType.CONFIG_FLOW, next_flow_id),
