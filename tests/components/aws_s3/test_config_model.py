@@ -358,3 +358,25 @@ async def test_async_validate_access_bucket_head_errors(
     errors = model.get_errors()
     assert errors == expected_errors
 
+
+def test_filter_errors() -> None:
+    """Test filter_errors removes errors for specified keys and leaves others."""
+    model = S3ConfigModel()
+    model.record_error("foo", "bar")
+    model.record_error("one", "two")
+    assert model.has_errors({"foo", "one"})
+    model.filter_errors({"foo", "one"})
+    assert model.has_errors({"foo", "one"})
+    assert not model.has_errors({"test"})
+    model.filter_errors({"foo", "one", "test"})
+    assert model.has_errors({"foo", "one"})
+    assert not model.has_errors({"test"})
+    model.filter_errors({"foo", "test"})
+    assert model.has_errors({"foo"})
+    assert not model.has_errors({"one", "test"})
+    model.filter_errors({"foo"})
+    assert model.has_errors({"foo"})
+    assert not model.has_errors({"one", "test"})
+    model.filter_errors({"bar"})
+    assert not model.has_errors({"foo", "one", "test"})
+    assert len(model.get_errors()) == 0
