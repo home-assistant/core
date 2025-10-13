@@ -428,6 +428,18 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._provision_result is not None
 
         result = self._provision_result
+        if result["type"] == "abort" and result["reason"] in (
+            "provision_successful",
+            "provision_successful_url",
+        ):
+            # Delete ignored config entry, if it exists
+            address = self.context["unique_id"]
+            current_entries = self._async_current_entries(include_ignore=True)
+            for entry in current_entries:
+                if entry.unique_id == address:
+                    _LOGGER.debug("Removing ignored entry: %s", entry)
+                    await self.hass.config_entries.async_remove(entry.entry_id)
+                    break
         self._provision_result = None
         return result
 
