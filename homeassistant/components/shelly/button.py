@@ -41,7 +41,6 @@ from .utils import (
     get_rpc_key_ids,
     get_rpc_key_instances,
     get_rpc_role_by_key,
-    get_virtual_component_ids,
 )
 
 PARALLEL_UPDATES = 0
@@ -208,17 +207,12 @@ async def async_setup_entry(
         hass, config_entry, async_add_entities, RPC_BUTTONS, RpcVirtualButton
     )
 
-    # the user can remove virtual components from the device configuration, so
-    # we need to remove orphaned entities
-    virtual_button_component_ids = get_virtual_component_ids(
-        coordinator.device.config, BUTTON_PLATFORM
-    )
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
         coordinator.mac,
         BUTTON_PLATFORM,
-        virtual_button_component_ids + list(coordinator.device.status),
+        coordinator.device.config,
     )
 
 
