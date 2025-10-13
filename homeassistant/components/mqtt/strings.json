@@ -922,7 +922,7 @@
                 "command_off_template": "Command \"off\" template"
               },
               "data_description": {
-                "command_off_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"off\" state changes. By default the \"[Command template]({url}#command_template)\" will be used.  [Learn more.]({url}#command_off_template)"
+                "command_off_template": "The [template]({templating_url}#using-command-templates-with-mqtt) for \"off\" state changes. By default the \"[Command template]({url}#command_template)\" will be used.  [Learn more.]({url}#command_off_template)"
               }
             },
             "target_temperature_settings": {
