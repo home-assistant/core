@@ -9,16 +9,26 @@
           "url": "URL of the Music Assistant server in the form `http://mass.local:8095` or `http://192.168.1.150:8095`"
         }
       },
+      "user": {
+        "title": "[%key:component::music_assistant::config::step::manual::title%]",
+        "description": "[%key:component::music_assistant::config::step::manual::description%]",
+        "data": {
+          "url": "[%key:component::music_assistant::config::step::manual::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::music_assistant::config::step::manual::data_description::url%]"
+        }
+      },
       "manual": {
         "title": "Manually add Music Assistant server",
         "description": "Enter the URL to your already running Music Assistant server. If you do not have the Music Assistant server running, you should install it first.",
         "data": {
-          "url": "URL of the Music Assistant server"
+          "url": "[%key:component::music_assistant::config::step::init::data::url%]"
         },
         "data_description": {
-          "url": "URL of the Music Assistant server in the form `http://myserver.local:8095` or `http://192.168.1.150:8095`"
+          "url": "[%key:component::music_assistant::config::step::init::data_description::url%]"
         }
-      },
+      }
       "discovery_confirm": {
         "description": "Do you want to add the Music Assistant server `{url}` to Home Assistant?",
         "title": "Discovered Music Assistant server"
