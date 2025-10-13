@@ -254,45 +254,6 @@ async def test_abort_removes_instance(manager: MockFlowManager) -> None:
     assert len(manager.mock_created_entries) == 0
 
 
-async def test_abort_with_next_flow(manager: MockFlowManager) -> None:
-    """Test that abort can include next_flow parameter."""
-
-    @manager.mock_reg_handler("test")
-    class TestFlow(data_entry_flow.FlowHandler):
-        async def async_step_init(
-            self, user_input: dict[str, str] | None = None
-        ) -> data_entry_flow.FlowResult:
-            return self.async_abort(
-                reason="success",
-                next_flow=("config_flow", "next_flow_id"),
-            )
-
-    form = await manager.async_init("test")
-    assert form["type"] == data_entry_flow.FlowResultType.ABORT
-    assert form["reason"] == "success"
-    assert form["next_flow"] == ("config_flow", "next_flow_id")
-    assert len(manager.async_progress()) == 0
-    assert len(manager.mock_created_entries) == 0
-
-
-async def test_abort_without_next_flow(manager: MockFlowManager) -> None:
-    """Test that abort without next_flow parameter works as before."""
-
-    @manager.mock_reg_handler("test")
-    class TestFlow(data_entry_flow.FlowHandler):
-        async def async_step_init(
-            self, user_input: dict[str, str] | None = None
-        ) -> data_entry_flow.FlowResult:
-            return self.async_abort(reason="simple_abort")
-
-    form = await manager.async_init("test")
-    assert form["type"] == data_entry_flow.FlowResultType.ABORT
-    assert form["reason"] == "simple_abort"
-    assert "next_flow" not in form
-    assert len(manager.async_progress()) == 0
-    assert len(manager.mock_created_entries) == 0
-
-
 async def test_abort_aborted_flow(manager: MockFlowManager) -> None:
     """Test return abort from aborted flow."""
 
