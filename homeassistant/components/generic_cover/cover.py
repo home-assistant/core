@@ -120,10 +120,6 @@ async def _async_setup_config(
     )
 
 
-class InterlockError(RuntimeError):
-    """Error raised when cover switches interlock."""
-
-
 ATTR_DURATION = "duration"
 ATTR_TILT_DURATION = "tilt_duration"
 ATTR_SWITCH_OPEN_ENTITY_ID = "switch_open_entity_id"
@@ -304,9 +300,8 @@ class GenericCover(CoverEntity, RestoreEntity):
                 self._target_cover_position = 100
             elif self._target_cover_position < (self.current_cover_position or 0):
                 self._cancel_update_cover_position_track()
-                raise InterlockError(
-                    "Cannot open cover while closing operation is active"
-                )
+                _LOGGER.warning("Cannot open cover while closing operation is active")
+                return
             self._track_update_cover_position()
         if new_state.state == STATE_OFF:
             self._attr_is_opening = False
@@ -334,9 +329,8 @@ class GenericCover(CoverEntity, RestoreEntity):
                 self._target_cover_position = 0
             elif self._target_cover_position > (self.current_cover_position or 0):
                 self._cancel_update_cover_position_track()
-                raise InterlockError(
-                    "Cannot close cover while opening operation is active"
-                )
+                _LOGGER.warning("Cannot close cover while opening operation is active")
+                return
             self._track_update_cover_position()
         elif new_state.state == STATE_OFF:
             self._attr_is_closing = False
@@ -353,9 +347,7 @@ class GenericCover(CoverEntity, RestoreEntity):
         # there should be a target position
         if self._target_cover_position is None:
             self._cancel_update_cover_position_track()
-            raise NotImplementedError(
-                "Cover position update called without target position"
-            )
+            raise RuntimeError("Cover position update called without target position")
 
         if self.is_opening:
             self._attr_current_cover_position = min(
@@ -374,7 +366,7 @@ class GenericCover(CoverEntity, RestoreEntity):
         else:
             # it should either be opening or closing
             self._cancel_update_cover_position_track()
-            raise NotImplementedError(
+            raise RuntimeError(
                 "Cover position update called when not opening or closing"
             )
 
