@@ -11,10 +11,15 @@ from homeassistant.helpers.typing import TemplateVarsType
 
 
 def render(
-    hass: HomeAssistant, template_str: str, variables: TemplateVarsType | None = None
+    hass: HomeAssistant,
+    template_str: str,
+    variables: TemplateVarsType | None = None,
+    **render_kwargs: Any,
 ) -> str:
     """Render template and return result."""
-    return template.Template(template_str, hass).async_render(variables)
+    return template.Template(template_str, hass).async_render(
+        variables, **render_kwargs
+    )
 
 
 def render_to_info(
