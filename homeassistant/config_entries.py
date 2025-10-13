@@ -2860,6 +2860,27 @@ class ConfigFlow(ConfigEntryBaseFlow):
         return {}
 
     @callback
+    def async_update_title_placeholders(
+        self, title_placeholders: Mapping[str, str]
+    ) -> None:
+        """Update title placeholders for the discovery notification and notify listeners.
+
+        This updates the flow context title_placeholders and notifies listeners
+        (such as the frontend) to reload the flow state, updating the discovery
+        notification title.
+
+        Only call this method when the flow is not progressing to a new step
+        (e.g., from a callback that receives updated data). If the flow is
+        progressing to a new step, set title_placeholders directly in context
+        before returning the step result, as the step change will trigger
+        listener notification automatically.
+        """
+        # Context is typed as TypedDict but is mutable dict at runtime
+        current_placeholders = self.context.setdefault("title_placeholders", {})
+        current_placeholders.update(title_placeholders)  # type: ignore[attr-defined]
+        self.async_notify_flow_changed()
+
+    @callback
     def _async_abort_entries_match(
         self, match_dict: dict[str, Any] | None = None
     ) -> None:
