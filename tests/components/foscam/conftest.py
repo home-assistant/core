@@ -79,11 +79,16 @@ def setup_mock_foscam_camera(mock_foscam_camera):
             0,
             {
                 "swCapabilities1": "100",
-                "swCapbilities2": "100",
-                "swCapbilities3": "100",
-                "swCapbilities4": "100",
+                "swCapabilities2": "768",
+                "swCapabilities3": "100",
+                "swCapabilities4": "100",
             },
         )
+        mock_foscam_camera.get_motion_detect_config.return_value = (
+            0,
+            {"petEnable": "1", "carEnable": "1", "humanEnable": "1"},
+        )
+
         return mock_foscam_camera
 
     mock_foscam_camera.side_effect = configure_mock_on_init
