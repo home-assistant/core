@@ -278,6 +278,17 @@ async def test_subentry_websearch_unsupported_reasoning_effort(
     assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["errors"] == {"web_search": "web_search_minimal_reasoning"}
 
+    # Reconfigure model step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_REASONING_EFFORT: "low",
+            CONF_WEB_SEARCH: True,
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.ABORT
+    assert subentry_flow["reason"] == "reconfigure_successful"
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
