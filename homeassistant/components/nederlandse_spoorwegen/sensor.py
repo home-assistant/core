@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import datetime as dt
 from datetime import datetime
 import logging
 from typing import Any
@@ -116,29 +115,12 @@ async def async_setup_entry(
     coordinators = config_entry.runtime_data
 
     entities = []
-    for subentry in config_entry.subentries.values():
-        if subentry.subentry_type != "route":
-            continue
-
-        # Get the coordinator for this specific route
-        coordinator = coordinators.get(subentry.subentry_id)
-        if not coordinator:
-            _LOGGER.error("No coordinator found for route %s", subentry.subentry_id)
-            continue
-
+    for subentry_id, coordinator in coordinators.items():
+        # Build entity from coordinator fields directly
         entities.append(
             NSDepartureSensor(
+                subentry_id,
                 coordinator,
-                subentry.data[CONF_NAME],
-                subentry.data[CONF_FROM],
-                subentry.data[CONF_TO],
-                subentry.subentry_id,
-                subentry.data.get(CONF_VIA),
-                (
-                    parse_time(subentry.data[CONF_TIME])
-                    if CONF_TIME in subentry.data
-                    else None
-                ),
             )
         )
 
@@ -154,21 +136,16 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
 
     def __init__(
         self,
-        coordinator: NSDataUpdateCoordinator,
-        name: str,
-        departure: str,
-        heading: str,
         subentry_id: str,
-        via: str | None,
-        time: dt.time | None,
+        coordinator: NSDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._name = name
-        self._departure = departure
-        self._via = via
-        self._heading = heading
-        self._time = time
+        self._name = coordinator.name
+        self._departure = coordinator.departure
+        self._via = coordinator.via
+        self._heading = coordinator.destination
+        self._time = parse_time(coordinator.time) if coordinator.time else None
         self._subentry_id = subentry_id
         self._attr_unique_id = f"{subentry_id}-actual_departure"
 

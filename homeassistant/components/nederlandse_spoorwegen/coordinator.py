@@ -6,13 +6,13 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import logging
 
-from ns_api import NSAPI, Station, Trip
+from ns_api import NSAPI, Trip
 from requests.exceptions import ConnectionError, HTTPError, Timeout
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import AMS_TZ, DOMAIN, SCAN_INTERVAL
@@ -46,7 +46,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
         hass: HomeAssistant,
         config_entry: NSConfigEntry,
         route_id: str,
-        route_data: dict[str, str],
+        subentry: ConfigSubentry,
     ) -> None:
         """Initialize the coordinator for a specific route."""
         super().__init__(
@@ -56,87 +56,60 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
             update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )
-        self.route_id = route_id
+        self.id = route_id
         self.nsapi = NSAPI(config_entry.data[CONF_API_KEY])
-        # Static route configuration - accessible as coordinator properties
-        self.departure = route_data["from"]
-        self.destination = route_data["to"]
-        self.via = route_data["via"]
-        self.time = route_data["time"]
-        self.stations: list[Station] = []
+        self.name = subentry.data["name"]
+        self.departure = subentry.data["from"]
+        self.destination = subentry.data["to"]
+        self.via = subentry.data.get("via")
+        self.time = subentry.data.get("time")
 
     async def _async_update_data(self) -> NSRouteResult:
         """Fetch data from NS API for this specific route."""
         try:
-            route_data = await self._get_trips_for_route()
-        except (
-            ConnectionError,
-            Timeout,
-            HTTPError,
-            ValueError,
-        ) as err:
-            _LOGGER.error("Error fetching data for route %s: %s", self.route_id, err)
-            return NSRouteResult(error=str(err))
-        if route_data.error:
-            _LOGGER.error(
-                "Error fetching data for route %s: %s", self.route_id, route_data.error
-            )
-        return route_data
+            return await self._get_trips_for_route()
+        except (ConnectionError, Timeout, HTTPError, ValueError) as err:
+            # Surface API failures to Home Assistant so the entities become unavailable
+            raise UpdateFailed(f"API communication error: {err}") from err
 
     async def _get_trips_for_route(self) -> NSRouteResult:
         """Get trips for route using coordinator properties."""
         trips: list[Trip] = []
         first_trip: Trip | None = None
         next_trip: Trip | None = None
-        error: str | None = None
-        try:
-            trips = await self._get_trips(
-                self.departure,
-                self.destination,
-                self.via,
-                self.time,
-            )
+        trips = await self._get_trips(
+            self.departure,
+            self.destination,
+            self.via,
+            self.time,
+        )
 
-            # Filter out trips that have already departed (trips are already sorted)
-            future_trips = self._remove_trips_in_the_past(trips)
+        # Filter out trips that have already departed (trips are already sorted)
+        future_trips = self._remove_trips_in_the_past(trips)
 
-            # Process trips to find current and next departure
-            first_trip, next_trip = self._get_first_and_next_trips(future_trips)
-
-        except (ConnectionError, Timeout, HTTPError, ValueError) as err:
-            error = f"Error communicating with NS API: {err}"
-            _LOGGER.error(error)
+        # Process trips to find current and next departure
+        first_trip, next_trip = self._get_first_and_next_trips(future_trips)
 
         return NSRouteResult(
-            trips=trips if not error else [],
-            first_trip=first_trip if not error else None,
-            next_trip=next_trip if not error else None,
-            error=error,
+            trips=trips,
+            first_trip=first_trip,
+            next_trip=next_trip,
+            error=None,
         )
 
     def _get_time_from_route(self, time_str: str | None) -> str:
         """Combine today's date with a time string if needed."""
         if not time_str:
             return _now_nl().strftime("%d-%m-%Y %H:%M")
-
         try:
-            # First, try to parse as a full date-time string and extract only the time
-            parsed_datetime = datetime.strptime(time_str, "%d-%m-%Y %H:%M")
-        except ValueError:
-            try:
-                # If that fails, check if it's a time-only string (HH:MM or HH:MM:SS)
-                if len(time_str.split(":")) in (2, 3) and " " not in time_str:
-                    today = _now_nl().strftime("%d-%m-%Y")
-                    return f"{today} {time_str[:5]}"
-            except (ValueError, IndexError):
-                pass
-            # Fallback: use current date and time
-            return _now_nl().strftime("%d-%m-%Y %H:%M")
-        else:
-            # Extract time and combine with today's date
-            time_only = parsed_datetime.strftime("%H:%M")
-            today = _now_nl().strftime("%d-%m-%Y")
-            return f"{today} {time_only}"
+            # If that fails, check if it's a time-only string (HH:MM or HH:MM:SS)
+            if len(time_str.split(":")) in (2, 3) and " " not in time_str:
+                today = _now_nl().strftime("%d-%m-%Y")
+                return f"{today} {time_str[:5]}"
+        except (ValueError, IndexError):
+            pass
+        # Fallback: use current date and time
+        return _now_nl().strftime("%d-%m-%Y %H:%M")
 
     async def _get_trips(
         self,
@@ -150,50 +123,30 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
         # Convert time to full date-time string if needed and default to Dutch local time if not provided
         time_str = self._get_time_from_route(time)
 
-        try:
-            trips = await self.hass.async_add_executor_job(
-                self.nsapi.get_trips,
-                time_str,  # trip_time
-                departure,  # departure
-                via,  # via
-                destination,  # destination
-                True,  # exclude_high_speed
-                0,  # year_card
-                2,  # max_number_of_transfers
-            )
+        trips = await self.hass.async_add_executor_job(
+            self.nsapi.get_trips,
+            time_str,  # trip_time
+            departure,  # departure
+            via,  # via
+            destination,  # destination
+            True,  # exclude_high_speed
+            0,  # year_card
+            2,  # max_number_of_transfers
+        )
 
-            if not trips:
-                return []
-
-            return sorted(
-                trips,
-                key=lambda trip: (
-                    trip.departure_time_actual
-                    if trip.departure_time_actual is not None
-                    else trip.departure_time_planned
-                    if trip.departure_time_planned is not None
-                    else _now_nl()
-                ),
-            )
-
-        except (
-            ConnectionError,
-            Timeout,
-            HTTPError,
-            ValueError,
-        ) as err:
-            _LOGGER.error("Error communicating with NS API: %s", err)
+        if not trips:
             return []
 
-    async def get_stations(self) -> list[Station]:
-        """Get all stations from NS API."""
-        try:
-            stations = await self.hass.async_add_executor_job(self.nsapi.get_stations)
-        except (HTTPError, ValueError, ConnectionError, Timeout) as err:
-            _LOGGER.warning("Failed to fetch stations: %s", err)
-            return []
-        else:
-            return stations or []
+        return sorted(
+            trips,
+            key=lambda trip: (
+                trip.departure_time_actual
+                if trip.departure_time_actual is not None
+                else trip.departure_time_planned
+                if trip.departure_time_planned is not None
+                else _now_nl()
+            ),
+        )
 
     def _get_first_and_next_trips(
         self, trips: list[Trip]

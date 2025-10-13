@@ -24,19 +24,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     for subentry_id, subentry in entry.subentries.items():
         if subentry.subentry_type == SUBENTRY_TYPE_ROUTE:
             coordinator = NSDataUpdateCoordinator(
-                hass, entry, subentry_id, dict(subentry.data)
+                hass,
+                entry,
+                subentry_id,
+                subentry,
             )
 
-            await coordinator.async_config_entry_first_refresh()
-
             coordinators[subentry_id] = coordinator
-            _LOGGER.debug("Added coordinator for route %s", subentry_id)
 
     entry.runtime_data = coordinators
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    for coordinator in coordinators.values():
+        await coordinator.async_config_entry_first_refresh()
     return True
 
 
