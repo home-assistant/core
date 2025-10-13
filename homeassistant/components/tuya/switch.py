@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
@@ -27,6 +27,8 @@ from homeassistant.helpers.issue_registry import (
 from . import TuyaConfigEntry
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
+from .xternal_tuya_quirks import TUYA_QUIRKS_REGISTRY
+from .xternal_tuya_quirks.switch import CommonSwitchType, TuyaSwitchDefinition
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -898,6 +900,23 @@ SWITCHES[DeviceCategory.CZ] = SWITCHES[DeviceCategory.PC]
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 SWITCHES[DeviceCategory.DGHSXJ] = SWITCHES[DeviceCategory.SP]
 
+COMMON_SWITCH_DEFINITIONS: dict[CommonSwitchType, SwitchEntityDescription] = {
+    CommonSwitchType.CHILD_LOCK: SwitchEntityDescription(
+        key="tbc",
+        translation_key="child_lock",
+        entity_category=EntityCategory.CONFIG,
+    )
+}
+
+
+def _create_quirk_description(
+    definition: TuyaSwitchDefinition,
+) -> SwitchEntityDescription:
+    return replace(
+        COMMON_SWITCH_DEFINITIONS[definition.common_type],
+        key=DPCode(definition.key),
+    )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -914,7 +933,15 @@ async def async_setup_entry(
         entities: list[TuyaSwitchEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if descriptions := SWITCHES.get(device.category):
+            if quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device):
+                entities.extend(
+                    TuyaSwitchEntity(
+                        device, manager, _create_quirk_description(definition)
+                    )
+                    for definition in quirk.switch_definitions
+                    if definition.key in device.status
+                )
+            elif descriptions := SWITCHES.get(device.category):
                 entities.extend(
                     TuyaSwitchEntity(device, manager, description)
                     for description in descriptions
