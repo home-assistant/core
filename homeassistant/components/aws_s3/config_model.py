@@ -6,6 +6,16 @@ and error tracking for the configuration of the AWS S3 Home Assistant integratio
 
 from collections.abc import MutableMapping
 
+from aiobotocore.session import AioSession
+from botocore.exceptions import (
+    ClientError,
+    ConnectionError,
+    NoCredentialsError,
+    ParamValidationError,
+    ProfileNotFound,
+    TokenRetrievalError,
+)
+
 from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_AUTH_MODE,
@@ -96,6 +106,54 @@ class S3ConfigModel(MutableMapping[str, str]):
         for i in blank:
             if i in self:
                 self[i] = None
+
+    async def async_validate_access(self) -> None:
+        """Test the connection to the bucket."""
+        self._errors.clear()
+        try:
+            session = AioSession(profile=self[CONF_PROFILE_NAME])
+            async with session.create_client(
+                "s3",
+                endpoint_url=self[CONF_ENDPOINT_URL],
+                aws_secret_access_key=self[CONF_SECRET_ACCESS_KEY],
+                aws_access_key_id=self[CONF_ACCESS_KEY_ID],
+            ) as client:
+                await client.head_bucket(Bucket=self[CONF_BUCKET])
+        except NoCredentialsError:
+            self.record_error_missing_credentials()
+        except ProfileNotFound:
+            self.record_error_missing_credentials()
+        except ClientError:
+            self.record_error_invalid_credentials()
+        except TokenRetrievalError:
+            self.record_error_invalid_credentials()
+        except ParamValidationError as err:
+            if "Invalid bucket name" in str(err):
+                self.record_error(CONF_BUCKET, "invalid_bucket_name")
+        except ValueError:
+            self.record_error(CONF_ENDPOINT_URL, "invalid_endpoint_url")
+        except ConnectionError:
+            self.record_error(CONF_ENDPOINT_URL, "cannot_connect")
+
+    def record_error_missing_credentials(self) -> None:
+        """Record an error for missing credentials based on the current authentication mode."""
+        if self[CONF_AUTH_MODE] == CONF_AUTH_MODE_IMPLICIT:
+            self.record_error(CONF_AUTH_MODE, "no_credentials_implicit")
+        elif self[CONF_AUTH_MODE] == CONF_AUTH_MODE_PROFILE:
+            self.record_error(CONF_PROFILE_NAME, "no_credentials_profile")
+        elif self[CONF_AUTH_MODE] == CONF_AUTH_MODE_EXPLICIT:
+            self.record_error(CONF_ACCESS_KEY_ID, "invalid_credentials_explicit")
+            self.record_error(CONF_SECRET_ACCESS_KEY, "invalid_credentials_explicit")
+
+    def record_error_invalid_credentials(self) -> None:
+        """Record an error for invalid credentials based on the current authentication mode."""
+        if self[CONF_AUTH_MODE] == CONF_AUTH_MODE_IMPLICIT:
+            self.record_error(CONF_AUTH_MODE, "invalid_credentials")
+        elif self[CONF_AUTH_MODE] == CONF_AUTH_MODE_PROFILE:
+            self.record_error(CONF_PROFILE_NAME, "invalid_credentials")
+        elif self[CONF_AUTH_MODE] == CONF_AUTH_MODE_EXPLICIT:
+            self.record_error(CONF_ACCESS_KEY_ID, "invalid_credentials_explicit")
+            self.record_error(CONF_SECRET_ACCESS_KEY, "invalid_credentials_explicit")
 
     def record_error(self, error_context: str, error_identifier: str) -> None:
         """Record an error for a specific context with the given identifier.
