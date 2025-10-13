@@ -46,7 +46,7 @@ async def test_activate_scene(
     await hass.services.async_call(
         SCENE_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "scene.scene_none"},
+        {ATTR_ENTITY_ID: "scene.scene"},
         blocking=True,
     )
     mock_niko_home_control_connection.scenes[scene_id].activate.assert_called_once()

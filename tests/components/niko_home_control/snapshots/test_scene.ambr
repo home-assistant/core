@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[scene.scene_none-entry]
+# name: test_entities[scene.scene-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'scene',
     'entity_category': None,
-    'entity_id': 'scene.scene_none',
+    'entity_id': 'scene.scene',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,7 +23,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:palette',
+    'original_icon': None,
     'original_name': None,
     'platform': 'niko_home_control',
     'previous_unique_id': None,
@@ -34,14 +34,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[scene.scene_none-state]
+# name: test_entities[scene.scene-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'scene None',
-      'icon': 'mdi:palette',
+      'friendly_name': 'scene',
     }),
     'context': <ANY>,
-    'entity_id': 'scene.scene_none',
+    'entity_id': 'scene.scene',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
