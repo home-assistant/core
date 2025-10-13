@@ -2,16 +2,20 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.energyid.config_flow import EnergyIDConfigFlow
 from homeassistant.components.energyid.const import (
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
     DOMAIN,
+)
+from homeassistant.components.energyid.energyid_sensor_mapping_flow import (
+    EnergyIDSensorMappingFlowHandler,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -381,3 +385,115 @@ async def test_config_flow_reauth_success(hass: HomeAssistant) -> None:
         updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
         assert updated_entry.data[CONF_PROVISIONING_KEY] == "new_key"
         assert updated_entry.data[CONF_PROVISIONING_SECRET] == "new_secret"
+
+
+async def test_config_flow_client_response_error_401(hass: HomeAssistant) -> None:
+    """Test config flow with 401 ClientResponseError (invalid auth)."""
+    mock_client = MagicMock()
+    mock_client.authenticate.side_effect = ClientResponseError(
+        request_info=MagicMock(),
+        history=(),
+        status=401,
+        message="Unauthorized",
+    )
+
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=mock_client,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"]["base"] == "invalid_auth"
+
+
+async def test_config_flow_client_response_error_other(hass: HomeAssistant) -> None:
+    """Test config flow with non-401 ClientResponseError."""
+    mock_client = MagicMock()
+    mock_client.authenticate.side_effect = ClientResponseError(
+        request_info=MagicMock(),
+        history=(),
+        status=500,
+        message="Server Error",
+    )
+
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=mock_client,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"]["base"] == "cannot_connect"
+
+
+async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
+    """Test reauth flow when device needs to be claimed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="site_12345",
+        data={
+            CONF_PROVISIONING_KEY: "old_key",
+            CONF_PROVISIONING_SECRET: "old_secret",
+            CONF_DEVICE_ID: "existing_device",
+            CONF_DEVICE_NAME: "Existing Device",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # Mock client that needs claiming
+    mock_client = MagicMock()
+    mock_client.authenticate = AsyncMock(return_value=False)
+    mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
+
+    with (
+        patch(
+            "homeassistant.components.energyid.config_flow.WebhookClient",
+            return_value=mock_client,
+        ),
+        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth", "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: "new_key",
+                CONF_PROVISIONING_SECRET: "new_secret",
+            },
+        )
+
+        assert result2["type"] is FlowResultType.EXTERNAL_STEP
+        assert result2["step_id"] == "auth_and_claim"
+
+
+async def test_async_get_supported_subentry_types(hass: HomeAssistant) -> None:
+    """Test async_get_supported_subentry_types returns correct types."""
+
+    mock_entry = MockConfigEntry(domain=DOMAIN, data={})
+
+    result = EnergyIDConfigFlow.async_get_supported_subentry_types(mock_entry)
+
+    assert "sensor_mapping" in result
+    assert result["sensor_mapping"] == EnergyIDSensorMappingFlowHandler

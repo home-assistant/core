@@ -1,6 +1,7 @@
 """Shared test configuration for EnergyID tests."""
 
-from unittest.mock import MagicMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -11,66 +12,46 @@ from homeassistant.components.energyid.const import (
     CONF_PROVISIONING_SECRET,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_energyid_config_entry(hass: HomeAssistant):
-    """Create a mock EnergyID config entry."""
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a mock config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Test EnergyID Site",
         data={
-            CONF_PROVISIONING_KEY: "test_provisioning_key",
-            CONF_PROVISIONING_SECRET: "test_provisioning_secret",
-            CONF_DEVICE_ID: "test_device_id",
+            CONF_PROVISIONING_KEY: "test-key",
+            CONF_PROVISIONING_SECRET: "test-secret",
+            CONF_DEVICE_ID: "test-device",
             CONF_DEVICE_NAME: "Test Device",
         },
-        unique_id="test_site_12345",
-        entry_id="test_entry_id",
-        state=ConfigEntryState.NOT_LOADED,
+        entry_id="test-entry-id-123",
+        title="Test EnergyID Site",
     )
     entry.add_to_hass(hass)
     return entry
 
 
 @pytest.fixture
-def mock_webhook_client():
-    """Create a mock WebhookClient for testing."""
-    client = MagicMock()
+def mock_webhook_client() -> Generator[MagicMock]:
+    """Mock the WebhookClient."""
+    with patch(
+        "homeassistant.components.energyid.WebhookClient", autospec=True
+    ) as mock_client_class:
+        client = mock_client_class.return_value
+        client.authenticate = AsyncMock(return_value=True)
+        client.webhook_policy = {"uploadInterval": 60}
+        client.device_name = "Test Device"
+        client.synchronize_sensors = AsyncMock()
 
-    # Default successful authentication
-    client.authenticate = MagicMock(return_value=True)
-    client.device_name = "Test Device"
-    client.recordNumber = "test_site_12345"
-    client.recordName = "Test EnergyID Site"
-    client.webhook_policy = {"uploadInterval": 60}
+        # Create a mock sensor that will be returned by get_or_create_sensor
+        mock_sensor = MagicMock()
+        mock_sensor.update = MagicMock()
 
-    # Sensor management
-    client.get_or_create_sensor = MagicMock()
-    client.start_auto_sync = MagicMock()
-    client.close = MagicMock()
+        # Configure get_or_create_sensor to always return the same mock sensor
+        client.get_or_create_sensor = MagicMock(return_value=mock_sensor)
 
-    return client
-
-
-@pytest.fixture
-def mock_unclaimed_webhook_client():
-    """Create a mock WebhookClient that needs claiming."""
-    client = MagicMock()
-
-    # Unclaimed authentication
-    client.authenticate = MagicMock(return_value=False)
-    client.get_claim_info = MagicMock(
-        return_value={
-            "claim_url": "https://app.energyid.eu/claim/test",
-            "claim_code": "ABC123",
-            "valid_until": "2024-01-01T00:00:00Z",
-        }
-    )
-    client.device_name = "Test Device"
-
-    return client
+        yield client

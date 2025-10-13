@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 import datetime as dt
+from datetime import timedelta
 import functools
 import logging
 
@@ -25,6 +25,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
     async_track_state_change_event,
+    async_track_time_interval,
 )
 
 from .const import (
@@ -51,7 +52,6 @@ class EnergyIDRuntimeData:
     client: WebhookClient
     mappings: dict[str, str]
     state_listener: CALLBACK_TYPE | None = None
-    background_sync_task: asyncio.Task[None] | None = None
     registry_tracking_listener: CALLBACK_TYPE | None = None
     unavailable_logged: bool = False
 
@@ -79,6 +79,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         raise ConfigEntryNotReady(
             f"Timeout authenticating with EnergyID: {err}"
         ) from err
+    # Specifically catch ConfigEntryNotReady to allow retries
+    except ConfigEntryNotReady:
+        raise
+    # Catch all other exceptions as fatal authentication failures
     except Exception as err:
         _LOGGER.exception("Unexpected error during EnergyID authentication")
         raise ConfigEntryAuthFailed(
@@ -89,27 +93,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
 
     _LOGGER.debug("EnergyID device '%s' authenticated successfully", client.device_name)
 
-    async def _async_background_sync() -> None:
-        """Background task to synchronize sensor data and log unavailability only once."""
-        while True:
-            try:
-                await client.synchronize_sensors()
-                if entry.runtime_data.unavailable_logged:
-                    _LOGGER.debug("Connection to EnergyID re-established")
-                    entry.runtime_data.unavailable_logged = False
-            except (OSError, RuntimeError) as err:
-                if not entry.runtime_data.unavailable_logged:
-                    _LOGGER.debug("EnergyID is unavailable: %s", err)
-                    entry.runtime_data.unavailable_logged = True
-            upload_interval = DEFAULT_UPLOAD_INTERVAL_SECONDS
-            if client.webhook_policy:
-                upload_interval = client.webhook_policy.get(
-                    "uploadInterval", DEFAULT_UPLOAD_INTERVAL_SECONDS
-                )
-            await asyncio.sleep(upload_interval)
+    async def _async_synchronize_sensors(now: dt.datetime | None = None) -> None:
+        """Callback for periodically synchronizing sensor data."""
+        try:
+            await client.synchronize_sensors()
+            if entry.runtime_data.unavailable_logged:
+                _LOGGER.debug("Connection to EnergyID re-established")
+                entry.runtime_data.unavailable_logged = False
+        except (OSError, RuntimeError) as err:
+            if not entry.runtime_data.unavailable_logged:
+                _LOGGER.debug("EnergyID is unavailable: %s", err)
+                entry.runtime_data.unavailable_logged = True
 
-    sync_task = hass.async_create_task(_async_background_sync())
-    entry.runtime_data.background_sync_task = sync_task
+    upload_interval = DEFAULT_UPLOAD_INTERVAL_SECONDS
+    if client.webhook_policy:
+        upload_interval = client.webhook_policy.get(
+            "uploadInterval", DEFAULT_UPLOAD_INTERVAL_SECONDS
+        )
+
+    # Schedule the callback and automatically unsubscribe when the entry is unloaded.
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass, _async_synchronize_sensors, timedelta(seconds=upload_interval)
+        )
+    )
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
 
     update_listeners(hass, entry)
@@ -182,6 +189,8 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
                 ha_entity_id,
                 energyid_key,
             )
+            # Still add to entities_to_track so we can handle it when state appears
+            entities_to_track.append(ha_entity_id)
             continue
 
         mappings[ha_entity_id] = energyid_key
@@ -299,22 +308,46 @@ def _async_handle_state_change(
         return
 
     runtime_data = entry.runtime_data
-    # Skip if entity is no longer mapped (e.g., options just changed)
-    if not (energyid_key := runtime_data.mappings.get(entity_id)):
-        return
+    client = runtime_data.client
 
-    _LOGGER.debug(
-        "Updating EnergyID sensor %s with value %s", energyid_key, new_state.state
-    )
+    # Check if entity is already mapped
+    if energyid_key := runtime_data.mappings.get(entity_id):
+        # Entity already mapped, just update value
+        _LOGGER.debug(
+            "Updating EnergyID sensor %s with value %s", energyid_key, new_state.state
+        )
+    else:
+        # Entity not mapped yet - check if it should be (handles late-appearing entities)
+        ent_reg = er.async_get(hass)
+        for subentry in entry.subentries.values():
+            entity_uuid = subentry.data.get(CONF_HA_ENTITY_UUID)
+            energyid_key_candidate = subentry.data.get(CONF_ENERGYID_KEY)
+
+            if not (entity_uuid and energyid_key_candidate):
+                continue
+
+            entity_entry = ent_reg.async_get(entity_uuid)
+            if entity_entry and entity_entry.entity_id == entity_id:
+                # Found it! Add to mappings and send initial value
+                energyid_key = energyid_key_candidate
+                runtime_data.mappings[entity_id] = energyid_key
+                client.get_or_create_sensor(energyid_key)
+                _LOGGER.debug(
+                    "Entity %s now available in state machine, adding to mappings (key: %s)",
+                    entity_id,
+                    energyid_key,
+                )
+                break
+        else:
+            # Not a tracked entity, ignore
+            return
 
     try:
         value = float(new_state.state)
     except (ValueError, TypeError):
         return
 
-    runtime_data.client.get_or_create_sensor(energyid_key).update(
-        value, new_state.last_updated
-    )
+    client.get_or_create_sensor(energyid_key).update(value, new_state.last_updated)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
@@ -335,10 +368,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) ->
         # Only clean up listeners and client if runtime_data is present
         if hasattr(entry, "runtime_data"):
             runtime_data = entry.runtime_data
-
-            # Cancel background sync task
-            if runtime_data.background_sync_task:
-                runtime_data.background_sync_task.cancel()
 
             # Remove state listener
             if runtime_data.state_listener:

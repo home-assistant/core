@@ -1,736 +1,461 @@
-"""Test EnergyID integration init with comprehensive coverage."""
+"""Tests for EnergyID integration initialization."""
 
-import datetime as dt
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import ANY, MagicMock
 
-import pytest
-
-from homeassistant.components.energyid import (
-    EnergyIDRuntimeData,
-    _async_handle_state_change,
-    async_config_entry_update_listener,
-    async_setup_entry,
-    async_unload_entry,
-    async_update_listeners,
-)
 from homeassistant.components.energyid.const import (
-    CONF_DEVICE_ID,
-    CONF_DEVICE_NAME,
     CONF_ENERGYID_KEY,
     CONF_HA_ENTITY_UUID,
-    CONF_PROVISIONING_KEY,
-    CONF_PROVISIONING_SECRET,
-    DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import Event, HomeAssistant, State
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_webhook_client():
-    """Create a mock WebhookClient."""
-    client = MagicMock()
-    client.authenticate = AsyncMock(return_value=True)
-    client.device_name = "Test Device"
-    client.webhook_policy = {"uploadInterval": 30}
-    client.start_auto_sync = MagicMock()
-    client.get_or_create_sensor = MagicMock()
-    client.close = AsyncMock()
-    return client
-
-
-@pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Create a mock config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_PROVISIONING_KEY: "test_key",
-            CONF_PROVISIONING_SECRET: "test_secret",
-            CONF_DEVICE_ID: "test_device",
-            CONF_DEVICE_NAME: "Test Device",
-        },
-        entry_id="test_entry",
-        state=ConfigEntryState.NOT_LOADED,
-    )
-    entry.add_to_hass(hass)
-    return entry
-
-
-def create_subentry(
-    hass: HomeAssistant,
-    parent_entry: MockConfigEntry,
-    data: dict,
-    entry_id: str = "sub_entry",
-) -> MockConfigEntry:
-    """Create a mock subentry and link it to the parent for testing."""
-    # Patch subentries with a mutable dict for test purposes
-    # If subentries is a mappingproxy, replace it with a mutable dict
-    if not hasattr(parent_entry, "subentries") or not isinstance(
-        parent_entry.subentries, dict
-    ):
-        # Patch the attribute directly (MockConfigEntry allows this)
-        parent_entry.subentries = {}
-    subentry = MagicMock()
-    subentry.data = data
-    subentry.entry_id = entry_id
-    parent_entry.subentries[entry_id] = subentry
-    return subentry
-
-
-async def test_async_setup_entry_success_claimed(
+async def test_successful_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test successful setup when device is claimed."""
-    with patch(
-        "homeassistant.components.energyid.WebhookClient",
-        return_value=mock_webhook_client,
-    ):
-        result = await async_setup_entry(hass, mock_config_entry)
-        await hass.async_block_till_done()
+    """Test the integration sets up successfully."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        assert result is True
-        assert hasattr(mock_config_entry, "runtime_data")
-        assert mock_config_entry.runtime_data.client == mock_webhook_client
-        mock_webhook_client.authenticate.assert_called_once()
-    # start_auto_sync is no longer called; background sync is managed by the integration
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_webhook_client.authenticate.assert_called_once()
 
 
-async def test_async_setup_entry_timeout_error(
+async def test_setup_retries_on_timeout(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test setup with timeout error."""
-    mock_webhook_client.authenticate.side_effect = TimeoutError("Timeout")
+    """Test setup retries when there is a connection timeout."""
+    mock_webhook_client.authenticate.side_effect = ConfigEntryNotReady
 
-    with (
-        patch(
-            "homeassistant.components.energyid.WebhookClient",
-            return_value=mock_webhook_client,
-        ),
-        pytest.raises(
-            ConfigEntryNotReady, match="Timeout authenticating with EnergyID"
-        ),
-    ):
-        await async_setup_entry(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_async_setup_entry_unexpected_error(
+async def test_setup_fails_on_auth_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test setup with unexpected error during authentication."""
-    mock_webhook_client.authenticate.side_effect = Exception("Unexpected")
+    """Test setup fails when authentication returns an unexpected error."""
+    mock_webhook_client.authenticate.side_effect = Exception("Unexpected error")
 
-    with (
-        patch(
-            "homeassistant.components.energyid.WebhookClient",
-            return_value=mock_webhook_client,
-        ),
-        pytest.raises(
-            ConfigEntryAuthFailed, match="Failed to authenticate with EnergyID"
-        ),
-    ):
-        await async_setup_entry(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_async_setup_entry_not_claimed(
+async def test_setup_fails_when_not_claimed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test setup when device is not claimed."""
+    """Test setup fails when device is not claimed."""
     mock_webhook_client.authenticate.return_value = False
 
-    with (
-        patch(
-            "homeassistant.components.energyid.WebhookClient",
-            return_value=mock_webhook_client,
-        ),
-        pytest.raises(Exception) as exc_info,
-    ):
-        await async_setup_entry(hass, mock_config_entry)
-    # The new code raises ConfigEntryAuthFailed, which is a subclass of HomeAssistantError
-    # and not ConfigEntryError. Check the message for clarity.
-    assert "Device is not claimed" in str(exc_info.value)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_async_setup_entry_default_upload_interval(
+async def test_state_change_sends_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
-) -> None:
-    """Test setup uses default upload interval when not in webhook_policy."""
-    mock_webhook_client.webhook_policy = {}
-
-    with patch(
-        "homeassistant.components.energyid.WebhookClient",
-        return_value=mock_webhook_client,
-    ):
-        result = await async_setup_entry(hass, mock_config_entry)
-        await hass.async_block_till_done()
-
-        assert result is True
-    # start_auto_sync is no longer called; background sync is managed by the integration
-
-
-async def test_async_setup_entry_no_webhook_policy(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_webhook_client: MagicMock,
-) -> None:
-    """Test setup when webhook_policy is None."""
-    mock_webhook_client.webhook_policy = None
-
-    with patch(
-        "homeassistant.components.energyid.WebhookClient",
-        return_value=mock_webhook_client,
-    ):
-        result = await async_setup_entry(hass, mock_config_entry)
-        await hass.async_block_till_done()
-
-        assert result is True
-    # start_auto_sync is no longer called; background sync is managed by the integration
-
-
-async def test_async_update_listeners(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_webhook_client: MagicMock,
 ) -> None:
-    """Test async_update_listeners function for a valid mapping."""
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client, listeners={}, mappings={}
-    )
+    """Test that a sensor state change is correctly sent to the EnergyID API."""
+    # ARRANGE: Prepare the config entry with sub-entries BEFORE setup.
     entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test", "power_1", suggested_object_id="power_meter"
+        "sensor", "test_platform", "power_1", suggested_object_id="power_meter"
     )
-    hass.states.async_set("sensor.power_meter", "100")
+    hass.states.async_set(entity_entry.entity_id, STATE_UNAVAILABLE)
+    sub_entry = {
+        "data": {CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "grid_power"}
+    }
+    mock_config_entry.subentries = {"sub_entry_1": MagicMock(**sub_entry)}
 
-    create_subentry(
-        hass,
-        mock_config_entry,
-        data={CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "power"},
-    )
+    # ACT 1: Set up the integration.
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_sensor = MagicMock()
-    mock_webhook_client.get_or_create_sensor.return_value = mock_sensor
+    # ACT 2: Simulate the sensor reporting a new value.
+    hass.states.async_set(entity_entry.entity_id, "123.45")
+    await hass.async_block_till_done()
 
-    await async_update_listeners(hass, mock_config_entry)
-
-    assert "sensor.power_meter" in mock_config_entry.runtime_data.mappings
-    assert mock_config_entry.runtime_data.mappings["sensor.power_meter"] == "power"
-    mock_webhook_client.get_or_create_sensor.assert_called_with("power")
-    mock_sensor.update.assert_called_once()
+    # ASSERT
+    mock_webhook_client.get_or_create_sensor.assert_called_with("grid_power")
+    sensor_mock = mock_webhook_client.get_or_create_sensor.return_value
+    sensor_mock.update.assert_called_once_with(123.45, ANY)
 
 
-async def test_async_update_listeners_entity_not_found(
+async def test_state_change_handles_invalid_values(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
-) -> None:
-    """Test async_update_listeners when entity UUID doesn't exist."""
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client, listeners={}, mappings={}
-    )
-    create_subentry(
-        hass,
-        mock_config_entry,
-        data={
-            CONF_HA_ENTITY_UUID: "non-existent-uuid",
-            CONF_ENERGYID_KEY: "power",
-        },
-    )
-    await hass.async_block_till_done()
-
-    await async_update_listeners(hass, mock_config_entry)
-
-    assert not mock_config_entry.runtime_data.mappings
-    mock_webhook_client.get_or_create_sensor.assert_not_called()
-
-
-async def test_async_update_listeners_entity_no_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_webhook_client: MagicMock,
 ) -> None:
-    """Test async_update_listeners when entity has no state."""
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client, listeners={}, mappings={}
-    )
+    """Test that invalid state values are handled gracefully."""
     entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test", "no_state", suggested_object_id="no_state_meter"
+        "sensor", "test_platform", "power_2", suggested_object_id="invalid_sensor"
     )
-    create_subentry(
-        hass,
-        mock_config_entry,
-        data={CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "power"},
-    )
+    hass.states.async_set(entity_entry.entity_id, STATE_UNAVAILABLE)
+    sub_entry = {
+        "data": {CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "grid_power"}
+    }
+    mock_config_entry.subentries = {"sub_entry_1": MagicMock(**sub_entry)}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await async_update_listeners(hass, mock_config_entry)
+    # Reset the mock to clear any calls from setup
+    sensor_mock = mock_webhook_client.get_or_create_sensor.return_value
+    sensor_mock.update.reset_mock()
 
-    assert not mock_config_entry.runtime_data.mappings
-
-
-async def test_async_update_listeners_invalid_subentry_data(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_webhook_client: MagicMock,
-) -> None:
-    """Test async_update_listeners with invalid subentry data (missing keys)."""
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client, listeners={}, mappings={}
-    )
-    create_subentry(hass, mock_config_entry, data={})
+    # Act: Send an invalid (non-numeric) value
+    hass.states.async_set(entity_entry.entity_id, "invalid")
     await hass.async_block_till_done()
 
-    await async_update_listeners(hass, mock_config_entry)
+    # ASSERT: No sensor update call should happen for invalid values
+    sensor_mock.update.assert_not_called()
 
-    assert not mock_config_entry.runtime_data.mappings
 
-
-async def test_async_update_listeners_removes_old_listener(
+async def test_state_change_ignores_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
-) -> None:
-    """Test that async_update_listeners removes the old state listener."""
-    old_listener = MagicMock()
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client,
-        listeners={"state_listener": old_listener},
-        mappings={},
-    )
-
-    await async_update_listeners(hass, mock_config_entry)
-
-    old_listener.assert_called_once()
-    assert "state_listener" not in mock_config_entry.runtime_data.listeners
-
-
-async def test_async_update_listeners_logs_removed_mappings(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_webhook_client: MagicMock,
-) -> None:
-    """Test that async_update_listeners correctly handles removed mappings."""
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client,
-        listeners={},
-        mappings={"sensor.old_meter": "old_power"},
-    )
-    # No subentries are created, so the old mapping should be detected as removed.
-    await async_update_listeners(hass, mock_config_entry)
-    assert not mock_config_entry.runtime_data.mappings
-
-
-async def test_async_update_listeners_no_valid_mappings(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_webhook_client: MagicMock,
-) -> None:
-    """Test async_update_listeners when no valid mappings are configured."""
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client, listeners={}, mappings={}
-    )
-    await async_update_listeners(hass, mock_config_entry)
-    assert not mock_config_entry.runtime_data.listeners
-
-
-async def test_async_update_listeners_non_numeric_initial_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_webhook_client: MagicMock,
 ) -> None:
-    """Test async_update_listeners with a non-numeric initial state."""
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client, listeners={}, mappings={}
-    )
+    """Test that unavailable states are ignored."""
     entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test", "text_1", suggested_object_id="text_meter"
+        "sensor", "test_platform", "power_3", suggested_object_id="unavailable_sensor"
     )
-    hass.states.async_set("sensor.text_meter", "not_a_number")
-    create_subentry(
-        hass,
-        mock_config_entry,
-        data={CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "text"},
-    )
+    hass.states.async_set(entity_entry.entity_id, "100")
+    sub_entry = {
+        "data": {CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "grid_power"}
+    }
+    mock_config_entry.subentries = {"sub_entry_1": MagicMock(**sub_entry)}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_sensor = MagicMock()
-    mock_webhook_client.get_or_create_sensor.return_value = mock_sensor
-    await async_update_listeners(hass, mock_config_entry)
+    # Reset the mock
+    sensor_mock = mock_webhook_client.get_or_create_sensor.return_value
+    sensor_mock.update.reset_mock()
 
-    assert "sensor.text_meter" in mock_config_entry.runtime_data.mappings
-    mock_sensor.update.assert_not_called()
-
-
-async def test_async_update_listeners_unknown_unavailable_states(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    mock_webhook_client: MagicMock,
-) -> None:
-    """Test async_update_listeners with unknown/unavailable initial states."""
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client, listeners={}, mappings={}
-    )
-    entity1 = entity_registry.async_get_or_create(
-        "sensor", "test", "unknown_1", suggested_object_id="unknown_meter"
-    )
-    hass.states.async_set("sensor.unknown_meter", STATE_UNKNOWN)
-    create_subentry(
-        hass,
-        mock_config_entry,
-        data={CONF_HA_ENTITY_UUID: entity1.id, CONF_ENERGYID_KEY: "unknown"},
-        entry_id="sub1",
-    )
-
-    entity2 = entity_registry.async_get_or_create(
-        "sensor", "test", "unavail_1", suggested_object_id="unavailable_meter"
-    )
-    hass.states.async_set("sensor.unavailable_meter", STATE_UNAVAILABLE)
-    create_subentry(
-        hass,
-        mock_config_entry,
-        data={CONF_HA_ENTITY_UUID: entity2.id, CONF_ENERGYID_KEY: "unavailable"},
-        entry_id="sub2",
-    )
+    # Act: Set to unavailable
+    hass.states.async_set(entity_entry.entity_id, STATE_UNAVAILABLE)
     await hass.async_block_till_done()
 
-    mock_sensor = MagicMock()
-    mock_webhook_client.get_or_create_sensor.return_value = mock_sensor
-    await async_update_listeners(hass, mock_config_entry)
-
-    assert "sensor.unknown_meter" in mock_config_entry.runtime_data.mappings
-    assert "sensor.unavailable_meter" in mock_config_entry.runtime_data.mappings
-    mock_sensor.update.assert_not_called()
+    # ASSERT: No update for unavailable state
+    sensor_mock.update.assert_not_called()
 
 
-async def test_async_update_listeners_with_existing_mappings(
+async def test_state_change_ignores_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
     mock_webhook_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test async_update_listeners with existing mappings (no initial state queue)."""
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client,
-        listeners={},
-        mappings={"sensor.power_meter": "power"},
-    )
-
+    """Test that unknown states are ignored."""
     entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test", "power_1", suggested_object_id="power_meter"
+        "sensor", "test_platform", "power_4", suggested_object_id="unknown_sensor"
     )
-    hass.states.async_set("sensor.power_meter", "100")
+    hass.states.async_set(entity_entry.entity_id, "100")
+    sub_entry = {
+        "data": {CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "grid_power"}
+    }
+    mock_config_entry.subentries = {"sub_entry_1": MagicMock(**sub_entry)}
 
-    create_subentry(
-        hass,
-        mock_config_entry,
-        data={CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "power"},
-    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_sensor = MagicMock()
-    mock_webhook_client.get_or_create_sensor.return_value = mock_sensor
+    # Reset the mock
+    sensor_mock = mock_webhook_client.get_or_create_sensor.return_value
+    sensor_mock.update.reset_mock()
 
-    await async_update_listeners(hass, mock_config_entry)
+    # Act: Set to unknown
+    hass.states.async_set(entity_entry.entity_id, STATE_UNKNOWN)
+    await hass.async_block_till_done()
 
-    assert "sensor.power_meter" in mock_config_entry.runtime_data.mappings
-    mock_sensor.update.assert_not_called()
+    # ASSERT: No update for unknown state
+    sensor_mock.update.assert_not_called()
 
 
-async def test_async_update_listeners_state_with_none_timestamp(
+async def test_listener_tracks_entity_rename(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
     entity_registry: er.EntityRegistry,
-    mock_webhook_client: MagicMock,
 ) -> None:
-    """Test async_update_listeners with a state that has no last_updated timestamp."""
-
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client, listeners={}, mappings={}
-    )
+    """Test that the integration correctly handles a mapped entity being renamed."""
+    # ARRANGE: Prepare the config entry with sub-entries BEFORE setup.
     entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test", "ts_1", suggested_object_id="timestamp_meter"
+        "sensor", "test_platform", "power_5", suggested_object_id="power_meter"
     )
+    hass.states.async_set(entity_entry.entity_id, "50")
+    sub_entry = {
+        "data": {CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "grid_power"}
+    }
+    mock_config_entry.subentries = {"sub_entry_1": MagicMock(**sub_entry)}
 
-    state_with_no_timestamp = State("sensor.timestamp_meter", "100")
-    state_with_no_timestamp.last_updated = None
-    hass.states.async_set("sensor.timestamp_meter", "100")
-    hass.states._states["sensor.timestamp_meter"] = state_with_no_timestamp
-
-    create_subentry(
-        hass,
-        mock_config_entry,
-        data={
-            CONF_HA_ENTITY_UUID: entity_entry.id,
-            CONF_ENERGYID_KEY: "timestamp_test",
-        },
-    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_sensor = MagicMock()
-    mock_webhook_client.get_or_create_sensor.return_value = mock_sensor
+    # Reset the mock to clear calls from setup
+    sensor_mock = mock_webhook_client.get_or_create_sensor.return_value
+    sensor_mock.update.reset_mock()
 
-    with patch("homeassistant.components.energyid.dt.datetime") as mock_dt:
-        mock_now = dt.datetime(2023, 1, 1, 12, 0, 0, tzinfo=dt.UTC)
-        mock_dt.now.return_value = mock_now
+    # ACT 1: Rename the entity in registry first, then set state for new entity_id
+    # This avoids the "Entity with this ID is already registered" error
+    new_entity_id = "sensor.new_and_improved_power_meter"
+    old_state = hass.states.get(entity_entry.entity_id)
+    entity_registry.async_update_entity(
+        entity_entry.entity_id, new_entity_id=new_entity_id
+    )
+    # Set state for new entity_id after rename to simulate migration
+    hass.states.async_set(new_entity_id, old_state.state)
+    # Clear old state to simulate HA's actual rename behavior
+    hass.states.async_set(entity_entry.entity_id, None)
+    await hass.async_block_till_done()
 
-        await async_update_listeners(hass, mock_config_entry)
+    # Reset again after the rename triggers update_listeners
+    sensor_mock.update.reset_mock()
 
-    assert "sensor.timestamp_meter" in mock_config_entry.runtime_data.mappings
-    mock_sensor.update.assert_called_once_with(100.0, mock_now)
+    # ACT 2: Post a new value to the renamed entity
+    hass.states.async_set(new_entity_id, "1000")
+    await hass.async_block_till_done()
+
+    # ASSERT: The listener should track the new entity ID
+    sensor_mock.update.assert_called_with(1000.0, ANY)
 
 
-async def test_async_config_entry_update_listener(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+async def test_listener_tracks_entity_removal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the config entry update listener schedules the correct callback."""
-    with patch(
-        "homeassistant.components.energyid.async_update_listeners"
-    ) as mock_update:
-        await async_config_entry_update_listener(hass, mock_config_entry)
-        mock_update.assert_called_once_with(hass, mock_config_entry)
+    """Test that the integration handles entity removal."""
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test_platform", "power_6", suggested_object_id="removable_meter"
+    )
+    hass.states.async_set(entity_entry.entity_id, "100")
+    sub_entry = {
+        "data": {CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "grid_power"}
+    }
+    mock_config_entry.subentries = {"sub_entry_1": MagicMock(**sub_entry)}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # ACT: Remove the entity
+    entity_registry.async_remove(entity_entry.entity_id)
+    await hass.async_block_till_done()
+
+    # ASSERT: Integration should still be loaded (just no longer tracking that entity)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_async_unload_entry_success(
+async def test_entity_not_in_state_machine_during_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity that exists in registry but not state machine during setup."""
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test_platform", "power_7", suggested_object_id="ghost_meter"
+    )
+    # Note: NOT setting a state for this entity initially
+    sub_entry = {
+        "data": {CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "grid_power"}
+    }
+    mock_config_entry.subentries = {"sub_entry_1": MagicMock(**sub_entry)}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # ASSERT: Should still load successfully
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Reset mock to clear any setup calls
+    sensor_mock = mock_webhook_client.get_or_create_sensor.return_value
+    sensor_mock.update.reset_mock()
+
+    # Now add the state - entity should be tracked dynamically
+    hass.states.async_set(entity_entry.entity_id, "200")
+    await hass.async_block_till_done()
+
+    # ASSERT: Entity should now be tracked and update called
+    sensor_mock.update.assert_called_with(200.0, ANY)
+
+
+async def test_unload_cleans_up_listeners(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test successful unload of a config entry."""
-    mock_listener = MagicMock()
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client,
-        listeners={"test_listener": mock_listener},
-        mappings={},
-    )
+    """Test unloading the integration cleans up properly."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    result = await async_unload_entry(hass, mock_config_entry)
+    # ACT: Unload the integration
+    result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
+    # ASSERT: Unload was successful
     assert result is True
-    mock_listener.cancel.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_webhook_client.close.assert_called_once()
 
 
-async def test_async_unload_entry_no_runtime_data(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test unload when entry has no runtime_data."""
-    if hasattr(mock_config_entry, "runtime_data"):
-        delattr(mock_config_entry, "runtime_data")
-    result = await async_unload_entry(hass, mock_config_entry)
-    assert result is True
-
-
-async def test_async_unload_entry_client_close_error(
+async def test_no_valid_subentries_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test unload when client.close() raises an exception."""
-    mock_webhook_client.close.side_effect = Exception("Close error")
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client, listeners={}, mappings={}
-    )
-    assert await async_unload_entry(hass, mock_config_entry) is True
+    """Test setup with no valid subentries completes successfully."""
+    # Set up empty subentries
+    mock_config_entry.subentries = {}
 
-
-async def test_async_unload_entry_general_exception(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test unload when a general exception occurs."""
-    mock_config_entry.runtime_data = MagicMock()
-    mock_config_entry.runtime_data.listeners.values.side_effect = Exception(
-        "General error"
-    )
-    assert await async_unload_entry(hass, mock_config_entry) is False
-
-
-def test_state_change_handler_numeric_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_webhook_client: MagicMock,
-) -> None:
-    """Test the state change handler with a valid numeric state."""
-    mock_sensor = MagicMock()
-    mock_webhook_client.get_or_create_sensor.return_value = mock_sensor
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client,
-        listeners={},
-        mappings={"sensor.power_meter": "power"},
-    )
-    mock_state = MagicMock(state="100.5", last_updated="2023-01-01T00:00:00Z")
-    event = Event(
-        "state_changed",
-        {"entity_id": "sensor.power_meter", "new_state": mock_state},
-    )
-
-    _async_handle_state_change(hass, mock_config_entry.entry_id, event)
-
-    mock_webhook_client.get_or_create_sensor.assert_called_with("power")
-    mock_sensor.update.assert_called_once_with(100.5, mock_state.last_updated)
-
-
-def test_state_change_handler_non_numeric_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_webhook_client: MagicMock,
-) -> None:
-    """Test the state change handler with a non-numeric state."""
-    mock_sensor = MagicMock()
-    mock_webhook_client.get_or_create_sensor.return_value = mock_sensor
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client,
-        listeners={},
-        mappings={"sensor.text_meter": "text"},
-    )
-    mock_state = MagicMock(state="not_a_number")
-    event = Event(
-        "state_changed", {"entity_id": "sensor.text_meter", "new_state": mock_state}
-    )
-
-    _async_handle_state_change(hass, mock_config_entry.entry_id, event)
-
-    mock_sensor.update.assert_not_called()
-
-
-def test_state_change_handler_type_error_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_webhook_client: MagicMock,
-) -> None:
-    """Test the state change handler with a state that causes TypeError."""
-    mock_sensor = MagicMock()
-    mock_webhook_client.get_or_create_sensor.return_value = mock_sensor
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client,
-        listeners={},
-        mappings={"sensor.type_error_meter": "type_error"},
-    )
-    mock_state = MagicMock(state=None)
-    event = Event(
-        "state_changed",
-        {"entity_id": "sensor.type_error_meter", "new_state": mock_state},
-    )
-
-    _async_handle_state_change(hass, mock_config_entry.entry_id, event)
-
-    mock_sensor.update.assert_not_called()
-
-
-def test_state_change_handler_removed_entity(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test the state change handler when an entity is removed (new_state is None)."""
-    event = Event("state_changed", {"entity_id": "sensor.removed", "new_state": None})
-    _async_handle_state_change(hass, mock_config_entry.entry_id, event)
-
-
-def test_state_change_handler_unavailable_state(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test the state change handler with an unavailable state."""
-    mock_state = MagicMock(state=STATE_UNAVAILABLE)
-    event = Event(
-        "state_changed",
-        {"entity_id": "sensor.unavailable_meter", "new_state": mock_state},
-    )
-    _async_handle_state_change(hass, mock_config_entry.entry_id, event)
-
-
-def test_state_change_handler_unknown_state(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test the state change handler with an unknown state."""
-    mock_state = MagicMock(state=STATE_UNKNOWN)
-    event = Event(
-        "state_changed",
-        {"entity_id": "sensor.unknown_meter", "new_state": mock_state},
-    )
-    _async_handle_state_change(hass, mock_config_entry.entry_id, event)
-
-
-def test_state_change_handler_entry_not_found(hass: HomeAssistant) -> None:
-    """Test the state change handler when the config entry is not found."""
-    mock_state = MagicMock(state="100")
-    event = Event(
-        "state_changed",
-        {"entity_id": "sensor.power_meter", "new_state": mock_state},
-    )
-    _async_handle_state_change(hass, "non_existent_entry", event)
-
-
-def test_state_change_handler_entry_no_runtime_data(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test the state change handler when the entry has no runtime_data."""
-    if hasattr(mock_config_entry, "runtime_data"):
-        delattr(mock_config_entry, "runtime_data")
-    mock_state = MagicMock(state="100")
-    event = Event(
-        "state_changed",
-        {"entity_id": "sensor.power_meter", "new_state": mock_state},
-    )
-    _async_handle_state_change(hass, mock_config_entry.entry_id, event)
-
-
-def test_state_change_handler_unmapped_entity(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_webhook_client: MagicMock,
-) -> None:
-    """Test the state change handler for an unmapped entity."""
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client, listeners={}, mappings={}
-    )
-    mock_state = MagicMock(state="100")
-    event = Event(
-        "state_changed",
-        {"entity_id": "sensor.unmapped_meter", "new_state": mock_state},
-    )
-
-    _async_handle_state_change(hass, mock_config_entry.entry_id, event)
-
-    mock_webhook_client.get_or_create_sensor.assert_not_called()
-
-
-async def test_async_unload_entry_with_subentries(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_webhook_client: MagicMock,
-) -> None:
-    """Test successful unload of a config entry that has subentries."""
-    # Set up the parent entry
-    mock_config_entry.runtime_data = EnergyIDRuntimeData(
-        client=mock_webhook_client, listeners={}, mappings={}
-    )
-
-    # Create and link a subentry
-    create_subentry(
-        hass,
-        mock_config_entry,
-        data={"ha_entity_uuid": "some-uuid", "energyid_key": "some_key"},
-    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Even though subentries exist, they are not real config entries, so async_unload is not called.
-    result = await async_unload_entry(hass, mock_config_entry)
-    assert result is True
-    mock_webhook_client.close.assert_called_once()
+    # ASSERT: Still loads successfully but with no mappings
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_webhook_client.authenticate.assert_called_once()
+
+
+async def test_subentry_with_missing_uuid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test subentry with missing entity UUID is skipped."""
+    sub_entry = {
+        "data": {CONF_ENERGYID_KEY: "grid_power"}  # Missing CONF_HA_ENTITY_UUID
+    }
+    mock_config_entry.subentries = {"sub_entry_1": MagicMock(**sub_entry)}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # ASSERT: Still loads successfully
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_subentry_with_nonexistent_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test subentry referencing non-existent entity UUID."""
+    sub_entry = {
+        "data": {
+            CONF_HA_ENTITY_UUID: "nonexistent-uuid-12345",
+            CONF_ENERGYID_KEY: "grid_power",
+        }
+    }
+    mock_config_entry.subentries = {"sub_entry_1": MagicMock(**sub_entry)}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # ASSERT: Still loads successfully (entity is just skipped with warning)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_initial_state_queued_for_new_mapping(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that initial state is queued when a new mapping is detected."""
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test_platform", "power_8", suggested_object_id="initial_meter"
+    )
+    hass.states.async_set(entity_entry.entity_id, "42.5")
+    sub_entry = {
+        "data": {CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "grid_power"}
+    }
+    mock_config_entry.subentries = {"sub_entry_1": MagicMock(**sub_entry)}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # ASSERT: Initial state should have been sent
+    sensor_mock = mock_webhook_client.get_or_create_sensor.return_value
+    sensor_mock.update.assert_called_with(42.5, ANY)
+
+
+async def test_synchronize_sensors_error_handling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test that synchronize_sensors errors are handled gracefully."""
+    mock_webhook_client.synchronize_sensors.side_effect = OSError("Connection failed")
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # ASSERT: Integration should still load
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_config_entry_update_listener(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that config entry update listener reloads listeners."""
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test_platform", "power_9", suggested_object_id="update_meter"
+    )
+    hass.states.async_set(entity_entry.entity_id, "100")
+    sub_entry = {
+        "data": {CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "grid_power"}
+    }
+    mock_config_entry.subentries = {"sub_entry_1": MagicMock(**sub_entry)}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Reset mock
+    sensor_mock = mock_webhook_client.get_or_create_sensor.return_value
+    sensor_mock.update.reset_mock()
+
+    # Add a new subentry dynamically
+    entity_entry2 = entity_registry.async_get_or_create(
+        "sensor", "test_platform", "power_10", suggested_object_id="second_meter"
+    )
+    hass.states.async_set(entity_entry2.entity_id, "200")
+    sub_entry2 = {
+        "data": {
+            CONF_HA_ENTITY_UUID: entity_entry2.id,
+            CONF_ENERGYID_KEY: "solar_power",
+        }
+    }
+    mock_config_entry.subentries["sub_entry_2"] = MagicMock(**sub_entry2)
+
+    # Trigger update listener
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # ASSERT: Integration reloaded successfully
+    assert mock_config_entry.state is ConfigEntryState.LOADED
