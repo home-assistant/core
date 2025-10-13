@@ -483,7 +483,7 @@
         "name": "System Power"
       },
       "tlx_p_self": {
-        "name": "Self Power"
+        "name": "Self power"
       },
       "total_money_today": {
         "name": "Total money today"
