@@ -321,11 +321,16 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Convert WiFi MAC to Bluetooth MAC and notify Improv BLE if waiting
         # ESPHome devices use WiFi MAC + 1 for Bluetooth MAC
-        if "improv_ble" in self.hass.config.components:
-            ble_mac = wifi_mac_to_bluetooth_mac(mac_address)
+        try:
             # Late import to avoid circular dependency
+            # NOTE: Do not change to hass.config.components check - improv_ble is
+            # config_flow only and may not be in the components registry
             from homeassistant.components import improv_ble  # noqa: PLC0415
-
+        except ImportError:
+            # improv_ble not available, which is fine
+            pass
+        else:
+            ble_mac = wifi_mac_to_bluetooth_mac(mac_address)
             improv_ble.async_register_next_flow(self.hass, ble_mac, self.flow_id)
             _LOGGER.debug(
                 "Notified Improv BLE of flow %s for BLE MAC %s (derived from WiFi MAC %s)",
