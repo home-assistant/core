@@ -18,6 +18,7 @@ from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
+    CONF_PROFILE_NAME,
     CONF_SECRET_ACCESS_KEY,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
@@ -36,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
     model.from_dict(cast(dict, entry.data))
 
     try:
-        session = AioSession()
+        session = AioSession(profile=model[CONF_PROFILE_NAME])
         # pylint: disable-next=unnecessary-dunder-call
         client = await session.create_client(
             "s3",
