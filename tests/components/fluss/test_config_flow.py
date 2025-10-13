@@ -33,8 +33,9 @@ async def test_step_user(hass: HomeAssistant) -> None:
     user_input: dict[str, Any] = {CONF_API_KEY: "valid_api_key"}
     with patch("fluss_api.FlussApiClient") as mock_client:
         mock_client.return_value = None
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=user_input
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
