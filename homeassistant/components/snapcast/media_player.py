@@ -65,7 +65,7 @@ def register_services() -> None:
     """Register snapcast services."""
     platform = entity_platform.async_get_current_platform()
 
-    platform.async_register_entity_service(SERVICE_SNAPSHOT, None, "snapshot")
+    platform.async_register_entity_service(SERVICE_SNAPSHOT, None, "async_snapshot")
     platform.async_register_entity_service(SERVICE_RESTORE, None, "async_restore")
     platform.async_register_entity_service(
         SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, "async_join"
@@ -250,7 +250,7 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         await self._device.set_volume(round(volume * 100))
         self.async_write_ha_state()
 
-    def snapshot(self) -> None:
+    async def async_snapshot(self) -> None:
         """Snapshot the group state."""
         self._device.snapshot()
 
@@ -428,12 +428,12 @@ class SnapcastGroupDevice(SnapcastBaseDevice):
 
         await super().async_set_volume_level(volume)
 
-    def snapshot(self) -> None:
+    async def async_snapshot(self) -> None:
         """Snapshot the group state."""
         # Groups are deprecated, create an issue when used
         self._async_create_group_deprecation_issue()
 
-        super().snapshot()
+        await super().async_snapshot()
 
     async def async_restore(self) -> None:
         """Restore the group state."""
