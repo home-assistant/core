@@ -340,6 +340,7 @@ class ShellyCuryButton(ShellyRpcAttributeEntity, ButtonEntity):
         """Triggers the Shelly button press service."""
         if TYPE_CHECKING:
             assert isinstance(self.coordinator, ShellyRpcCoordinator)
+            assert self.entity_description.slot is not None
 
         await self.coordinator.device.cury_boost(self._id, self.entity_description.slot)
 
