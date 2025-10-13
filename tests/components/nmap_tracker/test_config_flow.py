@@ -24,7 +24,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "hosts", [["1.1.1.1"], ["192.168.1.0/24"], ["192.168.1.0/24", "192.168.2.0/24"]]
+    "hosts", ["1.1.1.1", "192.168.1.0/24", "192.168.1.0/24,192.168.2.0/24"]
 )
 async def test_form(hass: HomeAssistant, hosts: str) -> None:
     """Test we get the form."""
@@ -48,20 +48,20 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
                 CONF_HOSTS: hosts,
                 CONF_HOME_INTERVAL: 3,
                 CONF_OPTIONS: DEFAULT_OPTIONS,
-                CONF_EXCLUDE: ["4.4.4.4"],
+                CONF_EXCLUDE: "4.4.4.4",
                 CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == f"Nmap Tracker {', '.join(hosts)}"
+    assert result2["title"] == f"Nmap Tracker {hosts}"
     assert result2["data"] == {}
     assert result2["options"] == {
         CONF_HOSTS: hosts,
         CONF_HOME_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
-        CONF_EXCLUDE: ["4.4.4.4"],
+        CONF_EXCLUDE: "4.4.4.4",
         CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -83,10 +83,10 @@ async def test_form_range(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOSTS: ["192.168.0.5-12"],
+                CONF_HOSTS: "192.168.0.5-12",
                 CONF_HOME_INTERVAL: 3,
                 CONF_OPTIONS: DEFAULT_OPTIONS,
-                CONF_EXCLUDE: ["4.4.4.4"],
+                CONF_EXCLUDE: "4.4.4.4",
                 CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
             },
         )
@@ -96,10 +96,10 @@ async def test_form_range(hass: HomeAssistant) -> None:
     assert result2["title"] == "Nmap Tracker 192.168.0.5-12"
     assert result2["data"] == {}
     assert result2["options"] == {
-        CONF_HOSTS: ["192.168.0.5-12"],
+        CONF_HOSTS: "192.168.0.5-12",
         CONF_HOME_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
-        CONF_EXCLUDE: ["4.4.4.4"],
+        CONF_EXCLUDE: "4.4.4.4",
         CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -117,10 +117,10 @@ async def test_form_invalid_hosts(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOSTS: ["not an ip block"],
+            CONF_HOSTS: "not an ip block",
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: [],
+            CONF_EXCLUDE: "",
             CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
         },
     )
@@ -137,10 +137,10 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={},
         options={
-            CONF_HOSTS: ["192.168.0.0/20"],
+            CONF_HOSTS: "192.168.0.0/20",
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: ["4.4.4.4"],
+            CONF_EXCLUDE: "4.4.4.4",
             CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
         },
     )
@@ -154,10 +154,10 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOSTS: ["192.168.0.0/20"],
+            CONF_HOSTS: "192.168.0.0/20",
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: [],
+            CONF_EXCLUDE: "",
             CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
         },
     )
@@ -179,10 +179,10 @@ async def test_form_invalid_ip_excludes(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOSTS: ["3.3.3.3"],
+            CONF_HOSTS: "3.3.3.3",
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: ["not an exclude"],
+            CONF_EXCLUDE: "not an exclude",
             CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
         },
     )
@@ -210,10 +210,10 @@ async def test_form_invalid_mac_excludes(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOSTS: ["3.3.3.3"],
+            CONF_HOSTS: "3.3.3.3",
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: ["4.4.4.4"],
+            CONF_EXCLUDE: "4.4.4.4",
             CONF_MAC_EXCLUDE: mac_excludes,
         },
     )
@@ -230,13 +230,12 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={},
         options={
-            CONF_HOSTS: ["192.168.1.0/24"],
+            CONF_HOSTS: "192.168.1.0/24",
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: ["4.4.4.4"],
+            CONF_EXCLUDE: "4.4.4.4",
             CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
         },
-        version=2,
     )
     config_entry.add_to_hass(hass)
     hass.set_state(CoreState.stopped)
@@ -250,9 +249,9 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
 
     assert result["data_schema"]({}) == {
-        CONF_EXCLUDE: ["4.4.4.4"],
+        CONF_EXCLUDE: "4.4.4.4",
         CONF_HOME_INTERVAL: 3,
-        CONF_HOSTS: ["192.168.1.0/24"],
+        CONF_HOSTS: "192.168.1.0/24",
         CONF_CONSIDER_HOME: 180,
         CONF_SCAN_INTERVAL: 120,
         CONF_OPTIONS: "-n -sn -PR -T4 --min-rate 10 --host-timeout 5s",
@@ -266,11 +265,11 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_HOSTS: ["192.168.1.0/24", "192.168.2.0/24"],
+                CONF_HOSTS: "192.168.1.0/24, 192.168.2.0/24",
                 CONF_HOME_INTERVAL: 5,
                 CONF_CONSIDER_HOME: 500,
                 CONF_OPTIONS: "-sn",
-                CONF_EXCLUDE: ["4.4.4.4", "5.5.5.5"],
+                CONF_EXCLUDE: "4.4.4.4, 5.5.5.5",
                 CONF_SCAN_INTERVAL: 10,
                 CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
             },
@@ -279,11 +278,11 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        CONF_HOSTS: ["192.168.1.0/24", "192.168.2.0/24"],
+        CONF_HOSTS: "192.168.1.0/24,192.168.2.0/24",
         CONF_HOME_INTERVAL: 5,
         CONF_CONSIDER_HOME: 500,
         CONF_OPTIONS: "-sn",
-        CONF_EXCLUDE: ["4.4.4.4", "5.5.5.5"],
+        CONF_EXCLUDE: "4.4.4.4,5.5.5.5",
         CONF_SCAN_INTERVAL: 10,
         CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
     }
