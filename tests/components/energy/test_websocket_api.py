@@ -141,7 +141,7 @@ async def test_save_preferences(
             {
                 "type": "solar",
                 "stat_energy_from": "my_solar_production",
-                "stat_power_from": "my_solar_power",
+                "stat_power": "my_solar_power",
                 "config_entry_solar_forecast": ["predicted_config_entry"],
             },
             {
