@@ -366,7 +366,7 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                     ):
                         self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
-                # Wait for potential ESPHome discovery and flow chaining
+                # Wait for another integration to discover and register flow chaining
                 next_flow_id: str | None = None
                 assert self._discovery_info is not None
                 ble_mac = format_mac(self._discovery_info.address)

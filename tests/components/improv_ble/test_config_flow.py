@@ -849,7 +849,7 @@ async def test_flow_chaining_with_next_flow(hass: HomeAssistant) -> None:
     provision_future = hass.loop.create_future()
 
     async def provision_with_delay(*args):
-        """Simulate a provision call that takes time."""
+        """Simulate a provision call that waits on a future."""
         await provision_future
 
     with (
@@ -971,7 +971,7 @@ async def test_flow_chaining_with_redirect_url(hass: HomeAssistant) -> None:
     provision_future = hass.loop.create_future()
 
     async def provision_with_delay(*args):
-        """Simulate a provision call that takes time."""
+        """Simulate a provision call that waits on a future."""
         await provision_future
         return "http://device.local"
 
