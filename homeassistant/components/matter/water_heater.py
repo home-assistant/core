@@ -51,7 +51,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.WATER_HEATER, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterWaterHeaterEntityDescription(
     WaterHeaterEntityDescription, MatterEntityDescription
 ):
