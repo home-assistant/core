@@ -10,9 +10,27 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ACCOUNT_ROLE_MAPPING, ACCOUNT_TYPE_ICONS
 from .coordinator import FireflyConfigEntry, FireflyDataUpdateCoordinator
 from .entity import FireflyAccountBaseEntity, FireflyCategoryBaseEntity
+
+ACCOUNT_ROLE_MAPPING = {
+    "defaultAsset": "default_asset",
+    "sharedAsset": "shared_asset",
+    "savingAsset": "saving_asset",
+    "ccAsset": "cc_asset",
+    "cashWalletAsset": "cash_wallet_asset",
+}
+ACCOUNT_TYPE_ICONS = {
+    "expense": "mdi:cash-minus",
+    "asset": "mdi:account-cash",
+    "revenue": "mdi:cash-plus",
+    "liability": "mdi:hand-coin",
+}
+
+ACCOUNT_BALANCE = "account_balance"
+ACCOUNT_ROLE = "account_role"
+ACCOUNT_TYPE = "account_type"
+CATEGORY = "category"
 
 
 async def async_setup_entry(
@@ -26,14 +44,14 @@ async def async_setup_entry(
 
     for account in coordinator.data.accounts:
         entities.append(
-            FireflyAccountBalanceSensor(coordinator, account, "account_balance")
+            FireflyAccountBalanceSensor(coordinator, account, ACCOUNT_BALANCE)
         )
-        entities.append(FireflyAccountRoleSensor(coordinator, account, "account_role"))
-        entities.append(FireflyAccountTypeSensor(coordinator, account, "account_type"))
+        entities.append(FireflyAccountRoleSensor(coordinator, account, ACCOUNT_ROLE))
+        entities.append(FireflyAccountTypeSensor(coordinator, account, ACCOUNT_TYPE))
 
     entities.extend(
         [
-            FireflyCategorySensor(coordinator, category, "category")
+            FireflyCategorySensor(coordinator, category, CATEGORY)
             for category in coordinator.data.category_details
         ]
     )
@@ -126,6 +144,10 @@ class FireflyAccountTypeSensor(FireflyAccountBaseEntity, SensorEntity):
 
 class FireflyCategorySensor(FireflyCategoryBaseEntity, SensorEntity):
     """Category sensor."""
+
+    _attr_translation_key = "category"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.TOTAL
 
     def __init__(
         self,
