@@ -55,7 +55,7 @@ async def async_get_network(hass: HomeAssistant) -> str:
     return str(ip_network(f"{local_ip}/{network_prefix}", False))
 
 
-def _normalize_ips_and_network(hosts: str) -> list[str] | None:
+def _normalize_ips_and_network(hosts: list[str]) -> list[str] | None:
     """Check if a list of hosts are all ips or ip networks."""
     normalized_hosts = []
 
@@ -89,13 +89,15 @@ def _normalize_ips_and_network(hosts: str) -> list[str] | None:
 
 def _is_valid_mac(mac_address: str) -> bool:
     """Check if a mac address is valid."""
-    is_valid_mac = re.match(r"([0-9A-F]{12})", string=mac_address, flags=re.IGNORECASE)
-    if is_valid_mac is not None and is_valid_mac.group() is not None:
+    is_valid_mac = re.fullmatch(
+        r"[0-9A-F]{12}", string=mac_address, flags=re.IGNORECASE
+    )
+    if is_valid_mac is not None:
         return True
     return False
 
 
-def _normalize_mac_addresses(mac_addresses: str) -> list[str] | None:
+def _normalize_mac_addresses(mac_addresses: list[str]) -> list[str] | None:
     """Check if a list of mac addresses are all valid."""
     normalized_mac_addresses = []
 
