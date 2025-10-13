@@ -21,7 +21,7 @@ from aioesphomeapi import (
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components import improv_ble, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_ESPHOME,
     SOURCE_IGNORE,
@@ -321,14 +321,18 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Convert WiFi MAC to Bluetooth MAC and notify Improv BLE if waiting
         # ESPHome devices use WiFi MAC + 1 for Bluetooth MAC
-        ble_mac = wifi_mac_to_bluetooth_mac(mac_address)
-        improv_ble.async_register_next_flow(self.hass, ble_mac, self.flow_id)
-        _LOGGER.debug(
-            "Notified Improv BLE of flow %s for BLE MAC %s (derived from WiFi MAC %s)",
-            self.flow_id,
-            ble_mac,
-            mac_address,
-        )
+        if "improv_ble" in self.hass.config.components:
+            ble_mac = wifi_mac_to_bluetooth_mac(mac_address)
+            # Late import to avoid circular dependency
+            from homeassistant.components import improv_ble  # noqa: PLC0415
+
+            improv_ble.async_register_next_flow(self.hass, ble_mac, self.flow_id)
+            _LOGGER.debug(
+                "Notified Improv BLE of flow %s for BLE MAC %s (derived from WiFi MAC %s)",
+                self.flow_id,
+                ble_mac,
+                mac_address,
+            )
 
         await self._async_validate_mac_abort_configured(
             mac_address, self._host, self._port
