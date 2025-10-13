@@ -139,6 +139,8 @@ IGNORE_VIOLATIONS = {
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),
     ("websocket_api", "shopping_list"),
+    # This would be a circular dep - improv_ble is optional and uses try/ImportError
+    ("esphome", "improv_ble"),
     "logbook",
 }
 
