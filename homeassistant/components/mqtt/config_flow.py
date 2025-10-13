@@ -470,6 +470,26 @@ _CODE_VALIDATION_MODE = {
 EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY}
 PWD_NOT_CHANGED = "__**password_not_changed**__"
 
+DEVELOPER_DOCUMENTATION_URL = "https://developers.home-assistant.io/"
+USER_DOCUMENTATION_URL = "https://www.home-assistant.io/"
+
+INTEGRATION_URL = f"{USER_DOCUMENTATION_URL}integrations/{DOMAIN}/"
+TEMPLATING_URL = f"{USER_DOCUMENTATION_URL}docs/configuration/templating/"
+AVAILABLE_STATE_CLASSES_URL = (
+    f"{DEVELOPER_DOCUMENTATION_URL}docs/core/entity/sensor/#available-state-classes"
+)
+NAMING_ENTITIES_URL = f"{INTEGRATION_URL}#naming-of-mqtt-entities"
+REGISTRY_PROPERTIES_URL = (
+    f"{DEVELOPER_DOCUMENTATION_URL}docs/core/entity/#registry-properties"
+)
+
+TRANSLATION_DESCRIPTION_PLACEHOLDERS = {
+    "templating_url": TEMPLATING_URL,
+    "available_state_classes_url": AVAILABLE_STATE_CLASSES_URL,
+    "naming_entities_url": NAMING_ENTITIES_URL,
+    "registry_properties_url": REGISTRY_PROPERTIES_URL,
+}
+
 # Common selectors
 BOOLEAN_SELECTOR = BooleanSelector()
 TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
@@ -4248,7 +4268,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="entity_platform_config",
             data_schema=data_schema,
-            description_placeholders={
+            description_placeholders=TRANSLATION_DESCRIPTION_PLACEHOLDERS
+            | {
                 "mqtt_device": device_name,
                 CONF_PLATFORM: platform,
                 "entity": full_entity_name,
@@ -4301,7 +4322,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="mqtt_platform_config",
             data_schema=data_schema,
-            description_placeholders={
+            description_placeholders=TRANSLATION_DESCRIPTION_PLACEHOLDERS
+            | {
                 "mqtt_device": device_name,
                 CONF_PLATFORM: platform,
                 "entity": full_entity_name,
@@ -4517,9 +4539,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             step_id="export_yaml",
             last_step=False,
             data_schema=data_schema,
-            description_placeholders={
-                "url": "https://www.home-assistant.io/integrations/mqtt/"
-            },
+            description_placeholders={"url": INTEGRATION_URL},
         )
 
     async def async_step_export_discovery(
@@ -4571,9 +4591,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             step_id="export_discovery",
             last_step=False,
             data_schema=data_schema,
-            description_placeholders={
-                "url": "https://www.home-assistant.io/integrations/mqtt/"
-            },
+            description_placeholders={"url": INTEGRATION_URL},
         )
 
 
