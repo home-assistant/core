@@ -158,6 +158,12 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         self._discovery_info = service_info
+
+        # Update title placeholders if name changed
+        name = service_info.name or service_info.address
+        if self.context.get("title_placeholders", {}).get("name") != name:
+            self.async_update_title_placeholders({"name": name})
+
         try:
             self._abort_if_provisioned()
         except AbortFlow:
