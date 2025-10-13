@@ -9434,3 +9434,62 @@ async def test_create_entry_existing_unique_id(
         "working in Home Assistant 2026.3, please create a bug report at https:"
     )
     assert (log_text in caplog.text) == expected_log
+
+
+async def test_async_update_title_placeholders(hass: HomeAssistant) -> None:
+    """Test async_update_title_placeholders updates context and notifies listeners."""
+    domain = "test"
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            self.context["title_placeholders"] = {"initial": "value"}
+            return self.async_show_form(step_id="user")
+
+    with mock_config_flow(domain, TestFlow):
+        result = await hass.config_entries.flow.async_init(
+            domain, context={"source": config_entries.SOURCE_USER}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["context"]["title_placeholders"] == {"initial": "value"}
+
+    # Get the flow instance
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
+
+    # Capture events to verify frontend notification
+    events = async_capture_events(
+        hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED
+    )
+
+    # Update title placeholders
+    flow.async_update_title_placeholders({"name": "updated"})
+    await hass.async_block_till_done()
+
+    # Verify placeholders were updated (preserving existing values)
+    assert flow.context["title_placeholders"] == {"initial": "value", "name": "updated"}
+
+    # Verify frontend was notified
+    assert len(events) == 1
+    assert events[0].data == {
+        "handler": domain,
+        "flow_id": result["flow_id"],
+        "refresh": True,
+    }
+
+    # Update again with overlapping key
+    flow.async_update_title_placeholders({"initial": "new_value", "another": "key"})
+    await hass.async_block_till_done()
+
+    # Verify placeholders were updated correctly
+    assert flow.context["title_placeholders"] == {
+        "initial": "new_value",
+        "name": "updated",
+        "another": "key",
+    }
+
+    # Verify frontend was notified again
+    assert len(events) == 2

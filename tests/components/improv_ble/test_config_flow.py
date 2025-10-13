@@ -8,7 +8,10 @@ from improv_ble_client import Error, State, errors as improv_ble_errors
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth import BluetoothChange
+from homeassistant.components.bluetooth import (
+    BluetoothChange,
+    BluetoothServiceInfoBleak,
+)
 from homeassistant.components.improv_ble.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_ADDRESS
@@ -22,7 +25,8 @@ from . import (
     PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_capture_events
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 IMPROV_BLE = "homeassistant.components.improv_ble"
 
@@ -696,3 +700,62 @@ async def test_provision_fails_invalid_data(
         "Received invalid improv via BLE data '000000000000' from device with bluetooth address 'AA:BB:CC:DD:EE:F0'"
         in caplog.text
     )
+
+
+async def test_bluetooth_name_update(hass: HomeAssistant) -> None:
+    """Test that discovery notification title updates when device name changes."""
+    with patch(
+        f"{IMPROV_BLE}.config_flow.bluetooth.async_register_callback",
+    ) as mock_async_register_callback:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=IMPROV_BLE_DISCOVERY_INFO,
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # Get the flow to check initial title_placeholders
+    flow = hass.config_entries.flow.async_get(result["flow_id"])
+    assert flow["context"]["title_placeholders"] == {"name": "00123456"}
+
+    # Get the callback that was registered
+    callback = mock_async_register_callback.call_args.args[1]
+
+    # Create updated discovery info with a new name
+    updated_discovery_info = BluetoothServiceInfoBleak(
+        name="improvtest",
+        address="AA:BB:CC:DD:EE:F0",
+        rssi=-60,
+        manufacturer_data={},
+        service_uuids=[IMPROV_BLE_DISCOVERY_INFO.service_uuids[0]],
+        service_data=IMPROV_BLE_DISCOVERY_INFO.service_data,
+        source="local",
+        device=generate_ble_device(address="AA:BB:CC:DD:EE:F0", name="improvtest"),
+        advertisement=generate_advertisement_data(
+            service_uuids=IMPROV_BLE_DISCOVERY_INFO.service_uuids,
+            service_data=IMPROV_BLE_DISCOVERY_INFO.service_data,
+        ),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    )
+
+    # Capture events to verify frontend notification
+    events = async_capture_events(hass, "data_entry_flow_progressed")
+
+    # Simulate receiving updated advertisement with new name
+    callback(updated_discovery_info, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
+
+    # Verify title_placeholders were updated
+    flow = hass.config_entries.flow.async_get(result["flow_id"])
+    assert flow["context"]["title_placeholders"] == {"name": "improvtest"}
+
+    # Verify frontend was notified
+    assert len(events) == 1
+    assert events[0].data == {
+        "handler": DOMAIN,
+        "flow_id": result["flow_id"],
+        "refresh": True,
+    }
