@@ -2876,8 +2876,10 @@ class ConfigFlow(ConfigEntryBaseFlow):
         listener notification automatically.
         """
         # Context is typed as TypedDict but is mutable dict at runtime
-        current_placeholders = self.context.setdefault("title_placeholders", {})
-        current_placeholders.update(title_placeholders)  # type: ignore[attr-defined]
+        current_placeholders = cast(
+            dict[str, str], self.context.setdefault("title_placeholders", {})
+        )
+        current_placeholders.update(title_placeholders)
         self.async_notify_flow_changed()
 
     @callback
