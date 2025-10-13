@@ -201,7 +201,7 @@ aioaquacell==0.2.0
 aioaseko==1.0.0
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.4.0
+aioasuswrt==1.5.1
 
 # homeassistant.components.husqvarna_automower
 aioautomower==2.2.1
@@ -384,7 +384,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.12.0
+aioshelly==13.13.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -895,7 +895,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.11.3
+env-canada==0.12.1
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1545,7 +1545,7 @@ nextcord==3.1.0
 nextdns==4.1.0
 
 # homeassistant.components.niko_home_control
-nhc==0.6.1
+nhc==0.7.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.19.0
@@ -1652,7 +1652,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.15.6
+opower==0.15.7
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1744,7 +1744,7 @@ proliphix==0.4.1
 prometheus-client==0.21.0
 
 # homeassistant.components.prowl
-prowlpy==1.0.2
+prowlpy==1.1.1
 
 # homeassistant.components.proxmoxve
 proxmoxer==2.0.1
@@ -1815,7 +1815,7 @@ pyAtome==0.1.1
 pyCEC==0.5.2
 
 # homeassistant.components.control4
-pyControl4==1.2.0
+pyControl4==1.5.0
 
 # homeassistant.components.duotecno
 pyDuotecno==2024.10.1
@@ -2054,7 +2054,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.5
+pyheos==1.0.6
 
 # homeassistant.components.hive
 pyhive-integration==1.0.2
@@ -2420,7 +2420,7 @@ pyspcwebgw==0.7.0
 pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.12.1
+pysqueezebox==0.13.0
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.2.3
@@ -2991,7 +2991,7 @@ thinqconnect==1.0.8
 tikteck==0.4
 
 # homeassistant.components.tilt_ble
-tilt-ble==0.3.1
+tilt-ble==1.0.1
 
 # homeassistant.components.tilt_pi
 tilt-pi==0.2.1
