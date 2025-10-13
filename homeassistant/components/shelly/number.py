@@ -49,6 +49,7 @@ from .utils import (
     get_block_entity_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
+    get_rpc_entity_name,
     get_virtual_component_ids,
     get_virtual_component_unit,
     is_view_for_platform,
@@ -93,6 +94,8 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator, key, attribute, description)
+        # Temporary until translations are added
+        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
 
         if description.max_fn is not None:
             self._attr_native_max_value = description.max_fn(

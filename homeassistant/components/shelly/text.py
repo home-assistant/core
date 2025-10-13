@@ -15,7 +15,7 @@ from homeassistant.components.text import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ShellyConfigEntry
+from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
@@ -25,6 +25,7 @@ from .entity import (
 from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
+    get_rpc_entity_name,
     get_virtual_component_ids,
     is_view_for_platform,
 )
@@ -84,6 +85,18 @@ class RpcText(ShellyRpcAttributeEntity, TextEntity):
     entity_description: RpcTextDescription
     attribute_value: str | None
     _id: int
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, key, attribute, description)
+        # Temporary until translations are added
+        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
 
     @property
     def native_value(self) -> str | None:

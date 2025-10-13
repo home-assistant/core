@@ -211,8 +211,10 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
         self.event_id = int(key.split(":")[-1])
         self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
-        self._attr_name = get_rpc_entity_name(coordinator.device, key)
         self.entity_description = description
+
+        # Temporary until translations are added
+        self._attr_name = get_rpc_entity_name(coordinator.device, key)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

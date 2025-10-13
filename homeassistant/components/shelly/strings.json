@@ -218,26 +218,43 @@
       "analog": {
         "name": "Analog"
       },
+      "analog_with_channel_name": {
+        "name": "{channel_name} analog"
+      },
       "analog_value": {
         "name": "Analog value"
+      },
+      "analog_value_with_channel_name": {
+        "name": "{channel_name} analog value"
       },
       "pulse_counter": {
         "name": "Pulse counter"
       },
+      "pulse_counter_with_channel_name": {
+        "name": "{channel_name} pulse counter"
+      },
       "counter_value": {
         "name": "Counter value"
+      },
+      "counter_value_with_channel_name": {
+        "name": "{channel_name} counter value"
       },
       "counter_frequency": {
         "name": "Pulse counter frequency"
       },
+      "counter_frequency_with_channel_name": {
+        "name": "{channel_name} pulse counter frequency"
+      },
       "counter_frequency_value": {
         "name": "Pulse counter frequency value"
+      },
+      "counter_frequency_value_with_channel_name": {
+        "name": "{channel_name} pulse counter frequency value"
       },
       "valve_position": {
         "name": "Valve position"
       },
       "charger_state": {
-        "name": "Charger state",
         "state": {
           "charger_charging": "[%key:common::state::charging%]",
           "charger_end": "Charge completed",
@@ -251,6 +268,10 @@
       },
       "detected_objects": {
         "name": "Detected objects",
+        "unit_of_measurement": "objects"
+      },
+      "detected_objects_with_channel_name": {
+        "name": "{channel_name} detected objects",
         "unit_of_measurement": "objects"
       },
       "gas_detected": {
@@ -317,15 +338,6 @@
           "twilight": "Twilight",
           "bright": "Bright"
         }
-      },
-      "phase_a_voltage": {
-        "name": "Phase A voltage"
-      },
-      "phase_b_voltage": {
-        "name": "Phase B voltage"
-      },
-      "phase_c_voltage": {
-        "name": "Phase C voltage"
       },
       "left_slot_vial": {
         "name": "Left slot vial"

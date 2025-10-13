@@ -40,6 +40,7 @@ from .utils import (
     get_block_entity_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
+    get_rpc_entity_name,
     is_block_momentary_input,
     is_rpc_momentary_input,
     is_view_for_platform,
@@ -69,6 +70,19 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
     """Represent a RPC binary sensor entity."""
 
     entity_description: RpcBinarySensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, key, attribute, description)
+        # Temporary until translations are added
+        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
+        self._attr_translation_key = description.translation_key
 
     @property
     def is_on(self) -> bool:
@@ -460,6 +474,24 @@ class RpcSleepingBinarySensor(
     """Represent a RPC sleeping binary sensor entity."""
 
     entity_description: RpcBinarySensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        super().__init__(coordinator, key, attribute, description, entry)
+        # Temporary until translations are added
+        if coordinator.device.initialized:
+            self._attr_name = get_rpc_entity_name(
+                coordinator.device, key, description.name
+            )
+        elif entry is not None:
+            self._attr_name = cast(str, entry.original_name)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

@@ -38,6 +38,7 @@ from .utils import (
     format_ble_addr,
     get_blu_trv_device_info,
     get_device_entry_gen,
+    get_rpc_entity_name,
     get_rpc_key_ids,
     get_rpc_key_instances,
     get_rpc_role_by_key,
@@ -380,6 +381,18 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
 
     entity_description: RpcButtonDescription
     _id: int
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, key, attribute, description)
+        # Temporary until translations are added
+        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
 
     @rpc_call
     async def async_press(self) -> None:

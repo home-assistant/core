@@ -51,6 +51,7 @@ from .utils import (
     brightness_to_percentage,
     get_block_entity_name,
     get_device_entry_gen,
+    get_rpc_entity_name,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
     percentage_to_brightness,
@@ -369,6 +370,8 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
     ) -> None:
         """Initialize light."""
         super().__init__(coordinator, key, attribute, description)
+        # Temporary until translations are added
+        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
 
     @property

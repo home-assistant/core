@@ -25,6 +25,7 @@ from .entity import (
 from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
+    get_rpc_entity_name,
     get_virtual_component_ids,
     is_view_for_platform,
 )
@@ -93,7 +94,8 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
     ) -> None:
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
-
+        # Temporary until translations are added
+        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
         self._attr_options = list(self.option_map.values())
 
     @property

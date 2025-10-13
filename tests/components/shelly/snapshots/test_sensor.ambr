@@ -577,7 +577,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'energy_consumed',
+    'translation_key': 'energy_consumed_with_channel_name',
     'unique_id': '123456789ABC-switch:0-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -636,7 +636,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'energy_returned',
+    'translation_key': 'energy_returned_with_channel_name',
     'unique_id': '123456789ABC-switch:0-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -695,7 +695,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_with_channel_name',
     'unique_id': '123456789ABC-switch:0-energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
