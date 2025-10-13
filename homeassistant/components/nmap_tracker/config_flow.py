@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ipaddress import ip_address, ip_network, summarize_address_range
+import re
 from typing import Any
 
 import voluptuous as vol
@@ -23,10 +24,13 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_HOME_INTERVAL,
+    CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
     DEFAULT_OPTIONS,
     DOMAIN,
@@ -86,6 +90,31 @@ def _normalize_ips_and_network(hosts_str: str) -> list[str] | None:
     return normalized_hosts
 
 
+def _is_valid_mac(mac_address: str) -> bool:
+    """Check if a mac address is valid."""
+    is_valid_mac = re.fullmatch(
+        r"[0-9A-F]{12}", string=mac_address, flags=re.IGNORECASE
+    )
+    if is_valid_mac is not None:
+        return True
+    return False
+
+
+def _normalize_mac_addresses(mac_addresses: list[str]) -> list[str] | None:
+    """Check if a list of mac addresses are all valid."""
+    normalized_mac_addresses = []
+
+    for mac_address in sorted(mac_addresses):
+        mac_address = mac_address.replace(":", "").replace("-", "").upper().strip()
+        if not _is_valid_mac(mac_address):
+            return None
+
+        formatted_mac_address = format_mac(mac_address)
+        normalized_mac_addresses.append(formatted_mac_address)
+
+    return normalized_mac_addresses
+
+
 def normalize_input(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate hosts and exclude are valid."""
     errors = {}
@@ -101,6 +130,12 @@ def normalize_input(user_input: dict[str, Any]) -> dict[str, str]:
     else:
         user_input[CONF_EXCLUDE] = ",".join(normalized_exclude)
 
+    normalized_mac_exclude = _normalize_mac_addresses(user_input[CONF_MAC_EXCLUDE])
+    if normalized_mac_exclude is None:
+        errors[CONF_MAC_EXCLUDE] = "invalid_hosts"
+    else:
+        user_input[CONF_MAC_EXCLUDE] = normalized_mac_exclude
+
     return errors
 
 
@@ -111,12 +146,17 @@ async def _async_build_schema_with_user_input(
     exclude = user_input.get(
         CONF_EXCLUDE, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
     )
+    mac_exclude = user_input.get(CONF_MAC_EXCLUDE, [])
+
     schema: VolDictType = {
         vol.Required(CONF_HOSTS, default=hosts): str,
         vol.Required(
             CONF_HOME_INTERVAL, default=user_input.get(CONF_HOME_INTERVAL, 0)
         ): int,
         vol.Optional(CONF_EXCLUDE, default=exclude): str,
+        vol.Optional(CONF_MAC_EXCLUDE, default=mac_exclude): TextSelector(
+            TextSelectorConfig(multiple=True)
+        ),
         vol.Optional(
             CONF_OPTIONS, default=user_input.get(CONF_OPTIONS, DEFAULT_OPTIONS)
         ): str,
