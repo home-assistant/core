@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ipaddress import ip_address, ip_network, summarize_address_range
+import re
 from typing import Any
 
 import voluptuous as vol
@@ -20,13 +21,16 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_HOME_INTERVAL,
+    CONF_HOSTS_EXCLUDE,
+    CONF_HOSTS_LIST,
+    CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
     DEFAULT_OPTIONS,
     DOMAIN,
@@ -52,11 +56,9 @@ async def async_get_network(hass: HomeAssistant) -> str:
     return str(ip_network(f"{local_ip}/{network_prefix}", False))
 
 
-def _normalize_ips_and_network(hosts_str: str) -> list[str] | None:
+def _normalize_ips_and_network(hosts: list[str]) -> list[str] | None:
     """Check if a list of hosts are all ips or ip networks."""
-
     normalized_hosts = []
-    hosts = [host for host in cv.ensure_list_csv(hosts_str) if host != ""]
 
     for host in sorted(hosts):
         try:
@@ -86,20 +88,51 @@ def _normalize_ips_and_network(hosts_str: str) -> list[str] | None:
     return normalized_hosts
 
 
+def _is_valid_mac(mac_address: str) -> bool:
+    """Check if a mac address is valid."""
+    is_valid_mac = re.fullmatch(
+        r"[0-9A-F]{12}", string=mac_address, flags=re.IGNORECASE
+    )
+    if is_valid_mac is not None:
+        return True
+    return False
+
+
+def _normalize_mac_addresses(mac_addresses: list[str]) -> list[str] | None:
+    """Check if a list of mac addresses are all valid."""
+    normalized_mac_addresses = []
+
+    for mac_address in sorted(mac_addresses):
+        mac_address = mac_address.replace(":", "").replace("-", "").upper().strip()
+        if not _is_valid_mac(mac_address):
+            return None
+
+        formatted_mac_address = format_mac(mac_address)
+        normalized_mac_addresses.append(formatted_mac_address)
+
+    return normalized_mac_addresses
+
+
 def normalize_input(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate hosts and exclude are valid."""
     errors = {}
-    normalized_hosts = _normalize_ips_and_network(user_input[CONF_HOSTS])
+    normalized_hosts = _normalize_ips_and_network(user_input[CONF_HOSTS_LIST])
     if not normalized_hosts:
-        errors[CONF_HOSTS] = "invalid_hosts"
+        errors[CONF_HOSTS_LIST] = "invalid_hosts"
     else:
-        user_input[CONF_HOSTS] = ",".join(normalized_hosts)
+        user_input[CONF_HOSTS_LIST] = normalized_hosts
 
-    normalized_exclude = _normalize_ips_and_network(user_input[CONF_EXCLUDE])
+    normalized_exclude = _normalize_ips_and_network(user_input[CONF_HOSTS_EXCLUDE])
     if normalized_exclude is None:
-        errors[CONF_EXCLUDE] = "invalid_hosts"
+        errors[CONF_HOSTS_EXCLUDE] = "invalid_hosts"
     else:
-        user_input[CONF_EXCLUDE] = ",".join(normalized_exclude)
+        user_input[CONF_HOSTS_EXCLUDE] = normalized_exclude
+
+    normalized_mac_exclude = _normalize_mac_addresses(user_input[CONF_MAC_EXCLUDE])
+    if normalized_mac_exclude is None:
+        errors[CONF_MAC_EXCLUDE] = "invalid_hosts"
+    else:
+        user_input[CONF_MAC_EXCLUDE] = normalized_mac_exclude
 
     return errors
 
@@ -107,16 +140,26 @@ def normalize_input(user_input: dict[str, Any]) -> dict[str, str]:
 async def _async_build_schema_with_user_input(
     hass: HomeAssistant, user_input: dict[str, Any], include_options: bool
 ) -> vol.Schema:
-    hosts = user_input.get(CONF_HOSTS, await async_get_network(hass))
-    exclude = user_input.get(
-        CONF_EXCLUDE, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
+    hosts = user_input.get(CONF_HOSTS_LIST, [await async_get_network(hass)])
+    ip_exclude = user_input.get(
+        CONF_HOSTS_EXCLUDE, [await network.async_get_source_ip(hass, MDNS_TARGET_IP)]
     )
+
+    mac_exclude = user_input.get(CONF_MAC_EXCLUDE, [])
+
     schema: VolDictType = {
-        vol.Required(CONF_HOSTS, default=hosts): str,
+        vol.Required(CONF_HOSTS_LIST, default=hosts): TextSelector(
+            TextSelectorConfig(multiple=True)
+        ),
         vol.Required(
             CONF_HOME_INTERVAL, default=user_input.get(CONF_HOME_INTERVAL, 0)
         ): int,
-        vol.Optional(CONF_EXCLUDE, default=exclude): str,
+        vol.Optional(CONF_HOSTS_EXCLUDE, default=ip_exclude): TextSelector(
+            TextSelectorConfig(multiple=True)
+        ),
+        vol.Optional(CONF_MAC_EXCLUDE, default=mac_exclude): TextSelector(
+            TextSelectorConfig(multiple=True)
+        ),
         vol.Optional(
             CONF_OPTIONS, default=user_input.get(CONF_OPTIONS, DEFAULT_OPTIONS)
         ): str,
@@ -139,7 +182,7 @@ async def _async_build_schema_with_user_input(
 
 
 class OptionsFlowHandler(OptionsFlowWithReload):
-    """Handle a option flow for homekit."""
+    """Handle an option flow for nmap tracker."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
@@ -155,8 +198,9 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             self.options.update(user_input)
 
             if not errors:
+                title_hosts = ", ".join(self.options[CONF_HOSTS_LIST])
                 return self.async_create_entry(
-                    title=f"Nmap Tracker {self.options[CONF_HOSTS]}", data=self.options
+                    title=f"Nmap Tracker {title_hosts}", data=self.options
                 )
 
         return self.async_show_form(
@@ -172,6 +216,7 @@ class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nmap Tracker."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -190,8 +235,9 @@ class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             self.options.update(user_input)
 
             if not errors:
+                title_hosts = ", ".join(user_input[CONF_HOSTS_LIST])
                 return self.async_create_entry(
-                    title=f"Nmap Tracker {user_input[CONF_HOSTS]}",
+                    title=f"Nmap Tracker {title_hosts}",
                     data={},
                     options=user_input,
                 )
@@ -205,9 +251,9 @@ class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     def _async_is_unique_host_list(self, user_input: dict[str, Any]) -> bool:
-        hosts = _normalize_ips_and_network(user_input[CONF_HOSTS])
+        hosts = _normalize_ips_and_network(user_input[CONF_HOSTS_LIST])
         for entry in self._async_current_entries():
-            if _normalize_ips_and_network(entry.options[CONF_HOSTS]) == hosts:
+            if _normalize_ips_and_network(entry.options[CONF_HOSTS_LIST]) == hosts:
                 return False
         return True
 
