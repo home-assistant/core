@@ -863,7 +863,7 @@ async def test_flow_chaining_with_next_flow(hass: HomeAssistant) -> None:
         assert result["step_id"] == "do_provision"
 
         # Yield to allow the background task to create the future
-        await asyncio.sleep(0)
+        await asyncio.sleep(0)  # task is created with eager_start=False
 
         # Simulate another integration discovering the device and registering a flow
         # This happens while provision is waiting on the future
@@ -975,7 +975,7 @@ async def test_flow_chaining_with_redirect_url(hass: HomeAssistant) -> None:
         assert result["step_id"] == "do_provision"
 
         # Yield to allow the background task to create the future
-        await asyncio.sleep(0)
+        await asyncio.sleep(0)  # task is created with eager_start=False
 
         # Simulate ESPHome discovering the device and notifying Improv BLE
         # This happens while provision is still running
