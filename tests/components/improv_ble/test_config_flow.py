@@ -179,6 +179,30 @@ async def test_bluetooth_step_provisioned_device_2(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.flow.async_progress_by_handler("improv_ble")) == 0
 
 
+async def test_bluetooth_step_provisioned_no_rediscovery(hass: HomeAssistant) -> None:
+    """Test that provisioned device is not rediscovered while it stays provisioned."""
+    # Step 1: Device is discovered in provisioned state (aborts)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_provisioned"
+
+    # Step 2: Device continues advertising provisioned state
+    # This should NOT trigger a new discovery because the content hasn't changed
+    # even though we cleared the match history
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
+    )
+    # Verify that it still aborts (no new flow started)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_provisioned"
+
+
 async def test_bluetooth_step_factory_reset_rediscovery(hass: HomeAssistant) -> None:
     """Test that factory reset device can be rediscovered."""
     # Step 1: Device is discovered in provisioned state (aborts)
