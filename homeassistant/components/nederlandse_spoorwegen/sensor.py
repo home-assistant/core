@@ -125,7 +125,7 @@ async def async_setup_entry(
 
         # Add entity with proper subentry association
         async_add_entities(
-            [entity], update_before_add=True, config_subentry_id=subentry_id
+            [entity], config_subentry_id=subentry_id
         )
 
 
