@@ -784,104 +784,24 @@ class BrSensor(SensorEntity):
             self.async_write_ha_state()
 
     @callback
-    def _load_data(self, data):  # noqa: C901
+    def _load_data(self, data):
         """Load the sensor with relevant data."""
-        # Check if we have a new measurement,
-        # otherwise we do not have to update the sensor
         if self._measured == data.get(MEASURED):
             return False
 
         self._measured = data.get(MEASURED)
         sensor_type = self.entity_description.key
 
+        # Handle forecast-type sensors
         if sensor_type.endswith(("_1d", "_2d", "_3d", "_4d", "_5d")):
-            # update forecasting sensors:
-            fcday = 0
-            if sensor_type.endswith("_2d"):
-                fcday = 1
-            if sensor_type.endswith("_3d"):
-                fcday = 2
-            if sensor_type.endswith("_4d"):
-                fcday = 3
-            if sensor_type.endswith("_5d"):
-                fcday = 4
+            return self._update_forecast_sensor(sensor_type, data)
 
-            # update weather symbol & status text
-            if sensor_type.startswith((SYMBOL, CONDITION)):
-                try:
-                    condition = data.get(FORECAST)[fcday].get(CONDITION)
-                except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s", fcday)
-                    return False
-
-                if condition:
-                    new_state = condition.get(CONDITION)
-                    if sensor_type.startswith(SYMBOL):
-                        new_state = condition.get(EXACTNL)
-                    if sensor_type.startswith("conditioncode"):
-                        new_state = condition.get(CONDCODE)
-                    if sensor_type.startswith("conditiondetailed"):
-                        new_state = condition.get(DETAILED)
-                    if sensor_type.startswith("conditionexact"):
-                        new_state = condition.get(EXACT)
-
-                    img = condition.get(IMAGE)
-
-                    if new_state != self.state or img != self.entity_picture:
-                        self._attr_native_value = new_state
-                        self._attr_entity_picture = img
-                        return True
-                return False
-
-            if sensor_type.startswith(WINDSPEED):
-                # hass wants windspeeds in km/h not m/s, so convert:
-                try:
-                    self._attr_native_value = data.get(FORECAST)[fcday].get(
-                        sensor_type[:-3]
-                    )
-                except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s", fcday)
-                    return False
-
-                if self.state is not None:
-                    self._attr_native_value = round(self.state * 3.6, 1)
-                return True
-
-            # update all other sensors
-            try:
-                self._attr_native_value = data.get(FORECAST)[fcday].get(
-                    sensor_type[:-3]
-                )
-            except IndexError:
-                _LOGGER.warning("No forecast for fcday=%s", fcday)
-                return False
-            return True
-
+        # Handle current condition sensors
         if sensor_type == SYMBOL or sensor_type.startswith(CONDITION):
-            # update weather symbol & status text
-            if condition := data.get(CONDITION):
-                if sensor_type == SYMBOL:
-                    new_state = condition.get(EXACTNL)
-                if sensor_type == CONDITION:
-                    new_state = condition.get(CONDITION)
-                if sensor_type == "conditioncode":
-                    new_state = condition.get(CONDCODE)
-                if sensor_type == "conditiondetailed":
-                    new_state = condition.get(DETAILED)
-                if sensor_type == "conditionexact":
-                    new_state = condition.get(EXACT)
+            return self._update_condition_sensor(sensor_type, data)
 
-                img = condition.get(IMAGE)
-
-                if new_state != self.state or img != self.entity_picture:
-                    self._attr_native_value = new_state
-                    self._attr_entity_picture = img
-                    return True
-
-            return False
-
+        # Handle nested precipitation forecast
         if sensor_type.startswith(PRECIPITATION_FORECAST):
-            # update nested precipitation forecast sensors
             nested = data.get(PRECIPITATION_FORECAST)
             self._timeframe = nested.get(TIMEFRAME)
             self._attr_native_value = nested.get(
@@ -889,37 +809,129 @@ class BrSensor(SensorEntity):
             )
             return True
 
+        # Handle wind and visibility conversions
         if sensor_type in [WINDSPEED, WINDGUST]:
-            # hass wants windspeeds in km/h not m/s, so convert:
-            self._attr_native_value = data.get(sensor_type)
-            if self.state is not None:
-                self._attr_native_value = round(data.get(sensor_type) * 3.6, 1)
-            return True
+            return self._update_windspeed_sensor(sensor_type, data)
 
         if sensor_type == VISIBILITY:
-            # hass wants visibility in km (not m), so convert:
-            self._attr_native_value = data.get(sensor_type)
+            return self._update_visibility_sensor(sensor_type, data)
+
+        # Default: simple value sensor
+        self._attr_native_value = data.get(sensor_type)
+        self._set_common_attributes(data)
+        return True
+
+    def _update_forecast_sensor(self, sensor_type, data):
+        """Update forecast-type sensors."""
+        fcday = self._get_forecast_day(sensor_type)
+
+        if sensor_type.startswith((SYMBOL, CONDITION)):
+            return self._update_forecast_condition(sensor_type, data, fcday)
+
+        if sensor_type.startswith(WINDSPEED):
+            try:
+                self._attr_native_value = data.get(FORECAST)[fcday].get(sensor_type[:-3])
+            except IndexError:
+                _LOGGER.warning("No forecast for fcday=%s", fcday)
+                return False
+
             if self.state is not None:
-                self._attr_native_value = round(self.state / 1000, 1)
+                self._attr_native_value = round(self.state * 3.6, 1)
             return True
 
-        # update all other sensors
-        self._attr_native_value = data.get(sensor_type)
-        if sensor_type.startswith(PRECIPITATION_FORECAST):
-            result = {ATTR_ATTRIBUTION: data.get(ATTRIBUTION)}
-            if self._timeframe is not None:
-                result[TIMEFRAME_LABEL] = f"{self._timeframe} min"
+        try:
+            self._attr_native_value = data.get(FORECAST)[fcday].get(sensor_type[:-3])
+        except IndexError:
+            _LOGGER.warning("No forecast for fcday=%s", fcday)
+            return False
+        return True
 
-            self._attr_extra_state_attributes = result
+    def _update_forecast_condition(self, sensor_type, data, fcday):
+        """Handle forecasted condition sensors."""
+        try:
+            condition = data.get(FORECAST)[fcday].get(CONDITION)
+        except IndexError:
+            _LOGGER.warning("No forecast for fcday=%s", fcday)
+            return False
 
+        if not condition:
+            return False
+
+        new_state = self._extract_condition_value(sensor_type, condition)
+        img = condition.get(IMAGE)
+
+        if new_state != self.state or img != self.entity_picture:
+            self._attr_native_value = new_state
+            self._attr_entity_picture = img
+            return True
+
+        return False
+
+    def _update_condition_sensor(self, sensor_type, data):
+        """Handle current condition sensors."""
+        condition = data.get(CONDITION)
+        if not condition:
+            return False
+
+        new_state = self._extract_condition_value(sensor_type, condition)
+        img = condition.get(IMAGE)
+
+        if new_state != self.state or img != self.entity_picture:
+            self._attr_native_value = new_state
+            self._attr_entity_picture = img
+            return True
+        return False
+
+    def _update_windspeed_sensor(self, sensor_type, data):
+        """Convert wind speed to km/h."""
+        value = data.get(sensor_type)
+        if value is None:
+            return False
+
+        self._attr_native_value = round(value * 3.6, 1)
+        return True
+
+    def _update_visibility_sensor(self, sensor_type, data):
+        """Convert visibility to kilometers."""
+        value = data.get(sensor_type)
+        if value is None:
+            return False
+
+        self._attr_native_value = round(value / 1000, 1)
+        return True
+
+    def _extract_condition_value(self, sensor_type, condition):
+        """Map sensor type to correct condition field."""
+        if sensor_type == SYMBOL or sensor_type.startswith(SYMBOL):
+            return condition.get(EXACTNL)
+        if sensor_type.startswith("conditioncode"):
+            return condition.get(CONDCODE)
+        if sensor_type.startswith("conditiondetailed"):
+            return condition.get(DETAILED)
+        if sensor_type.startswith("conditionexact"):
+            return condition.get(EXACT)
+        return condition.get(CONDITION)
+
+    def _get_forecast_day(self, sensor_type):
+        """Return forecast day index from sensor key (explicit style)."""
+        fcday = 0
+        if sensor_type.endswith("_2d"):
+            fcday = 1
+        elif sensor_type.endswith("_3d"):
+            fcday = 2
+        elif sensor_type.endswith("_4d"):
+            fcday = 3
+        elif sensor_type.endswith("_5d"):
+            fcday = 4
+        return fcday
+
+    def _set_common_attributes(self, data):
+        """Set shared state attributes for all sensors."""
         result = {
             ATTR_ATTRIBUTION: data.get(ATTRIBUTION),
             STATIONNAME_LABEL: data.get(STATIONNAME),
         }
         if self._measured is not None:
-            # convert datetime (Europe/Amsterdam) into local datetime
             local_dt = dt_util.as_local(self._measured)
             result[MEASURED_LABEL] = local_dt.strftime("%c")
-
         self._attr_extra_state_attributes = result
-        return True
