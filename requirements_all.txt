@@ -453,7 +453,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.5.5
+airos==0.5.6
 
 # homeassistant.components.airthings_ble
 airthings-ble==1.1.1
