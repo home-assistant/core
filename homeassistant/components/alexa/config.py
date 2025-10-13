@@ -96,6 +96,7 @@ class AbstractConfig(ABC):
         if unsub_func := self._unsub_proactive_report:
             unsub_func()
         self._unsub_proactive_report = None
+        await asyncio.sleep(0)
 
     @callback
     def should_expose(self, entity_id: str) -> bool:
