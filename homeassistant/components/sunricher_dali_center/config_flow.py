@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from PySrDaliGateway import DaliGatewayType
+from PySrDaliGateway import DaliGateway, DaliGatewayType
 from PySrDaliGateway.discovery import DaliGatewayDiscovery
 from PySrDaliGateway.exceptions import DaliGatewayError
 import voluptuous as vol
@@ -51,6 +51,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle gateway discovery."""
         errors: dict[str, str] = {}
+        retry_discovery = False
 
         if discovery_info and "selected_gateway" in discovery_info:
             selected_sn = discovery_info["selected_gateway"]
@@ -73,13 +74,27 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_SSL: selected_gateway.get("is_tls", False),
                 }
 
-                return self.async_create_entry(
-                    title=title,
-                    data=gateway_data,
-                )
-            errors["base"] = "device_not_found"
+                gateway = DaliGateway(selected_gateway)
+                try:
+                    await gateway.connect()
+                except DaliGatewayError as err:
+                    _LOGGER.debug(
+                        "Failed to connect to gateway %s during config flow",
+                        selected_gateway["gw_sn"],
+                        exc_info=err,
+                    )
+                    errors["base"] = "cannot_connect"
+                else:
+                    await gateway.disconnect()
+                    return self.async_create_entry(
+                        title=title,
+                        data=gateway_data,
+                    )
+            else:
+                errors["base"] = "device_not_found"
+                retry_discovery = True
 
-        if not self._discovered_gateways or errors:
+        if not self._discovered_gateways or retry_discovery:
             _LOGGER.debug("Starting gateway discovery")
             discovery = DaliGatewayDiscovery()
             try:

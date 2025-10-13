@@ -48,6 +48,7 @@ async def test_discovery_flow_success(
     hass: HomeAssistant,
     mock_setup_entry,
     mock_discovery,
+    mock_config_flow_gateway,
 ) -> None:
     """Test a successful discovery flow."""
     mock_discovery.discover_gateways.return_value = [MOCK_GATEWAY_DATA]
@@ -81,6 +82,8 @@ async def test_discovery_flow_success(
     }
     assert mock_discovery.discover_gateways.await_count == 1
     mock_setup_entry.assert_called_once()
+    assert mock_config_flow_gateway.connect.await_count == 1
+    assert mock_config_flow_gateway.disconnect.await_count == 1
 
 
 async def test_discovery_no_gateways_found(
@@ -148,6 +151,37 @@ async def test_discovery_device_not_found(
     assert select_result["step_id"] == "discovery"
     assert select_result["errors"]["base"] == "device_not_found"
     assert mock_discovery.discover_gateways.await_count == 2
+
+
+async def test_discovery_connection_failure(
+    hass: HomeAssistant,
+    mock_discovery,
+    mock_config_flow_gateway,
+) -> None:
+    """Test connection failure when validating the selected gateway."""
+    mock_discovery.discover_gateways.return_value = [MOCK_GATEWAY_DATA]
+    mock_config_flow_gateway.connect.side_effect = DaliGatewayError("failure")
+
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    discovery_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"], {}
+    )
+
+    assert discovery_result["type"] is FlowResultType.FORM
+    assert discovery_result["step_id"] == "discovery"
+
+    select_result = await hass.config_entries.flow.async_configure(
+        discovery_result["flow_id"],
+        {"selected_gateway": MOCK_GATEWAY_DATA["gw_sn"]},
+    )
+
+    assert select_result["type"] is FlowResultType.FORM
+    assert select_result["step_id"] == "discovery"
+    assert select_result["errors"]["base"] == "cannot_connect"
+    assert mock_config_flow_gateway.connect.await_count == 1
+    assert mock_config_flow_gateway.disconnect.await_count == 0
 
 
 async def test_discovery_duplicate_filtered(

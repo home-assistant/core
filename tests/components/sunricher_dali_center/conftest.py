@@ -151,6 +151,19 @@ def mock_dali_gateway() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_config_flow_gateway() -> Generator[MagicMock]:
+    """Return a mocked DaliGateway for the config flow."""
+    with patch(
+        "homeassistant.components.sunricher_dali_center.config_flow.DaliGateway",
+        autospec=True,
+    ) as mock_gateway_class:
+        mock_gateway = mock_gateway_class.return_value
+        mock_gateway.connect = AsyncMock()
+        mock_gateway.disconnect = AsyncMock()
+        yield mock_gateway
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(

@@ -30,6 +30,8 @@ from .types import DaliCenterConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -73,6 +75,7 @@ class DaliCenterLight(LightEntity):
         """Initialize the light entity."""
 
         self._light = light
+        self._unavailable_logged = False
         self._attr_unique_id = light.unique_id
         self._attr_available = light.status == "online"
         self._attr_device_info = DeviceInfo(
@@ -137,6 +140,12 @@ class DaliCenterLight(LightEntity):
     @callback
     def _handle_availability(self, available: bool) -> None:
         self._attr_available = available
+        if not available and not self._unavailable_logged:
+            _LOGGER.info("Light %s became unavailable", self._attr_unique_id)
+            self._unavailable_logged = True
+        elif available and self._unavailable_logged:
+            _LOGGER.info("Light %s is back online", self._attr_unique_id)
+            self._unavailable_logged = False
         self.schedule_update_ha_state()
 
     @callback

@@ -90,4 +90,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, _PLATFORMS):
+        await entry.runtime_data.gateway.disconnect()
+    return unload_ok
