@@ -476,3 +476,54 @@ async def test_migrate_unique_id_virtual_components_roles(
     assert entity_entry.unique_id == new_unique_id
 
     assert "Migrating unique_id for button.test_name_test_button" in caplog.text
+
+
+async def test_cury_button_entity(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test button entities for cury component."""
+    status = {
+        "cury:0": {
+            "id": 0,
+            "slots": {
+                "left": {
+                    "intensity": 70,
+                    "on": True,
+                    "boost": None,
+                    "vial": {"level": 27, "name": "Forest Dream"},
+                },
+                "right": {
+                    "intensity": 70,
+                    "on": False,
+                    "boost": {"started_at": 1760365354, "duration": 1800},
+                    "vial": {"level": 84, "name": "Velvet Rose"},
+                },
+            },
+        }
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 3)
+
+    for entity in (
+        "left_slot_start_boost",
+        "right_slot_start_boost",
+    ):
+        entity_id = f"{BUTTON_DOMAIN}.test_name_{entity}"
+
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: f"{BUTTON_DOMAIN}.test_name_right_slot_start_boost"},
+        blocking=True,
+    )
+    mock_rpc_device.cury_boost.assert_called_once_with(0, "right")
