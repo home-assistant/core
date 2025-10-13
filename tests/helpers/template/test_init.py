@@ -1090,9 +1090,7 @@ def test_render_with_possible_json_value_undefined_json_error_value(
 def test_render_with_possible_json_value_non_string_value(hass: HomeAssistant) -> None:
     """Render with possible JSON value with non-string value."""
     tpl = template.Template(
-        """
-{{ strptime(value~'+0000', '%Y-%m-%d %H:%M:%S%z') }}
-        """,
+        """{{ strptime(value~'+0000', '%Y-%m-%d %H:%M:%S%z') }}""",
         hass,
     )
     value = datetime(2019, 1, 18, 12, 13, 14)
@@ -1152,41 +1150,31 @@ def test_is_state(hass: HomeAssistant) -> None:
     """Test is_state method."""
     hass.states.async_set("test.object", "available")
     tpl = template.Template(
-        """
-{% if is_state("test.object", "available") %}yes{% else %}no{% endif %}
-        """,
+        """{% if is_state("test.object", "available") %}yes{% else %}no{% endif %}""",
         hass,
     )
     assert tpl.async_render() == "yes"
 
     tpl = template.Template(
-        """
-{{ is_state("test.noobject", "available") }}
-        """,
+        """{{ is_state("test.noobject", "available") }}""",
         hass,
     )
     assert tpl.async_render() is False
 
     tpl = template.Template(
-        """
-{% if "test.object" is is_state("available") %}yes{% else %}no{% endif %}
-        """,
+        """{% if "test.object" is is_state("available") %}yes{% else %}no{% endif %}""",
         hass,
     )
     assert tpl.async_render() == "yes"
 
     tpl = template.Template(
-        """
-{{ ['test.object'] | select("is_state", "available") | first | default }}
-        """,
+        """{{ ['test.object'] | select("is_state", "available") | first | default }}""",
         hass,
     )
     assert tpl.async_render() == "test.object"
 
     tpl = template.Template(
-        """
-{{ is_state("test.object", ["on", "off", "available"]) }}
-        """,
+        """{{ is_state("test.object", ["on", "off", "available"]) }}""",
         hass,
     )
     assert tpl.async_render() is True
@@ -1196,49 +1184,37 @@ def test_is_state_attr(hass: HomeAssistant) -> None:
     """Test is_state_attr method."""
     hass.states.async_set("test.object", "available", {"mode": "on", "exists": None})
     tpl = template.Template(
-        """
-{% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}
-            """,
+        """{% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}""",
         hass,
     )
     assert tpl.async_render() == "yes"
 
     tpl = template.Template(
-        """
-{{ is_state_attr("test.noobject", "mode", "on") }}
-            """,
+        """{{ is_state_attr("test.noobject", "mode", "on") }}""",
         hass,
     )
     assert tpl.async_render() is False
 
     tpl = template.Template(
-        """
-{% if "test.object" is is_state_attr("mode", "on") %}yes{% else %}no{% endif %}
-        """,
+        """{% if "test.object" is is_state_attr("mode", "on") %}yes{% else %}no{% endif %}""",
         hass,
     )
     assert tpl.async_render() == "yes"
 
     tpl = template.Template(
-        """
-{{ ['test.object'] | select("is_state_attr", "mode", "on") | first | default }}
-        """,
+        """{{ ['test.object'] | select("is_state_attr", "mode", "on") | first | default }}""",
         hass,
     )
     assert tpl.async_render() == "test.object"
 
     tpl = template.Template(
-        """
-{% if is_state_attr("test.object", "exists", None) %}yes{% else %}no{% endif %}
-            """,
+        """{% if is_state_attr("test.object", "exists", None) %}yes{% else %}no{% endif %}""",
         hass,
     )
     assert tpl.async_render() == "yes"
 
     tpl = template.Template(
-        """
-{% if is_state_attr("test.object", "noexist", None) %}yes{% else %}no{% endif %}
-            """,
+        """{% if is_state_attr("test.object", "noexist", None) %}yes{% else %}no{% endif %}""",
         hass,
     )
     assert tpl.async_render() == "no"
@@ -1250,33 +1226,25 @@ def test_state_attr(hass: HomeAssistant) -> None:
         "test.object", "available", {"effect": "action", "mode": "on"}
     )
     tpl = template.Template(
-        """
-{% if state_attr("test.object", "mode") == "on" %}yes{% else %}no{% endif %}
-            """,
+        """{% if state_attr("test.object", "mode") == "on" %}yes{% else %}no{% endif %}""",
         hass,
     )
     assert tpl.async_render() == "yes"
 
     tpl = template.Template(
-        """
-{{ state_attr("test.noobject", "mode") == None }}
-            """,
+        """{{ state_attr("test.noobject", "mode") == None }}""",
         hass,
     )
     assert tpl.async_render() is True
 
     tpl = template.Template(
-        """
-{% if "test.object" | state_attr("mode") == "on" %}yes{% else %}no{% endif %}
-        """,
+        """{% if "test.object" | state_attr("mode") == "on" %}yes{% else %}no{% endif %}""",
         hass,
     )
     assert tpl.async_render() == "yes"
 
     tpl = template.Template(
-        """
-{{ ['test.object'] | map("state_attr", "effect") | first | default }}
-        """,
+        """{{ ['test.object'] | map("state_attr", "effect") | first | default }}""",
         hass,
     )
     assert tpl.async_render() == "action"
@@ -1292,17 +1260,13 @@ def test_states_function(hass: HomeAssistant) -> None:
     assert tpl2.async_render() == "unknown"
 
     tpl = template.Template(
-        """
-{% if "test.object" | states == "available" %}yes{% else %}no{% endif %}
-        """,
+        """{% if "test.object" | states == "available" %}yes{% else %}no{% endif %}""",
         hass,
     )
     assert tpl.async_render() == "yes"
 
     tpl = template.Template(
-        """
-{{ ['test.object'] | map("states") | first | default }}
-        """,
+        """{{ ['test.object'] | map("states") | first | default }}""",
         hass,
     )
     assert tpl.async_render() == "available"
@@ -1421,33 +1385,25 @@ def test_has_value(hass: HomeAssistant) -> None:
     hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
 
     tpl = template.Template(
-        """
-{{ has_value("test.value1") }}
-        """,
+        """{{ has_value("test.value1") }}""",
         hass,
     )
     assert tpl.async_render() is True
 
     tpl = template.Template(
-        """
-{{ has_value("test.unavailable") }}
-        """,
+        """{{ has_value("test.unavailable") }}""",
         hass,
     )
     assert tpl.async_render() is False
 
     tpl = template.Template(
-        """
-{{ has_value("test.unknown") }}
-        """,
+        """{{ has_value("test.unknown") }}""",
         hass,
     )
     assert tpl.async_render() is False
 
     tpl = template.Template(
-        """
-{% if "test.value1" is has_value %}yes{% else %}no{% endif %}
-        """,
+        """{% if "test.value1" is has_value %}yes{% else %}no{% endif %}""",
         hass,
     )
     assert tpl.async_render() == "yes"
@@ -2007,9 +1963,7 @@ def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
 
     # render as filter
     tpl = template.Template(
-        """
-{{ value | pack('>I') }}
-            """,
+        """{{ value | pack('>I') }}""",
         hass,
     )
     variables = {
@@ -2019,9 +1973,7 @@ def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
 
     # render as function
     tpl = template.Template(
-        """
-{{ pack(value, '>I') }}
-            """,
+        """{{ pack(value, '>I') }}""",
         hass,
     )
     variables = {
@@ -2031,9 +1983,7 @@ def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
 
     # test with None value
     tpl = template.Template(
-        """
-{{ pack(value, '>I') }}
-            """,
+        """{{ pack(value, '>I') }}""",
         hass,
     )
     variables = {
@@ -2049,9 +1999,7 @@ def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
 
     # test with invalid filter
     tpl = template.Template(
-        """
-{{ pack(value, 'invalid filter') }}
-            """,
+        """{{ pack(value, 'invalid filter') }}""",
         hass,
     )
     variables = {
@@ -2072,9 +2020,7 @@ def test_unpack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
 
     # render as filter
     tpl = template.Template(
-        """
-{{ value | unpack('>I') }}
-            """,
+        """{{ value | unpack('>I') }}""",
         hass,
     )
     variables = {
@@ -2084,9 +2030,7 @@ def test_unpack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
 
     # render as function
     tpl = template.Template(
-        """
-{{ unpack(value, '>I') }}
-            """,
+        """{{ unpack(value, '>I') }}""",
         hass,
     )
     variables = {
@@ -2096,9 +2040,7 @@ def test_unpack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
 
     # unpack with offset
     tpl = template.Template(
-        """
-{{ unpack(value, '>H', offset=2) }}
-            """,
+        """{{ unpack(value, '>H', offset=2) }}""",
         hass,
     )
     variables = {
@@ -2108,9 +2050,7 @@ def test_unpack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
 
     # test with an empty bytes object
     tpl = template.Template(
-        """
-{{ unpack(value, '>I') }}
-            """,
+        """{{ unpack(value, '>I') }}""",
         hass,
     )
     variables = {
@@ -2125,9 +2065,7 @@ def test_unpack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
 
     # test with invalid filter
     tpl = template.Template(
-        """
-{{ unpack(value, 'invalid filter') }}
-            """,
+        """{{ unpack(value, 'invalid filter') }}""",
         hass,
     )
     variables = {
