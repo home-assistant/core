@@ -43,6 +43,7 @@ from homeassistant.helpers.typing import VolDictType
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REASONING_EFFORT,
@@ -64,6 +65,7 @@ from .const import (
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_CODE_INTERPRETER,
     RECOMMENDED_CONVERSATION_OPTIONS,
+    RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
@@ -72,6 +74,7 @@ from .const import (
     RECOMMENDED_WEB_SEARCH,
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
     RECOMMENDED_WEB_SEARCH_USER_LOCATION,
+    UNSUPPORTED_IMAGE_MODELS,
     UNSUPPORTED_MODELS,
     UNSUPPORTED_WEB_SEARCH_MODELS,
 )
@@ -410,6 +413,18 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     CONF_WEB_SEARCH_TIMEZONE,
                 )
             }
+
+        if self._subentry_type == "ai_task_data" and not model.startswith(
+            tuple(UNSUPPORTED_IMAGE_MODELS)
+        ):
+            step_schema[
+                vol.Optional(CONF_IMAGE_MODEL, default=RECOMMENDED_IMAGE_MODEL)
+            ] = SelectSelector(
+                SelectSelectorConfig(
+                    options=["gpt-image-1", "gpt-image-1-mini"],
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            )
 
         if user_input is not None:
             if user_input.get(CONF_WEB_SEARCH):

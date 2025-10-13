@@ -1,4 +1,4 @@
-"""Sensor platform for Nintendo Parental."""
+"""Sensor platform for Nintendo parental controls."""
 
 from __future__ import annotations
 
@@ -16,39 +16,39 @@ from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import NintendoParentalConfigEntry, NintendoUpdateCoordinator
+from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
 from .entity import Device, NintendoDevice
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 
-class NintendoParentalSensor(StrEnum):
-    """Store keys for Nintendo Parental sensors."""
+class NintendoParentalControlsSensor(StrEnum):
+    """Store keys for Nintendo parental controls sensors."""
 
     PLAYING_TIME = "playing_time"
     TIME_REMAINING = "time_remaining"
 
 
 @dataclass(kw_only=True, frozen=True)
-class NintendoParentalSensorEntityDescription(SensorEntityDescription):
-    """Description for Nintendo Parental sensor entities."""
+class NintendoParentalControlsSensorEntityDescription(SensorEntityDescription):
+    """Description for Nintendo parental controls sensor entities."""
 
     value_fn: Callable[[Device], int | float | None]
 
 
-SENSOR_DESCRIPTIONS: tuple[NintendoParentalSensorEntityDescription, ...] = (
-    NintendoParentalSensorEntityDescription(
-        key=NintendoParentalSensor.PLAYING_TIME,
-        translation_key=NintendoParentalSensor.PLAYING_TIME,
+SENSOR_DESCRIPTIONS: tuple[NintendoParentalControlsSensorEntityDescription, ...] = (
+    NintendoParentalControlsSensorEntityDescription(
+        key=NintendoParentalControlsSensor.PLAYING_TIME,
+        translation_key=NintendoParentalControlsSensor.PLAYING_TIME,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.today_playing_time,
     ),
-    NintendoParentalSensorEntityDescription(
-        key=NintendoParentalSensor.TIME_REMAINING,
-        translation_key=NintendoParentalSensor.TIME_REMAINING,
+    NintendoParentalControlsSensorEntityDescription(
+        key=NintendoParentalControlsSensor.TIME_REMAINING,
+        translation_key=NintendoParentalControlsSensor.TIME_REMAINING,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
@@ -59,27 +59,27 @@ SENSOR_DESCRIPTIONS: tuple[NintendoParentalSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: NintendoParentalConfigEntry,
+    entry: NintendoParentalControlsConfigEntry,
     async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     async_add_devices(
-        NintendoParentalSensorEntity(entry.runtime_data, device, sensor)
+        NintendoParentalControlsSensorEntity(entry.runtime_data, device, sensor)
         for device in entry.runtime_data.api.devices.values()
         for sensor in SENSOR_DESCRIPTIONS
     )
 
 
-class NintendoParentalSensorEntity(NintendoDevice, SensorEntity):
+class NintendoParentalControlsSensorEntity(NintendoDevice, SensorEntity):
     """Represent a single sensor."""
 
-    entity_description: NintendoParentalSensorEntityDescription
+    entity_description: NintendoParentalControlsSensorEntityDescription
 
     def __init__(
         self,
         coordinator: NintendoUpdateCoordinator,
         device: Device,
-        description: NintendoParentalSensorEntityDescription,
+        description: NintendoParentalControlsSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator, device=device, key=description.key)
