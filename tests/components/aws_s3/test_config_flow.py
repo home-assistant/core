@@ -991,3 +991,45 @@ async def test_profile_flow_reconfigure_initial(hass: HomeAssistant) -> None:
         )
 
 
+async def test_explicit_flow_reconfigure_initial(hass: HomeAssistant) -> None:
+    """Test initial reconfigure explicit flow step returns correct schema and values."""
+    bucket_expected_keys = {
+        CONF_BUCKET,
+        CONF_ENDPOINT_URL,
+        CONF_AUTH_MODE,
+    }
+    bucket_user_input = {
+        k: v for k, v in USER_INPUT_VALID_EXPLICIT.items() if k in bucket_expected_keys
+    }
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_get_entry",
+        autospec=True,
+        side_effect=lambda *_: MockConfigEntry(data=USER_INPUT_VALID_EXPLICIT),
+    ):
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context=config_entries.ConfigFlowContext(
+                source=config_entries.SOURCE_RECONFIGURE, entry_id="test"
+            ),
+        )
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input=bucket_user_input
+        )
+        assert result["step_id"] == "explicit"
+        assert len(result["errors"]) == 0
+        assert result["type"] == FlowResultType.FORM
+        _validate_data_schema_output(
+            result["data_schema"],
+            expected_keys={CONF_ACCESS_KEY_ID, CONF_SECRET_ACCESS_KEY},
+            expected_readonly=set({}),
+            expected_values={
+                CONF_ACCESS_KEY_ID: USER_INPUT_VALID_EXPLICIT[CONF_ACCESS_KEY_ID],
+                CONF_SECRET_ACCESS_KEY: USER_INPUT_VALID_EXPLICIT[
+                    CONF_SECRET_ACCESS_KEY
+                ],
+            },
+            expected_types={
+                CONF_ACCESS_KEY_ID: TextSelectorType.TEXT,
+                CONF_SECRET_ACCESS_KEY: TextSelectorType.PASSWORD,
+            },
+        )
