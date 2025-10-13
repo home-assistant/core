@@ -300,6 +300,7 @@ class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
     """Typed result dict for config flow."""
 
     # Extra keys, only present if type is CREATE_ENTRY
+    next_flow: tuple[FlowType, str]  # (flow type, flow id)
     minor_version: int
     options: Mapping[str, Any]
     result: ConfigEntry
@@ -3167,6 +3168,37 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Handle a flow initialized by Zeroconf discovery."""
         return await self._async_step_discovery_without_unique_id()
 
+    def _async_set_next_flow_if_valid(
+        self,
+        result: ConfigFlowResult,
+        next_flow: tuple[FlowType, str] | None,
+    ) -> None:
+        """Validate and set next_flow in result if provided."""
+        if next_flow is None:
+            return
+        flow_type, flow_id = next_flow
+        if flow_type != FlowType.CONFIG_FLOW:
+            raise HomeAssistantError("Invalid next_flow type")
+        # Raises UnknownFlow if the flow does not exist.
+        self.hass.config_entries.flow.async_get(flow_id)
+        result["next_flow"] = next_flow
+
+    @callback
+    def async_abort(
+        self,
+        *,
+        reason: str,
+        description_placeholders: Mapping[str, str] | None = None,
+        next_flow: tuple[FlowType, str] | None = None,
+    ) -> ConfigFlowResult:
+        """Abort the config flow."""
+        result = super().async_abort(
+            reason=reason,
+            description_placeholders=description_placeholders,
+        )
+        self._async_set_next_flow_if_valid(result, next_flow)
+        return result
+
     @callback
     def async_create_entry(  # type: ignore[override]
         self,
@@ -3196,13 +3228,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         )
 
         result["minor_version"] = self.MINOR_VERSION
-        if next_flow is not None:
-            flow_type, flow_id = next_flow
-            if flow_type != FlowType.CONFIG_FLOW:
-                raise HomeAssistantError("Invalid next_flow type")
-            # Raises UnknownFlow if the flow does not exist.
-            self.hass.config_entries.flow.async_get(flow_id)
-            result["next_flow"] = next_flow
+        self._async_set_next_flow_if_valid(result, next_flow)
         result["options"] = options or {}
         result["subentries"] = subentries or ()
         result["version"] = self.VERSION

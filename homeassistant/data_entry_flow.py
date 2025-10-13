@@ -138,7 +138,6 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     handler: Required[_HandlerT]
     last_step: bool | None
     menu_options: Container[str]
-    next_flow: tuple[str, str]  # (flow type, flow id)
     preview: str | None
     progress_action: str
     progress_task: asyncio.Task[Any] | None
@@ -764,19 +763,15 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         *,
         reason: str,
         description_placeholders: Mapping[str, str] | None = None,
-        next_flow: tuple[str, str] | None = None,
     ) -> _FlowResultT:
         """Abort the flow."""
-        result = self._flow_result(
+        return self._flow_result(
             type=FlowResultType.ABORT,
             flow_id=self.flow_id,
             handler=self.handler,
             reason=reason,
             description_placeholders=description_placeholders,
         )
-        if next_flow is not None:
-            result["next_flow"] = next_flow
-        return result
 
     async def async_step__progress_step_abort(
         self, user_input: dict[str, Any] | None = None
