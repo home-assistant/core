@@ -756,6 +756,8 @@ async def test_cury_binary_sensor_entity(
         }
     }
     monkeypatch.setattr(mock_rpc_device, "status", status)
+    config = {"cury:0": {"id": 0}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
     await init_integration(hass, 3)
 
     for entity in (
