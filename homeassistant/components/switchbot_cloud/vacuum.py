@@ -241,11 +241,10 @@ def _async_make_entity(
     | SwitchBotCloudVacuumK10PlusProCombo
 ):
     """Make a SwitchBotCloudVacuum."""
-    if device.device_type in VacuumCleanerV2Commands.get_supported_devices():
-        if device.device_type == "K20+ Pro":
-            return SwitchBotCloudVacuumK20PlusPro(api, device, coordinator)
+    if device.device_type in ["K20+ Pro", "Robot Vacuum Cleaner K11 Plus"]:
+        return SwitchBotCloudVacuumK20PlusPro(api, device, coordinator)
+    if device.device_type == "Robot Vacuum Cleaner K10+ Pro Combo":
         return SwitchBotCloudVacuumK10PlusProCombo(api, device, coordinator)
-
     if device.device_type in VacuumCleanerV3Commands.get_supported_devices():
         return SwitchBotCloudVacuumV3(api, device, coordinator)
     return SwitchBotCloudVacuum(api, device, coordinator)
