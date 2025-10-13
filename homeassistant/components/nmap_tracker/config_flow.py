@@ -23,7 +23,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 from homeassistant.helpers.typing import VolDictType
@@ -56,11 +55,9 @@ async def async_get_network(hass: HomeAssistant) -> str:
     return str(ip_network(f"{local_ip}/{network_prefix}", False))
 
 
-def _normalize_ips_and_network(hosts_str: str) -> list[str] | None:
+def _normalize_ips_and_network(hosts: list[str]) -> list[str] | None:
     """Check if a list of hosts are all ips or ip networks."""
-
     normalized_hosts = []
-    hosts = [host for host in cv.ensure_list_csv(hosts_str) if host != ""]
 
     for host in sorted(hosts):
         try:
@@ -122,13 +119,13 @@ def normalize_input(user_input: dict[str, Any]) -> dict[str, str]:
     if not normalized_hosts:
         errors[CONF_HOSTS] = "invalid_hosts"
     else:
-        user_input[CONF_HOSTS] = ",".join(normalized_hosts)
+        user_input[CONF_HOSTS] = normalized_hosts
 
     normalized_exclude = _normalize_ips_and_network(user_input[CONF_EXCLUDE])
     if normalized_exclude is None:
         errors[CONF_EXCLUDE] = "invalid_hosts"
     else:
-        user_input[CONF_EXCLUDE] = ",".join(normalized_exclude)
+        user_input[CONF_EXCLUDE] = normalized_exclude
 
     normalized_mac_exclude = _normalize_mac_addresses(user_input[CONF_MAC_EXCLUDE])
     if normalized_mac_exclude is None:
@@ -142,18 +139,23 @@ def normalize_input(user_input: dict[str, Any]) -> dict[str, str]:
 async def _async_build_schema_with_user_input(
     hass: HomeAssistant, user_input: dict[str, Any], include_options: bool
 ) -> vol.Schema:
-    hosts = user_input.get(CONF_HOSTS, await async_get_network(hass))
-    exclude = user_input.get(
-        CONF_EXCLUDE, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
+    hosts = user_input.get(CONF_HOSTS, [await async_get_network(hass)])
+    ip_exclude = user_input.get(
+        CONF_EXCLUDE, [await network.async_get_source_ip(hass, MDNS_TARGET_IP)]
     )
+
     mac_exclude = user_input.get(CONF_MAC_EXCLUDE, [])
 
     schema: VolDictType = {
-        vol.Required(CONF_HOSTS, default=hosts): str,
+        vol.Required(CONF_HOSTS, default=hosts): TextSelector(
+            TextSelectorConfig(multiple=True)
+        ),
         vol.Required(
             CONF_HOME_INTERVAL, default=user_input.get(CONF_HOME_INTERVAL, 0)
         ): int,
-        vol.Optional(CONF_EXCLUDE, default=exclude): str,
+        vol.Optional(CONF_EXCLUDE, default=ip_exclude): TextSelector(
+            TextSelectorConfig(multiple=True)
+        ),
         vol.Optional(CONF_MAC_EXCLUDE, default=mac_exclude): TextSelector(
             TextSelectorConfig(multiple=True)
         ),
@@ -195,8 +197,9 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             self.options.update(user_input)
 
             if not errors:
+                title_hosts = ", ".join(self.options[CONF_HOSTS])
                 return self.async_create_entry(
-                    title=f"Nmap Tracker {self.options[CONF_HOSTS]}", data=self.options
+                    title=f"Nmap Tracker {title_hosts}", data=self.options
                 )
 
         return self.async_show_form(
@@ -211,7 +214,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nmap Tracker."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -230,8 +233,9 @@ class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             self.options.update(user_input)
 
             if not errors:
+                title_hosts = ", ".join(user_input[CONF_HOSTS])
                 return self.async_create_entry(
-                    title=f"Nmap Tracker {user_input[CONF_HOSTS]}",
+                    title=f"Nmap Tracker {title_hosts}",
                     data={},
                     options=user_input,
                 )
