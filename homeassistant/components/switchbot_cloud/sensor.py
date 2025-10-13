@@ -21,7 +21,6 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -137,13 +136,6 @@ RELAY_SWITCH_2PM_POWER_DESCRIPTION = SensorEntityDescription(
     native_unit_of_measurement=UnitOfPower.WATT,
 )
 
-DURATION_OF_USED_DESCRIPTION = SensorEntityDescription(
-    key=SENSOR_TYPE_DURATION_OF_USED,
-    device_class=SensorDeviceClass.DURATION,
-    state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=UnitOfTime.MINUTES,
-)
-
 RELAY_SWITCH_2PM_VOLTAGE_DESCRIPTION = SensorEntityDescription(
     key=RELAY_SWITCH_2PM_SENSOR_TYPE_VOLTAGE,
     device_class=SensorDeviceClass.VOLTAGE,
@@ -198,13 +190,11 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         VOLTAGE_DESCRIPTION,
         CURRENT_DESCRIPTION_IN_MA,
         POWER_CONSUMPTION_DESCRIPTION,
-        DURATION_OF_USED_DESCRIPTION,
     ),
     "Plug Mini (JP)": (
         VOLTAGE_DESCRIPTION,
         CURRENT_DESCRIPTION_IN_MA,
         POWER_CONSUMPTION_DESCRIPTION,
-        DURATION_OF_USED_DESCRIPTION,
     ),
     "Plug Mini (EU)": (
         POWER_DESCRIPTION,
