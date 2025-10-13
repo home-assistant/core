@@ -84,71 +84,91 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up sensors for device."""
-    entities: list[ShellyBlockEvent | ShellyRpcEvent] = []
-
-    coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
-
+    """Set up event entities."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        coordinator = config_entry.runtime_data.rpc
-        if TYPE_CHECKING:
-            assert coordinator
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-        key_instances = get_rpc_key_instances(coordinator.device.status, RPC_EVENT.key)
+    return _async_setup_block_entry(hass, config_entry, async_add_entities)
 
-        for key in key_instances:
-            if RPC_EVENT.removal_condition and RPC_EVENT.removal_condition(
-                coordinator.device.config, coordinator.device.status, key
-            ):
-                unique_id = f"{coordinator.mac}-{key}"
-                async_remove_shelly_entity(hass, EVENT_DOMAIN, unique_id)
-            else:
-                entities.append(ShellyRpcEvent(coordinator, key, RPC_EVENT))
 
-        script_instances = get_rpc_key_instances(
-            coordinator.device.status, SCRIPT_EVENT.key
-        )
-        script_events = config_entry.runtime_data.rpc_script_events
-        for script in script_instances:
-            script_name = get_rpc_entity_name(coordinator.device, script)
-            if script_name == BLE_SCRIPT_NAME:
-                continue
+@callback
+def _async_setup_block_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for BLOCK device."""
+    entities: list[ShellyBlockEvent] = []
 
-            script_id = int(script.split(":")[-1])
-            if script_events and (event_types := script_events[script_id]):
-                entities.append(ShellyRpcScriptEvent(coordinator, script, event_types))
+    coordinator = config_entry.runtime_data.block
+    if TYPE_CHECKING:
+        assert coordinator and coordinator.device.blocks
 
-        # If a script is removed, from the device configuration, we need to remove orphaned entities
-        async_remove_orphaned_entities(
-            hass,
-            config_entry.entry_id,
-            coordinator.mac,
-            EVENT_DOMAIN,
-            coordinator.device.status,
-            "script",
-        )
+    for block in coordinator.device.blocks:
+        if (
+            "inputEvent" not in block.sensor_ids
+            or "inputEventCnt" not in block.sensor_ids
+        ):
+            continue
 
-    else:
-        coordinator = config_entry.runtime_data.block
-        if TYPE_CHECKING:
-            assert coordinator
-            assert coordinator.device.blocks
+        if BLOCK_EVENT.removal_condition and BLOCK_EVENT.removal_condition(
+            coordinator.device.settings, block
+        ):
+            channel = int(block.channel or 0) + 1
+            unique_id = f"{coordinator.mac}-{block.description}-{channel}"
+            async_remove_shelly_entity(hass, EVENT_DOMAIN, unique_id)
+        else:
+            entities.append(ShellyBlockEvent(coordinator, block, BLOCK_EVENT))
 
-        for block in coordinator.device.blocks:
-            if (
-                "inputEvent" not in block.sensor_ids
-                or "inputEventCnt" not in block.sensor_ids
-            ):
-                continue
+    async_add_entities(entities)
 
-            if BLOCK_EVENT.removal_condition and BLOCK_EVENT.removal_condition(
-                coordinator.device.settings, block
-            ):
-                channel = int(block.channel or 0) + 1
-                unique_id = f"{coordinator.mac}-{block.description}-{channel}"
-                async_remove_shelly_entity(hass, EVENT_DOMAIN, unique_id)
-            else:
-                entities.append(ShellyBlockEvent(coordinator, block, BLOCK_EVENT))
+
+@callback
+def _async_setup_rpc_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for RPC device."""
+    entities: list[ShellyRpcEvent] = []
+
+    coordinator = config_entry.runtime_data.rpc
+    if TYPE_CHECKING:
+        assert coordinator
+
+    key_instances = get_rpc_key_instances(coordinator.device.status, RPC_EVENT.key)
+
+    for key in key_instances:
+        if RPC_EVENT.removal_condition and RPC_EVENT.removal_condition(
+            coordinator.device.config, coordinator.device.status, key
+        ):
+            unique_id = f"{coordinator.mac}-{key}"
+            async_remove_shelly_entity(hass, EVENT_DOMAIN, unique_id)
+        else:
+            entities.append(ShellyRpcEvent(coordinator, key, RPC_EVENT))
+
+    script_instances = get_rpc_key_instances(
+        coordinator.device.status, SCRIPT_EVENT.key
+    )
+    script_events = config_entry.runtime_data.rpc_script_events
+    for script in script_instances:
+        script_name = get_rpc_entity_name(coordinator.device, script)
+        if script_name == BLE_SCRIPT_NAME:
+            continue
+
+        script_id = int(script.split(":")[-1])
+        if script_events and (event_types := script_events[script_id]):
+            entities.append(ShellyRpcScriptEvent(coordinator, script, event_types))
+
+    # If a script is removed, from the device configuration, we need to remove orphaned entities
+    async_remove_orphaned_entities(
+        hass,
+        config_entry.entry_id,
+        coordinator.mac,
+        EVENT_DOMAIN,
+        coordinator.device.status,
+        "script",
+    )
 
     async_add_entities(entities)
 

@@ -8,11 +8,11 @@ from volvocarsapi.models import VolvoCarsApiBaseModel
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_VIN, DOMAIN, MANUFACTURER
-from .coordinator import VolvoBaseCoordinator
+from .const import DOMAIN, MANUFACTURER
+from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
 
 
 def get_unique_id(vin: str, key: str) -> str:
@@ -29,32 +29,29 @@ def value_to_translation_key(value: str) -> str:
 class VolvoEntityDescription(EntityDescription):
     """Describes a Volvo entity."""
 
-    api_field: str
+    api_field: str | None = None
 
 
-class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator]):
+class VolvoBaseEntity(Entity):
     """Volvo base entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: VolvoBaseCoordinator,
+        entry: VolvoConfigEntry,
         description: VolvoEntityDescription,
     ) -> None:
         """Initialize entity."""
-        super().__init__(coordinator)
-
         self.entity_description: VolvoEntityDescription = description
+        self.entry = entry
 
         if description.device_class != SensorDeviceClass.BATTERY:
             self._attr_translation_key = description.key
 
-        self._attr_unique_id = get_unique_id(
-            coordinator.config_entry.data[CONF_VIN], description.key
-        )
+        vehicle = entry.runtime_data.context.vehicle
+        self._attr_unique_id = get_unique_id(vehicle.vin, description.key)
 
-        vehicle = coordinator.vehicle
         model = (
             f"{vehicle.description.model} ({vehicle.model_year})"
             if vehicle.fuel_type == "NONE"
@@ -69,6 +66,19 @@ class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator]):
             serial_number=vehicle.vin,
         )
 
+
+class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator], VolvoBaseEntity):
+    """Volvo base coordinator entity."""
+
+    def __init__(
+        self,
+        coordinator: VolvoBaseCoordinator,
+        description: VolvoEntityDescription,
+    ) -> None:
+        """Initialize entity."""
+        CoordinatorEntity.__init__(self, coordinator)
+        VolvoBaseEntity.__init__(self, coordinator.config_entry, description)
+
         self._update_state(coordinator.get_api_field(description.api_field))
 
     @callback
@@ -81,8 +91,13 @@ class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        api_field = self.coordinator.get_api_field(self.entity_description.api_field)
-        return super().available and api_field is not None
+        if self.entity_description.api_field:
+            api_field = self.coordinator.get_api_field(
+                self.entity_description.api_field
+            )
+            return super().available and api_field is not None
+
+        return super().available
 
     @abstractmethod
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:

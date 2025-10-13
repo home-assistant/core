@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Final
 
 from aioshelly.ble.const import BLE_SCRIPT_NAME
@@ -59,9 +60,11 @@ from .coordinator import (
 from .repairs import (
     async_manage_ble_scanner_firmware_unsupported_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
+    async_manage_wall_display_firmware_unsupported_issue,
 )
 from .utils import (
     async_create_issue_unsupported_firmware,
+    async_migrate_rpc_virtual_components_unique_ids,
     get_coap_context,
     get_device_entry_gen,
     get_http_port,
@@ -322,12 +325,19 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                 translation_placeholders={"device": entry.title},
             ) from err
 
+        await er.async_migrate_entries(
+            hass,
+            entry.entry_id,
+            partial(async_migrate_rpc_virtual_components_unique_ids, device.config),
+        )
+
         runtime_data.rpc = ShellyRpcCoordinator(hass, entry, device)
         runtime_data.rpc.async_setup()
         runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
+        async_manage_wall_display_firmware_unsupported_issue(hass, entry)
         async_manage_ble_scanner_firmware_unsupported_issue(
             hass,
             entry,

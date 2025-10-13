@@ -32,6 +32,13 @@ from homeassistant.helpers import (
     entity_registry as er,
     trace,
 )
+from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
+from homeassistant.helpers.condition import (
+    Condition,
+    ConditionCheckerType,
+    ConditionConfig,
+    async_validate_condition_config,
+)
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
@@ -82,11 +89,26 @@ def assert_condition_trace(expected):
             assert_element(condition_trace[key][index], element, path)
 
 
-async def test_invalid_condition(hass: HomeAssistant) -> None:
-    """Test if invalid condition raises."""
-    with pytest.raises(HomeAssistantError):
-        await condition.async_from_config(
-            hass,
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        (
+            {"condition": 123},
+            "Unexpected value for condition: '123'. Expected a condition, "
+            "a list of conditions or a valid template",
+        )
+    ],
+)
+async def test_invalid_condition(hass: HomeAssistant, config: dict, error: str) -> None:
+    """Test if validating an invalid condition raises."""
+    with pytest.raises(vol.Invalid, match=error):
+        cv.CONDITION_SCHEMA(config)
+
+
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        (
             {
                 "condition": "invalid",
                 "conditions": [
@@ -97,7 +119,15 @@ async def test_invalid_condition(hass: HomeAssistant) -> None:
                     },
                 ],
             },
+            'Invalid condition "invalid" specified',
         )
+    ],
+)
+async def test_unknown_condition(hass: HomeAssistant, config: dict, error: str) -> None:
+    """Test if creating an unknown condition raises."""
+    config = cv.CONDITION_SCHEMA(config)
+    with pytest.raises(HomeAssistantError, match=error):
+        await condition.async_from_config(hass, config)
 
 
 async def test_and_condition(hass: HomeAssistant) -> None:
@@ -2082,11 +2112,8 @@ async def test_platform_async_get_conditions(hass: HomeAssistant) -> None:
 async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     """Test a condition platform with multiple conditions."""
 
-    class MockCondition(condition.Condition):
+    class MockCondition(Condition):
         """Mock condition."""
-
-        def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-            """Initialize condition."""
 
         @classmethod
         async def async_validate_config(
@@ -2095,23 +2122,24 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
             """Validate config."""
             return config
 
+        def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+            """Initialize condition."""
+
     class MockCondition1(MockCondition):
         """Mock condition 1."""
 
-        async def async_get_checker(self) -> condition.ConditionCheckerType:
+        async def async_get_checker(self) -> ConditionCheckerType:
             """Evaluate state based on configuration."""
             return lambda hass, vars: True
 
     class MockCondition2(MockCondition):
         """Mock condition 2."""
 
-        async def async_get_checker(self) -> condition.ConditionCheckerType:
+        async def async_get_checker(self) -> ConditionCheckerType:
             """Evaluate state based on configuration."""
             return lambda hass, vars: False
 
-    async def async_get_conditions(
-        hass: HomeAssistant,
-    ) -> dict[str, type[condition.Condition]]:
+    async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
         return {
             "_": MockCondition1,
             "cond_2": MockCondition2,
@@ -2125,12 +2153,12 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     config_1 = {CONF_CONDITION: "test"}
     config_2 = {CONF_CONDITION: "test.cond_2"}
     config_3 = {CONF_CONDITION: "test.unknown_cond"}
-    assert await condition.async_validate_condition_config(hass, config_1) == config_1
-    assert await condition.async_validate_condition_config(hass, config_2) == config_2
+    assert await async_validate_condition_config(hass, config_1) == config_1
+    assert await async_validate_condition_config(hass, config_2) == config_2
     with pytest.raises(
         vol.Invalid, match="Invalid condition 'test.unknown_cond' specified"
     ):
-        await condition.async_validate_condition_config(hass, config_3)
+        await async_validate_condition_config(hass, config_3)
 
     cond_func = await condition.async_from_config(hass, config_1)
     assert cond_func(hass, {}) is True
@@ -2140,6 +2168,74 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
 
     with pytest.raises(KeyError):
         await condition.async_from_config(hass, config_3)
+
+
+async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
+    """Test a condition platform with a migration."""
+
+    OPTIONS_SCHEMA_DICT = {
+        vol.Required("option_1"): str,
+        vol.Optional("option_2"): int,
+    }
+
+    class MockCondition(Condition):
+        """Mock condition."""
+
+        @classmethod
+        async def async_validate_complete_config(
+            cls, hass: HomeAssistant, complete_config: ConfigType
+        ) -> ConfigType:
+            """Validate complete config."""
+            complete_config = move_top_level_schema_fields_to_options(
+                complete_config, OPTIONS_SCHEMA_DICT
+            )
+            return await super().async_validate_complete_config(hass, complete_config)
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+    async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
+        return {
+            "_": MockCondition,
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    config_1 = {
+        "condition": "test",
+        "option_1": "value_1",
+        "option_2": 2,
+    }
+    config_2 = {
+        "condition": "test",
+        "option_1": "value_1",
+    }
+    config_1_migrated = {
+        "condition": "test",
+        "options": {"option_1": "value_1", "option_2": 2},
+    }
+    config_2_migrated = {
+        "condition": "test",
+        "options": {"option_1": "value_1"},
+    }
+
+    assert await async_validate_condition_config(hass, config_1) == config_1_migrated
+    assert await async_validate_condition_config(hass, config_2) == config_2_migrated
+    assert (
+        await async_validate_condition_config(hass, config_1_migrated)
+        == config_1_migrated
+    )
+    assert (
+        await async_validate_condition_config(hass, config_2_migrated)
+        == config_2_migrated
+    )
 
 
 @pytest.mark.parametrize("enabled_value", [True, "{{ 1 == 1 }}"])
