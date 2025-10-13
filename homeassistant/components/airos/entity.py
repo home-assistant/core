@@ -36,6 +36,9 @@ class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
             identifiers={(DOMAIN, str(airos_data.host.device_id))},
             manufacturer=MANUFACTURER,
             model=airos_data.host.devmodel,
+            model_id=sku
+            if (sku := airos_data.derived.sku) not in ["UNKNOWN", "AMBIGUOUS"]
+            else None,
             name=airos_data.host.hostname,
             sw_version=airos_data.host.fwversion,
         )
