@@ -45,7 +45,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: NSConfigEntry,
         route_id: str,
         route_data: dict[str, str],
     ) -> None:
