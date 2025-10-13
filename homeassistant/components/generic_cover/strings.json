@@ -1,0 +1,51 @@
+{
+  "title": "Generic cover",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Create generic cover",
+        "description": "Create a cover entity that is controlled by two switches.",
+        "data": {
+          "name": "Name",
+          "switch_open": "Open Switch",
+          "switch_close": "Close Switch",
+          "duration": "Duration",
+          "tilt_duration": "Tilt Duration"
+        },
+        "data_description": {
+          "name": "Name for this cover entity.",
+          "switch_open": "Switch to open the cover. This switch will be turned on when the cover is opening, and off when it is closing.",
+          "switch_close": "Switch to close the cover. This switch will be turned on when the cover is closing, and off when it is opening.",
+          "duration": "Duration that takes to open or close the entire cover. This is used to calculate the position of the cover. If you don't know the duration, you can keep it empty and adjust it later in the settings.",
+          "tilt_duration": "Duration that takes to tilt the cover. This is used to calculate the tilt position of the cover. If you don't know the duration, you can keep it empty and adjust it later in the settings."
+        }
+      }
+    },
+    "error": {
+      "same_switch": "The open and close switches must be different",
+      "invalid_duration": "Duration must be greater than 0 seconds",
+      "invalid_tilt_duration": "Tilt duration must be greater than 0 seconds"
+    },
+    "abort": {
+      "already_configured": "A cover with the same switches is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "switch_open": "[%key:component::generic_cover::config::step::user::data::switch_open%]",
+          "switch_close": "[%key:component::generic_cover::config::step::user::data::switch_close%]",
+          "duration": "[%key:component::generic_cover::config::step::user::data::duration%]",
+          "tilt_duration": "[%key:component::generic_cover::config::step::user::data::tilt_duration%]"
+        },
+        "data_description": {
+          "switch_open": "[%key:component::generic_cover::config::step::user::data_description::switch_open%]",
+          "switch_close": "[%key:component::generic_cover::config::step::user::data_description::switch_close%]",
+          "duration": "[%key:component::generic_cover::config::step::user::data_description::duration%]",
+          "tilt_duration": "[%key:component::generic_cover::config::step::user::data_description::tilt_duration%]"
+        }
+      }
+    }
+  }
+}
