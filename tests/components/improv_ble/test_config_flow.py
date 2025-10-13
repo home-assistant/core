@@ -862,15 +862,15 @@ async def test_flow_chaining_with_next_flow(hass: HomeAssistant) -> None:
         assert result["progress_action"] == "provisioning"
         assert result["step_id"] == "do_provision"
 
-        # Allow the provision task to actually start and create the future
+        # Yield to allow the background task to create the future
         await asyncio.sleep(0)
+
         # Simulate another integration discovering the device and registering a flow
         # This happens while provision is waiting on the future
         improv_ble.async_register_next_flow(
             hass, IMPROV_BLE_DISCOVERY_INFO.address, "next_config_flow_id"
         )
 
-        # Now complete the provision
         await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -973,7 +973,8 @@ async def test_flow_chaining_with_redirect_url(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "provisioning"
         assert result["step_id"] == "do_provision"
-        # Allow the provision task to actually start and create the future
+
+        # Yield to allow the background task to create the future
         await asyncio.sleep(0)
 
         # Simulate ESPHome discovering the device and notifying Improv BLE
@@ -982,7 +983,6 @@ async def test_flow_chaining_with_redirect_url(hass: HomeAssistant) -> None:
             hass, IMPROV_BLE_DISCOVERY_INFO.address, "esphome_flow_id"
         )
 
-        # Now complete the provision
         await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
