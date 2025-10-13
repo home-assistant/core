@@ -431,8 +431,8 @@
       "io_input": {
         "name": "IO input {index}",
         "state": {
-          "off": "disconnected",
-          "on": "connected"
+          "off": "[%key:common::state::disconnected%]",
+          "on": "[%key:common::state::connected%]"
         }
       }
     },
