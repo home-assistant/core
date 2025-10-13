@@ -38,7 +38,7 @@ async def test_user_flow_oauth2_success(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should create entry on successful token exchange
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@example.com"
     assert result["data"] == {
         CONF_API_TOKEN: "test_refresh_token",
@@ -85,7 +85,7 @@ async def test_user_flow_oauth2_error(hass: HomeAssistant, mock_actron_api) -> N
     )
 
     # Should abort with oauth2_error
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "oauth2_error"
 
 
@@ -111,7 +111,7 @@ async def test_user_flow_token_polling_error(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should show the connection error form
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connection_error"
 
     # Now fix the mock to allow successful token polling for recovery
@@ -128,7 +128,7 @@ async def test_user_flow_token_polling_error(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     # Should start progress again
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "user"
     assert result["progress_action"] == "wait_for_authorization"
 
@@ -139,7 +139,7 @@ async def test_user_flow_token_polling_error(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should create entry on successful recovery
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@example.com"
     assert result["data"] == {
         CONF_API_TOKEN: "test_refresh_token",
