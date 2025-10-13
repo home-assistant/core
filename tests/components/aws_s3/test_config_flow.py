@@ -174,6 +174,63 @@ async def test_end_flow_cleans_up_config_model(
         mock.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("input", "second_flow_expected_keys"),
+    [
+        (USER_INPUT_VALID_PROFILE, {CONF_PROFILE_NAME}),
+        (USER_INPUT_VALID_EXPLICIT, {CONF_ACCESS_KEY_ID, CONF_SECRET_ACCESS_KEY}),
+    ],
+)
+async def test_bucket_error_from_other_flow(
+    hass: HomeAssistant,
+    input: dict[str, str],
+    second_flow_expected_keys: set[str],
+) -> None:
+    """Test that errors from other flow steps that need to be handled in the bucket step are handled in the bucket step."""
+    bucket_expected_keys = {CONF_BUCKET, CONF_ENDPOINT_URL, CONF_AUTH_MODE}
+    bucket_user_input = {k: v for k, v in input.items() if k in bucket_expected_keys}
+    second_flow_user_input = {
+        k: v for k, v in input.items() if k in second_flow_expected_keys
+    }
+    errors = {CONF_BUCKET: "invalid_bucket_name"}
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
+    )
+    with patch(
+        "homeassistant.components.aws_s3.config_model.S3ConfigModel.async_validate_access",
+        autospec=True,
+        return_value=AsyncMock(),
+        side_effect=lambda self, *_: _record_errors(self, errors),
+    ) as mock:
+        await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input=bucket_user_input
+        )
+        mock.assert_not_called()
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input=second_flow_user_input
+        )
+        mock.assert_called_once()
+
+        assert result["step_id"] == "bucket"
+        assert result["errors"] == errors
+        assert result["type"] == FlowResultType.FORM
+        _validate_data_schema_output(
+            result["data_schema"],
+            expected_keys={
+                CONF_BUCKET,
+                CONF_ENDPOINT_URL,
+                CONF_AUTH_MODE,
+            },
+            expected_readonly=set({}),
+            expected_values=bucket_user_input,
+            expected_types={
+                CONF_BUCKET: TextSelectorType.TEXT,
+                CONF_ENDPOINT_URL: TextSelectorType.URL,
+            },
+        )
+
+
 ###############
 # USER FLOWS
 ###############
@@ -203,6 +260,89 @@ async def test_bucket_flow_user_initial(hass: HomeAssistant) -> None:
         },
     )
 
+
+async def test_bucket_flow_user_invalid_url(hass: HomeAssistant) -> None:
+    """Test user bucket flow with invalid endpoint URL returns correct error."""
+    expected_keys = {
+        CONF_BUCKET,
+        CONF_ENDPOINT_URL,
+        CONF_AUTH_MODE,
+    }
+    user_input = {
+        k: v for k, v in USER_INPUT_VALID_IMPLICIT.items() if k in expected_keys
+    } | {CONF_ENDPOINT_URL: TEST_ENDPOINT_URL[TEST_INVALID]}
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
+    )
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input=user_input
+    )
+    assert result["step_id"] == "bucket"
+    assert result["errors"] == {CONF_ENDPOINT_URL: "invalid_endpoint_url"}
+    assert result["type"] == FlowResultType.FORM
+    _validate_data_schema_output(
+        result["data_schema"],
+        expected_keys={
+            CONF_BUCKET,
+            CONF_ENDPOINT_URL,
+            CONF_AUTH_MODE,
+        },
+        expected_readonly=set({}),
+        expected_values=user_input,
+        expected_types={
+            CONF_BUCKET: TextSelectorType.TEXT,
+            CONF_ENDPOINT_URL: TextSelectorType.URL,
+        },
+    )
+
+
+async def test_bucket_flow_user_validate_access_errors(hass: HomeAssistant) -> None:
+    """Test user bucket flow with access validation errors returns correct errors."""
+    expected_keys = {
+        CONF_BUCKET,
+        CONF_ENDPOINT_URL,
+        CONF_AUTH_MODE,
+    }
+    user_input = {
+        k: v for k, v in USER_INPUT_VALID_IMPLICIT.items() if k in expected_keys
+    }
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
+    )
+    errors = {
+        CONF_BUCKET: "invalid_bucket_name",
+        CONF_ENDPOINT_URL: "cannot_connect",
+        CONF_AUTH_MODE: "no_credentials_implicit",
+    }
+    with patch(
+        "homeassistant.components.aws_s3.config_model.S3ConfigModel.async_validate_access",
+        autospec=True,
+        return_value=AsyncMock(),
+        side_effect=lambda self, *_: _record_errors(self, errors),
+    ) as mock:
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input=user_input
+        )
+        mock.assert_called_once()
+        assert result["step_id"] == "bucket"
+        assert result["errors"] == errors
+        assert result["type"] == FlowResultType.FORM
+        _validate_data_schema_output(
+            result["data_schema"],
+            expected_keys={
+                CONF_BUCKET,
+                CONF_ENDPOINT_URL,
+                CONF_AUTH_MODE,
+            },
+            expected_readonly=set({}),
+            expected_values=user_input,
+            expected_types={
+                CONF_BUCKET: TextSelectorType.TEXT,
+                CONF_ENDPOINT_URL: TextSelectorType.URL,
+            },
+        )
 
 
 async def test_bucket_flow_user_create_implicit(hass: HomeAssistant) -> None:
