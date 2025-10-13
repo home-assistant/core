@@ -138,7 +138,7 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     handler: Required[_HandlerT]
     last_step: bool | None
     menu_options: Container[str]
-    next_flow: tuple[str, str]  # (flow type, flow id)
+    next_flow: tuple[FlowType, str]  # (flow type from FlowType, flow id)
     preview: str | None
     progress_action: str
     progress_task: asyncio.Task[Any] | None
