@@ -176,12 +176,12 @@ async def _client_listen(
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MusicAssistantConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        mass_entry_data: MusicAssistantEntryData = entry.runtime_data
+        mass_entry_data = entry.runtime_data
         mass_entry_data.listen_task.cancel()
         await mass_entry_data.mass.disconnect()
 
@@ -189,7 +189,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+       hass: HomeAssistant, config_entry: MusicAssistantConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     player_id = next(
