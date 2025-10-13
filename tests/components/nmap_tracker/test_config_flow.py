@@ -11,6 +11,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.nmap_tracker.const import (
     CONF_HOME_INTERVAL,
+    CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
     DEFAULT_OPTIONS,
     DOMAIN,
@@ -48,6 +49,7 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
                 CONF_HOME_INTERVAL: 3,
                 CONF_OPTIONS: DEFAULT_OPTIONS,
                 CONF_EXCLUDE: "4.4.4.4",
+                CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
             },
         )
         await hass.async_block_till_done()
@@ -60,6 +62,7 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
         CONF_HOME_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_EXCLUDE: "4.4.4.4",
+        CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -84,6 +87,7 @@ async def test_form_range(hass: HomeAssistant) -> None:
                 CONF_HOME_INTERVAL: 3,
                 CONF_OPTIONS: DEFAULT_OPTIONS,
                 CONF_EXCLUDE: "4.4.4.4",
+                CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
             },
         )
         await hass.async_block_till_done()
@@ -96,6 +100,7 @@ async def test_form_range(hass: HomeAssistant) -> None:
         CONF_HOME_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_EXCLUDE: "4.4.4.4",
+        CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -116,6 +121,7 @@ async def test_form_invalid_hosts(hass: HomeAssistant) -> None:
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_EXCLUDE: "",
+            CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
         },
     )
     await hass.async_block_till_done()
@@ -135,6 +141,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_EXCLUDE: "4.4.4.4",
+            CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
         },
     )
     config_entry.add_to_hass(hass)
@@ -151,6 +158,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_EXCLUDE: "",
+            CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
         },
     )
     await hass.async_block_till_done()
@@ -159,8 +167,8 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_invalid_excludes(hass: HomeAssistant) -> None:
-    """Test invalid excludes passed in."""
+async def test_form_invalid_ip_excludes(hass: HomeAssistant) -> None:
+    """Test invalid ip excludes passed in."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -175,12 +183,44 @@ async def test_form_invalid_excludes(hass: HomeAssistant) -> None:
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_EXCLUDE: "not an exclude",
+            CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
         },
     )
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_EXCLUDE: "invalid_hosts"}
+
+
+@pytest.mark.parametrize(
+    "mac_excludes",
+    [["1234567890"], ["1234567890", "11:22:33:44:55:66"], ["ABCDEFGHIJK"]],
+)
+async def test_form_invalid_mac_excludes(
+    hass: HomeAssistant, mac_excludes: str
+) -> None:
+    """Test invalid mac excludes passed in."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOSTS: "3.3.3.3",
+            CONF_HOME_INTERVAL: 3,
+            CONF_OPTIONS: DEFAULT_OPTIONS,
+            CONF_EXCLUDE: "4.4.4.4",
+            CONF_MAC_EXCLUDE: mac_excludes,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_MAC_EXCLUDE: "invalid_hosts"}
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
@@ -194,6 +234,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_EXCLUDE: "4.4.4.4",
+            CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
         },
     )
     config_entry.add_to_hass(hass)
@@ -214,6 +255,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_CONSIDER_HOME: 180,
         CONF_SCAN_INTERVAL: 120,
         CONF_OPTIONS: "-n -sn -PR -T4 --min-rate 10 --host-timeout 5s",
+        CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
     }
 
     with patch(
@@ -229,6 +271,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
                 CONF_OPTIONS: "-sn",
                 CONF_EXCLUDE: "4.4.4.4, 5.5.5.5",
                 CONF_SCAN_INTERVAL: 10,
+                CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
             },
         )
         await hass.async_block_till_done()
@@ -241,5 +284,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_OPTIONS: "-sn",
         CONF_EXCLUDE: "4.4.4.4,5.5.5.5",
         CONF_SCAN_INTERVAL: 10,
+        CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
