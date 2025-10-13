@@ -5,7 +5,13 @@ from collections.abc import Callable
 from unittest.mock import patch
 
 from bleak.exc import BleakError
-from improv_ble_client import Error, State, errors as improv_ble_errors
+from improv_ble_client import (
+    SERVICE_DATA_UUID,
+    SERVICE_UUID,
+    Error,
+    State,
+    errors as improv_ble_errors,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -35,6 +41,43 @@ from tests.components.bluetooth import (
 )
 
 IMPROV_BLE = "homeassistant.components.improv_ble"
+
+# Discovery info for target flow devices (used for flow chaining tests)
+IMPROV_BLE_DISCOVERY_INFO_TARGET1 = BluetoothServiceInfoBleak(
+    name="target_device",
+    address="AA:BB:CC:DD:EE:F1",
+    rssi=-60,
+    manufacturer_data={},
+    service_uuids=[SERVICE_UUID],
+    service_data={SERVICE_DATA_UUID: b"\x01\x00\x00\x00\x00\x00"},
+    source="local",
+    device=generate_ble_device(address="AA:BB:CC:DD:EE:F1", name="target_device"),
+    advertisement=generate_advertisement_data(
+        service_uuids=[SERVICE_UUID],
+        service_data={SERVICE_DATA_UUID: b"\x01\x00\x00\x00\x00\x00"},
+    ),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+IMPROV_BLE_DISCOVERY_INFO_TARGET2 = BluetoothServiceInfoBleak(
+    name="esphome_device",
+    address="AA:BB:CC:DD:EE:F2",
+    rssi=-60,
+    manufacturer_data={},
+    service_uuids=[SERVICE_UUID],
+    service_data={SERVICE_DATA_UUID: b"\x01\x00\x00\x00\x00\x00"},
+    source="local",
+    device=generate_ble_device(address="AA:BB:CC:DD:EE:F2", name="esphome_device"),
+    advertisement=generate_advertisement_data(
+        service_uuids=[SERVICE_UUID],
+        service_data={SERVICE_DATA_UUID: b"\x01\x00\x00\x00\x00\x00"},
+    ),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
 
 
 @pytest.mark.parametrize(
@@ -865,10 +908,18 @@ async def test_flow_chaining_with_next_flow(hass: HomeAssistant) -> None:
         # Yield to allow the background task to create the future
         await asyncio.sleep(0)  # task is created with eager_start=False
 
+        # Create a dummy target flow using a different device address
+        target_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=IMPROV_BLE_DISCOVERY_INFO_TARGET1,
+        )
+        next_config_flow_id = target_result["flow_id"]
+
         # Simulate another integration discovering the device and registering a flow
         # This happens while provision is waiting on the future
         improv_ble.async_register_next_flow(
-            hass, IMPROV_BLE_DISCOVERY_INFO.address, "next_config_flow_id"
+            hass, IMPROV_BLE_DISCOVERY_INFO.address, next_config_flow_id
         )
 
         await hass.async_block_till_done()
@@ -876,7 +927,7 @@ async def test_flow_chaining_with_next_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "provision_successful"
-    assert result.get("next_flow") == (FlowType.CONFIG_FLOW, "next_config_flow_id")
+    assert result["next_flow"] == (FlowType.CONFIG_FLOW, next_config_flow_id)
 
 
 async def test_flow_chaining_timeout(hass: HomeAssistant) -> None:
@@ -977,10 +1028,18 @@ async def test_flow_chaining_with_redirect_url(hass: HomeAssistant) -> None:
         # Yield to allow the background task to create the future
         await asyncio.sleep(0)  # task is created with eager_start=False
 
+        # Create a dummy target flow using a different device address
+        target_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=IMPROV_BLE_DISCOVERY_INFO_TARGET2,
+        )
+        esphome_flow_id = target_result["flow_id"]
+
         # Simulate ESPHome discovering the device and notifying Improv BLE
         # This happens while provision is still running
         improv_ble.async_register_next_flow(
-            hass, IMPROV_BLE_DISCOVERY_INFO.address, "esphome_flow_id"
+            hass, IMPROV_BLE_DISCOVERY_INFO.address, esphome_flow_id
         )
 
         await hass.async_block_till_done()
@@ -989,7 +1048,87 @@ async def test_flow_chaining_with_redirect_url(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     # Should use next_flow instead of redirect URL
     assert result["reason"] == "provision_successful"
-    assert result.get("next_flow") == (FlowType.CONFIG_FLOW, "esphome_flow_id")
+    assert result["next_flow"] == (FlowType.CONFIG_FLOW, esphome_flow_id)
+
+
+async def test_flow_chaining_future_already_done(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_register_next_flow when future is already done."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=IMPROV_BLE_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # Confirm bluetooth setup
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # Start provisioning
+    with patch(
+        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=False
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ADDRESS: IMPROV_BLE_DISCOVERY_INFO.address},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "provision"
+
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=False,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"ssid": "TestNetwork", "password": "secret"}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["progress_action"] == "provisioning"
+        assert result["step_id"] == "do_provision"
+
+        # Yield to allow the background task to create the future
+        await asyncio.sleep(0)  # task is created with eager_start=False
+
+        # Create a target flow for the first call
+        target_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=IMPROV_BLE_DISCOVERY_INFO_TARGET1,
+        )
+        first_flow_id = target_result["flow_id"]
+
+        # First call resolves the future
+        improv_ble.async_register_next_flow(
+            hass, IMPROV_BLE_DISCOVERY_INFO.address, first_flow_id
+        )
+
+        # Second call immediately after - future is now done but still in registry
+        # This call should be ignored with a debug log
+        caplog.clear()
+        improv_ble.async_register_next_flow(
+            hass, IMPROV_BLE_DISCOVERY_INFO.address, "second_flow_id"
+        )
+
+        # Verify the debug log message was emitted
+        assert "Future for aa:bb:cc:dd:ee:f0 already done" in caplog.text
+        assert "ignoring flow_id second_flow_id" in caplog.text
+
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "provision_successful"
+    assert result["next_flow"] == (FlowType.CONFIG_FLOW, first_flow_id)
 
 
 async def test_bluetooth_name_update(hass: HomeAssistant) -> None:
