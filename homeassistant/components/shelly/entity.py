@@ -24,6 +24,7 @@ from .const import CONF_SLEEP_PERIOD, DOMAIN, LOGGER
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .utils import (
     async_remove_shelly_entity,
+    get_block_channel_name,
     get_block_device_info,
     get_block_entity_name,
     get_rpc_device_info,
@@ -384,9 +385,14 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.block = block
-        self._attr_name = get_block_entity_name(coordinator.device, block)
+
         self._attr_device_info = get_entity_block_device_info(coordinator, block)
         self._attr_unique_id = f"{coordinator.mac}-{block.description}"
+
+        if (
+            channel_name := get_block_channel_name(coordinator.device, block)
+        ) is not None:
+            self._attr_translation_placeholders = {"channel_name": channel_name}
 
     # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
@@ -480,9 +486,11 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
         self.entity_description = description
 
         self._attr_unique_id: str = f"{super().unique_id}-{self.attribute}"
-        self._attr_name = get_block_entity_name(
-            coordinator.device, block, description.name
-        )
+
+        if "channel_name" in self.translation_placeholders and (
+            translation_key := description.translation_key or description.device_class
+        ):
+            self._attr_translation_key = f"{translation_key}_with_channel_name"
 
     @property
     def attribute_value(self) -> StateType:
@@ -520,12 +528,20 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         self.block_coordinator = coordinator
         self.attribute = attribute
         self.entity_description = description
-        self._attr_name = get_block_entity_name(
-            coordinator.device, None, description.name
-        )
+
         self._attr_unique_id = f"{coordinator.mac}-{attribute}"
         self._attr_device_info = get_entity_block_device_info(coordinator)
         self._last_value = None
+
+        if (
+            channel_name := get_block_channel_name(coordinator.device, None)
+        ) is not None:
+            self._attr_translation_placeholders = {"channel_name": channel_name}
+            if (
+                translation_key := description.translation_key
+                or description.device_class
+            ):
+                self._attr_translation_key = f"{translation_key}_with_channel_name"
 
     @property
     def available(self) -> bool:

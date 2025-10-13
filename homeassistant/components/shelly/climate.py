@@ -431,11 +431,10 @@ class BlockSleepingClimate(
         elif entry is not None:
             self._unique_id = entry.unique_id
         self._attr_device_info = get_entity_block_device_info(coordinator, sensor_block)
-        self._attr_name = get_block_entity_name(
-            self.coordinator.device, sensor_block, None
-        )
 
         self._channel = cast(int, self._unique_id.split("_")[1])
+
+        self._attr_name = get_block_entity_name(coordinator.device, sensor_block)
 
     @property
     def extra_restore_state_data(self) -> ShellyClimateExtraStoredData:

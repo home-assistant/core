@@ -49,6 +49,7 @@ from .utils import (
     async_remove_orphaned_entities,
     async_remove_shelly_entity,
     brightness_to_percentage,
+    get_block_entity_name,
     get_device_entry_gen,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
@@ -134,6 +135,8 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
 
         if coordinator.model in MODELS_SUPPORTING_LIGHT_TRANSITION:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
+
+        self._attr_name = get_block_entity_name(coordinator.device, block)
 
     @property
     def is_on(self) -> bool:

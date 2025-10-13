@@ -30,6 +30,7 @@ from .entity import ShellyBlockEntity, get_entity_rpc_device_info
 from .utils import (
     async_remove_orphaned_entities,
     async_remove_shelly_entity,
+    get_block_entity_name,
     get_device_entry_gen,
     get_rpc_entity_name,
     get_rpc_key_instances,
@@ -168,12 +169,14 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
         super().__init__(coordinator, block)
         self.channel = channel = int(block.channel or 0) + 1
         self._attr_unique_id = f"{super().unique_id}-{channel}"
+        self.entity_description = description
 
         if coordinator.model == MODEL_I3:
             self._attr_event_types = list(SHIX3_1_INPUTS_EVENTS_TYPES)
         else:
             self._attr_event_types = list(BASIC_INPUTS_EVENTS_TYPES)
-        self.entity_description = description
+
+        self._attr_name = get_block_entity_name(coordinator.device, block)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
