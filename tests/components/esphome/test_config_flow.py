@@ -2,6 +2,7 @@
 
 from ipaddress import ip_address
 import json
+import sys
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -2862,3 +2863,34 @@ async def test_zeroconf_notifies_improv_ble(
     expected_ble_mac = wifi_mac_to_bluetooth_mac("aa:bb:cc:dd:ee:ff")
     assert call_args[1] == expected_ble_mac  # BLE MAC address
     assert call_args[2] == flow["flow_id"]  # Flow ID
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_zeroconf_when_improv_ble_not_available(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+) -> None:
+    """Test that zeroconf discovery works when improv_ble is not available."""
+    service_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={
+            "mac": "aabbccddeeff",
+        },
+        type="mock_type",
+    )
+
+    # Mock ImportError when trying to import improv_ble by removing it from sys.modules
+    with patch.dict(sys.modules, {"homeassistant.components.improv_ble": None}):
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=service_info,
+        )
+
+    # Flow should still work even without improv_ble
+    assert flow["type"] is FlowResultType.FORM
+    assert flow["step_id"] == "discovery_confirm"
