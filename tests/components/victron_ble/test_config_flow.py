@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.victron_ble.const import DOMAIN
-from homeassistant.config_entries import SOURCE_BLUETOOTH
+from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -50,37 +50,38 @@ async def test_async_step_bluetooth_valid_device(
     flow_result = result.get("result")
     assert flow_result is not None
     assert flow_result.unique_id == VICTRON_VEBUS_SERVICE_INFO.address
+    assert flow_result.data == {
+        CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN,
+    }
+    assert set(flow_result.data.keys()) == {CONF_ACCESS_TOKEN}
 
 
 @pytest.mark.parametrize(
-    ("source", "service_info", "expected_reason", "test_description"),
+    ("source", "service_info", "expected_reason"),
     [
         (
-            config_entries.SOURCE_BLUETOOTH,
+            SOURCE_BLUETOOTH,
             NOT_VICTRON_SERVICE_INFO,
             "not_supported",
-            "not a victron device",
         ),
         (
-            config_entries.SOURCE_BLUETOOTH,
+            SOURCE_BLUETOOTH,
             VICTRON_INVERTER_SERVICE_INFO,
             "not_supported",
-            "victron device unsupported by library",
         ),
         (
-            config_entries.SOURCE_USER,
+            SOURCE_USER,
             None,
             "no_devices_found",
-            "no devices found",
         ),
     ],
+    ids=["bluetooth_not_victron", "bluetooth_unsupported_device", "user_no_devices"],
 )
 async def test_abort_scenarios(
     hass: HomeAssistant,
     source: str,
     service_info: BluetoothServiceInfo | None,
     expected_reason: str,
-    test_description: str,
 ) -> None:
     """Test flows that result in abort."""
     result = await hass.config_entries.flow.async_init(
@@ -103,19 +104,19 @@ async def test_async_step_user_with_devices_found(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_ADDRESS: VICTRON_VEBUS_SERVICE_INFO.address},
     )
-    assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "access_token"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "access_token"
 
     # test invalid access token (valid already tested above)
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"], user_input={CONF_ACCESS_TOKEN: VICTRON_TEST_WRONG_TOKEN}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ACCESS_TOKEN: VICTRON_TEST_WRONG_TOKEN}
     )
-    assert result3.get("type") is FlowResultType.ABORT
-    assert result3.get("reason") == "invalid_access_token"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "invalid_access_token"
 
 
 async def test_async_step_user_device_added_between_steps(
@@ -133,12 +134,12 @@ async def test_async_step_user_device_added_between_steps(
 
     mock_config_entry.add_to_hass(hass)
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"address": VICTRON_VEBUS_SERVICE_INFO.address},
     )
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "already_configured"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
 
 
 async def test_async_step_user_with_found_devices_already_setup(

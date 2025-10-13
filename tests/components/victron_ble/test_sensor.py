@@ -1,11 +1,11 @@
 """Test updating sensors in the victron_ble integration."""
 
+from collections.abc import Callable
+
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.victron_ble.const import DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -26,7 +26,10 @@ from tests.components.bluetooth import inject_bluetooth_service_info
 
 @pytest.mark.usefixtures("enable_bluetooth")
 @pytest.mark.parametrize(
-    ("service_info", "token"),
+    (
+        "service_info",
+        "token",
+    ),
     [
         (VICTRON_BATTERY_MONITOR_SERVICE_INFO, VICTRON_BATTERY_MONITOR_TOKEN),
         (VICTRON_DC_ENERGY_METER_SERVICE_INFO, VICTRON_DC_ENERGY_METER_TOKEN),
@@ -41,14 +44,12 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
     service_info: BluetoothServiceInfo,
     token: str,
+    mock_config_entry_added_to_hass_factory: Callable[
+        [BluetoothServiceInfo, str], MockConfigEntry
+    ],
 ) -> None:
     """Test sensor entities."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=service_info.address,
-        data={CONF_ACCESS_TOKEN: token},
-    )
-    entry.add_to_hass(hass)
+    entry = mock_config_entry_added_to_hass_factory(service_info, token)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

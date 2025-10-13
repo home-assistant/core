@@ -1,8 +1,9 @@
 """Test the Victron Bluetooth Low Energy config flow."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, patch
 
+from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 
 from homeassistant.components.victron_ble.const import DOMAIN
@@ -34,21 +35,56 @@ def mock_discovered_service_info() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Mock a config entry for testing."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ADDRESS: VICTRON_VEBUS_SERVICE_INFO.address,
-            CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN,
-        },
-        unique_id=VICTRON_VEBUS_SERVICE_INFO.address,
-    )
+def mock_config_entry_factory(
+    hass: HomeAssistant,
+) -> Callable[[BluetoothServiceInfo, str], MockConfigEntry]:
+    """Mock config entry factory."""
+
+    def _create_config_entry(
+        service_info: BluetoothServiceInfo = VICTRON_VEBUS_SERVICE_INFO,
+        access_token: str = VICTRON_VEBUS_TOKEN,
+    ) -> MockConfigEntry:
+        return MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_ADDRESS: service_info.address,
+                CONF_ACCESS_TOKEN: access_token,
+            },
+            unique_id=service_info.address,
+        )
+
+    return _create_config_entry
+
+
+@pytest.fixture
+def mock_config_entry(
+    hass: HomeAssistant, mock_config_entry_factory
+) -> MockConfigEntry:
+    """Mock config entry."""
+    return mock_config_entry_factory()
+
+
+@pytest.fixture
+def mock_config_entry_added_to_hass_factory(
+    mock_config_entry_factory,
+    hass: HomeAssistant,
+) -> Callable[[BluetoothServiceInfo, str], MockConfigEntry]:
+    """Mock config entry factory that adds the entry to hass."""
+
+    def _create_and_add_config_entry(
+        service_info: BluetoothServiceInfo = VICTRON_VEBUS_SERVICE_INFO,
+        access_token: str = VICTRON_VEBUS_TOKEN,
+    ) -> MockConfigEntry:
+        entry = mock_config_entry_factory(service_info, access_token)
+        entry.add_to_hass(hass)
+        return entry
+
+    return _create_and_add_config_entry
 
 
 @pytest.fixture
 def mock_config_entry_added_to_hass(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Add the mock config entry to hass."""
-    mock_config_entry.add_to_hass(hass)
+    mock_config_entry_added_to_hass_factory,
+) -> MockConfigEntry:
+    """Mock config entry that has been added to hass."""
+    return mock_config_entry_added_to_hass_factory()
