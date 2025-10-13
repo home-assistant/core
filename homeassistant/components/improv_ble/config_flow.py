@@ -342,13 +342,15 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 try:
                     next_flow_id = await asyncio.wait_for(future, timeout=10.0)
-                    _LOGGER.debug("Received next flow ID: %s", next_flow_id)
                 except TimeoutError:
                     _LOGGER.debug(
                         "Timeout waiting for next flow, proceeding with URL redirect"
                     )
                 finally:
                     provisioning_futures.pop(ble_mac, None)
+
+                if next_flow_id:
+                    _LOGGER.debug("Received next flow ID: %s", next_flow_id)
 
                 if next_flow_id:
                     self._provision_result = self.async_abort(
