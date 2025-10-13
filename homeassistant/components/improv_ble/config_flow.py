@@ -138,11 +138,21 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(
                 (
                     "Aborting improv flow, device with bluetooth address '%s' is "
-                    "already provisioned: %s"
+                    "already provisioned: %s; clearing match history to allow "
+                    "rediscovery if device is factory reset"
                 ),
                 self._discovery_info.address,
                 improv_service_data.state,
             )
+            # Clear match history so device can be rediscovered if factory reset.
+            # This is safe to do on every abort because:
+            # 1. While device stays provisioned, the Bluetooth matcher won't trigger
+            #    new discoveries since the advertisement content hasn't changed
+            # 2. If device is factory reset (state changes to authorized), the
+            #    matcher will see new content and trigger discovery since we cleared
+            #    the history
+            # 3. No ongoing monitoring or callbacks - zero performance overhead
+            bluetooth.async_rediscover_address(self.hass, self._discovery_info.address)
             raise AbortFlow("already_provisioned")
 
     @callback

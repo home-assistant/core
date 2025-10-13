@@ -179,6 +179,29 @@ async def test_bluetooth_step_provisioned_device_2(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.flow.async_progress_by_handler("improv_ble")) == 0
 
 
+async def test_bluetooth_step_factory_reset_rediscovery(hass: HomeAssistant) -> None:
+    """Test that factory reset device can be rediscovered."""
+    # Step 1: Device is discovered in provisioned state (aborts)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_provisioned"
+
+    # Step 2: Device is factory reset and advertises authorized state
+    # This should trigger a new discovery because we cleared the match history
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=IMPROV_BLE_DISCOVERY_INFO,
+    )
+    # Verify that discovery proceeds (not aborted)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+
 async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     """Test bluetooth step success path."""
     result = await hass.config_entries.flow.async_init(
