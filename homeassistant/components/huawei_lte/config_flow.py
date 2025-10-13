@@ -112,6 +112,9 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors or {},
+            description_placeholders={
+                "sample_ip" : "http://192.168.X.1",
+            },
         )
 
     async def _async_show_reauth_form(
@@ -132,6 +135,9 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors or {},
+            description_placeholders={
+                "sample_ip" : "http://192.168.X.1",
+            },
         )
 
     async def _connect(
@@ -406,4 +412,10 @@ class HuaweiLteOptionsFlow(OptionsFlow):
                 ): bool,
             }
         )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="init", 
+            data_schema=data_schema,
+            description_placeholders={
+                "sample_ip" : "http://192.168.X.1",
+            },
+        )
