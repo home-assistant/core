@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 from homeassistant.components.nmap_tracker.const import (
     CONF_HOME_INTERVAL,
+    CONF_HOSTS_EXCLUDE,
+    CONF_HOSTS_LIST,
     CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
     DEFAULT_OPTIONS,
@@ -45,10 +47,17 @@ async def test_migrate_entry(hass: HomeAssistant) -> None:
     updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
 
     assert updated_entry
-    assert updated_entry.version == 2
-    assert updated_entry.options.get(CONF_HOSTS) == ["192.168.1.0/24", "192.168.2.0/24"]
-    assert updated_entry.options.get(CONF_EXCLUDE) == ["192.168.1.1", "192.168.2.2"]
-    assert updated_entry.options.get(CONF_MAC_EXCLUDE) == []
+    assert updated_entry.version == 1
+    assert updated_entry.minor_version == 2
+    assert updated_entry.options == {
+        CONF_EXCLUDE: "192.168.1.1,192.168.2.2",
+        CONF_HOME_INTERVAL: 3,
+        CONF_HOSTS: "192.168.1.0/24,192.168.2.0/24",
+        CONF_HOSTS_EXCLUDE: ["192.168.1.1", "192.168.2.2"],
+        CONF_HOSTS_LIST: ["192.168.1.0/24", "192.168.2.0/24"],
+        CONF_MAC_EXCLUDE: [],
+        CONF_OPTIONS: DEFAULT_OPTIONS,
+    }
     assert updated_entry.state == ConfigEntryState.LOADED
 
 
@@ -57,7 +66,7 @@ async def test_migrate_entry_fails_on_downgrade(hass: HomeAssistant) -> None:
     mock_entry = MockConfigEntry(
         unique_id="test_nmap_tracker",
         domain=DOMAIN,
-        version=3,
+        version=2,
         options={
             CONF_HOSTS: ["192.168.1.0/24"],
             CONF_HOME_INTERVAL: 3,
@@ -80,5 +89,5 @@ async def test_migrate_entry_fails_on_downgrade(hass: HomeAssistant) -> None:
     # Check that entry is in migration error state
     updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
     assert updated_entry
-    assert updated_entry.version == 3
+    assert updated_entry.version == 2
     assert updated_entry.state == ConfigEntryState.MIGRATION_ERROR

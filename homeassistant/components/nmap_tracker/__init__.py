@@ -29,6 +29,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_HOME_INTERVAL,
+    CONF_HOSTS_EXCLUDE,
+    CONF_HOSTS_LIST,
     CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
     DOMAIN,
@@ -110,23 +112,23 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version
     )
 
-    if entry.version > 2:
+    if entry.version > 1:
         # This means the user has downgraded from a future version
         return False
 
     if entry.version == 1:
         new_options = {**entry.options}
         if entry.minor_version < 2:
-            new_options[CONF_HOSTS] = cv.ensure_list_csv(
+            new_options[CONF_HOSTS_LIST] = cv.ensure_list_csv(
                 new_options.get(CONF_HOSTS, [])
             )
-            new_options[CONF_EXCLUDE] = cv.ensure_list_csv(
+            new_options[CONF_HOSTS_EXCLUDE] = cv.ensure_list_csv(
                 new_options.get(CONF_EXCLUDE, [])
             )
             new_options[CONF_MAC_EXCLUDE] = []
 
     hass.config_entries.async_update_entry(
-        entry, options=new_options, minor_version=1, version=2
+        entry, options=new_options, minor_version=2, version=1
     )
 
     _LOGGER.debug(
@@ -193,8 +195,8 @@ class NmapDeviceScanner:
         self._scan_interval = timedelta(
             seconds=config.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL)
         )
-        self._hosts = config.get(CONF_HOSTS, [])
-        self._exclude = config.get(CONF_EXCLUDE, [])
+        self._hosts = config.get(CONF_HOSTS_LIST, [])
+        self._exclude = config.get(CONF_HOSTS_EXCLUDE, [])
         self._mac_exclude = config.get(CONF_MAC_EXCLUDE, [])
         self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(
