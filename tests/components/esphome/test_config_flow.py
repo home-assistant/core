@@ -2,7 +2,6 @@
 
 from ipaddress import ip_address
 import json
-import sys
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -2883,22 +2882,16 @@ async def test_zeroconf_when_improv_ble_not_available(
         type="mock_type",
     )
 
-    # Remove improv_ble from sys.modules to force ImportError
-    # Save and remove the module
-    improv_ble_module = sys.modules.pop("homeassistant.components.improv_ble", None)
-
-    try:
-        # Block re-import by making the module unavailable
-        with patch.dict(sys.modules, {"homeassistant.components.improv_ble": None}):
-            flow = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_ZEROCONF},
-                data=service_info,
-            )
-    finally:
-        # Restore the module
-        if improv_ble_module is not None:
-            sys.modules["homeassistant.components.improv_ble"] = improv_ble_module
+    # Mock async_import_module to return None (simulating improv_ble not available)
+    with patch(
+        "homeassistant.components.esphome.config_flow.async_import_module",
+        return_value=None,
+    ):
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=service_info,
+        )
 
     # Flow should still work even without improv_ble
     assert flow["type"] is FlowResultType.FORM
