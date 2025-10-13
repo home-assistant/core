@@ -104,7 +104,7 @@ async def test_user_flow_token_polling_error(
     )
 
     # Since the error occurs immediately, the task completes and we get progress_done
-    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
     assert result["step_id"] == "connection_error"
 
     # Continue to the connection_error step
