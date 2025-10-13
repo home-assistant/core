@@ -16,29 +16,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
 
-@pytest.mark.asyncio
 async def test_async_setup_entry_multiple_devices(
     hass: HomeAssistant,
     init_integration_multiple_devices: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test setup with multiple devices."""
     init_integration_multiple_devices.add_to_hass(hass)
     assert await hass.config_entries.async_setup(init_integration_multiple_devices.entry_id)
     await hass.async_block_till_done()
 
-    state1 = hass.states.get("button.device_1")
-    assert state1
-    assert state1 == snapshot(name="device1_state")
-
-    state2 = hass.states.get("button.device_2")
-    assert state2
-    assert state2 == snapshot(name="device2_state")
+    # Snapshot all button entities using snapshot_platform
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration_multiple_devices.entry_id)
 
 
 @pytest.mark.asyncio
