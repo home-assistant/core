@@ -36,7 +36,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -54,7 +54,8 @@ from .entity_registry import (
 )
 from .ratelimit import KeyedRateLimit
 from .sun import get_astral_event_next
-from .template import RenderInfo, Template, result_as_boolean
+from .template import Template, result_as_boolean
+from .template.render_info import RenderInfo
 from .typing import TemplateVarsType
 
 _TRACK_STATE_CHANGE_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = HassKey(
@@ -1003,12 +1004,9 @@ class TrackTemplateResultInfo:
             if track_template_.template.hass:
                 continue
 
-            frame.report_usage(
-                "calls async_track_template_result with template without hass",
-                core_behavior=frame.ReportBehavior.LOG,
-                breaks_in_ha_version="2025.10",
+            raise HomeAssistantError(
+                "Calls async_track_template_result with template without hass"
             )
-            track_template_.template.hass = hass
 
         self._rate_limit = KeyedRateLimit(hass)
         self._info: dict[Template, RenderInfo] = {}
