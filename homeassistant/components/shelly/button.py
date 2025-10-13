@@ -97,36 +97,6 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ),
 ]
 
-BLU_TRV_BUTTONS: Final[list[ShellyButtonDescription]] = [
-    ShellyButtonDescription[ShellyRpcCoordinator](
-        key="calibrate",
-        name="Calibrate",
-        translation_key="calibrate",
-        entity_category=EntityCategory.CONFIG,
-        press_action="trigger_blu_trv_calibration",
-        supported=lambda coordinator: coordinator.model == MODEL_BLU_GATEWAY_G3,
-    ),
-]
-
-RPC_VIRTUAL_BUTTONS = {
-    "button_generic": RpcButtonDescription(
-        key="button",
-        role="generic",
-    ),
-    "button_open": RpcButtonDescription(
-        key="button",
-        entity_registry_enabled_default=False,
-        role="open",
-        models={MODEL_FRANKEVER_WATER_VALVE},
-    ),
-    "button_close": RpcButtonDescription(
-        key="button",
-        entity_registry_enabled_default=False,
-        role="close",
-        models={MODEL_FRANKEVER_WATER_VALVE},
-    ),
-}
-
 
 @callback
 def async_migrate_unique_ids(
@@ -203,7 +173,7 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set buttons for device."""
+    """Set up button entities."""
     entry_data = config_entry.runtime_data
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
@@ -218,7 +188,7 @@ async def async_setup_entry(
         hass, config_entry.entry_id, partial(async_migrate_unique_ids, coordinator)
     )
 
-    entities: list[ShellyButton | ShellyBluTrvButton] = []
+    entities: list[ShellyButton] = []
 
     entities.extend(
         ShellyButton(coordinator, button)
@@ -226,25 +196,15 @@ async def async_setup_entry(
         if button.supported(coordinator)
     )
 
+    async_add_entities(entities)
+
     if not isinstance(coordinator, ShellyRpcCoordinator):
-        async_add_entities(entities)
         return
 
-    # add virtual buttons
+    # add RPC buttons
     async_setup_entry_rpc(
-        hass, config_entry, async_add_entities, RPC_VIRTUAL_BUTTONS, RpcVirtualButton
+        hass, config_entry, async_add_entities, RPC_BUTTONS, RpcVirtualButton
     )
-
-    # add BLU TRV buttons
-    if blutrv_key_ids := get_rpc_key_ids(coordinator.device.status, BLU_TRV_IDENTIFIER):
-        entities.extend(
-            ShellyBluTrvButton(coordinator, button, id_)
-            for id_ in blutrv_key_ids
-            for button in BLU_TRV_BUTTONS
-            if button.supported(coordinator)
-        )
-
-    async_add_entities(entities)
 
     # the user can remove virtual components from the device configuration, so
     # we need to remove orphaned entities
@@ -342,37 +302,35 @@ class ShellyButton(ShellyBaseButton):
         await method()
 
 
-class ShellyBluTrvButton(ShellyBaseButton):
+class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
     """Represent a Shelly BLU TRV button."""
+
+    entity_description: RpcButtonDescription
+    _id: int
 
     def __init__(
         self,
         coordinator: ShellyRpcCoordinator,
-        description: ShellyButtonDescription,
-        id_: int,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
     ) -> None:
-        """Initialize."""
-        super().__init__(coordinator, description)
+        """Initialize button."""
+        super().__init__(coordinator, key, attribute, description)
 
-        key = f"{BLU_TRV_IDENTIFIER}:{id_}"
         config = coordinator.device.config[key]
         ble_addr: str = config["addr"]
         fw_ver = coordinator.device.status[key].get("fw_ver")
 
-        self._attr_unique_id = f"{format_ble_addr(ble_addr)}-{key}-{description.key}"
+        self._attr_unique_id = f"{format_ble_addr(ble_addr)}-{key}-{attribute}"
         self._attr_device_info = get_blu_trv_device_info(
             config, ble_addr, coordinator.mac, fw_ver
         )
-        self._id = id_
 
-    async def _press_method(self) -> None:
-        """Press method."""
-        method = getattr(self.coordinator.device, self.entity_description.press_action)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
-        await method(self._id)
+    @rpc_call
+    async def async_press(self) -> None:
+        """Triggers the Shelly button press service."""
+        await self.coordinator.device.trigger_blu_trv_calibration(self._id)
 
 
 class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
@@ -388,3 +346,31 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
             assert isinstance(self.coordinator, ShellyRpcCoordinator)
 
         await self.coordinator.device.button_trigger(self._id, "single_push")
+
+
+RPC_BUTTONS = {
+    "button_generic": RpcButtonDescription(
+        key="button",
+        role="generic",
+    ),
+    "button_open": RpcButtonDescription(
+        key="button",
+        entity_registry_enabled_default=False,
+        role="open",
+        models={MODEL_FRANKEVER_WATER_VALVE},
+    ),
+    "button_close": RpcButtonDescription(
+        key="button",
+        entity_registry_enabled_default=False,
+        role="close",
+        models={MODEL_FRANKEVER_WATER_VALVE},
+    ),
+    "calibrate": RpcButtonDescription(
+        key="blutrv",
+        name="Calibrate",
+        translation_key="calibrate",
+        entity_category=EntityCategory.CONFIG,
+        entity_class=ShellyBluTrvButton,
+        models={MODEL_BLU_GATEWAY_G3},
+    ),
+}
