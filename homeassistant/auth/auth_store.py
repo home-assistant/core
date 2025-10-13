@@ -311,6 +311,8 @@ class AuthStore:
         credentials.data = data
         self._async_schedule_save()
 
+    # -----------------------------------------------------------------------------------------------
+
     async def async_load(self) -> None:
         """Load the users."""
         if self._loaded:
@@ -332,61 +334,7 @@ class AuthStore:
         groups: dict[str, models.Group] = {}
         credentials: dict[str, models.Credentials] = {}
 
-        # Soft-migrating data as we load. We are going to make sure we have a
-        # read only group and an admin group. There are two states that we can
-        # migrate from:
-        # 1. Data from a recent version which has a single group without policy
-        # 2. Data from old version which has no groups
-        has_admin_group = False
-        has_user_group = False
-        has_read_only_group = False
-        group_without_policy = None
-
-        # When creating objects we mention each attribute explicitly. This
-        # prevents crashing if user rolls back HA version after a new property
-        # was added.
-
-        for group_dict in data.get("groups", []):
-            policy: PolicyType | None = None
-
-            if group_dict["id"] == GROUP_ID_ADMIN:
-                has_admin_group = True
-
-                name = GROUP_NAME_ADMIN
-                policy = system_policies.ADMIN_POLICY
-                system_generated = True
-
-            elif group_dict["id"] == GROUP_ID_USER:
-                has_user_group = True
-
-                name = GROUP_NAME_USER
-                policy = system_policies.USER_POLICY
-                system_generated = True
-
-            elif group_dict["id"] == GROUP_ID_READ_ONLY:
-                has_read_only_group = True
-
-                name = GROUP_NAME_READ_ONLY
-                policy = system_policies.READ_ONLY_POLICY
-                system_generated = True
-
-            else:
-                name = group_dict["name"]
-                policy = group_dict.get("policy")
-                system_generated = False
-
-            # We don't want groups without a policy that are not system groups
-            # This is part of migrating from state 1
-            if policy is None:
-                group_without_policy = group_dict["id"]
-                continue
-
-            groups[group_dict["id"]] = models.Group(
-                id=group_dict["id"],
-                name=name,
-                policy=policy,
-                system_generated=system_generated,
-            )
+        group_without_policy = self.load_groups(data.get("groups", []), groups)
 
         # If there are no groups, add all existing users to the admin group.
         # This is part of migrating from state 2
@@ -398,20 +346,6 @@ class AuthStore:
         # This is part of migrating from state 1
         if groups and group_without_policy is not None:
             group_without_policy = None
-
-        # This is part of migrating from state 1 and 2
-        if not has_admin_group:
-            admin_group = _system_admin_group()
-            groups[admin_group.id] = admin_group
-
-        # This is part of migrating from state 1 and 2
-        if not has_read_only_group:
-            read_only_group = _system_read_only_group()
-            groups[read_only_group.id] = read_only_group
-
-        if not has_user_group:
-            user_group = _system_user_group()
-            groups[user_group.id] = user_group
 
         for user_dict in data["users"]:
             # Collect the users group.
@@ -504,6 +438,84 @@ class AuthStore:
         self._users = users
         self._build_token_id_to_user_id()
         self._async_schedule_save(INITIAL_LOAD_SAVE_DELAY)
+
+    # -----------------------------------------------------------------------------------------------
+
+    def load_groups(self, data, groups) -> str | None:
+        """Load groups and return flag about what was found."""
+        # Soft-migrating data as we load. We are going to make sure we have a
+        # read only group and an admin group. There are two states that we can
+        # migrate from:
+        # 1. Data from a recent version which has a single group without policy
+        # 2. Data from old version which has no groups
+        has_admin_group = False
+        has_user_group = False
+        has_read_only_group = False
+        group_without_policy = None
+
+        # When creating objects we mention each attribute explicitly. This
+        # prevents crashing if user rolls back HA version after a new property
+        # was added.
+
+        for group_dict in data:
+            policy: PolicyType | None = None
+
+            if group_dict["id"] == GROUP_ID_ADMIN:
+                has_admin_group = True
+
+                name = GROUP_NAME_ADMIN
+                policy = system_policies.ADMIN_POLICY
+                system_generated = True
+
+            elif group_dict["id"] == GROUP_ID_USER:
+                has_user_group = True
+
+                name = GROUP_NAME_USER
+                policy = system_policies.USER_POLICY
+                system_generated = True
+
+            elif group_dict["id"] == GROUP_ID_READ_ONLY:
+                has_read_only_group = True
+
+                name = GROUP_NAME_READ_ONLY
+                policy = system_policies.READ_ONLY_POLICY
+                system_generated = True
+
+            else:
+                name = group_dict["name"]
+                policy = group_dict.get("policy")
+                system_generated = False
+
+            # We don't want groups without a policy that are not system groups
+            # This is part of migrating from state 1
+            if policy is None:
+                group_without_policy = group_dict["id"]
+                continue
+
+            groups[group_dict["id"]] = models.Group(
+                id=group_dict["id"],
+                name=name,
+                policy=policy,
+                system_generated=system_generated,
+            )
+
+        # This is part of migrating from state 1 and 2
+        if not has_admin_group:
+            admin_group = _system_admin_group()
+            groups[admin_group.id] = admin_group
+
+        # This is part of migrating from state 1 and 2
+        if not has_read_only_group:
+            read_only_group = _system_read_only_group()
+            groups[read_only_group.id] = read_only_group
+
+        if not has_user_group:
+            user_group = _system_user_group()
+            groups[user_group.id] = user_group
+
+        return group_without_policy
+
+    # -----------------------------------------------------------------------------------------------
 
     @callback
     def _build_token_id_to_user_id(self) -> None:
