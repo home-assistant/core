@@ -479,7 +479,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             )
 
         if (dpcode := get_dpcode(self.device, description.color_data)) and (
-            get_dptype(self.device, dpcode) == DPType.JSON
+            get_dptype(self.device, dpcode, prefer_function=True) == DPType.JSON
         ):
             self._color_data_dpcode = dpcode
             color_modes.add(ColorMode.HS)

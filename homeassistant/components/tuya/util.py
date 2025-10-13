@@ -42,12 +42,20 @@ def get_dpcode(
     return None
 
 
-def get_dptype(device: CustomerDevice, dpcode: DPCode | None) -> DPType | None:
+def get_dptype(
+    device: CustomerDevice, dpcode: DPCode | None, *, prefer_function: bool = False
+) -> DPType | None:
     """Find a matching DPType type information for this device DPCode."""
     if dpcode is None:
         return None
 
-    for device_specs in (device.status_range, device.function):
+    lookup_tuple = (
+        (device.function, device.status_range)
+        if prefer_function
+        else (device.status_range, device.function)
+    )
+
+    for device_specs in lookup_tuple:
         if current_definition := device_specs.get(dpcode):
             current_type = current_definition.type
             try:
