@@ -41,6 +41,7 @@ from .utils import (
     get_rpc_key_ids,
     get_rpc_key_instances,
     get_rpc_role_by_key,
+    get_virtual_component_ids,
 )
 
 PARALLEL_UPDATES = 0
@@ -60,8 +61,6 @@ class ShellyButtonDescription[
 @dataclass(frozen=True, kw_only=True)
 class RpcButtonDescription(RpcEntityDescription, ButtonEntityDescription):
     """Class to describe a RPC button."""
-
-    slot: str | None = None
 
 
 BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
@@ -207,12 +206,17 @@ async def async_setup_entry(
         hass, config_entry, async_add_entities, RPC_BUTTONS, RpcVirtualButton
     )
 
+    # the user can remove virtual components from the device configuration, so
+    # we need to remove orphaned entities
+    virtual_button_component_ids = get_virtual_component_ids(
+        coordinator.device.config, BUTTON_PLATFORM
+    )
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
         coordinator.mac,
         BUTTON_PLATFORM,
-        coordinator.device.config,
+        virtual_button_component_ids,
     )
 
 
@@ -329,22 +333,6 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
         await self.coordinator.device.trigger_blu_trv_calibration(self._id)
 
 
-class ShellyCuryButton(ShellyRpcAttributeEntity, ButtonEntity):
-    """Represent a Shelly Cury button."""
-
-    entity_description: RpcButtonDescription
-    _id: int
-
-    @rpc_call
-    async def async_press(self) -> None:
-        """Triggers the Shelly button press service."""
-        if TYPE_CHECKING:
-            assert isinstance(self.coordinator, ShellyRpcCoordinator)
-            assert self.entity_description.slot is not None
-
-        await self.coordinator.device.cury_boost(self._id, self.entity_description.slot)
-
-
 class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
     """Defines a Shelly RPC virtual component button."""
 
@@ -384,19 +372,5 @@ RPC_BUTTONS = {
         entity_category=EntityCategory.CONFIG,
         entity_class=ShellyBluTrvButton,
         models={MODEL_BLU_GATEWAY_G3},
-    ),
-    "cury_left_boost": RpcButtonDescription(
-        key="cury",
-        name="Left slot start boost",
-        translation_key="cury_boost",
-        slot="left",
-        entity_class=ShellyCuryButton,
-    ),
-    "cury_right_boost": RpcButtonDescription(
-        key="cury",
-        name="Right slot start boost",
-        translation_key="cury_boost",
-        slot="right",
-        entity_class=ShellyCuryButton,
     ),
 }

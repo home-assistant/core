@@ -1,14 +1,6 @@
 {
   "entity": {
-    "binary_sensor": {
-      "cury_boost": {
-        "default": "mdi:trending-up"
-      }
-    },
     "button": {
-      "cury_boost": {
-        "default": "mdi:trending-up"
-      },
       "mute": {
         "default": "mdi:volume-mute"
       },
@@ -75,6 +67,9 @@
           "off": "mdi:valve-closed",
           "on": "mdi:valve-open"
         }
+      },
+      "cury_boost": {
+        "default": "mdi:trending-up"
       },
       "cury_slot": {
         "default": "mdi:scent",

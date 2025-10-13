@@ -329,28 +329,6 @@ RPC_SENSORS: Final = {
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         entity_class=RpcPresenceBinarySensor,
     ),
-    "cury_left_boost": RpcBinarySensorDescription(
-        key="cury",
-        sub_key="slots",
-        name="Left slot boost",
-        translation_key="cury_boost",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        value=lambda status, _: status["left"]["boost"] is not None,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (left := status["left"]) is not None
-        and left.get("vial", {}).get("level", -1) != -1,
-    ),
-    "cury_right_boost": RpcBinarySensorDescription(
-        key="cury",
-        sub_key="slots",
-        name="Right slot boost",
-        translation_key="cury_boost",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        value=lambda status, _: status["right"]["boost"] is not None,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (right := status["right"]) is not None
-        and right.get("vial", {}).get("level", -1) != -1,
-    ),
 }
 
 
