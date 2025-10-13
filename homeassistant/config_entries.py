@@ -300,8 +300,8 @@ class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
     """Typed result dict for config flow."""
 
     # Extra keys, only present if type is CREATE_ENTRY
+    next_flow: tuple[FlowType, str]  # (flow type, flow id)
     minor_version: int
-    next_flow: tuple[FlowType, str]
     options: Mapping[str, Any]
     result: ConfigEntry
     subentries: Iterable[ConfigSubentryData]
