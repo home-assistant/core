@@ -21,12 +21,18 @@ from improv_ble_client import (
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    FlowType,
+)
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN
+from .const import DOMAIN, PROVISIONING_FUTURES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -325,6 +331,32 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                         and self.unique_id == flow_unique_id
                     ):
                         self.hass.config_entries.flow.async_abort(flow["flow_id"])
+
+                # Wait for potential ESPHome discovery and flow chaining
+                next_flow_id: str | None = None
+                assert self._discovery_info is not None
+                ble_mac = format_mac(self._discovery_info.address)
+                future = self.hass.loop.create_future()
+                provisioning_futures = self.hass.data[PROVISIONING_FUTURES]
+                provisioning_futures[ble_mac] = future
+
+                try:
+                    next_flow_id = await asyncio.wait_for(future, timeout=10.0)
+                    _LOGGER.debug("Received next flow ID: %s", next_flow_id)
+                except TimeoutError:
+                    _LOGGER.debug(
+                        "Timeout waiting for next flow, proceeding with URL redirect"
+                    )
+                finally:
+                    provisioning_futures.pop(ble_mac, None)
+
+                if next_flow_id:
+                    self._provision_result = self.async_abort(
+                        reason="provision_successful",
+                        next_flow=(FlowType.CONFIG_FLOW, next_flow_id),
+                    )
+                    return
+
                 if redirect_url:
                     self._provision_result = self.async_abort(
                         reason="provision_successful_url",
@@ -361,18 +393,6 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._provision_result is not None
 
         result = self._provision_result
-        if result["type"] == "abort" and result["reason"] in (
-            "provision_successful",
-            "provision_successful_url",
-        ):
-            # Delete ignored config entry, if it exists
-            address = self.context["unique_id"]
-            current_entries = self._async_current_entries(include_ignore=True)
-            for entry in current_entries:
-                if entry.unique_id == address:
-                    _LOGGER.debug("Removing ignored entry: %s", entry)
-                    await self.hass.config_entries.async_remove(entry.entry_id)
-                    break
         self._provision_result = None
         return result
 
