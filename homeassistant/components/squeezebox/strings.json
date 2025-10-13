@@ -99,6 +99,15 @@
       },
       "needsrestart": {
         "name": "Needs restart"
+      },
+      "alarm_upcoming": {
+        "name": "Alarm upcoming"
+      },
+      "alarm_active": {
+        "name": "Alarm active"
+      },
+      "alarm_snooze": {
+        "name": "Alarm snoozed"
       }
     },
     "sensor": {
