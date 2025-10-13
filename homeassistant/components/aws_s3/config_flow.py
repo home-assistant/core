@@ -136,6 +136,16 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
         self._model()
         return await self.async_step_bucket()
 
+    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
+        """Trigger reauth when required."""
+        self._model()
+        return await self.async_step_bucket()
+
+    async def async_step_reconfigure(self, _: Mapping[str, Any]) -> ConfigFlowResult:
+        """Handle reconfiguration flow initiated by the user."""
+        self._model()
+        return await self.async_step_bucket()
+
     async def async_step_bucket(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
