@@ -6,9 +6,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.sunricher_dali_center.const import (
-    CONF_GATEWAY_DATA,
-    CONF_GATEWAY_SN,
+    CONF_CHANNEL_TOTAL,
+    CONF_SN,
     DOMAIN,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
 )
 
 from tests.common import MockConfigEntry
@@ -20,12 +28,14 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_GATEWAY_SN: "6A242121110E",
-            CONF_GATEWAY_DATA: {
-                "gw_sn": "6A242121110E",
-                "gw_ip": "192.168.1.100",
-                "name": "Test Gateway",
-            },
+            CONF_SN: "6A242121110E",
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1883,
+            CONF_NAME: "Test Gateway",
+            CONF_USERNAME: "gateway_user",
+            CONF_PASSWORD: "gateway_pass",
+            CONF_CHANNEL_TOTAL: [1, 2],
+            CONF_SSL: False,
         },
         unique_id="6A242121110E",
         title="Test Gateway",

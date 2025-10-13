@@ -4,16 +4,24 @@ from __future__ import annotations
 
 import logging
 
-from PySrDaliGateway import DaliGateway
+from PySrDaliGateway import DaliGateway, DaliGatewayType
 from PySrDaliGateway.exceptions import DaliGatewayError
 
-from homeassistant.const import Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_GATEWAY_DATA, DOMAIN, MANUFACTURER
+from .const import CONF_CHANNEL_TOTAL, CONF_SN, DOMAIN, MANUFACTURER
 from .types import DaliCenterConfigEntry, DaliCenterData
 
 _PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -23,7 +31,18 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> bool:
     """Set up DALI Center from a config entry."""
 
-    gateway = DaliGateway(entry.data[CONF_GATEWAY_DATA])
+    gateway_data: DaliGatewayType = {
+        "gw_sn": entry.data[CONF_SN],
+        "gw_ip": entry.data[CONF_HOST],
+        "port": entry.data[CONF_PORT],
+        "name": entry.data[CONF_NAME],
+        "username": entry.data[CONF_USERNAME],
+        "passwd": entry.data[CONF_PASSWORD],
+        "channel_total": entry.data[CONF_CHANNEL_TOTAL],
+        "is_tls": entry.data[CONF_SSL],
+    }
+
+    gateway = DaliGateway(gateway_data)
     gw_sn = gateway.gw_sn
 
     try:

@@ -11,8 +11,16 @@ from PySrDaliGateway.exceptions import DaliGatewayError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+)
 
-from .const import CONF_GATEWAY_DATA, CONF_GATEWAY_SN, DOMAIN
+from .const import CONF_CHANNEL_TOTAL, CONF_SN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,12 +62,20 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 title = selected_gateway["name"]
 
+                gateway_data: dict[str, Any] = {
+                    CONF_SN: selected_gateway["gw_sn"],
+                    CONF_HOST: selected_gateway["gw_ip"],
+                    CONF_PORT: selected_gateway["port"],
+                    CONF_NAME: selected_gateway["name"],
+                    CONF_USERNAME: selected_gateway["username"],
+                    CONF_PASSWORD: selected_gateway["passwd"],
+                    CONF_CHANNEL_TOTAL: selected_gateway["channel_total"],
+                    CONF_SSL: selected_gateway.get("is_tls", False),
+                }
+
                 return self.async_create_entry(
                     title=title,
-                    data={
-                        CONF_GATEWAY_SN: selected_gateway["gw_sn"],
-                        CONF_GATEWAY_DATA: selected_gateway,
-                    },
+                    data=gateway_data,
                 )
             errors["base"] = "device_not_found"
 
@@ -73,7 +89,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "discovery_failed"
             else:
                 configured_gateways = {
-                    entry.data[CONF_GATEWAY_SN]
+                    entry.data[CONF_SN]
                     for entry in self.hass.config_entries.async_entries(DOMAIN)
                 }
 

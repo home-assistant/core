@@ -1,22 +1,37 @@
 """Test the DALI Center config flow."""
 
+from typing import Any
+
 from PySrDaliGateway.exceptions import DaliGatewayError
 
 from homeassistant import config_entries
 from homeassistant.components.sunricher_dali_center.const import (
-    CONF_GATEWAY_DATA,
-    CONF_GATEWAY_SN,
+    CONF_CHANNEL_TOTAL,
+    CONF_SN,
     DOMAIN,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-MOCK_GATEWAY_DATA = {
+MOCK_GATEWAY_DATA: dict[str, Any] = {
     "gw_sn": "TEST123",
     "gw_ip": "192.168.1.100",
+    "port": 1883,
     "name": "Test Gateway",
+    "username": "gateway_user",
+    "passwd": "gateway_pass",
+    "channel_total": [1, 2, 3],
+    "is_tls": True,
 }
 
 
@@ -55,8 +70,14 @@ async def test_discovery_flow_success(
     assert select_result["type"] is FlowResultType.CREATE_ENTRY
     assert select_result["title"] == MOCK_GATEWAY_DATA["name"]
     assert select_result["data"] == {
-        CONF_GATEWAY_SN: MOCK_GATEWAY_DATA["gw_sn"],
-        CONF_GATEWAY_DATA: MOCK_GATEWAY_DATA,
+        CONF_SN: MOCK_GATEWAY_DATA["gw_sn"],
+        CONF_HOST: MOCK_GATEWAY_DATA["gw_ip"],
+        CONF_PORT: MOCK_GATEWAY_DATA["port"],
+        CONF_NAME: MOCK_GATEWAY_DATA["name"],
+        CONF_USERNAME: MOCK_GATEWAY_DATA["username"],
+        CONF_PASSWORD: MOCK_GATEWAY_DATA["passwd"],
+        CONF_CHANNEL_TOTAL: MOCK_GATEWAY_DATA["channel_total"],
+        CONF_SSL: MOCK_GATEWAY_DATA["is_tls"],
     }
     assert mock_discovery.discover_gateways.await_count == 1
     mock_setup_entry.assert_called_once()
@@ -137,8 +158,14 @@ async def test_discovery_duplicate_filtered(
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_GATEWAY_SN: MOCK_GATEWAY_DATA["gw_sn"],
-            CONF_GATEWAY_DATA: MOCK_GATEWAY_DATA,
+            CONF_SN: MOCK_GATEWAY_DATA["gw_sn"],
+            CONF_HOST: MOCK_GATEWAY_DATA["gw_ip"],
+            CONF_PORT: MOCK_GATEWAY_DATA["port"],
+            CONF_NAME: MOCK_GATEWAY_DATA["name"],
+            CONF_USERNAME: MOCK_GATEWAY_DATA["username"],
+            CONF_PASSWORD: MOCK_GATEWAY_DATA["passwd"],
+            CONF_CHANNEL_TOTAL: MOCK_GATEWAY_DATA["channel_total"],
+            CONF_SSL: MOCK_GATEWAY_DATA["is_tls"],
         },
         unique_id=MOCK_GATEWAY_DATA["gw_sn"],
     )
@@ -176,8 +203,14 @@ async def test_discovery_unique_id_already_configured(
     duplicate_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_GATEWAY_SN: MOCK_GATEWAY_DATA["gw_sn"],
-            CONF_GATEWAY_DATA: MOCK_GATEWAY_DATA,
+            CONF_SN: MOCK_GATEWAY_DATA["gw_sn"],
+            CONF_HOST: MOCK_GATEWAY_DATA["gw_ip"],
+            CONF_PORT: MOCK_GATEWAY_DATA["port"],
+            CONF_NAME: MOCK_GATEWAY_DATA["name"],
+            CONF_USERNAME: MOCK_GATEWAY_DATA["username"],
+            CONF_PASSWORD: MOCK_GATEWAY_DATA["passwd"],
+            CONF_CHANNEL_TOTAL: MOCK_GATEWAY_DATA["channel_total"],
+            CONF_SSL: MOCK_GATEWAY_DATA["is_tls"],
         },
         unique_id=MOCK_GATEWAY_DATA["gw_sn"],
     )

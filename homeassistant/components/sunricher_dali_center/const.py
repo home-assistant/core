@@ -2,5 +2,5 @@
 
 DOMAIN = "sunricher_dali_center"
 MANUFACTURER = "Sunricher"
-CONF_GATEWAY_DATA = "gateway_data"
-CONF_GATEWAY_SN = "gateway_sn"
+CONF_SN = "gateway_sn"
+CONF_CHANNEL_TOTAL = "gateway_channel_total"
