@@ -2,10 +2,6 @@
 
 API_KEY = "abc1234567"
 
-# Test strings used in fixtures
-INTEGRATION_TITLE = "Nederlandse Spoorwegen"
-SUBENTRY_TYPE_ROUTE = "route"
-
 # Date/time format strings
 DATETIME_FORMAT_LENGTH = 16  # "DD-MM-YYYY HH:MM" format
 DATE_SEPARATOR = "-"

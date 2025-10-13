@@ -4,19 +4,14 @@ from __future__ import annotations
 
 import logging
 
-from requests.exceptions import ConnectionError, HTTPError, Timeout
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from .coordinator import NSDataUpdateCoordinator
+from .const import SUBENTRY_TYPE_ROUTE
+from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-
-type NSConfigEntry = ConfigEntry[dict[str, NSDataUpdateCoordinator]]
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -27,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
 
     # Set up coordinators for all existing routes
     for subentry_id, subentry in entry.subentries.items():
-        if subentry.subentry_type == "route":
+        if subentry.subentry_type == SUBENTRY_TYPE_ROUTE:
             coordinator = NSDataUpdateCoordinator(
                 hass, entry, subentry_id, dict(subentry.data)
             )

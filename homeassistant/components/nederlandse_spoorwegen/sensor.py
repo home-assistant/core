@@ -27,7 +27,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import parse_time
 
-from . import NSConfigEntry
 from .const import (
     CONF_FROM,
     CONF_ROUTES,
@@ -37,7 +36,7 @@ from .const import (
     DOMAIN,
     INTEGRATION_TITLE,
 )
-from .coordinator import NSDataUpdateCoordinator
+from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,7 +181,7 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
     def native_value(self) -> datetime | None:
         """Return the native value of the sensor."""
         route_data = self.coordinator.data
-        if not route_data or not route_data.first_trip:
+        if not route_data.first_trip:
             return None
 
         first_trip = route_data.first_trip

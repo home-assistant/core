@@ -11,6 +11,8 @@ from homeassistant.components.nederlandse_spoorwegen.const import (
     CONF_TO,
     CONF_VIA,
     DOMAIN,
+    INTEGRATION_TITLE,
+    SUBENTRY_TYPE_ROUTE,
 )
 from homeassistant.components.nederlandse_spoorwegen.coordinator import (
     NSDataUpdateCoordinator,
@@ -21,10 +23,8 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     API_KEY,
-    INTEGRATION_TITLE,
     SUBENTRY_ID_1,
     SUBENTRY_ID_2,
-    SUBENTRY_TYPE_ROUTE,
     TEST_ROUTE_TITLE_1,
     TEST_ROUTE_TITLE_2,
 )

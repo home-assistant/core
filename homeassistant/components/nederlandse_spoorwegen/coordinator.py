@@ -25,27 +25,26 @@ def _now_nl() -> datetime:
     return dt_util.now(AMS_TZ)
 
 
-@dataclass
-class NSRouteData:
-    """Data class for Nederlandse Spoorwegen route information."""
+type NSConfigEntry = ConfigEntry[dict[str, NSDataUpdateCoordinator]]
 
-    departure: str
-    destination: str
-    via: str | None = None
-    time: str | None = None
+
+@dataclass
+class NSRouteResult:
+    """Data class for Nederlandse Spoorwegen API results."""
+
     trips: list[Trip] = field(default_factory=list)
     first_trip: Trip | None = None
     next_trip: Trip | None = None
     error: str | None = None
 
 
-class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteData]):
+class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
     """Class to manage fetching Nederlandse Spoorwegen data from the API for a single route."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: NSConfigEntry,
         route_id: str,
         route_data: dict[str, str],
     ) -> None:
@@ -59,18 +58,17 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteData]):
         )
         self.route_id = route_id
         self.nsapi = NSAPI(config_entry.data[CONF_API_KEY])
-        self.route_config = NSRouteData(
-            departure=route_data.get("from", ""),
-            destination=route_data.get("to", ""),
-            via=route_data.get("via"),
-            time=route_data.get("time"),
-        )
+        # Static route configuration - accessible as coordinator properties
+        self.departure = route_data["from"]
+        self.destination = route_data["to"]
+        self.via = route_data["via"]
+        self.time = route_data["time"]
         self.stations: list[Station] = []
 
-    async def _async_update_data(self) -> NSRouteData:
+    async def _async_update_data(self) -> NSRouteResult:
         """Fetch data from NS API for this specific route."""
         try:
-            route_data = await self._get_trips_for_route(self.route_config)
+            route_data = await self._get_trips_for_route()
         except (
             ConnectionError,
             Timeout,
@@ -78,38 +76,25 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteData]):
             ValueError,
         ) as err:
             _LOGGER.error("Error fetching data for route %s: %s", self.route_id, err)
-            return NSRouteData(
-                departure=self.route_config.departure,
-                destination=self.route_config.destination,
-                via=self.route_config.via,
-                time=self.route_config.time,
-                error=str(err),
-            )
+            return NSRouteResult(error=str(err))
         if route_data.error:
             _LOGGER.error(
                 "Error fetching data for route %s: %s", self.route_id, route_data.error
             )
-            return NSRouteData(
-                departure=self.route_config.departure,
-                destination=self.route_config.destination,
-                via=self.route_config.via,
-                time=self.route_config.time,
-                error=route_data.error,
-            )
         return route_data
 
-    async def _get_trips_for_route(self, route_config: NSRouteData) -> NSRouteData:
-        """Get_get_trips_for_route route."""
+    async def _get_trips_for_route(self) -> NSRouteResult:
+        """Get trips for route using coordinator properties."""
         trips: list[Trip] = []
         first_trip: Trip | None = None
         next_trip: Trip | None = None
         error: str | None = None
         try:
             trips = await self._get_trips(
-                route_config.departure,
-                route_config.destination,
-                route_config.via,
-                route_config.time,
+                self.departure,
+                self.destination,
+                self.via,
+                self.time,
             )
 
             # Filter out trips that have already departed (trips are already sorted)
@@ -122,11 +107,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteData]):
             error = f"Error communicating with NS API: {err}"
             _LOGGER.error(error)
 
-        return NSRouteData(
-            departure=route_config.departure,
-            destination=route_config.destination,
-            via=route_config.via,
-            time=route_config.time,
+        return NSRouteResult(
             trips=trips if not error else [],
             first_trip=first_trip if not error else None,
             next_trip=next_trip if not error else None,
