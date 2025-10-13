@@ -8,7 +8,8 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
+
+from tests.helpers.template.helpers import render
 
 
 @pytest.mark.parametrize(
@@ -27,10 +28,7 @@ from homeassistant.helpers import template
 )
 def test_is_list(hass: HomeAssistant, value: Any, expected: bool) -> None:
     """Test list test."""
-    assert (
-        template.Template("{{ value is list }}", hass).async_render({"value": value})
-        == expected
-    )
+    assert render(hass, "{{ value is list }}", {"value": value}) == expected
 
 
 @pytest.mark.parametrize(
@@ -49,10 +47,7 @@ def test_is_list(hass: HomeAssistant, value: Any, expected: bool) -> None:
 )
 def test_is_set(hass: HomeAssistant, value: Any, expected: bool) -> None:
     """Test set test."""
-    assert (
-        template.Template("{{ value is set }}", hass).async_render({"value": value})
-        == expected
-    )
+    assert render(hass, "{{ value is set }}", {"value": value}) == expected
 
 
 @pytest.mark.parametrize(
@@ -71,10 +66,7 @@ def test_is_set(hass: HomeAssistant, value: Any, expected: bool) -> None:
 )
 def test_is_tuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
     """Test tuple test."""
-    assert (
-        template.Template("{{ value is tuple }}", hass).async_render({"value": value})
-        == expected
-    )
+    assert render(hass, "{{ value is tuple }}", {"value": value}) == expected
 
 
 @pytest.mark.parametrize(
@@ -93,8 +85,7 @@ def test_is_tuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
 def test_set(hass: HomeAssistant, value: Any, expected: bool) -> None:
     """Test set conversion."""
     assert (
-        template.Template("{{ set(value) }}", hass).async_render({"value": value})
-        == list(expected.values())[0]
+        render(hass, "{{ set(value) }}", {"value": value}) == list(expected.values())[0]
     )
 
 
@@ -113,9 +104,7 @@ def test_set(hass: HomeAssistant, value: Any, expected: bool) -> None:
 )
 def test_tuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
     """Test tuple conversion."""
-    result = template.Template("{{ tuple(value) }}", hass).async_render(
-        {"value": value}
-    )
+    result = render(hass, "{{ tuple(value) }}", {"value": value})
     expected_value = list(expected.values())[0]
     if isinstance(value, set):  # Sets don't have predictable order
         assert set(result) == set(expected_value)
@@ -134,15 +123,15 @@ def test_tuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
 def test_zip(hass: HomeAssistant, cola, colb, expected) -> None:
     """Test zip."""
     assert (
-        template.Template("{{ zip(cola, colb) | list }}", hass).async_render(
-            {"cola": cola, "colb": colb}
-        )
+        render(hass, "{{ zip(cola, colb) | list }}", {"cola": cola, "colb": colb})
         == expected
     )
     assert (
-        template.Template(
-            "[{% for a, b in zip(cola, colb) %}({{a}}, {{b}}), {% endfor %}]", hass
-        ).async_render({"cola": cola, "colb": colb})
+        render(
+            hass,
+            "[{% for a, b in zip(cola, colb) %}({{a}}, {{b}}), {% endfor %}]",
+            {"cola": cola, "colb": colb},
+        )
         == expected
     )
 
@@ -156,14 +145,9 @@ def test_zip(hass: HomeAssistant, cola, colb, expected) -> None:
 )
 def test_unzip(hass: HomeAssistant, col, expected) -> None:
     """Test unzipping using zip."""
+    assert render(hass, "{{ zip(*col) | list }}", {"col": col}) == expected
     assert (
-        template.Template("{{ zip(*col) | list }}", hass).async_render({"col": col})
-        == expected
-    )
-    assert (
-        template.Template(
-            "{% set a, b = zip(*col) %}[{{a}}, {{b}}]", hass
-        ).async_render({"col": col})
+        render(hass, "{% set a, b = zip(*col) %}[{{a}}, {{b}}]", {"col": col})
         == expected
     )
 
@@ -171,23 +155,17 @@ def test_unzip(hass: HomeAssistant, col, expected) -> None:
 def test_shuffle(hass: HomeAssistant) -> None:
     """Test shuffle."""
     # Test basic shuffle
-    result = template.Template("{{ shuffle([1, 2, 3, 4, 5]) }}", hass).async_render()
+    result = render(hass, "{{ shuffle([1, 2, 3, 4, 5]) }}")
     assert len(result) == 5
     assert set(result) == {1, 2, 3, 4, 5}
 
     # Test shuffle with seed
-    result1 = template.Template(
-        "{{ shuffle([1, 2, 3, 4, 5], seed=42) }}", hass
-    ).async_render()
-    result2 = template.Template(
-        "{{ shuffle([1, 2, 3, 4, 5], seed=42) }}", hass
-    ).async_render()
+    result1 = render(hass, "{{ shuffle([1, 2, 3, 4, 5], seed=42) }}")
+    result2 = render(hass, "{{ shuffle([1, 2, 3, 4, 5], seed=42) }}")
     assert result1 == result2  # Same seed should give same result
 
     # Test shuffle with different seed
-    result3 = template.Template(
-        "{{ shuffle([1, 2, 3, 4, 5], seed=123) }}", hass
-    ).async_render()
+    result3 = render(hass, "{{ shuffle([1, 2, 3, 4, 5], seed=123) }}")
     # Different seeds should usually give different results
     # (but we can't guarantee it for small lists)
     assert len(result3) == 5
@@ -197,30 +175,33 @@ def test_shuffle(hass: HomeAssistant) -> None:
 def test_flatten(hass: HomeAssistant) -> None:
     """Test flatten."""
     # Test basic flattening
-    assert template.Template(
-        "{{ flatten([[1, 2], [3, 4]]) }}", hass
-    ).async_render() == [1, 2, 3, 4]
+    assert render(hass, "{{ flatten([[1, 2], [3, 4]]) }}") == [1, 2, 3, 4]
 
     # Test nested flattening
-    assert template.Template(
-        "{{ flatten([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]) }}", hass
-    ).async_render() == [1, 2, 3, 4, 5, 6, 7, 8]
+    assert render(hass, "{{ flatten([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]) }}") == [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+    ]
 
     # Test flattening with levels
-    assert template.Template(
-        "{{ flatten([[[1, 2], [3, 4]], [[5, 6], [7, 8]]], levels=1) }}", hass
-    ).async_render() == [[1, 2], [3, 4], [5, 6], [7, 8]]
+    assert render(
+        hass, "{{ flatten([[[1, 2], [3, 4]], [[5, 6], [7, 8]]], levels=1) }}"
+    ) == [[1, 2], [3, 4], [5, 6], [7, 8]]
 
     # Test mixed types
-    assert template.Template(
-        "{{ flatten([[1, 'a'], [2, 'b']]) }}", hass
-    ).async_render() == [1, "a", 2, "b"]
+    assert render(hass, "{{ flatten([[1, 'a'], [2, 'b']]) }}") == [1, "a", 2, "b"]
 
     # Test empty list
-    assert template.Template("{{ flatten([]) }}", hass).async_render() == []
+    assert render(hass, "{{ flatten([]) }}") == []
 
     # Test single level
-    assert template.Template("{{ flatten([1, 2, 3]) }}", hass).async_render() == [
+    assert render(hass, "{{ flatten([1, 2, 3]) }}") == [
         1,
         2,
         3,
@@ -230,111 +211,89 @@ def test_flatten(hass: HomeAssistant) -> None:
 def test_intersect(hass: HomeAssistant) -> None:
     """Test intersect."""
     # Test basic intersection
-    result = template.Template(
-        "{{ [1, 2, 3, 4] | intersect([3, 4, 5, 6]) | sort }}", hass
-    ).async_render()
+    result = render(hass, "{{ [1, 2, 3, 4] | intersect([3, 4, 5, 6]) | sort }}")
     assert result == [3, 4]
 
     # Test no intersection
-    result = template.Template("{{ [1, 2] | intersect([3, 4]) }}", hass).async_render()
+    result = render(hass, "{{ [1, 2] | intersect([3, 4]) }}")
     assert result == []
 
     # Test string intersection
-    result = template.Template(
-        "{{ ['a', 'b', 'c'] | intersect(['b', 'c', 'd']) | sort }}", hass
-    ).async_render()
+    result = render(hass, "{{ ['a', 'b', 'c'] | intersect(['b', 'c', 'd']) | sort }}")
     assert result == ["b", "c"]
 
     # Test empty list intersection
-    result = template.Template("{{ [] | intersect([1, 2, 3]) }}", hass).async_render()
+    result = render(hass, "{{ [] | intersect([1, 2, 3]) }}")
     assert result == []
 
 
 def test_difference(hass: HomeAssistant) -> None:
     """Test difference."""
     # Test basic difference
-    result = template.Template(
-        "{{ [1, 2, 3, 4] | difference([3, 4, 5, 6]) | sort }}", hass
-    ).async_render()
+    result = render(hass, "{{ [1, 2, 3, 4] | difference([3, 4, 5, 6]) | sort }}")
     assert result == [1, 2]
 
     # Test no difference
-    result = template.Template(
-        "{{ [1, 2] | difference([1, 2, 3, 4]) }}", hass
-    ).async_render()
+    result = render(hass, "{{ [1, 2] | difference([1, 2, 3, 4]) }}")
     assert result == []
 
     # Test string difference
-    result = template.Template(
-        "{{ ['a', 'b', 'c'] | difference(['b', 'c', 'd']) | sort }}", hass
-    ).async_render()
+    result = render(hass, "{{ ['a', 'b', 'c'] | difference(['b', 'c', 'd']) | sort }}")
     assert result == ["a"]
 
     # Test empty list difference
-    result = template.Template("{{ [] | difference([1, 2, 3]) }}", hass).async_render()
+    result = render(hass, "{{ [] | difference([1, 2, 3]) }}")
     assert result == []
 
 
 def test_union(hass: HomeAssistant) -> None:
     """Test union."""
     # Test basic union
-    result = template.Template(
-        "{{ [1, 2, 3] | union([3, 4, 5]) | sort }}", hass
-    ).async_render()
+    result = render(hass, "{{ [1, 2, 3] | union([3, 4, 5]) | sort }}")
     assert result == [1, 2, 3, 4, 5]
 
     # Test string union
-    result = template.Template(
-        "{{ ['a', 'b'] | union(['b', 'c']) | sort }}", hass
-    ).async_render()
+    result = render(hass, "{{ ['a', 'b'] | union(['b', 'c']) | sort }}")
     assert result == ["a", "b", "c"]
 
     # Test empty list union
-    result = template.Template(
-        "{{ [] | union([1, 2, 3]) | sort }}", hass
-    ).async_render()
+    result = render(hass, "{{ [] | union([1, 2, 3]) | sort }}")
     assert result == [1, 2, 3]
 
     # Test duplicate elements
-    result = template.Template(
-        "{{ [1, 1, 2, 2] | union([2, 2, 3, 3]) | sort }}", hass
-    ).async_render()
+    result = render(hass, "{{ [1, 1, 2, 2] | union([2, 2, 3, 3]) | sort }}")
     assert result == [1, 2, 3]
 
 
 def test_symmetric_difference(hass: HomeAssistant) -> None:
     """Test symmetric_difference."""
     # Test basic symmetric difference
-    result = template.Template(
-        "{{ [1, 2, 3, 4] | symmetric_difference([3, 4, 5, 6]) | sort }}", hass
-    ).async_render()
+    result = render(
+        hass, "{{ [1, 2, 3, 4] | symmetric_difference([3, 4, 5, 6]) | sort }}"
+    )
     assert result == [1, 2, 5, 6]
 
     # Test no symmetric difference (identical sets)
-    result = template.Template(
-        "{{ [1, 2, 3] | symmetric_difference([1, 2, 3]) }}", hass
-    ).async_render()
+    result = render(hass, "{{ [1, 2, 3] | symmetric_difference([1, 2, 3]) }}")
     assert result == []
 
     # Test string symmetric difference
-    result = template.Template(
-        "{{ ['a', 'b', 'c'] | symmetric_difference(['b', 'c', 'd']) | sort }}", hass
-    ).async_render()
+    result = render(
+        hass, "{{ ['a', 'b', 'c'] | symmetric_difference(['b', 'c', 'd']) | sort }}"
+    )
     assert result == ["a", "d"]
 
     # Test empty list symmetric difference
-    result = template.Template(
-        "{{ [] | symmetric_difference([1, 2, 3]) | sort }}", hass
-    ).async_render()
+    result = render(hass, "{{ [] | symmetric_difference([1, 2, 3]) | sort }}")
     assert result == [1, 2, 3]
 
 
 def test_collection_functions_as_tests(hass: HomeAssistant) -> None:
     """Test that type checking functions work as tests."""
     # Test various type checking functions
-    assert template.Template("{{ [1,2,3] is list }}", hass).async_render()
-    assert template.Template("{{ set([1,2,3]) is set }}", hass).async_render()
-    assert template.Template("{{ (1,2,3) is tuple }}", hass).async_render()
+    assert render(hass, "{{ [1,2,3] is list }}")
+    assert render(hass, "{{ set([1,2,3]) is set }}")
+    assert render(hass, "{{ (1,2,3) is tuple }}")
 
 
 def test_collection_error_handling(hass: HomeAssistant) -> None:
@@ -342,16 +301,16 @@ def test_collection_error_handling(hass: HomeAssistant) -> None:
 
     # Test flatten with non-iterable
     with pytest.raises(TemplateError, match="flatten expected a list"):
-        template.Template("{{ flatten(123) }}", hass).async_render()
+        render(hass, "{{ flatten(123) }}")
 
     # Test intersect with non-iterable
     with pytest.raises(TemplateError, match="intersect expected a list"):
-        template.Template("{{ [1, 2] | intersect(123) }}", hass).async_render()
+        render(hass, "{{ [1, 2] | intersect(123) }}")
 
     # Test difference with non-iterable
     with pytest.raises(TemplateError, match="difference expected a list"):
-        template.Template("{{ [1, 2] | difference(123) }}", hass).async_render()
+        render(hass, "{{ [1, 2] | difference(123) }}")
 
     # Test shuffle with no arguments
     with pytest.raises(TemplateError, match="shuffle expected at least 1 argument"):
-        template.Template("{{ shuffle() }}", hass).async_render()
+        render(hass, "{{ shuffle() }}")

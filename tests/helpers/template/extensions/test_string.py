@@ -5,6 +5,8 @@ from __future__ import annotations
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
 
+from tests.helpers.template.helpers import render
+
 
 def test_ordinal(hass: HomeAssistant) -> None:
     """Test the ordinal filter."""
@@ -20,37 +22,22 @@ def test_ordinal(hass: HomeAssistant) -> None:
     ]
 
     for value, expected in tests:
-        assert (
-            template.Template(f"{{{{ {value} | ordinal }}}}", hass).async_render()
-            == expected
-        )
+        assert render(hass, f"{{{{ {value} | ordinal }}}}") == expected
 
 
 def test_slugify(hass: HomeAssistant) -> None:
     """Test the slugify filter."""
     # Test as global function
-    assert (
-        template.Template('{{ slugify("Home Assistant") }}', hass).async_render()
-        == "home_assistant"
-    )
+    assert render(hass, '{{ slugify("Home Assistant") }}') == "home_assistant"
 
     # Test as filter
-    assert (
-        template.Template('{{ "Home Assistant" | slugify }}', hass).async_render()
-        == "home_assistant"
-    )
+    assert render(hass, '{{ "Home Assistant" | slugify }}') == "home_assistant"
 
     # Test with custom separator as global
-    assert (
-        template.Template('{{ slugify("Home Assistant", "-") }}', hass).async_render()
-        == "home-assistant"
-    )
+    assert render(hass, '{{ slugify("Home Assistant", "-") }}') == "home-assistant"
 
     # Test with custom separator as filter
-    assert (
-        template.Template('{{ "Home Assistant" | slugify("-") }}', hass).async_render()
-        == "home-assistant"
-    )
+    assert render(hass, '{{ "Home Assistant" | slugify("-") }}') == "home-assistant"
 
 
 def test_urlencode(hass: HomeAssistant) -> None:
@@ -73,10 +60,10 @@ def test_urlencode(hass: HomeAssistant) -> None:
 def test_string_functions_with_non_string_input(hass: HomeAssistant) -> None:
     """Test string functions with non-string input (automatic conversion)."""
     # Test ordinal with integer
-    assert template.Template("{{ 42 | ordinal }}", hass).async_render() == "42nd"
+    assert render(hass, "{{ 42 | ordinal }}") == "42nd"
 
     # Test slugify with integer - Note: Jinja2 may return integer for simple cases
-    result = template.Template("{{ 123 | slugify }}", hass).async_render()
+    result = render(hass, "{{ 123 | slugify }}")
     # Accept either string or integer result for simple numeric cases
     assert result in ["123", 123]
 
@@ -94,10 +81,7 @@ def test_ordinal_edge_cases(hass: HomeAssistant) -> None:
     ]
 
     for value, expected in teens_tests:
-        assert (
-            template.Template(f"{{{{ {value} | ordinal }}}}", hass).async_render()
-            == expected
-        )
+        assert render(hass, f"{{{{ {value} | ordinal }}}}") == expected
 
     # Test other numbers ending in 1, 2, 3
     other_tests = [
@@ -110,10 +94,7 @@ def test_ordinal_edge_cases(hass: HomeAssistant) -> None:
     ]
 
     for value, expected in other_tests:
-        assert (
-            template.Template(f"{{{{ {value} | ordinal }}}}", hass).async_render()
-            == expected
-        )
+        assert render(hass, f"{{{{ {value} | ordinal }}}}") == expected
 
 
 def test_slugify_various_separators(hass: HomeAssistant) -> None:
@@ -127,20 +108,10 @@ def test_slugify_various_separators(hass: HomeAssistant) -> None:
 
     for text, separator, expected in test_cases:
         # Test as global function
-        assert (
-            template.Template(
-                f'{{{{ slugify("{text}", "{separator}") }}}}', hass
-            ).async_render()
-            == expected
-        )
+        assert render(hass, f'{{{{ slugify("{text}", "{separator}") }}}}') == expected
 
         # Test as filter
-        assert (
-            template.Template(
-                f'{{{{ "{text}" | slugify("{separator}") }}}}', hass
-            ).async_render()
-            == expected
-        )
+        assert render(hass, f'{{{{ "{text}" | slugify("{separator}") }}}}') == expected
 
 
 def test_urlencode_various_types(hass: HomeAssistant) -> None:
