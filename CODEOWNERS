@@ -553,6 +553,8 @@ build.json @home-assistant/supervisor
 /tests/components/gdacs/ @exxamalte
 /homeassistant/components/generic/ @davet2001
 /tests/components/generic/ @davet2001
+/homeassistant/components/generic_cover/ @bsunderhus
+/tests/components/generic_cover/ @bsunderhus
 /homeassistant/components/generic_hygrostat/ @Shulyaka
 /tests/components/generic_hygrostat/ @Shulyaka
 /homeassistant/components/geniushub/ @manzanotti
