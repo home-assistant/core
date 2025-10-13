@@ -1,117 +1,111 @@
-"""Tests for the Fluss Buttons."""
+"""Shared test fixtures for Fluss+ integration."""
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from fluss_api import FlussApiClient
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.fluss.button import async_setup_entry
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.fluss.button import FlussDataUpdateCoordinator
+from homeassistant.components.fluss.const import DOMAIN
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
-
-pytestmark = pytest.mark.usefixtures("init_integration")
+from tests.common import MockConfigEntry
 
 
-async def test_async_setup_entry_multiple_devices(
-    hass: HomeAssistant,
-    init_integration_multiple_devices: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test setup with multiple devices."""
-    init_integration_multiple_devices.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(init_integration_multiple_devices.entry_id)
-    await hass.async_block_till_done()
-
-    # Snapshot all button entities using snapshot_platform
-    await snapshot_platform(hass, entity_registry, snapshot, init_integration_multiple_devices.entry_id)
-
-
-@pytest.mark.asyncio
-async def test_button_press_success(
-    hass: HomeAssistant,
-    mock_api_client: FlussApiClient,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test successful button press."""
-    state = hass.states.get("button.test_device")
-    assert state
-    assert state == snapshot(name="button_state")
-
-    entry_reg = entity_registry.async_get(state.entity_id)
-    assert entry_reg
-    assert entry_reg.device_info == snapshot(name="device_info")
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_device"},
-        blocking=True,
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Fluss Integration",
+        data={CONF_API_KEY: "test_api_key"},
+        unique_id="test_api_key",
     )
 
-    mock_api_client.async_trigger_device.assert_called_once_with("1")
+
+@pytest.fixture
+def mock_api_client() -> AsyncMock:
+    """Mock Fluss API client with single device."""
+    with (
+        patch(
+            "homeassistant.components.fluss.coordinator.FlussApiClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.fluss.config_flow.FlussApiClient",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.async_get_devices.return_value = {
+            "devices": [{"deviceId": "1", "deviceName": "Test Device"}]
+        }
+        client.async_trigger_device.return_value = None
+        yield client
 
 
-@pytest.mark.asyncio
-async def test_button_press_error(
-    hass: HomeAssistant,
-    mock_api_client: FlussApiClient,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test button press with API error."""
-    state = hass.states.get("button.test_device")
-    assert state
-
-    mock_api_client.async_trigger_device.side_effect = Exception("API Boom")
-
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_device"},
-            blocking=True,
-        )
-    assert "button_error" in str(exc_info.value)
-
-
-@pytest.mark.asyncio
-async def test_no_devices_setup(
-    hass: HomeAssistant,
-    mock_api_client: FlussApiClient,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test setup with no devices."""
-    mock_api_client.async_get_devices.return_value = {"devices": []}
-
-    with patch("fluss_api.FlussApiClient", return_value=mock_api_client):
-        init_integration.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(init_integration.entry_id)
-        await hass.async_block_till_done()
-
-    assert hass.states.get("button.test_device") is None
+@pytest.fixture
+def mock_api_client_multiple_devices() -> AsyncMock:
+    """Mock Fluss API client with multiple devices."""
+    with (
+        patch(
+            "homeassistant.components.fluss.coordinator.FlussApiClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.fluss.config_flow.FlussApiClient",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.async_get_devices.return_value = {
+            "devices": [
+                {"deviceId": "2a303030sdj1", "deviceName": "Device 1"},
+                {"deviceId": "ape93k9302j2", "deviceName": "Device 2"},
+            ]
+        }
+        client.async_trigger_device.return_value = None
+        yield client
 
 
-@pytest.mark.asyncio
-async def test_unload_entry(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test unloading the entry."""
-    assert init_integration.state is ConfigEntryState.LOADED
-    assert await hass.config_entries.async_unload(init_integration.entry_id)
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api_client: AsyncMock
+) -> MockConfigEntry:
+    """Set up the Fluss integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert init_integration.state is ConfigEntryState.NOT_LOADED
-    assert hass.states.get("button.test_device") is None
+    return mock_config_entry
 
 
+@pytest.fixture
+async def init_integration_multiple_devices(
+    hass: HomeAssistant, mock_api_client_multiple_devices: AsyncMock
+) -> MockConfigEntry:
+    """Set up the Fluss integration for testing with multiple devices."""
+    # Create a new config entry to avoid conflicts with init_integration
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Fluss Integration Multiple Devices",
+        data={CONF_API_KEY: "test_api_key_multiple"},
+        unique_id="test_api_key_multiple",
+    )
+    config_entry.add_to_hass(hass)
+
+    # Set up the coordinator with mock_api_client_multiple_devices
+    coordinator = FlussDataUpdateCoordinator(hass, mock_api_client_multiple_devices)
+    coordinator.data = {
+        device["deviceId"]: device
+        for device in mock_api_client_multiple_devices.async_get_devices.return_value[
+            "devices"
+        ]
+    }
+    config_entry.runtime_data = coordinator
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return config_entry

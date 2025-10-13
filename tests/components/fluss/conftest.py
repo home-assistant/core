@@ -5,7 +5,6 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 from fluss_api import FlussApiClient
-from homeassistant.components.fluss.button import FlussDataUpdateCoordinator
 import pytest
 
 from homeassistant.components.fluss.const import DOMAIN
@@ -80,26 +79,3 @@ async def init_integration(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return mock_config_entry
-
-@pytest.fixture
-async def init_integration_multiple_devices(
-    hass: HomeAssistant, mock_api_client_multiple_devices: AsyncMock
-) -> MockConfigEntry:
-    """Set up the Fluss integration for testing with multiple devices."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Fluss Integration Multiple Devices",
-        data={CONF_API_KEY: "test_api_key_multiple"},
-        unique_id="test_api_key_multiple",
-    )
-    config_entry.add_to_hass(hass)
-
-    coordinator = FlussDataUpdateCoordinator(hass, mock_api_client_multiple_devices)
-    coordinator.data = {
-        device["deviceId"]: device for device in mock_api_client_multiple_devices.async_get_devices.return_value["devices"]
-    }
-    config_entry.runtime_data = coordinator
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    return config_entry

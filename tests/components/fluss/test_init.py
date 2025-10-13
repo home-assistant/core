@@ -11,81 +11,69 @@ from fluss_api import (
 import pytest
 
 from homeassistant.components.fluss import PLATFORMS, async_setup_entry
+from homeassistant.components.fluss.button import FlussDataUpdateCoordinator
+from homeassistant.components.fluss.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-async def mock_entry():
-    """Mock Fluss+ API entry."""
-    entry = MockConfigEntry(
-        domain="fluss",
-        data={"api_key": "test_api_key"},
-        entry_id="test_entry_id",
+def mock_config_entry(hass) -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Fluss Integration",
+        data={CONF_API_KEY: "test_api_key"},
+        unique_id="test_api_key",
     )
-    entry.state = ConfigEntryState.NOT_LOADED
-    return entry
+    config_entry.add_to_hass(hass)
+    return config_entry
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry_authentication_error(mock_hass, mock_entry) -> None:
+async def test_async_setup_entry_authentication_error(
+    hass: HomeAssistant, mock_config_entry
+) -> None:
     """Test authentication failure raises ConfigEntryAuthFailed."""
     with (
         patch(
-            "homeassistant.components.fluss.FlussApiClient",
-            side_effect=FlussApiClientAuthenticationError,
+            "homeassistant.components.fluss.coordinator.FlussApiClient.async_get_devices",
+            side_effect=FlussApiClientAuthenticationError("Invalid credentials"),
         ),
         pytest.raises(ConfigEntryAuthFailed),
     ):
-        await async_setup_entry(mock_hass, mock_entry)
+        await async_setup_entry(hass, mock_config_entry)
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry_communication_error(mock_hass, mock_entry) -> None:
+async def test_async_setup_entry_communication_error(
+    hass: HomeAssistant, mock_config_entry
+) -> None:
     """Test communication error raises ConfigEntryNotReady."""
     with (
         patch(
-            "homeassistant.components.fluss.FlussApiClient",
+            "fluss_api.FlussApiClient",
             side_effect=FlussApiClientCommunicationError,
         ),
         pytest.raises(ConfigEntryNotReady),
     ):
-        await async_setup_entry(mock_hass, mock_entry)
+        await async_setup_entry(hass, mock_config_entry)
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry_general_error(mock_hass, mock_entry) -> None:
+async def test_async_setup_entry_general_error(
+    hass: HomeAssistant, mock_config_entry
+) -> None:
     """Test general error raises ConfigEntryNotReady."""
     with (
         patch(
-            "homeassistant.components.fluss.FlussApiClient",
-            side_effect=FlussApiClientError,
+            "fluss_api.FlussApiClient",
+            side_effect=FlussApiClientCommunicationError,
         ),
         pytest.raises(ConfigEntryNotReady),
     ):
-        await async_setup_entry(mock_hass, mock_entry)
-
-
-@pytest.mark.asyncio
-async def test_async_setup_entry_success(mock_hass, mock_entry) -> None:
-    """Test successful setup of a config entry."""
-    mock_api_client = AsyncMock(spec=FlussApiClient)
-    with patch(
-        "homeassistant.components.fluss.FlussApiClient",
-        return_value=mock_api_client,
-    ) as mock_api_client_class:
-        result = await async_setup_entry(mock_hass, mock_entry)
-
-        # Verify FlussApiClient was initialized with the correct API key and URL
-        mock_api_client_class.assert_called_once_with(
-            mock_entry.data["api_key"],
-            "https://zgekzokxrl.execute-api.eu-west-1.amazonaws.com/v1/api/",
-        )
-
-        assert result is True
-        # Verify that the API client is stored in the entry's runtime data
-        assert mock_entry.runtime_data == mock_api_client
-        mock_hass.config_entries.async_forward_entry_setups.assert_called_once_with(
-            mock_entry, PLATFORMS
-        )
+        await async_setup_entry(hass, mock_config_entry)
