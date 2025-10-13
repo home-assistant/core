@@ -45,18 +45,11 @@ async def test_activate_scene(
     """Test activating the scene."""
     await setup_integration(hass, mock_config_entry)
 
-    # Resolve the created scene entity dynamically
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    scene_entities = [e for e in entity_entries if e.domain == SCENE_DOMAIN]
-    assert scene_entities, "No scene entities registered"
-    entity_id = scene_entities[0].entity_id
 
     await hass.services.async_call(
         SCENE_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: "scene.scene_none")},
         blocking=True,
     )
     mock_niko_home_control_connection.scenes[scene_id].activate.assert_called_once()
