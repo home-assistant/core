@@ -3626,7 +3626,7 @@ async def test_compile_hourly_statistics_changing_units_3(
             13.050847,
             -10,
             30,
-            1.145609,
+            1.16441,
         ),
         (
             "carbon_monoxide",
@@ -3636,7 +3636,7 @@ async def test_compile_hourly_statistics_changing_units_3(
             13.050847,
             -10,
             30,
-            1 / 1.145609,
+            1 / 1.16441,
         ),
         (None, "%", None, "unitless", 13.050847, -10, 30, 0.01),
         (None, "W", "kW", "power", 13.050847, -10, 30, 0.001),
