@@ -2072,7 +2072,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==2.0.3
+pyicloud==2.1.0
 
 # homeassistant.components.insteon
 pyinsteon==1.6.3
