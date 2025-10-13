@@ -15,7 +15,7 @@ def render(
     template_str: str,
     variables: TemplateVarsType | None = None,
     **render_kwargs: Any,
-) -> str:
+) -> Any:
     """Render template and return result."""
     return template.Template(template_str, hass).async_render(
         variables, **render_kwargs
