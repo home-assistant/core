@@ -9,7 +9,7 @@ from enum import StrEnum
 from functools import lru_cache
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict
 
 import attr
 from yarl import URL
@@ -92,7 +92,7 @@ class DeviceInfo(TypedDict, total=False):
     default_model: str
     default_name: str
     entry_type: DeviceEntryType | None
-    identifiers: set[tuple[str, str]]
+    identifiers: Required[set[tuple[str, str]]]
     manufacturer: str | None
     model: str | None
     model_id: str | None
