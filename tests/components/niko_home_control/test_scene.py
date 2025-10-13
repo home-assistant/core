@@ -3,7 +3,6 @@
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -45,11 +44,10 @@ async def test_activate_scene(
     """Test activating the scene."""
     await setup_integration(hass, mock_config_entry)
 
-
     await hass.services.async_call(
         SCENE_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "scene.scene_none")},
+        {ATTR_ENTITY_ID: "scene.scene_none"},
         blocking=True,
     )
     mock_niko_home_control_connection.scenes[scene_id].activate.assert_called_once()
