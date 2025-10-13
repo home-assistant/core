@@ -13,6 +13,7 @@ from aioesphomeapi import (
     InvalidEncryptionKeyAPIError,
     RequiresEncryptionAPIError,
     ResolveAPIError,
+    wifi_mac_to_bluetooth_mac,
 )
 import aiohttp
 import pytest
@@ -2819,3 +2820,45 @@ async def test_user_flow_zwave_discovery_aborts(
 
     # Verify next_flow was NOT set since Z-Wave flow aborted
     assert "next_flow" not in result
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_zeroconf_notifies_improv_ble(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+) -> None:
+    """Test that zeroconf discovery notifies improv_ble integration."""
+    service_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={
+            "mac": "aabbccddeeff",
+        },
+        type="mock_type",
+    )
+
+    # Patch improv_ble to ensure it's available and track calls
+    with patch(
+        "homeassistant.components.improv_ble.async_register_next_flow"
+    ) as mock_register:
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=service_info,
+        )
+
+    assert flow["type"] is FlowResultType.FORM
+    assert flow["step_id"] == "discovery_confirm"
+
+    # Verify improv_ble.async_register_next_flow was called with correct parameters
+    assert len(mock_register.mock_calls) == 1
+    call_args = mock_register.mock_calls[0].args
+    assert call_args[0] is hass  # HomeAssistant instance
+    # WiFi MAC aabbccddeeff + 1 = Bluetooth MAC aabbccddee00
+    # (wifi_mac_to_bluetooth_mac from aioesphomeapi)
+    expected_ble_mac = wifi_mac_to_bluetooth_mac("aa:bb:cc:dd:ee:ff")
+    assert call_args[1] == expected_ble_mac  # BLE MAC address
+    assert call_args[2] == flow["flow_id"]  # Flow ID
