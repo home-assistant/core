@@ -13,7 +13,7 @@ from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 from aiohttp import ClientSession
 from asusrouter import AsusRouter, AsusRouterError
 from asusrouter.config import ARConfigKey
-from asusrouter.modules.client import AsusClient
+from asusrouter.modules.client import AsusClient, ConnectionState
 from asusrouter.modules.data import AsusData
 from asusrouter.modules.homeassistant import convert_to_ha_data, convert_to_ha_sensors
 from asusrouter.tools.connection import get_cookie_jar
@@ -436,6 +436,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
             if dev.connection is not None
             and dev.description is not None
             and dev.connection.ip_address is not None
+            and dev.state is ConnectionState.CONNECTED
         }
 
     async def async_get_available_sensors(self) -> dict[str, dict[str, Any]]:
