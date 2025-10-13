@@ -127,7 +127,19 @@ class DaliCenterLight(LightEntity):
             async_dispatcher_connect(self.hass, signal, self._handle_device_update)
         )
 
+        gateway_signal = f"{DOMAIN}_update_available_{self._attr_unique_id}"
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, gateway_signal, self._handle_availability
+            )
+        )
+
         self._light.read_status()
+
+    @callback
+    def _handle_availability(self, available: bool) -> None:
+        self._attr_available = available
+        self.schedule_update_ha_state()
 
     @callback
     def _handle_device_update(self, status: LightStatus) -> None:
