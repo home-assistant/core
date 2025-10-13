@@ -81,8 +81,7 @@ def _set_up_units(hass: HomeAssistant) -> None:
 async def test_template_render_missing_hass(hass: HomeAssistant) -> None:
     """Test template render when hass is not set."""
     hass.states.async_set("sensor.test", "23")
-    template_str = "{{ states('sensor.test') }}"
-    template_obj = template.Template(template_str, None)
+    template_obj = template.Template("{{ states('sensor.test') }}", None)
     template.render_info_cv.set(template.RenderInfo(template_obj))
 
     with pytest.raises(RuntimeError, match="hass not set while rendering"):
@@ -96,8 +95,7 @@ async def test_template_render_info_collision(hass: HomeAssistant) -> None:
     in the wrong thread.
     """
     hass.states.async_set("sensor.test", "23")
-    template_str = "{{ states('sensor.test') }}"
-    template_obj = template.Template(template_str, None)
+    template_obj = template.Template("{{ states('sensor.test') }}", None)
     template_obj.hass = hass
     template.render_info_cv.set(template.RenderInfo(template_obj))
 
@@ -295,22 +293,17 @@ async def test_import_change(hass: HomeAssistant) -> None:
 
 def test_loop_controls(hass: HomeAssistant) -> None:
     """Test that loop controls are enabled."""
-    assert (
-        render(
-            hass,
-            """
-        {%- for v in range(10) %}
-            {%- if v == 1 -%}
-                {%- continue -%}
-            {%- elif v == 3 -%}
-                {%- break -%}
-            {%- endif -%}
-            {{ v }}
-        {%- endfor -%}
-        """,
-        )
-        == "02"
-    )
+    tpl = """
+    {%- for v in range(10) %}
+        {%- if v == 1 -%}
+            {%- continue -%}
+        {%- elif v == 3 -%}
+            {%- break -%}
+        {%- endif -%}
+        {{ v }}
+    {%- endfor -%}
+    """
+    assert render(hass, tpl) == "02"
 
 
 def test_float_function(hass: HomeAssistant) -> None:
@@ -549,10 +542,7 @@ def test_apply(hass: HomeAssistant) -> None:
     ) == ["afoo", "bfoo", "cfoo"]
 
     assert render(
-        hass,
-        """
-    {{ ['1', '2', '3', '4', '5'] | map('apply', int) | list }}
-    """,
+        hass, "{{ ['1', '2', '3', '4', '5'] | map('apply', int) | list }}"
     ) == [1, 2, 3, 4, 5]
 
 
@@ -873,8 +863,8 @@ def test_to_json(hass: HomeAssistant) -> None:
     actual_result = render(
         hass,
         "{{ test_dict | to_json(sort_keys=True) }}",
+        {"test_dict": test_dict},
         parse_result=False,
-        variables={"test_dict": test_dict},
     )
     assert actual_result == expected_result
 
@@ -1152,8 +1142,7 @@ def test_is_state(hass: HomeAssistant) -> None:
     hass.states.async_set("test.object", "available")
 
     result = render(
-        hass,
-        """{% if is_state("test.object", "available") %}yes{% else %}no{% endif %}""",
+        hass, '{% if is_state("test.object", "available") %}yes{% else %}no{% endif %}'
     )
     assert result == "yes"
 
@@ -1162,7 +1151,7 @@ def test_is_state(hass: HomeAssistant) -> None:
 
     result = render(
         hass,
-        """{% if "test.object" is is_state("available") %}yes{% else %}no{% endif %}""",
+        '{% if "test.object" is is_state("available") %}yes{% else %}no{% endif %}',
     )
     assert result == "yes"
 
@@ -1172,9 +1161,7 @@ def test_is_state(hass: HomeAssistant) -> None:
     )
     assert result == "test.object"
 
-    result = render(
-        hass, """{{ is_state("test.object", ["on", "off", "available"]) }}"""
-    )
+    result = render(hass, '{{ is_state("test.object", ["on", "off", "available"]) }}')
     assert result is True
 
 
@@ -1940,35 +1927,15 @@ def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test struct pack method."""
 
     # render as filter
-    tpl = template.Template(
-        """{{ value | pack('>I') }}""",
-        hass,
-    )
-    variables = {
-        "value": 0xDEADBEEF,
-    }
-    assert tpl.async_render(variables=variables) == b"\xde\xad\xbe\xef"
+    variables = {"value": 0xDEADBEEF}
+    assert render(hass, "{{ value | pack('>I') }}", variables) == b"\xde\xad\xbe\xef"
 
     # render as function
-    tpl = template.Template(
-        """{{ pack(value, '>I') }}""",
-        hass,
-    )
-    variables = {
-        "value": 0xDEADBEEF,
-    }
-    assert tpl.async_render(variables=variables) == b"\xde\xad\xbe\xef"
+    assert render(hass, "{{ pack(value, '>I') }}", variables) == b"\xde\xad\xbe\xef"
 
     # test with None value
-    tpl = template.Template(
-        """{{ pack(value, '>I') }}""",
-        hass,
-    )
-    variables = {
-        "value": None,
-    }
     # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
-    assert tpl.async_render(variables=variables) is None
+    assert render(hass, "{{ pack(value, '>I') }}", {"value": None}) is None
     assert (
         "Template warning: 'pack' unable to pack object 'None' with type 'NoneType' and"
         " format_string '>I' see https://docs.python.org/3/library/struct.html for more"
@@ -1976,15 +1943,8 @@ def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     )
 
     # test with invalid filter
-    tpl = template.Template(
-        """{{ pack(value, 'invalid filter') }}""",
-        hass,
-    )
-    variables = {
-        "value": 0xDEADBEEF,
-    }
     # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
-    assert tpl.async_render(variables=variables) is None
+    assert render(hass, "{{ pack(value, 'invalid filter') }}", variables) is None
     assert (
         "Template warning: 'pack' unable to pack object '3735928559' with type 'int'"
         " and format_string 'invalid filter' see"
@@ -1996,45 +1956,22 @@ def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
 def test_unpack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test struct unpack method."""
 
+    variables = {"value": b"\xde\xad\xbe\xef"}
+
     # render as filter
-    tpl = template.Template(
-        """{{ value | unpack('>I') }}""",
-        hass,
-    )
-    variables = {
-        "value": b"\xde\xad\xbe\xef",
-    }
-    assert tpl.async_render(variables=variables) == 0xDEADBEEF
+    result = render(hass, """{{ value | unpack('>I') }}""", variables)
+    assert result == 0xDEADBEEF
 
     # render as function
-    tpl = template.Template(
-        """{{ unpack(value, '>I') }}""",
-        hass,
-    )
-    variables = {
-        "value": b"\xde\xad\xbe\xef",
-    }
-    assert tpl.async_render(variables=variables) == 0xDEADBEEF
+    result = render(hass, """{{ unpack(value, '>I') }}""", variables)
+    assert result == 0xDEADBEEF
 
     # unpack with offset
-    tpl = template.Template(
-        """{{ unpack(value, '>H', offset=2) }}""",
-        hass,
-    )
-    variables = {
-        "value": b"\xde\xad\xbe\xef",
-    }
-    assert tpl.async_render(variables=variables) == 0xBEEF
+    result = render(hass, """{{ unpack(value, '>H', offset=2) }}""", variables)
+    assert result == 0xBEEF
 
     # test with an empty bytes object
-    tpl = template.Template(
-        """{{ unpack(value, '>I') }}""",
-        hass,
-    )
-    variables = {
-        "value": b"",
-    }
-    assert tpl.async_render(variables=variables) is None
+    assert render(hass, """{{ unpack(value, '>I') }}""", {"value": b""}) is None
     assert (
         "Template warning: 'unpack' unable to unpack object 'b''' with format_string"
         " '>I' and offset 0 see https://docs.python.org/3/library/struct.html for more"
@@ -2042,14 +1979,10 @@ def test_unpack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     )
 
     # test with invalid filter
-    tpl = template.Template(
-        """{{ unpack(value, 'invalid filter') }}""",
-        hass,
+    assert (
+        render(hass, """{{ unpack(value, 'invalid filter') }}""", {"value": b""})
+        is None
     )
-    variables = {
-        "value": b"",
-    }
-    assert tpl.async_render(variables=variables) is None
     assert (
         "Template warning: 'unpack' unable to unpack object 'b''' with format_string"
         " 'invalid filter' and offset 0 see"
@@ -2098,13 +2031,8 @@ def test_distance_function_with_1_coord(hass: HomeAssistant) -> None:
 def test_distance_function_with_2_coords(hass: HomeAssistant) -> None:
     """Test distance function with 2 coords."""
     _set_up_units(hass)
-    assert (
-        render(
-            hass,
-            f'{{{{ distance("32.87336", "-117.22943", {hass.config.latitude}, {hass.config.longitude}) | round }}}}',
-        )
-        == 187
-    )
+    tpl = f'{{{{ distance("32.87336", "-117.22943", {hass.config.latitude}, {hass.config.longitude}) | round }}}}'
+    assert render(hass, tpl) == 187
 
 
 def test_distance_function_with_1_state_1_coord(hass: HomeAssistant) -> None:
@@ -2130,9 +2058,8 @@ def test_distance_function_with_1_state_1_coord(hass: HomeAssistant) -> None:
 def test_distance_function_return_none_if_invalid_state(hass: HomeAssistant) -> None:
     """Test distance function return None if invalid state."""
     hass.states.async_set("test.object_2", "happy", {"latitude": 10})
-    tpl = template.Template("{{ distance(states.test.object_2) | round }}", hass)
     with pytest.raises(TemplateError):
-        tpl.async_render()
+        render(hass, "{{ distance(states.test.object_2) | round }}")
 
 
 def test_distance_function_return_none_if_invalid_coord(hass: HomeAssistant) -> None:
@@ -2930,11 +2857,11 @@ async def test_config_entry_attr(hass: HomeAssistant) -> None:
     info["state"] = config_entries.ConfigEntryState.NOT_LOADED
 
     for key, value in info.items():
-        tpl = template.Template(
-            "{{ config_entry_attr('" + config_entry.entry_id + "', '" + key + "') }}",
+        assert render(
             hass,
-        )
-        assert tpl.async_render(parse_result=False) == str(value)
+            "{{ config_entry_attr('" + config_entry.entry_id + "', '" + key + "') }}",
+            parse_result=False,
+        ) == str(value)
 
     for config_entry_id, key in (
         (config_entry.entry_id, "invalid_key"),
@@ -4068,17 +3995,14 @@ def test_is_template_string() -> None:
 
 async def test_protected_blocked(hass: HomeAssistant) -> None:
     """Test accessing __getattr__ produces a template error."""
-    tmp = template.Template('{{ states.__getattr__("any") }}', hass)
     with pytest.raises(TemplateError):
-        tmp.async_render()
+        render(hass, '{{ states.__getattr__("any") }}')
 
-    tmp = template.Template('{{ states.sensor.__getattr__("any") }}', hass)
     with pytest.raises(TemplateError):
-        tmp.async_render()
+        render(hass, '{{ states.sensor.__getattr__("any") }}')
 
-    tmp = template.Template('{{ states.sensor.any.__getattr__("any") }}', hass)
     with pytest.raises(TemplateError):
-        tmp.async_render()
+        render(hass, '{{ states.sensor.any.__getattr__("any") }}')
 
 
 async def test_demo_template(hass: HomeAssistant) -> None:
@@ -4114,9 +4038,7 @@ For loop example getting 3 entity values:
   {{ state.name | lower }} is {{state.state_with_unit}}
 {%- endfor %}.
 """
-    tmp = template.Template(demo_template_str, hass)
-
-    result = tmp.async_render()
+    result = render(hass, demo_template_str)
     assert "The temperature is 25" in result
     assert "is on" in result
     assert "sensor0" in result
@@ -4275,12 +4197,8 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
     result = render(hass, "{{ states.sensor.test.invalid_prop }}")
     assert result == ""
 
-    tpl = template.Template(
-        "{{ states.sensor.test.invalid_prop.xx }}",
-        hass,
-    )
     with pytest.raises(TemplateError):
-        tpl.async_render()
+        render(hass, "{{ states.sensor.test.invalid_prop.xx }}")
 
 
 async def test_unavailable_states(hass: HomeAssistant) -> None:
@@ -4343,8 +4261,7 @@ async def test_result_wrappers(hass: HomeAssistant) -> None:
         ("(1, 2)", (1, 2), tuple, vol.ExactSequence([int, int])),
         ('{"hello": True}', {"hello": True}, dict, vol.Schema({"hello": bool})),
     ):
-        tpl = template.Template(text, hass)
-        result = tpl.async_render()
+        result = render(hass, text)
         assert isinstance(result, orig_type)
         assert isinstance(result, template.ResultWrapper)
         assert result == native
@@ -5202,9 +5119,8 @@ async def test_template_thread_safety_checks(hass: HomeAssistant) -> None:
 
 def test_template_output_exceeds_maximum_size(hass: HomeAssistant) -> None:
     """Test template output exceeds maximum size."""
-    tpl = template.Template("{{ 'a' * 1024 * 257 }}", hass)
     with pytest.raises(TemplateError):
-        tpl.async_render()
+        render(hass, "{{ 'a' * 1024 * 257 }}")
 
 
 @pytest.mark.parametrize(
@@ -5364,9 +5280,11 @@ async def test_merge_response(
 
     _template = "{{ merge_response(" + str(service_response) + ") }}"
 
-    tpl = template.Template(_template, hass)
     assert service_response == snapshot(name="a_response")
-    assert tpl.async_render() == snapshot(name="b_rendered")
+    assert render(
+        hass,
+        _template,
+    ) == snapshot(name="b_rendered")
 
 
 async def test_merge_response_with_entity_id_in_response(
@@ -5418,9 +5336,8 @@ async def test_merge_response_with_empty_response(
         "calendar.yap_house_schedules": {"events": []},
     }
     _template = "{{ merge_response(" + str(service_response) + ") }}"
-    tpl = template.Template(_template, hass)
     assert service_response == snapshot(name="a_response")
-    assert tpl.async_render() == snapshot(name="b_rendered")
+    assert render(hass, _template) == snapshot(name="b_rendered")
 
 
 async def test_response_empty_dict(
@@ -5453,17 +5370,15 @@ async def test_merge_response_with_incorrect_response(hass: HomeAssistant) -> No
 
     service_response = {"calendar.sports": []}
     _template = "{{ merge_response(" + str(service_response) + ") }}"
-    tpl = template.Template(_template, hass)
     with pytest.raises(TemplateError, match="TypeError: Response is not a dictionary"):
-        tpl.async_render()
+        render(hass, _template)
 
     service_response = {
         "binary_sensor.workday": [],
     }
     _template = "{{ merge_response(" + str(service_response) + ") }}"
-    tpl = template.Template(_template, hass)
     with pytest.raises(TemplateError, match="TypeError: Response is not a dictionary"):
-        tpl.async_render()
+        render(hass, _template)
 
 
 def test_warn_no_hass(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
@@ -5497,8 +5412,7 @@ async def test_merge_response_not_mutate_original_object(
         "{{ merge_response(calendar_response) }}"
     )
 
-    tpl = template.Template(_template, hass)
-    assert tpl.async_render()
+    assert render(hass, _template)
 
 
 def test_typeof(hass: HomeAssistant) -> None:

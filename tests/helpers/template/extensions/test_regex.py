@@ -6,7 +6,8 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
+
+from tests.helpers.template.helpers import render
 
 
 def test_regex_match(hass: HomeAssistant) -> None:
@@ -20,9 +21,7 @@ def test_regex_match(hass: HomeAssistant) -> None:
     result = render(hass, """{{ 'Home Assistant test' | regex_match('home', True) }}""")
     assert result is True
 
-    result = render(
-        hass, """    {{ 'Another Home Assistant test' | regex_match('Home') }}"""
-    )
+    result = render(hass, """{{ 'Another Home Assistant test'|regex_match('Home') }}""")
     assert result is False
 
     result = render(hass, """{{ ['Home Assistant test'] | regex_match('.*Assist') }}""")
@@ -146,24 +145,15 @@ def test_regex_edge_cases(hass: HomeAssistant) -> None:
     """Test regex functions with edge cases."""
     # Test with empty string
 
-    result = render(hass, """{{ '' | regex_match('.*') }}""")
-    assert result is True
+    assert render(hass, """{{ '' | regex_match('.*') }}""") is True
 
     # Test regex_findall_index with out of bounds index
-    tpl = template.Template(
-        """{{ 'test' | regex_findall_index('t', 5) }}""",
-        hass,
-    )
     with pytest.raises(TemplateError):
-        tpl.async_render()
+        render(hass, """{{ 'test' | regex_findall_index('t', 5) }}""")
 
     # Test with invalid regex pattern
-    tpl = template.Template(
-        """{{ 'test' | regex_match('[') }}""",
-        hass,
-    )
     with pytest.raises(TemplateError):  # re.error wrapped in TemplateError
-        tpl.async_render()
+        render(hass, """{{ 'test' | regex_match('[') }}""")
 
 
 def test_regex_groups_and_replacement_patterns(hass: HomeAssistant) -> None:
@@ -176,10 +166,9 @@ def test_regex_groups_and_replacement_patterns(hass: HomeAssistant) -> None:
     assert result == "Doe, John"
 
     # Test findall with groups
-    tpl = template.Template(
-        r"""{{ 'Email: test@example.com, Phone: 123-456-7890' | regex_findall('(\\w+@\\w+\\.\\w+)|(\\d{3}-\\d{3}-\\d{4})') }}""",
+    result = render(
         hass,
+        r"""{{ 'Email: test@example.com, Phone: 123-456-7890' | regex_findall('(\\w+@\\w+\\.\\w+)|(\\d{3}-\\d{3}-\\d{4})') }}""",
     )
-    result = tpl.async_render()
     # The result will contain tuples with empty strings for non-matching groups
     assert len(result) == 2

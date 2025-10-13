@@ -122,18 +122,11 @@ def test_tuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
 )
 def test_zip(hass: HomeAssistant, cola, colb, expected) -> None:
     """Test zip."""
-    assert (
-        render(hass, "{{ zip(cola, colb) | list }}", {"cola": cola, "colb": colb})
-        == expected
-    )
-    assert (
-        render(
-            hass,
-            "[{% for a, b in zip(cola, colb) %}({{a}}, {{b}}), {% endfor %}]",
-            {"cola": cola, "colb": colb},
-        )
-        == expected
-    )
+    for tpl in (
+        "{{ zip(cola, colb) | list }}",
+        "[{% for a, b in zip(cola, colb) %}({{a}}, {{b}}), {% endfor %}]",
+    ):
+        assert render(hass, tpl, {"cola": cola, "colb": colb}) == expected
 
 
 @pytest.mark.parametrize(
@@ -145,11 +138,11 @@ def test_zip(hass: HomeAssistant, cola, colb, expected) -> None:
 )
 def test_unzip(hass: HomeAssistant, col, expected) -> None:
     """Test unzipping using zip."""
-    assert render(hass, "{{ zip(*col) | list }}", {"col": col}) == expected
-    assert (
-        render(hass, "{% set a, b = zip(*col) %}[{{a}}, {{b}}]", {"col": col})
-        == expected
-    )
+    for tpl in (
+        "{{ zip(*col) | list }}",
+        "{% set a, b = zip(*col) %}[{{a}}, {{b}}]",
+    ):
+        assert render(hass, tpl, {"col": col}) == expected
 
 
 def test_shuffle(hass: HomeAssistant) -> None:
@@ -178,16 +171,10 @@ def test_flatten(hass: HomeAssistant) -> None:
     assert render(hass, "{{ flatten([[1, 2], [3, 4]]) }}") == [1, 2, 3, 4]
 
     # Test nested flattening
-    assert render(hass, "{{ flatten([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]) }}") == [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-    ]
+    expected = [1, 2, 3, 4, 5, 6, 7, 8]
+    assert (
+        render(hass, "{{ flatten([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]) }}") == expected
+    )
 
     # Test flattening with levels
     assert render(
@@ -201,11 +188,7 @@ def test_flatten(hass: HomeAssistant) -> None:
     assert render(hass, "{{ flatten([]) }}") == []
 
     # Test single level
-    assert render(hass, "{{ flatten([1, 2, 3]) }}") == [
-        1,
-        2,
-        3,
-    ]
+    assert render(hass, "{{ flatten([1, 2, 3]) }}") == [1, 2, 3]
 
 
 def test_intersect(hass: HomeAssistant) -> None:

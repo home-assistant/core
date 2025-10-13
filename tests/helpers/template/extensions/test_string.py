@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import template
 
 from tests.helpers.template.helpers import render
 
@@ -117,11 +116,10 @@ def test_slugify_various_separators(hass: HomeAssistant) -> None:
 def test_urlencode_various_types(hass: HomeAssistant) -> None:
     """Test urlencode with various data types."""
     # Test with nested dictionary values
-    tpl = template.Template(
-        "{% set data = {'key': 'value with spaces', 'num': 123} %}{{ data | urlencode }}",
+    result = render(
         hass,
+        "{% set data = {'key': 'value with spaces', 'num': 123} %}{{ data | urlencode }}",
     )
-    result = tpl.async_render()
     # URL encoding can have different order, so check both parts are present
     # Note: urllib.parse.urlencode uses + for spaces in form data
     assert "key=value+with+spaces" in result
