@@ -1,5 +1,7 @@
 """Test KNX sensor."""
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.knx.const import CONF_STATE_ADDRESS, CONF_SYNC_STATE
 from homeassistant.components.knx.schema import SensorSchema
 from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_UNKNOWN
@@ -7,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
 
-from tests.common import async_capture_events
+from tests.common import async_capture_events, async_fire_time_changed
 
 
 async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -39,6 +41,41 @@ async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
     # don't answer to GroupValueRead requests
     await knx.receive_read("1/1/1")
     await knx.assert_no_telegram()
+
+
+async def test_last_reported(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test KNX sensor with last_reported."""
+
+    await knx.setup_integration(
+        {
+            SensorSchema.PLATFORM: [
+                {
+                    CONF_NAME: "test",
+                    CONF_STATE_ADDRESS: "1/1/1",
+                    CONF_SYNC_STATE: False,
+                    CONF_TYPE: "percentU8",
+                },
+            ]
+        }
+    )
+    events = async_capture_events(hass, "state_changed")
+
+    # receive initial telegram
+    await knx.receive_write("1/1/1", (0x42,))
+    first_reported = hass.states.get("sensor.test").last_reported
+    assert len(events) == 1
+
+    # receive second telegram with identical payload
+    freezer.tick(1)
+    async_fire_time_changed(hass)
+    await knx.receive_write("1/1/1", (0x42,))
+
+    assert first_reported != hass.states.get("sensor.test").last_reported
+    assert len(events) == 1, events  # last_reported shall not fire state_changed
 
 
 async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit) -> None:
