@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 async def test_read_min_time_segments_single_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_api,
+    mock_growatt_v1_api,
 ) -> None:
     """Test reading MIN time segments for single device."""
     mock_config_entry.add_to_hass(hass)
@@ -47,7 +47,7 @@ async def test_read_min_time_segments_single_device(
 async def test_update_min_time_segment_charge_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_api,
+    mock_growatt_v1_api,
 ) -> None:
     """Test updating MIN time segment with charge mode."""
     mock_config_entry.add_to_hass(hass)
@@ -77,13 +77,13 @@ async def test_update_min_time_segment_charge_mode(
     )
 
     # Verify the API was called
-    mock_growatt_api.min_write_time_segment.assert_called_once()
+    mock_growatt_v1_api.min_write_time_segment.assert_called_once()
 
 
 async def test_update_min_time_segment_discharge_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_api,
+    mock_growatt_v1_api,
 ) -> None:
     """Test updating MIN time segment with discharge mode."""
     mock_config_entry.add_to_hass(hass)
@@ -111,13 +111,13 @@ async def test_update_min_time_segment_discharge_mode(
         blocking=True,
     )
 
-    mock_growatt_api.min_write_time_segment.assert_called_once()
+    mock_growatt_v1_api.min_write_time_segment.assert_called_once()
 
 
 async def test_update_min_time_segment_standby_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_api,
+    mock_growatt_v1_api,
 ) -> None:
     """Test updating MIN time segment with standby mode."""
     mock_config_entry.add_to_hass(hass)
@@ -145,13 +145,13 @@ async def test_update_min_time_segment_standby_mode(
         blocking=True,
     )
 
-    mock_growatt_api.min_write_time_segment.assert_called_once()
+    mock_growatt_v1_api.min_write_time_segment.assert_called_once()
 
 
 async def test_update_min_time_segment_disabled(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_api,
+    mock_growatt_v1_api,
 ) -> None:
     """Test disabling a MIN time segment."""
     mock_config_entry.add_to_hass(hass)
@@ -179,13 +179,13 @@ async def test_update_min_time_segment_disabled(
         blocking=True,
     )
 
-    mock_growatt_api.min_write_time_segment.assert_called_once()
+    mock_growatt_v1_api.min_write_time_segment.assert_called_once()
 
 
 async def test_update_min_time_segment_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_api,
+    mock_growatt_v1_api,
 ) -> None:
     """Test handling API error when updating MIN time segment."""
     mock_config_entry.add_to_hass(hass)
@@ -201,7 +201,7 @@ async def test_update_min_time_segment_api_error(
         await hass.async_block_till_done()
 
     # Mock API error response
-    mock_growatt_api.min_write_time_segment.return_value = {
+    mock_growatt_v1_api.min_write_time_segment.return_value = {
         "error_code": 1,
         "error_msg": "API Error",
     }
@@ -224,7 +224,7 @@ async def test_update_min_time_segment_api_error(
 async def test_no_min_devices_skips_service_registration(
     hass: HomeAssistant,
     mock_config_entry_classic: MockConfigEntry,
-    mock_growatt_api,
+    mock_growatt_classic_api,
 ) -> None:
     """Test that no services are registered when no MIN devices exist."""
     mock_config_entry_classic.add_to_hass(hass)
@@ -248,7 +248,7 @@ async def test_no_min_devices_skips_service_registration(
 async def test_multiple_devices_require_device_id_in_schema(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_api,
+    mock_growatt_v1_api,
 ) -> None:
     """Test that multiple devices require device_id parameter in schema."""
     mock_config_entry.add_to_hass(hass)
@@ -300,7 +300,7 @@ async def test_multiple_devices_require_device_id_in_schema(
 async def test_single_device_does_not_require_device_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_api,
+    mock_growatt_v1_api,
 ) -> None:
     """Test that single device works without device_id parameter."""
     mock_config_entry.add_to_hass(hass)
@@ -329,7 +329,7 @@ async def test_single_device_does_not_require_device_id(
         blocking=True,
     )
 
-    mock_growatt_api.min_write_time_segment.assert_called()
+    mock_growatt_v1_api.min_write_time_segment.assert_called()
 
     # Test read service works without device_id (single device)
     response = await hass.services.async_call(
@@ -347,7 +347,7 @@ async def test_single_device_does_not_require_device_id(
 async def test_multiple_devices_with_valid_device_id_works(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_growatt_api,
+    mock_growatt_v1_api,
 ) -> None:
     """Test that multiple devices work when device_id is specified."""
     mock_config_entry.add_to_hass(hass)
@@ -380,7 +380,7 @@ async def test_multiple_devices_with_valid_device_id_works(
         blocking=True,
     )
 
-    mock_growatt_api.min_write_time_segment.assert_called_once()
+    mock_growatt_v1_api.min_write_time_segment.assert_called_once()
 
     # Test read service with specific device_id
     response = await hass.services.async_call(

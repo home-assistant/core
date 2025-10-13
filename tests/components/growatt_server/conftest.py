@@ -1,6 +1,6 @@
 """Common fixtures for the Growatt server tests."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -88,10 +88,13 @@ def mock_growatt_v1_api():
         mock_v1_api.min_write_parameter.return_value = None
 
         # Called by time segment management services
-        mock_v1_api.min_write_time_segment.return_value = {
-            "error_code": 0,
-            "error_msg": "Success",
-        }
+        # Note: Don't use autospec for this method as it needs to accept variable arguments
+        mock_v1_api.min_write_time_segment = Mock(
+            return_value={
+                "error_code": 0,
+                "error_msg": "Success",
+            }
+        )
 
         yield mock_v1_api
 
