@@ -77,7 +77,7 @@ class LabelPlacement(StrEnum):
     RENAME = "rename"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterEntityLabeling(EntityDescription):
     """Data structure for labeling Information."""
 
