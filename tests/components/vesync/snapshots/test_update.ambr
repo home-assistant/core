@@ -1,0 +1,97 @@
+# serializer version: 1
+# name: test_update_state[Air Purifier 131s][devices]
+  list([
+  ])
+# ---
+# name: test_update_state[Air Purifier 131s][entities]
+  list([
+  ])
+# ---
+# name: test_update_state[Air Purifier 200s][devices]
+  list([
+  ])
+# ---
+# name: test_update_state[Air Purifier 200s][entities]
+  list([
+  ])
+# ---
+# name: test_update_state[Air Purifier 400s][devices]
+  list([
+  ])
+# ---
+# name: test_update_state[Air Purifier 400s][entities]
+  list([
+  ])
+# ---
+# name: test_update_state[Air Purifier 600s][devices]
+  list([
+  ])
+# ---
+# name: test_update_state[Air Purifier 600s][entities]
+  list([
+  ])
+# ---
+# name: test_update_state[Dimmable Light][devices]
+  list([
+  ])
+# ---
+# name: test_update_state[Dimmable Light][entities]
+  list([
+  ])
+# ---
+# name: test_update_state[Dimmer Switch][devices]
+  list([
+  ])
+# ---
+# name: test_update_state[Dimmer Switch][entities]
+  list([
+  ])
+# ---
+# name: test_update_state[Humidifier 200s][devices]
+  list([
+  ])
+# ---
+# name: test_update_state[Humidifier 200s][entities]
+  list([
+  ])
+# ---
+# name: test_update_state[Humidifier 600S][devices]
+  list([
+  ])
+# ---
+# name: test_update_state[Humidifier 600S][entities]
+  list([
+  ])
+# ---
+# name: test_update_state[Outlet][devices]
+  list([
+  ])
+# ---
+# name: test_update_state[Outlet][entities]
+  list([
+  ])
+# ---
+# name: test_update_state[SmartTowerFan][devices]
+  list([
+  ])
+# ---
+# name: test_update_state[SmartTowerFan][entities]
+  list([
+  ])
+# ---
+# name: test_update_state[Temperature Light][devices]
+  list([
+  ])
+# ---
+# name: test_update_state[Temperature Light][entities]
+  list([
+  ])
+# ---
+# name: test_update_state[Wall Switch][devices]
+  list([
+  ])
+# ---
+# name: test_update_state[Wall Switch][entities]
+  list([
+  ])
+# ---
