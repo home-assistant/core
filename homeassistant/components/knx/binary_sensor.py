@@ -84,11 +84,11 @@ class _KnxBinarySensor(BinarySensorEntity, RestoreEntity):
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
-        await super().async_added_to_hass()
         if (
             last_state := await self.async_get_last_state()
         ) and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             self._device.remote_value.update_value(last_state.state == STATE_ON)
+        await super().async_added_to_hass()
 
     @property
     def is_on(self) -> bool:

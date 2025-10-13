@@ -111,7 +111,7 @@ async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_telegram_count(0)
 
 
-async def test_switch_restore_and_respond(hass: HomeAssistant, knx) -> None:
+async def test_switch_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test restoring KNX switch state and respond to read."""
     _ADDRESS = "1/1/1"
     fake_state = State("switch.test", "on")

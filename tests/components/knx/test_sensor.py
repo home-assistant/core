@@ -2,14 +2,22 @@
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.knx.const import CONF_STATE_ADDRESS, CONF_SYNC_STATE
+from homeassistant.components.knx.const import (
+    ATTR_SOURCE,
+    CONF_STATE_ADDRESS,
+    CONF_SYNC_STATE,
+)
 from homeassistant.components.knx.schema import SensorSchema
 from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 
 from .conftest import KNXTestKit
 
-from tests.common import async_capture_events, async_fire_time_changed
+from tests.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 
 async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -41,6 +49,41 @@ async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
     # don't answer to GroupValueRead requests
     await knx.receive_read("1/1/1")
     await knx.assert_no_telegram()
+
+
+async def test_sensor_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test restoring KNX sensor state."""
+    ADDRESS = "2/2/2"
+    RAW_FLOAT_21_0 = (0x0C, 0x1A)
+    RESTORED_STATE = "21.0"
+    RESTORED_STATE_ATTRIBUTES = {ATTR_SOURCE: knx.INDIVIDUAL_ADDRESS}
+    fake_state = State(
+        "sensor.test", "ignored in favour of native_value", RESTORED_STATE_ATTRIBUTES
+    )
+    extra_data = {"native_value": RESTORED_STATE, "native_unit_of_measurement": "°C"}
+    mock_restore_cache_with_extra_data(hass, [(fake_state, extra_data)])
+
+    await knx.setup_integration(
+        {
+            SensorSchema.PLATFORM: [
+                {
+                    CONF_NAME: "test",
+                    CONF_STATE_ADDRESS: ADDRESS,
+                    CONF_TYPE: "temperature",  # 2 byte float
+                    CONF_SYNC_STATE: False,
+                },
+            ]
+        }
+    )
+
+    # restored state - no read-response due to sync_state False
+    knx.assert_state("sensor.test", RESTORED_STATE, **RESTORED_STATE_ATTRIBUTES)
+    await knx.assert_telegram_count(0)
+
+    # receiving the restored value from restored source does not trigger state_changed event
+    events = async_capture_events(hass, "state_changed")
+    await knx.receive_write(ADDRESS, RAW_FLOAT_21_0)
+    assert not events
 
 
 async def test_last_reported(

@@ -284,8 +284,8 @@ async def test_binary_sensor_reset(
     assert state.state is STATE_OFF
 
 
-async def test_binary_sensor_restore_and_respond(hass: HomeAssistant, knx) -> None:
-    """Test restoring KNX binary sensor state and respond to read."""
+async def test_binary_sensor_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test restoring KNX binary sensor state."""
     _ADDRESS = "2/2/2"
     fake_state = State("binary_sensor.test", STATE_ON)
     mock_restore_cache(hass, (fake_state,))
@@ -312,7 +312,9 @@ async def test_binary_sensor_restore_and_respond(hass: HomeAssistant, knx) -> No
     assert state.state is STATE_OFF
 
 
-async def test_binary_sensor_restore_invert(hass: HomeAssistant, knx) -> None:
+async def test_binary_sensor_restore_invert(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
     """Test restoring KNX binary sensor state with invert."""
     _ADDRESS = "2/2/2"
     fake_state = State("binary_sensor.test", STATE_ON)
