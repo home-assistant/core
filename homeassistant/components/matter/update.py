@@ -67,7 +67,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.UPDATE, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterUpdateEntityDescription(UpdateEntityDescription, MatterEntityDescription):
     """Describe Matter Update entities."""
 

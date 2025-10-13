@@ -144,7 +144,7 @@ class MatterEntityLabeling(EntityDescription):
         return None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterEntityDescription(MatterEntityLabeling):
     """Describe the Matter entity."""
 

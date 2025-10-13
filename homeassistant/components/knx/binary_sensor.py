@@ -125,6 +125,7 @@ class KnxYamlBinarySensor(_KnxBinarySensor, KnxYamlEntity):
                 ignore_internal_state=config[CONF_IGNORE_INTERNAL_STATE],
                 context_timeout=config.get(CONF_CONTEXT_TIMEOUT),
                 reset_after=config.get(CONF_RESET_AFTER),
+                always_callback=True,
             ),
         )
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
@@ -159,5 +160,6 @@ class KnxUiBinarySensor(_KnxBinarySensor, KnxUiEntity):
             ),
             context_timeout=knx_conf.get(CONF_CONTEXT_TIMEOUT),
             reset_after=knx_conf.get(CONF_RESET_AFTER),
+            always_callback=True,
         )
         self._attr_force_update = self._device.ignore_internal_state
