@@ -320,8 +320,6 @@ build.json @home-assistant/supervisor
 /tests/components/cync/ @Kinachi249
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
-/homeassistant/components/dali_center/ @niracler
-/tests/components/dali_center/ @niracler
 /homeassistant/components/date/ @home-assistant/core
 /tests/components/date/ @home-assistant/core
 /homeassistant/components/datetime/ @home-assistant/core
@@ -1535,6 +1533,8 @@ build.json @home-assistant/supervisor
 /tests/components/suez_water/ @ooii @jb101010-2
 /homeassistant/components/sun/ @home-assistant/core
 /tests/components/sun/ @home-assistant/core
+/homeassistant/components/sunricher_dali_center/ @niracler
+/tests/components/sunricher_dali_center/ @niracler
 /homeassistant/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen

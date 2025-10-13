@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.dali_center.const import DOMAIN
+from homeassistant.components.sunricher_dali_center.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -41,7 +41,7 @@ async def init_integration(
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.dali_center._PLATFORMS", platforms):
+    with patch("homeassistant.components.sunricher_dali_center._PLATFORMS", platforms):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -148,7 +148,7 @@ async def test_dispatcher_connection(
     status_update: dict[str, Any] = {"is_on": True, "brightness": 128}
 
     async_dispatcher_send(
-        hass, "dali_center_update_01010000026A242121110E", status_update
+        hass, "sunricher_dali_center_update_01010000026A242121110E", status_update
     )
     await hass.async_block_till_done()
 
@@ -163,7 +163,7 @@ async def test_color_temp_status_update(
     """Test status update with color temperature for CCT device."""
     status_update = {"color_temp_kelvin": 3000}
     async_dispatcher_send(
-        hass, "dali_center_update_01020000036A242121110E", status_update
+        hass, "sunricher_dali_center_update_01020000036A242121110E", status_update
     )
     await hass.async_block_till_done()
 
@@ -175,7 +175,7 @@ async def test_hs_color_status_update(
     """Test status update with HS color for HS device."""
     status_update = {"hs_color": (120.0, 50.0)}
     async_dispatcher_send(
-        hass, "dali_center_update_01030000046A242121110E", status_update
+        hass, "sunricher_dali_center_update_01030000046A242121110E", status_update
     )
     await hass.async_block_till_done()
 
@@ -187,12 +187,12 @@ async def test_rgbw_status_update(
     """Test status update with RGBW color and white level."""
     status_update1 = {"rgbw_color": (255, 128, 64, 32)}
     async_dispatcher_send(
-        hass, "dali_center_update_01040000056A242121110E", status_update1
+        hass, "sunricher_dali_center_update_01040000056A242121110E", status_update1
     )
     await hass.async_block_till_done()
 
     status_update2 = {"white_level": 200}
     async_dispatcher_send(
-        hass, "dali_center_update_01040000056A242121110E", status_update2
+        hass, "sunricher_dali_center_update_01040000056A242121110E", status_update2
     )
     await hass.async_block_till_done()

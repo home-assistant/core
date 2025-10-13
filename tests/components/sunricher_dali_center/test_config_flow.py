@@ -3,7 +3,7 @@
 from PySrDaliGateway.exceptions import DaliGatewayError
 
 from homeassistant import config_entries
-from homeassistant.components.dali_center.const import (
+from homeassistant.components.sunricher_dali_center.const import (
     CONF_GATEWAY_DATA,
     CONF_GATEWAY_SN,
     DOMAIN,

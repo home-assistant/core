@@ -42,7 +42,7 @@ async def async_setup_entry(
     devices = [Device(gateway, device) for device in runtime_data.device_data_list]
 
     def _on_light_status(dev_id: str, status: LightStatus) -> None:
-        signal = f"dali_center_update_{dev_id}"
+        signal = f"{DOMAIN}_update_{dev_id}"
         hass.add_job(async_dispatcher_send, hass, signal, status)
 
     gateway.on_light_status = _on_light_status
@@ -122,7 +122,7 @@ class DaliCenterLight(LightEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
 
-        signal = f"dali_center_update_{self._attr_unique_id}"
+        signal = f"{DOMAIN}_update_{self._attr_unique_id}"
         self.async_on_remove(
             async_dispatcher_connect(self.hass, signal, self._handle_device_update)
         )

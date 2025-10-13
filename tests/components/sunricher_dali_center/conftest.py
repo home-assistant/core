@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.dali_center.const import (
+from homeassistant.components.sunricher_dali_center.const import (
     CONF_GATEWAY_DATA,
     CONF_GATEWAY_SN,
     DOMAIN,
@@ -36,7 +36,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_devices(mock_dali_gateway: MagicMock) -> Generator[list[MagicMock]]:
     """Return mocked Device objects."""
     with patch(
-        "homeassistant.components.dali_center.light.Device"
+        "homeassistant.components.sunricher_dali_center.light.Device"
     ) as mock_device_class:
         device1 = MagicMock()
         device1.dev_id = "01010000026A242121110E"
@@ -119,7 +119,7 @@ def mock_devices(mock_dali_gateway: MagicMock) -> Generator[list[MagicMock]]:
 def mock_discovery() -> Generator[MagicMock]:
     """Mock DaliGatewayDiscovery."""
     with patch(
-        "homeassistant.components.dali_center.config_flow.DaliGatewayDiscovery"
+        "homeassistant.components.sunricher_dali_center.config_flow.DaliGatewayDiscovery"
     ) as mock_discovery_class:
         mock_discovery = mock_discovery_class.return_value
         mock_discovery.discover_gateways = AsyncMock()
@@ -130,7 +130,7 @@ def mock_discovery() -> Generator[MagicMock]:
 def mock_dali_gateway() -> Generator[MagicMock]:
     """Return a mocked DaliGateway."""
     with patch(
-        "homeassistant.components.dali_center.DaliGateway", autospec=True
+        "homeassistant.components.sunricher_dali_center.DaliGateway", autospec=True
     ) as mock_gateway_class:
         mock_gateway = mock_gateway_class.return_value
         mock_gateway.gw_sn = "6A242121110E"
@@ -144,6 +144,7 @@ def mock_dali_gateway() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.dali_center.async_setup_entry", return_value=True
+        "homeassistant.components.sunricher_dali_center.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry

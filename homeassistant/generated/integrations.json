@@ -1180,12 +1180,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "dali_center": {
-      "name": "DALI Center",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
     "danfoss_air": {
       "name": "Danfoss Air",
       "integration_type": "hub",
@@ -6468,6 +6462,12 @@
       "config_flow": true,
       "iot_class": "calculated",
       "single_config_entry": true
+    },
+    "sunricher_dali_center": {
+      "name": "DALI Center",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "sunweg": {
       "name": "Sun WEG",
