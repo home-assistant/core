@@ -32,7 +32,7 @@ type NSConfigEntry = ConfigEntry[dict[str, NSDataUpdateCoordinator]]
 class NSRouteResult:
     """Data class for Nederlandse Spoorwegen API results."""
 
-    trips: list[Trip] = field(default_factory=list)
+    trips: list[Trip]
     first_trip: Trip | None = None
     next_trip: Trip | None = None
     error: str | None = None
