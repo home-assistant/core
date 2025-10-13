@@ -1,6 +1,5 @@
 """Tests for the Niko Home Control Scene platform."""
 
-from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -80,6 +79,4 @@ async def test_updating(
 
     after = hass.states.get(entity_id)
     assert after is not None
-    # If integration records activation on updates, state should change and be a valid ISO timestamp
-    if after.state != before.state:
-        datetime.fromisoformat(after.state)
+    assert after.state != before.state
