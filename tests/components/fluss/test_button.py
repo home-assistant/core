@@ -28,7 +28,8 @@ async def test_async_setup_entry_multiple_devices(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup with multiple devices."""
-    assert await async_setup_entry(hass, init_integration_multiple_devices, MagicMock())
+    init_integration_multiple_devices.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(init_integration_multiple_devices.entry_id)
     await hass.async_block_till_done()
 
     state1 = hass.states.get("button.device_1")
@@ -99,7 +100,8 @@ async def test_no_devices_setup(
     mock_api_client.async_get_devices.return_value = {"devices": []}
 
     with patch("fluss_api.FlussApiClient", return_value=mock_api_client):
-        assert await async_setup_entry(hass, init_integration, MagicMock())
+        init_integration.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(init_integration.entry_id)
         await hass.async_block_till_done()
 
     assert hass.states.get("button.test_device") is None
