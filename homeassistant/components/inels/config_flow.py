@@ -20,8 +20,8 @@ class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by MQTT discovery."""
-        if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+        if self._async_in_progress():
+            return self.async_abort(reason="already_in_progress")
 
         # Validate the message, abort if it fails.
         if not discovery_info.topic.endswith("/gw"):
@@ -37,10 +37,6 @@ class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        # There is no reason to have multiple entries due to the single broker limitation
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         try:
             if not mqtt.is_connected(self.hass):
                 return self.async_abort(reason="mqtt_not_connected")
@@ -56,7 +52,6 @@ class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             await self.async_set_unique_id(DOMAIN)
-            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=TITLE, data={})
 
         return self.async_show_form(step_id=step_id)
