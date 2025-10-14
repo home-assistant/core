@@ -391,12 +391,10 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         native_unit_of_measurement = self.__native_unit_of_measurement_compat
         # device_class is checked after native_unit_of_measurement since most
         # of the time we can avoid the device_class check
-        if native_unit_of_measurement in (
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.FAHRENHEIT,
-        ) and self.device_class in (
-            NumberDeviceClass.TEMPERATURE,
-            NumberDeviceClass.TEMPERATURE_DELTA,
+        if (
+            native_unit_of_measurement
+            in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT)
+            and self.device_class == NumberDeviceClass.TEMPERATURE
         ):
             return self.hass.config.units.temperature_unit
 
