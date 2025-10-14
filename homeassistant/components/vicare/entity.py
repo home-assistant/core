@@ -31,7 +31,7 @@ class ViCareEntity(Entity):
         model = device_config.getModel().replace("_", " ")
 
         identifier = (
-            f"{gateway_serial}_{device_serial.replace('zigbee-', 'zigbee_')}"
+            f"{gateway_serial}_{device_serial.replace('-', '_')}"
             if device_serial is not None
             else f"{gateway_serial}_{device_id}"
         )

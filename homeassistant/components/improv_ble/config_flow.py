@@ -138,10 +138,22 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(
                 (
                     "Aborting improv flow, device with bluetooth address '%s' is "
-                    "already provisioned: %s"
+                    "already provisioned: %s; clearing match history to allow "
+                    "rediscovery if device is factory reset"
                 ),
                 self._discovery_info.address,
                 improv_service_data.state,
+            )
+            # Clear match history so device can be rediscovered if factory reset.
+            # This is safe to do on every abort because:
+            # 1. While device stays provisioned, the Bluetooth matcher won't trigger
+            #    new discoveries since the advertisement content hasn't changed
+            # 2. If device is factory reset (state changes to authorized), the
+            #    matcher will see new content and trigger discovery since we cleared
+            #    the history
+            # 3. No ongoing monitoring or callbacks - zero performance overhead
+            bluetooth.async_clear_address_from_match_history(
+                self.hass, self._discovery_info.address
             )
             raise AbortFlow("already_provisioned")
 
@@ -158,6 +170,12 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         self._discovery_info = service_info
+
+        # Update title placeholders if name changed
+        name = service_info.name or service_info.address
+        if self.context.get("title_placeholders", {}).get("name") != name:
+            self.async_update_title_placeholders({"name": name})
+
         try:
             self._abort_if_provisioned()
         except AbortFlow:
@@ -179,6 +197,14 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         self._abort_if_provisioned()
+
+        # Clear match history at the start of discovery flow.
+        # This ensures that if the user never provisions the device and it
+        # disappears (powers down), the discovery flow gets cleaned up,
+        # and then the device comes back later, it can be rediscovered.
+        bluetooth.async_clear_address_from_match_history(
+            self.hass, discovery_info.address
+        )
 
         self._remove_bluetooth_callback = bluetooth.async_register_callback(
             self.hass,
@@ -317,6 +343,13 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                     return
             else:
                 _LOGGER.debug("Provision successful, redirect URL: %s", redirect_url)
+                # Clear match history so device can be rediscovered if factory reset.
+                # This ensures that if the device is factory reset in the future,
+                # it will trigger a new discovery flow.
+                assert self._discovery_info is not None
+                bluetooth.async_clear_address_from_match_history(
+                    self.hass, self._discovery_info.address
+                )
                 # Abort all flows in progress with same unique ID
                 for flow in self._async_in_progress(include_uninitialized=True):
                     flow_unique_id = flow["context"].get("unique_id")
