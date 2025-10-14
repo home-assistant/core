@@ -255,6 +255,7 @@
         "name": "Valve position"
       },
       "charger_state": {
+        "name": "Charger state",
         "state": {
           "charger_charging": "[%key:common::state::charging%]",
           "charger_end": "Charge completed",
@@ -265,6 +266,12 @@
           "charger_pause": "Charging paused by charger",
           "charger_wait": "Charging paused by vehicle"
         }
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "session_duration": {
+        "name": "Session duration"
       },
       "detected_objects": {
         "name": "Detected objects",
@@ -350,6 +357,18 @@
       },
       "right_slot_level": {
         "name": "Right slot level"
+      },
+      "water_flow_rate": {
+        "name": "Water flow rate"
+      },
+      "water_pressure": {
+        "name": "Water pressure"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      },
+      "water_consumption": {
+        "name": "Water consumption"
       }
     }
   },

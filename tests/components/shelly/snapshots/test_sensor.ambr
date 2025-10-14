@@ -460,7 +460,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'session_duration',
     'unique_id': '123456789ABC-number:202-number_time_charge',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
@@ -518,7 +518,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'session_energy',
     'unique_id': '123456789ABC-number:201-number_energy_charge',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })

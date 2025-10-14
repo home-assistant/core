@@ -105,10 +105,11 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        if not description.role:
+        if description.role != "generic":
             if hasattr(self, "_attr_name"):
                 delattr(self, "_attr_name")
 
+        if not description.role:
             if (
                 channel_name := get_rpc_channel_name(coordinator.device, key)
             ) is not None:
@@ -1429,6 +1430,7 @@ RPC_SENSORS: Final = {
     "number_flow_rate": RpcSensorDescription(
         key="number",
         sub_key="value",
+        translation_key="water_flow_rate",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1437,6 +1439,7 @@ RPC_SENSORS: Final = {
     "number_water_pressure": RpcSensorDescription(
         key="number",
         sub_key="value",
+        translation_key="water_pressure",
         native_unit_of_measurement=UnitOfPressure.KPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1445,6 +1448,7 @@ RPC_SENSORS: Final = {
     "number_water_temperature": RpcSensorDescription(
         key="number",
         sub_key="value",
+        translation_key="water_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -1471,6 +1475,7 @@ RPC_SENSORS: Final = {
     "number_energy_charge": RpcSensorDescription(
         key="number",
         sub_key="value",
+        translation_key="session_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
@@ -1481,6 +1486,7 @@ RPC_SENSORS: Final = {
     "number_time_charge": RpcSensorDescription(
         key="number",
         sub_key="value",
+        translation_key="session_duration",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.DURATION,
@@ -1503,6 +1509,7 @@ RPC_SENSORS: Final = {
     "object_water_consumption": RpcSensorDescription(
         key="object",
         sub_key="value",
+        translation_key="water_consumption",
         value=lambda status, _: float(status["counter"]["total"]),
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         suggested_display_precision=3,
@@ -1824,9 +1831,10 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         self.restored_data: SensorExtraStoredData | None = None
 
         if coordinator.device.initialized:
-            if not description.role:
+            if description.role != "generic":
                 if hasattr(self, "_attr_name"):
                     delattr(self, "_attr_name")
+            if not description.role:
                 if (
                     channel_name := get_rpc_channel_name(coordinator.device, key)
                 ) is not None:
