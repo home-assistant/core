@@ -8,15 +8,17 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import WattsVisionCoordinator
+from .coordinator import WattsVisionDeviceCoordinator
 
 
-class WattsVisionEntity(CoordinatorEntity[WattsVisionCoordinator]):
+class WattsVisionEntity(CoordinatorEntity[WattsVisionDeviceCoordinator]):
     """Base entity for Watts Vision integration."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: WattsVisionCoordinator, device_id: str) -> None:
+    def __init__(
+        self, coordinator: WattsVisionDeviceCoordinator, device_id: str
+    ) -> None:
         """Initialize the entity."""
 
         super().__init__(coordinator, context=device_id)
@@ -38,13 +40,15 @@ class WattsVisionEntity(CoordinatorEntity[WattsVisionCoordinator]):
     @property
     def device(self) -> Device:
         """Return the device object from the coordinator data."""
-        return self.coordinator.data[self.coordinator_context]
+        if self.coordinator.data is None:
+            raise RuntimeError("Empty device coordinator data")
+        return self.coordinator.data
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
             super().available
-            and self.device_id in self.coordinator.data
-            and self.coordinator.data[self.device_id].is_online
+            and self.coordinator.data is not None
+            and self.coordinator.data.is_online
         )

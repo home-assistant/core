@@ -6,7 +6,10 @@ import pytest
 from visionpluspython.client import WattsVisionClient
 from visionpluspython.models import Device
 
-from homeassistant.components.watts.coordinator import WattsVisionCoordinator
+from homeassistant.components.watts.coordinator import (
+    WattsVisionDeviceCoordinator,
+    WattsVisionHubCoordinator,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -47,111 +50,156 @@ def mock_device():
 
 
 @pytest.fixture
-def coordinator(mock_hass, mock_client, mock_config_entry):
-    """Create a WattsVisionCoordinator instance."""
-    return WattsVisionCoordinator(mock_hass, mock_client, mock_config_entry)
+def hub_coordinator(mock_hass, mock_client, mock_config_entry):
+    """Create a WattsVisionHubCoordinator instance."""
+    return WattsVisionHubCoordinator(mock_hass, mock_client, mock_config_entry)
 
 
-async def test_coordinator_initialization(coordinator, mock_hass, mock_client) -> None:
-    """Test coordinator initialization."""
-    assert coordinator.hass == mock_hass
-    assert coordinator.client == mock_client
-    assert coordinator.name == DOMAIN
-    assert coordinator.update_interval.total_seconds() == UPDATE_INTERVAL
-    assert coordinator._is_initialized is False
-    assert coordinator._devices == {}
+@pytest.fixture
+def device_coordinator(mock_hass, mock_client, mock_config_entry):
+    """Create a WattsVisionDeviceCoordinator instance."""
+    return WattsVisionDeviceCoordinator(
+        mock_hass, mock_client, mock_config_entry, "device_123"
+    )
 
 
-async def test_async_config_entry_first_refresh_success(
-    coordinator, mock_client, mock_device
-) -> None:
-    """Test successful initial device discovery."""
-    mock_client.discover_devices.return_value = [mock_device]
+class TestWattsVisionHubCoordinator:
+    """Test the hub coordinator."""
 
-    await coordinator.async_config_entry_first_refresh()
+    async def test_hub_coordinator_initialization(
+        self, hub_coordinator, mock_hass, mock_client
+    ) -> None:
+        """Test hub coordinator initialization."""
+        assert hub_coordinator.hass == mock_hass
+        assert hub_coordinator.client == mock_client
+        assert hub_coordinator.name == DOMAIN
+        assert hub_coordinator.update_interval.total_seconds() == UPDATE_INTERVAL
+        assert hub_coordinator._is_initialized is False
+        assert hub_coordinator._devices == {}
 
-    mock_client.discover_devices.assert_called_once()
-    assert coordinator._is_initialized is True
-    assert coordinator._devices == {mock_device.device_id: mock_device}
+    async def test_async_config_entry_first_refresh_success(
+        self, hub_coordinator, mock_client, mock_device
+    ) -> None:
+        """Test successful initial device discovery."""
+        mock_client.discover_devices.return_value = [mock_device]
+
+        await hub_coordinator.async_config_entry_first_refresh()
+
+        mock_client.discover_devices.assert_called_once()
+        assert hub_coordinator._is_initialized is True
+        assert hub_coordinator._devices == {mock_device.device_id: mock_device}
+
+    async def test_async_config_entry_first_refresh_failure(
+        self, hub_coordinator, mock_client
+    ) -> None:
+        """Test failed initial device discovery."""
+        mock_client.discover_devices.side_effect = ConnectionError("API error")
+
+        with pytest.raises(UpdateFailed):
+            await hub_coordinator.async_config_entry_first_refresh()
+
+        assert hub_coordinator._is_initialized is False
+        assert hub_coordinator._devices == {}
+
+    async def test_async_update_data_not_initialized(
+        self, hub_coordinator, mock_client, mock_device
+    ) -> None:
+        """Test _async_update_data when coordinator is not initialized."""
+        mock_client.discover_devices.return_value = [mock_device]
+
+        result = await hub_coordinator._async_update_data()
+
+        mock_client.discover_devices.assert_called_once()
+        assert hub_coordinator._is_initialized is True
+        assert result == {mock_device.device_id: mock_device}
+
+    async def test_async_update_data_no_devices(
+        self, hub_coordinator, mock_client
+    ) -> None:
+        """Test _async_update_data when no devices are known."""
+        hub_coordinator._is_initialized = True
+        hub_coordinator._devices = {}
+
+        result = await hub_coordinator._async_update_data()
+
+        mock_client.get_devices_report.assert_not_called()
+        assert result == {}
+
+    async def test_async_update_data_success(
+        self, hub_coordinator, mock_client, mock_device
+    ) -> None:
+        """Test successful device report update."""
+        hub_coordinator._is_initialized = True
+        hub_coordinator._devices = {mock_device.device_id: mock_device}
+        updated_device = MagicMock(spec=Device)
+        updated_device.device_id = mock_device.device_id
+        mock_client.get_devices_report.return_value = {
+            mock_device.device_id: updated_device
+        }
+
+        result = await hub_coordinator._async_update_data()
+
+        mock_client.get_devices_report.assert_called_once_with([mock_device.device_id])
+        assert hub_coordinator._devices[mock_device.device_id] == updated_device
+        assert result == {mock_device.device_id: updated_device}
+
+    async def test_device_ids_property(self, hub_coordinator, mock_device) -> None:
+        """Test device_ids property."""
+        hub_coordinator._devices = {mock_device.device_id: mock_device}
+
+        assert hub_coordinator.device_ids == [mock_device.device_id]
 
 
-async def test_async_config_entry_first_refresh_failure(
-    coordinator, mock_client
-) -> None:
-    """Test failed initial device discovery."""
-    mock_client.discover_devices.side_effect = ConnectionError("API error")
+class TestWattsVisionDeviceCoordinator:
+    """Test the device coordinator."""
 
-    with pytest.raises(UpdateFailed):
-        await coordinator.async_config_entry_first_refresh()
+    async def test_device_coordinator_initialization(
+        self, device_coordinator, mock_hass, mock_client
+    ) -> None:
+        """Test device coordinator initialization."""
+        assert device_coordinator.hass == mock_hass
+        assert device_coordinator.client == mock_client
+        assert device_coordinator.name == f"{DOMAIN}_device_123"
+        assert device_coordinator.update_interval is None  # Manual refresh only
+        assert device_coordinator.device_id == "device_123"
 
-    assert coordinator._is_initialized is False
-    assert coordinator._devices == {}
+    async def test_async_set_updated_data(
+        self, device_coordinator, mock_device
+    ) -> None:
+        """Test setting initial data from hub coordinator."""
+        device_coordinator.async_set_updated_data(mock_device)
 
+        assert device_coordinator.data == mock_device
 
-async def test_async_refresh_device_success(
-    coordinator, mock_client, mock_device
-) -> None:
-    """Test refreshing a specific device successfully."""
-    coordinator._devices = {mock_device.device_id: mock_device}
-    coordinator._is_initialized = True
-    mock_client.get_device.return_value = mock_device
+    async def test_async_update_data_success(
+        self, device_coordinator, mock_client, mock_device
+    ) -> None:
+        """Test successful device refresh."""
+        mock_client.get_device.return_value = mock_device
 
-    await coordinator.async_refresh_device(mock_device.device_id)
+        result = await device_coordinator._async_update_data()
 
-    mock_client.get_device.assert_called_once_with(mock_device.device_id, refresh=True)
-    assert coordinator._devices[mock_device.device_id] == mock_device
+        mock_client.get_device.assert_called_once_with("device_123", refresh=True)
+        assert result == mock_device
 
+    async def test_async_update_data_device_not_found(
+        self, device_coordinator, mock_client
+    ) -> None:
+        """Test device refresh when device is not found."""
+        mock_client.get_device.return_value = None
 
-async def test_async_refresh_device_failure(
-    coordinator, mock_client, mock_device
-) -> None:
-    """Test refreshing a specific device when API call fails."""
-    coordinator._devices = {mock_device.device_id: mock_device}
-    coordinator._is_initialized = True
-    mock_client.get_device.side_effect = ConnectionError("Refresh error")
+        result = await device_coordinator._async_update_data()
 
-    await coordinator.async_refresh_device(mock_device.device_id)
+        mock_client.get_device.assert_called_once_with("device_123", refresh=True)
+        assert result is None
 
-    mock_client.get_device.assert_called_once_with(mock_device.device_id, refresh=True)
-    assert coordinator._devices[mock_device.device_id] == mock_device  # Unchanged
+    async def test_async_update_data_failure(
+        self, device_coordinator, mock_client
+    ) -> None:
+        """Test device refresh when API call fails."""
+        mock_client.get_device.side_effect = ConnectionError("Refresh error")
 
+        with pytest.raises(UpdateFailed):
+            await device_coordinator._async_update_data()
 
-async def test_async_update_data_not_initialized(
-    coordinator, mock_client, mock_device
-) -> None:
-    """Test _async_update_data when coordinator is not initialized."""
-    mock_client.discover_devices.return_value = [mock_device]
-
-    result = await coordinator._async_update_data()
-
-    mock_client.discover_devices.assert_called_once()
-    assert coordinator._is_initialized is True
-    assert result == {mock_device.device_id: mock_device}
-
-
-async def test_async_update_data_no_devices(coordinator, mock_client) -> None:
-    """Test _async_update_data when no devices are known."""
-    coordinator._is_initialized = True
-    coordinator._devices = {}
-
-    result = await coordinator._async_update_data()
-
-    mock_client.get_devices_report.assert_not_called()
-    assert result == {}
-
-
-async def test_async_update_data_success(coordinator, mock_client, mock_device) -> None:
-    """Test successful device report update."""
-    coordinator._is_initialized = True
-    coordinator._devices = {mock_device.device_id: mock_device}
-    updated_device = MagicMock(spec=Device)
-    updated_device.device_id = mock_device.device_id
-    mock_client.get_devices_report.return_value = {
-        mock_device.device_id: updated_device
-    }
-
-    result = await coordinator._async_update_data()
-
-    mock_client.get_devices_report.assert_called_once_with([mock_device.device_id])
-    assert coordinator._devices[mock_device.device_id] == updated_device
-    assert result == {mock_device.device_id: updated_device}
+        mock_client.get_device.assert_called_once_with("device_123", refresh=True)

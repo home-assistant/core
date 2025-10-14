@@ -17,13 +17,13 @@ from .const import DOMAIN, UPDATE_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class WattsVisionCoordinator(DataUpdateCoordinator[dict[str, Device]]):
-    """Class to fetch Watts Vision+ data."""
+class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
+    """Hub coordinator for bulk device discovery and updates."""
 
     def __init__(
         self, hass: HomeAssistant, client: WattsVisionClient, config_entry: ConfigEntry
     ) -> None:
-        """Initialize the coordinator."""
+        """Initialize the hub coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -51,19 +51,8 @@ class WattsVisionCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self._is_initialized = True
         _LOGGER.info("Initial discovery completed with %d devices", len(self._devices))
 
-    async def async_refresh_device(self, device_id: str) -> None:
-        """Refresh a specific device."""
-        try:
-            device = await self.client.get_device(device_id, refresh=True)
-            if device:
-                self._devices[device_id] = device
-                self.async_set_updated_data(self._devices)
-                _LOGGER.debug("Refreshed device %s", device_id)
-        except (ConnectionError, TimeoutError, ValueError) as err:
-            _LOGGER.error("Failed to refresh device %s: %s", device_id, err)
-
     async def _async_update_data(self) -> dict[str, Device]:
-        """Fetch data from Watts Vision API."""
+        """Fetch data from Watts Vision API for all devices."""
         try:
             if not self._is_initialized:
                 # First loading, discover devices
@@ -91,3 +80,41 @@ class WattsVisionCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     def device_ids(self) -> list[str]:
         """Get list of all device IDs."""
         return list(self._devices.keys())
+
+
+class WattsVisionDeviceCoordinator(DataUpdateCoordinator[Device | None]):
+    """Device coordinator for individual updates."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client: WattsVisionClient,
+        config_entry: ConfigEntry,
+        device_id: str,
+    ) -> None:
+        """Initialize the device coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_{device_id}",
+            update_interval=None,  # Manual refresh only
+            config_entry=config_entry,
+        )
+        self.client = client
+        self.device_id = device_id
+
+    async def _async_update_data(self) -> Device | None:
+        """Refresh specific device."""
+        try:
+            device = await self.client.get_device(self.device_id, refresh=True)
+        except (ConnectionError, TimeoutError, ValueError) as err:
+            _LOGGER.error("Failed to refresh device %s: %s", self.device_id, err)
+            raise UpdateFailed(
+                f"Failed to refresh device {self.device_id}: {err}"
+            ) from err
+        else:
+            if device:
+                _LOGGER.debug("Refreshed device %s", self.device_id)
+                return device
+            _LOGGER.warning("Device %s not found during refresh", self.device_id)
+            return None

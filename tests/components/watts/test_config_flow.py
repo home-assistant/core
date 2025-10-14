@@ -58,7 +58,7 @@ async def test_full_flow(
             return_value="user123",
         ),
         patch(
-            "homeassistant.components.watts.WattsVisionCoordinator.async_config_entry_first_refresh",
+            "homeassistant.components.watts.WattsVisionHubCoordinator.async_config_entry_first_refresh",
             return_value=AsyncMock(),
         ),
     ):
@@ -299,7 +299,7 @@ async def test_unique_config_entry_full_flow(
             return_value="user123",
         ),
         patch(
-            "homeassistant.components.watts.WattsVisionCoordinator.async_config_entry_first_refresh",
+            "homeassistant.components.watts.WattsVisionHubCoordinator.async_config_entry_first_refresh",
             return_value=AsyncMock(),
         ),
     ):

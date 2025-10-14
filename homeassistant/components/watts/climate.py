@@ -24,7 +24,7 @@ from .const import (
     THERMOSTAT_MODE_TO_HVAC,
     UPDATE_DELAY_AFTER_COMMAND,
 )
-from .coordinator import WattsVisionCoordinator
+from .coordinator import WattsVisionDeviceCoordinator
 from .entity import WattsVisionEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,12 +37,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Watts Vision climate entities from a config entry."""
 
-    coordinator = entry.runtime_data.coordinator
+    device_coordinators = entry.runtime_data.device_coordinators
 
     async_add_entities(
         [
-            WattsVisionClimate(coordinator, device)
-            for device in coordinator.data.values()
+            WattsVisionClimate(device_coordinator, device_coordinator.data)
+            for device_coordinator in device_coordinators.values()
+            if device_coordinator.data
         ],
         update_before_add=True,
     )
@@ -57,7 +58,7 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
 
     def __init__(
         self,
-        coordinator: WattsVisionCoordinator,
+        coordinator: WattsVisionDeviceCoordinator,
         device: ThermostatDevice,
     ) -> None:
         """Initialize the climate entity."""
@@ -90,7 +91,7 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
 
     async def async_request_refresh(self) -> None:
         """Request refresh for this specific entity only."""
-        await self.coordinator.async_refresh_device(self.device_id)
+        await self.coordinator.async_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -109,7 +110,7 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
             )
 
             await asyncio.sleep(UPDATE_DELAY_AFTER_COMMAND)
-            await self.coordinator.async_refresh_device(self.device_id)
+            await self.coordinator.async_refresh()
 
         except RuntimeError as err:
             raise HomeAssistantError(
@@ -135,4 +136,4 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
             ) from err
 
         await asyncio.sleep(UPDATE_DELAY_AFTER_COMMAND)
-        await self.coordinator.async_refresh_device(self.device_id)
+        await self.coordinator.async_refresh()
