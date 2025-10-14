@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterable
 from dataclasses import replace
 
@@ -134,6 +135,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         """Handle pipeline update."""
         self._update_options()
         self.async_write_ha_state()
+        await asyncio.sleep(0)
 
     @callback
     def _update_options(self) -> None:
