@@ -91,7 +91,7 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict | HomeLinkEventData]):
 def on_message(
     coordinator: HomeLinkCoordinator, _topic: str, message: HomeLinkMQTTMessage
 ):
-    "MQTT Callback function."
+    """MQTT Callback function."""
 
     if message["type"] == "state":
         coordinator.hass.add_job(coordinator.async_set_updated_data, message["data"])
