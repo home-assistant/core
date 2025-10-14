@@ -34,7 +34,7 @@
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "recommended": "Recommended model settings",
-            "prompt": "Instructions",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
             "chat_model": "[%key:common::generic::model%]",
             "temperature": "Temperature",
             "top_p": "Top P",
@@ -59,6 +59,38 @@
       },
       "error": {
         "invalid_google_search_option": "Google Search can only be enabled if nothing is selected in the \"Control Home Assistant\" setting."
+      }
+    },
+    "stt": {
+      "initiate_flow": {
+        "user": "Add Speech-to-Text service",
+        "reconfigure": "Reconfigure Speech-to-Text service"
+      },
+      "entry_type": "Speech-to-Text",
+      "step": {
+        "set_options": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "recommended": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::recommended%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "chat_model": "[%key:common::generic::model%]",
+            "temperature": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::temperature%]",
+            "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_p%]",
+            "top_k": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_k%]",
+            "max_tokens": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::max_tokens%]",
+            "harassment_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::harassment_block_threshold%]",
+            "hate_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::hate_block_threshold%]",
+            "sexual_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::sexual_block_threshold%]",
+            "dangerous_block_threshold": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::dangerous_block_threshold%]"
+          },
+          "data_description": {
+            "prompt": "Instruct how the LLM should transcribe the audio."
+          }
+        }
+      },
+      "abort": {
+        "entry_not_loaded": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       }
     },
     "tts": {
@@ -91,10 +123,10 @@
     },
     "ai_task_data": {
       "initiate_flow": {
-        "user": "Add Generate data with AI service",
-        "reconfigure": "Reconfigure Generate data with AI service"
+        "user": "Add AI task",
+        "reconfigure": "Reconfigure AI task"
       },
-      "entry_type": "Generate data with AI service",
+      "entry_type": "AI task",
       "step": {
         "set_options": {
           "data": {
@@ -118,20 +150,21 @@
       }
     }
   },
+  "issues": {
+    "deprecated_generate_content": {
+      "title": "Deprecated 'generate_content' action",
+      "description": "Action 'google_generative_ai_conversation.generate_content' is deprecated and will be removed in the 2026.4.0 release. Please use the 'ai_task.generate_data' action instead"
+    }
+  },
   "services": {
     "generate_content": {
-      "name": "Generate content",
-      "description": "Generate content from a prompt consisting of text and optionally images",
+      "name": "Generate content (deprecated)",
+      "description": "Generate content from a prompt consisting of text and optionally images (deprecated)",
       "fields": {
         "prompt": {
           "name": "Prompt",
           "description": "The prompt",
           "example": "Describe what you see in these images"
-        },
-        "image_filename": {
-          "name": "Image filename",
-          "description": "Deprecated. Use filenames instead.",
-          "example": "/config/www/image.jpg"
         },
         "filenames": {
           "name": "Attachment filenames",
@@ -139,12 +172,6 @@
           "example": "/config/www/image.jpg"
         }
       }
-    }
-  },
-  "issues": {
-    "deprecated_image_filename_parameter": {
-      "title": "Deprecated 'image_filename' parameter",
-      "description": "The 'image_filename' parameter in Google Generative AI actions is deprecated. Please edit scripts and automations to use 'filenames' instead."
     }
   }
 }

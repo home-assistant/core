@@ -100,6 +100,7 @@ _LOGGER = logging.getLogger(__name__)
 SOURCE_BLUETOOTH = "bluetooth"
 SOURCE_DHCP = "dhcp"
 SOURCE_DISCOVERY = "discovery"
+SOURCE_ESPHOME = "esphome"
 SOURCE_HARDWARE = "hardware"
 SOURCE_HASSIO = "hassio"
 SOURCE_HOMEKIT = "homekit"
@@ -298,10 +299,21 @@ class ConfigFlowContext(FlowContext, total=False):
 class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
     """Typed result dict for config flow."""
 
+    # Extra keys, only present if type is CREATE_ENTRY
+    next_flow: tuple[FlowType, str]  # (flow type, flow id)
     minor_version: int
     options: Mapping[str, Any]
+    result: ConfigEntry
     subentries: Iterable[ConfigSubentryData]
     version: int
+
+
+class FlowType(StrEnum):
+    """Flow type."""
+
+    CONFIG_FLOW = "config_flow"
+    # Add other flow types here as needed in the future,
+    # if we want to support them in the `next_flow` parameter.
 
 
 def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
@@ -1176,7 +1188,13 @@ class ConfigEntry[_DataT = Any]:
 
     @callback
     def async_on_state_change(self, func: CALLBACK_TYPE) -> CALLBACK_TYPE:
-        """Add a function to call when a config entry changes its state."""
+        """Add a function to call when a config entry changes its state.
+
+        Note: async_on_unload listeners are called before the state is changed to
+        NOT_LOADED when unloading a config entry. This means the passed function
+        will not be called after a config entry has been unloaded, the last call
+        will be after the state is changed to UNLOAD_IN_PROGRESS.
+        """
         if self._on_state_change is None:
             self._on_state_change = []
         self._on_state_change.append(func)
@@ -2319,8 +2337,9 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
-        | UndefinedType = UNDEFINED,
+        discovery_keys: (
+            MappingProxyType[str, tuple[DiscoveryKey, ...]] | UndefinedType
+        ) = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
@@ -2356,8 +2375,9 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
-        | UndefinedType = UNDEFINED,
+        discovery_keys: (
+            MappingProxyType[str, tuple[DiscoveryKey, ...]] | UndefinedType
+        ) = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
@@ -2711,7 +2731,10 @@ class ConfigEntries:
                 continue
             issues.add(issue.issue_id)
 
-        for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+        for (
+            domain,
+            unique_ids,
+        ) in self._entries._domain_unique_id_index.items():  # noqa: SLF001
             for unique_id, entries in unique_ids.items():
                 # We might mutate the list of entries, so we need a copy to not mess up
                 # the index
@@ -2778,7 +2801,9 @@ def _async_abort_entries_match(
     Requires `already_configured` in strings.json in user visible flows.
     """
     if match_dict is None:
-        match_dict = {}  # Match any entry
+        if other_entries:
+            raise data_entry_flow.AbortFlow("already_configured")  # Match any entry
+        return
     for entry in other_entries:
         options_items = entry.options.items()
         data_items = entry.data.items()
@@ -2833,6 +2858,29 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {}
+
+    @callback
+    def async_update_title_placeholders(
+        self, title_placeholders: Mapping[str, str]
+    ) -> None:
+        """Update title placeholders for the discovery notification and notify listeners.
+
+        This updates the flow context title_placeholders and notifies listeners
+        (such as the frontend) to reload the flow state, updating the discovery
+        notification title.
+
+        Only call this method when the flow is not progressing to a new step
+        (e.g., from a callback that receives updated data). If the flow is
+        progressing to a new step, set title_placeholders directly in context
+        before returning the step result, as the step change will trigger
+        listener notification automatically.
+        """
+        # Context is typed as TypedDict but is mutable dict at runtime
+        current_placeholders = cast(
+            dict[str, str], self.context.setdefault("title_placeholders", {})
+        )
+        current_placeholders.update(title_placeholders)
+        self.async_notify_flow_changed()
 
     @callback
     def _async_abort_entries_match(
@@ -2983,8 +3031,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Return current unique IDs."""
         return {
             entry.unique_id
-            for entry in self.hass.config_entries.async_entries(self.handler)
-            if include_ignore or entry.source != SOURCE_IGNORE
+            for entry in self.hass.config_entries.async_entries(
+                self.handler, include_ignore=include_ignore
+            )
         }
 
     @callback
@@ -3128,6 +3177,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
+        next_flow: tuple[FlowType, str] | None = None,
         options: Mapping[str, Any] | None = None,
         subentries: Iterable[ConfigSubentryData] | None = None,
     ) -> ConfigFlowResult:
@@ -3148,11 +3198,88 @@ class ConfigFlow(ConfigEntryBaseFlow):
         )
 
         result["minor_version"] = self.MINOR_VERSION
+        if next_flow is not None:
+            flow_type, flow_id = next_flow
+            if flow_type != FlowType.CONFIG_FLOW:
+                raise HomeAssistantError("Invalid next_flow type")
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.flow.async_get(flow_id)
+            result["next_flow"] = next_flow
         result["options"] = options or {}
         result["subentries"] = subentries or ()
         result["version"] = self.VERSION
 
         return result
+
+    @callback
+    def __async_update(
+        self,
+        entry: ConfigEntry,
+        *,
+        unique_id: str | None | UndefinedType,
+        title: str | UndefinedType,
+        data: Mapping[str, Any] | UndefinedType,
+        data_updates: Mapping[str, Any] | UndefinedType,
+        options: Mapping[str, Any] | UndefinedType,
+    ) -> bool:
+        """Update config entry and return result.
+
+        Internal to be used by update_and_abort and update_reload_and_abort methods only.
+        """
+
+        if data_updates is not UNDEFINED:
+            if data is not UNDEFINED:
+                raise ValueError("Cannot set both data and data_updates")
+            data = entry.data | data_updates
+        return self.hass.config_entries.async_update_entry(
+            entry=entry,
+            unique_id=unique_id,
+            title=title,
+            data=data,
+            options=options,
+        )
+
+    @callback
+    def async_update_and_abort(
+        self,
+        entry: ConfigEntry,
+        *,
+        unique_id: str | None | UndefinedType = UNDEFINED,
+        title: str | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        options: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        reason: str | UndefinedType = UNDEFINED,
+    ) -> ConfigFlowResult:
+        """Update config entry and finish config flow.
+
+        Args:
+            entry: config entry to update
+            unique_id: replace the unique_id of the entry
+            title: replace the title of the entry
+            data: replace the entry data with new data
+            data_updates: add items from data_updates to entry data - existing keys
+                are overridden
+            options: replace the entry options with new options
+            reason: set the reason for the abort, defaults to
+                `reauth_successful` or `reconfigure_successful` based on flow source
+
+        Returns:
+            ConfigFlowResult: The result of the config flow.
+        """
+        self.__async_update(
+            entry=entry,
+            unique_id=unique_id,
+            title=title,
+            data=data,
+            data_updates=data_updates,
+            options=options,
+        )
+        if reason is UNDEFINED:
+            reason = "reauth_successful"
+            if self.source == SOURCE_RECONFIGURE:
+                reason = "reconfigure_successful"
+        return self.async_abort(reason=reason)
 
     @callback
     def async_update_reload_and_abort(
@@ -3169,28 +3296,28 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Update config entry, reload config entry and finish config flow.
 
-        :param data: replace the entry data with new data
-        :param data_updates: add items from data_updates to entry data - existing keys
-        are overridden
-        :param options: replace the entry options with new options
-        :param title: replace the title of the entry
-        :param unique_id: replace the unique_id of the entry
+        Args:
+            entry: config entry to update and reload
+            unique_id: replace the unique_id of the entry
+            title: replace the title of the entry
+            data: replace the entry data with new data
+            data_updates: add items from data_updates to entry data - existing keys
+                are overridden
+            options: replace the entry options with new options
+            reason: set the reason for the abort, defaults to
+                `reauth_successful` or `reconfigure_successful` based on flow source
+            reload_even_if_entry_is_unchanged: set this to `False` if the entry
+                should not be reloaded if it is unchanged
 
-        :param reason: set the reason for the abort, defaults to
-        `reauth_successful` or `reconfigure_successful` based on flow source
-
-        :param reload_even_if_entry_is_unchanged: set this to `False` if the entry
-        should not be reloaded if it is unchanged
+        Returns:
+            ConfigFlowResult: The result of the config flow.
         """
-        if data_updates is not UNDEFINED:
-            if data is not UNDEFINED:
-                raise ValueError("Cannot set both data and data_updates")
-            data = entry.data | data_updates
-        result = self.hass.config_entries.async_update_entry(
+        result = self.__async_update(
             entry=entry,
             unique_id=unique_id,
             title=title,
             data=data,
+            data_updates=data_updates,
             options=options,
         )
         if reload_even_if_entry_is_unchanged or result:
@@ -3345,7 +3472,6 @@ class ConfigSubentryFlowManager(
             ),
         )
 
-        result["result"] = True
         return result
 
 
@@ -3385,6 +3511,34 @@ class ConfigSubentryFlow(
         return result
 
     @callback
+    def _async_update(
+        self,
+        entry: ConfigEntry,
+        subentry: ConfigSubentry,
+        *,
+        unique_id: str | None | UndefinedType = UNDEFINED,
+        title: str | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
+    ) -> bool:
+        """Update config subentry and return result.
+
+        Internal to be used by update_and_abort and update_reload_and_abort methods only.
+        """
+
+        if data_updates is not UNDEFINED:
+            if data is not UNDEFINED:
+                raise ValueError("Cannot set both data and data_updates")
+            data = subentry.data | data_updates
+        return self.hass.config_entries.async_update_subentry(
+            entry=entry,
+            subentry=subentry,
+            unique_id=unique_id,
+            title=title,
+            data=data,
+        )
+
+    @callback
     def async_update_and_abort(
         self,
         entry: ConfigEntry,
@@ -3403,17 +3557,50 @@ class ConfigSubentryFlow(
         :param title: replace the title of the subentry
         :param unique_id: replace the unique_id of the subentry
         """
-        if data_updates is not UNDEFINED:
-            if data is not UNDEFINED:
-                raise ValueError("Cannot set both data and data_updates")
-            data = subentry.data | data_updates
-        self.hass.config_entries.async_update_subentry(
+        self._async_update(
             entry=entry,
             subentry=subentry,
             unique_id=unique_id,
             title=title,
             data=data,
+            data_updates=data_updates,
         )
+        return self.async_abort(reason="reconfigure_successful")
+
+    @callback
+    def async_update_reload_and_abort(
+        self,
+        entry: ConfigEntry,
+        subentry: ConfigSubentry,
+        *,
+        unique_id: str | None | UndefinedType = UNDEFINED,
+        title: str | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        reload_even_if_entry_is_unchanged: bool = True,
+    ) -> SubentryFlowResult:
+        """Update config subentry, reload config entry and finish subentry flow.
+
+        :param data: replace the subentry data with new data
+        :param data_updates: add items from data_updates to subentry data - existing
+        keys are overridden
+        :param title: replace the title of the subentry
+        :param unique_id: replace the unique_id of the subentry
+        :param reload_even_if_entry_is_unchanged: set this to `False` if the entry
+        should not be reloaded if it is unchanged
+        """
+        result = self._async_update(
+            entry=entry,
+            subentry=subentry,
+            unique_id=unique_id,
+            title=title,
+            data=data,
+            data_updates=data_updates,
+        )
+        if reload_even_if_entry_is_unchanged or result:
+            if entry.update_listeners:
+                raise ValueError("Cannot update and reload entry with update listeners")
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
         return self.async_abort(reason="reconfigure_successful")
 
     @property
@@ -3491,9 +3678,23 @@ class OptionsFlowManager(
         entry = self.hass.config_entries.async_get_known_entry(flow.handler)
 
         if result["data"] is not None:
-            self.hass.config_entries.async_update_entry(entry, options=result["data"])
+            automatic_reload = False
+            if isinstance(flow, OptionsFlowWithReload):
+                automatic_reload = flow.automatic_reload
 
-        result["result"] = True
+            if automatic_reload and entry.update_listeners:
+                raise ValueError(
+                    "Config entry update listeners should not be used with OptionsFlowWithReload"
+                )
+
+            if (
+                self.hass.config_entries.async_update_entry(
+                    entry, options=result["data"]
+                )
+                and automatic_reload is True
+            ):
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+
         return result
 
     async def _async_setup_preview(
@@ -3598,6 +3799,18 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
     def options(self) -> dict[str, Any]:
         """Return a mutable copy of the config entry options."""
         return self._options
+
+
+class OptionsFlowWithReload(OptionsFlow):
+    """Automatic reloading class for config options flows.
+
+    Triggers an automatic reload of the config entry when the flow ends with
+    calling `async_create_entry` with changed options.
+    It's not allowed to use this class if the integration uses config entry
+    update listeners.
+    """
+
+    automatic_reload: bool = True
 
 
 class EntityRegistryDisabledHandler:

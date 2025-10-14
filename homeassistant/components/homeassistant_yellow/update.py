@@ -16,6 +16,7 @@ from homeassistant.components.homeassistant_hardware.update import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    ResetTarget,
 )
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry
@@ -129,6 +130,7 @@ def _async_create_update_entity(
         config_entry=config_entry,
         update_coordinator=FirmwareUpdateCoordinator(
             hass,
+            config_entry,
             session,
             NABU_CASA_FIRMWARE_RELEASES_URL,
         ),
@@ -172,7 +174,7 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Yellow firmware update entity."""
 
-    bootloader_reset_type = "yellow"  # Triggers a GPIO reset
+    bootloader_reset_methods = [ResetTarget.YELLOW]  # Triggers a GPIO reset
 
     def __init__(
         self,

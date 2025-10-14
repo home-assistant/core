@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.sensor.const import DEVICE_CLASS_STATE_CLASSES
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
@@ -44,6 +45,7 @@ from homeassistant.const import (
 from tests.common import MockEntity
 
 UNITS_OF_MEASUREMENT = {
+    SensorDeviceClass.ABSOLUTE_HUMIDITY: CONCENTRATION_GRAMS_PER_CUBIC_METER,
     SensorDeviceClass.APPARENT_POWER: UnitOfApparentPower.VOLT_AMPERE,
     SensorDeviceClass.AQI: None,
     SensorDeviceClass.AREA: UnitOfArea.SQUARE_METERS,
@@ -78,6 +80,7 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.PM10: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     SensorDeviceClass.PM1: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     SensorDeviceClass.PM25: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.PM4: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     SensorDeviceClass.POWER: UnitOfPower.KILO_WATT,
     SensorDeviceClass.POWER_FACTOR: PERCENTAGE,
     SensorDeviceClass.PRECIPITATION: UnitOfPrecipitationDepth.MILLIMETERS,

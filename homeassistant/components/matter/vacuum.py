@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING, Any
 
@@ -20,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -58,6 +59,13 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.VACUUM, async_add_entities)
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterStateVacuumEntityDescription(
+    StateVacuumEntityDescription, MatterEntityDescription
+):
+    """Describe Matter Vacuum entities."""
+
+
 class MatterVacuum(MatterEntity, StateVacuumEntity):
     """Representation of a Matter Vacuum cleaner entity."""
 
@@ -65,7 +73,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     _supported_run_modes: (
         dict[int, clusters.RvcRunMode.Structs.ModeOptionStruct] | None
     ) = None
-    entity_description: StateVacuumEntityDescription
+    entity_description: MatterStateVacuumEntityDescription
     _platform_translation_key = "vacuum"
 
     def _get_run_mode_by_tag(
@@ -140,11 +148,6 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
-        # optional battery level
-        if VacuumEntityFeature.BATTERY & self._attr_supported_features:
-            self._attr_battery_level = self.get_matter_attribute_value(
-                clusters.PowerSource.Attributes.BatPercentRemaining
-            )
         # derive state from the run mode + operational state
         run_mode_raw: int = self.get_matter_attribute_value(
             clusters.RvcRunMode.Attributes.CurrentMode
@@ -188,11 +191,6 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         supported_features |= VacuumEntityFeature.STATE
         supported_features |= VacuumEntityFeature.STOP
 
-        # optional battery attribute = battery feature
-        if self.get_matter_attribute_value(
-            clusters.PowerSource.Attributes.BatPercentRemaining
-        ):
-            supported_features |= VacuumEntityFeature.BATTERY
         # optional identify cluster = locate feature (value must be not None or 0)
         if self.get_matter_attribute_value(clusters.Identify.Attributes.IdentifyType):
             supported_features |= VacuumEntityFeature.LOCATE
@@ -222,7 +220,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.VACUUM,
-        entity_description=StateVacuumEntityDescription(
+        entity_description=MatterStateVacuumEntityDescription(
             key="MatterVacuumCleaner", name=None
         ),
         entity_class=MatterVacuum,
@@ -230,7 +228,6 @@ DISCOVERY_SCHEMAS = [
             clusters.RvcRunMode.Attributes.CurrentMode,
             clusters.RvcOperationalState.Attributes.OperationalState,
         ),
-        optional_attributes=(clusters.PowerSource.Attributes.BatPercentRemaining,),
         device_type=(device_types.RoboticVacuumCleaner,),
         allow_none_value=True,
     ),

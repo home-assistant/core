@@ -35,6 +35,8 @@ from homeassistant.util import dt as dt_util
 
 from .alarms import SonosAlarms
 from .const import (
+    ATTR_DIALOG_LEVEL,
+    ATTR_SPEECH_ENHANCEMENT_ENABLED,
     AVAILABILITY_TIMEOUT,
     BATTERY_SCAN_INTERVAL,
     DOMAIN,
@@ -46,6 +48,7 @@ from .const import (
     SONOS_CREATE_LEVELS,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_CREATE_MIC_SENSOR,
+    SONOS_CREATE_SELECTS,
     SONOS_CREATE_SWITCHES,
     SONOS_FALLBACK_POLL,
     SONOS_REBOOTED,
@@ -157,6 +160,8 @@ class SonosSpeaker:
         # Home theater
         self.audio_delay: int | None = None
         self.dialog_level: bool | None = None
+        self.dialog_level_enum: int | None = None
+        self.speech_enhance_enabled: bool | None = None
         self.night_mode: bool | None = None
         self.sub_enabled: bool | None = None
         self.sub_crossover: int | None = None
@@ -251,6 +256,7 @@ class SonosSpeaker:
         ]:
             dispatches.append((SONOS_CREATE_ALARM, self, new_alarms))
 
+        dispatches.append((SONOS_CREATE_SELECTS, self))
         dispatches.append((SONOS_CREATE_SWITCHES, self))
         dispatches.append((SONOS_CREATE_MEDIA_PLAYER, self))
         dispatches.append((SONOS_SPEAKER_ADDED, self.soco.uid))
@@ -268,6 +274,29 @@ class SonosSpeaker:
     def async_write_entity_states(self) -> None:
         """Write states for associated SonosEntity instances."""
         async_dispatcher_send(self.hass, f"{SONOS_STATE_UPDATED}-{self.soco.uid}")
+
+    def update_soco_int_attribute(
+        self, soco_attribute: str, speaker_attribute: str
+    ) -> int | None:
+        """Update an integer attribute from SoCo and set it on the speaker.
+
+        Returns the integer value if successful, otherwise None. Do not call from
+        async context as it is a blocking function.
+        """
+        value: int | None = None
+        if (state := getattr(self.soco, soco_attribute, None)) is None:
+            _LOGGER.error("Missing value for %s", speaker_attribute)
+        else:
+            try:
+                value = int(state)
+            except (TypeError, ValueError):
+                _LOGGER.error(
+                    "Invalid value for %s %s",
+                    speaker_attribute,
+                    state,
+                )
+        setattr(self, speaker_attribute, value)
+        return value
 
     #
     # Properties
@@ -548,6 +577,11 @@ class SonosSpeaker:
     @callback
     def async_update_volume(self, event: SonosEvent) -> None:
         """Update information about currently volume settings."""
+        _LOGGER.debug(
+            "Updating volume for %s with event variables: %s",
+            self.zone_name,
+            event.variables,
+        )
         self.event_stats.process(event)
         variables = event.variables
 
@@ -565,6 +599,7 @@ class SonosSpeaker:
 
         for bool_var in (
             "dialog_level",
+            ATTR_SPEECH_ENHANCEMENT_ENABLED,
             "night_mode",
             "sub_enabled",
             "surround_enabled",
@@ -584,6 +619,15 @@ class SonosSpeaker:
         ):
             if int_var in variables:
                 setattr(self, int_var, variables[int_var])
+
+        for enum_var in (ATTR_DIALOG_LEVEL,):
+            if enum_var in variables:
+                try:
+                    setattr(self, f"{enum_var}_enum", int(variables[enum_var]))
+                except ValueError:
+                    _LOGGER.error(
+                        "Invalid value for %s %s", enum_var, variables[enum_var]
+                    )
 
         self.async_write_entity_states()
 

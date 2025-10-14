@@ -407,6 +407,28 @@
       },
       "last_report_duration": {
         "name": "Last report duration"
+      },
+      "grid_status": {
+        "name": "[%key:component::enphase_envoy::entity::binary_sensor::grid_status::name%]",
+        "state": {
+          "on_grid": "On grid",
+          "off_grid": "Off grid",
+          "synchronizing": "Synchronizing to grid"
+        }
+      },
+      "mid_state": {
+        "name": "MID state",
+        "state": {
+          "open": "[%key:common::state::open%]",
+          "close": "[%key:common::state::closed%]"
+        }
+      },
+      "admin_state": {
+        "name": "Admin state",
+        "state": {
+          "on_grid": "[%key:component::enphase_envoy::entity::sensor::grid_status::state::on_grid%]",
+          "off_grid": "[%key:component::enphase_envoy::entity::sensor::grid_status::state::off_grid%]"
+        }
       }
     },
     "switch": {

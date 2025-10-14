@@ -1,11 +1,8 @@
 """Constants for the Squeezebox component."""
 
 CONF_HTTPS = "https"
-DISCOVERY_TASK = "discovery_task"
 DOMAIN = "squeezebox"
 DEFAULT_PORT = 9000
-KNOWN_PLAYERS = "known_players"
-KNOWN_SERVERS = "known_servers"
 PLAYER_DISCOVERY_UNSUB = "player_discovery_unsub"
 SENSOR_UPDATE_INTERVAL = 60
 SERVER_MANUFACTURER = "https://lyrion.org/"

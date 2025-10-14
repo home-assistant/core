@@ -15,6 +15,12 @@ from telegram import (
     CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    InputMedia,
+    InputMediaAnimation,
+    InputMediaAudio,
+    InputMediaDocument,
+    InputMediaPhoto,
+    InputMediaVideo,
     InputPollOption,
     Message,
     ReplyKeyboardMarkup,
@@ -22,7 +28,7 @@ from telegram import (
     Update,
     User,
 )
-from telegram.constants import ParseMode
+from telegram.constants import InputMediaType, ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, filters
 from telegram.request import HTTPXRequest
@@ -52,6 +58,7 @@ from .const import (
     ATTR_FILE,
     ATTR_FROM_FIRST,
     ATTR_FROM_LAST,
+    ATTR_INLINE_MESSAGE_ID,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
     ATTR_MESSAGE,
@@ -101,13 +108,26 @@ _LOGGER = logging.getLogger(__name__)
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
 
 
+def _get_bot_info(bot: Bot, config_entry: ConfigEntry) -> dict[str, Any]:
+    return {
+        "config_entry_id": config_entry.entry_id,
+        "id": bot.id,
+        "first_name": bot.first_name,
+        "last_name": bot.last_name,
+        "username": bot.username,
+    }
+
+
 class BaseTelegramBot:
     """The base class for the telegram bot."""
 
-    def __init__(self, hass: HomeAssistant, config: TelegramBotConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config: TelegramBotConfigEntry, bot: Bot
+    ) -> None:
         """Initialize the bot base class."""
         self.hass = hass
         self.config = config
+        self._bot = bot
 
     @abstractmethod
     async def shutdown(self) -> None:
@@ -133,6 +153,8 @@ class BaseTelegramBot:
         else:
             _LOGGER.warning("Unhandled update: %s", update)
             return True
+
+        event_data["bot"] = _get_bot_info(self._bot, self.config)
 
         event_context = Context()
 
@@ -284,7 +306,7 @@ class TelegramNotificationService:
             ):
                 message_id = self._last_message_id[chat_id]
         else:
-            inline_message_id = msg_data["inline_message_id"]
+            inline_message_id = msg_data[ATTR_INLINE_MESSAGE_ID]
         return message_id, inline_message_id
 
     def get_target_chat_ids(self, target: int | list[int] | None) -> list[int]:
@@ -442,6 +464,9 @@ class TelegramNotificationService:
                     event_data[ATTR_MESSAGE_THREAD_ID] = kwargs_msg[
                         ATTR_MESSAGE_THREAD_ID
                     ]
+
+                event_data["bot"] = _get_bot_info(self.bot, self.config)
+
                 self.hass.bus.async_fire(
                     EVENT_TELEGRAM_SENT, event_data, context=context
                 )
@@ -508,6 +533,63 @@ class TelegramNotificationService:
             # change last msg_id for deque(n_msgs)?
             self._last_message_id[chat_id] -= 1
         return deleted
+
+    async def edit_message_media(
+        self,
+        media_type: str,
+        chat_id: int | None = None,
+        context: Context | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        "Edit message media of a previously sent message."
+        chat_id = self.get_target_chat_ids(chat_id)[0]
+        message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
+        params = self._get_msg_kwargs(kwargs)
+        _LOGGER.debug(
+            "Edit message media %s in chat ID %s with params: %s",
+            message_id or inline_message_id,
+            chat_id,
+            params,
+        )
+
+        file_content = await load_data(
+            self.hass,
+            url=kwargs.get(ATTR_URL),
+            filepath=kwargs.get(ATTR_FILE),
+            username=kwargs.get(ATTR_USERNAME, ""),
+            password=kwargs.get(ATTR_PASSWORD, ""),
+            authentication=kwargs.get(ATTR_AUTHENTICATION),
+            verify_ssl=(
+                get_default_context()
+                if kwargs.get(ATTR_VERIFY_SSL, False)
+                else get_default_no_verify_context()
+            ),
+        )
+
+        media: InputMedia
+        if media_type == InputMediaType.ANIMATION:
+            media = InputMediaAnimation(file_content, caption=kwargs.get(ATTR_CAPTION))
+        elif media_type == InputMediaType.AUDIO:
+            media = InputMediaAudio(file_content, caption=kwargs.get(ATTR_CAPTION))
+        elif media_type == InputMediaType.DOCUMENT:
+            media = InputMediaDocument(file_content, caption=kwargs.get(ATTR_CAPTION))
+        elif media_type == InputMediaType.PHOTO:
+            media = InputMediaPhoto(file_content, caption=kwargs.get(ATTR_CAPTION))
+        else:
+            media = InputMediaVideo(file_content, caption=kwargs.get(ATTR_CAPTION))
+
+        return await self._send_msg(
+            self.bot.edit_message_media,
+            "Error editing message media",
+            params[ATTR_MESSAGE_TAG],
+            media=media,
+            chat_id=chat_id,
+            message_id=message_id,
+            inline_message_id=inline_message_id,
+            reply_markup=params[ATTR_REPLYMARKUP],
+            read_timeout=params[ATTR_TIMEOUT],
+            context=context,
+        )
 
     async def edit_message(
         self,
@@ -598,6 +680,28 @@ class TelegramNotificationService:
             read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
+
+    async def send_chat_action(
+        self,
+        chat_action: str = "",
+        target: Any = None,
+        context: Context | None = None,
+        **kwargs: Any,
+    ) -> dict[int, int]:
+        """Send a chat action to pre-allowed chat IDs."""
+        result = {}
+        for chat_id in self.get_target_chat_ids(target):
+            _LOGGER.debug("Send action %s in chat ID %s", chat_action, chat_id)
+            is_successful = await self._send_msg(
+                self.bot.send_chat_action,
+                "Error sending action",
+                None,
+                chat_id=chat_id,
+                action=chat_action,
+                context=context,
+            )
+            result[chat_id] = is_successful
+        return result
 
     async def send_file(
         self,

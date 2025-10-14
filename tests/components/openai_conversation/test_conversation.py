@@ -1,47 +1,22 @@
 """Tests for the OpenAI integration."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import httpx
 from openai import AuthenticationError, RateLimitError
-from openai.types import ResponseFormatText
 from openai.types.responses import (
-    Response,
-    ResponseCompletedEvent,
-    ResponseContentPartAddedEvent,
-    ResponseContentPartDoneEvent,
-    ResponseCreatedEvent,
     ResponseError,
     ResponseErrorEvent,
-    ResponseFailedEvent,
-    ResponseFunctionCallArgumentsDeltaEvent,
-    ResponseFunctionCallArgumentsDoneEvent,
-    ResponseFunctionToolCall,
-    ResponseFunctionWebSearch,
-    ResponseIncompleteEvent,
-    ResponseInProgressEvent,
-    ResponseOutputItemAddedEvent,
-    ResponseOutputItemDoneEvent,
-    ResponseOutputMessage,
-    ResponseOutputText,
-    ResponseReasoningItem,
     ResponseStreamEvent,
-    ResponseTextConfig,
-    ResponseTextDeltaEvent,
-    ResponseTextDoneEvent,
-    ResponseWebSearchCallCompletedEvent,
-    ResponseWebSearchCallInProgressEvent,
-    ResponseWebSearchCallSearchingEvent,
 )
 from openai.types.responses.response import IncompleteDetails
-from openai.types.responses.response_function_web_search import ActionSearch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.openai_conversation.const import (
+    CONF_CODE_INTERPRETER,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
@@ -55,102 +30,19 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 
+from . import (
+    create_code_interpreter_item,
+    create_function_tool_call_item,
+    create_message_item,
+    create_reasoning_item,
+    create_web_search_item,
+)
+
 from tests.common import MockConfigEntry
 from tests.components.conversation import (
     MockChatLog,
     mock_chat_log,  # noqa: F401
 )
-
-
-@pytest.fixture
-def mock_create_stream() -> Generator[AsyncMock]:
-    """Mock stream response."""
-
-    async def mock_generator(events, **kwargs):
-        response = Response(
-            id="resp_A",
-            created_at=1700000000,
-            error=None,
-            incomplete_details=None,
-            instructions=kwargs.get("instructions"),
-            metadata=kwargs.get("metadata", {}),
-            model=kwargs.get("model", "gpt-4o-mini"),
-            object="response",
-            output=[],
-            parallel_tool_calls=kwargs.get("parallel_tool_calls", True),
-            temperature=kwargs.get("temperature", 1.0),
-            tool_choice=kwargs.get("tool_choice", "auto"),
-            tools=kwargs.get("tools"),
-            top_p=kwargs.get("top_p", 1.0),
-            max_output_tokens=kwargs.get("max_output_tokens", 100000),
-            previous_response_id=kwargs.get("previous_response_id"),
-            reasoning=kwargs.get("reasoning"),
-            status="in_progress",
-            text=kwargs.get(
-                "text", ResponseTextConfig(format=ResponseFormatText(type="text"))
-            ),
-            truncation=kwargs.get("truncation", "disabled"),
-            usage=None,
-            user=kwargs.get("user"),
-            store=kwargs.get("store", True),
-        )
-        yield ResponseCreatedEvent(
-            response=response,
-            sequence_number=0,
-            type="response.created",
-        )
-        yield ResponseInProgressEvent(
-            response=response,
-            sequence_number=0,
-            type="response.in_progress",
-        )
-        response.status = "completed"
-
-        for value in events:
-            if isinstance(value, ResponseOutputItemDoneEvent):
-                response.output.append(value.item)
-            elif isinstance(value, IncompleteDetails):
-                response.status = "incomplete"
-                response.incomplete_details = value
-                break
-            if isinstance(value, ResponseError):
-                response.status = "failed"
-                response.error = value
-                break
-
-            yield value
-
-            if isinstance(value, ResponseErrorEvent):
-                return
-
-        if response.status == "incomplete":
-            yield ResponseIncompleteEvent(
-                response=response,
-                sequence_number=0,
-                type="response.incomplete",
-            )
-        elif response.status == "failed":
-            yield ResponseFailedEvent(
-                response=response,
-                sequence_number=0,
-                type="response.failed",
-            )
-        else:
-            yield ResponseCompletedEvent(
-                response=response,
-                sequence_number=0,
-                type="response.completed",
-            )
-
-    with patch(
-        "openai.resources.responses.AsyncResponses.create",
-        AsyncMock(),
-    ) as mock_create:
-        mock_create.side_effect = lambda **kwargs: mock_generator(
-            mock_create.return_value.pop(0), **kwargs
-        )
-
-        yield mock_create
 
 
 async def test_entity(
@@ -347,226 +239,9 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
-def create_message_item(
-    id: str, text: str | list[str], output_index: int
-) -> list[ResponseStreamEvent]:
-    """Create a message item."""
-    if isinstance(text, str):
-        text = [text]
-
-    content = ResponseOutputText(annotations=[], text="", type="output_text")
-    events = [
-        ResponseOutputItemAddedEvent(
-            item=ResponseOutputMessage(
-                id=id,
-                content=[],
-                type="message",
-                role="assistant",
-                status="in_progress",
-            ),
-            output_index=output_index,
-            sequence_number=0,
-            type="response.output_item.added",
-        ),
-        ResponseContentPartAddedEvent(
-            content_index=0,
-            item_id=id,
-            output_index=output_index,
-            part=content,
-            sequence_number=0,
-            type="response.content_part.added",
-        ),
-    ]
-
-    content.text = "".join(text)
-    events.extend(
-        ResponseTextDeltaEvent(
-            content_index=0,
-            delta=delta,
-            item_id=id,
-            output_index=output_index,
-            sequence_number=0,
-            type="response.output_text.delta",
-        )
-        for delta in text
-    )
-
-    events.extend(
-        [
-            ResponseTextDoneEvent(
-                content_index=0,
-                item_id=id,
-                output_index=output_index,
-                text="".join(text),
-                sequence_number=0,
-                type="response.output_text.done",
-            ),
-            ResponseContentPartDoneEvent(
-                content_index=0,
-                item_id=id,
-                output_index=output_index,
-                part=content,
-                sequence_number=0,
-                type="response.content_part.done",
-            ),
-            ResponseOutputItemDoneEvent(
-                item=ResponseOutputMessage(
-                    id=id,
-                    content=[content],
-                    role="assistant",
-                    status="completed",
-                    type="message",
-                ),
-                output_index=output_index,
-                sequence_number=0,
-                type="response.output_item.done",
-            ),
-        ]
-    )
-
-    return events
-
-
-def create_function_tool_call_item(
-    id: str, arguments: str | list[str], call_id: str, name: str, output_index: int
-) -> list[ResponseStreamEvent]:
-    """Create a function tool call item."""
-    if isinstance(arguments, str):
-        arguments = [arguments]
-
-    events = [
-        ResponseOutputItemAddedEvent(
-            item=ResponseFunctionToolCall(
-                id=id,
-                arguments="",
-                call_id=call_id,
-                name=name,
-                type="function_call",
-                status="in_progress",
-            ),
-            output_index=output_index,
-            sequence_number=0,
-            type="response.output_item.added",
-        )
-    ]
-
-    events.extend(
-        ResponseFunctionCallArgumentsDeltaEvent(
-            delta=delta,
-            item_id=id,
-            output_index=output_index,
-            sequence_number=0,
-            type="response.function_call_arguments.delta",
-        )
-        for delta in arguments
-    )
-
-    events.append(
-        ResponseFunctionCallArgumentsDoneEvent(
-            arguments="".join(arguments),
-            item_id=id,
-            output_index=output_index,
-            sequence_number=0,
-            type="response.function_call_arguments.done",
-        )
-    )
-
-    events.append(
-        ResponseOutputItemDoneEvent(
-            item=ResponseFunctionToolCall(
-                id=id,
-                arguments="".join(arguments),
-                call_id=call_id,
-                name=name,
-                type="function_call",
-                status="completed",
-            ),
-            output_index=output_index,
-            sequence_number=0,
-            type="response.output_item.done",
-        )
-    )
-
-    return events
-
-
-def create_reasoning_item(id: str, output_index: int) -> list[ResponseStreamEvent]:
-    """Create a reasoning item."""
-    return [
-        ResponseOutputItemAddedEvent(
-            item=ResponseReasoningItem(
-                id=id,
-                summary=[],
-                type="reasoning",
-                status=None,
-            ),
-            output_index=output_index,
-            sequence_number=0,
-            type="response.output_item.added",
-        ),
-        ResponseOutputItemDoneEvent(
-            item=ResponseReasoningItem(
-                id=id,
-                summary=[],
-                type="reasoning",
-                status=None,
-            ),
-            output_index=output_index,
-            sequence_number=0,
-            type="response.output_item.done",
-        ),
-    ]
-
-
-def create_web_search_item(id: str, output_index: int) -> list[ResponseStreamEvent]:
-    """Create a web search call item."""
-    return [
-        ResponseOutputItemAddedEvent(
-            item=ResponseFunctionWebSearch(
-                id=id,
-                status="in_progress",
-                action=ActionSearch(query="query", type="search"),
-                type="web_search_call",
-            ),
-            output_index=output_index,
-            sequence_number=0,
-            type="response.output_item.added",
-        ),
-        ResponseWebSearchCallInProgressEvent(
-            item_id=id,
-            output_index=output_index,
-            sequence_number=0,
-            type="response.web_search_call.in_progress",
-        ),
-        ResponseWebSearchCallSearchingEvent(
-            item_id=id,
-            output_index=output_index,
-            sequence_number=0,
-            type="response.web_search_call.searching",
-        ),
-        ResponseWebSearchCallCompletedEvent(
-            item_id=id,
-            output_index=output_index,
-            sequence_number=0,
-            type="response.web_search_call.completed",
-        ),
-        ResponseOutputItemDoneEvent(
-            item=ResponseFunctionWebSearch(
-                id=id,
-                status="completed",
-                action=ActionSearch(query="query", type="search"),
-                type="web_search_call",
-            ),
-            output_index=output_index,
-            sequence_number=0,
-            type="response.output_item.done",
-        ),
-    ]
-
-
 async def test_function_call(
     hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
+    mock_config_entry_with_reasoning_model: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
@@ -577,7 +252,11 @@ async def test_function_call(
         # Initial conversation
         (
             # Wait for the model to think
-            *create_reasoning_item(id="rs_A", output_index=0),
+            *create_reasoning_item(
+                id="rs_A",
+                output_index=0,
+                reasoning_summary=[["Thinking"], ["Thinking ", "more"]],
+            ),
             # First tool call
             *create_function_tool_call_item(
                 id="fc_1",
@@ -613,15 +292,10 @@ async def test_function_call(
         agent_id="conversation.openai_conversation",
     )
 
-    assert mock_create_stream.call_args.kwargs["input"][2] == {
-        "id": "rs_A",
-        "summary": [],
-        "type": "reasoning",
-        "encrypted_content": None,
-    }
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
     assert mock_chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["input"][1:] == snapshot
 
 
 async def test_function_call_without_reasoning(
@@ -761,6 +435,7 @@ async def test_web_search(
     mock_init_component,
     mock_create_stream,
     mock_chat_log: MockChatLog,  # noqa: F811
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test web_search_tool."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -799,7 +474,7 @@ async def test_web_search(
 
     assert mock_create_stream.mock_calls[0][2]["tools"] == [
         {
-            "type": "web_search_preview",
+            "type": "web_search",
             "search_context_size": "low",
             "user_location": {
                 "type": "approximate",
@@ -812,3 +487,81 @@ async def test_web_search(
     ]
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.speech["plain"]["speech"] == message, result.response.speech
+
+    # Test follow-up message in multi-turn conversation
+    mock_create_stream.return_value = [
+        (*create_message_item(id="msg_B", text="You are welcome!", output_index=1),)
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Thank you!",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    assert mock_create_stream.mock_calls[1][2]["input"][1:] == snapshot
+
+
+async def test_code_interpreter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test code_interpreter tool."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
+            CONF_CODE_INTERPRETER: True,
+        },
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    message = "I’ve calculated it with Python: the square root of 55555 is approximately 235.70108188126758."
+    mock_create_stream.return_value = [
+        (
+            *create_code_interpreter_item(
+                id="ci_A",
+                code=["import", " math", "\n", "math", ".sqrt", "(", "555", "55", ")"],
+                logs="235.70108188126758\n",
+                output_index=0,
+            ),
+            *create_message_item(id="msg_A", text=message, output_index=1),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Please use the python tool to calculate square root of 55555",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    assert mock_create_stream.mock_calls[0][2]["tools"] == [
+        {"type": "code_interpreter", "container": {"type": "auto"}}
+    ]
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == message, result.response.speech
+
+    # Test follow-up message in multi-turn conversation
+    mock_create_stream.return_value = [
+        (*create_message_item(id="msg_B", text="You are welcome!", output_index=1),)
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Thank you!",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    assert mock_create_stream.mock_calls[1][2]["input"][1:] == snapshot

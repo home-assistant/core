@@ -79,6 +79,11 @@ DEFAULT_NAME = "Vacuum cleaner robot"
 _DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumActivity.IDLE, "2026.1")
 _DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumActivity.PAUSED, "2026.1")
 
+_BATTERY_DEPRECATION_IGNORED_PLATFORMS = (
+    "mqtt",
+    "template",
+)
+
 
 class VacuumEntityFeature(IntFlag):
     """Supported features of the vacuum entity."""
@@ -98,41 +103,6 @@ class VacuumEntityFeature(IntFlag):
     STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
     START = 8192
 
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the VacuumEntityFeature enum instead.
-_DEPRECATED_SUPPORT_TURN_ON = DeprecatedConstantEnum(
-    VacuumEntityFeature.TURN_ON, "2025.10"
-)
-_DEPRECATED_SUPPORT_TURN_OFF = DeprecatedConstantEnum(
-    VacuumEntityFeature.TURN_OFF, "2025.10"
-)
-_DEPRECATED_SUPPORT_PAUSE = DeprecatedConstantEnum(VacuumEntityFeature.PAUSE, "2025.10")
-_DEPRECATED_SUPPORT_STOP = DeprecatedConstantEnum(VacuumEntityFeature.STOP, "2025.10")
-_DEPRECATED_SUPPORT_RETURN_HOME = DeprecatedConstantEnum(
-    VacuumEntityFeature.RETURN_HOME, "2025.10"
-)
-_DEPRECATED_SUPPORT_FAN_SPEED = DeprecatedConstantEnum(
-    VacuumEntityFeature.FAN_SPEED, "2025.10"
-)
-_DEPRECATED_SUPPORT_BATTERY = DeprecatedConstantEnum(
-    VacuumEntityFeature.BATTERY, "2025.10"
-)
-_DEPRECATED_SUPPORT_STATUS = DeprecatedConstantEnum(
-    VacuumEntityFeature.STATUS, "2025.10"
-)
-_DEPRECATED_SUPPORT_SEND_COMMAND = DeprecatedConstantEnum(
-    VacuumEntityFeature.SEND_COMMAND, "2025.10"
-)
-_DEPRECATED_SUPPORT_LOCATE = DeprecatedConstantEnum(
-    VacuumEntityFeature.LOCATE, "2025.10"
-)
-_DEPRECATED_SUPPORT_CLEAN_SPOT = DeprecatedConstantEnum(
-    VacuumEntityFeature.CLEAN_SPOT, "2025.10"
-)
-_DEPRECATED_SUPPORT_MAP = DeprecatedConstantEnum(VacuumEntityFeature.MAP, "2025.10")
-_DEPRECATED_SUPPORT_STATE = DeprecatedConstantEnum(VacuumEntityFeature.STATE, "2025.10")
-_DEPRECATED_SUPPORT_START = DeprecatedConstantEnum(VacuumEntityFeature.START, "2025.10")
 
 # mypy: disallow-any-generics
 
@@ -321,13 +291,17 @@ class StateVacuumEntity(
 
         Integrations should implement a sensor instead.
         """
-        if self.platform:
+        if (
+            self.platform
+            and self.platform.platform_name
+            not in _BATTERY_DEPRECATION_IGNORED_PLATFORMS
+        ):
             # Don't report usage until after entity added to hass, after init
             report_usage(
                 f"is setting the {property} which has been deprecated."
                 f" Integration {self.platform.platform_name} should implement a sensor"
                 " instead with a correct device class and link it to the same device",
-                core_integration_behavior=ReportBehavior.LOG,
+                core_integration_behavior=ReportBehavior.IGNORE,
                 custom_integration_behavior=ReportBehavior.LOG,
                 breaks_in_ha_version="2026.8",
                 integration_domain=self.platform.platform_name,
@@ -341,14 +315,18 @@ class StateVacuumEntity(
         Integrations should remove the battery supported feature when migrating
         battery level and icon to a sensor.
         """
-        if self.platform:
+        if (
+            self.platform
+            and self.platform.platform_name
+            not in _BATTERY_DEPRECATION_IGNORED_PLATFORMS
+        ):
             # Don't report usage until after entity added to hass, after init
             report_usage(
                 f"is setting the battery supported feature which has been deprecated."
                 f" Integration {self.platform.platform_name} should remove this as part of migrating"
                 " the battery level and icon to a sensor",
                 core_behavior=ReportBehavior.LOG,
-                core_integration_behavior=ReportBehavior.LOG,
+                core_integration_behavior=ReportBehavior.IGNORE,
                 custom_integration_behavior=ReportBehavior.LOG,
                 breaks_in_ha_version="2026.8",
                 integration_domain=self.platform.platform_name,

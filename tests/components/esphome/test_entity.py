@@ -51,13 +51,11 @@ async def test_entities_removed(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
         ),
         BinarySensorInfo(
             object_id="mybinary_sensor_to_be_removed",
             key=2,
             name="my binary_sensor to be removed",
-            unique_id="mybinary_sensor_to_be_removed",
         ),
     ]
     states = [
@@ -100,7 +98,6 @@ async def test_entities_removed(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
         ),
     ]
     states = [
@@ -140,13 +137,11 @@ async def test_entities_removed_after_reload(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
         ),
         BinarySensorInfo(
             object_id="mybinary_sensor_to_be_removed",
             key=2,
             name="my binary_sensor to be removed",
-            unique_id="mybinary_sensor_to_be_removed",
         ),
     ]
     states = [
@@ -214,11 +209,13 @@ async def test_entities_removed_after_reload(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
         ),
     ]
     mock_device.client.list_entities_services = AsyncMock(
         return_value=(entity_info, [])
+    )
+    mock_device.client.device_info_and_list_entities = AsyncMock(
+        return_value=(mock_device.device_info, entity_info, [])
     )
 
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -267,7 +264,6 @@ async def test_entities_for_entire_platform_removed(
             object_id="mybinary_sensor_to_be_removed",
             key=1,
             name="my binary_sensor to be removed",
-            unique_id="mybinary_sensor_to_be_removed",
         ),
     ]
     states = [
@@ -325,7 +321,6 @@ async def test_entity_info_object_ids(
             object_id="object_id_is_used",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
         )
     ]
     states = []
@@ -350,13 +345,11 @@ async def test_deep_sleep_device(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
         ),
         SensorInfo(
             object_id="my_sensor",
             key=3,
             name="my sensor",
-            unique_id="my_sensor",
         ),
     ]
     states = [
@@ -456,7 +449,6 @@ async def test_esphome_device_without_friendly_name(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
         ),
     ]
     states = [
@@ -486,7 +478,6 @@ async def test_entity_without_name_device_with_friendly_name(
             object_id="mybinary_sensor",
             key=1,
             name="",
-            unique_id="my_binary_sensor",
         ),
     ]
     states = [
@@ -519,7 +510,6 @@ async def test_entity_id_preserved_on_upgrade(
             object_id="my",
             key=1,
             name="my",
-            unique_id="binary_sensor_my",
         ),
     ]
     states = [
@@ -560,7 +550,6 @@ async def test_entity_id_preserved_on_upgrade_old_format_entity_id(
             object_id="my",
             key=1,
             name="my",
-            unique_id="binary_sensor_my",
         ),
     ]
     states = [
@@ -601,7 +590,6 @@ async def test_entity_id_preserved_on_upgrade_when_in_storage(
             object_id="my",
             key=1,
             name="my",
-            unique_id="binary_sensor_my",
         ),
     ]
     states = [
@@ -660,7 +648,6 @@ async def test_deep_sleep_added_after_setup(
                 object_id="test",
                 key=1,
                 name="test",
-                unique_id="test",
             ),
         ],
         states=[
@@ -693,6 +680,13 @@ async def test_deep_sleep_added_after_setup(
         **{**asdict(mock_device.device_info), "has_deep_sleep": True}
     )
     mock_device.client.device_info = AsyncMock(return_value=new_device_info)
+    mock_device.client.device_info_and_list_entities = AsyncMock(
+        return_value=(
+            new_device_info,
+            mock_device.client.list_entities_services.return_value[0],
+            mock_device.client.list_entities_services.return_value[1],
+        )
+    )
     mock_device.device_info = new_device_info
 
     await mock_device.mock_connect()
@@ -732,7 +726,6 @@ async def test_entity_assignment_to_sub_device(
             object_id="main_sensor",
             key=1,
             name="Main Sensor",
-            unique_id="main_sensor",
             device_id=0,
         ),
         # Entity for sub device 1
@@ -740,7 +733,6 @@ async def test_entity_assignment_to_sub_device(
             object_id="motion",
             key=2,
             name="Motion",
-            unique_id="motion",
             device_id=11111111,
         ),
         # Entity for sub device 2
@@ -748,7 +740,6 @@ async def test_entity_assignment_to_sub_device(
             object_id="door",
             key=3,
             name="Door",
-            unique_id="door",
             device_id=22222222,
         ),
     ]
@@ -932,7 +923,6 @@ async def test_entity_switches_between_devices(
             object_id="sensor",
             key=1,
             name="Test Sensor",
-            unique_id="sensor",
             # device_id omitted - entity belongs to main device
         ),
     ]
@@ -964,7 +954,6 @@ async def test_entity_switches_between_devices(
             object_id="sensor",
             key=1,
             name="Test Sensor",
-            unique_id="sensor",
             device_id=11111111,  # Now on sub device 1
         ),
     ]
@@ -972,6 +961,9 @@ async def test_entity_switches_between_devices(
     # Update the entity info by changing what the mock returns
     mock_client.list_entities_services = AsyncMock(
         return_value=(updated_entity_info, [])
+    )
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, updated_entity_info, [])
     )
     # Trigger a reconnect to simulate the entity info update
     await device.mock_disconnect(expected_disconnect=False)
@@ -993,13 +985,15 @@ async def test_entity_switches_between_devices(
             object_id="sensor",
             key=1,
             name="Test Sensor",
-            unique_id="sensor",
             device_id=22222222,  # Now on sub device 2
         ),
     ]
 
     mock_client.list_entities_services = AsyncMock(
         return_value=(updated_entity_info, [])
+    )
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, updated_entity_info, [])
     )
     await device.mock_disconnect(expected_disconnect=False)
     await device.mock_connect()
@@ -1020,13 +1014,15 @@ async def test_entity_switches_between_devices(
             object_id="sensor",
             key=1,
             name="Test Sensor",
-            unique_id="sensor",
             # device_id omitted - back to main device
         ),
     ]
 
     mock_client.list_entities_services = AsyncMock(
         return_value=(updated_entity_info, [])
+    )
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, updated_entity_info, [])
     )
     await device.mock_disconnect(expected_disconnect=False)
     await device.mock_connect()
@@ -1063,7 +1059,6 @@ async def test_entity_id_uses_sub_device_name(
             object_id="main_sensor",
             key=1,
             name="Main Sensor",
-            unique_id="main_sensor",
             device_id=0,
         ),
         # Entity for sub device 1
@@ -1071,7 +1066,6 @@ async def test_entity_id_uses_sub_device_name(
             object_id="motion",
             key=2,
             name="Motion",
-            unique_id="motion",
             device_id=11111111,
         ),
         # Entity for sub device 2
@@ -1079,7 +1073,6 @@ async def test_entity_id_uses_sub_device_name(
             object_id="door",
             key=3,
             name="Door",
-            unique_id="door",
             device_id=22222222,
         ),
         # Entity without name on sub device
@@ -1087,7 +1080,6 @@ async def test_entity_id_uses_sub_device_name(
             object_id="sensor_no_name",
             key=4,
             name="",
-            unique_id="sensor_no_name",
             device_id=11111111,
         ),
     ]
@@ -1147,7 +1139,6 @@ async def test_entity_id_with_empty_sub_device_name(
             object_id="sensor",
             key=1,
             name="Sensor",
-            unique_id="sensor",
             device_id=11111111,
         ),
     ]
@@ -1187,8 +1178,7 @@ async def test_unique_id_migration_when_entity_moves_between_devices(
         BinarySensorInfo(
             object_id="temperature",
             key=1,
-            name="Temperature",
-            unique_id="unused",  # This field is not used by the integration
+            name="Temperature",  # This field is not used by the integration
             device_id=0,  # Main device
         ),
     ]
@@ -1250,14 +1240,16 @@ async def test_unique_id_migration_when_entity_moves_between_devices(
         BinarySensorInfo(
             object_id="temperature",  # Same object_id
             key=1,  # Same key - this is what identifies the entity
-            name="Temperature",
-            unique_id="unused",  # This field is not used
+            name="Temperature",  # This field is not used
             device_id=22222222,  # Now on sub-device
         ),
     ]
 
     # Update the entity info by changing what the mock returns
     mock_client.list_entities_services = AsyncMock(return_value=(new_entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, new_entity_info, [])
+    )
 
     # Trigger a reconnect to simulate the entity info update
     await device.mock_disconnect(expected_disconnect=False)
@@ -1312,7 +1304,6 @@ async def test_unique_id_migration_sub_device_to_main_device(
             object_id="temperature",
             key=1,
             name="Temperature",
-            unique_id="unused",
             device_id=22222222,  # On sub-device
         ),
     ]
@@ -1347,13 +1338,15 @@ async def test_unique_id_migration_sub_device_to_main_device(
             object_id="temperature",
             key=1,
             name="Temperature",
-            unique_id="unused",
             device_id=0,  # Now on main device
         ),
     ]
 
     # Update the entity info
     mock_client.list_entities_services = AsyncMock(return_value=(new_entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, new_entity_info, [])
+    )
 
     # Trigger a reconnect
     await device.mock_disconnect(expected_disconnect=False)
@@ -1407,7 +1400,6 @@ async def test_unique_id_migration_between_sub_devices(
             object_id="temperature",
             key=1,
             name="Temperature",
-            unique_id="unused",
             device_id=22222222,  # On kitchen_controller
         ),
     ]
@@ -1442,13 +1434,15 @@ async def test_unique_id_migration_between_sub_devices(
             object_id="temperature",
             key=1,
             name="Temperature",
-            unique_id="unused",
             device_id=33333333,  # Now on bedroom_controller
         ),
     ]
 
     # Update the entity info
     mock_client.list_entities_services = AsyncMock(return_value=(new_entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, new_entity_info, [])
+    )
 
     # Trigger a reconnect
     await device.mock_disconnect(expected_disconnect=False)
@@ -1501,7 +1495,6 @@ async def test_entity_device_id_rename_in_yaml(
             object_id="sensor",
             key=1,
             name="Sensor",
-            unique_id="unused",
             device_id=11111111,
         ),
     ]
@@ -1563,13 +1556,15 @@ async def test_entity_device_id_rename_in_yaml(
             object_id="sensor",  # Same object_id
             key=1,  # Same key
             name="Sensor",
-            unique_id="unused",
             device_id=99999999,  # New device_id after rename
         ),
     ]
 
     # Update the entity info
     mock_client.list_entities_services = AsyncMock(return_value=(new_entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(new_device_info, new_entity_info, [])
+    )
 
     # Trigger a reconnect to simulate the YAML config change
     await device.mock_disconnect(expected_disconnect=False)
@@ -1636,8 +1631,7 @@ async def test_entity_with_unicode_name(
         BinarySensorInfo(
             object_id=sanitized_object_id,  # ESPHome sends the sanitized version
             key=1,
-            name=unicode_name,  # But also sends the original Unicode name
-            unique_id="unicode_sensor",
+            name=unicode_name,  # But also sends the original Unicode name,
         )
     ]
     states = [BinarySensorState(key=1, state=True)]
@@ -1677,8 +1671,7 @@ async def test_entity_without_name_uses_device_name_only(
         BinarySensorInfo(
             object_id="some_sanitized_id",
             key=1,
-            name="",  # Empty name
-            unique_id="no_name_sensor",
+            name="",  # Empty name,
         )
     ]
     states = [BinarySensorState(key=1, state=True)]

@@ -5,14 +5,15 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Container, Hashable, Iterable, Mapping
+from collections.abc import Callable, Container, Coroutine, Hashable, Iterable, Mapping
 from contextlib import suppress
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
+import functools
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, TypeVar, cast
+from typing import Any, Concatenate, Generic, Required, TypedDict, TypeVar, cast
 
 import voluptuous as vol
 
@@ -142,12 +143,21 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     progress_task: asyncio.Task[Any] | None
     reason: str
     required: bool
-    result: Any
+    sort: bool
     step_id: str
     title: str
     translation_domain: str
     type: FlowResultType
     url: str
+
+
+class ProgressStepData[_FlowResultT](TypedDict):
+    """Typed data for progress step tracking."""
+
+    tasks: dict[str, asyncio.Task[Any]]
+    abort_reason: str
+    abort_description_placeholders: Mapping[str, str]
+    next_step_result: _FlowResultT | None
 
 
 def _map_error_to_schema_errors(
@@ -422,11 +432,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                     != result.get("description_placeholders")
                 )
             ):
-                # Tell frontend to reload the flow state.
-                self.hass.bus.async_fire_internal(
-                    EVENT_DATA_ENTRY_FLOW_PROGRESSED,
-                    {"handler": flow.handler, "flow_id": flow_id, "refresh": True},
-                )
+                flow.async_notify_flow_changed()
 
         return result
 
@@ -639,6 +645,12 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     __progress_task: asyncio.Task[Any] | None = None
     __no_progress_task_reported = False
     deprecated_show_progress = False
+    _progress_step_data: ProgressStepData[_FlowResultT] = {
+        "tasks": {},
+        "abort_reason": "",
+        "abort_description_placeholders": MappingProxyType({}),
+        "next_step_result": None,
+    }
 
     @property
     def source(self) -> str | None:
@@ -677,9 +689,10 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 and key in suggested_values
             ):
                 new_section_key = copy.copy(key)
-                schema[new_section_key] = val
-                val.schema = self.add_suggested_values_to_schema(
-                    val.schema, suggested_values[key]
+                new_val = copy.copy(val)
+                schema[new_section_key] = new_val
+                new_val.schema = self.add_suggested_values_to_schema(
+                    new_val.schema, suggested_values[key]
                 )
                 continue
 
@@ -706,10 +719,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> _FlowResultT:
-        """Return the definition of a form to gather user input.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Return the definition of a form to gather user input."""
         flow_result = self._flow_result(
             type=FlowResultType.FORM,
             flow_id=self.flow_id,
@@ -763,6 +773,37 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             description_placeholders=description_placeholders,
         )
 
+    async def async_step__progress_step_abort(
+        self, user_input: dict[str, Any] | None = None
+    ) -> _FlowResultT:
+        """Abort the flow."""
+        return self.async_abort(
+            reason=self._progress_step_data["abort_reason"],
+            description_placeholders=self._progress_step_data[
+                "abort_description_placeholders"
+            ],
+        )
+
+    async def async_step__progress_step_progress_done(
+        self, user_input: dict[str, Any] | None = None
+    ) -> _FlowResultT:
+        """Progress done. Return the next step.
+
+        Used by the progress_step decorator
+        to allow decorated step methods
+        to call the next step method, to change step,
+        without using async_show_progress_done.
+        If no next step is set, abort the flow.
+        """
+        if self._progress_step_data["next_step_result"] is None:
+            return self.async_abort(
+                reason=self._progress_step_data["abort_reason"],
+                description_placeholders=self._progress_step_data[
+                    "abort_description_placeholders"
+                ],
+            )
+        return self._progress_step_data["next_step_result"]
+
     @callback
     def async_external_step(
         self,
@@ -771,10 +812,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         url: str,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> _FlowResultT:
-        """Return the definition of an external step for the user to take.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Return the definition of an external step for the user to take."""
         flow_result = self._flow_result(
             type=FlowResultType.EXTERNAL_STEP,
             flow_id=self.flow_id,
@@ -805,10 +843,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         description_placeholders: Mapping[str, str] | None = None,
         progress_task: asyncio.Task[Any] | None = None,
     ) -> _FlowResultT:
-        """Show a progress message to the user, without user input allowed.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Show a progress message to the user, without user input allowed."""
         if progress_task is None and not self.__no_progress_task_reported:
             self.__no_progress_task_reported = True
             cls = self.__class__
@@ -848,6 +883,17 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         )
 
     @callback
+    def async_notify_flow_changed(self) -> None:
+        """Notify listeners that the flow has changed.
+
+        This notifies listeners (such as the frontend) to reload the flow state.
+        """
+        self.hass.bus.async_fire_internal(
+            EVENT_DATA_ENTRY_FLOW_PROGRESSED,
+            {"handler": self.handler, "flow_id": self.flow_id, "refresh": True},
+        )
+
+    @callback
     def async_show_progress_done(self, *, next_step_id: str) -> _FlowResultT:
         """Mark the progress done."""
         return self._flow_result(
@@ -863,12 +909,12 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         *,
         step_id: str | None = None,
         menu_options: Container[str],
+        sort: bool = False,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> _FlowResultT:
         """Show a navigation menu to the user.
 
         Options dict maps step_id => i18n label
-        The step_id parameter is deprecated and will be removed in a future release.
         """
         flow_result = self._flow_result(
             type=FlowResultType.MENU,
@@ -878,6 +924,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             menu_options=menu_options,
             description_placeholders=description_placeholders,
         )
+        if sort:
+            flow_result["sort"] = sort
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -936,3 +984,90 @@ class section:
     def __call__(self, value: Any) -> Any:
         """Validate input."""
         return self.schema(value)
+
+
+type _FuncType[_T: FlowHandler[Any, Any, Any], _R: FlowResult[Any, Any], **_P] = (
+    Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]]
+)
+
+
+def progress_step[
+    HandlerT: FlowHandler[Any, Any, Any],
+    ResultT: FlowResult[Any, Any],
+    **P,
+](
+    description_placeholders: (
+        dict[str, str] | Callable[[Any], dict[str, str]] | None
+    ) = None,
+) -> Callable[[_FuncType[HandlerT, ResultT, P]], _FuncType[HandlerT, ResultT, P]]:
+    """Decorator to create a progress step from an async function.
+
+    The decorated method should be a step method
+    which needs to show progress.
+    The method should accept dict[str, Any] as user_input
+    and should return a FlowResult or raise AbortFlow.
+    The method can call self.async_update_progress(progress)
+    to update progress.
+
+    Args:
+        description_placeholders: Static dict or callable that returns dict for progress UI placeholders.
+    """
+
+    def decorator(
+        func: _FuncType[HandlerT, ResultT, P],
+    ) -> _FuncType[HandlerT, ResultT, P]:
+        @functools.wraps(func)
+        async def wrapper(
+            self: FlowHandler[Any, ResultT], *args: P.args, **kwargs: P.kwargs
+        ) -> ResultT:
+            step_id = func.__name__.replace("async_step_", "")
+
+            # Check if we have a progress task running
+            progress_task = self._progress_step_data["tasks"].get(step_id)
+
+            if progress_task is None:
+                # First call - create and start the progress task
+                progress_task = self.hass.async_create_task(
+                    func(self, *args, **kwargs),  # type: ignore[arg-type]
+                    f"Progress step {step_id}",
+                )
+                self._progress_step_data["tasks"][step_id] = progress_task
+
+                if not progress_task.done():
+                    # Handle description placeholders
+                    placeholders = None
+                    if description_placeholders is not None:
+                        if callable(description_placeholders):
+                            placeholders = description_placeholders(self)
+                        else:
+                            placeholders = description_placeholders
+
+                    return self.async_show_progress(
+                        step_id=step_id,
+                        progress_action=step_id,
+                        progress_task=progress_task,
+                        description_placeholders=placeholders,
+                    )
+
+            # Task is done or this is a subsequent call
+            try:
+                self._progress_step_data["next_step_result"] = await progress_task
+            except AbortFlow as err:
+                self._progress_step_data["abort_reason"] = err.reason
+                self._progress_step_data["abort_description_placeholders"] = (
+                    err.description_placeholders or {}
+                )
+                return self.async_show_progress_done(
+                    next_step_id="_progress_step_abort"
+                )
+            finally:
+                # Clean up task reference
+                self._progress_step_data["tasks"].pop(step_id, None)
+
+            return self.async_show_progress_done(
+                next_step_id="_progress_step_progress_done"
+            )
+
+        return wrapper
+
+    return decorator
