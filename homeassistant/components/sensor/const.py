@@ -52,7 +52,6 @@ from homeassistant.util.unit_conversion import (
     AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
-    CarbonMonoxideConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -159,7 +158,7 @@ class SensorDeviceClass(StrEnum):
     CO = "carbon_monoxide"
     """Carbon Monoxide gas concentration.
 
-    Unit of measurement: `ppm` (parts per million), `mg/m³`
+    Unit of measurement: `ppm` (parts per million)
     """
 
     CO2 = "carbon_dioxide"
@@ -552,7 +551,6 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.AREA: AreaConverter,
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
     SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: BloodGlucoseConcentrationConverter,
-    SensorDeviceClass.CO: CarbonMonoxideConcentrationConverter,
     SensorDeviceClass.CONDUCTIVITY: ConductivityConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.DATA_RATE: DataRateConverter,
@@ -595,10 +593,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     SensorDeviceClass.BATTERY: {PERCENTAGE},
     SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
-    SensorDeviceClass.CO: {
-        CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    },
+    SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
     SensorDeviceClass.CURRENT: set(UnitOfElectricCurrent),

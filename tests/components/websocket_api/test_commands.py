@@ -2307,14 +2307,21 @@ async def test_manifest_list(
     ]
 
 
+@pytest.mark.parametrize(
+    "integrations",
+    [
+        ["hue", "websocket_api"],
+        ["hue", "non_existing", "websocket_api"],
+    ],
+)
 async def test_manifest_list_specific_integrations(
-    hass: HomeAssistant, websocket_client
+    hass: HomeAssistant, websocket_client, integrations: list[str]
 ) -> None:
     """Test loading manifests for specific integrations."""
     websocket_api = await async_get_integration(hass, "websocket_api")
 
     await websocket_client.send_json_auto_id(
-        {"type": "manifest/list", "integrations": ["hue", "websocket_api"]}
+        {"type": "manifest/list", "integrations": integrations}
     )
     hue = await async_get_integration(hass, "hue")
 

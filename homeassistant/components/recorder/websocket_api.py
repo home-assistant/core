@@ -19,7 +19,6 @@ from homeassistant.util.unit_conversion import (
     ApparentPowerConverter,
     AreaConverter,
     BloodGlucoseConcentrationConverter,
-    CarbonMonoxideConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -67,9 +66,6 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("area"): vol.In(AreaConverter.VALID_UNITS),
         vol.Optional("blood_glucose_concentration"): vol.In(
             BloodGlucoseConcentrationConverter.VALID_UNITS
-        ),
-        vol.Optional("carbon_monoxide"): vol.In(
-            CarbonMonoxideConcentrationConverter.VALID_UNITS
         ),
         vol.Optional("concentration"): vol.In(
             MassVolumeConcentrationConverter.VALID_UNITS
