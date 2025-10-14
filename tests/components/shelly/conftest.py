@@ -620,7 +620,9 @@ async def mock_rpc_device():
         current_pos = iter(range(50, -1, -10))  # from 50 to 0 in steps of 10
 
         async def update_cover_status(cover_id: int):
-            device.status[f"cover:{cover_id}"]["current_pos"] = next(current_pos)
+            device.status[f"cover:{cover_id}"]["current_pos"] = next(
+                current_pos, device.status[f"cover:{cover_id}"]["current_pos"]
+            )
 
         device = _mock_rpc_device()
         rpc_device_mock.return_value = device
