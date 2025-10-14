@@ -464,6 +464,7 @@ class PressureConverter(BaseUnitConverter):
 
     UNIT_CLASS = "pressure"
     _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfPressure.MILLIPASCAL: 1 * 1000,
         UnitOfPressure.PA: 1,
         UnitOfPressure.HPA: 1 / 100,
         UnitOfPressure.KPA: 1 / 1000,
@@ -478,6 +479,7 @@ class PressureConverter(BaseUnitConverter):
         / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
     }
     VALID_UNITS = {
+        UnitOfPressure.MILLIPASCAL,
         UnitOfPressure.PA,
         UnitOfPressure.HPA,
         UnitOfPressure.KPA,
