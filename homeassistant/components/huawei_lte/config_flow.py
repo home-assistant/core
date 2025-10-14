@@ -113,7 +113,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors or {},
             description_placeholders={
-                "sample_ip" : "http://192.168.X.1",
+                "sample_ip": "http://192.168.X.1",
             },
         )
 
@@ -136,7 +136,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors or {},
             description_placeholders={
-                "sample_ip" : "http://192.168.X.1",
+                "sample_ip": "http://192.168.X.1",
             },
         )
 
@@ -413,9 +413,9 @@ class HuaweiLteOptionsFlow(OptionsFlow):
             }
         )
         return self.async_show_form(
-            step_id="init", 
+            step_id="init",
             data_schema=data_schema,
             description_placeholders={
-                "sample_ip" : "http://192.168.X.1",
+                "sample_ip": "http://192.168.X.1",
             },
         )
