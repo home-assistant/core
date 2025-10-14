@@ -53,20 +53,17 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self.send_api_command(LockCommands.LOCK)
-        self._attr_is_locked = True
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self.send_api_command(LockCommands.UNLOCK)
-        self._attr_is_locked = False
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_open(self, **kwargs: Any) -> None:
         """Latch open the lock."""
         await self.send_api_command(LockV2Commands.DEADBOLT)
-        self._attr_is_locked = False
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
