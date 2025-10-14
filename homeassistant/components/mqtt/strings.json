@@ -412,7 +412,7 @@
             "state_topic": "The MQTT topic subscribed to receive {platform} state values. [Learn more.]({url}#state_topic)",
             "step": "Step value. Smallest value 0.001.",
             "support_duration": "The siren supports setting a duration in second. The `duration` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#support_duration)",
-            "support_volume_set": "The siren supports setting a volume. The `tone` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#support_volume_set)",
+            "support_volume_set": "The siren supports setting a volume. The `volume` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#support_volume_set)",
             "supported_color_modes": "A list of color modes supported by the light. Possible color modes are On/Off, Brightness, Color temperature, HS, XY, RGB, RGBW, RGBWW, White. Note that if On/Off or Brightness are used, that must be the only value in the list. [Learn more.]({url}#supported_color_modes)",
             "url_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract an URL from the received URL topic payload value. [Learn more.]({url}#url_template)",
             "url_topic": "The MQTT topic subscribed to receive messages containing the image URL. [Learn more.]({url}#url_topic)",
