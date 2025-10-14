@@ -1,0 +1,32 @@
+"""Tests for diagnostics data."""
+
+from unittest.mock import AsyncMock
+
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.core import HomeAssistant
+
+from .conftest import setup_integration
+
+from tests.common import MockConfigEntry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
+
+
+@pytest.mark.parametrize(
+    "device_fixture", ["SolidFlex/PowerFlex2000", "BK1600/BK1600Ultra"], indirect=True
+)
+async def test_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_indevolt: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test diagnostics."""
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
+    )
