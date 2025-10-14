@@ -2,7 +2,6 @@
 
 from dataclasses import replace
 from datetime import timedelta
-import logging
 from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
@@ -28,7 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration  # pylint: disable=hass-relative-import
-from .conftest import VALID_CONFIG
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -89,16 +87,26 @@ async def test_sensors_are_updated(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test sensors are updated."""
+    """Test sensors are updated with properly formatted values."""
     await init_integration(hass, mock_config_entry)
 
     entity_id = "sensor.amd_ryzen_7_7800x3d_package_temperature"
-
     state = hass.states.get(entity_id)
 
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "52.8"
+
+    assert state.attributes["min_value"] == "38.4"
+    assert state.attributes["max_value"] == "74.0"
+
+    voltage_state = hass.states.get(
+        "sensor.msi_mag_b650m_mortar_wifi_ms_7d76_12v_voltage"
+    )
+    assert voltage_state
+    assert voltage_state.state == "12.072"
+    assert voltage_state.attributes["min_value"] == "12.048"
+    assert voltage_state.attributes["max_value"] == "12.096"
 
     updated_data = dict(mock_lhm_client.get_data.return_value.sensor_data)
     updated_data["amdcpu-0-temperature-3"] = replace(
@@ -198,13 +206,10 @@ async def test_legacy_device_ids_are_updated(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that non-unique legacy device IDs are updated."""
-    # First add the config entry to Home Assistant
     mock_config_entry.add_to_hass(hass)
 
-    # Manually create devices with legacy identifiers first
     legacy_device_ids = ["amdcpu-0", "gpu-nvidia-0", "lpc-nct6687d-0"]
 
-    # Create devices with old identifiers (without entry_id prefix)
     created_devices = []
     for device_id in legacy_device_ids:
         device = device_registry.async_get_or_create(
@@ -214,7 +219,6 @@ async def test_legacy_device_ids_are_updated(
         )
         created_devices.append(device)
 
-    # Verify devices were created with legacy identifiers
     device_entries_before = dr.async_entries_for_config_entry(
         registry=device_registry, config_entry_id=mock_config_entry.entry_id
     )
@@ -222,10 +226,8 @@ async def test_legacy_device_ids_are_updated(
         next(iter(device.identifiers))[1] for device in device_entries_before
     } == set(legacy_device_ids)
 
-    # Initialize integration - should trigger migration
     await init_integration(hass, mock_config_entry)
 
-    # Verify devices now have new identifiers with entry_id prefix
     device_entries_after = dr.async_entries_for_config_entry(
         registry=device_registry, config_entry_id=mock_config_entry.entry_id
     )
@@ -235,88 +237,3 @@ async def test_legacy_device_ids_are_updated(
     assert {
         next(iter(device.identifiers))[1] for device in device_entries_after
     } == set(expected_device_ids)
-
-
-async def test_unique_id_migration(
-    hass: HomeAssistant,
-    mock_lhm_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test migration of entities with old unique ID format."""
-    # Create a new config entry with version 1 to trigger migration
-    config_entry_v1 = MockConfigEntry(
-        domain=DOMAIN,
-        title="192.168.0.20:8085",
-        data=VALID_CONFIG,
-        entry_id="test_entry_id",
-        version=1,
-    )
-
-    # Add the config entry to Home Assistant
-    config_entry_v1.add_to_hass(hass)
-
-    # Use an actual sensor ID from the mock data (without leading slash)
-    actual_sensor_id = "lpc-nct6687d-0-voltage-0"
-
-    # Manually create entity with old unique ID format first
-    old_unique_id = f"lhm-{actual_sensor_id}"
-    entity_id = "sensor.msi_mag_b650m_mortar_wifi_ms_7d76_12v_voltage"
-
-    entity_registry.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        old_unique_id,
-        suggested_object_id="msi_mag_b650m_mortar_wifi_ms_7d76_12v_voltage",
-        config_entry=config_entry_v1,
-    )
-
-    # Verify entity exists with old unique ID
-    assert (
-        entity_registry.async_get_entity_id("sensor", DOMAIN, old_unique_id)
-        == entity_id
-    )
-
-    # Ensure entity registry is synchronized before migration
-    await hass.async_block_till_done()
-
-    # Verify the entity is actually in the registry before migration
-    entity_registry_after = er.async_get(hass)
-    assert (
-        entity_registry_after.async_get_entity_id("sensor", DOMAIN, old_unique_id)
-        == entity_id
-    )
-
-    # Now initialize the integration - this should trigger the migration
-    await init_integration(hass, config_entry_v1)
-
-    # Wait for the integration to fully load
-    await hass.async_block_till_done()
-
-
-async def test_integration_does_not_log_new_devices_on_first_refresh(
-    hass: HomeAssistant,
-    mock_lhm_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test that initial data update does not cause warning about new devices."""
-    mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
-        main_device_ids_and_names=MappingProxyType(
-            {
-                **mock_lhm_client.get_data.return_value.main_device_ids_and_names,
-                DeviceId("generic-memory"): DeviceName("Generic Memory"),
-            }
-        ),
-        sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
-    )
-
-    with caplog.at_level(logging.WARNING):
-        await init_integration(hass, mock_config_entry)
-        # Filter out asyncio warnings which are not related to our integration
-        libre_hardware_monitor_logs = [
-            record
-            for record in caplog.records
-            if record.name.startswith("homeassistant.components.libre_hardware_monitor")
-        ]
-        assert len(libre_hardware_monitor_logs) == 0

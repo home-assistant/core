@@ -5,16 +5,14 @@ from __future__ import annotations
 from librehardwaremonitor_api.model import LibreHardwareMonitorSensorData
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LibreHardwareMonitorCoordinator
+from . import LibreHardwareMonitorConfigEntry, LibreHardwareMonitorCoordinator
 from .const import DOMAIN
 
-# Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 STATE_MIN_VALUE = "min_value"
@@ -23,7 +21,7 @@ STATE_MAX_VALUE = "max_value"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LibreHardwareMonitorConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the LibreHardwareMonitor platform."""
