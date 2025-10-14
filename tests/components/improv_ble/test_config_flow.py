@@ -8,7 +8,10 @@ from improv_ble_client import Error, State, errors as improv_ble_errors
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth import BluetoothChange
+from homeassistant.components.bluetooth import (
+    BluetoothChange,
+    BluetoothServiceInfoBleak,
+)
 from homeassistant.components.improv_ble.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_ADDRESS
@@ -22,7 +25,12 @@ from . import (
     PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_capture_events
+from tests.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info_bleak,
+)
 
 IMPROV_BLE = "homeassistant.components.improv_ble"
 
@@ -177,6 +185,112 @@ async def test_bluetooth_step_provisioned_device_2(hass: HomeAssistant) -> None:
     callback(PROVISIONED_IMPROV_BLE_DISCOVERY_INFO, BluetoothChange.ADVERTISEMENT)
 
     assert len(hass.config_entries.flow.async_progress_by_handler("improv_ble")) == 0
+
+
+async def test_bluetooth_step_provisioned_no_rediscovery(hass: HomeAssistant) -> None:
+    """Test that provisioned device is not rediscovered while it stays provisioned."""
+    # Step 1: Inject provisioned device advertisement (triggers discovery, aborts)
+    inject_bluetooth_service_info_bleak(hass, PROVISIONED_IMPROV_BLE_DISCOVERY_INFO)
+    await hass.async_block_till_done()
+
+    # Verify flow was aborted
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 0
+
+    # Step 2: Inject same provisioned advertisement again
+    # This should NOT trigger a new discovery because the content hasn't changed
+    # even though we cleared the match history
+    inject_bluetooth_service_info_bleak(hass, PROVISIONED_IMPROV_BLE_DISCOVERY_INFO)
+    await hass.async_block_till_done()
+
+    # Verify no new flow was started
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 0
+
+
+async def test_bluetooth_step_factory_reset_rediscovery(hass: HomeAssistant) -> None:
+    """Test that factory reset device can be rediscovered."""
+    # Start a flow manually with provisioned device to ensure improv_ble is loaded
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_provisioned"
+
+    # Now the match history has been cleared by the config flow
+    # Inject authorized device advertisement - should trigger new discovery
+    inject_bluetooth_service_info_bleak(hass, IMPROV_BLE_DISCOVERY_INFO)
+    await hass.async_block_till_done()
+
+    # Verify discovery proceeds (new flow started)
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "bluetooth_confirm"
+
+
+async def test_bluetooth_rediscovery_after_successful_provision(
+    hass: HomeAssistant,
+) -> None:
+    """Test that device can be rediscovered after successful provisioning."""
+    # Start provisioning flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=IMPROV_BLE_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # Confirm bluetooth setup
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # Start provisioning
+    with patch(
+        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=False
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ADDRESS: IMPROV_BLE_DISCOVERY_INFO.address},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "provision"
+
+    # Complete provisioning successfully
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=False,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"ssid": "TestNetwork", "password": "secret"}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["progress_action"] == "provisioning"
+        assert result["step_id"] == "do_provision"
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "provision_successful"
+
+    # Now inject the same device again (simulating factory reset)
+    # The match history was cleared after successful provision, so it should be rediscovered
+    inject_bluetooth_service_info_bleak(hass, IMPROV_BLE_DISCOVERY_INFO)
+    await hass.async_block_till_done()
+
+    # Verify new discovery flow was created
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "bluetooth_confirm"
 
 
 async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
@@ -696,3 +810,62 @@ async def test_provision_fails_invalid_data(
         "Received invalid improv via BLE data '000000000000' from device with bluetooth address 'AA:BB:CC:DD:EE:F0'"
         in caplog.text
     )
+
+
+async def test_bluetooth_name_update(hass: HomeAssistant) -> None:
+    """Test that discovery notification title updates when device name changes."""
+    with patch(
+        f"{IMPROV_BLE}.config_flow.bluetooth.async_register_callback",
+    ) as mock_async_register_callback:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=IMPROV_BLE_DISCOVERY_INFO,
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # Get the flow to check initial title_placeholders
+    flow = hass.config_entries.flow.async_get(result["flow_id"])
+    assert flow["context"]["title_placeholders"] == {"name": "00123456"}
+
+    # Get the callback that was registered
+    callback = mock_async_register_callback.call_args.args[1]
+
+    # Create updated discovery info with a new name
+    updated_discovery_info = BluetoothServiceInfoBleak(
+        name="improvtest",
+        address="AA:BB:CC:DD:EE:F0",
+        rssi=-60,
+        manufacturer_data={},
+        service_uuids=[IMPROV_BLE_DISCOVERY_INFO.service_uuids[0]],
+        service_data=IMPROV_BLE_DISCOVERY_INFO.service_data,
+        source="local",
+        device=generate_ble_device(address="AA:BB:CC:DD:EE:F0", name="improvtest"),
+        advertisement=generate_advertisement_data(
+            service_uuids=IMPROV_BLE_DISCOVERY_INFO.service_uuids,
+            service_data=IMPROV_BLE_DISCOVERY_INFO.service_data,
+        ),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    )
+
+    # Capture events to verify frontend notification
+    events = async_capture_events(hass, "data_entry_flow_progressed")
+
+    # Simulate receiving updated advertisement with new name
+    callback(updated_discovery_info, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
+
+    # Verify title_placeholders were updated
+    flow = hass.config_entries.flow.async_get(result["flow_id"])
+    assert flow["context"]["title_placeholders"] == {"name": "improvtest"}
+
+    # Verify frontend was notified
+    assert len(events) == 1
+    assert events[0].data == {
+        "handler": DOMAIN,
+        "flow_id": result["flow_id"],
+        "refresh": True,
+    }
