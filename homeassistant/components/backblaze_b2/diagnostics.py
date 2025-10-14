@@ -10,7 +10,8 @@ from homeassistant.core import HomeAssistant
 from . import BackblazeConfigEntry
 from .const import CONF_APPLICATION_KEY, CONF_KEY_ID
 
-TO_REDACT = {CONF_APPLICATION_KEY, CONF_KEY_ID}
+TO_REDACT_ENTRY_DATA = {CONF_APPLICATION_KEY, CONF_KEY_ID}
+TO_REDACT_ACCOUNT_DATA_ALLOWED = {"bucketId", "bucketName", "namePrefix"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -40,7 +41,7 @@ async def async_get_config_entry_diagnostics(
 
         if isinstance(account_data["allowed"], dict):
             account_data["allowed"] = async_redact_data(
-                account_data["allowed"], {"bucketId", "bucketName", "namePrefix"}
+                account_data["allowed"], TO_REDACT_ACCOUNT_DATA_ALLOWED
             )
 
     except (AttributeError, TypeError, ValueError, KeyError):
@@ -48,7 +49,7 @@ async def async_get_config_entry_diagnostics(
         account_data = {"error": "Failed to retrieve detailed account information"}
 
     return {
-        "entry_data": async_redact_data(entry.data, TO_REDACT),
+        "entry_data": async_redact_data(entry.data, TO_REDACT_ENTRY_DATA),
         "entry_options": entry.options,
         "bucket_info": bucket_info,
         "account_info": account_data,

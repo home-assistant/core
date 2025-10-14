@@ -19,7 +19,6 @@ from homeassistant.components.backup import (
     BackupNotFound,
     suggested_filename,
 )
-
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.async_iterator import AsyncIteratorReader
 
@@ -289,7 +288,7 @@ class BackblazeBackupAgent(BackupAgent):
         _LOGGER.debug("Starting streaming upload for %s", filename)
 
         stream = await open_stream()
-        reader = AsyncIteratorReader(self._hass, stream)
+        reader = AsyncIteratorReader(self._hass.loop, stream)
 
         _LOGGER.info("Uploading backup file %s with streaming", filename)
         try:
@@ -332,26 +331,23 @@ class BackblazeBackupAgent(BackupAgent):
 
         await self._hass.async_add_executor_job(file.delete)
 
-        try:
-            if metadata_file:
-                try:
-                    await self._hass.async_add_executor_job(metadata_file.delete)
-                except Exception as e:
-                    _LOGGER.error("Unexpected error from executor for metadata: %s", e)
-                    raise BackupAgentError(
-                        "Unexpected error in metadata deletion"
-                    ) from e
-            else:
-                _LOGGER.warning(
-                    "Metadata file for backup %s not found for deletion", backup_id
-                )
-        finally:
-            self._invalidate_caches(
-                backup_id,
-                file.file_name,
-                metadata_file.file_name if metadata_file else None,
-                remove_files=True,
+        if metadata_file:
+            try:
+                await self._hass.async_add_executor_job(metadata_file.delete)
+            except Exception as e:
+                _LOGGER.error("Unexpected error from executor for metadata: %s", e)
+                raise BackupAgentError("Unexpected error in metadata deletion") from e
+        else:
+            _LOGGER.warning(
+                "Metadata file for backup %s not found for deletion", backup_id
             )
+
+        self._invalidate_caches(
+            backup_id,
+            file.file_name,
+            metadata_file.file_name if metadata_file else None,
+            remove_files=True,
+        )
 
     @handle_b2_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
