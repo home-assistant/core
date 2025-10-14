@@ -145,3 +145,11 @@ def test_set_item_auth_mode(auth_mode, expected_blank) -> None:
         ).values()
     )
     assert model[CONF_AUTH_MODE] == auth_mode
+
+
+async def test_async_validate_access_success() -> None:
+    """Test async_validate_access succeeds with valid explicit credentials."""
+    model = S3ConfigModel()
+    model.from_dict(USER_INPUT_VALID_EXPLICIT)
+    await model.async_validate_access()
+    assert not model.has_errors(set(model.keys()))
