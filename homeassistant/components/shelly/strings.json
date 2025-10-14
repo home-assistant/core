@@ -152,17 +152,11 @@
       }
     },
     "sensor": {
-      "energy_with_channel_name": {
-        "name": "{channel_name} energy"
+      "temperature_with_channel_name": {
+        "name": "{channel_name} temperature"
       },
-      "power_with_channel_name": {
-        "name": "{channel_name} power"
-      },
-      "apparent_power_with_channel_name": {
-        "name": "{channel_name} apparent power"
-      },
-      "power_factor_with_channel_name": {
-        "name": "{channel_name} power factor"
+      "frequency_with_channel_name": {
+        "name": "{channel_name} frequency"
       },
       "voltage_with_channel_name": {
         "name": "{channel_name} voltage"
@@ -170,17 +164,17 @@
       "current_with_channel_name": {
         "name": "{channel_name} current"
       },
-      "frequency_with_channel_name": {
-        "name": "{channel_name} frequency"
+      "power_factor_with_channel_name": {
+        "name": "{channel_name} power factor"
       },
-      "temperature_with_channel_name": {
-        "name": "{channel_name} temperature"
+      "apparent_power_with_channel_name": {
+        "name": "{channel_name} apparent power"
       },
-      "neutral_current": {
-        "name": "Neutral current"
+      "power_with_channel_name": {
+        "name": "{channel_name} power"
       },
-      "device_temperature": {
-        "name": "Device temperature"
+      "energy_with_channel_name": {
+        "name": "{channel_name} energy"
       },
       "energy_returned": {
         "name": "Energy returned"
@@ -233,22 +227,22 @@
       "pulse_counter_with_channel_name": {
         "name": "{channel_name} pulse counter"
       },
-      "counter_value": {
-        "name": "Counter value"
+      "pulse_counter_value": {
+        "name": "Pulse counter value"
       },
-      "counter_value_with_channel_name": {
-        "name": "{channel_name} counter value"
+      "pulse_counter_value_with_channel_name": {
+        "name": "{channel_name} pulse counter value"
       },
-      "counter_frequency": {
+      "pulse_counter_frequency": {
         "name": "Pulse counter frequency"
       },
-      "counter_frequency_with_channel_name": {
+      "pulse_counter_frequency_with_channel_name": {
         "name": "{channel_name} pulse counter frequency"
       },
-      "counter_frequency_value": {
+      "pulse_counter_frequency_value": {
         "name": "Pulse counter frequency value"
       },
-      "counter_frequency_value_with_channel_name": {
+      "pulse_counter_frequency_value_with_channel_name": {
         "name": "{channel_name} pulse counter frequency value"
       },
       "valve_position": {

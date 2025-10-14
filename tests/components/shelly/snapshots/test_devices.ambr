@@ -4456,7 +4456,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'neutral_current',
+    'translation_key': 'current_with_channel_name',
     'unique_id': '123456789ABC-em:0-n_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })

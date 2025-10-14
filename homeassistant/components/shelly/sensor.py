@@ -222,7 +222,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("device", "deviceTemp"): BlockSensorDescription(
         key="device|deviceTemp",
-        translation_key="device_temperature",
+        translation_placeholders={"channel_name": "Device"},
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -238,7 +238,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("device", "neutralCurrent"): BlockSensorDescription(
         key="device|neutralCurrent",
-        translation_key="neutral_current",
+        translation_placeholders={"channel_name": "Neutral"},
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -835,7 +835,7 @@ RPC_SENSORS: Final = {
     "n_current": RpcSensorDescription(
         key="em",
         sub_key="n_current",
-        translation_key="neutral_current",
+        translation_placeholders={"channel_name": "Neutral"},
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1316,7 +1316,7 @@ RPC_SENSORS: Final = {
     "counter_value": RpcSensorDescription(
         key="input",
         sub_key="counts",
-        translation_key="counter_value",
+        translation_key="pulse_counter_value",
         value=lambda status, _: status["xtotal"],
         removal_condition=lambda config, status, key: (
             config[key]["type"] != "count"
@@ -1328,7 +1328,7 @@ RPC_SENSORS: Final = {
     "counter_frequency": RpcSensorDescription(
         key="input",
         sub_key="freq",
-        translation_key="counter_frequency",
+        translation_key="pulse_counter_frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, _, key: (
@@ -1338,7 +1338,7 @@ RPC_SENSORS: Final = {
     "counter_frequency_value": RpcSensorDescription(
         key="input",
         sub_key="xfreq",
-        translation_key="counter_frequency_value",
+        translation_key="pulse_counter_frequency_value",
         removal_condition=lambda config, status, key: (
             config[key]["type"] != "count"
             or config[key]["enable"] is False
