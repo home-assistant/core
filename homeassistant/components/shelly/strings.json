@@ -118,6 +118,77 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "power_with_channel_name": {
+        "name": "{channel_name} power"
+      },
+      "overvoltage": {
+        "name": "Overvoltage"
+      },
+      "overvoltage_with_channel_name": {
+        "name": "{channel_name} overvoltage"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overcurrent_with_channel_name": {
+        "name": "{channel_name} overcurrent"
+      },
+      "overpowering": {
+        "name": "Overpowering"
+      },
+      "overpowering_with_channel_name": {
+        "name": "{channel_name} overpowering"
+      },
+      "overheating": {
+        "name": "Overheating"
+      },
+      "overheating_with_channel_name": {
+        "name": "{channel_name} overheating"
+      },
+      "door": {
+        "name": "Door"
+      },
+      "input": {
+        "name": "Input"
+      },
+      "external_input": {
+        "name": "External input"
+      },
+      "cloud": {
+        "name": "Cloud"
+      },
+      "external_power": {
+        "name": "External power"
+      },
+      "restart_required": {
+        "name": "Restart required"
+      },
+      "calibration": {
+        "name": "Calibration"
+      },
+      "flood": {
+        "name": "Flood"
+      },
+      "flood_with_channel_name": {
+        "name": "{channel_name} flood"
+      },
+      "mute": {
+        "name": "Mute"
+      },
+      "mute_with_channel_name": {
+        "name": "{channel_name} mute"
+      },
+      "cable_unplugged": {
+        "name": "Cable unplugged"
+      },
+      "cable_unplugged_with_channel_name": {
+        "name": "{channel_name} cable unplugged"
+      },
+      "occupancy_with_channel_name": {
+        "name": "{channel_name} occupancy"
+      }
+    },
     "climate": {
       "thermostat": {
         "state_attributes": {

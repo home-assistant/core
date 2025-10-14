@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, cast
 
+from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.binary_sensor import (
@@ -16,10 +17,11 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD, MODEL_FRANKEVER_WATER_VALVE
-from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,
@@ -35,8 +37,10 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
+    get_block_channel_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
+    get_rpc_channel_name,
     is_block_momentary_input,
     is_rpc_momentary_input,
     is_view_for_platform,
@@ -66,6 +70,35 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
     """Represent a RPC binary sensor entity."""
 
     entity_description: RpcBinarySensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcBinarySensorDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if not description.role:
+            if hasattr(self, "_attr_name"):
+                delattr(self, "_attr_name")
+
+            if (
+                channel_name := get_rpc_channel_name(coordinator.device, key)
+            ) is not None:
+                self._attr_translation_placeholders = {"channel_name": channel_name}
+
+            if "channel_name" in self.translation_placeholders and (
+                translation_key := description.translation_key
+                or (
+                    description.device_class
+                    if self._default_to_device_class_name()
+                    else None
+                )
+            ):
+                self._attr_translation_key = f"{translation_key}_with_channel_name"
 
     @property
     def is_on(self) -> bool:
@@ -108,30 +141,35 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
     ("device", "overtemp"): BlockBinarySensorDescription(
         key="device|overtemp",
         name="Overheating",
+        translation_key="overheating",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ("device", "overpower"): BlockBinarySensorDescription(
         key="device|overpower",
         name="Overpowering",
+        translation_key="overpowering",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ("light", "overpower"): BlockBinarySensorDescription(
         key="light|overpower",
         name="Overpowering",
+        translation_key="overpowering",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ("relay", "overpower"): BlockBinarySensorDescription(
         key="relay|overpower",
         name="Overpowering",
+        translation_key="overpowering",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ("sensor", "dwIsOpened"): BlockBinarySensorDescription(
         key="sensor|dwIsOpened",
         name="Door",
+        translation_key="door",
         device_class=BinarySensorDeviceClass.OPENING,
         available=lambda block: cast(int, block.dwIsOpened) != -1,
     ),
@@ -142,7 +180,6 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
         key="sensor|gas",
         name="Gas",
         device_class=BinarySensorDeviceClass.GAS,
-        translation_key="gas",
         value=lambda value: value in ["mild", "heavy"],
     ),
     ("sensor", "smoke"): BlockBinarySensorDescription(
@@ -156,24 +193,28 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
     ("input", "input"): BlockBinarySensorDescription(
         key="input|input",
         name="Input",
+        translation_key="input",
         device_class=BinarySensorDeviceClass.POWER,
         removal_condition=is_block_momentary_input,
     ),
     ("relay", "input"): BlockBinarySensorDescription(
         key="relay|input",
         name="Input",
+        translation_key="input",
         device_class=BinarySensorDeviceClass.POWER,
         removal_condition=is_block_momentary_input,
     ),
     ("device", "input"): BlockBinarySensorDescription(
         key="device|input",
         name="Input",
+        translation_key="input",
         device_class=BinarySensorDeviceClass.POWER,
         removal_condition=is_block_momentary_input,
     ),
     ("sensor", "extInput"): BlockBinarySensorDescription(
         key="sensor|extInput",
         name="External input",
+        translation_key="external_input",
         device_class=BinarySensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
     ),
@@ -186,6 +227,7 @@ REST_SENSORS: Final = {
     "cloud": RestBinarySensorDescription(
         key="cloud",
         name="Cloud",
+        translation_key="cloud",
         value=lambda status, _: status["cloud"]["connected"],
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_registry_enabled_default=False,
@@ -204,6 +246,7 @@ RPC_SENSORS: Final = {
         key="cloud",
         sub_key="connected",
         name="Cloud",
+        translation_key="cloud",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -212,6 +255,7 @@ RPC_SENSORS: Final = {
         key="devicepower",
         sub_key="external",
         name="External power",
+        translation_key="external_power",
         value=lambda status, _: status["present"],
         device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -220,6 +264,7 @@ RPC_SENSORS: Final = {
         key="switch",
         sub_key="errors",
         name="Overheating",
+        translation_key="overheating",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value=lambda status, _: False if status is None else "overtemp" in status,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -229,6 +274,7 @@ RPC_SENSORS: Final = {
         key="switch",
         sub_key="errors",
         name="Overpowering",
+        translation_key="overpowering",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value=lambda status, _: False if status is None else "overpower" in status,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -238,6 +284,7 @@ RPC_SENSORS: Final = {
         key="switch",
         sub_key="errors",
         name="Overvoltage",
+        translation_key="overvoltage",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value=lambda status, _: False if status is None else "overvoltage" in status,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -247,6 +294,7 @@ RPC_SENSORS: Final = {
         key="switch",
         sub_key="errors",
         name="Overcurrent",
+        translation_key="overcurrent",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value=lambda status, _: False if status is None else "overcurrent" in status,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -262,6 +310,7 @@ RPC_SENSORS: Final = {
         key="sys",
         sub_key="restart_required",
         name="Restart required",
+        translation_key="restart_required",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -286,6 +335,7 @@ RPC_SENSORS: Final = {
         key="blutrv",
         sub_key="errors",
         name="Calibration",
+        translation_key="calibration",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value=lambda status, _: False if status is None else "not_calibrated" in status,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -295,12 +345,14 @@ RPC_SENSORS: Final = {
         key="flood",
         sub_key="alarm",
         name="Flood",
+        translation_key="flood",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
     "mute": RpcBinarySensorDescription(
         key="flood",
         sub_key="mute",
         name="Mute",
+        translation_key="mute",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "flood_cable_unplugged": RpcBinarySensorDescription(
@@ -310,6 +362,7 @@ RPC_SENSORS: Final = {
         if status is None
         else "cable_unplugged" in status,
         name="Cable unplugged",
+        translation_key="cable_unplugged",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         supported=lambda status: status.get("alarm") is not None,
@@ -394,6 +447,34 @@ class BlockBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
 
     entity_description: BlockBinarySensorDescription
 
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block,
+        attribute: str,
+        description: BlockBinarySensorDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, block, attribute, description)
+
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
+
+        if (
+            channel_name := get_block_channel_name(coordinator.device, self.block)
+        ) is not None:
+            self._attr_translation_placeholders = {"channel_name": channel_name}
+
+        if "channel_name" in self.translation_placeholders and (
+            translation_key := description.translation_key
+            or (
+                description.device_class
+                if self._default_to_device_class_name()
+                else None
+            )
+        ):
+            self._attr_translation_key = f"{translation_key}_with_channel_name"
+
     @property
     def is_on(self) -> bool:
         """Return true if sensor state is on."""
@@ -404,6 +485,29 @@ class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     """Represent a REST binary sensor entity."""
 
     entity_description: RestBinarySensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        attribute: str,
+        description: RestBinarySensorDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, attribute, description)
+
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
+
+        if (
+            channel_name := get_block_channel_name(coordinator.device, None)
+        ) is not None:
+            self._attr_translation_placeholders = {"channel_name": channel_name}
+            if translation_key := description.translation_key or (
+                description.device_class
+                if self._default_to_device_class_name()
+                else None
+            ):
+                self._attr_translation_key = f"{translation_key}_with_channel_name"
 
     @property
     def is_on(self) -> bool:
@@ -417,6 +521,31 @@ class BlockSleepingBinarySensor(
     """Represent a block sleeping binary sensor."""
 
     entity_description: BlockBinarySensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block | None,
+        attribute: str,
+        description: BlockBinarySensorDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        super().__init__(coordinator, block, attribute, description, entry)
+
+        if block is not None:
+            if hasattr(self, "_attr_name"):
+                delattr(self, "_attr_name")
+            if (
+                channel_name := get_block_channel_name(coordinator.device, block)
+            ) is not None:
+                self._attr_translation_placeholders = {"channel_name": channel_name}
+                if translation_key := description.translation_key or (
+                    description.device_class
+                    if self._default_to_device_class_name()
+                    else None
+                ):
+                    self._attr_translation_key = f"{translation_key}_with_channel_name"
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -441,6 +570,34 @@ class RpcSleepingBinarySensor(
     """Represent a RPC sleeping binary sensor entity."""
 
     entity_description: RpcBinarySensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcBinarySensorDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        super().__init__(coordinator, key, attribute, description, entry)
+
+        if coordinator.device.initialized:
+            if not description.role:
+                if hasattr(self, "_attr_name"):
+                    delattr(self, "_attr_name")
+                if (
+                    channel_name := get_rpc_channel_name(coordinator.device, key)
+                ) is not None:
+                    self._attr_translation_placeholders = {"channel_name": channel_name}
+                    if translation_key := description.translation_key or (
+                        description.device_class
+                        if self._default_to_device_class_name()
+                        else None
+                    ):
+                        self._attr_translation_key = (
+                            f"{translation_key}_with_channel_name"
+                        )
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

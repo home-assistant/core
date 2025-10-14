@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'calibration',
     'unique_id': '123456789ABC-blutrv:200-calibration',
     'unit_of_measurement': None,
   })
@@ -78,7 +78,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'cable_unplugged_with_channel_name',
     'unique_id': '123456789ABC-flood:0-flood_cable_unplugged',
     'unit_of_measurement': None,
   })
@@ -127,7 +127,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'flood_with_channel_name',
     'unique_id': '123456789ABC-flood:0-flood',
     'unit_of_measurement': None,
   })
@@ -176,7 +176,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'mute_with_channel_name',
     'unique_id': '123456789ABC-flood:0-mute',
     'unit_of_measurement': None,
   })

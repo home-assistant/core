@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'cloud',
     'unique_id': '123456789ABC-cloud-cloud',
     'unit_of_measurement': None,
   })
@@ -48,7 +48,7 @@
     'state': 'off',
   })
 # ---
-# name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_input_0-entry]
+# name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_input_0_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,7 +61,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_name_input_0',
+    'entity_id': 'binary_sensor.test_name_input_0_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -73,31 +73,31 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Input 0',
+    'original_name': 'Input 0 power',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'power_with_channel_name',
     'unique_id': '123456789ABC-input:0-input',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_input_0-state]
+# name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_input_0_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Test name Input 0',
+      'friendly_name': 'Test name Input 0 power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_name_input_0',
+    'entity_id': 'binary_sensor.test_name_input_0_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_input_1-entry]
+# name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_input_1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -110,7 +110,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_name_input_1',
+    'entity_id': 'binary_sensor.test_name_input_1_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -122,24 +122,24 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Input 1',
+    'original_name': 'Input 1 power',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'power_with_channel_name',
     'unique_id': '123456789ABC-input:1-input',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_input_1-state]
+# name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_input_1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Test name Input 1',
+      'friendly_name': 'Test name Input 1 power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_name_input_1',
+    'entity_id': 'binary_sensor.test_name_input_1_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -176,7 +176,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overcurrent',
     'unique_id': '123456789ABC-cover:0-overcurrent',
     'unit_of_measurement': None,
   })
@@ -225,7 +225,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overheating',
     'unique_id': '123456789ABC-cover:0-overtemp',
     'unit_of_measurement': None,
   })
@@ -274,7 +274,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overpowering',
     'unique_id': '123456789ABC-cover:0-overpower',
     'unit_of_measurement': None,
   })
@@ -323,7 +323,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overvoltage',
     'unique_id': '123456789ABC-cover:0-overvoltage',
     'unit_of_measurement': None,
   })
@@ -372,7 +372,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'restart_required',
     'unique_id': '123456789ABC-sys-restart',
     'unit_of_measurement': None,
   })
@@ -1083,7 +1083,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'cloud',
     'unique_id': '123456789ABC-cloud-cloud',
     'unit_of_measurement': None,
   })
@@ -1102,7 +1102,7 @@
     'state': 'off',
   })
 # ---
-# name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_input_0-entry]
+# name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_input_0_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1115,7 +1115,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_name_input_0',
+    'entity_id': 'binary_sensor.test_name_input_0_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1127,31 +1127,31 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Input 0',
+    'original_name': 'Input 0 power',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'power_with_channel_name',
     'unique_id': '123456789ABC-input:0-input',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_input_0-state]
+# name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_input_0_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Test name Input 0',
+      'friendly_name': 'Test name Input 0 power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_name_input_0',
+    'entity_id': 'binary_sensor.test_name_input_0_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_input_1-entry]
+# name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_input_1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1164,7 +1164,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_name_input_1',
+    'entity_id': 'binary_sensor.test_name_input_1_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1176,24 +1176,24 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Input 1',
+    'original_name': 'Input 1 power',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'power_with_channel_name',
     'unique_id': '123456789ABC-input:1-input',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_input_1-state]
+# name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_input_1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Test name Input 1',
+      'friendly_name': 'Test name Input 1 power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_name_input_1',
+    'entity_id': 'binary_sensor.test_name_input_1_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1230,7 +1230,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'restart_required',
     'unique_id': '123456789ABC-sys-restart',
     'unit_of_measurement': None,
   })
@@ -1279,7 +1279,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overcurrent',
     'unique_id': '123456789ABC-switch:0-overcurrent',
     'unit_of_measurement': None,
   })
@@ -1328,7 +1328,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overheating',
     'unique_id': '123456789ABC-switch:0-overtemp',
     'unit_of_measurement': None,
   })
@@ -1377,7 +1377,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overpowering',
     'unique_id': '123456789ABC-switch:0-overpower',
     'unit_of_measurement': None,
   })
@@ -1426,7 +1426,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overvoltage',
     'unique_id': '123456789ABC-switch:0-overvoltage',
     'unit_of_measurement': None,
   })
@@ -1475,7 +1475,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overcurrent',
     'unique_id': '123456789ABC-switch:1-overcurrent',
     'unit_of_measurement': None,
   })
@@ -1524,7 +1524,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overheating',
     'unique_id': '123456789ABC-switch:1-overtemp',
     'unit_of_measurement': None,
   })
@@ -1573,7 +1573,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overpowering',
     'unique_id': '123456789ABC-switch:1-overpower',
     'unit_of_measurement': None,
   })
@@ -1622,7 +1622,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overvoltage',
     'unique_id': '123456789ABC-switch:1-overvoltage',
     'unit_of_measurement': None,
   })
@@ -2954,7 +2954,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'cloud',
     'unique_id': '123456789ABC-cloud-cloud',
     'unit_of_measurement': None,
   })
@@ -3003,7 +3003,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'restart_required',
     'unique_id': '123456789ABC-sys-restart',
     'unit_of_measurement': None,
   })
@@ -5073,7 +5073,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'cloud',
     'unique_id': '123456789ABC-cloud-cloud',
     'unit_of_measurement': None,
   })
@@ -5122,7 +5122,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'external_power',
     'unique_id': '123456789ABC-devicepower:0-external_power',
     'unit_of_measurement': None,
   })
@@ -5141,7 +5141,7 @@
     'state': 'on',
   })
 # ---
-# name: test_wall_display_xl[binary_sensor.test_name_input_2-entry]
+# name: test_wall_display_xl[binary_sensor.test_name_input_2_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5154,7 +5154,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_name_input_2',
+    'entity_id': 'binary_sensor.test_name_input_2_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5166,24 +5166,24 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Input 2',
+    'original_name': 'Input 2 power',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'power_with_channel_name',
     'unique_id': '123456789ABC-input:2-input',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_wall_display_xl[binary_sensor.test_name_input_2-state]
+# name: test_wall_display_xl[binary_sensor.test_name_input_2_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Test name Input 2',
+      'friendly_name': 'Test name Input 2 power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_name_input_2',
+    'entity_id': 'binary_sensor.test_name_input_2_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5220,7 +5220,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'restart_required',
     'unique_id': '123456789ABC-sys-restart',
     'unit_of_measurement': None,
   })
