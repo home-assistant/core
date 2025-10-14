@@ -11,7 +11,6 @@ from botocore.exceptions import (
     ClientError,
     NoCredentialsError,
     ParamValidationError,
-    ProfileNotFound,
     TokenRetrievalError,
 )
 
@@ -65,13 +64,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="no_credentials_implicit",
-        ) from err
-    except ProfileNotFound as err:
-        if client is not None:
-            await client.__aexit__(None, None, None)
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="no_credentials_profile",
         ) from err
     except TokenRetrievalError as err:
         if client is not None:

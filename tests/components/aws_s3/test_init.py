@@ -50,6 +50,7 @@ _setup_errors = [
         EndpointConnectionError(endpoint_url="https://example.com"),
         ConfigEntryState.SETUP_ERROR,
     ),
+    (ConnectionError(), ConfigEntryState.SETUP_RETRY),
 ]
 
 _setup_error_locations = [
