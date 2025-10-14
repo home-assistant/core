@@ -17,7 +17,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import AddonError
-from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
+from homeassistant.components.mqtt.config_flow import (
+    PWD_NOT_CHANGED,
+    TRANSLATION_DESCRIPTION_PLACEHOLDERS,
+)
 from homeassistant.components.mqtt.util import learn_more_url
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
 from homeassistant.const import (
@@ -3757,12 +3760,16 @@ async def test_subentry_configflow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
-    assert result["description_placeholders"] == {
-        "mqtt_device": device_name,
-        "platform": component["platform"],
-        "entity": entity_name,
-        "url": learn_more_url(component["platform"]),
-    }
+    assert (
+        result["description_placeholders"]
+        == {
+            "mqtt_device": device_name,
+            "platform": component["platform"],
+            "entity": entity_name,
+            "url": learn_more_url(component["platform"]),
+        }
+        | TRANSLATION_DESCRIPTION_PLACEHOLDERS
+    )
 
     # Process entity details step
     assert result["step_id"] == "entity_platform_config"
@@ -3784,12 +3791,16 @@ async def test_subentry_configflow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
-    assert result["description_placeholders"] == {
-        "mqtt_device": device_name,
-        "platform": component["platform"],
-        "entity": entity_name,
-        "url": learn_more_url(component["platform"]),
-    }
+    assert (
+        result["description_placeholders"]
+        == {
+            "mqtt_device": device_name,
+            "platform": component["platform"],
+            "entity": entity_name,
+            "url": learn_more_url(component["platform"]),
+        }
+        | TRANSLATION_DESCRIPTION_PLACEHOLDERS
+    )
 
     # Process mqtt platform config flow
     # Test an invalid mqtt user input case
@@ -5096,12 +5107,16 @@ async def test_subentry_configflow_section_feature(
         user_input={"platform": "fan"},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["description_placeholders"] == {
-        "mqtt_device": "Bla",
-        "platform": "fan",
-        "entity": "Bla",
-        "url": learn_more_url("fan"),
-    }
+    assert (
+        result["description_placeholders"]
+        == {
+            "mqtt_device": "Bla",
+            "platform": "fan",
+            "entity": "Bla",
+            "url": learn_more_url("fan"),
+        }
+        | TRANSLATION_DESCRIPTION_PLACEHOLDERS
+    )
 
     # Process entity details step
     assert result["step_id"] == "entity_platform_config"
