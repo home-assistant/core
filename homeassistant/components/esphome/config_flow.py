@@ -520,6 +520,16 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle creating a new entry by removing the old one and creating new."""
         assert self._entry_with_name_conflict is not None
+        if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            return self.async_update_reload_and_abort(
+                self._entry_with_name_conflict,
+                title=self._name,
+                unique_id=self.unique_id,
+                data=self._async_make_config_data(),
+                options={
+                    CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+                },
+            )
         await self.hass.config_entries.async_remove(
             self._entry_with_name_conflict.entry_id
         )
