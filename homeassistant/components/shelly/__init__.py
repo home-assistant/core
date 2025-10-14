@@ -43,6 +43,7 @@ from .const import (
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
+    DEPRECATED_FIRMWARES,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
     LOGGER,
@@ -59,8 +60,8 @@ from .coordinator import (
 )
 from .repairs import (
     async_manage_ble_scanner_firmware_unsupported_issue,
+    async_manage_deprecated_firmware_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
-    async_manage_wall_display_firmware_unsupported_issue,
 )
 from .utils import (
     async_create_issue_unsupported_firmware,
@@ -337,7 +338,8 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
-        async_manage_wall_display_firmware_unsupported_issue(hass, entry)
+        for model, min_firmware in DEPRECATED_FIRMWARES.items():
+            async_manage_deprecated_firmware_issue(hass, entry, model, min_firmware)
         async_manage_ble_scanner_firmware_unsupported_issue(
             hass,
             entry,

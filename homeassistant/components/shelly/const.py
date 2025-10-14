@@ -232,7 +232,9 @@ class BLEScannerMode(StrEnum):
 
 
 BLE_SCANNER_MIN_FIRMWARE = "1.5.1"
-WALL_DISPLAY_MIN_FIRMWARE = "2.3.0"
+DEPRECATED_FIRMWARES = {
+    MODEL_WALL_DISPLAY: "2.3.0",
+}
 
 MAX_PUSH_UPDATE_FAILURES = 5
 PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
@@ -245,9 +247,7 @@ BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID = "ble_scanner_firmware_unsupported_{u
 OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
     "outbound_websocket_incorrectly_enabled_{unique}"
 )
-WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID = (
-    "wall_display_firmware_unsupported_{unique}"
-)
+DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
 
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
 

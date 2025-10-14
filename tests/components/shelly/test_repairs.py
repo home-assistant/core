@@ -9,9 +9,9 @@ import pytest
 from homeassistant.components.shelly.const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     CONF_BLE_SCANNER_MODE,
+    DEPRECATED_FIRMWARE_ISSUE_ID,
     DOMAIN,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
-    WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     BLEScannerMode,
 )
 from homeassistant.core import HomeAssistant
@@ -215,14 +215,14 @@ async def test_outbound_websocket_incorrectly_enabled_issue_exc(
     assert len(issue_registry.issues) == 1
 
 
-async def test_wall_display_unsupported_firmware_issue(
+async def test_deprecated_firmware_issue(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_rpc_device: Mock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test repair issues handling for Wall Display with unsupported firmware."""
-    issue_id = WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
+    """Test repair issues handling deprecated firmware."""
+    issue_id = DEPRECATED_FIRMWARE_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
