@@ -3260,3 +3260,6 @@ zwave-js-server-python==0.67.1
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
+
+# homeassistant.components.quickbars
+quickbars-bridge==0.0.6
