@@ -7,6 +7,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 import dataclasses
 from datetime import datetime
+import errno
 import fcntl
 from io import TextIOWrapper
 import json
@@ -207,11 +208,20 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
 
 
 @callback
-def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
+def _async_loop_exception_handler(
+    loop: asyncio.AbstractEventLoop,
+    context: dict[str, Any],
+) -> None:
     """Handle all exception inside the core loop."""
+    fatal_error: str | None = None
     kwargs = {}
     if exception := context.get("exception"):
         kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
+        if isinstance(exception, OSError) and exception.errno == errno.EMFILE:
+            # Too many open files – something is leaking them, and it's likely
+            # to be quite unrecoverable if the event loop can't pump messages
+            # (e.g. unable to accept a socket).
+            fatal_error = str(exception)
 
     logger = logging.getLogger(__package__)
     if source_traceback := context.get("source_traceback"):
@@ -231,6 +241,14 @@ def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
         context.get("task"),
         **kwargs,  # type: ignore[arg-type]
     )
+
+    if fatal_error:
+        logger.error(
+            "Fatal error '%s' raised in event loop, shutting it down",
+            fatal_error,
+        )
+        loop.stop()
+        loop.close()
 
 
 async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
