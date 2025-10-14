@@ -749,17 +749,13 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self.call_rpc(
-            "Thermostat.SetConfig",
-            {"config": {"id": self._id, "target_C": kwargs[ATTR_TEMPERATURE]}},
+        await self.coordinator.device.climate_set_target_temperature(
+            self._id, kwargs[ATTR_TEMPERATURE]
         )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        mode = hvac_mode in (HVACMode.COOL, HVACMode.HEAT)
-        await self.call_rpc(
-            "Thermostat.SetConfig", {"config": {"id": self._id, "enable": mode}}
-        )
+        await self.coordinator.device.climate_set_hvac_mode(self._id, str(hvac_mode))
 
 
 class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
