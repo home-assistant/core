@@ -18,17 +18,18 @@ COPY rootfs /
 # Needs to be redefined inside the FROM statement to be set for RUN commands
 ARG BUILD_ARCH
 # Get go2rtc binary
-RUN \
-    case "${BUILD_ARCH}" in \
-        "aarch64") go2rtc_suffix='arm64' ;; \
-        "armhf") go2rtc_suffix='armv6' ;; \
-        "armv7") go2rtc_suffix='arm' ;; \
-        *) go2rtc_suffix=${BUILD_ARCH} ;; \
-    esac \
-    && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.9/go2rtc_linux_${go2rtc_suffix} --output /bin/go2rtc \
-    && chmod +x /bin/go2rtc \
-    # Verify go2rtc can be executed
-    && go2rtc --version
+RUN <<'EOR'
+case "${BUILD_ARCH}" in
+    "aarch64") go2rtc_suffix='arm64' ;;
+    "armhf") go2rtc_suffix='armv6' ;;
+    "armv7") go2rtc_suffix='arm' ;;
+    *) go2rtc_suffix=${BUILD_ARCH} ;;
+esac
+curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.9/go2rtc_linux_${go2rtc_suffix} --output /bin/go2rtc
+chmod +x /bin/go2rtc
+# Verify go2rtc can be executed
+go2rtc --version
+EOR
 
 # Install uv
 RUN pip3 install uv==0.8.9
@@ -38,26 +39,29 @@ WORKDIR /usr/src
 ## Setup Home Assistant Core dependencies
 COPY requirements.txt homeassistant/
 COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
-RUN \
-    uv pip install \
-        --no-build \
-        -r homeassistant/requirements.txt
+RUN <<'EOR'
+uv pip install \
+    --no-build \
+    -r homeassistant/requirements.txt
+EOR
 
 COPY requirements_all.txt home_assistant_frontend-* home_assistant_intents-* homeassistant/
-RUN \
-    if ls homeassistant/home_assistant_*.whl 1> /dev/null 2>&1; then \
-        uv pip install homeassistant/home_assistant_*.whl; \
-    fi \
-    && uv pip install \
-        --no-build \
-        -r homeassistant/requirements_all.txt
+RUN <<'EOR'
+if ls homeassistant/home_assistant_*.whl 1> /dev/null 2>&1; then
+    uv pip install homeassistant/home_assistant_*.whl
+fi
+uv pip install \
+    --no-build \
+    -r homeassistant/requirements_all.txt
+EOR
 
 ## Setup Home Assistant Core
 COPY . homeassistant/
-RUN \
-    uv pip install \
-        -e ./homeassistant \
-    && python3 -m compileall \
-        homeassistant/homeassistant
+RUN <<'EOR'
+uv pip install \
+    -e ./homeassistant
+python3 -m compileall \
+    homeassistant/homeassistant
+EOR
 
 WORKDIR /config
