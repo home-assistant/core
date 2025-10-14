@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import LOGGER, UPDATE_INTERVAL_TIMEDELTA
 
@@ -42,6 +43,8 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch data from the Fluss API and return as a dictionary keyed by deviceId."""
         try:
             devices = await self.api.async_get_devices()
+        except FlussApiClientAuthenticationError as err:
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except FlussApiClientError as err:
             raise UpdateFailed(f"Error fetching Fluss devices: {err}") from err
 
