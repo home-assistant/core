@@ -1645,6 +1645,9 @@ openevsewifi==1.1.2
 # homeassistant.components.openhome
 openhomedevice==2.2.0
 
+# homeassistant.components.openrgb
+openrgb-python==0.3.5
+
 # homeassistant.components.opensensemap
 opensensemap-api==0.2.0
 
