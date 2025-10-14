@@ -237,10 +237,10 @@
         "name": "{channel_name} pulse counter"
       },
       "pulse_counter_value": {
-        "name": "Pulse counter value"
+        "name": "Counter value"
       },
       "pulse_counter_value_with_channel_name": {
-        "name": "{channel_name} pulse counter value"
+        "name": "{channel_name} counter value"
       },
       "pulse_counter_frequency": {
         "name": "Pulse counter frequency"
