@@ -20,9 +20,15 @@ from homeassistant.components.backup import (
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.util.async_iterator import AsyncIteratorReader
 
 from . import BackblazeConfigEntry
+
+# Compatibility: AsyncIteratorReader moved from backup.util to util.async_iterator
+try:
+    from homeassistant.util.async_iterator import AsyncIteratorReader
+except ImportError:
+    from homeassistant.components.backup.util import AsyncIteratorReader  # type: ignore[assignment]
+
 from .const import (
     CONF_PREFIX,
     DATA_BACKUP_AGENT_LISTENERS,
