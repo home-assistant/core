@@ -105,9 +105,8 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        if description.role != "generic":
-            if hasattr(self, "_attr_name"):
-                delattr(self, "_attr_name")
+        if hasattr(self, "_attr_name") and description.role != "generic":
+            delattr(self, "_attr_name")
 
         if not description.role:
             if (
@@ -1837,9 +1836,8 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         self.restored_data: SensorExtraStoredData | None = None
 
         if coordinator.device.initialized:
-            if description.role != "generic":
-                if hasattr(self, "_attr_name"):
-                    delattr(self, "_attr_name")
+            if hasattr(self, "_attr_name") and description.role != "generic":
+                delattr(self, "_attr_name")
 
             if not description.role:
                 if (
