@@ -54,6 +54,8 @@ X_PLEX_VERSION = __version__
 
 AUTOMATIC_SETUP_STRING = "Obtain a new token from plex.tv"
 MANUAL_SETUP_STRING = "Configure Plex server manually"
+PLEX_SERVER_SETUP_URL: Final = "https://plex.tv"
+PLEX_SERVER_SETUP_LINK_PLACEHOLDER: Final = f"[plex.tv]({PLEX_SERVER_SETUP_URL})"
 
 SERVICE_REFRESH_LIBRARY = "refresh_library"
 
