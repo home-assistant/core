@@ -38,6 +38,7 @@ SENSOR_TYPE_CO2 = "CO2"
 SENSOR_TYPE_POWER = "power"
 SENSOR_TYPE_VOLTAGE = "voltage"
 SENSOR_TYPE_CURRENT = "electricCurrent"
+SENSOR_TYPE_POWER_CONSUMPTION = "weight"
 SENSOR_TYPE_USED_ELECTRICITY = "usedElectricity"
 SENSOR_TYPE_LIGHTLEVEL = "lightLevel"
 
@@ -120,6 +121,13 @@ CO2_DESCRIPTION = SensorEntityDescription(
     native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
 )
 
+POWER_CONSUMPTION_DESCRIPTION = SensorEntityDescription(
+    key=SENSOR_TYPE_POWER_CONSUMPTION,
+    device_class=SensorDeviceClass.POWER,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfPower.WATT,
+)
+
 RELAY_SWITCH_2PM_POWER_DESCRIPTION = SensorEntityDescription(
     key=RELAY_SWITCH_2PM_SENSOR_TYPE_POWER,
     device_class=SensorDeviceClass.POWER,
@@ -180,10 +188,12 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Plug Mini (US)": (
         VOLTAGE_DESCRIPTION,
         CURRENT_DESCRIPTION_IN_MA,
+        POWER_CONSUMPTION_DESCRIPTION,
     ),
     "Plug Mini (JP)": (
         VOLTAGE_DESCRIPTION,
         CURRENT_DESCRIPTION_IN_MA,
+        POWER_CONSUMPTION_DESCRIPTION,
     ),
     "Plug Mini (EU)": (
         POWER_DESCRIPTION,
