@@ -82,3 +82,30 @@ def _record_errors(model: S3ConfigModel, errors: dict[str, str]) -> None:
     """Record errors in the S3ConfigModel instance."""
     for k, v in errors.items():
         model.record_error(k, v)
+
+
+#####################
+# GENERIC FLOW TESTS
+#####################
+
+
+async def test_start_flow_triggers_bucket_step(hass: HomeAssistant) -> None:
+    """Test that starting the flow triggers the bucket step."""
+    with patch(
+        "homeassistant.components.aws_s3.config_flow.S3ConfigFlow.async_step_bucket",
+        autospec=True,
+        return_value=AsyncMock(),
+        side_effect=lambda self, *_: ConfigFlowResult(
+            type=FlowResultType.FORM,
+            description_placeholders={},
+            data_schema=vol.Schema({}),
+            flow_id=self.flow_id,
+        ),
+    ) as mock:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
+        )
+        assert result["flow_id"]
+        assert result["flow_id"] in S3ConfigFlow._config_models
+        mock.assert_called_once()
