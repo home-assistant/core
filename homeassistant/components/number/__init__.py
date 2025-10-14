@@ -14,12 +14,7 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_MODE,
-    CONF_UNIT_OF_MEASUREMENT,
-    UnitOfTemperature,
-    UnitOfTemperatureDelta,
-)
+from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -396,23 +391,14 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         native_unit_of_measurement = self.__native_unit_of_measurement_compat
         # device_class is checked after native_unit_of_measurement since most
         # of the time we can avoid the device_class check
-        if (
-            native_unit_of_measurement
-            in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT)
-            and self.device_class == NumberDeviceClass.TEMPERATURE
+        if native_unit_of_measurement in (
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+        ) and self.device_class in (
+            NumberDeviceClass.TEMPERATURE,
+            NumberDeviceClass.TEMPERATURE_DELTA,
         ):
             return self.hass.config.units.temperature_unit
-        if (
-            native_unit_of_measurement
-            in (UnitOfTemperatureDelta.CELSIUS, UnitOfTemperatureDelta.FAHRENHEIT)
-            and self.device_class == NumberDeviceClass.TEMPERATURE_DELTA
-        ):
-            # UnitSystem.temperature_unit is either °F or °C so we need to map it
-            # to the corresponding delta unit
-            return {
-                UnitOfTemperature.CELSIUS: UnitOfTemperatureDelta.CELSIUS,
-                UnitOfTemperature.FAHRENHEIT: UnitOfTemperatureDelta.FAHRENHEIT,
-            }.get(self.hass.config.units.temperature_unit, native_unit_of_measurement)
 
         if (translation_key := self._unit_of_measurement_translation_key) and (
             unit_of_measurement

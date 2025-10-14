@@ -20,7 +20,6 @@ from homeassistant.const import (  # noqa: F401
     CONF_UNIT_OF_MEASUREMENT,
     EntityCategory,
     UnitOfTemperature,
-    UnitOfTemperatureDelta,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -534,23 +533,14 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         # Third priority: Legacy temperature conversion, which applies
         # to both registered and non registered entities
-        if (
-            native_unit_of_measurement
-            in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT)
-            and self.device_class == SensorDeviceClass.TEMPERATURE
+        if native_unit_of_measurement in (
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+        ) and self.device_class in (
+            SensorDeviceClass.TEMPERATURE,
+            SensorDeviceClass.TEMPERATURE_DELTA,
         ):
             return self.hass.config.units.temperature_unit
-        if (
-            native_unit_of_measurement
-            in (UnitOfTemperatureDelta.CELSIUS, UnitOfTemperatureDelta.FAHRENHEIT)
-            and self.device_class == SensorDeviceClass.TEMPERATURE_DELTA
-        ):
-            # UnitSystem.temperature_unit is either °F or °C so we need to map it
-            # to the corresponding delta unit
-            return {
-                UnitOfTemperature.CELSIUS: UnitOfTemperatureDelta.CELSIUS,
-                UnitOfTemperature.FAHRENHEIT: UnitOfTemperatureDelta.FAHRENHEIT,
-            }.get(self.hass.config.units.temperature_unit, native_unit_of_measurement)
 
         # Fourth priority: Unit translation
         if (translation_key := self._unit_of_measurement_translation_key) and (

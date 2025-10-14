@@ -32,7 +32,6 @@ from homeassistant.const import (
     UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
-    UnitOfTemperatureDelta,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -182,8 +181,8 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         0.555556,
     ),
     TemperatureDeltaConverter: (
-        UnitOfTemperatureDelta.CELSIUS,
-        UnitOfTemperatureDelta.FAHRENHEIT,
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
         0.555556,
     ),
     UnitlessRatioConverter: (PERCENTAGE, None, 100),
@@ -853,29 +852,29 @@ _CONVERTED_VALUE: dict[
     TemperatureDeltaConverter: [
         (
             100,
-            UnitOfTemperatureDelta.CELSIUS,
+            UnitOfTemperature.CELSIUS,
             180,
-            UnitOfTemperatureDelta.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
         ),
-        (100, UnitOfTemperatureDelta.CELSIUS, 100, UnitOfTemperatureDelta.KELVIN),
+        (100, UnitOfTemperature.CELSIUS, 100, UnitOfTemperature.KELVIN),
         (
             100,
-            UnitOfTemperatureDelta.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
             55.5556,
-            UnitOfTemperatureDelta.CELSIUS,
+            UnitOfTemperature.CELSIUS,
         ),
         (
             100,
-            UnitOfTemperatureDelta.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
             55.5556,
-            UnitOfTemperatureDelta.KELVIN,
+            UnitOfTemperature.KELVIN,
         ),
-        (100, UnitOfTemperatureDelta.KELVIN, 100, UnitOfTemperatureDelta.CELSIUS),
+        (100, UnitOfTemperature.KELVIN, 100, UnitOfTemperature.CELSIUS),
         (
             100,
-            UnitOfTemperatureDelta.KELVIN,
+            UnitOfTemperature.KELVIN,
             180,
-            UnitOfTemperatureDelta.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
         ),
     ],
     UnitlessRatioConverter: [
@@ -1238,13 +1237,13 @@ def test_unit_conversion_factory_allow_none_with_none() -> None:
     )
     assert (
         TemperatureDeltaConverter.converter_factory_allow_none(
-            UnitOfTemperatureDelta.CELSIUS, UnitOfTemperatureDelta.CELSIUS
+            UnitOfTemperature.CELSIUS, UnitOfTemperature.CELSIUS
         )(1)
         == 1
     )
     assert (
         TemperatureDeltaConverter.converter_factory_allow_none(
-            UnitOfTemperatureDelta.CELSIUS, UnitOfTemperatureDelta.CELSIUS
+            UnitOfTemperature.CELSIUS, UnitOfTemperature.CELSIUS
         )(None)
         is None
     )
@@ -1304,29 +1303,29 @@ def test_temperature_convert_with_interval(
     [
         (
             100,
-            UnitOfTemperatureDelta.CELSIUS,
+            UnitOfTemperature.CELSIUS,
             180,
-            UnitOfTemperatureDelta.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
         ),
-        (100, UnitOfTemperatureDelta.CELSIUS, 100, UnitOfTemperatureDelta.KELVIN),
+        (100, UnitOfTemperature.CELSIUS, 100, UnitOfTemperature.KELVIN),
         (
             100,
-            UnitOfTemperatureDelta.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
             55.5556,
-            UnitOfTemperatureDelta.CELSIUS,
+            UnitOfTemperature.CELSIUS,
         ),
         (
             100,
-            UnitOfTemperatureDelta.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
             55.5556,
-            UnitOfTemperatureDelta.KELVIN,
+            UnitOfTemperature.KELVIN,
         ),
-        (100, UnitOfTemperatureDelta.KELVIN, 100, UnitOfTemperatureDelta.CELSIUS),
+        (100, UnitOfTemperature.KELVIN, 100, UnitOfTemperature.CELSIUS),
         (
             100,
-            UnitOfTemperatureDelta.KELVIN,
+            UnitOfTemperature.KELVIN,
             180,
-            UnitOfTemperatureDelta.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
         ),
     ],
 )

@@ -32,7 +32,6 @@ from homeassistant.const import (
     UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
-    UnitOfTemperatureDelta,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -757,14 +756,14 @@ class TemperatureDeltaConverter(BaseUnitConverter):
 
     UNIT_CLASS = "temperature_delta"
     VALID_UNITS = {
-        UnitOfTemperatureDelta.CELSIUS,
-        UnitOfTemperatureDelta.FAHRENHEIT,
-        UnitOfTemperatureDelta.KELVIN,
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
+        UnitOfTemperature.KELVIN,
     }
     _UNIT_CONVERSION = {
-        UnitOfTemperatureDelta.CELSIUS: 1.0,
-        UnitOfTemperatureDelta.FAHRENHEIT: 1.8,
-        UnitOfTemperatureDelta.KELVIN: 1.0,
+        UnitOfTemperature.CELSIUS: 1.0,
+        UnitOfTemperature.FAHRENHEIT: 1.8,
+        UnitOfTemperature.KELVIN: 1.0,
     }
 
 
