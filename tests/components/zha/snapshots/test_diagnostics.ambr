@@ -118,7 +118,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': None,
-      'version': 4,
+      'version': 5,
     }),
     'devices': list([
       dict({

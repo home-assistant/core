@@ -35,7 +35,7 @@ async def test_get_firmware_info_normal(hass: HomeAssistant) -> None:
             },
             "radio_type": "ezsp",
         },
-        version=4,
+        version=5,
     )
     zha.add_to_hass(hass)
     zha.mock_state(hass, ConfigEntryState.LOADED)
@@ -87,7 +87,7 @@ async def test_get_firmware_info_errors(
         domain="zha",
         unique_id="some_unique_id",
         data=data,
-        version=4,
+        version=5,
     )
     zha.add_to_hass(hass)
 

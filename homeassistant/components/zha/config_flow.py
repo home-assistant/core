@@ -544,6 +544,8 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Form a brand-new network."""
         await self._radio_mgr.async_form_network()
+        # Load the newly formed network settings to get the network info
+        await self._radio_mgr.async_load_network_settings()
         return await self._async_create_radio_entry()
 
     def _parse_uploaded_backup(
