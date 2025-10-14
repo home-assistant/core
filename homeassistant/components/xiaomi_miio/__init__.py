@@ -8,6 +8,15 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
+import warnings
+
+# Suppress FutureWarning from miio library about functools.partial
+warnings.filterwarnings(
+    "ignore",
+    message="functools.partial will be a method descriptor",
+    category=FutureWarning,
+    module="miio.miot_device",
+)
 
 from miio import (
     AirFresh,
