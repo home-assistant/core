@@ -133,6 +133,7 @@ async def integration_fixture(
         "window_covering_pa_tilt",
         "window_covering_tilt",
         "yandex_smart_socket",
+        "zemismart_mt25b",
     ]
 )
 async def matter_devices(
