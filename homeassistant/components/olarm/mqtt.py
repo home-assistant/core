@@ -12,7 +12,7 @@ from olarmflowclient import OlarmFlowClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
@@ -54,12 +54,12 @@ class OlarmFlowClientMQTT:
 
         Checks if access token has expired and if not uses refresh token to fetch new.
         """
-        try:
-            # Check if token needs refresh
-            token_valid: bool = self._oauth_session.valid_token
-            if not token_valid:
-                _LOGGER.debug("Access token expired, refreshing")
+        # Check if token needs refresh
+        token_valid: bool = self._oauth_session.valid_token
+        if not token_valid:
+            _LOGGER.debug("Access token expired, refreshing")
 
+        try:
             await self._oauth_session.async_ensure_token_valid()
             new_token: str = self._oauth_session.token["access_token"]
             expires_at: float = self._oauth_session.token["expires_at"]
@@ -77,7 +77,7 @@ class OlarmFlowClientMQTT:
                     "OAuth2 refresh token is invalid (status 400). Integration will remain in error state"
                     "Please remove and re-add the integration to fix authentication"
                 )
-                raise ConfigEntryNotReady(
+                raise ConfigEntryError(
                     "OAuth2 refresh token is invalid. Please remove and re-add the integration."
                 ) from e
 
@@ -103,23 +103,24 @@ class OlarmFlowClientMQTT:
         try:
             # Ensure we have a valid token before reconnecting
             await self._ensure_valid_token()
-            _LOGGER.debug("Token refreshed successfully for MQTT reconnection")
-        except (ConfigEntryNotReady, OSError, TimeoutError) as e:
+        except (ConfigEntryError, ConfigEntryNotReady, OSError, TimeoutError) as e:
             _LOGGER.error("Failed to refresh token for MQTT reconnection: %s", e)
+
+        _LOGGER.debug("Token refreshed successfully for MQTT reconnection")
 
     async def init_mqtt(self) -> None:
         """Initialize and connect to the Olarm MQTT service."""
 
         _LOGGER.debug("Attempting to connect to Olarm MQTT Service")
 
+        # Set up the reconnection callback before starting MQTT
+        self._olarm_flow_client.set_mqtt_reconnection_callback(
+            self._mqtt_reconnection_callback
+        )
+
         try:
             # Ensure token is valid before connecting to MQTT
             await self._ensure_valid_token()
-
-            # Set up the reconnection callback before starting MQTT
-            self._olarm_flow_client.set_mqtt_reconnection_callback(
-                self._mqtt_reconnection_callback
-            )
 
             # Olarm limits the MQTT connections per user and each needs a unique client_id
             sorted_olarm_entries: list[ConfigEntry] = sorted(
