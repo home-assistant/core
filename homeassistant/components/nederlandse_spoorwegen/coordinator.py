@@ -73,10 +73,10 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
 
     async def _async_update_data(self) -> NSRouteResult:
         """Fetch data from NS API for this specific route."""
+        trips: list[Trip] = []
+        first_trip: Trip | None = None
+        next_trip: Trip | None = None
         try:
-            trips: list[Trip] = []
-            first_trip: Trip | None = None
-            next_trip: Trip | None = None
             trips = await self._get_trips(
                 self.departure,
                 self.destination,
@@ -84,32 +84,34 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
                 departure_time=self.departure_time,
             )
 
-            # Filter out trips that have already departed (trips are already sorted)
-            future_trips = self._remove_trips_in_the_past(trips)
-
-            # Process trips to find current and next departure
-            first_trip, next_trip = self._get_first_and_next_trips(future_trips)
-
-            return NSRouteResult(
-                trips=trips,
-                first_trip=first_trip,
-                next_trip=next_trip,
-            )
         except (ConnectionError, Timeout, HTTPError, ValueError) as err:
             # Surface API failures to Home Assistant so the entities become unavailable
             raise UpdateFailed(f"API communication error: {err}") from err
+
+        # Filter out trips that have already departed (trips are already sorted)
+        future_trips = self._remove_trips_in_the_past(trips)
+
+        # Process trips to find current and next departure
+        first_trip, next_trip = self._get_first_and_next_trips(future_trips)
+
+        return NSRouteResult(
+            trips=trips,
+            first_trip=first_trip,
+            next_trip=next_trip,
+        )
 
     def _get_time_from_route(self, time_str: str | None) -> str:
         """Combine today's date with a time string if needed."""
         if not time_str:
             return _now_nl().strftime("%d-%m-%Y %H:%M")
-        try:
-            if isinstance(time_str, str):
-                if len(time_str.split(":")) in (2, 3) and " " not in time_str:
-                    today = _now_nl().strftime("%d-%m-%Y")
-                    return f"{today} {time_str[:5]}"
-        except (ValueError, IndexError):
-            pass
+
+        if (
+            isinstance(time_str, str)
+            and len(time_str.split(":")) in (2, 3)
+            and " " not in time_str
+        ):
+            today = _now_nl().strftime("%d-%m-%Y")
+            return f"{today} {time_str[:5]}"
         # Fallback: use current date and time
         return _now_nl().strftime("%d-%m-%Y %H:%M")
 
