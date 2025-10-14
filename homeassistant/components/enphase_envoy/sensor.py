@@ -824,6 +824,12 @@ class EnvoyCollarSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[EnvoyCollar], datetime.datetime | int | float | str]
 
 
+# translations don't accept uppercase
+ADMIN_STATE_MAP = {
+    "ENCMN_MDE_ON_GRID": "on_grid",
+    "ENCMN_MDE_OFF_GRID": "off_grid",
+}
+
 COLLAR_SENSORS = (
     EnvoyCollarSensorEntityDescription(
         key="temperature",
@@ -838,10 +844,20 @@ COLLAR_SENSORS = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda collar: dt_util.utc_from_timestamp(collar.last_report_date),
     ),
+    # grid_state does not seem to change when off-grid, but rather admin_state_str
     EnvoyCollarSensorEntityDescription(
         key="grid_state",
         translation_key="grid_status",
         value_fn=lambda collar: collar.grid_state,
+    ),
+    # grid_status off-grid shows in admin_state rather than in grid_state
+    # map values as translations don't accept uppercase which these are
+    EnvoyCollarSensorEntityDescription(
+        key="admin_state_str",
+        translation_key="admin_state",
+        value_fn=lambda collar: ADMIN_STATE_MAP.get(
+            collar.admin_state_str, collar.admin_state_str
+        ),
     ),
     EnvoyCollarSensorEntityDescription(
         key="mid_state",

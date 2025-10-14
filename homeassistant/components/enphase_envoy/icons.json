@@ -38,6 +38,25 @@
       },
       "available_energy": {
         "default": "mdi:battery-50"
+      },
+      "grid_status": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "off_grid": "mdi:transmission-tower-off",
+          "synchronizing": "mdi:sync-alert"
+        }
+      },
+      "mid_state": {
+        "default": "mdi:electric-switch-closed",
+        "state": {
+          "open": "mdi:electric-switch"
+        }
+      },
+      "admin_state": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "off_grid": "mdi:transmission-tower-off"
+        }
       }
     },
     "switch": {
