@@ -21,7 +21,7 @@
     "step": {
       "init": {
         "title": "Vera controller options",
-        "description": "See the Vera documentation for details on optional parameters: {sample_url}. Note: Any changes here require a restart of the Home Assistant server. To clear values, provide a space.",
+        "description": "See the Vera documentation for details on optional parameters: {documentation_url}. Note: Any changes here require a restart of the Home Assistant server. To clear values, provide a space.",
         "data": {
           "lights": "[%key:component::vera::config::step::user::data::lights%]",
           "exclude": "[%key:component::vera::config::step::user::data::exclude%]"
