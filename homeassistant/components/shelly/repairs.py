@@ -74,6 +74,7 @@ def async_manage_deprecated_firmware_issue(
     entry: ShellyConfigEntry,
     model: str,
     min_firmware: str,
+    ha_version: str,
 ) -> None:
     """Manage deprecated firmware issue."""
     issue_id = DEPRECATED_FIRMWARE_ISSUE_ID.format(unique=entry.unique_id)
@@ -98,6 +99,7 @@ def async_manage_deprecated_firmware_issue(
                     "device_name": device.name,
                     "ip_address": device.ip_address,
                     "firmware": firmware,
+                    "ha_version": ha_version,
                 },
                 data={"entry_id": entry.entry_id},
             )

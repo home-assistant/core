@@ -338,8 +338,10 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
-        for model, min_firmware in DEPRECATED_FIRMWARES.items():
-            async_manage_deprecated_firmware_issue(hass, entry, model, min_firmware)
+        for model, data in DEPRECATED_FIRMWARES.items():
+            async_manage_deprecated_firmware_issue(
+                hass, entry, model, data["min_firmware"], data["ha_version"]
+            )
         async_manage_ble_scanner_firmware_unsupported_issue(
             hass,
             entry,

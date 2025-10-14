@@ -233,7 +233,7 @@ class BLEScannerMode(StrEnum):
 
 BLE_SCANNER_MIN_FIRMWARE = "1.5.1"
 DEPRECATED_FIRMWARES = {
-    MODEL_WALL_DISPLAY: "2.3.0",
+    MODEL_WALL_DISPLAY: {"min_firmware": "2.3.0", "ha_version": "2025.10.0"},
 }
 
 MAX_PUSH_UPDATE_FAILURES = 5
