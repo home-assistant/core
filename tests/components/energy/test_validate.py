@@ -413,6 +413,7 @@ async def test_validation_grid(
                             "stat_compensation": "sensor.grid_compensation_1",
                         }
                     ],
+                    "power": [],
                 }
             ]
         }
@@ -504,6 +505,7 @@ async def test_validation_grid_external_cost_compensation(
                             "stat_compensation": "external:grid_compensation_1",
                         }
                     ],
+                    "power": [],
                 }
             ]
         }
@@ -742,6 +744,7 @@ async def test_validation_grid_price_errors(
                         }
                     ],
                     "flow_to": [],
+                    "power": [],
                 }
             ]
         }
@@ -947,6 +950,7 @@ async def test_validation_grid_no_costs_tracking(
                             "number_energy_price": None,
                         },
                     ],
+                    "power": [],
                     "cost_adjustment_day": 0.0,
                 }
             ]

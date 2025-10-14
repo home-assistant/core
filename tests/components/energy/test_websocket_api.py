@@ -136,6 +136,7 @@ async def test_save_preferences(
                         "number_energy_price": 0.20,
                     },
                 ],
+                "power": [],
                 "cost_adjustment_day": 1.2,
             },
             {
@@ -254,6 +255,7 @@ async def test_handle_duplicate_from_stat(
                         },
                     ],
                     "flow_to": [],
+                    "power": [],
                     "cost_adjustment_day": 0,
                 },
             ],
