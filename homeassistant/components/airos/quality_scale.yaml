@@ -60,7 +60,7 @@ rules:
   icon-translations:
     status: exempt
     comment: no (custom) icons used or envisioned
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
 
