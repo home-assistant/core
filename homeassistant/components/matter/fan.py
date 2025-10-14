@@ -318,7 +318,7 @@ DISCOVERY_SCHEMAS = [
             key="MatterFan",
             name=None,
             label_placement=LabelPlacement.APPEND,
-            default_label_list=("devicetype",),
+            labeling_list=("devicetype",),
         ),
         entity_class=MatterFan,
         # FanEntityFeature

@@ -142,7 +142,7 @@ DISCOVERY_SCHEMAS = [
             key="GenericSwitch",
             device_class=EventDeviceClass.BUTTON,
             translation_key="button",
-            default_label_list=(
+            labeling_list=(
                 "Label",  # Inovelli VTM30 / VTM31 label
                 "Button",  # Inovelli VTM35 label
             ),

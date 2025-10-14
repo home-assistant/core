@@ -467,7 +467,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterLightEntityDescription(
             key="MatterLight",
             name=None,
-            default_label_list=(
+            labeling_list=(
                 "label",  # Used by Inovelli VTM30 / VTM31
                 "devicetype",  # Used by Inovelli VTM35
             ),

@@ -350,7 +350,7 @@ DISCOVERY_SCHEMAS = [
                 "previous": None,
             }.get,
             label_placement=LabelPlacement.APPEND,
-            default_label_list=(
+            labeling_list=(
                 "label",  # Used by Inovelli VTM30 / VTM31
                 "devicetype",  # Used by Inovelli VTM35
                 "orientation",  # Used by Eve Energy US outlet

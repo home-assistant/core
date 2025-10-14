@@ -174,7 +174,7 @@ DISCOVERY_SCHEMAS = [
             native_step=1,
             native_unit_of_measurement=None,
             label_placement=LabelPlacement.APPEND,
-            default_label_list=(
+            labeling_list=(
                 "label",
                 "devicetype",
             ),
@@ -199,7 +199,7 @@ DISCOVERY_SCHEMAS = [
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
             label_placement=LabelPlacement.APPEND,
-            default_label_list=("label",),
+            labeling_list=("label",),
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnTransitionTime,),
@@ -220,7 +220,7 @@ DISCOVERY_SCHEMAS = [
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
             label_placement=LabelPlacement.APPEND,
-            default_label_list=("label",),  # Used by Inovelli VTM30 / VTM31
+            labeling_list=("label",),  # Used by Inovelli VTM30 / VTM31
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OffTransitionTime,),
@@ -241,7 +241,7 @@ DISCOVERY_SCHEMAS = [
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
             label_placement=LabelPlacement.APPEND,
-            default_label_list=(
+            labeling_list=(
                 "label",  # Used by Inovelli VTM30 / VTM31
                 "devicetype",  # Used by Inovelli VTM35
             ),

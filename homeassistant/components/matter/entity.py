@@ -89,10 +89,10 @@ class MatterEntityLabeling:
 
     label_placement: LabelPlacement = LabelPlacement.APPEND
 
-    # Priority-ordered default set of labels used for locating the name modifier
-    # Can override this set in an entity's discovery schema.
+    # Priority-ordered set of labels used for locating the name modifier
+    # Set in an entity's discovery schema.
     # Always uses lower case for matching.
-    default_label_list: tuple[str, ...] | None = None
+    labeling_list: tuple[str, ...] | None = None
 
     # When labels are matched, use the concatenator string to join them.
     # Examples: ", " or "-" or " " (space).
@@ -123,7 +123,7 @@ class MatterEntityLabeling:
 
         found_labels: list[str] = [
             lbl.value
-            for label in self.default_label_list or []
+            for label in self.labeling_list or []
             for lbl in (*user_label_list, *fixed_label_list)
             if lbl.label.lower() == label.lower()
         ]
