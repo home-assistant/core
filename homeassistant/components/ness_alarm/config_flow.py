@@ -256,14 +256,9 @@ class OptionsFlow(config_entries.OptionsFlow):
                 new_data = dict(entry.data)
                 # Map the zone count to a panel model for consistency
                 zone_count = user_input["enabled_zones"]
-                if zone_count == 8:
-                    new_data["panel_model"] = "MANUAL_8"
-                elif zone_count == 16:
-                    new_data["panel_model"] = "MANUAL_16"
-                elif zone_count == 24:
-                    new_data["panel_model"] = "MANUAL_24"
-                else:
-                    new_data["panel_model"] = "MANUAL_32"
+                new_data["panel_model"] = (
+                    f"MANUAL_{zone_count if zone_count in (8, 16, 24) else DEFAULT_MAX_SUPPORTED_ZONES}"
+                )
 
                 self.hass.config_entries.async_update_entry(entry, data=new_data)
 

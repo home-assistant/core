@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SIGNAL_ZONE_CHANGED
-from .const import DEFAULT_MAX_SUPPORTED_ZONES, DOMAIN, PANEL_MODEL_ZONES, TOTAL_ZONES
+from .const import DEFAULT_MAX_SUPPORTED_ZONES, DOMAIN, PANEL_MODEL_ZONES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ async def async_setup_entry(
     entities = []
 
     # Always create 32 zones, and disable based on the number of supported zones from
-    for zone_id in range(1, TOTAL_ZONES + 1):
+    for zone_id in range(1, DEFAULT_MAX_SUPPORTED_ZONES + 1):
         name = f"Zone {zone_id}"
         zone_type = BinarySensorDeviceClass.MOTION
 
