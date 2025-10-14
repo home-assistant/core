@@ -109,6 +109,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     EntityCategory,
+    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, async_get_hass, callback
@@ -417,7 +418,6 @@ from .const import (
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
     VALUES_ON_COMMAND_TYPE,
-    Platform,
 )
 from .models import MqttAvailabilityData, MqttDeviceData, MqttSubentryData
 from .util import (
@@ -821,10 +821,7 @@ TEMPERATURE_UNIT_SELECTOR = SelectSelector(
 @callback
 def configured_target_temperature_feature(config: dict[str, Any]) -> str:
     """Calculate current target temperature feature from config."""
-    if (
-        config == {CONF_PLATFORM: Platform.CLIMATE.value}
-        or CONF_TEMP_COMMAND_TOPIC in config
-    ):
+    if config == {CONF_PLATFORM: Platform.CLIMATE} or CONF_TEMP_COMMAND_TOPIC in config:
         # default to single on initial set
         return "single"
     if CONF_TEMP_HIGH_COMMAND_TOPIC in config:
@@ -1156,20 +1153,20 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Callable[[dict[str, Any]], dict[str, str]] | None,
 ] = {
     Platform.ALARM_CONTROL_PANEL: None,
-    Platform.BINARY_SENSOR.value: None,
-    Platform.BUTTON.value: None,
-    Platform.CLIMATE.value: validate_climate_platform_config,
-    Platform.COVER.value: validate_cover_platform_config,
-    Platform.FAN.value: validate_fan_platform_config,
-    Platform.IMAGE.value: None,
-    Platform.LIGHT.value: validate_light_platform_config,
-    Platform.LOCK.value: None,
-    Platform.NOTIFY.value: None,
-    Platform.NUMBER.value: validate_number_platform_config,
+    Platform.BINARY_SENSOR: None,
+    Platform.BUTTON: None,
+    Platform.CLIMATE: validate_climate_platform_config,
+    Platform.COVER: validate_cover_platform_config,
+    Platform.FAN: validate_fan_platform_config,
+    Platform.IMAGE: None,
+    Platform.LIGHT: validate_light_platform_config,
+    Platform.LOCK: None,
+    Platform.NOTIFY: None,
+    Platform.NUMBER: validate_number_platform_config,
     Platform.SELECT: None,
+    Platform.SENSOR: validate_sensor_platform_config,
     Platform.SIREN: None,
-    Platform.SENSOR.value: validate_sensor_platform_config,
-    Platform.SWITCH.value: None,
+    Platform.SWITCH: None,
 }
 
 
@@ -1216,8 +1213,8 @@ SHARED_PLATFORM_ENTITY_FIELDS: dict[str, PlatformField] = {
         default=None,
     ),
 }
-PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
-    Platform.ALARM_CONTROL_PANEL.value: {
+PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
+    Platform.ALARM_CONTROL_PANEL: {
         CONF_SUPPORTED_FEATURES: PlatformField(
             selector=ALARM_CONTROL_PANEL_FEATURES_SELECTOR,
             required=True,
@@ -1234,7 +1231,7 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             else "local_code",
         ),
     },
-    Platform.BINARY_SENSOR.value: {
+    Platform.BINARY_SENSOR: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=BINARY_SENSOR_DEVICE_CLASS_SELECTOR,
             required=False,
@@ -1245,13 +1242,13 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             default=None,
         ),
     },
-    Platform.BUTTON.value: {
+    Platform.BUTTON: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=BUTTON_DEVICE_CLASS_SELECTOR,
             required=False,
         ),
     },
-    Platform.CLIMATE.value: {
+    Platform.CLIMATE: {
         CONF_TEMPERATURE_UNIT: PlatformField(
             selector=TEMPERATURE_UNIT_SELECTOR,
             validator=validate(cv.temperature_unit),
@@ -1323,13 +1320,13 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             default=lambda config: bool(config.get(CONF_POWER_COMMAND_TOPIC)),
         ),
     },
-    Platform.COVER.value: {
+    Platform.COVER: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=COVER_DEVICE_CLASS_SELECTOR,
             required=False,
         ),
     },
-    Platform.FAN.value: {
+    Platform.FAN: {
         "fan_feature_speed": PlatformField(
             selector=BOOLEAN_SELECTOR,
             required=False,
@@ -1355,7 +1352,7 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             default=lambda config: bool(config.get(CONF_DIRECTION_COMMAND_TOPIC)),
         ),
     },
-    Platform.IMAGE.value: {
+    Platform.IMAGE: {
         "image_processing_mode": PlatformField(
             selector=IMAGE_PROCESSING_MODE_SELECTOR,
             required=True,
@@ -1367,7 +1364,7 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             ),
         )
     },
-    Platform.LIGHT.value: {
+    Platform.LIGHT: {
         CONF_SCHEMA: PlatformField(
             selector=LIGHT_SCHEMA_SELECTOR,
             required=True,
@@ -1381,8 +1378,8 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             is_schema_default=True,
         ),
     },
-    Platform.LOCK.value: {},
-    Platform.NOTIFY.value: {},
+    Platform.LOCK: {},
+    Platform.NOTIFY: {},
     Platform.NUMBER: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=NUMBER_DEVICE_CLASS_SELECTOR,
@@ -1394,8 +1391,8 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             custom_filtering=True,
         ),
     },
-    Platform.SELECT.value: {},
-    Platform.SENSOR.value: {
+    Platform.SELECT: {},
+    Platform.SENSOR: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=SENSOR_DEVICE_CLASS_SELECTOR, required=False
         ),
@@ -1425,13 +1422,13 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
         ),
     },
     Platform.SIREN: {},
-    Platform.SWITCH.value: {
+    Platform.SWITCH: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=SWITCH_DEVICE_CLASS_SELECTOR, required=False
         ),
     },
 }
-PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
+PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
     Platform.ALARM_CONTROL_PANEL: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
@@ -1518,7 +1515,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="alarm_control_panel_payload_settings",
         ),
     },
-    Platform.BINARY_SENSOR.value: {
+    Platform.BINARY_SENSOR: {
         CONF_STATE_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -1554,7 +1551,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="advanced_settings",
         ),
     },
-    Platform.BUTTON.value: {
+    Platform.BUTTON: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -1574,7 +1571,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         ),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
-    Platform.CLIMATE.value: {
+    Platform.CLIMATE: {
         # operation mode settings
         CONF_MODE_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
@@ -2064,7 +2061,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             conditions=({"climate_feature_swing_horizontal_modes": True},),
         ),
     },
-    Platform.COVER.value: {
+    Platform.COVER: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
@@ -2243,7 +2240,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="cover_tilt_settings",
         ),
     },
-    Platform.FAN.value: {
+    Platform.FAN: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -2463,7 +2460,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             conditions=({"fan_feature_direction": True},),
         ),
     },
-    Platform.IMAGE.value: {
+    Platform.IMAGE: {
         CONF_IMAGE_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -2497,7 +2494,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             error="invalid_template",
         ),
     },
-    Platform.LIGHT.value: {
+    Platform.LIGHT: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -2978,7 +2975,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="advanced_settings",
         ),
     },
-    Platform.LOCK.value: {
+    Platform.LOCK: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -3065,7 +3062,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
         CONF_OPTIMISTIC: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
-    Platform.NOTIFY.value: {
+    Platform.NOTIFY: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -3080,7 +3077,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         ),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
-    Platform.NUMBER.value: {
+    Platform.NUMBER: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -3132,7 +3129,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         ),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
-    Platform.SELECT.value: {
+    Platform.SELECT: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -3160,7 +3157,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         CONF_OPTIONS: PlatformField(selector=OPTIONS_SELECTOR, required=True),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
-    Platform.SENSOR.value: {
+    Platform.SENSOR: {
         CONF_STATE_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -3252,7 +3249,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="siren_advanced_settings",
         ),
     },
-    Platform.SWITCH.value: {
+    Platform.SWITCH: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
