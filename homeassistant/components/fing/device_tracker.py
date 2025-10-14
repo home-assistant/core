@@ -91,7 +91,6 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
         """Enable entity by default."""
         return True
 
-
     @property
     def unique_id(self) -> str | None:
         """Return the unique ID of the entity."""
