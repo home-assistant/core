@@ -20,7 +20,6 @@ DOMAIN = "quickbars"
 
 @pytest.fixture
 def mock_bus_unsub(hass):
-    from unittest.mock import Mock, patch
 
     unsub = Mock(name="unsub")
 
