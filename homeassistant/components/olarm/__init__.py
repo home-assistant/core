@@ -11,7 +11,7 @@ from olarmflowclient import OlarmFlowClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .coordinator import OlarmDataUpdateCoordinator
@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
         await session.async_ensure_token_valid()
     except ClientResponseError as err:
         if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed("OAuth session not valid") from err
+            raise ConfigEntryError("OAuth session not valid") from err
         raise ConfigEntryNotReady from err
     except ClientError as err:
         raise ConfigEntryNotReady from err

@@ -27,7 +27,6 @@ class OlarmOauth2FlowHandler(
     """Handle a config flow for Olarm using OAuth2."""
 
     DOMAIN = DOMAIN
-    VERSION = 1
 
     _access_token: str | None = None
     _refresh_token: str | None = None
@@ -80,7 +79,6 @@ class OlarmOauth2FlowHandler(
             api_result = await olarm_connect_client.get_devices()
         except DevicesNotFound:
             # Handle if user has no devices
-            _LOGGER.info("No devices found for this account - aborting setup")
             return self.async_abort(reason="no_devices_found")
         except OlarmFlowClientApiError:
             # Otherwise, assume it's an auth-related error
