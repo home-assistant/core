@@ -19,6 +19,7 @@
         },
         "sections": {
           "advanced_settings": {
+            "name": "[%key:component::airos::config::step::user::sections::advanced_settings::name%]",
             "data": {
               "ssl": "[%key:component::airos::config::step::user::sections::advanced_settings::data::ssl%]",
               "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
@@ -43,6 +44,7 @@
         },
         "sections": {
           "advanced_settings": {
+            "name": "Advanced settings",
             "data": {
               "ssl": "Use HTTPS",
               "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
