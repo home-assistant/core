@@ -437,9 +437,11 @@ async def get_entities(
             if description.key.startswith("moisture/"):
                 s_id = description.key.split(".")[1]
                 is_leaf = int(
-                    await onewire_hub.owproxy.read(
-                        f"{device_path}moisture/is_leaf.{s_id}"
-                    )
+                    (
+                        await onewire_hub.owproxy.read(
+                            f"{device_path}moisture/is_leaf.{s_id}"
+                        )
+                    ).decode()
                 )
                 if is_leaf:
                     description = dataclasses.replace(
