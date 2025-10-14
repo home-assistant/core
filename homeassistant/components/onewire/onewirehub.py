@@ -68,8 +68,11 @@ class OneWireHub:
         self._hass = hass
         self._config_entry = config_entry
 
-    async def initialize(self) -> None:
-        """Initialize a config entry."""
+    async def _initialize(self) -> None:
+        """Connect to the server, and discover connected devices."""
+        host = self._config_entry.data[CONF_HOST]
+        port = self._config_entry.data[CONF_PORT]
+        _LOGGER.debug("Initializing connection to %s:%s", host, port)
         self.owproxy = OWServerStatelessProxy(
             self._config_entry.data[CONF_HOST], self._config_entry.data[CONF_PORT]
         )
@@ -80,6 +83,10 @@ class OneWireHub:
                 await self.owproxy.read(OWServerCommonPath.VERSION)
             ).decode()
         self.devices = await _discover_devices(self.owproxy)
+
+    async def initialize(self) -> None:
+        """Initialize a config entry."""
+        await self._initialize()
         self._populate_device_registry(self.devices)
 
     @callback
