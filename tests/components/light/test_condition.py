@@ -6,6 +6,7 @@ from homeassistant.components import automation
 from homeassistant.const import (
     ATTR_LABEL_ID,
     CONF_CONDITION,
+    CONF_OPTIONS,
     CONF_STATE,
     CONF_TARGET,
     STATE_OFF,
@@ -17,7 +18,6 @@ from homeassistant.helpers import entity_registry as er, label_registry as lr
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
