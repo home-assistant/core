@@ -115,7 +115,13 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
             ) is not None:
                 self._attr_translation_placeholders = {"channel_name": channel_name}
 
-            if "channel_name" in self.translation_placeholders and (
+            if (
+                suffix := "_with_channel_name"
+                if "channel_name" in self.translation_placeholders
+                else "_with_phase_name"
+                if "phase_name" in self.translation_placeholders
+                else ""
+            ) and (
                 translation_key := description.translation_key
                 or (
                     description.device_class
@@ -123,7 +129,7 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
                     else None
                 )
             ):
-                self._attr_translation_key = f"{translation_key}_with_channel_name"
+                self._attr_translation_key = f"{translation_key}{suffix}"
 
         if self.option_map:
             self._attr_options = list(self.option_map.values())
@@ -1553,7 +1559,7 @@ RPC_SENSORS: Final = {
     "object_phase_a_voltage": RpcSensorDescription(
         key="object",
         sub_key="value",
-        translation_placeholders={"channel_name": "Phase A"},
+        translation_placeholders={"phase_name": "A"},
         value=lambda status, _: float(status["phase_a"]["voltage"]),
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
@@ -1564,7 +1570,7 @@ RPC_SENSORS: Final = {
     "object_phase_b_voltage": RpcSensorDescription(
         key="object",
         sub_key="value",
-        translation_placeholders={"channel_name": "Phase B"},
+        translation_placeholders={"phase_name": "B"},
         value=lambda status, _: float(status["phase_b"]["voltage"]),
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
@@ -1575,7 +1581,7 @@ RPC_SENSORS: Final = {
     "object_phase_c_voltage": RpcSensorDescription(
         key="object",
         sub_key="value",
-        translation_placeholders={"channel_name": "Phase C"},
+        translation_placeholders={"phase_name": "C"},
         value=lambda status, _: float(status["phase_c"]["voltage"]),
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
@@ -1701,16 +1707,12 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
             channel_name := get_block_channel_name(coordinator.device, self.block)
         ) is not None:
             self._attr_translation_placeholders = {"channel_name": channel_name}
-
-        if "channel_name" in self.translation_placeholders and (
-            translation_key := description.translation_key
-            or (
+            if translation_key := description.translation_key or (
                 description.device_class
                 if self._default_to_device_class_name()
                 else None
-            )
-        ):
-            self._attr_translation_key = f"{translation_key}_with_channel_name"
+            ):
+                self._attr_translation_key = f"{translation_key}_with_channel_name"
 
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
@@ -1834,19 +1836,28 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
             if description.role != "generic":
                 if hasattr(self, "_attr_name"):
                     delattr(self, "_attr_name")
+
             if not description.role:
                 if (
                     channel_name := get_rpc_channel_name(coordinator.device, key)
                 ) is not None:
                     self._attr_translation_placeholders = {"channel_name": channel_name}
-                    if translation_key := description.translation_key or (
+
+                if (
+                    suffix := "_with_channel_name"
+                    if "channel_name" in self.translation_placeholders
+                    else "_with_phase_name"
+                    if "phase_name" in self.translation_placeholders
+                    else ""
+                ) and (
+                    translation_key := description.translation_key
+                    or (
                         description.device_class
                         if self._default_to_device_class_name()
                         else None
-                    ):
-                        self._attr_translation_key = (
-                            f"{translation_key}_with_channel_name"
-                        )
+                    )
+                ):
+                    self._attr_translation_key = f"{translation_key}{suffix}"
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

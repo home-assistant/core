@@ -161,6 +161,9 @@
       "voltage_with_channel_name": {
         "name": "{channel_name} voltage"
       },
+      "voltage_with_phase_name": {
+        "name": "Phase {phase_name} voltage"
+      },
       "current_with_channel_name": {
         "name": "{channel_name} current"
       },
