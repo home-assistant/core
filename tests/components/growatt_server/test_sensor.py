@@ -96,10 +96,13 @@ async def test_sensor_unavailable_on_coordinator_error(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_total_sensors_classic_api(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_growatt_classic_api,
     mock_config_entry_classic: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test total sensors with Classic API."""
     # Classic API uses TLX devices
@@ -110,34 +113,21 @@ async def test_total_sensors_classic_api(
     with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry_classic)
 
-    # Verify total sensors exist for Classic API
-    state = hass.states.get("sensor.test_plant_total_total_money_today")
-    assert state is not None
-
-    state = hass.states.get("sensor.test_plant_total_money_lifetime")
-    assert state is not None
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_config_entry_classic.entry_id
+    )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_entity_registry(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor entities are properly registered."""
     with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    # Get all sensor entities
-    entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-    # We should have many sensors registered
-    assert len(entries) > 10, "Not enough sensors registered"
-
-    # Verify all entities have required attributes
-    for entry in entries:
-        assert entry.unique_id is not None
-        assert entry.platform == "growatt_server"
-        assert entry.domain == "sensor"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

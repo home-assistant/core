@@ -96,8 +96,10 @@ async def test_coordinator_update_failed(
 
 async def test_classic_api_setup(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_growatt_classic_api,
     mock_config_entry_classic: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test integration setup with Classic API (password auth)."""
     # Classic API doesn't support MIN devices - use TLX device instead
@@ -113,9 +115,9 @@ async def test_classic_api_setup(
     mock_growatt_classic_api.login.assert_called()
 
     # Verify device was created
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")})
     assert device_entry is not None
+    assert device_entry == snapshot
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -138,6 +140,7 @@ async def test_unload_removes_listeners(
 
 async def test_multiple_devices_discovered(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
@@ -168,4 +171,6 @@ async def test_multiple_devices_discovered(
     device2 = device_registry.async_get_device(identifiers={(DOMAIN, "MIN789012")})
 
     assert device1 is not None
+    assert device1 == snapshot(name="device_min123456")
     assert device2 is not None
+    assert device2 == snapshot(name="device_min789012")
