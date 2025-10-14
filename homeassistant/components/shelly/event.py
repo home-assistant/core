@@ -30,7 +30,6 @@ from .entity import ShellyBlockEntity, get_entity_rpc_device_info
 from .utils import (
     async_remove_orphaned_entities,
     async_remove_shelly_entity,
-    get_block_entity_name,
     get_device_entry_gen,
     get_rpc_entity_name,
     get_rpc_key_instances,
@@ -176,9 +175,6 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
             self._attr_event_types = list(BASIC_INPUTS_EVENTS_TYPES)
         self.entity_description = description
 
-        # Temporary until translations are added
-        self._attr_name = get_block_entity_name(coordinator.device, block)
-
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -211,10 +207,8 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
         self.event_id = int(key.split(":")[-1])
         self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
-        self.entity_description = description
-
-        # Temporary until translations are added
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
+        self.entity_description = description
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

@@ -23,7 +23,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -44,7 +43,7 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import get_device_entry_gen, get_release_url, get_rpc_entity_name
+from .utils import get_device_entry_gen, get_release_url
 
 LOGGER = logging.getLogger(__name__)
 
@@ -252,8 +251,6 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     ) -> None:
         """Initialize update entity."""
         super().__init__(coordinator, key, attribute, description)
-        # Temporary until translations are added
-        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
         self._ota_in_progress = False
         self._ota_progress_percentage: int | None = None
         self._attr_release_url = get_release_url(
@@ -354,24 +351,6 @@ class RpcSleepingUpdateEntity(
     """Represent a RPC sleeping update entity."""
 
     entity_description: RpcUpdateDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcEntityDescription,
-        entry: RegistryEntry | None = None,
-    ) -> None:
-        """Initialize the sleeping sensor."""
-        super().__init__(coordinator, key, attribute, description, entry)
-        # Temporary until translations are added
-        if coordinator.device.initialized:
-            self._attr_name = get_rpc_entity_name(
-                coordinator.device, key, description.name
-            )
-        elif entry is not None:
-            self._attr_name = cast(str, entry.original_name)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

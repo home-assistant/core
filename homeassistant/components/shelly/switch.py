@@ -41,9 +41,7 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
-    get_block_entity_name,
     get_device_entry_gen,
-    get_rpc_entity_name,
     get_virtual_component_ids,
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
@@ -370,11 +368,6 @@ class BlockSleepingMotionSwitch(
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, block, attribute, description, entry)
         self.last_state: State | None = None
-        # Temporary until translations are added
-        if block is not None:
-            self._attr_name = get_block_entity_name(
-                coordinator.device, block, description.name
-            )
 
     @property
     def is_on(self) -> bool | None:
@@ -450,18 +443,6 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     """Entity that controls a switch on RPC based Shelly devices."""
 
     entity_description: RpcSwitchDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcEntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator, key, attribute, description)
-        # Temporary until translations are added
-        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
 
     @property
     def is_on(self) -> bool:

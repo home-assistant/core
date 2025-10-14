@@ -30,7 +30,7 @@ from .entity import (
     async_setup_entry_attribute_entities,
     async_setup_entry_rpc,
 )
-from .utils import get_device_entry_gen, get_rpc_entity_name
+from .utils import get_device_entry_gen
 
 PARALLEL_UPDATES = 0
 
@@ -202,9 +202,6 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
     ) -> None:
         """Initialize rpc cover."""
         super().__init__(coordinator, key, attribute, description)
-        # Temporary until translations are added
-        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
-        self._attr_translation_key = description.translation_key
         self._attr_unique_id: str = f"{coordinator.mac}-{key}"
         self._update_task: asyncio.Task | None = None
         if self.status["pos_control"]:

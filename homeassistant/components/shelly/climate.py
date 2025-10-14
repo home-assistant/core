@@ -54,7 +54,6 @@ from .utils import (
     get_block_entity_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
-    get_rpc_entity_name,
     get_rpc_key_by_role,
     get_rpc_key_ids,
     id_from_key,
@@ -432,11 +431,11 @@ class BlockSleepingClimate(
         elif entry is not None:
             self._unique_id = entry.unique_id
         self._attr_device_info = get_entity_block_device_info(coordinator, sensor_block)
+        self._attr_name = get_block_entity_name(
+            self.coordinator.device, sensor_block, None
+        )
 
         self._channel = cast(int, self._unique_id.split("_")[1])
-
-        # Temporary until translations are added
-        self._attr_name = get_block_entity_name(coordinator.device, sensor_block)
 
     @property
     def extra_restore_state_data(self) -> ShellyClimateExtraStoredData:
@@ -689,9 +688,7 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         """Initialize."""
         super().__init__(coordinator, f"thermostat:{id_}")
         self._id = id_
-        # Temporary until translations are added
-        self._attr_name = get_rpc_entity_name(coordinator.device, self.key)
-        self._thermostat_type = coordinator.device.config[self.key].get(
+        self._thermostat_type = coordinator.device.config[f"thermostat:{id_}"].get(
             "type", "heating"
         )
         if self._thermostat_type == "cooling":
@@ -771,10 +768,9 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
+
         super().__init__(coordinator, f"{BLU_TRV_IDENTIFIER}:{id_}")
         self._id = id_
-        # Temporary until translations are added
-        self._attr_name = get_rpc_entity_name(coordinator.device, self.key)
         self._config = coordinator.device.config[self.key]
         ble_addr: str = self._config["addr"]
         self._attr_unique_id = f"{ble_addr}-{self.key}"

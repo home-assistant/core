@@ -49,9 +49,7 @@ from .utils import (
     async_remove_orphaned_entities,
     async_remove_shelly_entity,
     brightness_to_percentage,
-    get_block_entity_name,
     get_device_entry_gen,
-    get_rpc_entity_name,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
     percentage_to_brightness,
@@ -136,9 +134,6 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
 
         if coordinator.model in MODELS_SUPPORTING_LIGHT_TRANSITION:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
-
-        # Temporary until translations are added
-        self._attr_name = get_block_entity_name(coordinator.device, block)
 
     @property
     def is_on(self) -> bool:
@@ -370,8 +365,6 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
     ) -> None:
         """Initialize light."""
         super().__init__(coordinator, key, attribute, description)
-        # Temporary until translations are added
-        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
 
     @property
