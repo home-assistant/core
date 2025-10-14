@@ -76,7 +76,9 @@ class OneWireHub:
         await self.owproxy.validate()
         with contextlib.suppress(OWServerProtocolError):
             # Version is not available on all servers
-            self._version = await self.owproxy.read_string(OWServerCommonPath.VERSION)
+            self._version = (
+                await self.owproxy.read(OWServerCommonPath.VERSION)
+            ).decode()
         self.devices = await _discover_devices(self.owproxy)
         self._populate_device_registry(self.devices)
 
@@ -121,7 +123,7 @@ async def _discover_devices(
     devices: list[OWDeviceDescription] = []
     for device_path in await owproxy.dir(path):
         device_id = os.path.split(os.path.split(device_path)[0])[1]
-        device_family = await owproxy.read_string(f"{device_path}family")
+        device_family = (await owproxy.read(f"{device_path}family")).decode()
         _LOGGER.debug("read `%sfamily`: %s", device_path, device_family)
         device_type = await _get_device_type(owproxy, device_path)
         if not _is_known_device(device_family, device_type):
@@ -164,12 +166,12 @@ async def _get_device_type(
 ) -> str | None:
     """Get device model."""
     try:
-        device_type = await owproxy.read_string(f"{device_path}type")
+        device_type = (await owproxy.read(f"{device_path}type")).decode()
     except OWServerProtocolError as exc:
         _LOGGER.debug("Unable to read `%stype`: %s", device_path, exc)
         return None
     _LOGGER.debug("read `%stype`: %s", device_path, device_type)
     if device_type == "EDS":
-        device_type = await owproxy.read_string(f"{device_path}device_type")
+        device_type = (await owproxy.read(f"{device_path}device_type")).decode()
         _LOGGER.debug("read `%sdevice_type`: %s", device_path, device_type)
     return device_type

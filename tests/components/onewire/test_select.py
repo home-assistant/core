@@ -86,7 +86,7 @@ async def test_selection_option_service(
     assert hass.states.get(entity_id).state == "12"
 
     # Test SELECT_OPTION service
-    owproxy.return_value.read.side_effect = [b"         9"]
+    owproxy.read.side_effect = [b"         9"]
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
