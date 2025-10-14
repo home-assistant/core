@@ -8,9 +8,7 @@ from typing import TYPE_CHECKING, Final
 
 from .generated.entity_platforms import EntityPlatforms
 from .helpers.deprecation import (
-    DeprecatedConstant,
     DeprecatedConstantEnum,
-    EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
@@ -315,88 +313,6 @@ STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
 
-# #### LOCK STATES ####
-# STATE_* below are deprecated as of 2024.10
-# use the LockState enum instead.
-_DEPRECATED_STATE_LOCKED: Final = DeprecatedConstant(
-    "locked",
-    "LockState.LOCKED",
-    "2025.10",
-)
-_DEPRECATED_STATE_UNLOCKED: Final = DeprecatedConstant(
-    "unlocked",
-    "LockState.UNLOCKED",
-    "2025.10",
-)
-_DEPRECATED_STATE_LOCKING: Final = DeprecatedConstant(
-    "locking",
-    "LockState.LOCKING",
-    "2025.10",
-)
-_DEPRECATED_STATE_UNLOCKING: Final = DeprecatedConstant(
-    "unlocking",
-    "LockState.UNLOCKING",
-    "2025.10",
-)
-_DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
-    "jammed",
-    "LockState.JAMMED",
-    "2025.10",
-)
-
-# #### ALARM CONTROL PANEL STATES ####
-# STATE_ALARM_* below are deprecated as of 2024.11
-# use the AlarmControlPanelState enum instead.
-_DEPRECATED_STATE_ALARM_DISARMED: Final = DeprecatedConstant(
-    "disarmed",
-    "AlarmControlPanelState.DISARMED",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_ARMED_HOME: Final = DeprecatedConstant(
-    "armed_home",
-    "AlarmControlPanelState.ARMED_HOME",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_ARMED_AWAY: Final = DeprecatedConstant(
-    "armed_away",
-    "AlarmControlPanelState.ARMED_AWAY",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_ARMED_NIGHT: Final = DeprecatedConstant(
-    "armed_night",
-    "AlarmControlPanelState.ARMED_NIGHT",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_ARMED_VACATION: Final = DeprecatedConstant(
-    "armed_vacation",
-    "AlarmControlPanelState.ARMED_VACATION",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_ARMED_CUSTOM_BYPASS: Final = DeprecatedConstant(
-    "armed_custom_bypass",
-    "AlarmControlPanelState.ARMED_CUSTOM_BYPASS",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_PENDING: Final = DeprecatedConstant(
-    "pending",
-    "AlarmControlPanelState.PENDING",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_ARMING: Final = DeprecatedConstant(
-    "arming",
-    "AlarmControlPanelState.ARMING",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_DISARMING: Final = DeprecatedConstant(
-    "disarming",
-    "AlarmControlPanelState.DISARMING",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_TRIGGERED: Final = DeprecatedConstant(
-    "triggered",
-    "AlarmControlPanelState.TRIGGERED",
-    "2025.11",
-)
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
@@ -796,35 +712,13 @@ class UnitOfMass(StrEnum):
     STONES = "st"
 
 
-class UnitOfConductivity(
-    StrEnum,
-    metaclass=EnumWithDeprecatedMembers,
-    deprecated={
-        "SIEMENS": ("UnitOfConductivity.SIEMENS_PER_CM", "2025.11.0"),
-        "MICROSIEMENS": ("UnitOfConductivity.MICROSIEMENS_PER_CM", "2025.11.0"),
-        "MILLISIEMENS": ("UnitOfConductivity.MILLISIEMENS_PER_CM", "2025.11.0"),
-    },
-):
+class UnitOfConductivity(StrEnum):
     """Conductivity units."""
 
     SIEMENS_PER_CM = "S/cm"
     MICROSIEMENS_PER_CM = "μS/cm"
     MILLISIEMENS_PER_CM = "mS/cm"
 
-    # Deprecated aliases
-    SIEMENS = "S/cm"
-    """Deprecated: Please use UnitOfConductivity.SIEMENS_PER_CM"""
-    MICROSIEMENS = "μS/cm"
-    """Deprecated: Please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
-    MILLISIEMENS = "mS/cm"
-    """Deprecated: Please use UnitOfConductivity.MILLISIEMENS_PER_CM"""
-
-
-_DEPRECATED_CONDUCTIVITY: Final = DeprecatedConstantEnum(
-    UnitOfConductivity.MICROSIEMENS_PER_CM,
-    "2025.11",
-)
-"""Deprecated: please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
 
 # Light units
 LIGHT_LUX: Final = "lx"

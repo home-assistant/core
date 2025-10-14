@@ -182,10 +182,10 @@ FAN_SPEED_MAX_SPEED_COUNT = 5
 
 COVER_VALVE_STATES = {
     cover.DOMAIN: {
-        "closed": cover.STATE_CLOSED,
-        "closing": cover.STATE_CLOSING,
-        "open": cover.STATE_OPEN,
-        "opening": cover.STATE_OPENING,
+        "closed": cover.CoverState.CLOSED.value,
+        "closing": cover.CoverState.CLOSING.value,
+        "open": cover.CoverState.OPEN.value,
+        "opening": cover.CoverState.OPENING.value,
     },
     valve.DOMAIN: {
         "closed": valve.STATE_CLOSED,
