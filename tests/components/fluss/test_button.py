@@ -1,4 +1,4 @@
-"""Shared test fixtures for Fluss+ integration."""
+"""Tests for Fluss+ button integration."""
 
 from __future__ import annotations
 
@@ -7,23 +7,15 @@ from unittest.mock import AsyncMock, patch
 from fluss_api import FlussApiClient
 import pytest
 
-from homeassistant.components.fluss.button import FlussDataUpdateCoordinator
+from homeassistant.components.fluss.button import (
+    FlussButton,
+    FlussDataUpdateCoordinator,
+)
 from homeassistant.components.fluss.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title="Fluss Integration",
-        data={CONF_API_KEY: "test_api_key"},
-        unique_id="test_api_key",
-    )
 
 
 @pytest.fixture
@@ -87,7 +79,6 @@ async def init_integration_multiple_devices(
     hass: HomeAssistant, mock_api_client_multiple_devices: AsyncMock
 ) -> MockConfigEntry:
     """Set up the Fluss integration for testing with multiple devices."""
-    # Create a new config entry to avoid conflicts with init_integration
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Fluss Integration Multiple Devices",
@@ -96,7 +87,6 @@ async def init_integration_multiple_devices(
     )
     config_entry.add_to_hass(hass)
 
-    # Set up the coordinator with mock_api_client_multiple_devices
     coordinator = FlussDataUpdateCoordinator(hass, mock_api_client_multiple_devices)
     coordinator.data = {
         device["deviceId"]: device
