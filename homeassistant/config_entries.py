@@ -3211,6 +3211,76 @@ class ConfigFlow(ConfigEntryBaseFlow):
         return result
 
     @callback
+    def __async_update(
+        self,
+        entry: ConfigEntry,
+        *,
+        unique_id: str | None | UndefinedType,
+        title: str | UndefinedType,
+        data: Mapping[str, Any] | UndefinedType,
+        data_updates: Mapping[str, Any] | UndefinedType,
+        options: Mapping[str, Any] | UndefinedType,
+    ) -> bool:
+        """Update config entry and return result.
+
+        Internal to be used by update_and_abort and update_reload_and_abort methods only.
+        """
+
+        if data_updates is not UNDEFINED:
+            if data is not UNDEFINED:
+                raise ValueError("Cannot set both data and data_updates")
+            data = entry.data | data_updates
+        return self.hass.config_entries.async_update_entry(
+            entry=entry,
+            unique_id=unique_id,
+            title=title,
+            data=data,
+            options=options,
+        )
+
+    @callback
+    def async_update_and_abort(
+        self,
+        entry: ConfigEntry,
+        *,
+        unique_id: str | None | UndefinedType = UNDEFINED,
+        title: str | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        options: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        reason: str | UndefinedType = UNDEFINED,
+    ) -> ConfigFlowResult:
+        """Update config entry and finish config flow.
+
+        Args:
+            entry: config entry to update
+            unique_id: replace the unique_id of the entry
+            title: replace the title of the entry
+            data: replace the entry data with new data
+            data_updates: add items from data_updates to entry data - existing keys
+                are overridden
+            options: replace the entry options with new options
+            reason: set the reason for the abort, defaults to
+                `reauth_successful` or `reconfigure_successful` based on flow source
+
+        Returns:
+            ConfigFlowResult: The result of the config flow.
+        """
+        self.__async_update(
+            entry=entry,
+            unique_id=unique_id,
+            title=title,
+            data=data,
+            data_updates=data_updates,
+            options=options,
+        )
+        if reason is UNDEFINED:
+            reason = "reauth_successful"
+            if self.source == SOURCE_RECONFIGURE:
+                reason = "reconfigure_successful"
+        return self.async_abort(reason=reason)
+
+    @callback
     def async_update_reload_and_abort(
         self,
         entry: ConfigEntry,
@@ -3225,28 +3295,28 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Update config entry, reload config entry and finish config flow.
 
-        :param data: replace the entry data with new data
-        :param data_updates: add items from data_updates to entry data - existing keys
-        are overridden
-        :param options: replace the entry options with new options
-        :param title: replace the title of the entry
-        :param unique_id: replace the unique_id of the entry
+        Args:
+            entry: config entry to update and reload
+            unique_id: replace the unique_id of the entry
+            title: replace the title of the entry
+            data: replace the entry data with new data
+            data_updates: add items from data_updates to entry data - existing keys
+                are overridden
+            options: replace the entry options with new options
+            reason: set the reason for the abort, defaults to
+                `reauth_successful` or `reconfigure_successful` based on flow source
+            reload_even_if_entry_is_unchanged: set this to `False` if the entry
+                should not be reloaded if it is unchanged
 
-        :param reason: set the reason for the abort, defaults to
-        `reauth_successful` or `reconfigure_successful` based on flow source
-
-        :param reload_even_if_entry_is_unchanged: set this to `False` if the entry
-        should not be reloaded if it is unchanged
+        Returns:
+            ConfigFlowResult: The result of the config flow.
         """
-        if data_updates is not UNDEFINED:
-            if data is not UNDEFINED:
-                raise ValueError("Cannot set both data and data_updates")
-            data = entry.data | data_updates
-        result = self.hass.config_entries.async_update_entry(
+        result = self.__async_update(
             entry=entry,
             unique_id=unique_id,
             title=title,
             data=data,
+            data_updates=data_updates,
             options=options,
         )
         if reload_even_if_entry_is_unchanged or result:
