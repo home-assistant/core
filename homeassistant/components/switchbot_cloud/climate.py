@@ -1,9 +1,17 @@
 """Support for SwitchBot Air Conditioner remotes."""
 
+import asyncio
 from logging import getLogger
 from typing import Any
 
-from switchbot_api import AirConditionerCommands
+from switchbot_api import (
+    AirConditionerCommands,
+    Device,
+    Remote,
+    SmartRadiatorThermostatCommands,
+    SmartRadiatorThermostatMode,
+    SwitchBotAPI,
+)
 
 from homeassistant.components import climate as FanState
 from homeassistant.components.climate import (
@@ -15,12 +23,12 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import SwitchbotCloudData
-from .const import DOMAIN
+from . import SwitchbotCloudData, SwitchBotCoordinator
+from .const import DOMAIN, SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH
 from .entity import SwitchBotCloudEntity
 
 _LOGGER = getLogger(__name__)
@@ -53,7 +61,7 @@ async def async_setup_entry(
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
     async_add_entities(
-        SwitchBotCloudAirConditioner(data.api, device, coordinator)
+        _async_make_entity(data.api, device, coordinator)
         for device, coordinator in data.devices.climates
     )
 
@@ -178,3 +186,124 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         if hvac_mode == HVACMode.OFF:
             hvac_mode = HVACMode.FAN_ONLY
         await self.async_set_hvac_mode(hvac_mode)
+
+
+class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity):
+    """Representation of a Smart Radiator Thermostat."""
+
+    _attr_name = None
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+
+    _attr_max_temp = 35
+    _attr_min_temp = 4
+    _attr_target_temperature_step = 0.1
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
+    _attr_preset_modes = [
+        item.name for item in SmartRadiatorThermostatMode.get_all_modes()
+    ]
+    _attr_preset_mode = SmartRadiatorThermostatMode.MANUAL.name
+
+    _attr_hvac_modes = [
+        HVACMode.OFF,
+        HVACMode.HEAT,
+    ]
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set target temperature."""
+        self._attr_target_temperature = kwargs["temperature"]
+        if self._attr_target_temperature == 4:
+            await self.send_api_command(
+                command=SmartRadiatorThermostatCommands.SET_MODE,
+                parameters=self.__mode_map_value(SmartRadiatorThermostatMode.OFF.name),
+            )
+            self._attr_preset_mode = SmartRadiatorThermostatMode.OFF.name
+        else:
+            await self.send_api_command(
+                command=SmartRadiatorThermostatCommands.SET_MANUAL_MODE_TEMPERATURE,
+                parameters=str(self._attr_target_temperature),
+            )
+
+        await asyncio.sleep(SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH)
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set preset mode."""
+        await self.send_api_command(
+            command=SmartRadiatorThermostatCommands.SET_MODE,
+            parameters=self.__mode_map_value(preset_mode),
+        )
+        self._attr_preset_mode = preset_mode
+
+        if self.preset_mode == SmartRadiatorThermostatMode.MANUAL.name:
+            self._attr_target_temperature = self.current_temperature
+        else:
+            self._attr_target_temperature = None
+
+        await asyncio.sleep(SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH)
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set target hvac mode."""
+        if hvac_mode is HVACMode.OFF:
+            await self.send_api_command(
+                command=SmartRadiatorThermostatCommands.SET_MODE,
+                parameters=self.__mode_map_value(SmartRadiatorThermostatMode.OFF.name),
+            )
+            self._attr_preset_mode = SmartRadiatorThermostatMode.OFF.name
+        else:
+            await self.send_api_command(
+                command=SmartRadiatorThermostatCommands.SET_MODE,
+                parameters=self.__mode_map_value(
+                    SmartRadiatorThermostatMode.FAST_HEATING.name
+                ),
+            )
+            self._attr_preset_mode = SmartRadiatorThermostatMode.FAST_HEATING.name
+        self._attr_target_temperature = None
+        self._attr_hvac_mode = hvac_mode
+        await asyncio.sleep(SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH)
+        await self.coordinator.async_request_refresh()
+
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
+        if self.coordinator.data is None:
+            return
+        mode: int = self.coordinator.data["mode"]
+        temperature: str = self.coordinator.data["temperature"]
+        self._attr_current_temperature = float(temperature)
+        self._attr_preset_mode = self.__value_map_mode(mode)
+
+        if self.preset_mode == SmartRadiatorThermostatMode.OFF.name:
+            self._attr_hvac_mode = HVACMode.OFF
+        else:
+            self._attr_hvac_mode = HVACMode.HEAT
+            if self.preset_mode == SmartRadiatorThermostatMode.MANUAL.name:
+                self._attr_target_temperature = self._attr_current_temperature
+        self.async_write_ha_state()
+
+    def __value_map_mode(self, value: int) -> Any:
+        """Value map SmartRadiatorThermostatMode mode."""
+        for i in SmartRadiatorThermostatMode.get_all_modes():
+            if i.value == value:
+                return i.name
+        raise NotImplementedError(f"{value} Not Supported")
+
+    def __mode_map_value(self, mode: str) -> Any:
+        """SmartRadiatorThermostatMode mode map value."""
+        for i in SmartRadiatorThermostatMode.get_all_modes():
+            if i.name == mode:
+                return i.value
+        raise NotImplementedError(f"{mode} Not Supported")
+
+
+@callback
+def _async_make_entity(
+    api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
+) -> SwitchBotCloudAirConditioner | SwitchBotCloudSmartRadiatorThermostat:
+    """Make a climate entity."""
+    if device.device_type == "Smart Radiator Thermostat":
+        return SwitchBotCloudSmartRadiatorThermostat(api, device, coordinator)
+    return SwitchBotCloudAirConditioner(api, device, coordinator)

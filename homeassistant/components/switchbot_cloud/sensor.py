@@ -234,6 +234,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         HUMIDITY_DESCRIPTION,
         BATTERY_DESCRIPTION,
     ),
+    "Smart Radiator Thermostat": (BATTERY_DESCRIPTION,),
 }
 
 
