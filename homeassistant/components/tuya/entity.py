@@ -13,16 +13,6 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .models import EnumTypeData, IntegerTypeData
 
-_DPTYPE_MAPPING: dict[str, DPType] = {
-    "bitmap": DPType.BITMAP,
-    "bool": DPType.BOOLEAN,
-    "enum": DPType.ENUM,
-    "json": DPType.JSON,
-    "raw": DPType.RAW,
-    "string": DPType.STRING,
-    "value": DPType.INTEGER,
-}
-
 
 class TuyaEntity(Entity):
     """Tuya base device."""
@@ -122,28 +112,6 @@ class TuyaEntity(Entity):
                     ):
                         continue
                     return integer_type
-
-        return None
-
-    def get_dptype(
-        self, dpcode: DPCode | None, *, prefer_function: bool = False
-    ) -> DPType | None:
-        """Find a matching DPCode data type available on for this device."""
-        if dpcode is None:
-            return None
-
-        order = ["status_range", "function"]
-        if prefer_function:
-            order = ["function", "status_range"]
-        for key in order:
-            if dpcode in getattr(self.device, key):
-                current_type = getattr(self.device, key)[dpcode].type
-                try:
-                    return DPType(current_type)
-                except ValueError:
-                    # Sometimes, we get ill-formed DPTypes from the cloud,
-                    # this fixes them and maps them to the correct DPType.
-                    return _DPTYPE_MAPPING.get(current_type)
 
         return None
 
