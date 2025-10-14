@@ -29,3 +29,56 @@ from .const import (
 )
 
 from tests.common import ConfigFlowResult, MockConfigEntry
+
+####################
+# HELPER FUNCTIONS
+####################
+
+
+def _validate_data_schema_output(
+    data_schema: vol.Schema,
+    expected_keys: set[str],
+    expected_types: dict[str, str],
+    expected_values: dict[str, str],
+) -> None:
+    """Validate an outputted data schema against expected keys, types, and values."""
+    schema_detail = {
+        k.schema: (k, data_schema.schema[k].config) for k in data_schema.schema
+    }
+
+    assert schema_detail.keys() == expected_keys
+
+    for k, v in expected_values.items():
+        suggested_value = (
+            schema_detail[k][0].description.get("suggested_value")
+            if schema_detail[k][0].description
+            else None
+        )
+        default_value = (
+            schema_detail[k][0].default()
+            if not isinstance(schema_detail[k][0].default, vol.Undefined)
+            else None
+        )
+        assert (suggested_value or default_value) == v
+
+    for k in expected_keys - expected_values.keys():
+        suggested_value = (
+            schema_detail[k][0].description.get("suggested_value")
+            if schema_detail[k][0].description
+            else None
+        )
+        default_value = (
+            schema_detail[k][0].default()
+            if not isinstance(schema_detail[k][0].default, vol.Undefined)
+            else None
+        )
+        assert not (suggested_value and default_value)
+
+    for k, v in expected_types.items():
+        assert schema_detail[k][1]["type"] == v
+
+
+def _record_errors(model: S3ConfigModel, errors: dict[str, str]) -> None:
+    """Record errors in the S3ConfigModel instance."""
+    for k, v in errors.items():
+        model.record_error(k, v)
