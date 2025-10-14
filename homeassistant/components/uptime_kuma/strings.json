@@ -98,7 +98,7 @@
           "postgres": "PostgreSQL",
           "mysql": "MySQL/MariaDB",
           "mongodb": "MongoDB",
-          "radius": "Radius",
+          "radius": "RADIUS",
           "redis": "Redis",
           "tailscale_ping": "Tailscale Ping",
           "snmp": "SNMP",

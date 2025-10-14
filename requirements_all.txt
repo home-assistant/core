@@ -175,6 +175,9 @@ aio-geojson-usgs-earthquakes==0.3
 # homeassistant.components.gdacs
 aio-georss-gdacs==0.10
 
+# homeassistant.components.onewire
+aio-ownet==0.0.3
+
 # homeassistant.components.acaia
 aioacaia==0.1.17
 
@@ -429,7 +432,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==1.2.1
+aiovodafone==2.0.1
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -1273,7 +1276,7 @@ inkbird-ble==1.1.0
 insteon-frontend-home-assistant==0.5.0
 
 # homeassistant.components.intellifire
-intellifire4py==4.1.9
+intellifire4py==4.2.1
 
 # homeassistant.components.iometer
 iometer==0.2.0
@@ -1403,7 +1406,7 @@ loqedAPI==2.1.10
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.4.8
+lunatone-rest-api-client==0.5.3
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -2270,9 +2273,6 @@ pyotp==2.9.0
 
 # homeassistant.components.overkiz
 pyoverkiz==1.19.0
-
-# homeassistant.components.onewire
-pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.19

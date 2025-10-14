@@ -318,6 +318,7 @@
           "title": "Configure MQTT device \"{mqtt_device}\"",
           "description": "Please configure MQTT specific details for {platform} entity \"{entity}\":",
           "data": {
+            "available_tones": "Available Tones",
             "blue_template": "Blue template",
             "brightness_template": "Brightness template",
             "code": "Alarm code",
@@ -360,12 +361,15 @@
             "state_topic": "State topic",
             "state_value_template": "State value template",
             "step": "Step",
+            "support_duration": "Duration support",
+            "support_volume_set": "Set volume support",
             "supported_color_modes": "Supported color modes",
             "url_template": "URL template",
             "url_topic": "URL topic",
             "value_template": "Value template"
           },
           "data_description": {
+            "available_tones": "The siren supports tones. The `tone` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#available_tones)",
             "blue_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract blue color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "brightness_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract brightness from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "code": "Specifies a code to enable or disable the alarm in the frontend. Note that this blocks sending MQTT message commands to the remote device if the code validation fails. [Learn more.]({url}#code)",
@@ -407,6 +411,8 @@
             "state_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract state from the state payload value.",
             "state_topic": "The MQTT topic subscribed to receive {platform} state values. [Learn more.]({url}#state_topic)",
             "step": "Step value. Smallest value 0.001.",
+            "support_duration": "The siren supports setting a duration in second. The `duration` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#support_duration)",
+            "support_volume_set": "The siren supports setting a volume. The `tone` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#support_volume_set)",
             "supported_color_modes": "A list of color modes supported by the light. Possible color modes are On/Off, Brightness, Color temperature, HS, XY, RGB, RGBW, RGBWW, White. Note that if On/Off or Brightness are used, that must be the only value in the list. [Learn more.]({url}#supported_color_modes)",
             "url_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract an URL from the received URL topic payload value. [Learn more.]({url}#url_template)",
             "url_topic": "The MQTT topic subscribed to receive messages containing the image URL. [Learn more.]({url}#url_topic)",
@@ -910,6 +916,15 @@
                 "target_humidity_state_topic": "The MQTT topic to subscribe for changes of the target humidity. [Learn more.]({url}#humidity_state_topic)"
               }
             },
+            "siren_advanced_settings": {
+              "name": "Advanced siren settings",
+              "data": {
+                "command_off_template": "Command \"off\" template"
+              },
+              "data_description": {
+                "command_off_template": "The [template]({templating_url}#using-command-templates-with-mqtt) for \"off\" state changes. By default the \"[Command template]({url}#command_template)\" will be used.  [Learn more.]({url}#command_off_template)"
+              }
+            },
             "target_temperature_settings": {
               "name": "Target temperature settings",
               "data": {
@@ -1338,6 +1353,7 @@
         "number": "[%key:component::number::title%]",
         "select": "[%key:component::select::title%]",
         "sensor": "[%key:component::sensor::title%]",
+        "siren": "[%key:component::siren::title%]",
         "switch": "[%key:component::switch::title%]"
       }
     },
