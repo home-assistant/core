@@ -89,7 +89,7 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[Device | None]):
         self,
         hass: HomeAssistant,
         client: WattsVisionClient,
-        config_entry: ConfigEntry,
+        config_entry: WattsVisionConfigEntry,
         device_id: str,
     ) -> None:
         """Initialize the device coordinator."""
