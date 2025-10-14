@@ -12,7 +12,6 @@ import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from unittest.mock import Mock, patch
 
 from tests.common import MockConfigEntry
 
