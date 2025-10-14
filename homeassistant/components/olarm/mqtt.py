@@ -63,8 +63,6 @@ class OlarmFlowClientMQTT:
             await self._oauth_session.async_ensure_token_valid()
             new_token: str = self._oauth_session.token["access_token"]
             expires_at: float = self._oauth_session.token["expires_at"]
-
-            # Log token info (without exposing the actual token)
             _LOGGER.debug("Access token expires at: %s ", expires_at)
 
             await self._olarm_flow_client.update_access_token(new_token, expires_at)
