@@ -1,6 +1,5 @@
 """Common methods used across tests."""
 
-# pyright: reportMissingImports=false
 try:
     from homeassistant.components import inels
     from homeassistant.components.inels.const import DOMAIN
