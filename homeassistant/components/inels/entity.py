@@ -25,7 +25,6 @@ class InelsBaseEntity(Entity):
         """Init base entity."""
         self._device = device
         self._device_id = device.unique_id
-        self._parent_id = device.parent_id
         self._attr_unique_id = self._device_id
 
         self._key = key
@@ -38,7 +37,6 @@ class InelsBaseEntity(Entity):
             model=info.model_number,
             name=device.title,
             sw_version=info.sw_version,
-            via_device=(DOMAIN, self._parent_id),
         )
 
     async def async_added_to_hass(self) -> None:
