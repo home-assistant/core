@@ -90,6 +90,10 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(options_schema(self.config_entry.options)),
+            description_placeholders={
+                "sample_ip": "http://192.168.1.161:3480",
+                "sample_url": "https://www.home-assistant.io/integrations/vera/",
+            },
         )
 
 
@@ -121,6 +125,10 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {vol.Required(CONF_CONTROLLER): str, **options_schema()}
             ),
+            description_placeholders={
+                "sample_ip": "http://192.168.1.161:3480",
+                "sample_url": "https://www.home-assistant.io/integrations/vera/",
+            },
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
