@@ -260,4 +260,9 @@ COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
         key="res_state",
         update_method=lambda x: x.get_res_state,
     ),
+    RenaultCoordinatorDescription(
+        endpoint="pressure",
+        key="pressure",
+        update_method=lambda x: x.get_tyre_pressure,
+    ),
 )
