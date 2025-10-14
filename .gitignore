@@ -111,6 +111,7 @@ virtualization/vagrant/config
 !.vscode/cSpell.json
 !.vscode/extensions.json
 !.vscode/tasks.json
+!.vscode/settings.default.jsonc
 .env
 
 # Windows Explorer

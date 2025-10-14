@@ -7,13 +7,17 @@
   "python.testing.pytestEnabled": false,
   // https://code.visualstudio.com/docs/python/linting#_general-settings
   "pylint.importStrategy": "fromEnvironment",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "[json][jsonc][yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "json.schemas": [
-        {
-            "fileMatch": [
-                "homeassistant/components/*/manifest.json"
-            ],
-            // This value differs between working with devcontainer and locally, therefor this value should NOT be in sync!
-            "url": "./script/json_schemas/manifest_schema.json"
-        }
-    ]
+    {
+      "fileMatch": ["homeassistant/components/*/manifest.json"],
+      // This value differs between working with devcontainer and locally, therefore this value should NOT be in sync!
+      "url": "./script/json_schemas/manifest_schema.json"
+    }
+  ]
 }
