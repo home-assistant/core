@@ -10,6 +10,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/squeezebox",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pysqueezebox"],
   "requirements": ["pysqueezebox==0.13.0"]
