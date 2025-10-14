@@ -24,10 +24,15 @@ from homeassistant.core import HomeAssistant, callback
 from . import BackblazeConfigEntry
 
 # Compatibility: AsyncIteratorReader moved from backup.util to util.async_iterator
+# and its signature changed from (hass, stream) to (loop, stream)
 try:
     from homeassistant.util.async_iterator import AsyncIteratorReader
+
+    _USE_NEW_SIGNATURE = True
 except ImportError:
     from homeassistant.components.backup.util import AsyncIteratorReader  # type: ignore[assignment]
+
+    _USE_NEW_SIGNATURE = False
 
 from .const import (
     CONF_PREFIX,
@@ -294,7 +299,11 @@ class BackblazeBackupAgent(BackupAgent):
         _LOGGER.debug("Starting streaming upload for %s", filename)
 
         stream = await open_stream()
-        reader = AsyncIteratorReader(self._hass.loop, stream)
+        # Handle both old (hass, stream) and new (loop, stream) signatures
+        if _USE_NEW_SIGNATURE:
+            reader = AsyncIteratorReader(self._hass.loop, stream)
+        else:
+            reader = AsyncIteratorReader(self._hass, stream)  # type: ignore[call-arg]
 
         _LOGGER.info("Uploading backup file %s with streaming", filename)
         try:
