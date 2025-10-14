@@ -8,7 +8,7 @@ import logging
 import os
 
 from aio_ownet.definitions import OWServerCommonPath
-from aio_ownet.exceptions import OWServerError
+from aio_ownet.exceptions import OWServerProtocolError, OWServerReturnError
 from aio_ownet.proxy import OWServerStatelessProxy
 
 from homeassistant.config_entries import ConfigEntry
@@ -74,7 +74,7 @@ class OneWireHub:
             self._config_entry.data[CONF_HOST], self._config_entry.data[CONF_PORT]
         )
         await self.owproxy.validate()
-        with contextlib.suppress(OWServerError):
+        with contextlib.suppress(OWServerReturnError):
             # Version is not available on all servers
             self._version = (
                 await self.owproxy.read(OWServerCommonPath.VERSION)
@@ -167,7 +167,7 @@ async def _get_device_type(
     """Get device model."""
     try:
         device_type = (await owproxy.read(f"{device_path}type")).decode()
-    except OWServerError as exc:
+    except OWServerProtocolError as exc:
         _LOGGER.debug("Unable to read `%stype`: %s", device_path, exc)
         return None
     _LOGGER.debug("read `%stype`: %s", device_path, device_type)
