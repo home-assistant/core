@@ -43,13 +43,9 @@ class HannaConfigFlow(ConfigFlow, domain=DOMAIN):
                 client.authenticate, user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
             )
         except (Timeout, RequestsConnectionError):
-            _LOGGER.warning("Connection timeout or error during Hanna authentication")
             errors["base"] = "cannot_connect"
         except AuthenticationError:
             errors["base"] = "invalid_auth"
-        except Exception:
-            _LOGGER.exception("Unexpected error during Hanna authentication")
-            errors["base"] = "unknown"
 
         if errors:
             return self.async_show_form(
