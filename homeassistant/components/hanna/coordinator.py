@@ -70,7 +70,7 @@ class HannaDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 return parameter["value"]
         return None
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest sensor data from the Hanna API."""
         try:
             readings = await self.hass.async_add_executor_job(
