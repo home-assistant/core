@@ -12,12 +12,12 @@ from homeassistant.exceptions import HomeAssistantError
 from tests.common import MockConfigEntry
 
 
-async def test_read_min_time_segments_single_device(
+async def test_read_time_segments_single_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_growatt_v1_api,
 ) -> None:
-    """Test reading MIN time segments for single device."""
+    """Test reading time segments for single device."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -33,7 +33,7 @@ async def test_read_min_time_segments_single_device(
     # Test service call
     response = await hass.services.async_call(
         DOMAIN,
-        "read_min_time_segments",
+        "read_time_segments",
         {},
         blocking=True,
         return_response=True,
@@ -44,12 +44,12 @@ async def test_read_min_time_segments_single_device(
     assert len(response["time_segments"]) == 9  # Returns all 9 segments (1-9)
 
 
-async def test_update_min_time_segment_charge_mode(
+async def test_update_time_segment_charge_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_growatt_v1_api,
 ) -> None:
-    """Test updating MIN time segment with charge mode."""
+    """Test updating time segment with charge mode."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -65,7 +65,7 @@ async def test_update_min_time_segment_charge_mode(
     # Test successful update
     await hass.services.async_call(
         DOMAIN,
-        "update_min_time_segment",
+        "update_time_segment",
         {
             "segment_id": 1,
             "start_time": "09:00",
@@ -80,12 +80,12 @@ async def test_update_min_time_segment_charge_mode(
     mock_growatt_v1_api.min_write_time_segment.assert_called_once()
 
 
-async def test_update_min_time_segment_discharge_mode(
+async def test_update_time_segment_discharge_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_growatt_v1_api,
 ) -> None:
-    """Test updating MIN time segment with discharge mode."""
+    """Test updating time segment with discharge mode."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -100,7 +100,7 @@ async def test_update_min_time_segment_discharge_mode(
 
     await hass.services.async_call(
         DOMAIN,
-        "update_min_time_segment",
+        "update_time_segment",
         {
             "segment_id": 2,
             "start_time": "14:00",
@@ -114,12 +114,12 @@ async def test_update_min_time_segment_discharge_mode(
     mock_growatt_v1_api.min_write_time_segment.assert_called_once()
 
 
-async def test_update_min_time_segment_standby_mode(
+async def test_update_time_segment_standby_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_growatt_v1_api,
 ) -> None:
-    """Test updating MIN time segment with standby mode."""
+    """Test updating time segment with standby mode."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -134,7 +134,7 @@ async def test_update_min_time_segment_standby_mode(
 
     await hass.services.async_call(
         DOMAIN,
-        "update_min_time_segment",
+        "update_time_segment",
         {
             "segment_id": 3,
             "start_time": "20:00",
@@ -148,12 +148,12 @@ async def test_update_min_time_segment_standby_mode(
     mock_growatt_v1_api.min_write_time_segment.assert_called_once()
 
 
-async def test_update_min_time_segment_disabled(
+async def test_update_time_segment_disabled(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_growatt_v1_api,
 ) -> None:
-    """Test disabling a MIN time segment."""
+    """Test disabling a time segment."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -168,7 +168,7 @@ async def test_update_min_time_segment_disabled(
 
     await hass.services.async_call(
         DOMAIN,
-        "update_min_time_segment",
+        "update_time_segment",
         {
             "segment_id": 1,
             "start_time": "06:00",
@@ -182,12 +182,12 @@ async def test_update_min_time_segment_disabled(
     mock_growatt_v1_api.min_write_time_segment.assert_called_once()
 
 
-async def test_update_min_time_segment_api_error(
+async def test_update_time_segment_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_growatt_v1_api,
 ) -> None:
-    """Test handling API error when updating MIN time segment."""
+    """Test handling API error when updating time segment."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -206,10 +206,10 @@ async def test_update_min_time_segment_api_error(
         "error_msg": "API Error",
     }
 
-    with pytest.raises(HomeAssistantError, match="Error updating MIN time segment"):
+    with pytest.raises(HomeAssistantError, match="Error updating time segment"):
         await hass.services.async_call(
             DOMAIN,
-            "update_min_time_segment",
+            "update_time_segment",
             {
                 "segment_id": 1,
                 "start_time": "09:00",
@@ -241,8 +241,8 @@ async def test_no_min_devices_skips_service_registration(
         await hass.async_block_till_done()
 
     # Verify services are not registered
-    assert not hass.services.has_service(DOMAIN, "update_min_time_segment")
-    assert not hass.services.has_service(DOMAIN, "read_min_time_segments")
+    assert not hass.services.has_service(DOMAIN, "update_time_segment")
+    assert not hass.services.has_service(DOMAIN, "read_time_segments")
 
 
 async def test_multiple_devices_require_device_id_in_schema(
@@ -267,14 +267,14 @@ async def test_multiple_devices_require_device_id_in_schema(
         await hass.async_block_till_done()
 
     # Verify services are registered
-    assert hass.services.has_service(DOMAIN, "update_min_time_segment")
-    assert hass.services.has_service(DOMAIN, "read_min_time_segments")
+    assert hass.services.has_service(DOMAIN, "update_time_segment")
+    assert hass.services.has_service(DOMAIN, "read_time_segments")
 
     # Test that schema validation requires device_id for update service
     with pytest.raises(vol.MultipleInvalid, match="required key not provided"):
         await hass.services.async_call(
             DOMAIN,
-            "update_min_time_segment",
+            "update_time_segment",
             {
                 # Missing required device_id
                 "segment_id": 1,
@@ -290,7 +290,7 @@ async def test_multiple_devices_require_device_id_in_schema(
     with pytest.raises(vol.MultipleInvalid, match="required key not provided"):
         await hass.services.async_call(
             DOMAIN,
-            "read_min_time_segments",
+            "read_time_segments",
             {},  # Missing required device_id
             blocking=True,
             return_response=True,
@@ -318,7 +318,7 @@ async def test_single_device_does_not_require_device_id(
     # Test update service works without device_id (single device)
     await hass.services.async_call(
         DOMAIN,
-        "update_min_time_segment",
+        "update_time_segment",
         {
             "segment_id": 1,
             "start_time": "09:00",
@@ -334,7 +334,7 @@ async def test_single_device_does_not_require_device_id(
     # Test read service works without device_id (single device)
     response = await hass.services.async_call(
         DOMAIN,
-        "read_min_time_segments",
+        "read_time_segments",
         {},
         blocking=True,
         return_response=True,
@@ -368,7 +368,7 @@ async def test_multiple_devices_with_valid_device_id_works(
     # Test update service with specific device_id
     await hass.services.async_call(
         DOMAIN,
-        "update_min_time_segment",
+        "update_time_segment",
         {
             "device_id": "MIN123456",
             "segment_id": 1,
@@ -385,7 +385,7 @@ async def test_multiple_devices_with_valid_device_id_works(
     # Test read service with specific device_id
     response = await hass.services.async_call(
         DOMAIN,
-        "read_min_time_segments",
+        "read_time_segments",
         {"device_id": "MIN123456"},
         blocking=True,
         return_response=True,

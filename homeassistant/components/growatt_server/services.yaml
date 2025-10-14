@@ -1,7 +1,7 @@
 # Service definitions for Growatt Server integration
 # Schemas are defined dynamically in code (__init__.py) using selectors
 
-update_min_time_segment:
+update_time_segment:
   fields:
     segment_id:
       required: true
@@ -41,7 +41,7 @@ update_min_time_segment:
       selector:
         text:
 
-read_min_time_segments:
+read_time_segments:
   fields:
     device_id:
       required: false

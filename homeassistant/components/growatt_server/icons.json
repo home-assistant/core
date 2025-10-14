@@ -1,9 +1,9 @@
 {
   "services": {
-    "read_min_time_segments": {
+    "read_time_segments": {
       "service": "mdi:clock-outline"
     },
-    "update_min_time_segment": {
+    "update_time_segment": {
       "service": "mdi:clock-edit"
     }
   }

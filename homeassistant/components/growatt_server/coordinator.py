@@ -253,10 +253,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return return_value
 
-    async def update_min_time_segment(
+    async def update_time_segment(
         self, segment_id: int, batt_mode: int, start_time, end_time, enabled: bool
     ) -> None:
-        """Update a MIN inverter time segment.
+        """Update an inverter time segment.
 
         Args:
             segment_id: Time segment ID (1-9)
@@ -266,7 +266,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             enabled: Whether the segment is enabled
         """
         _LOGGER.debug(
-            "Updating MIN time segment %s for device %s",
+            "Updating time segment %s for device %s",
             segment_id,
             self.device_id,
         )
@@ -292,7 +292,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         except growattServer.GrowattV1ApiError as err:
             _LOGGER.error(
-                "API error updating MIN time segment %s for device %s: %s",
+                "API error updating time segment %s for device %s: %s",
                 segment_id,
                 self.device_id,
                 err,
@@ -303,7 +303,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if response.get("error_code", 1) != 0:
             error_msg = response.get("error_msg", "Unknown error")
             _LOGGER.error(
-                "Failed to update MIN time segment %s for device %s: %s",
+                "Failed to update time segment %s for device %s: %s",
                 segment_id,
                 self.device_id,
                 error_msg,
@@ -311,21 +311,21 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise HomeAssistantError(f"Failed to update time segment: {error_msg}")
 
         _LOGGER.info(
-            "Successfully updated MIN time segment %s for device %s",
+            "Successfully updated time segment %s for device %s",
             segment_id,
             self.device_id,
         )
         # Trigger a refresh to update the data
         await self.async_refresh()
 
-    async def read_min_time_segments(self) -> list[dict]:
-        """Read time segments from a MIN inverter.
+    async def read_time_segments(self) -> list[dict]:
+        """Read time segments from an inverter.
 
         Returns:
             List of dictionaries containing segment information
         """
         _LOGGER.debug(
-            "Reading MIN time segments for device %s",
+            "Reading time segments for device %s",
             self.device_id,
         )
 

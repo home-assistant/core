@@ -244,8 +244,8 @@ async def _async_register_services(
 
         return min_coordinators[device_id]
 
-    async def handle_update_min_time_segment(call: ServiceCall) -> None:
-        """Handle update_min_time_segment service call."""
+    async def handle_update_time_segment(call: ServiceCall) -> None:
+        """Handle update_time_segment service call."""
         segment_id = call.data["segment_id"]
         batt_mode_str = str(call.data["batt_mode"])
         start_time_str = call.data["start_time"]
@@ -254,7 +254,7 @@ async def _async_register_services(
         device_id = call.data.get("device_id")
 
         _LOGGER.debug(
-            "handle_update_min_time_segment: segment_id=%d, batt_mode=%s, start=%s, end=%s, enabled=%s, device_id=%s",
+            "handle_update_time_segment: segment_id=%d, batt_mode=%s, start=%s, end=%s, enabled=%s, device_id=%s",
             segment_id,
             batt_mode_str,
             start_time_str,
@@ -283,7 +283,7 @@ async def _async_register_services(
         coordinator = get_coordinator(device_id)
 
         try:
-            await coordinator.update_min_time_segment(
+            await coordinator.update_time_segment(
                 segment_id,
                 batt_mode,
                 start_time,
@@ -292,24 +292,24 @@ async def _async_register_services(
             )
         except Exception as err:
             _LOGGER.error(
-                "Error updating MIN time segment %d: %s",
+                "Error updating time segment %d: %s",
                 segment_id,
                 err,
             )
             raise HomeAssistantError(
-                f"Error updating MIN time segment {segment_id}: {err}"
+                f"Error updating time segment {segment_id}: {err}"
             ) from err
 
-    async def handle_read_min_time_segments(call: ServiceCall) -> dict:
-        """Handle read_min_time_segments service call."""
+    async def handle_read_time_segments(call: ServiceCall) -> dict:
+        """Handle read_time_segments service call."""
         # Get the appropriate MIN coordinator
         coordinator = get_coordinator(call.data.get("device_id"))
 
         try:
-            time_segments = await coordinator.read_min_time_segments()
+            time_segments = await coordinator.read_time_segments()
         except Exception as err:
-            _LOGGER.error("Error reading MIN time segments: %s", err)
-            raise HomeAssistantError(f"Error reading MIN time segments: {err}") from err
+            _LOGGER.error("Error reading time segments: %s", err)
+            raise HomeAssistantError(f"Error reading time segments: {err}") from err
         else:
             return {"time_segments": time_segments}
 
@@ -353,11 +353,11 @@ async def _async_register_services(
     # Register services
     services_to_register = [
         (
-            "update_min_time_segment",
-            handle_update_min_time_segment,
+            "update_time_segment",
+            handle_update_time_segment,
             update_schema_fields,
         ),
-        ("read_min_time_segments", handle_read_min_time_segments, read_schema_fields),
+        ("read_time_segments", handle_read_time_segments, read_schema_fields),
     ]
 
     for service_name, handler, schema_fields in services_to_register:
@@ -365,7 +365,7 @@ async def _async_register_services(
             schema = vol.Schema(schema_fields) if schema_fields else None
             supports_response = (
                 SupportsResponse.ONLY
-                if service_name == "read_min_time_segments"
+                if service_name == "read_time_segments"
                 else SupportsResponse.NONE
             )
 

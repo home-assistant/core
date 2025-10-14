@@ -510,25 +510,25 @@
     }
   },
   "services": {
-    "read_min_time_segments": {
-      "description": "Read all time-of-use (TOU) segments from a MIN inverter.",
+    "read_time_segments": {
+      "description": "Read all time-of-use (TOU) segments from a supported inverter.",
       "fields": {
         "device_id": {
-          "description": "MIN device ID (only required when multiple MIN devices exist).",
+          "description": "Device ID (only required when multiple devices exist).",
           "name": "Device ID"
         }
       },
-      "name": "Read MIN time segments"
+      "name": "Read time segments"
     },
-    "update_min_time_segment": {
-      "description": "Update a time-of-use (TOU) segment for MIN inverters.",
+    "update_time_segment": {
+      "description": "Update a time-of-use (TOU) segment for supported inverters.",
       "fields": {
         "batt_mode": {
           "description": "Battery operation mode for this time segment.",
           "name": "Battery mode"
         },
         "device_id": {
-          "description": "MIN device ID (only required when multiple MIN devices exist).",
+          "description": "Device ID (only required when multiple devices exist).",
           "name": "Device ID"
         },
         "enabled": {
@@ -548,7 +548,7 @@
           "name": "Start time"
         }
       },
-      "name": "Update MIN time segment"
+      "name": "Update time segment"
     }
   },
   "title": "Growatt Server"
