@@ -27,7 +27,9 @@ class InelsBaseEntity(Entity):
         self._device_id = device.unique_id
         self._attr_unique_id = self._device_id
 
+        # The referenced variable to read from
         self._key = key
+        # The index of the variable list to read from. '-1' for no index
         self._index = index
 
         info = device.info()
@@ -42,7 +44,7 @@ class InelsBaseEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Add subscription of the data listener."""
         # Register the HA callback
-        self._device.add_ha_callback(self.key, self.index, self._callback)
+        self._device.add_ha_callback(self._key, self._index, self._callback)
         # Subscribe to MQTT updates
         self._device.mqtt.subscribe_listener(
             self._device.state_topic, self._device.unique_id, self._device.callback
@@ -57,13 +59,3 @@ class InelsBaseEntity(Entity):
     def available(self) -> bool:
         """Return if entity is available."""
         return bool(self._device.is_available)
-
-    @property
-    def key(self) -> str:
-        """Return the referenced variable to read from."""
-        return self._key
-
-    @property
-    def index(self) -> int:
-        """Return the index of the variable list to read from. '-1' for no index."""
-        return self._index
