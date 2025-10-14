@@ -740,7 +740,7 @@ async def test_rpc_polling_auth_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC polling authentication error."""
-    register_entity(hass, SENSOR_DOMAIN, "test_name_signal_strength", "wifi-rssi")
+    register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
     entry = await init_integration(hass, 2)
 
     monkeypatch.setattr(
@@ -838,9 +838,7 @@ async def test_rpc_polling_connection_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC polling connection error."""
-    entity_id = register_entity(
-        hass, SENSOR_DOMAIN, "test_name_signal_strength", "wifi-rssi"
-    )
+    entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
     await init_integration(hass, 2)
 
     monkeypatch.setattr(
@@ -867,9 +865,7 @@ async def test_rpc_polling_disconnected(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC polling device disconnected."""
-    entity_id = register_entity(
-        hass, SENSOR_DOMAIN, "test_name_signal_strength", "wifi-rssi"
-    )
+    entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
     await init_integration(hass, 2)
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)

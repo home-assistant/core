@@ -209,6 +209,9 @@
       "adc": {
         "name": "ADC"
       },
+      "rssi": {
+        "name": "RSSI"
+      },
       "uptime": {
         "name": "Uptime"
       },

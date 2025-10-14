@@ -155,9 +155,7 @@ async def test_block_rest_sensor(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block REST sensor."""
-    entity_id = register_entity(
-        hass, SENSOR_DOMAIN, "test_name_signal_strength", "rssi"
-    )
+    entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "rssi")
     await init_integration(hass, 1)
 
     assert (state := hass.states.get(entity_id))
@@ -482,13 +480,13 @@ async def test_rpc_sensor(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_rpc_signal_strength_sensor_removal(
+async def test_rpc_rssi_sensor_removal(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test RPC signal strength sensor removal if no WiFi stations enabled."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_signal_strength"
+    """Test RPC RSSI sensor removal if no WiFi stations enabled."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_rssi"
     entry = await init_integration(hass, 2)
 
     # WiFi1 enabled, do not remove sensor
@@ -557,9 +555,7 @@ async def test_rpc_polling_sensor(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC polling sensor."""
-    entity_id = register_entity(
-        hass, SENSOR_DOMAIN, "test_name_signal_strength", "wifi-rssi"
-    )
+    entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
     await init_integration(hass, 2)
 
     assert (state := hass.states.get(entity_id))
