@@ -1730,7 +1730,7 @@ class IncludedEntitiesMixin(Entity):
     def included_unique_ids(self) -> list[str]:
         """Return the list of unique IDs if the entity represents a group.
 
-        The corresponiding entities will be shown as members in the UI.
+        The corresponding entities will be shown as members in the UI.
         """
         if hasattr(self, "_attr_included_unique_ids"):
             return self._attr_included_unique_ids
