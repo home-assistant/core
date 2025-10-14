@@ -7,7 +7,13 @@ from typing import cast
 
 from aiobotocore.client import AioBaseClient as S3Client
 from aiobotocore.session import AioSession
-from botocore.exceptions import ClientError, ConnectionError, ParamValidationError
+from botocore.exceptions import (
+    ClientError,
+    NoCredentialsError,
+    ParamValidationError,
+    ProfileNotFound,
+    TokenRetrievalError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -46,6 +52,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
         ).__aenter__()
         await client.head_bucket(Bucket=model[CONF_BUCKET])
     except ClientError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_credentials",
+        ) from err
+    except NoCredentialsError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="no_credentials_implicit",
+        ) from err
+    except ProfileNotFound as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="no_credentials_profile",
+        ) from err
+    except TokenRetrievalError as err:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",
