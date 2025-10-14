@@ -81,9 +81,6 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
         """Return hvac mode."""
         return THERMOSTAT_MODE_TO_HVAC.get(self.device.thermostat_mode)
 
-    async def async_request_refresh(self) -> None:
-        """Request refresh for this specific entity only."""
-        await self.coordinator.async_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
