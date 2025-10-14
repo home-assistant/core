@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    HVACMode,
 )
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.config_entries import ConfigEntryState
@@ -411,4 +412,63 @@ async def test_smart_radiator_thermostat_set_preset_mode(
         SmartRadiatorThermostatCommands.SET_MODE,
         "command",
         1,
+    )
+
+
+async def test_smart_radiator_thermostat_set_hvac_mode(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test smart radiator thermostat set hvac mode."""
+    mock_list_devices.return_value = [
+        Remote(
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            remoteType="Smart Radiator Thermostat",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.side_effect = [
+        {
+            "mode": 1,
+            "temperature": 27.5,
+        },
+        {
+            "mode": 1,
+            "temperature": 27.5,
+        },
+        {
+            "mode": 2,
+            "temperature": 27.5,
+        },
+    ]
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "climate.climate_1"
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.OFF},
+        )
+    mock_send_command.assert_called_once_with(
+        "ac-device-id-1",
+        SmartRadiatorThermostatCommands.SET_MODE,
+        "command",
+        2,
+    )
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.HEAT},
+        )
+    mock_send_command.assert_called_once_with(
+        "ac-device-id-1",
+        SmartRadiatorThermostatCommands.SET_MODE,
+        "command",
+        5,
     )
