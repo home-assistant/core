@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from switchbot_api import Remote, SmartRadiatorThermostatCommands
+from switchbot_api import Device, Remote, SmartRadiatorThermostatCommands, SwitchBotAPI
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -17,7 +17,6 @@ from homeassistant.components.climate import (
     SERVICE_TURN_ON,
     HVACMode,
 )
-from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, State
@@ -305,10 +304,11 @@ async def test_smart_radiator_thermostat_set_temperature(
 ) -> None:
     """Test smart radiator thermostat set temperature."""
     mock_list_devices.return_value = [
-        Remote(
+        Device(
+            version="V1.0",
             deviceId="ac-device-id-1",
             deviceName="climate-1",
-            remoteType="Smart Radiator Thermostat",
+            deviceType="Smart Radiator Thermostat",
             hubDeviceId="test-hub-id",
         ),
     ]
@@ -361,10 +361,11 @@ async def test_smart_radiator_thermostat_set_preset_mode(
 ) -> None:
     """Test smart radiator thermostat set preset mode."""
     mock_list_devices.return_value = [
-        Remote(
+        Device(
+            version="V1.0",
             deviceId="ac-device-id-1",
             deviceName="climate-1",
-            remoteType="Smart Radiator Thermostat",
+            deviceType="Smart Radiator Thermostat",
             hubDeviceId="test-hub-id",
         ),
     ]
@@ -420,21 +421,22 @@ async def test_smart_radiator_thermostat_set_hvac_mode(
 ) -> None:
     """Test smart radiator thermostat set hvac mode."""
     mock_list_devices.return_value = [
-        Remote(
+        Device(
+            version="V1.0",
             deviceId="ac-device-id-1",
             deviceName="climate-1",
-            remoteType="Smart Radiator Thermostat",
+            deviceType="Smart Radiator Thermostat",
             hubDeviceId="test-hub-id",
         ),
     ]
 
     mock_get_status.side_effect = [
         {
-            "mode": 1,
+            "mode": 2,
             "temperature": 27.5,
         },
         {
-            "mode": 1,
+            "mode": 2,
             "temperature": 27.5,
         },
         {

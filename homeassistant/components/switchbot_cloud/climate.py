@@ -271,6 +271,7 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
+
         mode: int = self.coordinator.data["mode"]
         temperature: str = self.coordinator.data["temperature"]
         self._attr_current_temperature = float(temperature)
