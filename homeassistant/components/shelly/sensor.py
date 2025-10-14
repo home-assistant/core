@@ -1722,7 +1722,7 @@ class RestSensor(ShellyRestAttributeEntity, SensorEntity):
         self,
         coordinator: ShellyBlockCoordinator,
         attribute: str,
-        description: RestEntityDescription,
+        description: RestSensorDescription,
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator, attribute, description)
@@ -1816,7 +1816,7 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         coordinator: ShellyRpcCoordinator,
         key: str,
         attribute: str,
-        description: RpcEntityDescription,
+        description: RpcSensorDescription,
         entry: RegistryEntry | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
