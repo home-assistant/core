@@ -1575,7 +1575,7 @@ async def test_rpc_device_virtual_number_sensor_with_device_class(
     entity_registry: EntityRegistry,
 ) -> None:
     """Test a virtual number sensor with device class for RPC device."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_humidity_2"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_current_humidity"
     config = deepcopy(mock_rpc_device.config)
     config["number:203"] = {
         "name": "Current humidity",
