@@ -58,4 +58,5 @@ class InelsBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return bool(self._device.is_available)
+        # MyPy cannot statically verify the type because of inference limitations with Any types in complex boolean logic
+        return self._device.is_available  # type: ignore[no-any-return]
