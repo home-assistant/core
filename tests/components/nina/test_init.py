@@ -32,7 +32,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
         wraps=mocked_request_function,
     ):
         entry: MockConfigEntry = MockConfigEntry(
-            domain=DOMAIN, title="NINA", data=ENTRY_DATA
+            domain=DOMAIN, title="NINA", data=ENTRY_DATA, version=1, minor_version=3
         )
         entry.add_to_hass(hass)
 
@@ -41,9 +41,8 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
         return entry
 
 
-async def test_config_migration(hass: HomeAssistant) -> None:
+async def test_config_migration_from1_1(hass: HomeAssistant) -> None:
     """Test the migration to a new configuration layout."""
-
     old_entry_data: dict[str, Any] = {
         "slots": 5,
         "corona_filter": True,
@@ -51,18 +50,25 @@ async def test_config_migration(hass: HomeAssistant) -> None:
     }
 
     old_conf_entry: MockConfigEntry = MockConfigEntry(
-        domain=DOMAIN, title="NINA", data=old_entry_data
+        domain=DOMAIN, title="NINA", data=old_entry_data, version=1
     )
 
-    old_conf_entry.add_to_hass(hass)
+    with patch(
+        "pynina.baseApi.BaseAPI._makeRequest",
+        wraps=mocked_request_function,
+    ):
+        old_conf_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(old_conf_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.config_entries.async_setup(old_conf_entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert dict(old_conf_entry.data) == ENTRY_DATA
+        assert dict(old_conf_entry.data) == ENTRY_DATA
+        assert old_conf_entry.state is ConfigEntryState.LOADED
+        assert old_conf_entry.version == 1
+        assert old_conf_entry.minor_version == 3
 
 
-async def test_config_migration_to_section(hass: HomeAssistant) -> None:
+async def test_config_migration_from1_2(hass: HomeAssistant) -> None:
     """Test the migration to a new configuration layout with sections."""
     old_entry_data: dict[str, Any] = {
         "slots": 5,
@@ -72,15 +78,22 @@ async def test_config_migration_to_section(hass: HomeAssistant) -> None:
     }
 
     old_conf_entry: MockConfigEntry = MockConfigEntry(
-        domain=DOMAIN, title="NINA", data=old_entry_data
+        domain=DOMAIN, title="NINA", data=old_entry_data, version=1, minor_version=2
     )
 
-    old_conf_entry.add_to_hass(hass)
+    with patch(
+        "pynina.baseApi.BaseAPI._makeRequest",
+        wraps=mocked_request_function,
+    ):
+        old_conf_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(old_conf_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.config_entries.async_setup(old_conf_entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert dict(old_conf_entry.data) == ENTRY_DATA
+        assert dict(old_conf_entry.data) == ENTRY_DATA
+        assert old_conf_entry.state is ConfigEntryState.LOADED
+        assert old_conf_entry.version == 1
+        assert old_conf_entry.minor_version == 3
 
 
 async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
@@ -97,7 +110,7 @@ async def test_sensors_connection_error(hass: HomeAssistant) -> None:
         side_effect=ApiError("Could not connect to Api"),
     ):
         conf_entry: MockConfigEntry = MockConfigEntry(
-            domain=DOMAIN, title="NINA", data=ENTRY_DATA
+            domain=DOMAIN, title="NINA", data=ENTRY_DATA, version=1, minor_version=3
         )
 
         conf_entry.add_to_hass(hass)

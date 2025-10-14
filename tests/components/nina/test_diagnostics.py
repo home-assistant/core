@@ -36,7 +36,7 @@ async def test_diagnostics(
         wraps=mocked_request_function,
     ):
         config_entry: MockConfigEntry = MockConfigEntry(
-            domain=DOMAIN, title="NINA", data=ENTRY_DATA
+            domain=DOMAIN, title="NINA", data=ENTRY_DATA, version=1, minor_version=3
         )
 
         config_entry.add_to_hass(hass)

@@ -120,6 +120,8 @@ async def test_step_user(hass: HomeAssistant) -> None:
                 "095760000000": "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
             }
         }
+        assert result["version"] == 1
+        assert result["minor_version"] == 3
 
 
 async def test_step_user_no_selection(hass: HomeAssistant) -> None:
@@ -168,6 +170,8 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
             CONST_REGION_A_TO_D: deepcopy(DUMMY_DATA[CONST_REGION_A_TO_D]),
             CONF_REGIONS: {"095760000000": "Aach"},
         },
+        version=1,
+        minor_version=3,
     )
     config_entry.add_to_hass(hass)
 
@@ -223,6 +227,8 @@ async def test_options_flow_with_no_selection(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title="NINA",
         data=deepcopy(DUMMY_DATA),
+        version=1,
+        minor_version=3,
     )
     config_entry.add_to_hass(hass)
 
@@ -265,6 +271,8 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title="NINA",
         data=deepcopy(DUMMY_DATA),
+        version=1,
+        minor_version=3,
     )
     config_entry.add_to_hass(hass)
 
@@ -293,6 +301,8 @@ async def test_options_flow_unexpected_exception(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title="NINA",
         data=deepcopy(DUMMY_DATA),
+        version=1,
+        minor_version=3,
     )
     config_entry.add_to_hass(hass)
 
@@ -324,6 +334,8 @@ async def test_options_flow_entity_removal(
         domain=DOMAIN,
         title="NINA",
         data=deepcopy(DUMMY_DATA) | {CONF_REGIONS: {"095760000000": "Aach"}},
+        version=1,
+        minor_version=3,
     )
     config_entry.add_to_hass(hass)
 
