@@ -113,7 +113,7 @@ class SqueezeboxBinarySensorEntity(SqueezeboxEntity, BinarySensorEntity):
         """Initialize the SqueezeBox sensor."""
         super().__init__(coordinator)
         self.description = description
-        self._attr_translation_key = description.key.replace(" ", "_")
+        self._attr_translation_key = description.key
         self._attr_unique_id = f"{format_mac(self._player.player_id)}_{description.key}"
 
     @property
