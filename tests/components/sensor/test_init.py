@@ -133,38 +133,6 @@ TEST_DOMAIN = "test"
             38,
             38,
         ),
-        (
-            SensorDeviceClass.TEMPERATURE_DELTA,
-            US_CUSTOMARY_SYSTEM,
-            UnitOfTemperature.FAHRENHEIT,
-            UnitOfTemperature.FAHRENHEIT,
-            2,
-            2,
-        ),
-        (
-            SensorDeviceClass.TEMPERATURE_DELTA,
-            US_CUSTOMARY_SYSTEM,
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.FAHRENHEIT,
-            1,
-            1.8,
-        ),
-        (
-            SensorDeviceClass.TEMPERATURE_DELTA,
-            METRIC_SYSTEM,
-            UnitOfTemperature.FAHRENHEIT,
-            UnitOfTemperature.CELSIUS,
-            1,
-            pytest.approx(0.555555555556),
-        ),
-        (
-            SensorDeviceClass.TEMPERATURE_DELTA,
-            METRIC_SYSTEM,
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.CELSIUS,
-            0,
-            0,
-        ),
     ],
 )
 async def test_temperature_conversion(

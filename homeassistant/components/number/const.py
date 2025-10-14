@@ -385,7 +385,7 @@ class NumberDeviceClass(StrEnum):
     TEMPERATURE_DELTA = "temperature_delta"
     """Difference of temperatures - Temperature range.
 
-    Unit of measurement: `Δ°C`, `Δ°F`, `ΔK`
+    Unit of measurement: `°C`, `°F`, `K`
     """
 
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"

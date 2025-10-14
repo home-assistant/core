@@ -35,7 +35,7 @@ async def test_device_class_units(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"units": ["ΔK", "Δ°C", "Δ°F"]}
+    assert msg["result"] == {"units": ["K", "°C", "°F"]}
 
     # Device class with units which number doesn't allow customizing & converting
     await client.send_json_auto_id(
