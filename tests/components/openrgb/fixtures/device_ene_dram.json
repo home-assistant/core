@@ -1,0 +1,476 @@
+{
+  "active_mode": 2,
+  "colors": [
+    {
+      "blue": 0,
+      "green": 0,
+      "red": 255
+    },
+    {
+      "blue": 0,
+      "green": 0,
+      "red": 255
+    },
+    {
+      "blue": 0,
+      "green": 0,
+      "red": 255
+    },
+    {
+      "blue": 0,
+      "green": 0,
+      "red": 255
+    },
+    {
+      "blue": 0,
+      "green": 0,
+      "red": 255
+    }
+  ],
+  "device_id": 0,
+  "id": 0,
+  "leds": [
+    {
+      "colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "red": 255
+        }
+      ],
+      "device_id": 0,
+      "id": 0,
+      "name": "DRAM LED 1"
+    },
+    {
+      "colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "red": 255
+        }
+      ],
+      "device_id": 0,
+      "id": 1,
+      "name": "DRAM LED 2"
+    },
+    {
+      "colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "red": 255
+        }
+      ],
+      "device_id": 0,
+      "id": 2,
+      "name": "DRAM LED 3"
+    },
+    {
+      "colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "red": 255
+        }
+      ],
+      "device_id": 0,
+      "id": 3,
+      "name": "DRAM LED 4"
+    },
+    {
+      "colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "red": 255
+        }
+      ],
+      "device_id": 0,
+      "id": 4,
+      "name": "DRAM LED 5"
+    }
+  ],
+  "metadata": {
+    "description": "ENE SMBus Device",
+    "location": "I2C: PIIX4, address 0x70",
+    "serial": "",
+    "vendor": "ENE",
+    "version": "DIMM_LED-0103"
+  },
+  "modes": [
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "__enum__": "openrgb.utils.ModeColors",
+        "name": "PER_LED",
+        "value": 1
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "__enum__": "openrgb.utils.ModeFlags",
+        "name": "HAS_PER_LED_COLOR",
+        "value": 32
+      },
+      "id": 0,
+      "name": "Direct",
+      "speed": null,
+      "speed_max": null,
+      "speed_min": null,
+      "value": 65535
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "__enum__": "openrgb.utils.ModeColors",
+        "name": "NONE",
+        "value": 0
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "__enum__": "openrgb.utils.ModeFlags",
+        "name": null,
+        "value": 0
+      },
+      "id": 1,
+      "name": "Off",
+      "speed": null,
+      "speed_max": null,
+      "speed_min": null,
+      "value": 0
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "__enum__": "openrgb.utils.ModeColors",
+        "name": "PER_LED",
+        "value": 1
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "__enum__": "openrgb.utils.ModeFlags",
+        "name": "HAS_PER_LED_COLOR",
+        "value": 32
+      },
+      "id": 2,
+      "name": "Static",
+      "speed": null,
+      "speed_max": null,
+      "speed_min": null,
+      "value": 1
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "__enum__": "openrgb.utils.ModeColors",
+        "name": "PER_LED",
+        "value": 1
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "__enum__": "openrgb.utils.ModeFlags",
+        "name": "HAS_SPEED|HAS_PER_LED_COLOR|HAS_RANDOM_COLOR",
+        "value": 161
+      },
+      "id": 3,
+      "name": "Breathing",
+      "speed": 2,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 2
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "__enum__": "openrgb.utils.ModeColors",
+        "name": "PER_LED",
+        "value": 1
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "__enum__": "openrgb.utils.ModeFlags",
+        "name": "HAS_SPEED|HAS_PER_LED_COLOR",
+        "value": 33
+      },
+      "id": 4,
+      "name": "Flashing",
+      "speed": 2,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 3
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "__enum__": "openrgb.utils.ModeColors",
+        "name": "NONE",
+        "value": 0
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "__enum__": "openrgb.utils.ModeFlags",
+        "name": "HAS_SPEED",
+        "value": 1
+      },
+      "id": 5,
+      "name": "Spectrum Cycle",
+      "speed": 2,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 4
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "__enum__": "openrgb.utils.ModeColors",
+        "name": "NONE",
+        "value": 0
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": {
+        "__enum__": "openrgb.utils.ModeDirections",
+        "name": "LEFT",
+        "value": 0
+      },
+      "flags": {
+        "__enum__": "openrgb.utils.ModeFlags",
+        "name": "HAS_SPEED|HAS_DIRECTION_LR",
+        "value": 3
+      },
+      "id": 6,
+      "name": "Rainbow",
+      "speed": 0,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 5
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "__enum__": "openrgb.utils.ModeColors",
+        "name": "PER_LED",
+        "value": 1
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": {
+        "__enum__": "openrgb.utils.ModeDirections",
+        "name": "LEFT",
+        "value": 0
+      },
+      "flags": {
+        "__enum__": "openrgb.utils.ModeFlags",
+        "name": "HAS_SPEED|HAS_DIRECTION_LR|HAS_PER_LED_COLOR|HAS_RANDOM_COLOR",
+        "value": 163
+      },
+      "id": 7,
+      "name": "Chase Fade",
+      "speed": 2,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 7
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "__enum__": "openrgb.utils.ModeColors",
+        "name": "PER_LED",
+        "value": 1
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": {
+        "__enum__": "openrgb.utils.ModeDirections",
+        "name": "LEFT",
+        "value": 0
+      },
+      "flags": {
+        "__enum__": "openrgb.utils.ModeFlags",
+        "name": "HAS_SPEED|HAS_DIRECTION_LR|HAS_PER_LED_COLOR|HAS_RANDOM_COLOR",
+        "value": 163
+      },
+      "id": 8,
+      "name": "Chase",
+      "speed": 2,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 9
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "__enum__": "openrgb.utils.ModeColors",
+        "name": "NONE",
+        "value": 0
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "__enum__": "openrgb.utils.ModeFlags",
+        "name": "HAS_SPEED",
+        "value": 1
+      },
+      "id": 9,
+      "name": "Random Flicker",
+      "speed": 2,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 13
+    }
+  ],
+  "name": "ENE DRAM",
+  "type": {
+    "__enum__": "openrgb.utils.DeviceType",
+    "name": "DRAM",
+    "value": 1
+  },
+  "zones": [
+    {
+      "colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "red": 255
+        },
+        {
+          "blue": 0,
+          "green": 0,
+          "red": 255
+        },
+        {
+          "blue": 0,
+          "green": 0,
+          "red": 255
+        },
+        {
+          "blue": 0,
+          "green": 0,
+          "red": 255
+        },
+        {
+          "blue": 0,
+          "green": 0,
+          "red": 255
+        }
+      ],
+      "device_id": 0,
+      "id": 0,
+      "leds": [
+        {
+          "colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "red": 255
+            }
+          ],
+          "device_id": 0,
+          "id": 0,
+          "name": "DRAM LED 1"
+        },
+        {
+          "colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "red": 255
+            }
+          ],
+          "device_id": 0,
+          "id": 1,
+          "name": "DRAM LED 2"
+        },
+        {
+          "colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "red": 255
+            }
+          ],
+          "device_id": 0,
+          "id": 2,
+          "name": "DRAM LED 3"
+        },
+        {
+          "colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "red": 255
+            }
+          ],
+          "device_id": 0,
+          "id": 3,
+          "name": "DRAM LED 4"
+        },
+        {
+          "colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "red": 255
+            }
+          ],
+          "device_id": 0,
+          "id": 4,
+          "name": "DRAM LED 5"
+        }
+      ],
+      "mat_height": null,
+      "mat_width": null,
+      "matrix_map": null,
+      "name": "DRAM",
+      "segments": [],
+      "type": {
+        "__enum__": "openrgb.utils.ZoneType",
+        "name": "LINEAR",
+        "value": 1
+      }
+    }
+  ]
+}

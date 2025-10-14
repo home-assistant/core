@@ -1,0 +1,94 @@
+# serializer version: 1
+# name: test_entities[light.ene_dram-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'effect_list': list([
+        'off',
+        'breathing',
+        'flashing',
+        'spectrum_cycle',
+        'rainbow',
+        'chase_fade',
+        'chase',
+        'random_flicker',
+      ]),
+      'supported_color_modes': list([
+        <ColorMode.RGB: 'rgb'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.ene_dram',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:memory',
+    'original_name': None,
+    'platform': 'openrgb',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 4>,
+    'translation_key': 'openrgb_light',
+    'unique_id': '01J0EXAMPLE0CONFIGENTRY00||DRAM||ENE||ENE SMBus Device||none||I2C: PIIX4, address 0x70',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[light.ene_dram-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 255,
+      'color_mode': <ColorMode.RGB: 'rgb'>,
+      'effect': 'off',
+      'effect_list': list([
+        'off',
+        'breathing',
+        'flashing',
+        'spectrum_cycle',
+        'rainbow',
+        'chase_fade',
+        'chase',
+        'random_flicker',
+      ]),
+      'friendly_name': 'ENE DRAM',
+      'hs_color': tuple(
+        0.0,
+        100.0,
+      ),
+      'icon': 'mdi:memory',
+      'rgb_color': tuple(
+        255,
+        0,
+        0,
+      ),
+      'supported_color_modes': list([
+        <ColorMode.RGB: 'rgb'>,
+      ]),
+      'supported_features': <LightEntityFeature: 4>,
+      'xy_color': tuple(
+        0.701,
+        0.299,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.ene_dram',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
