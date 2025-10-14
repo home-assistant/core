@@ -288,7 +288,7 @@
             "climate_feature_target_temperature": "The climate supports setting the target temperature.",
             "climate_feature_target_humidity": "The climate supports setting the target humidity.",
             "device_class": "The device class of the {platform} entity. [Learn more.]({url}#device_class)",
-            "entity_category": "Allows marking an entity as device configuration or diagnostics. An entity with a category will not be exposed to cloud, Alexa, or Google Assistant components, nor included in indirect action calls to devices or areas. Sensor entities cannot be assigned a device configuration class. [Learn more.]({registry_properties_url)",
+            "entity_category": "Allows marking an entity as device configuration or diagnostics. An entity with a category will not be exposed to cloud, Alexa, or Google Assistant components, nor included in indirect action calls to devices or areas. Sensor entities cannot be assigned a device configuration class. [Learn more.]({registry_properties_url})",
             "fan_feature_speed": "The fan supports multiple speeds.",
             "fan_feature_preset_modes": "The fan supports preset modes.",
             "fan_feature_oscillation": "The fan supports oscillation.",
