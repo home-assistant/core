@@ -90,16 +90,12 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
                 channel_name := get_rpc_channel_name(coordinator.device, key)
             ) is not None:
                 self._attr_translation_placeholders = {"channel_name": channel_name}
-
-            if "channel_name" in self.translation_placeholders and (
-                translation_key := description.translation_key
-                or (
+                if translation_key := description.translation_key or (
                     description.device_class
                     if self._default_to_device_class_name()
                     else None
-                )
-            ):
-                self._attr_translation_key = f"{translation_key}_with_channel_name"
+                ):
+                    self._attr_translation_key = f"{translation_key}_with_channel_name"
 
     @property
     def is_on(self) -> bool:
@@ -436,16 +432,12 @@ class BlockBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
             channel_name := get_block_channel_name(coordinator.device, self.block)
         ) is not None:
             self._attr_translation_placeholders = {"channel_name": channel_name}
-
-        if "channel_name" in self.translation_placeholders and (
-            translation_key := description.translation_key
-            or (
+            if translation_key := description.translation_key or (
                 description.device_class
                 if self._default_to_device_class_name()
                 else None
-            )
-        ):
-            self._attr_translation_key = f"{translation_key}_with_channel_name"
+            ):
+                self._attr_translation_key = f"{translation_key}_with_channel_name"
 
     @property
     def is_on(self) -> bool:
