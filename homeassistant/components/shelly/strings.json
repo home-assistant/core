@@ -248,6 +248,9 @@
       "valve_position": {
         "name": "Valve position"
       },
+      "water_flow_rate": {
+        "name": "Water flow rate"
+      },
       "charger_state": {
         "name": "Charger state",
         "state": {
@@ -351,18 +354,6 @@
       },
       "right_slot_level": {
         "name": "Right slot level"
-      },
-      "water_flow_rate": {
-        "name": "Water flow rate"
-      },
-      "water_pressure": {
-        "name": "Water pressure"
-      },
-      "water_temperature": {
-        "name": "Water temperature"
-      },
-      "water_consumption": {
-        "name": "Water consumption"
       }
     }
   },
