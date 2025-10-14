@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -19,11 +18,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WattsVisionConfigEntry
-from .const import (
-    HVAC_MODE_TO_THERMOSTAT,
-    THERMOSTAT_MODE_TO_HVAC,
-    UPDATE_DELAY_AFTER_COMMAND,
-)
+from .const import HVAC_MODE_TO_THERMOSTAT, THERMOSTAT_MODE_TO_HVAC
 from .coordinator import WattsVisionDeviceCoordinator
 from .entity import WattsVisionEntity
 
@@ -109,7 +104,8 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
                 self.device_id,
             )
 
-            await asyncio.sleep(UPDATE_DELAY_AFTER_COMMAND)
+            self.coordinator.trigger_fast_polling()
+
             await self.coordinator.async_refresh()
 
         except RuntimeError as err:
@@ -130,10 +126,12 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
                 mode.name,
                 self.device_id,
             )
+
+            self.coordinator.trigger_fast_polling()
+
         except (ValueError, RuntimeError) as err:
             raise HomeAssistantError(
                 f"Error setting HVAC mode for {self.device_id}: {err}"
             ) from err
 
-        await asyncio.sleep(UPDATE_DELAY_AFTER_COMMAND)
         await self.coordinator.async_refresh()

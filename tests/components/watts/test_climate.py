@@ -26,6 +26,7 @@ def create_device_coordinator(device=None):
     coordinator.client.set_thermostat_temperature = AsyncMock()
     coordinator.client.set_thermostat_mode = AsyncMock()
     coordinator.async_refresh = AsyncMock()
+    coordinator.trigger_fast_polling = MagicMock()
     coordinator.last_update_success = True
     coordinator.available = device is not None
     return coordinator
@@ -179,7 +180,7 @@ async def test_set_temperature_success(mock_thermostat_device) -> None:
     coordinator.client.set_thermostat_temperature.assert_called_once_with(
         climate_entity.device_id, 23.5
     )
-
+    coordinator.trigger_fast_polling.assert_called_once()
     coordinator.async_refresh.assert_called_once()
 
 
@@ -192,7 +193,7 @@ async def test_set_temperature_with_attr_temperature(mock_thermostat_device) -> 
     coordinator.client.set_thermostat_temperature.assert_called_once_with(
         climate_entity.device_id, 24.0
     )
-
+    coordinator.trigger_fast_polling.assert_called_once()
     coordinator.async_refresh.assert_called_once()
 
 
@@ -203,6 +204,7 @@ async def test_set_temperature_no_temperature(mock_thermostat_device) -> None:
 
     await climate_entity.async_set_temperature()
     coordinator.client.set_thermostat_temperature.assert_not_called()
+    coordinator.trigger_fast_polling.assert_not_called()
     coordinator.async_refresh.assert_not_called()
 
 
@@ -220,6 +222,7 @@ async def test_set_temperature_error(mock_thermostat_device) -> None:
     coordinator.client.set_thermostat_temperature.assert_called_once_with(
         climate_entity.device_id, 23.5
     )
+    coordinator.trigger_fast_polling.assert_not_called()
     coordinator.async_refresh.assert_not_called()
 
 
@@ -240,7 +243,7 @@ async def test_set_temperature_changes_setpoint(mock_thermostat_device) -> None:
     coordinator.client.set_thermostat_temperature.assert_called_once_with(
         climate_entity.device_id, 25.0
     )
-
+    coordinator.trigger_fast_polling.assert_called_once()
     coordinator.async_refresh.assert_called_once()
 
     assert climate_entity.target_temperature == 25.0
@@ -263,7 +266,7 @@ async def test_set_temperature_no_change_on_api_failure(mock_thermostat_device) 
     coordinator.client.set_thermostat_temperature.assert_called_once_with(
         climate_entity.device_id, 25.0
     )
-
+    coordinator.trigger_fast_polling.assert_not_called()
     coordinator.async_refresh.assert_not_called()
 
     assert climate_entity.target_temperature == initial_temp
@@ -278,6 +281,8 @@ async def test_set_hvac_mode_heat_success(mock_thermostat_device) -> None:
     coordinator.client.set_thermostat_mode.assert_called_once_with(
         climate_entity.device_id, ThermostatMode.COMFORT
     )
+    coordinator.trigger_fast_polling.assert_called_once()
+    coordinator.async_refresh.assert_called_once()
 
 
 async def test_set_hvac_mode_off_success(mock_thermostat_device) -> None:
@@ -289,6 +294,8 @@ async def test_set_hvac_mode_off_success(mock_thermostat_device) -> None:
     coordinator.client.set_thermostat_mode.assert_called_once_with(
         climate_entity.device_id, ThermostatMode.OFF
     )
+    coordinator.trigger_fast_polling.assert_called_once()
+    coordinator.async_refresh.assert_called_once()
 
 
 async def test_set_hvac_mode_auto_success(mock_thermostat_device) -> None:
@@ -300,6 +307,8 @@ async def test_set_hvac_mode_auto_success(mock_thermostat_device) -> None:
     coordinator.client.set_thermostat_mode.assert_called_once_with(
         climate_entity.device_id, ThermostatMode.PROGRAM
     )
+    coordinator.trigger_fast_polling.assert_called_once()
+    coordinator.async_refresh.assert_called_once()
 
 
 async def test_set_hvac_mode_unsupported(mock_thermostat_device) -> None:
@@ -310,6 +319,8 @@ async def test_set_hvac_mode_unsupported(mock_thermostat_device) -> None:
     with pytest.raises(KeyError):
         await climate_entity.async_set_hvac_mode(HVACMode.FAN_ONLY)
     coordinator.client.set_thermostat_mode.assert_not_called()
+    coordinator.trigger_fast_polling.assert_not_called()
+    coordinator.async_refresh.assert_not_called()
 
 
 async def test_set_hvac_mode_error(mock_thermostat_device) -> None:
@@ -324,6 +335,8 @@ async def test_set_hvac_mode_error(mock_thermostat_device) -> None:
     coordinator.client.set_thermostat_mode.assert_called_once_with(
         climate_entity.device_id, ThermostatMode.COMFORT
     )
+    coordinator.trigger_fast_polling.assert_not_called()
+    coordinator.async_refresh.assert_not_called()
 
 
 async def test_async_setup_entry_with_thermostat_devices(

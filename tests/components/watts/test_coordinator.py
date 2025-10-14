@@ -1,6 +1,7 @@
 """Tests for the Watts Vision coordinator."""
 
-from unittest.mock import AsyncMock, MagicMock
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from visionpluspython.client import WattsVisionClient
@@ -162,6 +163,7 @@ class TestWattsVisionDeviceCoordinator:
         assert device_coordinator.name == f"{DOMAIN}_device_123"
         assert device_coordinator.update_interval is None  # Manual refresh only
         assert device_coordinator.device_id == "device_123"
+        assert device_coordinator._fast_polling_until is None
 
     async def test_async_set_updated_data(
         self, device_coordinator, mock_device
@@ -203,3 +205,54 @@ class TestWattsVisionDeviceCoordinator:
             await device_coordinator._async_update_data()
 
         mock_client.get_device.assert_called_once_with("device_123", refresh=True)
+
+    async def test_trigger_fast_polling(self, device_coordinator) -> None:
+        """Test triggering fast polling on device coordinator."""
+        with patch(
+            "homeassistant.components.watts.coordinator.datetime"
+        ) as mock_datetime:
+            mock_now = datetime(2023, 1, 1, 12, 0, 0)
+            mock_datetime.now.return_value = mock_now
+
+            device_coordinator.trigger_fast_polling(60)
+
+            assert device_coordinator._fast_polling_until == mock_now + timedelta(
+                seconds=60
+            )
+            assert device_coordinator.update_interval == timedelta(seconds=5)
+
+    async def test_fast_polling_expires(
+        self, device_coordinator, mock_client, mock_device
+    ) -> None:
+        """Test that fast polling expires and returns to manual refresh."""
+        mock_client.get_device.return_value = mock_device
+
+        # Set up fast polling that has expired
+        past_time = datetime.now() - timedelta(seconds=1)
+        device_coordinator._fast_polling_until = past_time
+        device_coordinator.update_interval = timedelta(seconds=5)
+
+        result = await device_coordinator._async_update_data()
+
+        # Should have reset fast polling
+        assert device_coordinator._fast_polling_until is None
+        assert device_coordinator.update_interval is None
+        assert result == mock_device
+
+    async def test_fast_polling_active(
+        self, device_coordinator, mock_client, mock_device
+    ) -> None:
+        """Test that fast polling remains active when not expired."""
+        mock_client.get_device.return_value = mock_device
+
+        # Set up fast polling that hasn't expired
+        future_time = datetime.now() + timedelta(seconds=30)
+        device_coordinator._fast_polling_until = future_time
+        device_coordinator.update_interval = timedelta(seconds=5)
+
+        result = await device_coordinator._async_update_data()
+
+        # Should keep fast polling active
+        assert device_coordinator._fast_polling_until == future_time
+        assert device_coordinator.update_interval == timedelta(seconds=5)
+        assert result == mock_device

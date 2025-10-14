@@ -16,7 +16,7 @@ OAUTH2_SCOPES = [
 ]
 
 UPDATE_INTERVAL = 30
-UPDATE_DELAY_AFTER_COMMAND = 7
+FAST_POLLING_INTERVAL = 5
 
 # Mapping from Watts Vision + modes to Home Assistant HVAC modes
 

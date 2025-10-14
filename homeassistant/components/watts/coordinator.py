@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from visionpluspython.client import WattsVisionClient
@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN, FAST_POLLING_INTERVAL, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,9 +102,18 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[Device | None]):
         )
         self.client = client
         self.device_id = device_id
+        self._fast_polling_until: datetime | None = None
 
     async def _async_update_data(self) -> Device | None:
         """Refresh specific device."""
+        if self._fast_polling_until and datetime.now() > self._fast_polling_until:
+            self._fast_polling_until = None
+            self.update_interval = None
+            _LOGGER.debug(
+                "Device %s: Fast polling period ended, returning to manual refresh",
+                self.device_id,
+            )
+
         try:
             device = await self.client.get_device(self.device_id, refresh=True)
         except (ConnectionError, TimeoutError, ValueError) as err:
@@ -118,3 +127,11 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[Device | None]):
                 return device
             _LOGGER.warning("Device %s not found during refresh", self.device_id)
             return None
+
+    def trigger_fast_polling(self, duration: int = 60) -> None:
+        """Activate fast polling for a specified duration after a command."""
+        self._fast_polling_until = datetime.now() + timedelta(seconds=duration)
+        self.update_interval = timedelta(seconds=FAST_POLLING_INTERVAL)
+        _LOGGER.debug(
+            "Device %s: Activated fast polling for %d seconds", self.device_id, duration
+        )
