@@ -819,7 +819,7 @@ COLLAR_SENSORS = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda collar: dt_util.utc_from_timestamp(collar.last_report_date),
     ),
-    # grid_status does not seem to change when off-grid, but rather amin_state_str
+    # grid_state does not seem to change when off-grid, but rather admin_state_str
     EnvoyCollarSensorEntityDescription(
         key="grid_state",
         translation_key="grid_status",
