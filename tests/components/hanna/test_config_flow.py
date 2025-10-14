@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from requests.exceptions import RequestException
+from hanna_cloud import AuthenticationError
 
 from homeassistant.components.hanna.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -28,7 +28,6 @@ async def test_full_flow(
         {
             "email": "test@example.com",
             "password": "test-password",
-            "code": "test-code",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -36,7 +35,6 @@ async def test_full_flow(
     assert result["data"] == {
         "email": "test@example.com",
         "password": "test-password",
-        "code": "test-code",
     }
 
 
@@ -47,7 +45,7 @@ async def test_invalid_auth(
 ) -> None:
     """Test invalid authentication."""
     # Create a RequestException with 401 status code to simulate authentication failure
-    auth_error = RequestException("Authentication failed")
+    auth_error = AuthenticationError("Authentication failed")
     auth_error.response = MagicMock()
     auth_error.response.status_code = 401
 
@@ -62,11 +60,7 @@ async def test_invalid_auth(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            "email": "test@example.com",
-            "password": "test-password",
-            "code": "test-code",
-        },
+        {"email": "test@example.com", "password": "test-password"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"

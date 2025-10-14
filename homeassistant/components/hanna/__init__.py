@@ -25,7 +25,6 @@ def _authenticate_and_get_devices(
 
 async def async_setup_entry(hass: HomeAssistant, entry: HannaConfigEntry) -> bool:
     """Set up Hanna Instruments from a config entry."""
-    # Create a temporary API client to discover devices
     api_client = HannaCloudClient()
     devices = await hass.async_add_executor_job(
         _authenticate_and_get_devices,
@@ -54,7 +53,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HannaConfigEntry) -> bo
     # Unload platforms
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # Clean up and device coordinators
+    # Unload coordinators
     if unload_ok and entry.runtime_data is not None:
         for coordinator in entry.runtime_data.values():
             await coordinator.async_shutdown()

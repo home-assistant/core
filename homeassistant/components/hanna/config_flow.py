@@ -29,32 +29,30 @@ class HannaConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the setup flow."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=self.data_schema,
-            )
 
         errors: dict[str, str] = {}
 
-        try:
-            client = HannaCloudClient()
-            await self.hass.async_add_executor_job(
-                client.authenticate, user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
-            )
-        except (Timeout, RequestsConnectionError):
-            errors["base"] = "cannot_connect"
-        except AuthenticationError:
-            errors["base"] = "invalid_auth"
+        if user_input is not None:
+            try:
+                client = HannaCloudClient()
+                await self.hass.async_add_executor_job(
+                    client.authenticate,
+                    user_input[CONF_EMAIL],
+                    user_input[CONF_PASSWORD],
+                )
+            except (Timeout, RequestsConnectionError):
+                errors["base"] = "cannot_connect"
+            except AuthenticationError:
+                errors["base"] = "invalid_auth"
 
-        if errors:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=self.data_schema,
-                errors=errors,
-            )
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_EMAIL],
+                    data=user_input,
+                )
 
-        return self.async_create_entry(
-            title=user_input[CONF_EMAIL],
-            data=user_input,
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.data_schema,
+            errors=errors,
         )

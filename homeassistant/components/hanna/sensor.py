@@ -60,11 +60,6 @@ SENSOR_DESCRIPTIONS = {
     "cl": SensorEntityDescription(
         key="cl", name="Chlorine flow rate", icon="mdi:chemical-weapon"
     ),
-    "alarms": SensorEntityDescription(
-        key="alarms",
-        name="Alarms",
-        icon="mdi:alert",
-    ),
 }
 
 
@@ -76,71 +71,46 @@ async def async_setup_entry(
     """Set up Hanna sensors from a config entry."""
     device_coordinators = entry.runtime_data
 
-    # Collect all entities during initialization
-    all_entities: list[HannaParamSensor | HannaAlarmSensor] = []
+    entities: list[HannaSensor] = []
 
     for coordinator in device_coordinators.values():
-        # Add parameter sensors
-        for parameter in coordinator.get_parameters():
-            if description := SENSOR_DESCRIPTIONS.get(parameter["name"]):
-                all_entities.append(HannaParamSensor(coordinator, description))
-            else:
-                _LOGGER.warning("No sensor description found for %s", parameter["name"])
-
-        # Add alarms sensor
-        all_entities.append(
-            HannaAlarmSensor(coordinator, SENSOR_DESCRIPTIONS["alarms"])
+        entities.extend(
+            [
+                HannaSensor(coordinator, description)
+                for parameter in coordinator.get_parameters()
+                if (description := SENSOR_DESCRIPTIONS.get(parameter["name"]))
+            ]
         )
 
-    if all_entities:
-        async_add_entities(all_entities)
+    if entities:
+        async_add_entities(entities)
 
 
 class HannaSensor(HannaEntity, SensorEntity):
     """Representation of a Hanna sensor."""
 
     def __init__(
-        self, coordinator: HannaDataCoordinator, description: SensorEntityDescription
+        self,
+        coordinator: HannaDataCoordinator,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize a Hanna sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.device_identifier}_{description.key}"
+        self._attr_has_entity_name = True
+        self._attr_should_poll = False
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_name = (
             None
             if description.name is None or description.name is UNDEFINED
             else description.name
         )
         self._attr_icon = description.icon
-        self._attr_has_entity_name = True
-        self._attr_should_poll = False
-        self.description = description
-
-
-class HannaParamSensor(HannaSensor):
-    """Representation of a Hanna sensor."""
-
-    def __init__(
-        self, coordinator: HannaDataCoordinator, description: SensorEntityDescription
-    ) -> None:
-        """Initialize a Hanna sensor."""
-        super().__init__(coordinator, description)
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_device_class = description.device_class
+        self.description = description
 
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.get_parameter_value(self.description.key)
-
-
-class HannaAlarmSensor(HannaSensor):
-    """Representation of a Hanna alarm sensor."""
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the value reported by the sensor."""
-        alarms = self.coordinator.get_all_alarms()
-        if not alarms:
-            return "No alarms"
-        return ", ".join(sorted(alarms))
