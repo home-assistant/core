@@ -825,6 +825,10 @@
       'ctmeter_production_phases': None,
       'ctmeter_storage': None,
       'ctmeter_storage_phases': None,
+      'ctmeters': dict({
+      }),
+      'ctmeters_phases': dict({
+      }),
       'dry_contact_settings': dict({
       }),
       'dry_contact_status': dict({
@@ -854,6 +858,8 @@
       'active_phasecount': 0,
       'ct_consumption_meter': None,
       'ct_count': 0,
+      'ct_meters': list([
+      ]),
       'ct_production_meter': None,
       'ct_storage_meter': None,
       'envoy_firmware': '7.6.175',
@@ -1700,6 +1706,10 @@
       'ctmeter_production_phases': None,
       'ctmeter_storage': None,
       'ctmeter_storage_phases': None,
+      'ctmeters': dict({
+      }),
+      'ctmeters_phases': dict({
+      }),
       'dry_contact_settings': dict({
       }),
       'dry_contact_status': dict({
@@ -1729,6 +1739,8 @@
       'active_phasecount': 0,
       'ct_consumption_meter': None,
       'ct_count': 0,
+      'ct_meters': list([
+      ]),
       'ct_production_meter': None,
       'ct_storage_meter': None,
       'envoy_firmware': '7.6.175',
@@ -2619,6 +2631,10 @@
       'ctmeter_production_phases': None,
       'ctmeter_storage': None,
       'ctmeter_storage_phases': None,
+      'ctmeters': dict({
+      }),
+      'ctmeters_phases': dict({
+      }),
       'dry_contact_settings': dict({
       }),
       'dry_contact_status': dict({
@@ -2648,6 +2664,8 @@
       'active_phasecount': 0,
       'ct_consumption_meter': None,
       'ct_count': 0,
+      'ct_meters': list([
+      ]),
       'ct_production_meter': None,
       'ct_storage_meter': None,
       'envoy_firmware': '7.6.175',
@@ -3563,6 +3581,10 @@
       'ctmeter_production_phases': None,
       'ctmeter_storage': None,
       'ctmeter_storage_phases': None,
+      'ctmeters': dict({
+      }),
+      'ctmeters_phases': dict({
+      }),
       'dry_contact_settings': dict({
       }),
       'dry_contact_status': dict({
@@ -3598,6 +3620,8 @@
       'active_phasecount': 0,
       'ct_consumption_meter': None,
       'ct_count': 0,
+      'ct_meters': list([
+      ]),
       'ct_production_meter': None,
       'ct_storage_meter': None,
       'envoy_firmware': '7.6.175',
