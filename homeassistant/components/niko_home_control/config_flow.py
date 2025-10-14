@@ -28,8 +28,14 @@ async def test_connection(host: str) -> str | None:
     controller = NHCController(host, 8000)
     try:
         await controller.connect()
+    except TimeoutError:
+        _LOGGER.exception("Connection timed out")
+        return "cannot_connect"
+    except OSError:
+        _LOGGER.exception("Cannot connect to controller")
+        return "cannot_connect"
     except Exception:
-        _LOGGER.exception("Unexpected exception")
+        _LOGGER.exception("Unexpected exception during connection")
         return "cannot_connect"
     return None
 
