@@ -26,41 +26,41 @@ from .entity import HannaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_DESCRIPTIONS = {
-    "ph": SensorEntityDescription(
+SENSOR_DESCRIPTIONS = [
+    SensorEntityDescription(
         key="ph",
         name="pH value",
         icon="mdi:flask",
         device_class=SensorDeviceClass.PH,
     ),
-    "orp": SensorEntityDescription(
+    SensorEntityDescription(
         key="orp",
         name="Chlorine ORP value",
         icon="mdi:flask",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
-    "temp": SensorEntityDescription(
+    SensorEntityDescription(
         key="temp",
         name="Water temperature",
         icon="mdi:thermometer",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
-    "airTemp": SensorEntityDescription(
+    SensorEntityDescription(
         key="airTemp",
         name="Air temperature",
         icon="mdi:thermometer",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
-    "acidBase": SensorEntityDescription(
+    SensorEntityDescription(
         key="acidBase", name="pH Acid/Base flow rate", icon="mdi:chemical-weapon"
     ),
-    "cl": SensorEntityDescription(
+    SensorEntityDescription(
         key="cl", name="Chlorine flow rate", icon="mdi:chemical-weapon"
     ),
-}
+]
 
 
 async def async_setup_entry(
@@ -77,8 +77,7 @@ async def async_setup_entry(
         entities.extend(
             [
                 HannaSensor(coordinator, description)
-                for parameter in coordinator.get_parameters()
-                if (description := SENSOR_DESCRIPTIONS.get(parameter["name"]))
+                for description in SENSOR_DESCRIPTIONS
             ]
         )
 
