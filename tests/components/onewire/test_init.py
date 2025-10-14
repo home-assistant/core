@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from aio_ownet.exceptions import OWServerReturnError
+from aio_ownet.exceptions import OWServerError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -38,7 +38,7 @@ async def test_listing_failure(
     hass: HomeAssistant, config_entry: MockConfigEntry, owproxy: MagicMock
 ) -> None:
     """Test listing failure raises ConfigEntryNotReady."""
-    owproxy.dir.side_effect = OWServerReturnError(1)
+    owproxy.return_value.dir.side_effect = OWServerError()
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

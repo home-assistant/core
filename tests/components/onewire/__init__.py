@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock
 
-from aio_ownet.exceptions import OWServerProtocolError
+from aio_ownet.exceptions import OWServerError
 
 from .const import ATTR_INJECT_READS, MOCK_OWPROXY_DEVICES
 
@@ -37,7 +37,7 @@ def setup_owproxy_mock_devices(owproxy: MagicMock, device_ids: list[str]) -> Non
         if (side_effect := read_side_effect.get(path)) is None:
             raise NotImplementedError(f"Unexpected _read call: {path}")
         if len(side_effect) == 0:
-            raise OWServerProtocolError(f"Missing injected value for: {path}")
+            raise OWServerError(f"Missing injected value for: {path}")
         result = side_effect.pop(0)
         if isinstance(result, Exception) or (
             isinstance(result, type) and issubclass(result, Exception)

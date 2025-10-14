@@ -5,7 +5,7 @@ from copy import deepcopy
 import logging
 from unittest.mock import MagicMock, _patch_dict, patch
 
-from aio_ownet.exceptions import OWServerProtocolError
+from aio_ownet.exceptions import OWServerError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -85,8 +85,8 @@ async def test_tai8570_sensors(
     """
     mock_devices = deepcopy(MOCK_OWPROXY_DEVICES)
     mock_device = mock_devices[device_id]
-    mock_device[ATTR_INJECT_READS]["/TAI8570/temperature"] = [OWServerProtocolError]
-    mock_device[ATTR_INJECT_READS]["/TAI8570/pressure"] = [OWServerProtocolError]
+    mock_device[ATTR_INJECT_READS]["/TAI8570/temperature"] = [OWServerError]
+    mock_device[ATTR_INJECT_READS]["/TAI8570/pressure"] = [OWServerError]
 
     with _patch_dict(MOCK_OWPROXY_DEVICES, mock_devices):
         setup_owproxy_mock_devices(owproxy, [device_id])

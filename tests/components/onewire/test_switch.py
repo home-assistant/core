@@ -90,7 +90,7 @@ async def test_switch_toggle(
     entity_id = "switch.05_111111111111_programmed_input_output"
 
     # Test TOGGLE service to off
-    owproxy.read.side_effect = [b"         0"]
+    owproxy.return_value.read.side_effect = [b"         0"]
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TOGGLE,
@@ -101,7 +101,7 @@ async def test_switch_toggle(
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # Test TOGGLE service to on
-    owproxy.read.side_effect = [b"         1"]
+    owproxy.return_value.read.side_effect = [b"         1"]
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TOGGLE,

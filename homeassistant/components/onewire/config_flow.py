@@ -5,7 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from aio_ownet.exceptions import OWServerConnectionError
+from aio_ownet.exceptions import OWServerError
 from aio_ownet.proxy import OWServerStatelessProxy
 import voluptuous as vol
 
@@ -49,7 +49,7 @@ async def validate_input(
     proxy = OWServerStatelessProxy(data[CONF_HOST], data[CONF_PORT])
     try:
         await proxy.validate()
-    except OWServerConnectionError:
+    except OWServerError:
         errors["base"] = "cannot_connect"
 
 

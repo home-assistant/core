@@ -1,6 +1,6 @@
 """Constants for 1-Wire integration."""
 
-from aio_ownet.exceptions import OWServerProtocolError
+from aio_ownet.exceptions import OWServerError
 
 ATTR_INJECT_READS = "inject_reads"
 
@@ -49,7 +49,7 @@ MOCK_OWPROXY_DEVICES = {
     },
     "16.111111111111": {
         # Test case for issue #115984, where the device type cannot be read
-        ATTR_INJECT_READS: {"/type": [OWServerProtocolError()]},
+        ATTR_INJECT_READS: {"/type": [OWServerError()]},
     },
     "1F.111111111111": {
         ATTR_INJECT_READS: {"/type": [b"DS2409"]},
@@ -82,7 +82,7 @@ MOCK_OWPROXY_DEVICES = {
     "22.111111111111": {
         ATTR_INJECT_READS: {
             "/type": [b"DS1822"],
-            "/temperature": [OWServerProtocolError],
+            "/temperature": [OWServerError],
         },
     },
     "26.111111111111": {
@@ -93,7 +93,7 @@ MOCK_OWPROXY_DEVICES = {
             "/HIH3600/humidity": [b"    73.7563"],
             "/HIH4000/humidity": [b"    74.7563"],
             "/HIH5030/humidity": [b"    75.7563"],
-            "/HTM1735/humidity": [OWServerProtocolError],
+            "/HTM1735/humidity": [OWServerError],
             "/B1-R1-A/pressure": [b"    969.265"],
             "/S3-R1-A/illuminance": [b"    65.8839"],
             "/VAD": [b"     2.97"],
@@ -129,7 +129,7 @@ MOCK_OWPROXY_DEVICES = {
             "/PIO.0": [b"    1"],
             "/PIO.1": [b"    0"],
             "/PIO.2": [b"    1"],
-            "/PIO.3": [OWServerProtocolError],
+            "/PIO.3": [OWServerError],
             "/PIO.4": [b"    1"],
             "/PIO.5": [b"    0"],
             "/PIO.6": [b"    1"],
@@ -145,7 +145,7 @@ MOCK_OWPROXY_DEVICES = {
             "/sensed.0": [b"    1"],
             "/sensed.1": [b"    0"],
             "/sensed.2": [b"    0"],
-            "/sensed.3": [OWServerProtocolError],
+            "/sensed.3": [OWServerError],
             "/sensed.4": [b"    0"],
             "/sensed.5": [b"    0"],
             "/sensed.6": [b"    0"],
@@ -190,7 +190,7 @@ MOCK_OWPROXY_DEVICES = {
             "/HIH3600/humidity": [b"    73.7563"],
             "/HIH4000/humidity": [b"    74.7563"],
             "/HIH5030/humidity": [b"    75.7563"],
-            "/HTM1735/humidity": [OWServerProtocolError],
+            "/HTM1735/humidity": [OWServerError],
             "/B1-R1-A/pressure": [b"    969.265"],
             "/S3-R1-A/illuminance": [b"    65.8839"],
             "/VAD": [b"     2.97"],
