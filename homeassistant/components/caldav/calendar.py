@@ -215,13 +215,11 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         """Create a new event in the calendar."""
         _LOGGER.debug("Event: %s", kwargs)
 
-        item_data: dict[str, Any] = {}
-        if summary := kwargs.get("summary"):
-            item_data["summary"] = summary
-        if dtstart := kwargs.get("dtstart"):
-            item_data["dtstart"] = dtstart
-        if dtend := kwargs.get("dtend"):
-            item_data["dtend"] = dtend
+        item_data: dict[str, Any] = {
+            "summary": kwargs["summary"],
+            "dtstart": kwargs["dtstart"],
+            "dtend": kwargs["dtend"],
+        }
         if description := kwargs.get("description"):
             item_data["description"] = description
         if location := kwargs.get("location"):
