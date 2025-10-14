@@ -41,12 +41,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -
         jar = CookieJar(unsafe=True, quote_cookie=False)
         session = ClientSession(cookie_jar=jar)
 
-        device_type, url = await VodafoneStationCommonApi.get_device_type(
-            entry.data[CONF_HOST],
-            session,
-        )
-
-        await session.close()
+        try:
+            device_type, url = await VodafoneStationCommonApi.get_device_type(
+                entry.data[CONF_HOST],
+                session,
+            )
+        finally:
+            await session.close()
 
         # Save device details to config entry
         new_data = entry.data.copy()
