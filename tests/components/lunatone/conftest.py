@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.const import CONF_URL
 
-from . import BASE_URL, DEVICES_DATA, INFO_DATA, SERIAL_NUMBER
+from . import BASE_URL, DEVICES_DATA, INFO_DATA, PRODUCT_NAME, SERIAL_NUMBER
 
 from tests.common import MockConfigEntry
 
@@ -68,6 +68,7 @@ def mock_lunatone_info() -> Generator[AsyncMock]:
         info.name = info.data.name
         info.version = info.data.version
         info.serial_number = info.data.device.serial
+        info.product_name = PRODUCT_NAME
         yield info
 
 

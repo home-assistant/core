@@ -60,6 +60,7 @@ from .common import (
     MOCK_SENSOR_SUBENTRY_DATA,
     MOCK_SENSOR_SUBENTRY_DATA_LAST_RESET_TEMPLATE,
     MOCK_SENSOR_SUBENTRY_DATA_STATE_CLASS,
+    MOCK_SIREN_SUBENTRY_DATA,
     MOCK_SWITCH_SUBENTRY_DATA,
 )
 
@@ -3654,6 +3655,41 @@ async def test_migrate_of_incompatible_config_entry(
             (),
             "Milk notifier Energy",
             id="sensor_total",
+        ),
+        pytest.param(
+            MOCK_SIREN_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Siren"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "optimistic": True,
+                "available_tones": ["Happy hour", "Cooling alarm"],
+                "support_duration": True,
+                "support_volume_set": True,
+                "siren_advanced_settings": {
+                    "command_off_template": "{{ value }}",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Siren",
+            id="siren",
         ),
         pytest.param(
             MOCK_SWITCH_SUBENTRY_DATA,
