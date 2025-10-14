@@ -25,7 +25,6 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import parse_time
 
 from .const import (
     CONF_FROM,
@@ -142,14 +141,6 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._name = coordinator.name
-        self._departure = coordinator.departure
-        self._via = coordinator.via
-        self._heading = coordinator.destination
-        self._time = (
-            parse_time(coordinator.departure_time)
-            if coordinator.departure_time
-            else None
-        )
         self._subentry_id = subentry_id
         self._attr_unique_id = f"{subentry_id}-actual_departure"
         self._attr_device_info = DeviceInfo(
