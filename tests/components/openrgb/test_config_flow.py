@@ -160,13 +160,7 @@ async def test_reconfigure_flow(
     """Test the reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": "reconfigure",
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -207,13 +201,7 @@ async def test_reconfigure_flow_errors(
     """Test reconfiguration flow with various errors."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": "reconfigure",
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     mock_openrgb_client.client_class_mock.side_effect = exception
 
@@ -260,13 +248,7 @@ async def test_reconfigure_flow_duplicate_entry(
     )
     other_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": "reconfigure",
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     # Try to reconfigure to match the other entry
     result = await hass.config_entries.flow.async_configure(
