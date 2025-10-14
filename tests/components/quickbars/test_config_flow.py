@@ -558,8 +558,6 @@ async def test_options_qb_pick_nonint_choice_uses_default(hass: HomeAssistant) -
         res = await hass.config_entries.options.async_configure(res["flow_id"], user_input={"quickbar": "not-a-number"})
         assert res["type"] is FlowResultType.FORM and res["step_id"] == "qb_manage"
 
-
-
 async def test_user_flow_pair_updates_existing_entry(hass: HomeAssistant) -> None:
     # Existing entry with same unique_id but different host/port
     existing = MockConfigEntry(
