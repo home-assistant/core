@@ -23,7 +23,7 @@ def setup_owproxy_mock_devices(owproxy: MagicMock, device_ids: list[str]) -> Non
     for device_id in device_ids:
         _setup_owproxy_mock_device(dir_side_effect, read_side_effect, device_id)
 
-    def _dir(path: str) -> Any:
+    async def _dir(path: str) -> Any:
         if (side_effect := dir_side_effect.get(path)) is None:
             raise NotImplementedError(f"Unexpected _dir call: {path}")
         result = side_effect.pop(0)
@@ -33,7 +33,7 @@ def setup_owproxy_mock_devices(owproxy: MagicMock, device_ids: list[str]) -> Non
             raise result
         return result
 
-    def _read(path: str) -> Any:
+    async def _read(path: str) -> Any:
         if (side_effect := read_side_effect.get(path)) is None:
             raise NotImplementedError(f"Unexpected _read call: {path}")
         if len(side_effect) == 0:

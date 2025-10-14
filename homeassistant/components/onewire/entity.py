@@ -56,9 +56,9 @@ class OneWireEntity(Entity):
             "device_file": self._device_file,
         }
 
-    async def _read_value(self) -> bytes:
+    async def _read_value(self) -> str:
         """Read a value from the server."""
-        return await self._owproxy.read(self._device_file)
+        return (await self._owproxy.read(self._device_file)).decode().lstrip()
 
     async def _write_value(self, value: bytes) -> None:
         """Write a value to the server."""
