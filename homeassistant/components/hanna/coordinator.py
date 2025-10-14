@@ -53,17 +53,6 @@ class HannaDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return the device identifier."""
         return self.device_data["DID"]
 
-    def get_alerts(self, alert_types: str) -> list[str]:
-        """Get all alerts from the sensor data."""
-        alerts = []
-        if alert_types == "alarms":
-            alerts.extend(self.api_client.alarms)
-        if alert_types == "errors":
-            alerts.extend(self.api_client.errors)
-        if alert_types == "warnings":
-            alerts.extend(self.api_client.warnings)
-        return alerts
-
     def get_parameters(self) -> list[dict[str, Any]]:
         """Get all parameters from the sensor data."""
         return self.api_client.parameters
