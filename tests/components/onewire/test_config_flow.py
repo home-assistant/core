@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
-from aio_ownet.exceptions import OWServerError
+from aio_ownet.exceptions import OWServerConnectionError
 import pytest
 
 from homeassistant.components.onewire.const import (
@@ -87,7 +87,7 @@ async def test_user_flow_recovery(hass: HomeAssistant) -> None:
     # Invalid server
     with patch(
         "homeassistant.components.onewire.onewirehub.OWServerStatelessProxy.validate",
-        side_effect=OWServerError,
+        side_effect=OWServerConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -149,7 +149,7 @@ async def test_reconfigure_flow(
     # Invalid server
     with patch(
         "homeassistant.components.onewire.onewirehub.OWServerStatelessProxy.validate",
-        side_effect=OWServerError,
+        side_effect=OWServerConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -223,7 +223,7 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
     # Cannot connect to server => retry
     with patch(
         "homeassistant.components.onewire.onewirehub.OWServerStatelessProxy.validate",
-        side_effect=OWServerError,
+        side_effect=OWServerConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -275,7 +275,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     # Cannot connect to server => retry
     with patch(
         "homeassistant.components.onewire.onewirehub.OWServerStatelessProxy.validate",
-        side_effect=OWServerError,
+        side_effect=OWServerConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

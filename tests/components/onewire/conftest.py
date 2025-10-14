@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aio_ownet.exceptions import OWServerError
+from aio_ownet.exceptions import OWServerConnectionError
 import pytest
 
 from homeassistant.components.onewire.const import DOMAIN
@@ -66,5 +66,5 @@ def get_owproxy() -> Generator[MagicMock]:
 @pytest.fixture(name="owproxy_with_connerror")
 def get_owproxy_with_connerror(owproxy: MagicMock) -> MagicMock:
     """Mock owproxy."""
-    owproxy.return_value.validate = AsyncMock(side_effect=OWServerError)
+    owproxy.return_value.validate.side_effect = OWServerConnectionError
     return owproxy
