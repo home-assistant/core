@@ -175,6 +175,9 @@ aio-geojson-usgs-earthquakes==0.3
 # homeassistant.components.gdacs
 aio-georss-gdacs==0.10
 
+# homeassistant.components.onewire
+aio-ownet==0.0.2
+
 # homeassistant.components.acaia
 aioacaia==0.1.17
 
@@ -2267,9 +2270,6 @@ pyotp==2.9.0
 
 # homeassistant.components.overkiz
 pyoverkiz==1.19.0
-
-# homeassistant.components.onewire
-pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.19
