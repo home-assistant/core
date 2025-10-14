@@ -50,13 +50,19 @@
       "valve_status": {
         "default": "mdi:valve"
       },
-      "vial_name": {
-        "default": "mdi:scent"
-      },
       "illuminance_level": {
         "default": "mdi:brightness-5"
       },
-      "vial_level": {
+      "left_slot_vial": {
+        "default": "mdi:scent"
+      },
+      "left_slot_level": {
+        "default": "mdi:bottle-tonic-outline"
+      },
+      "right_slot_vial": {
+        "default": "mdi:scent"
+      },
+      "right_slot_level": {
         "default": "mdi:bottle-tonic-outline"
       }
     },
