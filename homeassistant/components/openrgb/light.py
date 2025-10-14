@@ -22,6 +22,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 from homeassistant.util.color import color_hs_to_RGB, color_RGB_to_hsv
 
 from .const import (
@@ -37,16 +38,6 @@ from .const import (
 from .coordinator import OpenRGBConfigEntry, OpenRGBCoordinator
 
 PARALLEL_UPDATES = 0
-
-
-def normalize_mode_name(mode_name: str) -> str:
-    """Normalize mode name to translation key format."""
-    return mode_name.lower().replace(" ", "_")
-
-
-def denormalize_mode_name(normalized_name: str) -> str:
-    """Convert normalized mode name back to actual device mode name."""
-    return normalized_name.replace("_", " ")
 
 
 async def async_setup_entry(
@@ -93,6 +84,8 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
 
     _update_events: list[asyncio.Event] = []
 
+    _effect_to_mode: dict[str, str]
+
     def __init__(self, coordinator: OpenRGBCoordinator, device_key: str) -> None:
         """Initialize the OpenRGB light."""
         super().__init__(coordinator)
@@ -111,7 +104,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             via_device=(DOMAIN, coordinator.entry_id),
         )
 
-        modes = [mode.name.lower() for mode in self.device.modes]
+        modes = [mode.name for mode in self.device.modes]
 
         if self.device.metadata.description == "ASRock Polychrome USB Device":
             # https://gitlab.com/CalcProgrammer1/OpenRGB/-/issues/5145
@@ -129,17 +122,20 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         self._supports_off_mode = OpenRGBMode.OFF in modes
         # Determine which modes supports color
         self._supports_color_modes = [
-            mode.name.lower()
+            mode.name
             for mode in self.device.modes
             if check_if_mode_supports_color(mode)
         ]
-        # Convert modes to effects by excluding Off and effect-off modes
-        # Normalize mode names for translation keys
-        effects = [
-            normalize_mode_name(mode)
-            for mode in modes
-            if mode != OpenRGBMode.OFF and mode not in EFFECT_OFF_OPENRGB_MODES
-        ]
+
+        # Initialize effects from modes
+        self._effect_to_mode = {}
+        effects = []
+        for mode in modes:
+            if mode != OpenRGBMode.OFF and mode not in EFFECT_OFF_OPENRGB_MODES:
+                effect_name = slugify(mode)
+                effects.append(effect_name)
+                self._effect_to_mode[effect_name] = mode
+
         if len(effects) > 0:
             self._supports_effects = True
             self._attr_supported_features = LightEntityFeature.EFFECT
@@ -155,7 +151,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
     def _update_attrs(self) -> None:
         """Update the attributes based on the current device state."""
         mode_data = self.device.modes[self.device.active_mode]
-        mode = mode_data.name.lower()
+        mode = mode_data.name
         if mode == OpenRGBMode.OFF:
             mode = None
             mode_supports_colors = False
@@ -218,7 +214,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         elif mode in EFFECT_OFF_OPENRGB_MODES:
             self._attr_effect = EFFECT_OFF
         else:
-            self._attr_effect = normalize_mode_name(mode)
+            self._attr_effect = slugify(mode)
         self._mode = mode
 
         if mode is None:
@@ -330,8 +326,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             if effect == EFFECT_OFF:
                 mode = self._preferred_no_effect_mode
             else:
-                # Denormalize the effect name to get the actual device mode name
-                mode = denormalize_mode_name(effect)
+                mode = self._effect_to_mode[effect]
         elif self._mode is None or (
             self._attr_rgb_color is None and self._attr_brightness is None
         ):
@@ -353,7 +348,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
                 translation_domain=DOMAIN,
                 translation_key="effect_no_color_support",
                 translation_placeholders={
-                    "effect": mode or self._mode or "",
+                    "effect": slugify(mode or self._mode or ""),
                     "device_name": self.device.name,
                 },
             )

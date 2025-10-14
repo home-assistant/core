@@ -177,8 +177,7 @@ async def test_light_with_no_effects(
     mock_openrgb_device.modes = [
         mode
         for mode in mock_openrgb_device.modes
-        if mode.name.lower()
-        in {OpenRGBMode.OFF, OpenRGBMode.DIRECT, OpenRGBMode.STATIC}
+        if mode.name in {OpenRGBMode.OFF, OpenRGBMode.DIRECT, OpenRGBMode.STATIC}
     ]
 
     mock_config_entry.add_to_hass(hass)
@@ -326,7 +325,7 @@ async def test_turn_on_light_with_effect(
         blocking=True,
     )
 
-    mock_openrgb_device.set_mode.assert_called_once_with("rainbow")
+    mock_openrgb_device.set_mode.assert_called_once_with("Rainbow")
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -461,7 +460,7 @@ async def test_previous_values_updated_on_refresh(
         blocking=True,
     )
 
-    mock_openrgb_device.set_mode.assert_called_once_with("breathing")
+    mock_openrgb_device.set_mode.assert_called_once_with("Breathing")
     mock_openrgb_device.set_color.assert_called_once_with(RGBColor(0, 128, 0), True)
 
 
@@ -510,7 +509,7 @@ async def test_turn_on_restores_rainbow_after_off(
     )
 
     # Should restore to Rainbow mode (previous mode)
-    mock_openrgb_device.set_mode.assert_called_once_with("rainbow")
+    mock_openrgb_device.set_mode.assert_called_once_with("Rainbow")
     # set_color should NOT be called since Rainbow doesn't support colors
     mock_openrgb_device.set_color.assert_not_called()
 
@@ -561,7 +560,7 @@ async def test_turn_on_restores_rainbow_after_off_by_color(
     )
 
     # Should restore to Rainbow mode (previous mode), not Direct
-    mock_openrgb_device.set_mode.assert_called_once_with("rainbow")
+    mock_openrgb_device.set_mode.assert_called_once_with("Rainbow")
     # set_color should NOT be called since Rainbow doesn't support colors
     mock_openrgb_device.set_color.assert_not_called()
 
@@ -594,7 +593,7 @@ async def test_turn_off_light_without_off_mode(
     mock_openrgb_device.modes = [
         mode_data
         for mode_data in mock_openrgb_device.modes
-        if mode_data.name.lower() != OpenRGBMode.OFF
+        if mode_data.name != OpenRGBMode.OFF
     ]
 
     mock_config_entry.add_to_hass(hass)

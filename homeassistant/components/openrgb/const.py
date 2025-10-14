@@ -28,10 +28,10 @@ OFF_COLOR = (0, 0, 0)
 class OpenRGBMode(StrEnum):
     """OpenRGB modes."""
 
-    OFF = "off"
-    STATIC = "static"
-    DIRECT = "direct"
-    CUSTOM = "custom"
+    OFF = "Off"
+    STATIC = "Static"
+    DIRECT = "Direct"
+    CUSTOM = "Custom"
 
 
 EFFECT_OFF_OPENRGB_MODES = {OpenRGBMode.STATIC, OpenRGBMode.DIRECT, OpenRGBMode.CUSTOM}
