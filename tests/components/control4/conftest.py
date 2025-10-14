@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.components.control4.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -28,6 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: MOCK_PASSWORD,
             "controller_unique_id": MOCK_CONTROLLER_UNIQUE_ID,
         },
+        unique_id="00:aa:00:aa:00:aa",
     )
 
 
@@ -101,16 +101,3 @@ async def mock_patch_platforms(platforms: list[str]) -> AsyncGenerator[None]:
     """Fixture to set up platforms for tests."""
     with patch("homeassistant.components.control4.PLATFORMS", platforms):
         yield
-
-
-async def setup_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> MockConfigEntry:
-    """Set up the Control4 integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return mock_config_entry

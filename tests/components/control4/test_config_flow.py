@@ -86,6 +86,7 @@ async def test_form(hass: HomeAssistant) -> None:
         CONF_PASSWORD: MOCK_PASSWORD,
         "controller_unique_id": "control4_model_00AA00AA00AA",
     }
+    assert result2["result"].unique_id == "00:aa:00:aa:00:aa"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
