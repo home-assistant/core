@@ -18,8 +18,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-# remove when #151314 is merged
-CONF_OPTIONS = "options"
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
