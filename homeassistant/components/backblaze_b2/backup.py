@@ -172,14 +172,15 @@ class BackblazeBackupAgent(BackupAgent):
                 self._bucket.get_file_info_by_name, filename
             )
             await self._hass.async_add_executor_job(uploaded_main_file_info.delete)
-            _LOGGER.info(
-                "Successfully deleted partially uploaded main backup file %s", filename
-            )
         except Exception:
             _LOGGER.exception(
                 "Failed to clean up partially uploaded main backup file %s. "
                 "Manual intervention may be required to delete it from Backblaze B2",
                 filename,
+            )
+        else:
+            _LOGGER.info(
+                "Successfully deleted partially uploaded main backup file %s", filename
             )
 
     @handle_b2_errors
