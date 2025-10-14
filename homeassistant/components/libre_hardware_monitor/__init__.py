@@ -6,7 +6,7 @@ import logging
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
 from .coordinator import (
@@ -27,17 +27,13 @@ async def async_migrate_entry(
 
     if config_entry.version == 1:
         # Migrate from version 1 to 2
-        # This migration handles entity unique ID updates
 
-        # Get coordinator to access sensor data
         coordinator = LibreHardwareMonitorCoordinator(hass, config_entry)
         try:
             await coordinator.async_config_entry_first_refresh()
         except (ConnectionError, TimeoutError, OSError) as err:
             _LOGGER.warning("Could not refresh coordinator during migration: %s", err)
-            # Continue with migration even if refresh fails
 
-        # Migrate entity unique IDs
         entity_registry = er.async_get(hass)
 
         if (
@@ -54,9 +50,8 @@ async def async_migrate_entry(
                     old_unique_id,
                 )
 
-                # Check if entity exists with old unique ID
                 if entity_id := entity_registry.async_get_entity_id(
-                    DOMAIN, "sensor", old_unique_id
+                    "sensor", DOMAIN, old_unique_id
                 ):
                     _LOGGER.debug(
                         "Migrating entity %s from unique_id %s to %s",
@@ -64,19 +59,44 @@ async def async_migrate_entry(
                         old_unique_id,
                         new_unique_id,
                     )
-                    # Remove the old entity - Home Assistant will create a new one with the new unique_id
-                    entity_registry.async_remove(entity_id)
+                    entity_registry.async_update_entity(
+                        entity_id, new_unique_id=new_unique_id
+                    )
                 else:
                     _LOGGER.debug(
                         "No entity found with old unique_id: %s",
                         old_unique_id,
                     )
 
-        # Update config entry version
-        new_data = {**config_entry.data}
-        hass.config_entries.async_update_entry(config_entry, data=new_data, version=2)
+        # Migrate device identifiers
+        device_registry = dr.async_get(hass)
+        for device in device_registry.devices.values():
+            if not (
+                any(ident[0] == DOMAIN for ident in device.identifiers)
+                and config_entry.entry_id in device.config_entries
+            ):
+                continue
 
-        _LOGGER.info("Migration to version 2 successful")
+            old_device_id = next(
+                ident[1] for ident in device.identifiers if ident[0] == DOMAIN
+            )
+
+            device_registry.async_update_device(
+                device_id=device.id,
+                new_identifiers={(DOMAIN, f"{config_entry.entry_id}_{old_device_id}")},
+            )
+            _LOGGER.debug(
+                "Migrated device %s identifier from %s to %s",
+                device.id,
+                old_device_id,
+                f"{config_entry.entry_id}_{old_device_id}",
+            )
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=config_entry.data, version=2
+        )
+
+        _LOGGER.debug("Migration to version 2 successful")
         return True
 
     return True
