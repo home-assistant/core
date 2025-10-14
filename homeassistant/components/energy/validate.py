@@ -12,6 +12,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfEnergy,
+    UnitOfPower,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
@@ -23,12 +24,17 @@ ENERGY_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.ENERGY,)
 ENERGY_USAGE_UNITS: dict[str, tuple[UnitOfEnergy, ...]] = {
     sensor.SensorDeviceClass.ENERGY: tuple(UnitOfEnergy)
 }
+POWER_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.POWER,)
+POWER_USAGE_UNITS: dict[str, tuple[UnitOfPower, ...]] = {
+    sensor.SensorDeviceClass.POWER: tuple(UnitOfPower)
+}
 
 ENERGY_PRICE_UNITS = tuple(
     f"/{unit}" for units in ENERGY_USAGE_UNITS.values() for unit in units
 )
 ENERGY_UNIT_ERROR = "entity_unexpected_unit_energy"
 ENERGY_PRICE_UNIT_ERROR = "entity_unexpected_unit_energy_price"
+POWER_UNIT_ERROR = "entity_unexpected_unit_power"
 GAS_USAGE_DEVICE_CLASSES = (
     sensor.SensorDeviceClass.ENERGY,
     sensor.SensorDeviceClass.GAS,
@@ -81,6 +87,10 @@ def _get_placeholders(hass: HomeAssistant, issue_type: str) -> dict[str, str] | 
             "price_units": ", ".join(
                 f"{currency}{unit}" for unit in ENERGY_PRICE_UNITS
             ),
+        }
+    if issue_type == POWER_UNIT_ERROR:
+        return {
+            "power_units": ", ".join(POWER_USAGE_UNITS[sensor.SensorDeviceClass.POWER]),
         }
     if issue_type == GAS_UNIT_ERROR:
         return {
@@ -253,6 +263,62 @@ def _async_validate_price_entity(
 
     if unit is None or not unit.endswith(allowed_units):
         issues.add_issue(hass, unit_error, entity_id, unit)
+
+
+@callback
+def _async_validate_power_stat(
+    hass: HomeAssistant,
+    metadata: dict[str, tuple[int, recorder.models.StatisticMetaData]],
+    stat_id: str,
+    allowed_device_classes: Sequence[str],
+    allowed_units: Mapping[str, Sequence[str]],
+    unit_error: str,
+    issues: ValidationIssues,
+) -> None:
+    """Validate a power statistic."""
+    if stat_id not in metadata:
+        issues.add_issue(hass, "statistics_not_defined", stat_id)
+
+    has_entity_source = valid_entity_id(stat_id)
+
+    if not has_entity_source:
+        return
+
+    entity_id = stat_id
+
+    if not recorder.is_entity_recorded(hass, entity_id):
+        issues.add_issue(hass, "recorder_untracked", entity_id)
+        return
+
+    if (state := hass.states.get(entity_id)) is None:
+        issues.add_issue(hass, "entity_not_defined", entity_id)
+        return
+
+    if state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        issues.add_issue(hass, "entity_unavailable", entity_id, state.state)
+        return
+
+    try:
+        float(state.state)
+    except ValueError:
+        issues.add_issue(hass, "entity_state_non_numeric", entity_id, state.state)
+        return
+
+    device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    if device_class not in allowed_device_classes:
+        issues.add_issue(
+            hass, "entity_unexpected_device_class", entity_id, device_class
+        )
+    else:
+        unit = state.attributes.get("unit_of_measurement")
+
+        if device_class and unit not in allowed_units.get(device_class, []):
+            issues.add_issue(hass, unit_error, entity_id, unit)
+
+    state_class = state.attributes.get(sensor.ATTR_STATE_CLASS)
+
+    if state_class != sensor.SensorStateClass.MEASUREMENT:
+        issues.add_issue(hass, "entity_unexpected_state_class", entity_id, state_class)
 
 
 @callback
@@ -433,6 +499,21 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                             source_result,
                         )
                     )
+
+            for power_stat in source["power"]:
+                wanted_statistics_metadata.add(power_stat["stat_power"])
+                validate_calls.append(
+                    functools.partial(
+                        _async_validate_power_stat,
+                        hass,
+                        statistics_metadata,
+                        power_stat["stat_power"],
+                        POWER_USAGE_DEVICE_CLASSES,
+                        POWER_USAGE_UNITS,
+                        POWER_UNIT_ERROR,
+                        source_result,
+                    )
+                )
 
         elif source["type"] == "gas":
             wanted_statistics_metadata.add(source["stat_energy_from"])

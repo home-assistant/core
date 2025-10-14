@@ -32,10 +32,6 @@ class FlowFromGridSourceType(TypedDict):
     # statistic_id of an energy meter (kWh)
     stat_energy_from: str
 
-    # statistic_id of an power meter (kW)
-    # negative values indicate grid return
-    stat_power: str | None
-
     # statistic_id of costs ($) incurred from the energy meter
     # If set to None and entity_energy_price or number_energy_price are configured,
     # an EnergyCostSensor will be automatically created
@@ -62,6 +58,14 @@ class FlowToGridSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/kWh)
 
 
+class GridPowerSourceType(TypedDict):
+    """Dictionary holding the source of grid power consumption."""
+
+    # statistic_id of an power meter (kW)
+    # negative values indicate grid return
+    stat_power: str
+
+
 class GridSourceType(TypedDict):
     """Dictionary holding the source of grid energy consumption."""
 
@@ -69,6 +73,7 @@ class GridSourceType(TypedDict):
 
     flow_from: list[FlowFromGridSourceType]
     flow_to: list[FlowToGridSourceType]
+    power: list[GridPowerSourceType]
 
     cost_adjustment_day: float
 
@@ -182,7 +187,6 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required("stat_energy_from"): str,
-            vol.Optional("stat_power"): str,
             vol.Optional("stat_cost"): vol.Any(str, None),
             # entity_energy_from was removed in HA Core 2022.10
             vol.Remove("entity_energy_from"): vol.Any(str, None),
@@ -202,6 +206,12 @@ FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
         vol.Remove("entity_energy_to"): vol.Any(str, None),
         vol.Optional("entity_energy_price"): vol.Any(str, None),
         vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+    }
+)
+
+GRID_POWER_SOURCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("stat_power"): str,
     }
 )
 
@@ -234,6 +244,10 @@ GRID_SOURCE_SCHEMA = vol.Schema(
         vol.Required("flow_to"): vol.All(
             [FLOW_TO_GRID_SOURCE_SCHEMA],
             _generate_unique_value_validator("stat_energy_to"),
+        ),
+        vol.Required("power"): vol.All(
+            [GRID_POWER_SOURCE_SCHEMA],
+            _generate_unique_value_validator("stat_power"),
         ),
         vol.Required("cost_adjustment_day"): vol.Coerce(float),
     }
