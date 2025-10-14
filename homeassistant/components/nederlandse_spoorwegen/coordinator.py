@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, time
+from datetime import datetime
 import logging
 
 from ns_api import NSAPI, Trip
@@ -69,7 +69,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
         self.departure = subentry.data[CONF_FROM]
         self.destination = subentry.data[CONF_TO]
         self.via = subentry.data.get(CONF_VIA)
-        self.departure_time = subentry.data.get(CONF_TIME)  # str | time | None
+        self.departure_time = subentry.data.get(CONF_TIME)  # str | None
 
     async def _async_update_data(self) -> NSRouteResult:
         """Fetch data from NS API for this specific route."""
@@ -99,13 +99,11 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
             # Surface API failures to Home Assistant so the entities become unavailable
             raise UpdateFailed(f"API communication error: {err}") from err
 
-    def _get_time_from_route(self, time_str: str | time | None) -> str:
+    def _get_time_from_route(self, time_str: str | None) -> str:
         """Combine today's date with a time string if needed."""
         if not time_str:
             return _now_nl().strftime("%d-%m-%Y %H:%M")
         try:
-            if isinstance(time_str, time):
-                return _now_nl().strftime("%d-%m-%Y ") + time_str.strftime("%H:%M")
             if isinstance(time_str, str):
                 if len(time_str.split(":")) in (2, 3) and " " not in time_str:
                     today = _now_nl().strftime("%d-%m-%Y")
@@ -120,7 +118,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
         departure: str,
         destination: str,
         via: str | None = None,
-        departure_time: str | time | None = None,
+        departure_time: str | None = None,
     ) -> list[Trip]:
         """Get trips from NS API, sorted by departure time."""
 
