@@ -130,7 +130,7 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
 
 
 class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
-    """Representation of a SwitchBot K20+ Pro."""
+    """Representation of a SwitchBot K20+ Pro & Robot Vacuum Cleaner K11 Plus."""
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
