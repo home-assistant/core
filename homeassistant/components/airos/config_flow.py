@@ -15,7 +15,12 @@ from airos.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -119,7 +124,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             await self.async_set_unique_id(airos_data.derived.mac)
 
-            if self.source == SOURCE_REAUTH:
+            if self.source in [SOURCE_REAUTH, SOURCE_RECONFIGURE]:
                 self._abort_if_unique_id_mismatch()
             else:
                 self._abort_if_unique_id_configured()
@@ -159,6 +164,57 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
                         )
+                    ),
+                }
+            ),
+            errors=self.errors,
+        )
+
+    async def async_step_reconfigure(
+        self,
+        user_input: Mapping[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of airOS."""
+        self.errors = {}
+        entry = self._get_reconfigure_entry()
+        current_data = entry.data
+
+        if user_input is not None:
+            validate_data = {**current_data, **user_input}
+            if await self._validate_and_get_device_info(config_data=validate_data):
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates=validate_data,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PASSWORD): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
+                    vol.Required(SECTION_ADVANCED_SETTINGS): section(
+                        vol.Schema(
+                            {
+                                vol.Required(
+                                    CONF_SSL,
+                                    default=current_data[SECTION_ADVANCED_SETTINGS][
+                                        CONF_SSL
+                                    ],
+                                ): bool,
+                                vol.Required(
+                                    CONF_VERIFY_SSL,
+                                    default=current_data[SECTION_ADVANCED_SETTINGS][
+                                        CONF_VERIFY_SSL
+                                    ],
+                                ): bool,
+                            }
+                        ),
+                        {"collapsed": True},
                     ),
                 }
             ),
