@@ -27,12 +27,27 @@ from .const import (
     CONF_URL_WEATHER,
     DATA_DEVICE_IDS,
     DOMAIN,
+    DOORTAG_CATEGORY_DOOR,
+    DOORTAG_CATEGORY_FURNITURE,
+    DOORTAG_CATEGORY_GARAGE,
+    DOORTAG_CATEGORY_GATE,
+    DOORTAG_CATEGORY_OTHER,
+    DOORTAG_CATEGORY_WINDOW,
+    DOORTAG_STATUS_CALIBRATING,
+    DOORTAG_STATUS_CALIBRATION_FAILED,
+    DOORTAG_STATUS_CLOSED,
+    DOORTAG_STATUS_MAINTENANCE,
+    DOORTAG_STATUS_NO_NEWS,
+    DOORTAG_STATUS_OPEN,
+    DOORTAG_STATUS_UNDEFINED,
+    DOORTAG_STATUS_WEAK_SIGNAL,
     EVENT_TYPE_CAMERA_DISCONNECTION,
     EVENT_TYPE_DOOR_TAG_BIG_MOVE,
     EVENT_TYPE_DOOR_TAG_SMALL_MOVE,
     EVENT_TYPE_MODULE_CONNECT,
     EVENT_TYPE_MODULE_DISCONNECT,
     NETATMO_CREATE_BINARY_SENSOR,
+    NETATMO_NAME_OPENING_STATUS,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
 from .entity import NetatmoModuleEntity
@@ -53,21 +68,21 @@ def process_opening_status_string(status: StateType) -> StateType | None:
         "Translated opening status: %s",
         status,
     )
-    if status == "no_news":
+    if status == DOORTAG_STATUS_NO_NEWS:
         return None
-    if status == "calibrating":
+    if status == DOORTAG_STATUS_CALIBRATING:
         return None
-    if status == "undefined":
+    if status == DOORTAG_STATUS_UNDEFINED:
         return None
-    if status == "closed":
+    if status == DOORTAG_STATUS_CLOSED:
         return False
-    if status == "open":
+    if status == DOORTAG_STATUS_OPEN:
         return True
-    if status == "calibration_failed":
+    if status == DOORTAG_STATUS_CALIBRATION_FAILED:
         return None
-    if status == "maintenance":
+    if status == DOORTAG_STATUS_MAINTENANCE:
         return None
-    if status == "weak_signal":
+    if status == DOORTAG_STATUS_WEAK_SIGNAL:
         return None
     return None
 
@@ -84,7 +99,7 @@ def process_opening_status(module: Module, netatmo_name: str) -> StateType | Non
         value,
         module.name,
     )
-    return process_opening_status_string(status)
+    return value
 
 
 def process_opening_category_string(
@@ -97,17 +112,17 @@ def process_opening_category_string(
     )
 
     # Use a specific device class if we have a match
-    if category == "door":
+    if category == DOORTAG_CATEGORY_DOOR:
         return BinarySensorDeviceClass.DOOR
-    if category == "window":
+    if category == DOORTAG_CATEGORY_WINDOW:
         return BinarySensorDeviceClass.WINDOW
-    if category == "garage":
+    if category == DOORTAG_CATEGORY_GARAGE:
         return BinarySensorDeviceClass.GARAGE_DOOR
-    if category == "gate":
+    if category == DOORTAG_CATEGORY_GATE:
         return BinarySensorDeviceClass.OPENING
-    if category == "furniture":
+    if category == DOORTAG_CATEGORY_FURNITURE:
         return BinarySensorDeviceClass.OPENING
-    if category == "other":
+    if category == DOORTAG_CATEGORY_OTHER:
         return BinarySensorDeviceClass.OPENING
     return None
 
@@ -426,6 +441,13 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         """Return true if the binary sensor is on."""
         return self._attr_is_on
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (self.device.reachable is True) and (
+            getattr(self.device, self.entity_description.netatmo_name) is not None
+        )
+
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
@@ -436,9 +458,16 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         if not module:
             return
 
-        if not module.reachable:
-            if self.available:
-                self._attr_available = False
+        if not self.device.reachable:
+            self._attr_available = False
+            self._attr_is_on = None
+            _LOGGER.debug(
+                "Module %s is not reachable (%s), cannot update %s (%s) sensor",
+                module.name,
+                module.reachable,
+                self.entity_description.key,
+                self.entity_description.netatmo_name,
+            )
             self.async_write_ha_state()
             return
 
@@ -536,14 +565,22 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
                         device_id,
                     )
 
-                    if self._attr_is_on or self.available:
+                    if self.entity_description.key == "reachable":
                         self._attr_is_on = False
-                        self._attr_available = False
-                        _LOGGER.debug(
-                            "Toggling %s sensor state to unavailable",
-                            self.device.name,
-                        )
-                        self._async_write_ha_state()
+                    else:
+                        self._attr_is_on = None
+                    self._attr_available = False
+                    setattr(
+                        self.device,
+                        NETATMO_NAME_OPENING_STATUS,
+                        DOORTAG_STATUS_UNDEFINED,
+                    )
+                    self.device.reachable = False
+                    _LOGGER.debug(
+                        "Toggling %s binary sensor state to unavailable",
+                        self.device.entity_id,
+                    )
+                    self.schedule_update_ha_state(True)
                 else:
                     _LOGGER.warning(
                         "Binary sensor's bridge %s has received unexpected event as type %s",
@@ -560,24 +597,32 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
                     # Movement events for opening sensor only
                     if self.entity_description.key == "opening":
                         _LOGGER.debug(
-                            "Module %s has detected door tag move event",
+                            "Module %s has detected %s event",
                             module_id,
+                            event_type,
                         )
 
+                        # Interpret as open event if closed only
                         if (
-                            self._attr_available
+                            self.available
                             and self._attr_is_on is not None
                             and not self._attr_is_on
                         ):
                             self._attr_is_on = True
+                            self._attr_available = True
+                            setattr(
+                                self.device,
+                                NETATMO_NAME_OPENING_STATUS,
+                                DOORTAG_STATUS_OPEN,
+                            )
                             _LOGGER.debug(
-                                "Toggling %s sensor state to open",
+                                "Toggling %s binary sensor state to open",
                                 self.device.entity_id,
                             )
-                            self._async_write_ha_state()
+                            self.schedule_update_ha_state(True)
                         else:
                             _LOGGER.debug(
-                                "Skipping event processing as sensor %s either unavailable/unknown state or already open",
+                                "Skipping event processing as binary sensor %s either unavailable/unknown state or already open (should be closed)",
                                 self.device.entity_id,
                             )
 
@@ -588,18 +633,27 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
                         module_id,
                     )
 
-                    if self._attr_is_on or self.available:
-                        if self.entity_description.key == "reachable":
-                            self._attr_is_on = False
-                        else:
-                            self._attr_is_on = None
-                        self._attr_available = False
-                        self.device.reachable = False
-                        _LOGGER.debug(
-                            "Toggling %s sensor state to unavailable",
-                            self.device.entity_id,
-                        )
-                        self._async_write_ha_state()
+                    if self.entity_description.key == "reachable":
+                        self._attr_is_on = False
+                    else:
+                        self._attr_is_on = None
+                    self._attr_available = False
+                    setattr(
+                        self.device,
+                        NETATMO_NAME_OPENING_STATUS,
+                        DOORTAG_STATUS_UNDEFINED,
+                    )
+                    setattr(
+                        self.device,
+                        NETATMO_NAME_OPENING_STATUS,
+                        DOORTAG_STATUS_UNDEFINED,
+                    )
+                    self.device.reachable = False
+                    _LOGGER.debug(
+                        "Toggling %s binary sensor state to unavailable",
+                        self.device.entity_id,
+                    )
+                    self.schedule_update_ha_state(True)
                 elif event_type in [EVENT_TYPE_MODULE_CONNECT]:
                     # Connection of module
                     _LOGGER.debug(
@@ -607,20 +661,24 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
                         module_id,
                     )
 
-                    if not self.available:
-                        if self.entity_description.key == "reachable":
-                            self._attr_is_on = True
-                        else:
-                            self._attr_is_on = None
-                        self._attr_available = True
-                        self.device.reachable = True
-                        _LOGGER.debug(
-                            "Toggling %s sensor state to available (%s = %s)",
-                            self.device.entity_id,
-                            self.entity_description.key,
-                            self._attr_is_on,
-                        )
-                        self._async_write_ha_state()
+                    if self.entity_description.key == "reachable":
+                        self._attr_is_on = True
+                    else:
+                        self._attr_is_on = None
+                    self._attr_available = True
+                    setattr(
+                        self.device,
+                        NETATMO_NAME_OPENING_STATUS,
+                        DOORTAG_STATUS_UNDEFINED,
+                    )
+                    self.device.reachable = True
+                    _LOGGER.debug(
+                        "Toggling %s binary sensor state to available (%s = %s)",
+                        self.device.entity_id,
+                        self.entity_description.key,
+                        self._attr_is_on,
+                    )
+                    self.schedule_update_ha_state(True)
                 else:
                     _LOGGER.warning(
                         "Binary sensor %s has received unexpected event as type %s",

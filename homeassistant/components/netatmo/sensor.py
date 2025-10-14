@@ -43,17 +43,24 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
+    ATTR_EVENT_TYPE,
     CONF_URL_ENERGY,
     CONF_URL_PUBLIC_WEATHER,
     CONF_URL_SECURITY,
     CONF_URL_WEATHER,
     CONF_WEATHER_AREAS,
+    DATA_DEVICE_IDS,
     DATA_HANDLER,
     DOMAIN,
+    DOORTAG_STATUS_UNDEFINED,
+    EVENT_TYPE_CAMERA_DISCONNECTION,
+    EVENT_TYPE_MODULE_CONNECT,
+    EVENT_TYPE_MODULE_DISCONNECT,
     NETATMO_CREATE_BATTERY,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SENSOR,
     NETATMO_CREATE_WEATHER_SENSOR,
+    NETATMO_NAME_OPENING_STATUS,
     SIGNAL_NAME,
 )
 from .data_handler import HOME, PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
@@ -543,17 +550,51 @@ class NetatmoCommonSensor(NetatmoModuleEntity, SensorEntity):
             ]
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+
+        if self.device.device_type == "NACamDoorTag":
+            for event_type in (
+                EVENT_TYPE_CAMERA_DISCONNECTION,
+                EVENT_TYPE_MODULE_CONNECT,
+                EVENT_TYPE_MODULE_DISCONNECT,
+            ):
+                _LOGGER.debug(
+                    "Subscribing to event %s for module %s",
+                    event_type,
+                    self.device.name,
+                )
+                self.async_on_remove(
+                    async_dispatcher_connect(
+                        self.hass,
+                        f"signal-{DOMAIN}-webhook-{event_type}",
+                        self.handle_event,
+                    )
+                )
+
+        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self.device.entity_id] = (
+            self.device.name
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (self.device.reachable is True) and (
+            getattr(self.device, self.entity_description.netatmo_name) is not None
+        )
+
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         value = None
         module = self.device
 
-        if not module or not module.reachable:
-            if self.available:
-                self._attr_available = False
-            self._async_write_ha_state()
+        if not module:
             return
+
+        # Try to set value regardless of reachability, set availability later
+        # (treat sensor values as stale if module not reachable)
 
         raw_value = getattr(module, self.entity_description.netatmo_name, None)
         value = None
@@ -584,13 +625,153 @@ class NetatmoCommonSensor(NetatmoModuleEntity, SensorEntity):
         )
 
         if value is not None:
-            self._attr_available = True
+            if not module.reachable:
+                _LOGGER.debug(
+                    "Module %s is not reachable (%s), set sensor %s unavailable",
+                    module.name,
+                    module.reachable,
+                    self.entity_description.key,
+                )
+                self._attr_available = False
+            else:
+                self._attr_available = True
             self._attr_native_value = value
         else:
             self._attr_available = False
             self._attr_native_value = None
 
         self._async_write_ha_state()
+        return
+
+    def handle_event(self, event: dict) -> None:
+        """Handle webhook events."""
+        data = event["data"]
+        event_type = data.get(ATTR_EVENT_TYPE)
+
+        if not event_type:
+            _LOGGER.warning("Event has no type, returning")
+            return
+
+        if not data.get("device_id"):
+            _LOGGER.warning("Event %s has no device ID, returning", event_type)
+            return
+        device_id = data["device_id"]
+        module_id = device_id  # For safety, in case of direct module event
+
+        if not data.get("home_id"):
+            _LOGGER.warning(
+                "Event %s for device %s has no home ID, returning",
+                event_type,
+                data["device_id"],
+            )
+            return
+        home_id = data["home_id"]
+
+        # Door tag related direct events (where we need module_id)
+        if event_type in [
+            EVENT_TYPE_MODULE_CONNECT,
+            EVENT_TYPE_MODULE_DISCONNECT,
+        ]:
+            if not data.get("module_id"):
+                _LOGGER.warning("Event %s has no module ID, returning", event_type)
+                return
+            module_id = data["module_id"]
+
+        if self.device.device_type == "NACamDoorTag":
+            # Bridge related events (where we need device_id)
+            if (
+                home_id == self.home.entity_id
+                and device_id == self.device.bridge
+                and event_type in [EVENT_TYPE_CAMERA_DISCONNECTION]
+            ):
+                # Event for the bridge of this module
+                if event_type in [EVENT_TYPE_CAMERA_DISCONNECTION]:
+                    _LOGGER.debug(
+                        "Bridge (camera) %s has disconnect event",
+                        device_id,
+                    )
+
+                    self._attr_available = False
+                    setattr(
+                        self.device,
+                        NETATMO_NAME_OPENING_STATUS,
+                        DOORTAG_STATUS_UNDEFINED,
+                    )
+                    self.device.reachable = False
+                    _LOGGER.debug(
+                        "Toggling %s sensor state to unavailable",
+                        self.device.entity_id,
+                    )
+                    self.schedule_update_ha_state(True)
+                else:
+                    _LOGGER.warning(
+                        "Sensor's bridge %s has received unexpected event as type %s",
+                        device_id,
+                        event_type,
+                    )
+            # Module related events (where we need module_id)
+            elif home_id == self.home.entity_id and module_id == self.device.entity_id:
+                # Event for this module
+                if event_type in [EVENT_TYPE_MODULE_DISCONNECT]:
+                    # Disconnection of module
+                    _LOGGER.debug(
+                        "Module %s has detected disconnect event",
+                        module_id,
+                    )
+
+                    self._attr_available = False
+                    setattr(
+                        self.device,
+                        NETATMO_NAME_OPENING_STATUS,
+                        DOORTAG_STATUS_UNDEFINED,
+                    )
+                    self.device.reachable = False
+                    _LOGGER.debug(
+                        "Toggling %s sensor state to unavailable",
+                        self.device.entity_id,
+                    )
+                    self.schedule_update_ha_state(True)
+                elif event_type in [EVENT_TYPE_MODULE_CONNECT]:
+                    # Connection of module
+                    _LOGGER.debug(
+                        "Module %s has detected connect event",
+                        module_id,
+                    )
+
+                    self._attr_available = True
+                    setattr(
+                        self.device,
+                        NETATMO_NAME_OPENING_STATUS,
+                        DOORTAG_STATUS_UNDEFINED,
+                    )
+                    self.device.reachable = True
+                    _LOGGER.debug(
+                        "Toggling %s sensor state to available (%s = %s)",
+                        self.device.entity_id,
+                        self.entity_description.key,
+                        self._attr_native_value,
+                    )
+                    self.schedule_update_ha_state(True)
+                else:
+                    _LOGGER.warning(
+                        "Sensor %s has received unexpected event as type %s",
+                        module_id,
+                        event_type,
+                    )
+            else:
+                _LOGGER.warning(
+                    "Sensor %s of type %s has unexpectedly received event as type %s",
+                    self.device.entity_id,
+                    self.device.device_type,
+                    event_type,
+                )
+        else:
+            _LOGGER.warning(
+                "Sensor %s of type %s has unexpectedly received any event as type %s",
+                self.device.entity_id,
+                self.device.device_type,
+                event_type,
+            )
         return
 
 
@@ -840,10 +1021,9 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            self.device.reachable
-            or getattr(self.device, self.entity_description.netatmo_name) is not None
-        )
+        return (self.device.reachable is True) or getattr(
+            self.device, self.entity_description.netatmo_name
+        ) is not None
 
     @callback
     def async_update_callback(self) -> None:
@@ -977,7 +1157,6 @@ class NetatmoRoomSensor(NetatmoRoomEntity, SensorEntity):
             f"{self.device.entity_id}-{self.device.entity_id}-{description.key}"
         )
 
-    @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         if (state := getattr(self.device, self.entity_description.key)) is None:
