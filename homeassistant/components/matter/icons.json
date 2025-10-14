@@ -17,6 +17,9 @@
       },
       "stop": {
         "default": "mdi:stop"
+      },
+      "self_test_request": {
+        "default": "mdi:refresh-auto"
       }
     },
     "fan": {
@@ -40,6 +43,9 @@
       "laundry_washer_spin_speed": {
         "default": "mdi:reload"
       },
+      "power_level": {
+        "default": "mdi:power-settings"
+      },
       "temperature_level": {
         "default": "mdi:thermometer"
       }
@@ -50,6 +56,15 @@
       },
       "current_phase": {
         "default": "mdi:state-machine"
+      },
+      "eve_weather_trend": {
+        "default": "mdi:weather",
+        "state": {
+          "sunny": "mdi:weather-sunny",
+          "cloudy": "mdi:weather-cloudy",
+          "rainy": "mdi:weather-rainy",
+          "stormy": "mdi:weather-windy"
+        }
       },
       "air_quality": {
         "default": "mdi:air-filter"
@@ -81,8 +96,23 @@
       "valve_position": {
         "default": "mdi:valve"
       },
+      "battery_charge_state": {
+        "default": "mdi:battery-charging"
+      },
       "battery_replacement_description": {
         "default": "mdi:battery-sync-outline"
+      },
+      "battery_time_remaining": {
+        "default": "mdi:battery-clock-outline"
+      },
+      "battery_time_to_full_charge": {
+        "default": "mdi:battery-clock"
+      },
+      "esa_opt_out_state": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "esa_state": {
+        "default": "mdi:home-lightning-bolt"
       },
       "evse_state": {
         "default": "mdi:ev-station"
@@ -103,6 +133,11 @@
         "default": "mdi:pump"
       }
     },
+    "number": {
+      "cook_time": {
+        "default": "mdi:microwave"
+      }
+    },
     "switch": {
       "child_lock": {
         "default": "mdi:lock",
@@ -111,8 +146,18 @@
           "off": "mdi:lock-off"
         }
       },
+      "speaker_mute": {
+        "default": "mdi:volume-high",
+        "state": {
+          "on": "mdi:volume-mute",
+          "off": "mdi:volume-high"
+        }
+      },
       "evse_charging_switch": {
         "default": "mdi:ev-station"
+      },
+      "privacy_mode_button": {
+        "default": "mdi:shield-lock"
       }
     }
   }

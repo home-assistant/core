@@ -86,7 +86,8 @@
           "override": {
             "action": "NOT_ACTIVE"
           },
-          "restrictedReason": "WEEK_SCHEDULE"
+          "restrictedReason": "WEEK_SCHEDULE",
+          "externalReason": 4000
         },
         "metadata": {
           "connected": true,

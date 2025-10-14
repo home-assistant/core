@@ -1,12 +1,10 @@
 {
-  "entity": {
-    "binary_sensor": {
-      "bluetooth": {
-        "default": "mdi:bluetooth",
-        "state": {
-          "off": "mdi:bluetooth-off"
-        }
-      }
+  "services": {
+    "send_sound": {
+      "service": "mdi:cast-audio"
+    },
+    "send_text_command": {
+      "service": "mdi:microphone-message"
     }
   }
 }

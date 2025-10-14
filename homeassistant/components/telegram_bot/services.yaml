@@ -18,7 +18,8 @@ send_message:
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     parse_mode:
       selector:
         select:
@@ -43,7 +44,8 @@ send_message:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or ["Text button1:/button1, Text
@@ -59,6 +61,38 @@ send_message:
       selector:
         number:
           mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+
+send_chat_action:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    chat_action:
+      selector:
+        select:
+          options:
+            - "typing"
+            - "upload_photo"
+            - "record_video"
+            - "upload_video"
+            - "record_voice"
+            - "upload_voice"
+            - "upload_document"
+            - "choose_sticker"
+            - "find_location"
+            - "record_video_note"
+            - "upload_video_note"
+          translation_key: "chat_action"
+    target:
+      example: "[12345, 67890] or 12345"
+      selector:
+        text:
+          multiple: true
     message_thread_id:
       selector:
         number:
@@ -82,6 +116,14 @@ send_photo:
       example: "My image"
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -90,17 +132,12 @@ send_photo:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
+          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     parse_mode:
       selector:
         select:
@@ -109,6 +146,7 @@ send_photo:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -124,7 +162,8 @@ send_photo:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -162,6 +201,14 @@ send_sticker:
       example: CAACAgIAAxkBAAEDDldhZD-hqWclr6krLq-FWSfCrGNmOQAC9gAD9HsZAAFeYY-ltPYnrCEE
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -170,17 +217,12 @@ send_sticker:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
+          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     disable_notification:
       selector:
         boolean:
@@ -196,7 +238,8 @@ send_sticker:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -234,6 +277,14 @@ send_animation:
       example: "My animation"
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -242,17 +293,12 @@ send_animation:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
+          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     parse_mode:
       selector:
         select:
@@ -261,6 +307,7 @@ send_animation:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -276,7 +323,8 @@ send_animation:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -314,6 +362,14 @@ send_video:
       example: "My video"
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -322,17 +378,12 @@ send_video:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
+          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     parse_mode:
       selector:
         select:
@@ -341,6 +392,7 @@ send_video:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -356,7 +408,8 @@ send_video:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -394,6 +447,14 @@ send_voice:
       example: "My microphone recording"
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -402,17 +463,12 @@ send_voice:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
+          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     disable_notification:
       selector:
         boolean:
@@ -428,7 +484,8 @@ send_voice:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -466,6 +523,14 @@ send_document:
       example: Document Title xy
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -474,17 +539,12 @@ send_document:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
+          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     parse_mode:
       selector:
         select:
@@ -493,6 +553,7 @@ send_document:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -508,7 +569,8 @@ send_document:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -553,7 +615,8 @@ send_location:
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     disable_notification:
       selector:
         boolean:
@@ -566,7 +629,8 @@ send_location:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -595,7 +659,8 @@ send_poll:
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     question:
       required: true
       selector:
@@ -670,7 +735,79 @@ edit_message:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_web_page_preview:
+      selector:
+        boolean:
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+
+edit_message_media:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    message_id:
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    chat_id:
+      required: true
+      example: 12345
+      selector:
+        text:
+    timeout:
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    media_type:
+      selector:
+        select:
+          options:
+            - "animation"
+            - "audio"
+            - "document"
+            - "photo"
+            - "video"
+          translation_key: "media_type"
+    url:
+      example: "http://example.org/path/to/the/image.png"
+      selector:
+        text:
+    file:
+      example: "/path/to/the/image.png"
+      selector:
+        text:
+    caption:
+      example: Document Title xy
+      selector:
+        text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
+    username:
+      example: myuser
+      selector:
+        text:
+    password:
+      example: myuser_pwd
+      selector:
+        text:
+          type: password
+    verify_ssl:
       selector:
         boolean:
     inline_keyboard:

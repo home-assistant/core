@@ -35,6 +35,10 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, entity, template
+from homeassistant.helpers.condition import (
+    async_get_all_descriptions as async_get_all_condition_descriptions,
+    async_subscribe_platform_events as async_subscribe_condition_platform_events,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -52,7 +56,13 @@ from homeassistant.helpers.json import (
     json_bytes,
     json_fragment,
 )
-from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.helpers.service import (
+    async_get_all_descriptions as async_get_all_service_descriptions,
+)
+from homeassistant.helpers.trigger import (
+    async_get_all_descriptions as async_get_all_trigger_descriptions,
+    async_subscribe_platform_events as async_subscribe_trigger_platform_events,
+)
 from homeassistant.loader import (
     IntegrationNotFound,
     async_get_integration,
@@ -68,9 +78,11 @@ from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
 from .connection import ActiveConnection
-from .messages import construct_result_message
+from .messages import construct_event_message, construct_result_message
 
+ALL_CONDITION_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_condition_descriptions_json"
 ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
+ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_trigger_descriptions_json"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,8 +106,10 @@ def async_register_commands(
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
     async_reg(hass, handle_subscribe_bootstrap_integrations)
+    async_reg(hass, handle_subscribe_condition_platforms)
     async_reg(hass, handle_subscribe_events)
     async_reg(hass, handle_subscribe_trigger)
+    async_reg(hass, handle_subscribe_trigger_platforms)
     async_reg(hass, handle_test_condition)
     async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_validate_config)
@@ -459,6 +473,10 @@ def handle_subscribe_entities(
 
     serialized_states = []
     for state in states:
+        if entity_ids and state.entity_id not in entity_ids:
+            continue
+        if entity_filter and not entity_filter(state.entity_id):
+            continue
         try:
             serialized_states.append(state.as_compressed_state_json)
         except (ValueError, TypeError):
@@ -493,9 +511,56 @@ def _send_handle_entities_init_response(
     )
 
 
-async def _async_get_all_descriptions_json(hass: HomeAssistant) -> bytes:
+async def _async_get_all_condition_descriptions_json(hass: HomeAssistant) -> bytes:
+    """Return JSON of descriptions (i.e. user documentation) for all condition."""
+    descriptions = await async_get_all_condition_descriptions(hass)
+    if ALL_CONDITION_DESCRIPTIONS_JSON_CACHE in hass.data:
+        cached_descriptions, cached_json_payload = hass.data[
+            ALL_CONDITION_DESCRIPTIONS_JSON_CACHE
+        ]
+        # If the descriptions are the same, return the cached JSON payload
+        if cached_descriptions is descriptions:
+            return cast(bytes, cached_json_payload)
+    json_payload = json_bytes(
+        {
+            condition: description
+            for condition, description in descriptions.items()
+            if description is not None
+        }
+    )
+    hass.data[ALL_CONDITION_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
+    return json_payload
+
+
+@decorators.websocket_command({vol.Required("type"): "condition_platforms/subscribe"})
+@decorators.async_response
+async def handle_subscribe_condition_platforms(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe conditions command."""
+
+    async def on_new_conditions(new_conditions: set[str]) -> None:
+        """Forward new conditions to websocket."""
+        descriptions = await async_get_all_condition_descriptions(hass)
+        new_condition_descriptions = {}
+        for condition in new_conditions:
+            if (description := descriptions[condition]) is not None:
+                new_condition_descriptions[condition] = description
+        if not new_condition_descriptions:
+            return
+        connection.send_event(msg["id"], new_condition_descriptions)
+
+    connection.subscriptions[msg["id"]] = async_subscribe_condition_platform_events(
+        hass, on_new_conditions
+    )
+    connection.send_result(msg["id"])
+    conditions_json = await _async_get_all_condition_descriptions_json(hass)
+    connection.send_message(construct_event_message(msg["id"], conditions_json))
+
+
+async def _async_get_all_service_descriptions_json(hass: HomeAssistant) -> bytes:
     """Return JSON of descriptions (i.e. user documentation) for all service calls."""
-    descriptions = await async_get_all_descriptions(hass)
+    descriptions = await async_get_all_service_descriptions(hass)
     if ALL_SERVICE_DESCRIPTIONS_JSON_CACHE in hass.data:
         cached_descriptions, cached_json_payload = hass.data[
             ALL_SERVICE_DESCRIPTIONS_JSON_CACHE
@@ -514,8 +579,55 @@ async def handle_get_services(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get services command."""
-    payload = await _async_get_all_descriptions_json(hass)
+    payload = await _async_get_all_service_descriptions_json(hass)
     connection.send_message(construct_result_message(msg["id"], payload))
+
+
+async def _async_get_all_trigger_descriptions_json(hass: HomeAssistant) -> bytes:
+    """Return JSON of descriptions (i.e. user documentation) for all triggers."""
+    descriptions = await async_get_all_trigger_descriptions(hass)
+    if ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE in hass.data:
+        cached_descriptions, cached_json_payload = hass.data[
+            ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE
+        ]
+        # If the descriptions are the same, return the cached JSON payload
+        if cached_descriptions is descriptions:
+            return cast(bytes, cached_json_payload)
+    json_payload = json_bytes(
+        {
+            trigger: description
+            for trigger, description in descriptions.items()
+            if description is not None
+        }
+    )
+    hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
+    return json_payload
+
+
+@decorators.websocket_command({vol.Required("type"): "trigger_platforms/subscribe"})
+@decorators.async_response
+async def handle_subscribe_trigger_platforms(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe triggers command."""
+
+    async def on_new_triggers(new_triggers: set[str]) -> None:
+        """Forward new triggers to websocket."""
+        descriptions = await async_get_all_trigger_descriptions(hass)
+        new_trigger_descriptions = {}
+        for trigger in new_triggers:
+            if (description := descriptions[trigger]) is not None:
+                new_trigger_descriptions[trigger] = description
+        if not new_trigger_descriptions:
+            return
+        connection.send_event(msg["id"], new_trigger_descriptions)
+
+    connection.subscriptions[msg["id"]] = async_subscribe_trigger_platform_events(
+        hass, on_new_triggers
+    )
+    connection.send_result(msg["id"])
+    triggers_json = await _async_get_all_trigger_descriptions_json(hass)
+    connection.send_message(construct_event_message(msg["id"], triggers_json))
 
 
 @callback
@@ -539,9 +651,14 @@ async def handle_manifest_list(
         hass, msg.get("integrations") or async_get_loaded_integrations(hass)
     )
     manifest_json_fragments: list[json_fragment] = []
-    for int_or_exc in ints_or_excs.values():
+    for domain, int_or_exc in ints_or_excs.items():
         if isinstance(int_or_exc, Exception):
-            raise int_or_exc
+            _LOGGER.error(
+                "Unable to get manifest for integration %s: %s",
+                domain,
+                int_or_exc,
+            )
+            continue
         manifest_json_fragments.append(int_or_exc.manifest_json_fragment)
     connection.send_result(msg["id"], manifest_json_fragments)
 

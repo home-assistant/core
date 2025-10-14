@@ -12,8 +12,24 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .analytics import Analytics
+from .analytics import (
+    Analytics,
+    AnalyticsInput,
+    AnalyticsModifications,
+    DeviceAnalyticsModifications,
+    EntityAnalyticsModifications,
+    async_devices_payload,
+)
 from .const import ATTR_ONBOARDED, ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
+from .http import AnalyticsDevicesView
+
+__all__ = [
+    "AnalyticsInput",
+    "AnalyticsModifications",
+    "DeviceAnalyticsModifications",
+    "EntityAnalyticsModifications",
+    "async_devices_payload",
+]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -54,6 +70,8 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, websocket_analytics)
     websocket_api.async_register_command(hass, websocket_analytics_preferences)
+
+    hass.http.register_view(AnalyticsDevicesView)
 
     hass.data[DATA_COMPONENT] = analytics
     return True

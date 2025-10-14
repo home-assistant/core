@@ -54,7 +54,7 @@ class PollBot(BaseTelegramBot):
         self, hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
     ) -> None:
         """Create Application to poll for updates."""
-        super().__init__(hass, config)
+        super().__init__(hass, config, bot)
         self.bot = bot
         self.application = ApplicationBuilder().bot(self.bot).build()
         self.application.add_handler(TypeHandler(Update, self.handle_update))
@@ -64,16 +64,18 @@ class PollBot(BaseTelegramBot):
         """Shutdown the app."""
         await self.stop_polling()
 
-    async def start_polling(self, event=None):
+    async def start_polling(self) -> None:
         """Start the polling task."""
         _LOGGER.debug("Starting polling")
         await self.application.initialize()
-        await self.application.updater.start_polling(error_callback=error_callback)
+        if self.application.updater:
+            await self.application.updater.start_polling(error_callback=error_callback)
         await self.application.start()
 
-    async def stop_polling(self, event=None):
+    async def stop_polling(self) -> None:
         """Stop the polling task."""
         _LOGGER.debug("Stopping polling")
-        await self.application.updater.stop()
+        if self.application.updater:
+            await self.application.updater.stop()
         await self.application.stop()
         await self.application.shutdown()

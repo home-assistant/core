@@ -31,6 +31,13 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
+  "entity": {
+    "button": {
+      "favorite_now_playing": {
+        "name": "Favorite current song"
+      }
+    }
+  },
   "issues": {
     "invalid_server_version": {
       "title": "The Music Assistant server is not the correct version",
@@ -95,7 +102,7 @@
           "description": "The source media player which has the queue you want to transfer. When omitted, the first playing player will be used."
         },
         "auto_play": {
-          "name": "Auto play",
+          "name": "Autoplay",
           "description": "Start playing the queue on the target player. Omit to use the default behavior."
         }
       }

@@ -33,6 +33,7 @@ from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
 DEVICE_CLASS_NONE = "none"
 
+CONF_IS_ABSOLUTE_HUMIDITY = "is_absolute_humidity"
 CONF_IS_APPARENT_POWER = "is_apparent_power"
 CONF_IS_AQI = "is_aqi"
 CONF_IS_AREA = "is_area"
@@ -64,6 +65,7 @@ CONF_IS_PH = "is_ph"
 CONF_IS_PM1 = "is_pm1"
 CONF_IS_PM10 = "is_pm10"
 CONF_IS_PM25 = "is_pm25"
+CONF_IS_PM4 = "is_pm4"
 CONF_IS_POWER = "is_power"
 CONF_IS_POWER_FACTOR = "is_power_factor"
 CONF_IS_PRECIPITATION = "is_precipitation"
@@ -88,6 +90,7 @@ CONF_IS_WIND_DIRECTION = "is_wind_direction"
 CONF_IS_WIND_SPEED = "is_wind_speed"
 
 ENTITY_CONDITIONS = {
+    SensorDeviceClass.ABSOLUTE_HUMIDITY: [{CONF_TYPE: CONF_IS_ABSOLUTE_HUMIDITY}],
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_IS_APPARENT_POWER}],
     SensorDeviceClass.AQI: [{CONF_TYPE: CONF_IS_AQI}],
     SensorDeviceClass.AREA: [{CONF_TYPE: CONF_IS_AREA}],
@@ -124,6 +127,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.PM1: [{CONF_TYPE: CONF_IS_PM1}],
     SensorDeviceClass.PM10: [{CONF_TYPE: CONF_IS_PM10}],
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_IS_PM25}],
+    SensorDeviceClass.PM4: [{CONF_TYPE: CONF_IS_PM4}],
     SensorDeviceClass.PRECIPITATION: [{CONF_TYPE: CONF_IS_PRECIPITATION}],
     SensorDeviceClass.PRECIPITATION_INTENSITY: [
         {CONF_TYPE: CONF_IS_PRECIPITATION_INTENSITY}
@@ -159,6 +163,7 @@ CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_TYPE): vol.In(
                 [
+                    CONF_IS_ABSOLUTE_HUMIDITY,
                     CONF_IS_APPARENT_POWER,
                     CONF_IS_AQI,
                     CONF_IS_AREA,
@@ -192,6 +197,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_PM1,
                     CONF_IS_PM10,
                     CONF_IS_PM25,
+                    CONF_IS_PM4,
                     CONF_IS_PRECIPITATION,
                     CONF_IS_PRECIPITATION_INTENSITY,
                     CONF_IS_PRESSURE,

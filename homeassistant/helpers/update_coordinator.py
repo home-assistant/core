@@ -84,9 +84,19 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.update_interval = update_interval
         self._shutdown_requested = False
         if config_entry is UNDEFINED:
+            # late import to avoid circular imports
+            from . import frame  # noqa: PLC0415
+
+            # It is not planned to enforce this for custom integrations.
+            # see https://github.com/home-assistant/core/pull/138161#discussion_r1958184241
+            frame.report_usage(
+                "relies on ContextVar, but should pass the config entry explicitly.",
+                core_behavior=frame.ReportBehavior.ERROR,
+                custom_integration_behavior=frame.ReportBehavior.IGNORE,
+                breaks_in_ha_version="2026.8",
+            )
+
             self.config_entry = config_entries.current_entry.get()
-            # This should be deprecated once all core integrations are updated
-            # to pass in the config entry explicitly.
         else:
             self.config_entry = config_entry
         self.always_update = always_update
@@ -290,12 +300,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         to ensure that multiple retries do not cause log spam.
         """
         if self.config_entry is None:
-            report_usage(
-                "uses `async_config_entry_first_refresh`, which is only supported "
-                "for coordinators with a config entry",
-                breaks_in_ha_version="2025.11",
+            raise ConfigEntryError(
+                "Detected code that uses `async_config_entry_first_refresh`,"
+                " which is only supported for coordinators with a config entry"
             )
-        elif (
+        if (
             self.config_entry.state
             is not config_entries.ConfigEntryState.SETUP_IN_PROGRESS
         ):

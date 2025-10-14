@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Mapping
+from collections.abc import Mapping
 from contextlib import suppress
-import functools
 import os
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any
 
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
 from music_assistant_models.enums import (
@@ -18,7 +17,7 @@ from music_assistant_models.enums import (
     QueueOption,
     RepeatMode as MassRepeatMode,
 )
-from music_assistant_models.errors import MediaNotFoundError, MusicAssistantError
+from music_assistant_models.errors import MediaNotFoundError
 from music_assistant_models.event import MassEvent
 from music_assistant_models.media_items import ItemMapping, MediaItemType, Track
 from music_assistant_models.player_queue import PlayerQueue
@@ -40,7 +39,7 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
     async_process_play_media_url,
 )
-from homeassistant.const import ATTR_NAME, STATE_OFF
+from homeassistant.const import ATTR_NAME, STATE_OFF, Platform
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -76,6 +75,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import MusicAssistantEntity
+from .helpers import catch_musicassistant_error
 from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
@@ -120,25 +120,6 @@ SERVICE_TRANSFER_QUEUE = "transfer_queue"
 SERVICE_GET_QUEUE = "get_queue"
 
 
-def catch_musicassistant_error[_R, **P](
-    func: Callable[Concatenate[MusicAssistantPlayer, P], Coroutine[Any, Any, _R]],
-) -> Callable[Concatenate[MusicAssistantPlayer, P], Coroutine[Any, Any, _R]]:
-    """Check and log commands to players."""
-
-    @functools.wraps(func)
-    async def wrapper(
-        self: MusicAssistantPlayer, *args: P.args, **kwargs: P.kwargs
-    ) -> _R:
-        """Catch Music Assistant errors and convert to Home Assistant error."""
-        try:
-            return await func(self, *args, **kwargs)
-        except MusicAssistantError as err:
-            error_msg = str(err) or err.__class__.__name__
-            raise HomeAssistantError(error_msg) from err
-
-    return wrapper
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: MusicAssistantConfigEntry,
@@ -146,33 +127,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Music Assistant MediaPlayer(s) from Config Entry."""
     mass = entry.runtime_data.mass
-    added_ids = set()
 
-    async def handle_player_added(event: MassEvent) -> None:
-        """Handle Mass Player Added event."""
-        if TYPE_CHECKING:
-            assert event.object_id is not None
-        if event.object_id in added_ids:
-            return
-        player = mass.players.get(event.object_id)
-        if TYPE_CHECKING:
-            assert player is not None
-        if not player.expose_to_ha:
-            return
-        added_ids.add(event.object_id)
-        async_add_entities([MusicAssistantPlayer(mass, event.object_id)])
+    def add_player(player_id: str) -> None:
+        """Handle add player."""
+        async_add_entities([MusicAssistantPlayer(mass, player_id)])
 
-    # register listener for new players
-    entry.async_on_unload(mass.subscribe(handle_player_added, EventType.PLAYER_ADDED))
-    mass_players = []
-    # add all current players
-    for player in mass.players:
-        if not player.expose_to_ha:
-            continue
-        added_ids.add(player.player_id)
-        mass_players.append(MusicAssistantPlayer(mass, player.player_id))
-
-    async_add_entities(mass_players)
+    # register callback to add players when they are discovered
+    entry.runtime_data.platform_handlers.setdefault(Platform.MEDIA_PLAYER, add_player)
 
     # add platform service for play_media with advanced options
     platform = async_get_current_platform()
@@ -287,10 +248,8 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         player = self.player
         active_queue = self.active_queue
         # update generic attributes
-        if player.powered and active_queue is not None:
-            self._attr_state = MediaPlayerState(active_queue.state.value)
-        if player.powered and player.state is not None:
-            self._attr_state = MediaPlayerState(player.state.value)
+        if player.powered and player.playback_state is not None:
+            self._attr_state = MediaPlayerState(player.playback_state.value)
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
         # active source and source list (translate to HA source names)
@@ -309,12 +268,12 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_source = active_source_name
 
         group_members: list[str] = []
-        if player.group_childs:
-            group_members = player.group_childs
+        if player.group_members:
+            group_members = player.group_members
         elif player.synced_to and (parent := self.mass.players.get(player.synced_to)):
-            group_members = parent.group_childs
+            group_members = parent.group_members
 
-        # translate MA group_childs to HA group_members as entity id's
+        # translate MA group_members to HA group_members as entity id's
         entity_registry = er.async_get(self.hass)
         group_members_entity_ids: list[str] = [
             entity_id

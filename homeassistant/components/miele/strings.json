@@ -203,30 +203,28 @@
       "plate": {
         "name": "Plate {plate_no}",
         "state": {
-          "0": "0",
-          "110": "Warming",
-          "220": "[%key:component::miele::entity::sensor::plate::state::110%]",
-          "1": "1",
-          "2": "1\u2022",
-          "3": "2",
-          "4": "2\u2022",
-          "5": "3",
-          "6": "3\u2022",
-          "7": "4",
-          "8": "4\u2022",
-          "9": "5",
-          "10": "5\u2022",
-          "11": "6",
-          "12": "6\u2022",
-          "13": "7",
-          "14": "7\u2022",
-          "15": "8",
-          "16": "8\u2022",
-          "17": "9",
-          "18": "9\u2022",
-          "117": "Boost",
-          "118": "[%key:component::miele::entity::sensor::plate::state::117%]",
-          "217": "[%key:component::miele::entity::sensor::plate::state::117%]"
+          "plate_step_0": "0",
+          "plate_step_warm": "Warming",
+          "plate_step_1": "1",
+          "plate_step_2": "1\u2022",
+          "plate_step_3": "2",
+          "plate_step_4": "2\u2022",
+          "plate_step_5": "3",
+          "plate_step_6": "3\u2022",
+          "plate_step_7": "4",
+          "plate_step_8": "4\u2022",
+          "plate_step_9": "5",
+          "plate_step_10": "5\u2022",
+          "plate_step_11": "6",
+          "plate_step_12": "6\u2022",
+          "plate_step_13": "7",
+          "plate_step_14": "7\u2022",
+          "plate_step_15": "8",
+          "plate_step_16": "8\u2022",
+          "plate_step_17": "9",
+          "plate_step_18": "9\u2022",
+          "plate_step_boost": "Boost",
+          "plate_step_boost_2": "Boost 2"
         }
       },
       "drying_step": {
@@ -293,6 +291,7 @@
           "not_running": "Not running",
           "pre_brewing": "Pre-brewing",
           "pre_dishwash": "Pre-cleaning",
+          "pre_heating": "Pre-heating",
           "pre_wash": "Pre-wash",
           "process_finished": "Process finished",
           "process_running": "Process running",
@@ -465,8 +464,8 @@
           "chicken_tikka_masala_with_rice": "Chicken Tikka Masala with rice",
           "chicken_whole": "Chicken",
           "chinese_cabbage_cut": "Chinese cabbage (cut)",
-          "chocolate_hazlenut_cake_one_large": "Chocolate hazlenut cake (one large)",
-          "chocolate_hazlenut_cake_several_small": "Chocolate hazlenut cake (several small)",
+          "chocolate_hazlenut_cake_one_large": "Chocolate hazelnut cake (one large)",
+          "chocolate_hazlenut_cake_several_small": "Chocolate hazelnut cake (several small)",
           "chongming_rapid_steam_cooking": "Chongming (rapid steam cooking)",
           "chongming_steam_cooking": "Chongming (steam cooking)",
           "choux_buns": "Choux buns",
@@ -488,6 +487,8 @@
           "cook_bacon": "Cook bacon",
           "biscuits_short_crust_pastry_1_tray": "Biscuits, short crust pastry (1 tray)",
           "biscuits_short_crust_pastry_2_trays": "Biscuits, short crust pastry (2 trays)",
+          "comfort_wash": "Comfort wash",
+          "comfort_wash_plus": "Comfort wash plus",
           "cool_air": "Cool air",
           "corn_on_the_cob": "Corn on the cob",
           "cottons": "Cottons",
@@ -701,7 +702,7 @@
           "parsnip_cut_into_batons": "Parsnip (cut into batons)",
           "parsnip_diced": "Parsnip (diced)",
           "parsnip_sliced": "Parsnip (sliced)",
-          "pasta_paela": "Pasta/Paela",
+          "pasta_paela": "Pasta/paella",
           "pears_halved": "Pears (halved)",
           "pears_quartered": "Pears (quartered)",
           "pears_to_cook_large_halved": "Pears to cook (large, halved)",
@@ -830,6 +831,7 @@
           "rice_pudding_steam_cooking": "Rice pudding (steam cooking)",
           "rinse": "Rinse",
           "rinse_out_lint": "Rinse out lint",
+          "rinse_salt": "Rinse salt",
           "risotto": "Risotto",
           "ristretto": "Ristretto",
           "roast_beef_low_temperature_cooking": "Roast beef (low temperature cooking)",
@@ -990,6 +992,18 @@
           "yom_tov": "Yom tov",
           "yorkshire_pudding": "Yorkshire pudding",
           "zander_fillet": "Zander (fillet)"
+        },
+        "state_attributes": {
+          "profile": {
+            "name": "Profile",
+            "state": {
+              "profile_1": "Profile 1",
+              "profile_2": "Profile 2",
+              "profile_3": "Profile 3",
+              "profile_4": "Profile 4",
+              "profile_5": "Profile 5"
+            }
+          }
         }
       },
       "spin_speed": {
@@ -1062,8 +1076,68 @@
     "config_entry_not_ready": {
       "message": "Error while loading the integration."
     },
+    "invalid_target": {
+      "message": "Invalid device targeted."
+    },
+    "get_programs_error": {
+      "message": "'Get programs' action failed: {status} / {message}"
+    },
+    "set_program_error": {
+      "message": "'Set program' action failed: {status} / {message}"
+    },
+    "set_program_oven_error": {
+      "message": "'Set program on oven' action failed: {status} / {message}"
+    },
     "set_state_error": {
       "message": "Failed to set state for {entity}."
+    }
+  },
+  "services": {
+    "get_programs": {
+      "name": "Get programs",
+      "description": "Returns a list of available programs.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::miele::services::set_program::fields::device_id::description%]",
+          "name": "[%key:component::miele::services::set_program::fields::device_id::name%]"
+        }
+      }
+    },
+    "set_program": {
+      "name": "Set program",
+      "description": "Sets and starts a program on the appliance.",
+      "fields": {
+        "device_id": {
+          "description": "The target device for this action.",
+          "name": "Device"
+        },
+        "program_id": {
+          "description": "The ID of the program to set.",
+          "name": "Program ID"
+        }
+      }
+    },
+    "set_program_oven": {
+      "name": "Set program on oven",
+      "description": "[%key:component::miele::services::set_program::description%]",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::miele::services::set_program::fields::device_id::description%]",
+          "name": "[%key:component::miele::services::set_program::fields::device_id::name%]"
+        },
+        "program_id": {
+          "description": "[%key:component::miele::services::set_program::fields::program_id::description%]",
+          "name": "[%key:component::miele::services::set_program::fields::program_id::name%]"
+        },
+        "temperature": {
+          "description": "The target temperature for the oven program.",
+          "name": "[%key:component::sensor::entity_component::temperature::name%]"
+        },
+        "duration": {
+          "description": "The duration for the oven program.",
+          "name": "[%key:component::sensor::entity_component::duration::name%]"
+        }
+      }
     }
   }
 }
