@@ -84,10 +84,11 @@ class LuciDeviceScanner(DeviceScanner):
         (ip), reachable status (reachable), associated router
         (host), hostname if known (hostname) among others.
         """
-        device = next(
-            (result for result in self.last_results if result.mac == device), None
-        )
-        if device is None:
+        if not (
+            device := next(
+                (result for result in self.last_results if result.mac == device), None
+            )
+        ):
             return {}
         return device._asdict()
 
