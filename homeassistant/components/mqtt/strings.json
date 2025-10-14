@@ -221,7 +221,7 @@
           },
           "data_description": {
             "platform": "The type of the entity to configure.",
-            "name": "The name of the entity. Leave empty to set it to `None` to [mark it as main feature of the MQTT device]({naming_entities_url).",
+            "name": "The name of the entity. Leave empty to set it to `None` to [mark it as main feature of the MQTT device]({naming_entities_url}).",
             "entity_picture": "An URL to a picture to be assigned."
           }
         },
