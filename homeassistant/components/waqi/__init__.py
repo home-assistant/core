@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 from aiowaqi import WAQIClient
 
@@ -17,7 +18,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_STATION_NUMBER, DOMAIN
+from .const import CONF_STATION_NUMBER, DOMAIN, SUBENTRY_TYPE_STATION
 from .coordinator import WAQIConfigEntry, WAQIDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -40,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> bool
     entry.runtime_data = {}
 
     for subentry in entry.subentries.values():
-        if subentry.subentry_type != "station":
+        if subentry.subentry_type != SUBENTRY_TYPE_STATION:
             continue
 
         # Create a coordinator for each station subentry
@@ -66,7 +67,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> boo
 
 
 async def async_migrate_integration(hass: HomeAssistant) -> None:
-    """Migrate integration entry structure."""
+    """Migrate integration entry structure to subentries."""
 
     # Make sure we get enabled config entries first
     entries = sorted(
@@ -81,7 +82,6 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
     device_registry = dr.async_get(hass)
 
     for entry in entries:
-        use_existing = False
         subentry = ConfigSubentry(
             data=MappingProxyType(
                 {CONF_STATION_NUMBER: entry.data[CONF_STATION_NUMBER]}
@@ -91,7 +91,6 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             unique_id=entry.unique_id,
         )
         if entry.data[CONF_API_KEY] not in api_keys_entries:
-            use_existing = True
             all_disabled = all(
                 e.disabled_by is not None
                 for e in entries
@@ -104,7 +103,8 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         hass.config_entries.async_add_subentry(parent_entry, subentry)
 
         entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-        assert entry.unique_id is not None
+        if TYPE_CHECKING:
+            assert entry.unique_id is not None
         device = device_registry.async_get_device(
             identifiers={(DOMAIN, entry.unique_id)}
         )
@@ -158,7 +158,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                     remove_config_subentry_id=None,
                 )
 
-        if not use_existing:
+        if parent_entry.entry_id != entry.entry_id:
             await hass.config_entries.async_remove(entry.entry_id)
         else:
             hass.config_entries.async_update_entry(

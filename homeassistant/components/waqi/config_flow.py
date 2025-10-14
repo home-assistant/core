@@ -30,7 +30,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector
 
-from .const import CONF_STATION_NUMBER, DOMAIN
+from .const import CONF_STATION_NUMBER, DOMAIN, SUBENTRY_TYPE_STATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
-        return {"station": StationFlowHandler}
+        return {SUBENTRY_TYPE_STATION: StationFlowHandler}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
