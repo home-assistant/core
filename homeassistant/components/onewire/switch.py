@@ -218,7 +218,7 @@ class OneWireSwitchEntity(OneWireEntity, SwitchEntity):
         """Return true if switch is on."""
         if self._state is None:
             return None
-        return bool(self._state)
+        return self._state == 1
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
