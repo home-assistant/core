@@ -1,0 +1,152 @@
+camera_toggle:
+  # Show a camera PiP on the TV
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: quickbars
+    camera_alias:
+      selector:
+        text:
+      required: false
+      example: front_door
+    camera_entity:
+      selector:
+        entity:
+          domain: camera
+      required: false
+    rtsp_url:
+      selector:
+        text:
+      required: false
+    size:
+      selector:
+        select:
+          options: [small, medium, large]
+      required: false
+    size_px:
+      selector:
+        object:
+      required: false
+      example: { "w": 480, "h": 270 }
+    position:
+      selector:
+        select:
+          options: [top_left, top_right, bottom_left, bottom_right]
+      required: false
+    show_title:
+      selector:
+        boolean:
+      required: false
+      default: true
+    auto_hide:
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: "seconds"
+      required: false
+
+notify:
+  # Show a rich notification
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: quickbars
+    title:
+      selector:
+        text:
+      required: false
+    message:
+      selector:
+        text:
+          multiline: true
+      required: true
+    actions:
+      selector:
+        object:
+      required: false
+      example: [{ "id": "open", "label": "Open" }]
+    color:
+      selector:
+        color_rgb:
+      required: false
+      example: { "r": 255, "g": 165, "b": 0 }
+    transparency:
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.05
+      required: false
+      default: 0.0
+    mdi_icon:
+      selector:
+        icon:
+      required: false
+      example: mdi:bell
+    image:
+      selector:
+        object:
+      required: false
+      example: { "url": "https://example.com/pic.jpg" }
+    image_media:
+      selector:
+        media:
+          accept:
+            - image/*
+      required: false
+    sound:
+      selector:
+        object:
+      required: false
+      example: { "url": "https://example.com/file.mp3" }
+    sound_media:
+      selector:
+        media:
+          accept:
+            - audio/*
+      required: false
+    sound_volume_percent:
+      selector:
+        number:
+          min: 0
+          max: 200
+      required: false
+      default: 100
+    length:
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: "seconds"
+      required: false
+    interrupt:
+      default: false
+      selector:
+        boolean:
+      required: false
+    position:
+      selector:
+        select:
+          options: [top_left, top_right, bottom_left, bottom_right]
+      required: false
+
+quickbar_toggle:
+  # Toggle a QuickBar by alias
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: quickbars
+    alias:
+      selector:
+        text:
+      required: true
+      example: living_room

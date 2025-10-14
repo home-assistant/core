@@ -1,0 +1,286 @@
+{
+  "title": "QuickBars",
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Connect to QuickBars",
+        "description": "Enter the TV's IP and port",
+        "data_description": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        }
+      },
+      "pair": {
+        "title": "Enter pairing code",
+        "data_description": {
+          "code": "Code"
+        },
+        "data": {
+          "code": "Code"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Pair {name}",
+        "description": "We found a QuickBars TV app via Zeroconf.\n\n**Device ID:** {id}\n**IP:** {host}:{port}\n**API:** v{api}\n**App:** {app_version}\n\nClick **Continue** to show a pairing code on the TV and complete setup."
+      },
+      "token": {
+        "title": "Connect QuickBars to Home Assistant",
+        "description": "Enter your Home Assistant URL and a long-lived access token. We'll test the connection before saving.",
+        "data": {
+          "url": "Home Assistant URL",
+          "token": "Long-lived token"
+        },
+        "data_description": {
+          "url": "Home Assistant URL",
+          "token": "Long-lived token"
+        }
+      },
+      "init": {
+        "title": "QuickBars Editor",
+        "description": "Choose an action"
+      },
+      "entities": {
+        "title": "Export Entities",
+        "description": "Select entities to export to QuickBars"
+      },
+      "pick_quickbar": { "title": "Choose QuickBar" },
+      "edit_quickbar": { "title": "Edit QuickBar" }
+    },
+    "error": {
+      "no_snapshot": "No snapshot available. Pull one first.",
+      "no_quickbars": "No QuickBars were found in the snapshot.",
+      "creds_invalid": "Could not connect with the provided URL/token. {hint}",
+      "tv_unreachable": "TV not reachable. Make sure the app is open and the pairing screen is visible.",
+      "bad_code": "Invalid code. Try again.",
+      "no_unique_id": "Could not get a stable device ID from the TV. Please try again.",
+      "name_taken": "A QuickBar with that name already exists."
+    },
+    "abort": {
+      "already_configured": "This device is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "QuickBars Editor",
+        "description": "Pull / Edit / Push"
+      },
+      "qb_pick": {
+        "data": {
+          "quickbar": "QuickBar"
+        },
+        "data_description": {
+          "quickbar": "QuickBar"
+        }
+      },
+      "qb_manage": {
+        "title": "QuickBars Options",
+        "description": "Configure automatic close domains and QuickBar behavior",
+        "data": {
+          "quickbar_name": "QuickBar name",
+          "saved_entities": "Saved entities",
+          "show_name_on_overlay": "Show name on overlay",
+          "show_time_on_quickbar": "Show time on QuickBar",
+          "ha_trigger_alias": "QuickBar trigger alias",
+          "auto_close_domains": "Auto-close domains",
+          "position": "Position",
+          "use_grid_layout": "Use grid layout",
+          "background_opacity": "Background opacity",
+          "use_custom_bg": "Use custom background color",
+          "bg_rgb": "Background color",
+          "use_custom_on_state": "Use custom on-state color",
+          "on_rgb": "On-state color",
+          "close_delay_sec": "Close delay (seconds)"
+        },
+        "data_description": {
+          "quickbar_name": "QuickBar name",
+          "saved_entities": "Saved entities",
+          "show_name_on_overlay": "Show name on overlay",
+          "show_time_on_quickbar": "Show time on QuickBar",
+          "ha_trigger_alias": "QuickBar trigger alias",
+          "auto_close_domains": "Auto-close domains",
+          "position": "Position",
+          "use_grid_layout": "Use grid layout",
+          "background_opacity": "Background opacity",
+          "use_custom_bg": "Use custom background color",
+          "bg_rgb": "Background color",
+          "use_custom_on_state": "Use custom on-state color",
+          "on_rgb": "On-state color",
+          "close_delay_sec": "Close delay (seconds)"
+        }
+      },
+      "expose": {
+        "title": "Export Entities",
+        "description": "Pick entities to export to QuickBars",
+        "data": {
+          "saved": "Entities"
+        },
+        "data_description": {
+          "saved": "Entities"
+        }
+      },
+      "menu": {
+        "data":{
+          "action": "Menu action"
+        },
+        "data_description": {
+          "action": "Menu action"
+        }
+      },
+      "manage_saved_pick": {
+        "data": {
+          "entity": "Entity"
+        },
+        "data_description": {
+          "entity": "Entity"
+        }
+      },
+      "manage_saved": {
+        "data":{
+          "display_name": "Display name"
+        },
+        "data_description": {
+          "display_name": "Display name"
+        }
+      }
+    },
+    "error": {
+      "ws_error": "Could not communicate with QuickBars on the TV.",
+      "invalid_selection": "Please select at least one entity.",
+      "no_entities": "No entities available to export.",
+      "tv_unreachable": "TV not reachable. Make sure the app is open (foreground).",
+      "name_taken": "A QuickBar with that name already exists."
+    }
+  },
+  "services": {
+    "quickbar_toggle": {
+      "name": "Toggle QuickBar",
+      "description": "Open or close a QuickBar overlay by alias.",
+      "fields": {
+        "device_id": {
+          "name": "Target TV (optional)",
+          "description": "Target a specific QuickBars device. If omitted, broadcasts to all connected QuickBars devices."
+        },
+        "alias": {
+          "name": "Alias",
+          "description": "The QuickBar alias defined in the TV app."
+        }
+      }
+    },
+
+    "camera_toggle": {
+      "name": "Show camera (PiP)",
+      "description": "Show or hide a picture-in-picture camera overlay on the TV. Provide either a QuickBars camera alias or a Home Assistant camera entity (with MJPEG URL). You may also provide a direct RTSP URL.",
+      "fields": {
+        "device_id": {
+          "name": "Target TV (optional)",
+          "description": "Target a specific QuickBars device. If omitted, broadcasts to all connected QuickBars devices."
+        },
+        "camera_alias": {
+          "name": "Camera alias (QuickBars)",
+          "description": "Camera alias as configured in the QuickBars TV app (Manage Saved Entities). Use this or camera_entity."
+        },
+        "camera_entity": {
+          "name": "Camera entity",
+          "description": "Home Assistant camera entity that is imported into the QuickBars TV app and has an MJPEG URL. Use this or camera_alias."
+        },
+        "rtsp_url": {
+          "name": "RTSP URL (optional)",
+          "description": "Direct RTSP URL (e.g., rtsp://user:pass@host:554/path). If provided with camera_entity/alias, RTSP is preferred for this request. You may also use only rtsp_url (no entity/alias). Use rtsp:// (rtsps:// not supported). Credentials with special characters like @ or : are handled automatically."
+        },
+        "size": {
+          "name": "Size preset",
+          "description": "small, medium, or large. If omitted, uses the camera's saved default."
+        },
+        "size_px": {
+          "name": "Custom size (pixels)",
+          "description": "Object with width/height, for example: {\"w\":640,\"h\":360}. Use instead of size."
+        },
+        "position": {
+          "name": "Position",
+          "description": "Screen corner: top_left, top_right, bottom_left, or bottom_right."
+        },
+        "show_title": {
+          "name": "Show camera title",
+          "description": "true/false. If omitted, uses the saved setting in the TV app."
+        },
+        "auto_hide": {
+          "name": "Auto-hide (seconds)",
+          "description": "Seconds before the overlay hides. 0 = never (requires manual toggle). If omitted, uses the app default."
+        }
+      }
+    },
+
+    "notify": {
+      "name": "Send notification (TV)",
+      "description": "Display a rich notification on the TV with optional title, icon, image, sound, and action buttons.",
+      "fields": {
+        "device_id": {
+          "name": "Target TV (optional)",
+          "description": "Target a specific QuickBars device. If omitted, broadcasts to all connected QuickBars devices."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title of the notification."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Main text content of the notification."
+        },
+        "actions": {
+          "name": "Actions",
+          "description": "List of action objects: { id, label }."
+        },
+        "length": {
+          "name": "Length (seconds)",
+          "description": "How long to show the notification. Default 6."
+        },
+        "color": {
+          "name": "Overlay color",
+          "description": "Hex color (e.g., #8cd0e6)."
+        },
+        "transparency": {
+          "name": "Transparency",
+          "description": "0.0 = opaque, 1.0 = fully transparent. Default is 0."
+        },
+        "mdi_icon": {
+          "name": "Icon",
+          "description": "MDI icon near the title (e.g., mdi:bell)."
+        },
+        "image": {
+          "name": "Image source",
+          "description": "Provide an image via url (https://example.com/pic.jpg), path (relative to `/config/www`), or media_id. Choose any of the 3 options, or `image_media`."
+        },
+        "image_media": {
+          "name": "Image (Media Browser)",
+          "description": "Select an image directly from Home Assistant's Media Browser."
+        },
+        "sound": {
+          "name": "Sound",
+          "description": "Provide a sound via url (https://example.com/file.mp3), path (relative to `/config/www`), or media_id. Choose any of the 3 options, or `sound_media`."
+        },
+        "sound_media": {
+          "name": "Sound (Media Browser)",
+          "description": "Select a sound directly from Home Assistant's Media Browser."
+        },
+        "sound_volume_percent": {
+          "name": "Sound volume (%)",
+          "description": "0–200. 100 = TV system volume; >100 uses software boost and may distort."
+        },
+        "interrupt": {
+          "name": "Interrupt",
+          "description": "If true, replaces any currently visible notification immediately."
+        },
+        "position": {
+          "name": "Position",
+          "description": "top_left, top_right, bottom_left, or bottom_right. Default top_right."
+        }
+      }
+    }
+  }
+}

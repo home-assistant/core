@@ -1,0 +1,13 @@
+{
+  "services": {
+    "quickbar_toggle": {
+      "service": "mdi:television-guide"
+    },
+    "camera_toggle": {
+      "service": "mdi:video-wireless"
+    },
+    "notify": {
+      "service": "mdi:message-arrow-right"
+    }
+  }
+}

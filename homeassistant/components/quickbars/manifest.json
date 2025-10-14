@@ -1,0 +1,16 @@
+{
+  "domain": "quickbars",
+  "name": "QuickBars for Home Assistant",
+  "codeowners": ["@Trooped"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/quickbars",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["quickbars-bridge==0.0.6"],
+  "zeroconf": [
+    { "type": "_quickbars._tcp.local." },
+    { "type": "_quickbars._tcp.local.", "properties": { "api": "1" } }
+  ]
+}
