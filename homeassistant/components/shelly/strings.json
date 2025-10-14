@@ -209,8 +209,8 @@
       "adc": {
         "name": "ADC"
       },
-      "last_restart": {
-        "name": "Last restart"
+      "uptime": {
+        "name": "Uptime"
       },
       "voltmeter": {
         "name": "Voltmeter"
