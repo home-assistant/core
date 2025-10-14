@@ -35,12 +35,9 @@ async def async_setup_entry(
     device_coordinators = entry.runtime_data.device_coordinators
 
     async_add_entities(
-        [
-            WattsVisionClimate(device_coordinator, device_coordinator.data)
-            for device_coordinator in device_coordinators.values()
-            if device_coordinator.data
-        ],
-        update_before_add=True,
+        WattsVisionClimate(device_coordinator, device_coordinator.data)
+        for device_coordinator in device_coordinators.values()
+        if device_coordinator.data
     )
 
 
