@@ -92,7 +92,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             data_schema=vol.Schema(options_schema(self.config_entry.options)),
             description_placeholders={
                 "sample_ip": "http://192.168.1.161:3480",
-                "sample_url": "https://www.home-assistant.io/integrations/vera/",
+                "documentation_url": "https://www.home-assistant.io/integrations/vera/",
             },
         )
 
@@ -127,7 +127,7 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders={
                 "sample_ip": "http://192.168.1.161:3480",
-                "sample_url": "https://www.home-assistant.io/integrations/vera/",
+                "documentation_url": "https://www.home-assistant.io/integrations/vera/",
             },
         )
 
