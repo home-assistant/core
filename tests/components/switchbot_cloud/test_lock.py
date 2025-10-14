@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from switchbot_api import Device
+from switchbot_api import Device, LockCommands, LockV2Commands
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
@@ -19,7 +19,7 @@ from . import configure_integration
 
 
 async def test_lock(hass: HomeAssistant, mock_list_devices, mock_get_status) -> None:
-    """Test locking and unlocking."""
+    """Test locking."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -30,7 +30,7 @@ async def test_lock(hass: HomeAssistant, mock_list_devices, mock_get_status) -> 
         ),
     ]
 
-    mock_get_status.return_value = {"lockState": "locked"}
+    mock_get_status.side_effect = [{"lockState": "locked"}]
 
     entry = await configure_integration(hass)
 
@@ -39,17 +39,43 @@ async def test_lock(hass: HomeAssistant, mock_list_devices, mock_get_status) -> 
     lock_id = "lock.lock_1"
     assert hass.states.get(lock_id).state == LockState.LOCKED
 
-    with patch.object(SwitchBotAPI, "send_command"):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: lock_id}, blocking=True
         )
-    assert hass.states.get(lock_id).state == LockState.UNLOCKED
+    mock_send_command.assert_called_once_with(
+        "lock-id-1", LockCommands.UNLOCK, "command", "default"
+    )
 
-    with patch.object(SwitchBotAPI, "send_command"):
+
+async def test_unlock(hass: HomeAssistant, mock_list_devices, mock_get_status) -> None:
+    """Test unlocking."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="lock-id-1",
+            deviceName="lock-1",
+            deviceType="Smart Lock",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.side_effect = [{"lockState": "locked"}]
+
+    entry = await configure_integration(hass)
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    lock_id = "lock.lock_1"
+    assert hass.states.get(lock_id).state == LockState.LOCKED
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: lock_id}, blocking=True
         )
-    assert hass.states.get(lock_id).state == LockState.LOCKED
+    mock_send_command.assert_called_once_with(
+        "lock-id-1", LockCommands.LOCK, "command", "default"
+    )
 
 
 async def test_lock_open(
@@ -75,8 +101,10 @@ async def test_lock_open(
     lock_id = "lock.lock_1"
     assert hass.states.get(lock_id).state == LockState.LOCKED
 
-    with patch.object(SwitchBotAPI, "send_command"):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: lock_id}, blocking=True
         )
-    assert hass.states.get(lock_id).state == LockState.UNLOCKED
+    mock_send_command.assert_called_once_with(
+        "lock-id-1", LockV2Commands.DEADBOLT, "command", "default"
+    )
