@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
+import math
 from typing import Any
 from unittest.mock import patch
 
@@ -2313,9 +2314,11 @@ async def test_state_classes_with_invalid_unit_of_measurement(
         (datetime(2012, 11, 10, 7, 35, 1), "non-numeric"),
         (date(2012, 11, 10), "non-numeric"),
         ("inf", "non-finite"),
-        (float("inf"), "non-finite"),
+        (math.inf, "non-finite"),
+        (float("inf"), "non-finite"),  # pylint: disable=consider-math-not-float
         ("nan", "non-finite"),
-        (float("nan"), "non-finite"),
+        (math.nan, "non-finite"),
+        (float("nan"), "non-finite"),  # pylint: disable=consider-math-not-float
     ],
 )
 async def test_non_numeric_validation_error(
@@ -3065,7 +3068,6 @@ def test_device_class_converters_are_complete() -> None:
     no_converter_device_classes = {
         SensorDeviceClass.AQI,
         SensorDeviceClass.BATTERY,
-        SensorDeviceClass.CO,
         SensorDeviceClass.CO2,
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
