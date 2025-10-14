@@ -199,6 +199,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     repairs.async_delete_blocking_issues(hass)
 
+    # Set unique_id if it wasn't set during migration (e.g., no backups available)
+    if config_entry.unique_id is None:
+        unique_id = get_config_entry_unique_id(zha_gateway.state.network_info)
+        hass.config_entries.async_update_entry(config_entry, unique_id=unique_id)
+
     ha_zha_data.gateway_proxy = ZHAGatewayProxy(hass, config_entry, zha_gateway)
 
     manufacturer = zha_gateway.state.node_info.manufacturer
@@ -318,15 +323,22 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
         await radio_mgr.async_read_backups_from_database()
 
-        # We migrate all ZHA config entries to use a `unique_id` specific to the Zigbee
-        # network, not to the hardware
-        backup = radio_mgr.backups[0]
-
-        hass.config_entries.async_update_entry(
-            config_entry,
-            unique_id=get_config_entry_unique_id(backup.network_info),
-            version=5,
-        )
+        if radio_mgr.backups:
+            # We migrate all ZHA config entries to use a `unique_id` specific to the
+            # Zigbee network, not to the hardware
+            backup = radio_mgr.backups[0]
+            hass.config_entries.async_update_entry(
+                config_entry,
+                unique_id=get_config_entry_unique_id(backup.network_info),
+                version=5,
+            )
+        else:
+            # If no backups are available, the unique_id will be set when the network is
+            # loaded during setup
+            hass.config_entries.async_update_entry(
+                config_entry,
+                version=5,
+            )
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True
