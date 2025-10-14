@@ -9,14 +9,16 @@ from typing import Any, cast
 
 from pyatv import connect, exceptions, scan
 from pyatv.conf import AppleTV
-from pyatv.const import DeviceModel, Protocol
+from pyatv.const import DeviceModel, KeyboardFocusState, Protocol
 from pyatv.convert import model_str
 from pyatv.interface import AppleTV as AppleTVInterface, DeviceListener
+import voluptuous as vol
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_CONNECTIONS,
+    ATTR_ENTITY_ID,
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -28,17 +30,31 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ATTR_TEXT,
     CONF_CREDENTIALS,
     CONF_IDENTIFIERS,
     CONF_START_OFF,
     DOMAIN,
+    SERVICE_APPEND_KEYBOARD_TEXT,
+    SERVICE_CLEAR_KEYBOARD_TEXT,
+    SERVICE_SET_KEYBOARD_TEXT,
     SIGNAL_CONNECTED,
     SIGNAL_DISCONNECTED,
 )
@@ -74,6 +90,59 @@ DEVICE_EXCEPTIONS = (
 )
 
 type AppleTvConfigEntry = ConfigEntry[AppleTVManager]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Apple TV."""
+
+    # Services...
+    # Append text to the Apple TV keyboard field
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_APPEND_KEYBOARD_TEXT,
+        AppleTVManager.async_append_keyboard_text,
+        schema=vol.Schema(
+            vol.All(
+                {
+                    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+                    vol.Required(ATTR_TEXT): cv.string,
+                }
+            )
+        ),
+    )
+
+    # Clear the Apple TV keyboard field
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAR_KEYBOARD_TEXT,
+        AppleTVManager.async_clear_keyboard_text,
+        schema=vol.Schema(
+            vol.All(
+                {
+                    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+                }
+            )
+        ),
+    )
+
+    # Set the Apple TV keyboard field
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_KEYBOARD_TEXT,
+        AppleTVManager.async_set_keyboard_text,
+        schema=vol.Schema(
+            vol.All(
+                {
+                    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+                    vol.Required(ATTR_TEXT): cv.string,
+                }
+            )
+        ),
+    )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> bool:
@@ -388,3 +457,95 @@ class AppleTVManager(DeviceListener):
         async_dispatcher_send(
             self.hass, f"{signal}_{self.config_entry.unique_id}", *args
         )
+
+    @staticmethod
+    async def _async_get_managers(call: ServiceCall) -> list:
+        """Return registered AppleTVManagers for this ServieCall."""
+        rval: list[AppleTVManager] = []
+
+        registry = er.async_get(call.hass)
+
+        for entity_id in call.data[ATTR_ENTITY_ID]:
+            # Validate that the entity exists and is an Apple TV entity
+
+            if not (entity := registry.async_get(entity_id)):
+                raise ServiceValidationError(
+                    f"Entity '{entity_id}' not found in entity registry"
+                )
+
+            if entity.config_entry_id is None:
+                raise ServiceValidationError(
+                    f"Entity '{entity_id}' is missing a config entry"
+                )
+
+            config_entry = call.hass.config_entries.async_get_entry(
+                entity.config_entry_id
+            )
+
+            if not config_entry:
+                raise ServiceValidationError("Entry not found")
+
+            if config_entry.state is not ConfigEntryState.LOADED:
+                raise ServiceValidationError("Entry not loaded")
+
+            if not config_entry.domain == DOMAIN:
+                raise ServiceValidationError(
+                    f"Entity '{entity_id}' is not an {DOMAIN} entity"
+                )
+
+            rval.append(cast(AppleTVManager, config_entry.runtime_data))
+
+        return rval
+
+    @staticmethod
+    def _ok_to_change_text(atv: AppleTVInterface | None) -> bool:
+        """Check the status of the keyboard."""
+        if not atv:
+            _LOGGER.error("Unable to set text, not connected to Apple TV")
+            return False
+
+        if not atv.keyboard:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="keyboard_not_supported"
+            )
+
+        if atv.keyboard.text_focus_state != KeyboardFocusState.Focused:
+            _LOGGER.error("Keyboard not focused on Apple TV")
+            return False
+
+        return True
+
+    @staticmethod
+    async def async_append_keyboard_text(call: ServiceCall) -> None:
+        """Append text to the Apple TV keyboard field."""
+        managers: list[AppleTVManager] = await AppleTVManager._async_get_managers(call)
+
+        for manager in managers:
+            if AppleTVManager._ok_to_change_text(manager.atv):
+                text = call.data[ATTR_TEXT]
+                assert manager.atv is not None
+                _LOGGER.debug("Appending keyboard text '%s'", text)
+                await manager.atv.keyboard.text_append(text)
+
+    @staticmethod
+    async def async_clear_keyboard_text(call: ServiceCall) -> None:
+        """Clear the Apple TV keyboard field."""
+        managers: list[AppleTVManager] = await AppleTVManager._async_get_managers(call)
+
+        for manager in managers:
+            if AppleTVManager._ok_to_change_text(manager.atv):
+                assert manager.atv is not None
+                _LOGGER.debug("Clearing keyboard text")
+                await manager.atv.keyboard.text_clear()
+
+    @staticmethod
+    async def async_set_keyboard_text(call: ServiceCall) -> None:
+        """Set the Apple TV keyboard field."""
+        managers: list[AppleTVManager] = await AppleTVManager._async_get_managers(call)
+
+        for manager in managers:
+            if AppleTVManager._ok_to_change_text(manager.atv):
+                text = call.data[ATTR_TEXT]
+                assert manager.atv is not None
+                _LOGGER.debug("Setting keyboard text to '%s'", text)
+                await manager.atv.keyboard.text_set(text)
