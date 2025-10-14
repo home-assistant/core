@@ -9,7 +9,7 @@ import logging
 import os
 from typing import Any
 
-from pyownet import protocol
+from aio_ownet.exceptions import OWServerReturnError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -397,11 +397,7 @@ async def async_setup_entry(
         """Add 1-Wire entities for all devices."""
         if not devices:
             return
-        # note: we have to go through the executor as SENSOR platform
-        # makes extra calls to the hub during device listing
-        entities = await hass.async_add_executor_job(
-            get_entities, hub, devices, config_entry.options
-        )
+        entities = await get_entities(hub, devices, config_entry.options)
         async_add_entities(entities, True)
 
     hub = config_entry.runtime_data
@@ -411,7 +407,7 @@ async def async_setup_entry(
     )
 
 
-def get_entities(
+async def get_entities(
     onewire_hub: OneWireHub,
     devices: list[OWDeviceDescription],
     options: Mapping[str, Any],
@@ -441,8 +437,10 @@ def get_entities(
             if description.key.startswith("moisture/"):
                 s_id = description.key.split(".")[1]
                 is_leaf = int(
-                    onewire_hub.owproxy.read(
-                        f"{device_path}moisture/is_leaf.{s_id}"
+                    (
+                        await onewire_hub.owproxy.read(
+                            f"{device_path}moisture/is_leaf.{s_id}"
+                        )
                     ).decode()
                 )
                 if is_leaf:
@@ -463,8 +461,8 @@ def get_entities(
             if family == "12":
                 # We need to check if there is TAI8570 plugged in
                 try:
-                    onewire_hub.owproxy.read(device_file)
-                except protocol.OwnetError as err:
+                    await onewire_hub.owproxy.read(device_file)
+                except OWServerReturnError as err:
                     _LOGGER.debug(
                         "Ignoring unreachable sensor %s",
                         device_file,
