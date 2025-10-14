@@ -178,7 +178,7 @@ def com_port(device="/dev/ttyUSB1234") -> ListPortInfo:
         (
             # TubesZB, old ESPHome devices (ZNP)
             "tubeszb-cc2652-poe",
-            "aa:bb:cc:dd:ee:00:00:00",
+            "epid=aa:bb:cc:dd:ee:00:00:00",
             RadioType.znp,
             ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.200"),
@@ -201,7 +201,7 @@ def com_port(device="/dev/ttyUSB1234") -> ListPortInfo:
         (
             # TubesZB, old ESPHome device (EFR32)
             "tubeszb-efr32-poe",
-            "aa:bb:cc:dd:ee:00:00:00",
+            "epid=aa:bb:cc:dd:ee:00:00:00",
             RadioType.ezsp,
             ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.200"),
@@ -224,7 +224,7 @@ def com_port(device="/dev/ttyUSB1234") -> ListPortInfo:
         (
             # TubesZB, newer devices
             "TubeZB",
-            "aa:bb:cc:dd:ee:00:00:00",
+            "epid=aa:bb:cc:dd:ee:00:00:00",
             RadioType.znp,
             ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.200"),
@@ -245,7 +245,7 @@ def com_port(device="/dev/ttyUSB1234") -> ListPortInfo:
         (
             # Expected format for all new devices
             "Some Zigbee Gateway (12345)",
-            "aa:bb:cc:dd:ee:00:00:00",
+            "epid=aa:bb:cc:dd:ee:00:00:00",
             RadioType.znp,
             ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.200"),

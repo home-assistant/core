@@ -1404,4 +1404,4 @@ def exclude_none_values(obj: Mapping[str, Any]) -> dict[str, Any]:
 
 def get_config_entry_unique_id(network_info: NetworkInfo) -> str:
     """Generate a unique id for a config entry based on the network info."""
-    return f"{network_info.extended_pan_id}".lower()
+    return f"epid={network_info.extended_pan_id}".lower()
