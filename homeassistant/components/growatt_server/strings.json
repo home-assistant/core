@@ -2,26 +2,42 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_plants": "No plants have been found on this account"
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "Authentication failed. Please check your credentials and try again.",
+      "cannot_connect": "Cannot connect to Growatt servers. Please check your internet connection and try again."
     },
     "step": {
+      "user": {
+        "title": "Choose authentication method",
+        "description": "Note: API Token authentication is currently only supported for MIN/TLX devices. For other device types, please use Username & Password authentication.",
+        "menu_options": {
+          "password_auth": "Username & Password",
+          "token_auth": "API Token (MIN/TLX only)"
+        }
+      },
+      "password_auth": {
+        "title": "Enter your Growatt login credentials",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "token_auth": {
+        "title": "Enter your API token",
+        "description": "Token authentication is only supported for MIN/TLX devices. For other device types, please use username/password authentication.",
+        "data": {
+          "token": "API Token"
+        }
+      },
       "plant": {
         "data": {
           "plant_id": "Plant"
         },
         "title": "Select your plant"
-      },
-      "user": {
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "url": "[%key:common::config_flow::data::url%]"
-        },
-        "title": "Enter your Growatt information"
       }
     }
   },
@@ -346,6 +362,9 @@
       "tlx_wattage_input_4": {
         "name": "Input 4 wattage"
       },
+      "tlx_solar_generation_today": {
+        "name": "Solar energy today"
+      },
       "tlx_solar_generation_total": {
         "name": "Lifetime total solar energy"
       },
@@ -427,6 +446,45 @@
       "tlx_statement_of_charge": {
         "name": "State of charge (SoC)"
       },
+      "tlx_pac_to_local_load": {
+        "name": "Local load power"
+      },
+      "tlx_pac_to_user_total": {
+        "name": "Import power"
+      },
+      "tlx_pac_to_grid_total": {
+        "name": "Export power"
+      },
+      "tlx_system_production_today": {
+        "name": "System production today"
+      },
+      "tlx_system_production_total": {
+        "name": "Lifetime system production"
+      },
+      "tlx_self_consumption_today": {
+        "name": "Self consumption today"
+      },
+      "tlx_self_consumption_total": {
+        "name": "Lifetime self consumption"
+      },
+      "tlx_import_from_grid_today": {
+        "name": "Import from grid today"
+      },
+      "tlx_import_from_grid_total": {
+        "name": "Lifetime import from grid"
+      },
+      "tlx_batteries_charged_from_grid_today": {
+        "name": "Batteries charged from grid today"
+      },
+      "tlx_batteries_charged_from_grid_total": {
+        "name": "Lifetime batteries charged from grid"
+      },
+      "tlx_p_system": {
+        "name": "System power"
+      },
+      "tlx_p_self": {
+        "name": "Self power"
+      },
       "total_money_today": {
         "name": "Total money today"
       },
@@ -444,6 +502,11 @@
       },
       "total_maximum_output": {
         "name": "Maximum power"
+      }
+    },
+    "switch": {
+      "ac_charge": {
+        "name": "Charge from grid"
       }
     }
   }

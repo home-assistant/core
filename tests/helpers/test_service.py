@@ -91,24 +91,28 @@ def mock_entities(hass: HomeAssistant) -> dict[str, MockEntity]:
         available=True,
         should_poll=False,
         supported_features=SUPPORT_A,
+        device_class=None,
     )
     living_room = MockEntity(
         entity_id="light.living_room",
         available=True,
         should_poll=False,
         supported_features=SUPPORT_B,
+        device_class="class_a",
     )
     bedroom = MockEntity(
         entity_id="light.bedroom",
         available=True,
         should_poll=False,
         supported_features=(SUPPORT_A | SUPPORT_B),
+        device_class="class_b",
     )
     bathroom = MockEntity(
         entity_id="light.bathroom",
         available=True,
         should_poll=False,
         supported_features=(SUPPORT_B | SUPPORT_C),
+        device_class="class_c",
     )
     entities = {}
     entities[kitchen.entity_id] = kitchen
@@ -1415,7 +1419,7 @@ async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -
         mock_entities["light.bedroom"],
     ]
     actual = [call[0][0] for call in test_service_mock.call_args_list]
-    assert all(entity in actual for entity in expected)
+    assert actual == unordered(expected)
 
     # Test we raise if we target entity ID that does not support the service
     test_service_mock.reset_mock()
@@ -1475,7 +1479,70 @@ async def test_call_with_one_of_required_features(
         mock_entities["light.bathroom"],
     ]
     actual = [call[0][0] for call in test_service_mock.call_args_list]
-    assert all(entity in actual for entity in expected)
+    assert actual == unordered(expected)
+
+
+@pytest.mark.parametrize(
+    ("entity_device_classes", "expected_entities", "unsupported_entity"),
+    [
+        (
+            [None],
+            ["light.kitchen"],
+            "light.living_room",
+        ),
+        (
+            ["class_a"],
+            ["light.living_room"],
+            "light.kitchen",
+        ),
+        (
+            [None, "class_a"],
+            ["light.kitchen", "light.living_room"],
+            "light.bedroom",
+        ),
+    ],
+)
+async def test_call_with_device_class(
+    hass: HomeAssistant,
+    mock_entities,
+    entity_device_classes: list[str | None],
+    expected_entities: list[str],
+    unsupported_entity: str,
+) -> None:
+    """Test service calls invoked only if entity has required features."""
+    # Set up homeassistant component to fetch the translations
+    await async_setup_component(hass, "homeassistant", {})
+    test_service_mock = AsyncMock(return_value=None)
+    await service.entity_service_call(
+        hass,
+        mock_entities,
+        HassJob(test_service_mock),
+        ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
+        entity_device_classes=entity_device_classes,
+    )
+
+    assert test_service_mock.call_count == len(expected_entities)
+    expected = [mock_entities[expected_entity] for expected_entity in expected_entities]
+    actual = [call[0][0] for call in test_service_mock.call_args_list]
+    assert actual == unordered(expected)
+
+    # Test we raise if we target entity ID that does not support the service
+    test_service_mock.reset_mock()
+    with pytest.raises(
+        exceptions.ServiceNotSupported,
+        match=f"Entity {unsupported_entity} does not "
+        "support action test_domain.test_service",
+    ):
+        await service.entity_service_call(
+            hass,
+            mock_entities,
+            HassJob(test_service_mock),
+            ServiceCall(
+                hass, "test_domain", "test_service", {"entity_id": unsupported_entity}
+            ),
+            entity_device_classes=entity_device_classes,
+        )
+    assert test_service_mock.call_count == 0
 
 
 async def test_call_with_sync_func(hass: HomeAssistant, mock_entities) -> None:

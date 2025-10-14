@@ -196,8 +196,8 @@
         'null': 1,
       }),
       'GetWhiteLed': dict({
-        '0': 2,
-        'null': 2,
+        '0': 3,
+        'null': 3,
       }),
       'GetZoomFocus': dict({
         '0': 2,

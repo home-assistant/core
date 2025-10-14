@@ -126,6 +126,12 @@
         "state": {
           "on": "mdi:package-variant-closed-check"
         }
+      },
+      "io_input": {
+        "default": "mdi:electric-switch",
+        "state": {
+          "on": "mdi:electric-switch-closed"
+        }
       }
     },
     "button": {
@@ -178,8 +184,17 @@
       "floodlight_brightness": {
         "default": "mdi:spotlight-beam"
       },
+      "floodlight_event_brightness": {
+        "default": "mdi:spotlight-beam"
+      },
       "ir_brightness": {
         "default": "mdi:led-off"
+      },
+      "floodlight_event_on_time": {
+        "default": "mdi:spotlight-beam"
+      },
+      "floodlight_event_flash_time": {
+        "default": "mdi:spotlight-beam"
       },
       "volume": {
         "default": "mdi:volume-high",
@@ -337,6 +352,9 @@
     },
     "select": {
       "floodlight_mode": {
+        "default": "mdi:spotlight-beam"
+      },
+      "floodlight_event_mode": {
         "default": "mdi:spotlight-beam"
       },
       "day_night_mode": {
@@ -520,6 +538,12 @@
       },
       "manual_record": {
         "default": "mdi:record-rec"
+      },
+      "rule": {
+        "default": "mdi:cctv",
+        "state": {
+          "off": "mdi:cctv-off"
+        }
       },
       "pre_record": {
         "default": "mdi:history"

@@ -40,6 +40,7 @@ class SensorData:
     boot_time: datetime
     processes: list[Process]
     temperatures: dict[str, list[shwtemp]]
+    process_fds: dict[str, int]
 
     def as_dict(self) -> dict[str, Any]:
         """Return as dict."""
@@ -66,6 +67,7 @@ class SensorData:
             "boot_time": str(self.boot_time),
             "processes": str(self.processes),
             "temperatures": temperatures,
+            "process_fds": self.process_fds,
         }
 
 
@@ -161,6 +163,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             boot_time=_data["boot_time"],
             processes=_data["processes"],
             temperatures=_data["temperatures"],
+            process_fds=_data["process_fds"],
         )
 
     def update_data(self) -> dict[str, Any]:
@@ -209,6 +212,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             _LOGGER.debug("boot time: %s", self.boot_time)
 
         selected_processes: list[Process] = []
+        process_fds: dict[str, int] = {}
         if self.update_subscribers[("processes", "")] or self._initial_update:
             processes = self._psutil.process_iter()
             _LOGGER.debug("processes: %s", processes)
@@ -217,8 +221,12 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             ).get(CONF_PROCESS, [])
             for process in processes:
                 try:
-                    if process.name() in user_options:
+                    if (process_name := process.name()) in user_options:
                         selected_processes.append(process)
+                        process_fds[process_name] = (
+                            process_fds.get(process_name, 0) + process.num_fds()
+                        )
+
                 except PROCESS_ERRORS as err:
                     if not hasattr(err, "pid") or not hasattr(err, "name"):
                         _LOGGER.warning(
@@ -232,6 +240,12 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
                             err.name,
                         )
                     continue
+                except OSError as err:
+                    _LOGGER.warning(
+                        "OS error getting file descriptor count for process %s: %s",
+                        process.pid if hasattr(process, "pid") else "unknown",
+                        err,
+                    )
 
         temps: dict[str, list[shwtemp]] = {}
         if self.update_subscribers[("temperatures", "")] or self._initial_update:
@@ -250,4 +264,5 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             "boot_time": self.boot_time,
             "processes": selected_processes,
             "temperatures": temps,
+            "process_fds": process_fds,
         }
