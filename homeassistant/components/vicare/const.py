@@ -29,6 +29,8 @@ UNSUPPORTED_DEVICES = [
 VICARE_NAME = "ViCare"
 VICARE_TOKEN_FILENAME = "vicare_token.save"
 
+VIESSMANN_DEVELOPER_PORTAL = "https://app.developer.viessmann-climatesolutions.com"
+
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"
 
