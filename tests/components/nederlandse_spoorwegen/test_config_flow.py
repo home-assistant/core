@@ -53,7 +53,7 @@ async def test_creating_route(
 ) -> None:
     """Test creating a route after setting up the main config entry."""
     mock_config_entry.add_to_hass(hass)
-    assert len(mock_config_entry.subentries) == 1
+    assert len(mock_config_entry.subentries) == 2
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "route"), context={"source": SOURCE_USER}
     )
@@ -80,7 +80,7 @@ async def test_creating_route(
         CONF_NAME: "Home to Work",
         CONF_TIME: "08:30",
     }
-    assert len(mock_config_entry.subentries) == 2
+    assert len(mock_config_entry.subentries) == 3
 
 
 @pytest.mark.parametrize(
@@ -136,7 +136,7 @@ async def test_fetching_stations_failed(
 ) -> None:
     """Test creating a route after setting up the main config entry."""
     mock_config_entry.add_to_hass(hass)
-    assert len(mock_config_entry.subentries) == 1
+    assert len(mock_config_entry.subentries) == 2
     mock_nsapi.get_stations.side_effect = RequestsConnectionError("Unexpected error")
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "route"), context={"source": SOURCE_USER}
