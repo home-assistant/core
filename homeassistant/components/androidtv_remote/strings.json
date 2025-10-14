@@ -85,6 +85,19 @@
   "exceptions": {
     "connection_closed": {
       "message": "Connection to the Android TV device is closed"
+    },
+    "invalid_channel": {
+      "message": "Channel must be numeric: {media_id}"
+    },
+    "invalid_media_type": {
+      "message": "Invalid media type: {media_type}"
+    }
+  },
+  "selector": {
+    "apps": {
+      "options": {
+        "add_new": "Add new"
+      }
     }
   }
 }

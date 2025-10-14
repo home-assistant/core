@@ -22,6 +22,7 @@ from google.protobuf import timestamp_pb2
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -91,6 +92,16 @@ def convert_time(time_str: str) -> timestamp_pb2.Timestamp | None:
     return timestamp
 
 
+SENSOR_DESCRIPTIONS = [
+    SensorEntityDescription(
+        key="duration",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+    )
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -105,20 +116,20 @@ async def async_setup_entry(
     client_options = ClientOptions(api_key=api_key)
     client = RoutesAsyncClient(client_options=client_options)
 
-    sensor = GoogleTravelTimeSensor(
-        config_entry, name, api_key, origin, destination, client
-    )
+    sensors = [
+        GoogleTravelTimeSensor(
+            config_entry, name, api_key, origin, destination, client, sensor_description
+        )
+        for sensor_description in SENSOR_DESCRIPTIONS
+    ]
 
-    async_add_entities([sensor], False)
+    async_add_entities(sensors, False)
 
 
 class GoogleTravelTimeSensor(SensorEntity):
     """Representation of a Google travel time sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_device_class = SensorDeviceClass.DURATION
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
@@ -128,8 +139,10 @@ class GoogleTravelTimeSensor(SensorEntity):
         origin: str,
         destination: str,
         client: RoutesAsyncClient,
+        sensor_description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        self.entity_description = sensor_description
         self._attr_name = name
         self._attr_unique_id = config_entry.entry_id
         self._attr_device_info = DeviceInfo(

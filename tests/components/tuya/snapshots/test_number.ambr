@@ -58,6 +58,64 @@
     'state': '1.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.blissradia_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100.0,
+      'min': 5.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.blissradia_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'volume',
+    'unique_id': 'tuya.bfpewgk8r6fhmissdyzbvolume_set',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.blissradia_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BlissRadia  Volume',
+      'max': 100.0,
+      'min': 5.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.blissradia_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.boiler_temperature_controller_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -172,6 +230,122 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.cat_feeder_feed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 50.0,
+      'min': 1.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.cat_feeder_feed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Feed',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'feed',
+    'unique_id': 'tuya.igkrtodqg14xvfxlqswwcmanual_feed',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.cat_feeder_feed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cat Feeder Feed',
+      'max': 50.0,
+      'min': 1.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.cat_feeder_feed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.cat_feeder_voice_times-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 5.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.cat_feeder_voice_times',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Voice times',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voice_times',
+    'unique_id': 'tuya.igkrtodqg14xvfxlqswwcvoice_times',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.cat_feeder_voice_times-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cat Feeder Voice times',
+      'max': 5.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.cat_feeder_voice_times',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[number.cbe_pro_2_battery_backup_reserve-entry]
@@ -347,6 +521,122 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 300.0,
+      'min': -30.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.grillhomero_cooking_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cooking temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cook_temperature',
+    'unique_id': 'tuya.yybgnzr3ztwscook_temperature',
+    'unit_of_measurement': '℃',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Grillhőmérő Cooking temperature',
+      'max': 300.0,
+      'min': -30.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': '℃',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.grillhomero_cooking_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 300.0,
+      'min': -30.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.grillhomero_cooking_temperature_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cooking temperature 2',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_cook_temperature',
+    'unique_id': 'tuya.yybgnzr3ztwscook_temperature_2',
+    'unit_of_measurement': '℃',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Grillhőmérő Cooking temperature 2',
+      'max': 300.0,
+      'min': -30.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': '℃',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.grillhomero_cooking_temperature_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_platform_setup_and_discovery[number.hot_water_heat_pump_temperature-entry]
@@ -1348,6 +1638,64 @@
     'state': '-2.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.mirilla_puerta_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100.0,
+      'min': 1.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mirilla_puerta_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'volume',
+    'unique_id': 'tuya.i6xywcsymer1kmb6psbasic_device_volume',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.mirilla_puerta_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mirilla puerta Volume',
+      'max': 100.0,
+      'min': 1.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mirilla_puerta_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '51.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.multifunction_alarm_alarm_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1933,7 +2281,65 @@
     'state': '-2.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.sous_vide_cook_temperature-entry]
+# name: test_platform_setup_and_discovery[number.smart_white_noise_machine_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.smart_white_noise_machine_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'volume',
+    'unique_id': 'tuya.ri7eegdifufzdi54dyzbvolume_set',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.smart_white_noise_machine_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart White Noise Machine Volume',
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.smart_white_noise_machine_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.sous_vide_cooking_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1951,7 +2357,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.sous_vide_cook_temperature',
+    'entity_id': 'number.sous_vide_cooking_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1963,7 +2369,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cook temperature',
+    'original_name': 'Cooking temperature',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1973,10 +2379,10 @@
     'unit_of_measurement': '℃',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.sous_vide_cook_temperature-state]
+# name: test_platform_setup_and_discovery[number.sous_vide_cooking_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sous Vide Cook temperature',
+      'friendly_name': 'Sous Vide Cooking temperature',
       'max': 92.5,
       'min': 25.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1984,14 +2390,14 @@
       'unit_of_measurement': '℃',
     }),
     'context': <ANY>,
-    'entity_id': 'number.sous_vide_cook_temperature',
+    'entity_id': 'number.sous_vide_cooking_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.sous_vide_cook_time-entry]
+# name: test_platform_setup_and_discovery[number.sous_vide_cooking_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2009,7 +2415,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.sous_vide_cook_time',
+    'entity_id': 'number.sous_vide_cooking_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2021,7 +2427,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cook time',
+    'original_name': 'Cooking time',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2031,10 +2437,10 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[number.sous_vide_cook_time-state]
+# name: test_platform_setup_and_discovery[number.sous_vide_cooking_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sous Vide Cook time',
+      'friendly_name': 'Sous Vide Cooking time',
       'max': 5999.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2042,7 +2448,7 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.sous_vide_cook_time',
+    'entity_id': 'number.sous_vide_cooking_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
