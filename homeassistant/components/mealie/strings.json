@@ -1,6 +1,6 @@
 {
   "common": {
-    "data_description_host": "The URL of your Mealie instance, for example, http://192.168.1.123:1234",
+    "data_description_host": "The URL of your Mealie instance, for example, {example_url}.",
     "data_description_api_token": "The API token of your Mealie instance from your user profile within Mealie.",
     "data_description_verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates."
   },
