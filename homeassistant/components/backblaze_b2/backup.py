@@ -291,9 +291,8 @@ class BackblazeBackupAgent(BackupAgent):
         stream = await open_stream()
         reader = AsyncIteratorReader(self._hass, stream)
 
+        _LOGGER.info("Uploading backup file %s with streaming", filename)
         try:
-            _LOGGER.info("Uploading backup file %s with streaming", filename)
-
             content_type, _ = mimetypes.guess_type(filename)
             file_version = await self._hass.async_add_executor_job(
                 lambda: self._bucket.upload_unbound_stream(
@@ -303,16 +302,16 @@ class BackblazeBackupAgent(BackupAgent):
                     file_info=file_info,
                 )
             )
-            _LOGGER.info(
-                "Successfully uploaded %s (ID: %s)", filename, file_version.id_
-            )
-
         except B2Error:
             _LOGGER.exception("B2 connection error during upload for %s", filename)
             raise
         except Exception:
             _LOGGER.exception("An error occurred during upload for %s:", filename)
             raise
+        else:
+            _LOGGER.info(
+                "Successfully uploaded %s (ID: %s)", filename, file_version.id_
+            )
         finally:
             reader.close()
 
