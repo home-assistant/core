@@ -1,9 +1,9 @@
 """Constants for the TFA.me station integration."""
 
-DOMAIN = "a_tfa_me_1"
+DOMAIN = "tfa_me"
 DEFAULT_NAME = "TFA.me Station"
-CONF_INTERVAL = "interval"
 CONF_MULTIPLE_ENTITIES = "multiple_entities"
+LOCAL_POLL_INTERVAL = 60
 
 # Used icons for entities, see also
 # https://pictogrammers.com/library/mdi/

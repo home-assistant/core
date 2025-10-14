@@ -21,7 +21,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_INTERVAL, CONF_MULTIPLE_ENTITIES, DOMAIN
+from .const import CONF_MULTIPLE_ENTITIES, DOMAIN
 from .coordinator import TFAmeDataCoordinator
 from .data import TFAmeData, TFAmeException
 
@@ -29,9 +29,6 @@ from .data import TFAmeData, TFAmeException
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(CONF_INTERVAL, default=60): vol.All(
-            vol.Coerce(int), vol.Range(min=10, max=3600)
-        ),  # Interval between 10 and 3600 seconds
         vol.Required(CONF_MULTIPLE_ENTITIES): bool,
     }
 )
@@ -76,26 +73,8 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         self.multiple_entities = multi_ent
 
-        # Get interval and IP or mDNS host name
-        update_interval = user_input.get(CONF_INTERVAL)
-        if not isinstance(update_interval, int):
-            _LOGGER.debug("update_interval no Integer, set to default")
-            update_interval = 60
-            errors[CONF_INTERVAL] = "invalid_interval"
-            # Error, interval validation failed
-            return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors=errors
-            )
-
+        # Get IP or mDNS host name
         ip_host_str = user_input.get("ip_address")
-
-        # Verify interval
-        if update_interval <= 9:
-            errors[CONF_INTERVAL] = "invalid_interval"
-            # Error, interval validation failed
-            return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors=errors
-            )
 
         # if user_input is not None:
         if is_valid_ip_or_tfa_me(user_input):
@@ -125,11 +104,6 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-    # async def _reload_sensors(self):
-    #    """Reload the sensors."""
-    #    hass: HomeAssistant = self.config_entry.hass
-    #    await hass.config_entries.async_reload(self.config_entry.entry_id)
 
     @staticmethod
     @callback
@@ -174,12 +148,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         # Is an option selected?
         if user_input is not None:
-            if "interval" in user_input:
-                return await self.async_step_set_interval(user_input)
-
             if "select_option" in user_input:
-                if user_input["select_option"] == "menu_interval":
-                    return await self.async_step_set_interval(user_input)
                 if user_input["select_option"] == "discover_sensors":
                     return await self.async_discover_sensors(user_input)
                 if user_input["select_option"] == "action_rain":
@@ -190,7 +159,6 @@ class OptionsFlowHandler(OptionsFlow):
         # No option seletced -> build main option menu
         opt_dict = [
             SelectOptionDict(value="none", label="None"),
-            SelectOptionDict(value="menu_interval", label="Change request interval"),
             SelectOptionDict(value="discover_sensors", label="Discover new sensors"),
             SelectOptionDict(value="action_rain", label="Reset all rain sensors"),
             SelectOptionDict(value="update_data", label="Reload sensor data"),
@@ -210,45 +178,6 @@ class OptionsFlowHandler(OptionsFlow):
         )
 
         return self.async_show_form(step_id="init", data_schema=options_schema)
-
-    # ---- Change option: poll interval ----
-    async def async_step_set_interval(self, user_input=None) -> ConfigFlowResult:
-        """Entry point for options: change request interval."""
-
-        if user_input is not None:
-            if "interval" in user_input:
-                await self.hass.services.async_call(
-                    "persistent_notification",
-                    "create",
-                    {
-                        "title": "Settings saved",
-                        "message": f"The request/pull interval was set to {user_input['interval']} seconds.",
-                        "notification_id": "options_saved",
-                    },
-                )
-                return self.async_create_entry(title="", data=user_input)
-
-        # Get actual values from entry
-        interval = self.config_entry.data.get("interval")
-        current_interval = self.config_entry.options.get(CONF_INTERVAL, interval)
-
-        # Build options schema with interval range (10 to 3600)
-        options_schema = vol.Schema(
-            {
-                vol.Required(CONF_INTERVAL, default=current_interval): vol.All(
-                    vol.Coerce(int),
-                    vol.Range(min=10, max=3600),
-                )
-            }
-        )
-        # Show the form
-        return self.async_show_form(
-            step_id="init",
-            data_schema=options_schema,
-            description_placeholders={
-                "interval": str(self.config_entry.options.get("interval", 10))
-            },
-        )
 
     # ---- Change option: Reset all rain sensors ----
     async def async_step_action_rain(self, user_input=None) -> ConfigFlowResult:

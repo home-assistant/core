@@ -1,6 +1,6 @@
 """Test the TFA.me integration: test of sensor.py."""
 
-# For test run: "pytest ./tests/components/a_tfa_me_1/ --cov=homeassistant.components.a_tfa_me_1 --cov-report term-missing -vv"
+# For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 
 from datetime import datetime, timedelta
 import socket
@@ -8,16 +8,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.a_tfa_me_1.const import (
-    CONF_INTERVAL,
+from homeassistant.components.tfa_me.const import (
     CONF_MULTIPLE_ENTITIES,
     DEVICE_MAPPING,
     DOMAIN,
     ICON_MAPPING,
     ICON_MAPPING_WIND_DIR,
 )
-from homeassistant.components.a_tfa_me_1.coordinator import TFAmeDataCoordinator
-from homeassistant.components.a_tfa_me_1.sensor import (
+from homeassistant.components.tfa_me.coordinator import TFAmeDataCoordinator
+from homeassistant.components.tfa_me.sensor import (
     SensorHistory,
     TFAmeSensorEntity,
     async_setup_entry,
@@ -302,12 +301,11 @@ def mock_entry(mock_coordinator):
 
 @pytest.fixture
 def tfa_me_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return a mock config entry for a_tfa_me_1 integration."""
+    """Return a mock config entry for tfa_me integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_INTERVAL: 30,
             CONF_MULTIPLE_ENTITIES: False,
         },
         unique_id="test-1234",
@@ -777,7 +775,7 @@ async def test_async_discover_new_entities(
     await hass.data[DOMAIN][mock_config_entry.entry_id].async_discover_new_entities()
 
     # Assert: async_add_entities was called again
-    assert async_add_entities.call_count == 3
+    assert async_add_entities.call_count == 2
 
     # Are all entities in list?
     assert hass.data[DOMAIN][
@@ -805,7 +803,7 @@ async def test_async_discover_new_entities(
     await hass.data[DOMAIN][mock_config_entry.entry_id].async_discover_new_entities()
 
     # Assert: async_add_entities was called again
-    assert async_add_entities.call_count == 4
+    assert async_add_entities.call_count == 2
 
     # Are all entities in list?
     assert hass.data[DOMAIN][
@@ -813,7 +811,6 @@ async def test_async_discover_new_entities(
     ].runtime_data.sensor_entity_list == [
         "sensor.a0f169ad1_temperature",
         "sensor.a0f169ad1_humidity",
-        "sensor.a27654321_wind_direction_txt",
     ]
 
 

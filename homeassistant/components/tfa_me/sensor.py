@@ -14,7 +14,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEVICE_MAPPING, DOMAIN, ICON_MAPPING, TIMEOUT_MAPPING
 from .coordinator import TFAmeDataCoordinator
-from .text import TFAmeTextEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,15 +32,11 @@ async def async_setup_entry(
         # await coordinator.async_config_entry_first_refresh()
         # Collect all entities (entities are part of device)
         sensors_start = []
-        sensors_start_txt = []
+        # sensors_start_txt = []
         for entity_id in coordinator.data:
             sensor_id = coordinator.data[entity_id]["sensor_id"]
             if entity_id not in coordinator.sensor_entity_list:
-                if "_txt" in entity_id:
-                    sensors_start_txt.append(
-                        TFAmeTextEntity(coordinator, sensor_id, entity_id)
-                    )
-                else:
+                if "_txt" not in entity_id:
                     sensors_start.append(
                         TFAmeSensorEntity(coordinator, sensor_id, entity_id)
                     )
@@ -49,7 +44,6 @@ async def async_setup_entry(
 
         # Add all entities
         async_add_entities(sensors_start, True)
-        async_add_entities(sensors_start_txt, True)
 
     except Exception as error:
         raise ConfigEntryNotReady(
@@ -62,24 +56,17 @@ async def async_setup_entry(
         coordinator = entry.runtime_data
 
         new_sensors = []
-        new_sensors_txt = []
         for entity_id in coordinator.data:
             sensor_id = coordinator.data[entity_id]["sensor_id"]
             if entity_id not in coordinator.sensor_entity_list:
-                if "_txt" in entity_id:
-                    new_sensors_txt.append(
-                        TFAmeTextEntity(coordinator, sensor_id, entity_id)
-                    )
-                else:
+                if "_txt" not in entity_id:
                     new_sensors.append(
                         TFAmeSensorEntity(coordinator, sensor_id, entity_id)
                     )
-                coordinator.sensor_entity_list.append(entity_id)
+                    coordinator.sensor_entity_list.append(entity_id)
 
         if new_sensors:
             async_add_entities(new_sensors)
-        if new_sensors_txt:
-            async_add_entities(new_sensors_txt)
 
     # Attach it to the coordinator itself ?
     # coordinator.async_discover_new_entities = async_discover_new_entities

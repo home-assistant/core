@@ -38,8 +38,6 @@ build.json @home-assistant/supervisor
 /homeassistant/scripts/check_config.py @kellerza
 
 # Integrations
-/homeassistant/components/a_tfa_me_1/ @DrMatthiasBlaschke
-/tests/components/a_tfa_me_1/ @DrMatthiasBlaschke
 /homeassistant/components/abode/ @shred86
 /tests/components/abode/ @shred86
 /homeassistant/components/acaia/ @zweckj
@@ -1577,6 +1575,8 @@ build.json @home-assistant/supervisor
 /tests/components/tessie/ @Bre77
 /homeassistant/components/text/ @home-assistant/core
 /tests/components/text/ @home-assistant/core
+/homeassistant/components/tfa_me/ @DrMatthiasBlaschke
+/tests/components/tfa_me/ @DrMatthiasBlaschke
 /homeassistant/components/tfiac/ @fredrike @mellado
 /homeassistant/components/thermobeacon/ @bdraco
 /tests/components/thermobeacon/ @bdraco

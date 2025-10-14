@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_INTERVAL, CONF_MULTIPLE_ENTITIES, DOMAIN
+from .const import CONF_MULTIPLE_ENTITIES, DOMAIN, LOCAL_POLL_INTERVAL
 from .coordinator import TFAmeDataCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -23,15 +23,8 @@ async def async_setup_entry(
     hass.data.setdefault(DOMAIN, {})
 
     host = entry.data[CONF_IP_ADDRESS]
-    up_interval = entry.data[CONF_INTERVAL]
-    # Get option for alter user changes
-    interval_opt = entry.options.get(CONF_INTERVAL, -1)
-    if interval_opt != -1:
-        up_interval = interval_opt
-    # Update time
-    msg: str = "Pull interval: " + str(up_interval)
-    _LOGGER.info(msg)
-    delta_interval = timedelta(seconds=up_interval)
+    # Use default poll interval
+    delta_interval = timedelta(seconds=LOCAL_POLL_INTERVAL)
 
     # Use multiple entities
     multiple_entities = entry.data[CONF_MULTIPLE_ENTITIES]
@@ -83,11 +76,7 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     msg: str = "Options 'reset rain': " + str(reset_rain)
     _LOGGER.info(msg)
 
-    new_interval = entry.options.get(CONF_INTERVAL, 10)
-    msg = "Options 'pull interval': " + str(new_interval)
-    _LOGGER.info(msg)
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    coordinator.update_interval = timedelta(seconds=new_interval)
 
     await coordinator.async_refresh()
 

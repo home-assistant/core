@@ -1,23 +1,18 @@
 """Test the TFA.me integration: test of config_flow (options flow).py."""
 
-# For test run: "pytest ./tests/components/a_tfa_me_1/ --cov=homeassistant.components.a_tfa_me_1 --cov-report term-missing -vv"
+# For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.a_tfa_me_1.config_flow import OptionsFlowHandler
-from homeassistant.components.a_tfa_me_1.const import (
-    CONF_INTERVAL,
-    CONF_MULTIPLE_ENTITIES,
-    DOMAIN,
-)
-from homeassistant.components.a_tfa_me_1.coordinator import TFAmeDataCoordinator
+from homeassistant.components.tfa_me.config_flow import OptionsFlowHandler
+from homeassistant.components.tfa_me.const import CONF_MULTIPLE_ENTITIES, DOMAIN
+from homeassistant.components.tfa_me.coordinator import TFAmeDataCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -67,12 +62,11 @@ def mock_coordinator():
 
 @pytest.fixture
 def tfa_me_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return a mock config entry for a_tfa_me_1 integration."""
+    """Return a mock config entry for tfa_me integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_INTERVAL: 30,
             CONF_MULTIPLE_ENTITIES: False,
         },
         unique_id="test-1234",
@@ -102,7 +96,6 @@ async def test_setup_entry_bad_ip(
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: 1234,  # Bad IP, no valid MDNS
-            CONF_INTERVAL: 30,
             CONF_MULTIPLE_ENTITIES: True,
         },
         unique_id="test-1234",
@@ -111,7 +104,7 @@ async def test_setup_entry_bad_ip(
 
     # Patch den Coordinator, damit kein HTTP-Request passiert
     with patch(
-        "homeassistant.components.a_tfa_me_1.coordinator.TFAmeDataCoordinator._async_update_data",
+        "homeassistant.components.tfa_me.coordinator.TFAmeDataCoordinator._async_update_data",
         side_effect=Exception("invalid ip"),
     ):
         result = await hass.config_entries.async_setup(entry_x.entry_id)
@@ -132,7 +125,7 @@ async def test_options_flow_action_rain(
     # Create mock config entry
     cfg_entry_x = create_default_mock_entry(hass)
     with patch(
-        "homeassistant.components.a_tfa_me_1.coordinator.TFAmeDataCoordinator._async_update_data",
+        "homeassistant.components.tfa_me.coordinator.TFAmeDataCoordinator._async_update_data",
         new=AsyncMock(return_value=fake_json),
     ):
         result = await hass.config_entries.async_setup(cfg_entry_x.entry_id)
@@ -187,7 +180,7 @@ async def test_setup_entry_and_action_rain(
     cfg_entry_x = create_default_mock_entry(hass)
 
     with patch(
-        "homeassistant.components.a_tfa_me_1.coordinator.TFAmeDataCoordinator._async_update_data",
+        "homeassistant.components.tfa_me.coordinator.TFAmeDataCoordinator._async_update_data",
         new=AsyncMock(return_value=fake_json),
     ):
         result = await hass.config_entries.async_setup(cfg_entry_x.entry_id)
@@ -228,7 +221,7 @@ async def test_setup_entry_and_action_update_data(
     cfg_entry_x = create_default_mock_entry(hass)
 
     with patch(
-        "homeassistant.components.a_tfa_me_1.coordinator.TFAmeDataCoordinator._async_update_data",
+        "homeassistant.components.tfa_me.coordinator.TFAmeDataCoordinator._async_update_data",
         new=AsyncMock(return_value=fake_json),
     ):
         result = await hass.config_entries.async_setup(cfg_entry_x.entry_id)
@@ -276,46 +269,6 @@ async def test_setup_entry_and_action_update_data(
 
 
 @pytest.mark.asyncio
-async def test_setup_entry_and_menu_interval(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test a successful setup."""
-
-    # Fake JSON reply from gateway
-    fake_json = {"gateway_id": "001", "sensors": []}
-
-    # Create dummy config entry and add it to hass
-    cfg_entry_x = create_default_mock_entry(hass)
-
-    with patch(
-        "homeassistant.components.a_tfa_me_1.coordinator.TFAmeDataCoordinator._async_update_data",
-        new=AsyncMock(return_value=fake_json),
-    ):
-        result = await hass.config_entries.async_setup(cfg_entry_x.entry_id)
-        await hass.async_block_till_done()
-
-    assert result is True
-    assert cfg_entry_x.state == ConfigEntryState.LOADED
-    # setup ready now call an action
-
-    # Register dummy service in case of OptionsFlow calls it
-    hass.services.async_register(
-        "homeassistant", "reload_config_entry", lambda call: None
-    )
-
-    # Start OptionsFlow via HA API (not manually!)
-    result = await hass.config_entries.options.async_init(
-        cfg_entry_x.entry_id,
-        context={"source": "user"},
-        data={"select_option": "menu_interval"},
-    )
-
-    # Test result
-    assert result["type"] == "form"
-    assert result["description_placeholders"] == ({"interval": "10"})
-
-
-@pytest.mark.asyncio
 async def test_discover_sensors_via_options_flow_xxx(hass: HomeAssistant) -> None:
     """Test discover_sensors via options flow."""
 
@@ -356,11 +309,11 @@ async def test_discover_sensors_via_options_flow_xxx(hass: HomeAssistant) -> Non
     # Patch dummy data
     with (
         patch(
-            "homeassistant.components.a_tfa_me_1.coordinator.TFAmeClient.async_get_sensors",
+            "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
             new=AsyncMock(return_value=dummy_json),
         ),
         patch(
-            "homeassistant.components.a_tfa_me_1.coordinator.TFAmeDataForHA.json_to_entities",
+            "homeassistant.components.tfa_me.coordinator.TFAmeDataForHA.json_to_entities",
             return_value=dummy_entity_map,
         ),
     ):
@@ -390,105 +343,6 @@ async def test_discover_sensors_via_options_flow_xxx(hass: HomeAssistant) -> Non
     assert result["type"] == "create_entry"
     assert result["title"] == "discover_sensors"
 
-    # Fake JSON reply from gateway
-    # dummy_json = {
-    #    "gateway_id": "017654321",
-    #    "sensors": [
-    #        {
-    #            "sensor_id": "a21234567",
-    #            "name": "A21234567",
-    #            "timestamp": "2025-09-04T12:21:41Z",
-    #            "ts": int(now),
-    #            "measurements": {
-    #                "rssi": {"value": "221", "unit": "/255"},
-    #                "lowbatt": {"value": "0", "unit": "No"},
-    #                "wind_direction": {"value": "8", "unit": ""},
-    #                "wind_speed": {"value": "0.0", "unit": "m/s"},
-    #                "wind_gust": {"value": "0.0", "unit": "m/s"},
-    #            },
-    #        },
-    #    ],
-    # }
-
-
-@pytest.mark.asyncio
-async def test_options_flow_change_interval(
-    hass: HomeAssistant, mock_entry, mock_coordinator
-) -> None:
-    """Test that OptionsFlowHandler changes interval correctly."""
-
-    await mock_entry.add_to_hass(hass)
-    hass.data.setdefault(DOMAIN, {})[mock_entry.entry_id] = mock_coordinator
-
-    # Register dummy service in case of OptionsFlow calls it
-    hass.services.async_register(
-        "homeassistant", "reload_config_entry", lambda call: None
-    )
-
-    flow = OptionsFlowHandler()
-    flow.hass = hass
-
-    # User input
-    user_input = {"interval": 45}
-    with patch("homeassistant.core.ServiceRegistry.async_call") as mock_service:
-        result = await flow.async_step_init(user_input=user_input)
-        mock_service.assert_called()
-
-    assert result["type"] == "create_entry"
-    assert result["data"]["interval"] == 45
-
-
-@pytest.mark.asyncio
-async def test_options_flow_set_interval(hass: HomeAssistant) -> None:
-    """Test that setting the interval works in options flow."""
-    now = datetime.now().timestamp()
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "sensor.a01234567_temperature": {
-                "sensor_id": "a01234567",
-                "gateway_id": "017654321",
-                "sensor_name": "A01234567",
-                "measurement": "temperature",
-                "value": "23.5",
-                "unit": "°C",
-                "timestamp": "2025-09-01T08:46:01Z",
-                "ts": int(now),
-                "info": "",
-            }
-        },
-        unique_id="123456789",
-        options={"select_option": "menu_interval", "interval": 45},
-    )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    # assert result == ""
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    # Patch coordinator
-    coordinator = AsyncMock()
-    coordinator.sensor_entity_list = ["sensor.a01234567_temperature"]
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
-
-    # Act: Create OptionsFlow and call step
-    flow = OptionsFlowHandler()
-    flow.hass = hass
-
-    with patch(
-        "homeassistant.components.a_tfa_me_1.config_flow.OptionsFlowHandler.async_step_set_interval",
-        return_value={"step_id": "init", "data": {"interval": 45}},
-    ):
-        result = await flow.async_step_set_interval({"interval": 45})
-
-        # Asserts
-        assert result["step_id"] == "init"
-        assert result["data"]["interval"] == 45
-
 
 @pytest.mark.asyncio
 async def test_options_flow_show_main_menu(
@@ -514,7 +368,6 @@ def create_default_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_INTERVAL: 30,
             CONF_MULTIPLE_ENTITIES: True,
         },
         unique_id="test-1234",

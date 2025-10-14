@@ -1,23 +1,17 @@
 """Tests for TFA.me: test of __init__.py."""
 
-# For test run: "pytest ./tests/components/a_tfa_me_1/ --cov=homeassistant.components.a_tfa_me_1 --cov-report term-missing -vv"
+# For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.a_tfa_me_1 import (
+from homeassistant.components.tfa_me import (
     async_unload_entry,
-    async_update_listener,
     get_instances,
     get_running_instances,
 )
-from homeassistant.components.a_tfa_me_1.const import (
-    CONF_INTERVAL,
-    CONF_MULTIPLE_ENTITIES,
-    DOMAIN,
-)
+from homeassistant.components.tfa_me.const import CONF_MULTIPLE_ENTITIES, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
@@ -30,10 +24,8 @@ def mock_config_entryX() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_INTERVAL: 30,
             CONF_MULTIPLE_ENTITIES: True,
         },
-        options={CONF_INTERVAL: 33},
         entry_id="1234",
         unique_id="unique_1234",
     )
@@ -46,7 +38,7 @@ async def test_full_entry_setup(hass: HomeAssistant) -> None:
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.a_tfa_me_1.TFAmeDataCoordinator.async_config_entry_first_refresh",
+        "homeassistant.components.tfa_me.TFAmeDataCoordinator.async_config_entry_first_refresh",
         new=AsyncMock(return_value=True),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -68,7 +60,7 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.a_tfa_me_1.TFAmeDataCoordinator.async_config_entry_first_refresh",
+        "homeassistant.components.tfa_me.TFAmeDataCoordinator.async_config_entry_first_refresh",
         new=AsyncMock(return_value=True),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -89,37 +81,6 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.asyncio
-async def test_async_update_listener(hass: HomeAssistant) -> None:
-    """Test update listener adjusts interval."""
-    mock_config_entry = mock_config_entryX()
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.a_tfa_me_1.TFAmeDataCoordinator.async_config_entry_first_refresh",
-        new=AsyncMock(return_value=True),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Now state is LOADED
-    assert mock_config_entry.state.name == "LOADED"
-
-    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-    coordinator.async_refresh = AsyncMock()
-
-    # Change options
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={CONF_INTERVAL: 99},
-    )
-    await hass.async_block_till_done()
-    await async_update_listener(hass, mock_config_entry)
-
-    assert coordinator.update_interval == timedelta(seconds=99)
-    coordinator.async_refresh.assert_awaited()
-
-
-@pytest.mark.asyncio
 async def test_get_instances_and_running(
     hass: HomeAssistant,
 ) -> None:
@@ -127,7 +88,7 @@ async def test_get_instances_and_running(
     mock_config_entry = mock_config_entryX()
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.a_tfa_me_1.TFAmeDataCoordinator.async_config_entry_first_refresh",
+        "homeassistant.components.tfa_me.TFAmeDataCoordinator.async_config_entry_first_refresh",
         new=AsyncMock(return_value=True),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

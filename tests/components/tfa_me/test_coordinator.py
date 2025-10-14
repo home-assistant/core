@@ -1,6 +1,6 @@
 """Test the TFA.me integration: test of coordinator.py."""
 
-# For test run: "pytest ./tests/components/a_tfa_me_1/ --cov=homeassistant.components.a_tfa_me_1 --cov-report term-missing -vv"
+# For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 
 from datetime import timedelta
 from http import HTTPStatus
@@ -15,13 +15,9 @@ from tfa_me_ha_local.client import (
     TFAmeTimeoutError,
 )
 
-from homeassistant.components.a_tfa_me_1.const import (
-    CONF_INTERVAL,
-    CONF_MULTIPLE_ENTITIES,
-    DOMAIN,
-)
-from homeassistant.components.a_tfa_me_1.coordinator import TFAmeDataCoordinator
 from homeassistant.components.hassio import datetime
+from homeassistant.components.tfa_me.const import CONF_MULTIPLE_ENTITIES, DOMAIN
+from homeassistant.components.tfa_me.coordinator import TFAmeDataCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -34,12 +30,11 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 @pytest.fixture
 def tfa_me_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return a mock config entry for a_tfa_me_1 integration."""
+    """Return a mock config entry for tfa_me integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_INTERVAL: 30,
             CONF_MULTIPLE_ENTITIES: False,
         },
         unique_id="test-1234",
@@ -95,7 +90,7 @@ async def test_update_data_with_ip(hass: HomeAssistant, tfa_me_mock_entry) -> No
 
     # Patch TFAmeClient delivers JSON directly
     with patch(
-        "homeassistant.components.a_tfa_me_1.coordinator.TFAmeClient",
+        "homeassistant.components.tfa_me.coordinator.TFAmeClient",
         autospec=True,
     ) as mock_client_cls:
         mock_client = AsyncMock()
@@ -165,11 +160,11 @@ async def test_update_data_with_mdns(
 
     with (
         patch(
-            "homeassistant.components.a_tfa_me_1.TFAmeDataCoordinator.resolve_mdns",
+            "homeassistant.components.tfa_me.TFAmeDataCoordinator.resolve_mdns",
             return_value="127.0.0.1",
         ),
         patch(
-            "homeassistant.components.a_tfa_me_1.coordinator.TFAmeClient",
+            "homeassistant.components.tfa_me.coordinator.TFAmeClient",
             autospec=True,
         ) as mock_client_cls,
     ):
@@ -218,7 +213,7 @@ async def test_update_data_with_mdns_update_failed(
     with (
         pytest.raises(UpdateFailed),
         patch(
-            "homeassistant.components.a_tfa_me_1.TFAmeDataCoordinator.resolve_mdns",
+            "homeassistant.components.tfa_me.TFAmeDataCoordinator.resolve_mdns",
             return_value="127.0.0.1",
         ),
     ):
@@ -250,7 +245,7 @@ async def test_update_data_with_mdns_config_entry_not_ready(
     with (
         pytest.raises(ConfigEntryNotReady),
         patch(
-            "homeassistant.components.a_tfa_me_1.TFAmeDataCoordinator.resolve_mdns",
+            "homeassistant.components.tfa_me.TFAmeDataCoordinator.resolve_mdns",
             return_value="127.0.0.1",
         ),
     ):
@@ -282,7 +277,7 @@ async def test_update_data_with_mdns_http_errory(
     with (
         pytest.raises(ConfigEntryNotReady),
         patch(
-            "homeassistant.components.a_tfa_me_1.TFAmeDataCoordinator.resolve_mdns",
+            "homeassistant.components.tfa_me.TFAmeDataCoordinator.resolve_mdns",
             return_value="127.0.0.1",
         ),
     ):
@@ -317,7 +312,7 @@ async def test_async_update_data_exceptions_first_init(
     # Patch the client so that async_get_sensors raises our test exception
     with (
         patch(
-            "homeassistant.components.a_tfa_me_1.coordinator.TFAmeClient.async_get_sensors",
+            "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
             side_effect=exc,
         ),
         pytest.raises(expected),
@@ -353,7 +348,7 @@ async def test_async_update_data_exceptions_after_first_init(
 
     with (
         patch(
-            "homeassistant.components.a_tfa_me_1.coordinator.TFAmeClient.async_get_sensors",
+            "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
             side_effect=exc,
         ),
         pytest.raises(expected),
