@@ -93,18 +93,9 @@ async def test_sensor_with_api_connection_error(
     await setup_integration(hass, mock_config_entry)
     await hass.async_block_till_done()
 
-    # Sensors should still be created but may show error state or have error attributes
+    # Sensors should not be created at all if initial API call fails
     sensor_states = hass.states.async_all("sensor")
-    assert len(sensor_states) == 2  # Two routes from mock_config_entry
-
-    # Check that sensors handle the error gracefully (not crash the integration)
-    for state in sensor_states:
-        # Should either be unavailable or unknown or have error information
-        is_valid_error_state = (
-            state.state in ("unavailable", "unknown")
-            or state.attributes.get("error") is not None
-        )
-        assert is_valid_error_state
+    assert len(sensor_states) == 0
 
 
 async def test_sensor_handles_multiple_routes(

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, time
 import logging
 
@@ -10,12 +10,20 @@ from ns_api import NSAPI, Trip
 from requests.exceptions import ConnectionError, HTTPError, Timeout
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import AMS_TZ, DOMAIN, SCAN_INTERVAL
+from .const import (
+    AMS_TZ,
+    CONF_FROM,
+    CONF_TIME,
+    CONF_TO,
+    CONF_VIA,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +43,6 @@ class NSRouteResult:
     trips: list[Trip]
     first_trip: Trip | None = None
     next_trip: Trip | None = None
-    error: str | None = None
 
 
 class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
@@ -58,44 +65,39 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
         )
         self.id = route_id
         self.nsapi = NSAPI(config_entry.data[CONF_API_KEY])
-        self.name = subentry.data["name"]
-        self.departure = subentry.data["from"]
-        self.destination = subentry.data["to"]
-        self.via = subentry.data.get("via")
-        self.departure_time = subentry.data.get("time")  # str | time | None
+        self.name = subentry.data[CONF_NAME]
+        self.departure = subentry.data[CONF_FROM]
+        self.destination = subentry.data[CONF_TO]
+        self.via = subentry.data.get(CONF_VIA)
+        self.departure_time = subentry.data.get(CONF_TIME)  # str | time | None
 
     async def _async_update_data(self) -> NSRouteResult:
         """Fetch data from NS API for this specific route."""
         try:
-            return await self._get_trips_for_route()
+            trips: list[Trip] = []
+            first_trip: Trip | None = None
+            next_trip: Trip | None = None
+            trips = await self._get_trips(
+                self.departure,
+                self.destination,
+                self.via,
+                departure_time=self.departure_time,
+            )
+
+            # Filter out trips that have already departed (trips are already sorted)
+            future_trips = self._remove_trips_in_the_past(trips)
+
+            # Process trips to find current and next departure
+            first_trip, next_trip = self._get_first_and_next_trips(future_trips)
+
+            return NSRouteResult(
+                trips=trips,
+                first_trip=first_trip,
+                next_trip=next_trip,
+            )
         except (ConnectionError, Timeout, HTTPError, ValueError) as err:
             # Surface API failures to Home Assistant so the entities become unavailable
             raise UpdateFailed(f"API communication error: {err}") from err
-
-    async def _get_trips_for_route(self) -> NSRouteResult:
-        """Get trips for route using coordinator properties."""
-        trips: list[Trip] = []
-        first_trip: Trip | None = None
-        next_trip: Trip | None = None
-        trips = await self._get_trips(
-            self.departure,
-            self.destination,
-            self.via,
-            departure_time=self.departure_time,
-        )
-
-        # Filter out trips that have already departed (trips are already sorted)
-        future_trips = self._remove_trips_in_the_past(trips)
-
-        # Process trips to find current and next departure
-        first_trip, next_trip = self._get_first_and_next_trips(future_trips)
-
-        return NSRouteResult(
-            trips=trips,
-            first_trip=first_trip,
-            next_trip=next_trip,
-            error=None,
-        )
 
     def _get_time_from_route(self, time_str: str | time | None) -> str:
         """Combine today's date with a time string if needed."""

@@ -124,9 +124,7 @@ async def async_setup_entry(
         )
 
         # Add entity with proper subentry association
-        async_add_entities(
-            [entity], config_subentry_id=subentry_id
-        )
+        async_add_entities([entity], config_subentry_id=subentry_id)
 
 
 class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
@@ -154,6 +152,12 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
         )
         self._subentry_id = subentry_id
         self._attr_unique_id = f"{subentry_id}-actual_departure"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._subentry_id)},
+            name=self._name,
+            manufacturer=INTEGRATION_TITLE,
+            model=ROUTE_MODEL,
+        )
 
     @property
     def name(self) -> str:
@@ -171,17 +175,6 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
         if first_trip.departure_time_actual:
             return first_trip.departure_time_actual
         return first_trip.departure_time_planned
-
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this sensor."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._subentry_id)},
-            name=self._name,
-            manufacturer=INTEGRATION_TITLE,
-            model=ROUTE_MODEL,
-        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
