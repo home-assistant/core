@@ -54,6 +54,7 @@ from .const import (
     DOMAIN,
     MANUAL_SETUP_STRING,
     PLEX_SERVER_CONFIG,
+    PLEX_SERVER_SETUP_LINK_PLACEHOLDER,
     X_PLEX_DEVICE_NAME,
     X_PLEX_PLATFORM,
     X_PLEX_PRODUCT,
@@ -124,7 +125,13 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._async_step_plex_website_auth()
         if self.show_advanced_options:
             return await self.async_step_user_advanced(errors=errors)
-        return self.async_show_form(step_id="user", errors=errors)
+        return self.async_show_form(
+            step_id="user",
+            errors=errors,
+            description_placeholders={
+                "link": PLEX_SERVER_SETUP_LINK_PLACEHOLDER,
+            },
+        )
 
     async def async_step_user_advanced(
         self,
