@@ -1702,30 +1702,39 @@ class ToggleEntity(
 class IncludedEntitiesMixin(Entity):
     """Mixin class to include entities that are contained.
 
-    Integrations can include the this Mixin class for platforms that have
-    included the `entity_id` capability attribute.
-    Domain base entity platforms can include the `entity_id` capability attribute
-    to expose to allow exposure of the included entities.
+    Integrations can include the this Mixin class to
+    include the `entity_id` state attribute.
     """
 
     _attr_included_entities: list[str]
-    _included_unique_ids: list[str]
-    _initialized: bool = False
-    _platform_domain: str
+    _attr_included_unique_ids: list[str]
+    __initialized: bool = False
 
     @callback
     def async_set_included_entities(
-        self, platform_domain: str, unique_ids: list[str]
+        self, integration_domain: str, unique_ids: list[str]
     ) -> None:
         """Set the list of included entities identified by their unique IDs.
 
-        The entity_id of included entities will will be looked up and they will be
+        Integrations need to initialize this in entity.async_async_added_to_hass,
+        and when the list of included entities changes.
+        The entity ids of included entities will will be looked up and they will be
         tracked for changes.
         None existing entities for the supplied unique IDs will be ignored.
         """
-        self._included_unique_ids = unique_ids
-        self._platform_domain = platform_domain
+        self._integration_domain = integration_domain
+        self._attr_included_unique_ids = unique_ids
         self._monitor_member_updates()
+
+    @property
+    def included_unique_ids(self) -> list[str]:
+        """Return the list of unique IDs if the entity represents a group.
+
+        The corresponiding entities will be shown as members in the UI.
+        """
+        if hasattr(self, "_attr_included_unique_ids"):
+            return self._attr_included_unique_ids
+        return []
 
     @property
     def included_entities(self) -> list[str] | None:
@@ -1741,12 +1750,14 @@ class IncludedEntitiesMixin(Entity):
     def _monitor_member_updates(self) -> None:
         """Update the group members if the entity registry is updated."""
         entity_registry = er.async_get(self.hass)
+        assert self.entity_id is not None
+        platform_domain = self.entity_id.split(".")[0]
 
         def _update_group_entity_ids() -> None:
             self._attr_included_entities = []
-            for included_id in self._included_unique_ids:
+            for included_id in self.included_unique_ids:
                 if entity_id := entity_registry.async_get_entity_id(
-                    self.entity_id.split(".")[0], self._platform_domain, included_id
+                    platform_domain, self._integration_domain, included_id
                 ):
                     self._attr_included_entities.append(entity_id)
 
@@ -1755,7 +1766,7 @@ class IncludedEntitiesMixin(Entity):
             if (
                 event.data["action"] in {"create", "update"}
                 and (entry := entity_registry.async_get(event.data["entity_id"]))
-                and entry.unique_id in self._included_unique_ids
+                and entry.unique_id in self.included_unique_ids
             ) or (
                 event.data["action"] == "remove"
                 and self.included_entities is not None
@@ -1764,12 +1775,12 @@ class IncludedEntitiesMixin(Entity):
                 _update_group_entity_ids()
                 self.async_write_ha_state()
 
-        if not self._initialized:
+        if not self.__initialized:
             self.async_on_remove(
                 self.hass.bus.async_listen(
                     er.EVENT_ENTITY_REGISTRY_UPDATED,
                     _handle_entity_registry_updated,
                 )
             )
-            self._initialized = True
+            self.__initialized = True
         _update_group_entity_ids()

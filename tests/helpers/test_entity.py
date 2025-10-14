@@ -22,7 +22,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_INCLUDED_ENTITIES,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -2930,9 +2929,9 @@ async def test_included_entities_mixin(
 
         @property
         @override
-        def capability_attributes(self) -> dict[str, Any] | None:
-            """Return the capability attributes."""
-            if included_entities := getattr(self, ATTR_INCLUDED_ENTITIES):
+        def state_attributes(self) -> dict[str, Any] | None:
+            """Return the state attributes."""
+            if included_entities := getattr(self, "included_entities", None):
                 return {ATTR_ENTITY_ID: included_entities}
 
             return None
