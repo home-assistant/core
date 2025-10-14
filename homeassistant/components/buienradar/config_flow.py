@@ -66,9 +66,10 @@ def _options_suggested_values(handler: SchemaCommonFlowHandler) -> dict[str, Any
 
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
-        OPTIONS_SCHEMA, suggested_values=_options_suggested_values
+        OPTIONS_SCHEMA, suggested_values=None
     ),
 }
+
 
 
 class BuienradarFlowHandler(ConfigFlow, domain=DOMAIN):
