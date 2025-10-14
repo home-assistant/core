@@ -49,6 +49,7 @@ from homeassistant.helpers.device_registry import (
     DeviceInfo,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -118,12 +119,12 @@ def get_number_of_channels(device: BlockDevice, block: Block) -> int:
 def get_block_entity_name(
     device: BlockDevice,
     block: Block | None,
-    description: str | None = None,
+    description: str | UndefinedType | None = None,
 ) -> str | None:
     """Naming for block based switch and sensors."""
     channel_name = get_block_channel_name(device, block)
 
-    if description:
+    if description is not UNDEFINED and description:
         return f"{channel_name} {description.lower()}" if channel_name else description
 
     return channel_name
@@ -439,12 +440,12 @@ def get_rpc_sub_device_name(
 
 
 def get_rpc_entity_name(
-    device: RpcDevice, key: str, description: str | None = None
+    device: RpcDevice, key: str, description: str | UndefinedType | None = None
 ) -> str | None:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
-    if description:
+    if description is not UNDEFINED and description:
         return f"{channel_name} {description.lower()}" if channel_name else description
 
     return channel_name
