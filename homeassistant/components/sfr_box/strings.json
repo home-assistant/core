@@ -27,7 +27,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname, IP address, or full URL of your SFR device. e.g.: {sample_ip} or {sample_url}"
+          "host": "The hostname, IP address, or full URL of your SFR device. e.g.: `{sample_ip}` or `{sample_url}`"
         },
         "description": "Setting the credentials is optional, but enables additional functionality."
       }
