@@ -49,16 +49,10 @@ def mock_api_client() -> AsyncMock:
 @pytest.fixture
 def mock_api_client_multiple_devices() -> AsyncMock:
     """Mock Fluss API client with multiple devices."""
-    with (
-        patch(
-            "homeassistant.components.fluss.coordinator.FlussApiClient",
-            autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.fluss.config_flow.FlussApiClient",
-            new=mock_client,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.fluss.coordinator.FlussApiClient",
+        autospec=True,
+    ) as mock_client:
         client = mock_client.return_value
         client.async_get_devices.return_value = {
             "devices": [
