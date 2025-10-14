@@ -52,8 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
             "You can try to delete the gateway and add it again"
         ) from exc
 
-    _LOGGER.info("Successfully connected to gateway %s", gw_sn)
-
     def on_online_status(dev_id: str, available: bool) -> None:
         signal = f"{DOMAIN}_update_available_{dev_id}"
         hass.add_job(async_dispatcher_send, hass, signal, available)
