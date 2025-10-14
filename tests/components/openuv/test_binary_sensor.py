@@ -32,7 +32,7 @@ async def test_binary_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-async def test_protetction_window_update(
+async def test_protection_window_update(
     hass: HomeAssistant,
     set_time_zone,
     config,
@@ -43,7 +43,7 @@ async def test_protetction_window_update(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that updating the protetection window makes an extra API call."""
+    """Test that updating the protection window makes an extra API call."""
 
     assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
@@ -71,7 +71,7 @@ async def test_protection_window_recalculation(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that protetction window updates automatically without extra API calls."""
+    """Test that protection window updates automatically without extra API calls."""
 
     freezer.move_to("2018-07-30T06:17:59-06:00")
 
@@ -81,9 +81,9 @@ async def test_protection_window_recalculation(
     entity_id = "binary_sensor.openuv_protection_window"
     state = hass.states.get(entity_id)
     assert state.state == "off"
-    assert state == snapshot(name="before-protetction-state")
+    assert state == snapshot(name="before-protection-state")
 
-    # move to when the protetction window starts
+    # move to when the protection window starts
     freezer.move_to("2018-07-30T09:17:59-06:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -91,9 +91,9 @@ async def test_protection_window_recalculation(
     entity_id = "binary_sensor.openuv_protection_window"
     state = hass.states.get(entity_id)
     assert state.state == "on"
-    assert state == snapshot(name="during-protetction-state")
+    assert state == snapshot(name="during-protection-state")
 
-    # move to when the protetction window ends
+    # move to when the protection window ends
     freezer.move_to("2018-07-30T16:47:59-06:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -101,6 +101,6 @@ async def test_protection_window_recalculation(
     entity_id = "binary_sensor.openuv_protection_window"
     state = hass.states.get(entity_id)
     assert state.state == "off"
-    assert state == snapshot(name="after-protetction-state")
+    assert state == snapshot(name="after-protection-state")
 
     assert client.uv_protection_window.call_count == 1
