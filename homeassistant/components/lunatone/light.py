@@ -5,11 +5,17 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ColorMode,
+    LightEntity,
+    brightness_supported,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from .const import DOMAIN
 from .coordinator import LunatoneConfigEntry, LunatoneDevicesDataUpdateCoordinator
@@ -42,8 +48,10 @@ class LunatoneLight(
 ):
     """Representation of a Lunatone light."""
 
-    _attr_color_mode = ColorMode.ONOFF
-    _attr_supported_color_modes = {ColorMode.ONOFF}
+    BRIGHTNESS_SCALE = (1, 100)
+
+    _last_brightness = 255
+
     _attr_has_entity_name = True
     _attr_name = None
     _attr_should_poll = False
@@ -82,6 +90,28 @@ class LunatoneLight(
         """Return True if light is on."""
         return self._device is not None and self._device.is_on
 
+    @property
+    def brightness(self) -> int:
+        """Return the brightness of this light between 0..255."""
+        brightness = 0
+        if self._device is not None:
+            brightness = value_to_brightness(
+                self.BRIGHTNESS_SCALE, self._device.brightness
+            )
+        return brightness
+
+    @property
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if self._device is not None and self._device.is_dimmable:
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Return the supported color modes."""
+        return {self.color_mode}
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -91,13 +121,29 @@ class LunatoneLight(
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         assert self._device
-        await self._device.switch_on()
+
+        if brightness_supported(self.supported_color_modes):
+            brightness = self._last_brightness
+            if ATTR_BRIGHTNESS in kwargs:
+                brightness = kwargs[ATTR_BRIGHTNESS]
+            await self._device.fade_to_brightness(
+                brightness_to_value(self.BRIGHTNESS_SCALE, brightness)
+            )
+        else:
+            await self._device.switch_on()
+
         await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         assert self._device
-        await self._device.switch_off()
+
+        if brightness_supported(self.supported_color_modes):
+            self._last_brightness = self.brightness
+            await self._device.fade_to_brightness(0)
+        else:
+            await self._device.switch_off()
+
         await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self.coordinator.async_refresh()
