@@ -92,9 +92,12 @@ async def test_visible_background(
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
     coordinator: RoborockDataUpdateCoordinator = mock_roborock_entry.runtime_data.v1[0]
-    assert coordinator.map_parser._palette.get_color(  # pylint: disable=protected-access
-        SupportedColor.MAP_OUTSIDE
-    ) != (0, 0, 0, 0)
+    assert coordinator.map_parser._palette.get_color(SupportedColor.MAP_OUTSIDE) != (
+        0,
+        0,
+        0,
+        0,
+    )
 
 
 @pytest.mark.parametrize(
@@ -152,7 +155,7 @@ async def test_no_maps(
             return_value=prop,
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_multi_maps_list",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_multi_maps_list",
             return_value=MultiMapsList(
                 max_multi_map=1, max_bak_map=1, multi_map_count=0, map_info=[]
             ),

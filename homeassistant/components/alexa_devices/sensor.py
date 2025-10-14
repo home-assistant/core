@@ -31,15 +31,20 @@ class AmazonSensorEntityDescription(SensorEntityDescription):
     """Amazon Devices sensor entity description."""
 
     native_unit_of_measurement_fn: Callable[[AmazonDevice, str], str] | None = None
+    is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
+        device.online
+        and (sensor := device.sensors.get(key)) is not None
+        and sensor.error is False
+    )
 
 
 SENSORS: Final = (
     AmazonSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement_fn=lambda device, _key: (
+        native_unit_of_measurement_fn=lambda device, key: (
             UnitOfTemperature.CELSIUS
-            if device.sensors[_key].scale == "CELSIUS"
+            if key in device.sensors and device.sensors[key].scale == "CELSIUS"
             else UnitOfTemperature.FAHRENHEIT
         ),
         state_class=SensorStateClass.MEASUREMENT,
@@ -99,3 +104,13 @@ class AmazonSensorEntity(AmazonEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.device.sensors[self.entity_description.key].value
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.entity_description.is_available_fn(
+                self.device, self.entity_description.key
+            )
+            and super().available
+        )

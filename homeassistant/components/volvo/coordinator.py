@@ -8,7 +8,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast
 
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.models import (
@@ -22,7 +22,7 @@ from volvocarsapi.models import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_BATTERY_CAPACITY, DOMAIN
@@ -41,13 +41,15 @@ class VolvoContext:
 
     api: VolvoCarsApi
     vehicle: VolvoCarsVehicle
+    supported_commands: list[str]
 
 
 @dataclass
 class VolvoRuntimeData:
     """Volvo runtime data."""
 
-    interval_coordinators: tuple[VolvoBaseIntervalCoordinator, ...]
+    interval_coordinators: tuple[VolvoBaseCoordinator, ...]
+    context: VolvoContext
 
 
 type VolvoConfigEntry = ConfigEntry[VolvoRuntimeData]
@@ -64,42 +66,10 @@ def _is_invalid_api_field(field: VolvoCarsApiBaseModel | None) -> bool:
     return False
 
 
-T = TypeVar("T", bound=dict, default=dict[str, Any])
-
-
-class VolvoBaseCoordinator(DataUpdateCoordinator[T], Generic[T]):
-    """Volvo base coordinator."""
+class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
+    """Volvo base interval coordinator."""
 
     config_entry: VolvoConfigEntry
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: VolvoConfigEntry,
-        context: VolvoContext,
-        update_interval: timedelta | None,
-        name: str,
-    ) -> None:
-        """Initialize the coordinator."""
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=entry,
-            name=name,
-            update_interval=update_interval,
-        )
-
-        self.context = context
-
-    def get_api_field(self, api_field: str | None) -> VolvoCarsApiBaseModel | None:
-        """Get the API field based on the entity description."""
-
-        return self.data.get(api_field) if api_field else None
-
-
-class VolvoBaseIntervalCoordinator(VolvoBaseCoordinator[CoordinatorData]):
-    """Volvo base interval coordinator."""
 
     def __init__(
         self,
@@ -113,16 +83,26 @@ class VolvoBaseIntervalCoordinator(VolvoBaseCoordinator[CoordinatorData]):
 
         super().__init__(
             hass,
-            entry,
-            context,
-            update_interval,
-            name,
+            _LOGGER,
+            config_entry=entry,
+            name=name,
+            update_interval=update_interval,
         )
 
         self._api_calls: list[Callable[[], Coroutine[Any, Any, Any]]] = []
+        self.context = context
 
     async def _async_setup(self) -> None:
-        self._api_calls = await self._async_determine_api_calls()
+        try:
+            self._api_calls = await self._async_determine_api_calls()
+        except VolvoAuthException as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="unauthorized",
+                translation_placeholders={"message": err.message},
+            ) from err
+        except VolvoApiException as err:
+            raise ConfigEntryNotReady from err
 
         if not self._api_calls:
             self.update_interval = None
@@ -156,7 +136,9 @@ class VolvoBaseIntervalCoordinator(VolvoBaseCoordinator[CoordinatorData]):
                     result.message,
                 )
                 raise ConfigEntryAuthFailed(
-                    f"Authentication failed. {result.message}"
+                    translation_domain=DOMAIN,
+                    translation_key="unauthorized",
+                    translation_placeholders={"message": result.message},
                 ) from result
 
             if isinstance(result, VolvoApiException):
@@ -195,6 +177,11 @@ class VolvoBaseIntervalCoordinator(VolvoBaseCoordinator[CoordinatorData]):
 
         return data
 
+    def get_api_field(self, api_field: str | None) -> VolvoCarsApiBaseModel | None:
+        """Get the API field based on the entity description."""
+
+        return self.data.get(api_field) if api_field else None
+
     @abstractmethod
     async def _async_determine_api_calls(
         self,
@@ -202,7 +189,7 @@ class VolvoBaseIntervalCoordinator(VolvoBaseCoordinator[CoordinatorData]):
         raise NotImplementedError
 
 
-class VolvoVerySlowIntervalCoordinator(VolvoBaseIntervalCoordinator):
+class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):
     """Volvo coordinator with very slow update rate."""
 
     def __init__(
@@ -250,7 +237,7 @@ class VolvoVerySlowIntervalCoordinator(VolvoBaseIntervalCoordinator):
         return data
 
 
-class VolvoSlowIntervalCoordinator(VolvoBaseIntervalCoordinator):
+class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
     """Volvo coordinator with slow update rate."""
 
     def __init__(
@@ -273,17 +260,20 @@ class VolvoSlowIntervalCoordinator(VolvoBaseIntervalCoordinator):
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
         api = self.context.api
+        api_calls: list[Any] = [api.async_get_command_accessibility]
+
+        location = await api.async_get_location()
+
+        if location.get("location") is not None:
+            api_calls.append(api.async_get_location)
 
         if self.context.vehicle.has_combustion_engine():
-            return [
-                api.async_get_command_accessibility,
-                api.async_get_fuel_status,
-            ]
+            api_calls.append(api.async_get_fuel_status)
 
-        return [api.async_get_command_accessibility]
+        return api_calls
 
 
-class VolvoMediumIntervalCoordinator(VolvoBaseIntervalCoordinator):
+class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
     """Volvo coordinator with medium update rate."""
 
     def __init__(
@@ -352,7 +342,7 @@ class VolvoMediumIntervalCoordinator(VolvoBaseIntervalCoordinator):
         }
 
 
-class VolvoFastIntervalCoordinator(VolvoBaseIntervalCoordinator):
+class VolvoFastIntervalCoordinator(VolvoBaseCoordinator):
     """Volvo coordinator with fast update rate."""
 
     def __init__(
