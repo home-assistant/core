@@ -47,7 +47,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_BAUDRATE, CONF_FLOW_CONTROL, CONF_RADIO_TYPE, DOMAIN
-from .helpers import get_zha_gateway
+from .helpers import get_config_entry_unique_id, get_zha_gateway
 from .radio_manager import (
     DEVICE_SCHEMA,
     HARDWARE_DISCOVERY_SCHEMA,
@@ -668,7 +668,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 4
+    VERSION = 5
 
     async def _set_unique_id_and_update_ignored_flow(
         self, unique_id: str, device_path: str
@@ -927,6 +927,15 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                 reason="reconfigure_successful",
             )
         if not zha_config_entries:
+            # Load network settings from the radio to get the EPID
+            await self._radio_mgr.async_load_network_settings()
+            assert self._radio_mgr.current_settings is not None
+
+            unique_id = get_config_entry_unique_id(
+                self._radio_mgr.current_settings.network_info
+            )
+            await self.async_set_unique_id(unique_id)
+
             return self.async_create_entry(
                 title=self._title,
                 data=data,
