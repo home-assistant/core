@@ -1794,7 +1794,7 @@ py-improv-ble-client==1.0.3
 py-madvr2==1.6.40
 
 # homeassistant.components.melissa
-py-melissa-climate==2.1.4
+py-melissa-climate==3.0.2
 
 # homeassistant.components.nextbus
 py-nextbusnext==2.3.0
@@ -3147,7 +3147,7 @@ weatherflow4py==1.4.1
 webexpythonsdk==2.0.1
 
 # homeassistant.components.nasweb
-webio-api==0.1.11
+webio-api==0.1.12
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
