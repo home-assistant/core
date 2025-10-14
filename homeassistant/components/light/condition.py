@@ -47,6 +47,14 @@ STATE_CONDITION_SCHEMA = vol.Schema(
 class StateCondition(Condition):
     """State condition."""
 
+    @override
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return STATE_CONDITION_SCHEMA(config)  # type: ignore[no-any-return]
+
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
         self._hass = hass
@@ -56,14 +64,6 @@ class StateCondition(Condition):
         self._target = config.target
         self._state = config.options[CONF_STATE]
         self._behavior = config.options[ATTR_BEHAVIOR]
-
-    @override
-    @classmethod
-    async def async_validate_config(
-        cls, hass: HomeAssistant, config: ConfigType
-    ) -> ConfigType:
-        """Validate config."""
-        return STATE_CONDITION_SCHEMA(config)  # type: ignore[no-any-return]
 
     @override
     async def async_get_checker(self) -> ConditionCheckerType:
