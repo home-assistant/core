@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.energy import data, is_configured
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -365,8 +366,8 @@ async def test_fossil_energy_consumption_no_co2(
         },
     )
     external_energy_metadata_1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
@@ -400,8 +401,8 @@ async def test_fossil_energy_consumption_no_co2(
         },
     )
     external_energy_metadata_2 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
@@ -532,8 +533,8 @@ async def test_fossil_energy_consumption_hole(
         },
     )
     external_energy_metadata_1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
@@ -567,8 +568,8 @@ async def test_fossil_energy_consumption_hole(
         },
     )
     external_energy_metadata_2 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
@@ -697,8 +698,8 @@ async def test_fossil_energy_consumption_no_data(
         },
     )
     external_energy_metadata_1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
@@ -732,8 +733,8 @@ async def test_fossil_energy_consumption_no_data(
         },
     )
     external_energy_metadata_2 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
@@ -851,8 +852,8 @@ async def test_fossil_energy_consumption(
         },
     )
     external_energy_metadata_1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
@@ -886,8 +887,8 @@ async def test_fossil_energy_consumption(
         },
     )
     external_energy_metadata_2 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
@@ -917,8 +918,8 @@ async def test_fossil_energy_consumption(
         },
     )
     external_co2_metadata = {
-        "has_mean": True,
         "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Fossil percentage",
         "source": "test",
         "statistic_id": "test:fossil_percentage",
@@ -1105,8 +1106,8 @@ async def test_fossil_energy_consumption_check_missing_hour(
         },
     )
     energy_metadata_1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
@@ -1140,8 +1141,8 @@ async def test_fossil_energy_consumption_check_missing_hour(
         },
     )
     co2_metadata = {
-        "has_mean": True,
         "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Fossil percentage",
         "source": "test",
         "statistic_id": "test:fossil_percentage",
@@ -1202,8 +1203,8 @@ async def test_fossil_energy_consumption_missing_sum(
         {"start": period4, "last_reset": None, "state": 3, "mean": 5},
     )
     external_energy_metadata_1 = {
-        "has_mean": True,
         "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Mean imported energy",
         "source": "test",
         "statistic_id": "test:mean_energy_import_tariff",
