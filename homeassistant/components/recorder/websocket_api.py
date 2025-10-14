@@ -21,6 +21,7 @@ from homeassistant.util.unit_conversion import (
     ApparentPowerConverter,
     AreaConverter,
     BloodGlucoseConcentrationConverter,
+    CarbonMonoxideConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -70,6 +71,9 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("area"): vol.In(AreaConverter.VALID_UNITS),
         vol.Optional("blood_glucose_concentration"): vol.In(
             BloodGlucoseConcentrationConverter.VALID_UNITS
+        ),
+        vol.Optional("carbon_monoxide"): vol.In(
+            CarbonMonoxideConcentrationConverter.VALID_UNITS
         ),
         vol.Optional("concentration"): vol.In(
             MassVolumeConcentrationConverter.VALID_UNITS
@@ -540,7 +544,11 @@ async def ws_adjust_sum_statistics(
     {
         vol.Required("type"): "recorder/import_statistics",
         vol.Required("metadata"): {
-            vol.Required("has_mean"): bool,
+            vol.Optional("has_mean"): bool,
+            vol.Optional("mean_type"): vol.All(
+                vol.In(StatisticMeanType.__members__.values()),
+                vol.Coerce(StatisticMeanType),
+            ),
             vol.Required("has_sum"): bool,
             vol.Required("name"): vol.Any(str, None),
             vol.Required("source"): str,
@@ -570,10 +578,12 @@ def ws_import_statistics(
     The unit_class specifies which unit conversion class to use, if applicable.
     """
     metadata = msg["metadata"]
-    # The WS command will be changed in a follow up PR
-    metadata["mean_type"] = (
-        StatisticMeanType.ARITHMETIC if metadata["has_mean"] else StatisticMeanType.NONE
-    )
+    if "mean_type" not in metadata:
+        _LOGGER.warning(
+            "WS command recorder/import_statistics called without specifying "
+            "mean_type in metadata, this is deprecated and will stop working "
+            "in HA Core 2026.11"
+        )
     if "unit_class" not in metadata:
         _LOGGER.warning(
             "WS command recorder/import_statistics called without specifying "

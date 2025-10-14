@@ -4,6 +4,7 @@ import asyncio
 from copy import deepcopy
 import io
 import logging
+import math
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
@@ -1061,7 +1062,7 @@ async def test_get_states_not_allows_nan(
 ) -> None:
     """Test get_states command converts NaN to None."""
     hass.states.async_set("greeting.hello", "world")
-    hass.states.async_set("greeting.bad", "data", {"hello": float("NaN")})
+    hass.states.async_set("greeting.bad", "data", {"hello": math.nan})
     hass.states.async_set("greeting.bye", "universe")
 
     await websocket_client.send_json_auto_id({"type": "get_states"})
