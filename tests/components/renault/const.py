@@ -59,6 +59,7 @@ MOCK_VEHICLES = {
             "cockpit": "cockpit_ev.json",
             "hvac_status": "hvac_status.3.json",
             "location": "location.json",
+            "pressure": "pressure.1.json",
         },
     },
 }

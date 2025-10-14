@@ -3165,7 +3165,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2730',
   })
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_front_right_tyre_pressure-entry]
@@ -3221,7 +3221,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2790',
   })
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_hvac_soc_threshold-entry]
@@ -3649,7 +3649,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2340',
   })
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_rear_right_tyre_pressure-entry]
@@ -3705,7 +3705,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2460',
   })
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_battery-entry]
