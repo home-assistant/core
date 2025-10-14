@@ -978,6 +978,12 @@ _CONVERTED_VALUE: dict[
             UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         ),
         (
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+            0.264172052,
+            UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+        ),
+        (
             9,
             UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
             2500,
