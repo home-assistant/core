@@ -2208,7 +2208,6 @@ async def test_user_flow_name_conflict_overwrite(
         result["flow_id"], user_input={"next_step_id": "name_conflict_overwrite"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -2572,16 +2571,15 @@ async def test_reconfig_name_conflict_overwrite(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "name_conflict_overwrite"}
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
-    assert result["data"] == {
-        CONF_HOST: "127.0.0.2",
-        CONF_PORT: 6053,
-        CONF_PASSWORD: "",
-        CONF_NOISE_PSK: "",
-        CONF_DEVICE_NAME: "test",
-    }
-    assert result["context"]["unique_id"] == "11:22:33:44:55:bb"
+    assert (
+        hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, "11:22:33:44:55:bb"
+        )
+        is not None
+    )
     assert (
         hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, "11:22:33:44:55:aa"
