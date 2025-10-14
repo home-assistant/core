@@ -70,7 +70,8 @@
         "entry_not_loaded": "Cannot add things while the configuration is disabled."
       },
       "error": {
-        "model_not_supported": "This model is not supported, please select a different model"
+        "model_not_supported": "This model is not supported, please select a different model",
+        "web_search_minimal_reasoning": "Web search is currently not supported with minimal reasoning effort"
       }
     },
     "ai_task_data": {
@@ -98,6 +99,7 @@
         "model": {
           "title": "[%key:component::openai_conversation::config_subentries::conversation::step::model::title%]",
           "data": {
+            "code_interpreter": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::code_interpreter%]",
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::reasoning_effort%]",
             "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::image_model%]",
             "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::web_search%]",
@@ -105,6 +107,7 @@
             "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::user_location%]"
           },
           "data_description": {
+            "code_interpreter": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::code_interpreter%]",
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::reasoning_effort%]",
             "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::image_model%]",
             "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::web_search%]",
@@ -118,7 +121,8 @@
         "entry_not_loaded": "[%key:component::openai_conversation::config_subentries::conversation::abort::entry_not_loaded%]"
       },
       "error": {
-        "model_not_supported": "[%key:component::openai_conversation::config_subentries::conversation::error::model_not_supported%]"
+        "model_not_supported": "[%key:component::openai_conversation::config_subentries::conversation::error::model_not_supported%]",
+        "web_search_minimal_reasoning": "[%key:component::openai_conversation::config_subentries::conversation::error::web_search_minimal_reasoning%]"
       }
     }
   },
