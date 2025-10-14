@@ -1,0 +1,723 @@
+"""Test configuration for Hisense AC Plugin."""
+
+from __future__ import annotations
+
+import json
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from homeassistant.components.application_credentials import ApplicationCredentials
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
+
+from custom_components.hisense_connectlife.const import DOMAIN
+
+
+@pytest.fixture
+def mock_hass():
+    """Mock Home Assistant instance."""
+    hass = MagicMock(spec=HomeAssistant)
+    hass.data = {}
+    hass.config_entries = MagicMock()
+    hass.config_entries.async_forward_entry_setups = AsyncMock()
+    hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
+    hass.config_entries.async_update_entry = AsyncMock()
+    hass.config_entries.async_reload = AsyncMock()
+    hass.loop = MagicMock()
+    hass.loop.call_soon_threadsafe = MagicMock()
+    return hass
+
+
+@pytest.fixture
+def mock_config_entry():
+    """Mock config entry."""
+    entry = MagicMock(spec=ConfigEntry)
+    entry.entry_id = "test_entry_id"
+    entry.domain = DOMAIN
+    entry.title = "Hisense AC Plugin"
+    entry.data = {
+        "auth_implementation": DOMAIN,
+        "implementation": DOMAIN,
+        "token": {
+            "access_token": "test_access_token",
+            "refresh_token": "test_refresh_token",
+            "expires_in": 3600,
+            "expires_at": 1234567890,
+        },
+    }
+    entry.options = {}
+    entry.pref_disable_new_entities = False
+    entry.pref_disable_polling = False
+    entry.state = MagicMock()
+    entry.state.value = "loaded"
+    entry.source = "user"
+    entry.version = 1
+    return entry
+
+
+@pytest.fixture
+def mock_legacy_config_entry():
+    """Mock legacy config entry without Application Credentials."""
+    entry = MagicMock(spec=ConfigEntry)
+    entry.entry_id = "test_entry_id"
+    entry.domain = DOMAIN
+    entry.title = "Hisense AC Plugin"
+    entry.data = {
+        "token": {
+            "access_token": "test_access_token",
+            "refresh_token": "test_refresh_token",
+            "expires_in": 3600,
+            "expires_at": 1234567890,
+        },
+    }
+    entry.options = {}
+    entry.pref_disable_new_entities = False
+    entry.pref_disable_polling = False
+    entry.state = MagicMock()
+    entry.state.value = "loaded"
+    entry.source = "user"
+    entry.version = 1
+    return entry
+
+
+@pytest.fixture
+def mock_device_data():
+    """Mock device data from API."""
+    return {
+        "deviceId": "test_device_1",
+        "puid": "test_puid_1",
+        "deviceName": "Test AC Unit",
+        "deviceTypeCode": "009",
+        "deviceFeatureCode": "199",
+        "deviceFeatureName": "Split Air Conditioner",
+        "statusList": {
+            "t_power": "1",
+            "t_work_mode": "cool",
+            "t_temp": "25",
+            "f_temp_in": "24",
+        },
+        "failedData": [],
+        "staticData": {},
+    }
+
+
+@pytest.fixture
+def mock_api_response():
+    """Mock API response."""
+    return {
+        "resultCode": 0,
+        "msg": "success",
+        "deviceList": [
+            {
+                "deviceId": "test_device_1",
+                "puid": "test_puid_1",
+                "deviceName": "Test AC Unit",
+                "deviceTypeCode": "009",
+                "deviceFeatureCode": "199",
+                "deviceFeatureName": "Split Air Conditioner",
+                "statusList": {
+                    "t_power": "1",
+                    "t_work_mode": "cool",
+                    "t_temp": "25",
+                    "f_temp_in": "24",
+                },
+            }
+        ],
+    }
+
+
+@pytest.fixture
+def mock_oauth2_session():
+    """Mock OAuth2 session."""
+    session = AsyncMock()
+    session.async_ensure_token_valid = AsyncMock()
+    session.async_get_access_token = AsyncMock(return_value="test_access_token")
+    session.close = AsyncMock()
+    session.session = AsyncMock()
+    return session
+
+
+@pytest.fixture
+def mock_oauth2_implementation():
+    """Mock OAuth2 implementation."""
+    implementation = MagicMock()
+    implementation.async_generate_authorize_url = AsyncMock(
+        return_value="https://oauth.hijuconn.com/login?client_id=test&response_type=code"
+    )
+    implementation.async_refresh_token = AsyncMock(
+        return_value={
+            "access_token": "new_access_token",
+            "refresh_token": "new_refresh_token",
+            "expires_in": 3600,
+        }
+    )
+    return implementation
+
+
+@pytest.fixture
+def mock_application_credentials():
+    """Mock Application Credentials."""
+    with patch("custom_components.hisense_connectlife.auth.config_entry_oauth2_flow") as mock_oauth2:
+        mock_session = AsyncMock()
+        mock_session.async_ensure_token_valid = AsyncMock(
+            return_value={
+                "access_token": "test_access_token",
+                "refresh_token": "test_refresh_token",
+                "expires_in": 3600,
+            }
+        )
+        mock_oauth2.OAuth2Session.return_value = mock_session
+        mock_oauth2.async_get_config_entry_implementation = AsyncMock()
+        yield mock_oauth2
+
+
+@pytest.fixture
+def mock_websocket():
+    """Mock WebSocket connection."""
+    websocket = AsyncMock()
+    websocket.async_connect = AsyncMock()
+    websocket.async_disconnect = AsyncMock()
+    websocket.connected = True
+    return websocket
+
+
+@pytest.fixture
+def mock_coordinator():
+    """Mock data update coordinator."""
+    coordinator = AsyncMock()
+    coordinator.api_client = AsyncMock()
+    coordinator._devices = {}
+    coordinator.data = {}
+    coordinator.last_update_success = True
+    coordinator.last_update_time = None
+    coordinator.update_interval = None
+    coordinator.async_setup = AsyncMock(return_value=True)
+    coordinator.async_refresh = AsyncMock()
+    coordinator.async_set_updated_data = AsyncMock()
+    coordinator.get_device = MagicMock(return_value=None)
+    coordinator.async_unload = AsyncMock()
+    return coordinator
+
+
+@pytest.fixture
+def mock_api_client():
+    """Mock API client."""
+    client = AsyncMock()
+    client.async_get_devices = AsyncMock(return_value={})
+    client.async_control_device = AsyncMock(return_value={"success": True})
+    client.async_cleanup = AsyncMock()
+    client.oauth_session = AsyncMock()
+    client.oauth_session.close = AsyncMock()
+    return client
+
+
+@pytest.fixture
+def mock_device_info():
+    """Mock device info."""
+    device = MagicMock()
+    device.device_id = "test_device_1"
+    device.puid = "test_puid_1"
+    device.name = "Test AC Unit"
+    device.type_code = "009"
+    device.feature_code = "199"
+    device.feature_name = "Split Air Conditioner"
+    device.status = {
+        "t_power": "1",
+        "t_work_mode": "cool",
+        "t_temp": "25",
+        "f_temp_in": "24",
+    }
+    device.failed_data = []
+    device.static_data = {}
+    device.get_device_type = MagicMock(return_value=("009", "199"))
+    device.to_dict = MagicMock(
+        return_value={
+            "deviceId": "test_device_1",
+            "puid": "test_puid_1",
+            "deviceName": "Test AC Unit",
+            "deviceTypeCode": "009",
+            "deviceFeatureCode": "199",
+            "deviceFeatureName": "Split Air Conditioner",
+            "statusList": {
+                "t_power": "1",
+                "t_work_mode": "cool",
+                "t_temp": "25",
+                "f_temp_in": "24",
+            },
+            "failedData": [],
+            "staticData": {},
+        }
+    )
+    device.debug_info = MagicMock(return_value="Device debug info")
+    return device
+"""Test authentication module for Hisense AC Plugin."""
+
+from __future__ import annotations
+
+import pytest
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from custom_components.hisense_connectlife.auth import HisenseAuthProvider
+from custom_components.hisense_connectlife.const import DOMAIN
+
+
+@pytest.mark.asyncio
+async def test_get_access_token_application_credentials(mock_hass, mock_config_entry, mock_application_credentials):
+    """Test getting access token with Application Credentials."""
+    provider = HisenseAuthProvider(mock_hass)
+    
+    result = await provider.get_access_token(mock_config_entry)
+    
+    assert result == "test_access_token"
+
+
+@pytest.mark.asyncio
+async def test_get_access_token_legacy_oauth2(mock_hass, mock_legacy_config_entry):
+    """Test getting access token with legacy OAuth2."""
+    provider = HisenseAuthProvider(mock_hass)
+    
+    with patch("custom_components.hisense_connectlife.auth.HisenseOAuth2Implementation") as mock_impl:
+        mock_session = AsyncMock()
+        mock_session.async_ensure_token_valid = AsyncMock()
+        mock_session.async_get_access_token = AsyncMock(return_value="test_access_token")
+        
+        with patch("custom_components.hisense_connectlife.auth.OAuth2Session") as mock_oauth2_session:
+            mock_oauth2_session.return_value = mock_session
+            
+            result = await provider.get_access_token(mock_legacy_config_entry)
+            
+            assert result == "test_access_token"
+
+
+@pytest.mark.asyncio
+async def test_get_access_token_no_auth_method(mock_hass, mock_config_entry):
+    """Test getting access token when no auth method is available."""
+    provider = HisenseAuthProvider(mock_hass)
+    
+    # Remove auth_implementation to simulate no auth method
+    mock_config_entry.data = {}
+    
+    with pytest.raises(ValueError, match="No authentication method available"):
+        await provider.get_access_token(mock_config_entry)
+
+
+@pytest.mark.asyncio
+async def test_refresh_token_application_credentials(mock_hass, mock_config_entry, mock_application_credentials):
+    """Test refreshing token with Application Credentials."""
+    provider = HisenseAuthProvider(mock_hass)
+    
+    result = await provider.refresh_token(mock_config_entry)
+    
+    assert "access_token" in result
+    assert "refresh_token" in result
+    assert "expires_in" in result
+
+
+@pytest.mark.asyncio
+async def test_refresh_token_legacy_oauth2(mock_hass, mock_legacy_config_entry):
+    """Test refreshing token with legacy OAuth2."""
+    provider = HisenseAuthProvider(mock_hass)
+    
+    with patch("custom_components.hisense_connectlife.auth.HisenseOAuth2Implementation") as mock_impl:
+        mock_impl.return_value.async_refresh_token = AsyncMock(return_value={
+            "access_token": "new_access_token",
+            "refresh_token": "new_refresh_token",
+            "expires_in": 3600,
+        })
+        
+        with patch.object(mock_hass.config_entries, "async_update_entry") as mock_update:
+            result = await provider.refresh_token(mock_legacy_config_entry)
+            
+            assert result["access_token"] == "new_access_token"
+            mock_update.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_refresh_token_no_token_data(mock_hass, mock_legacy_config_entry):
+    """Test refreshing token when no token data is available."""
+    provider = HisenseAuthProvider(mock_hass)
+    
+    # Remove token data
+    mock_legacy_config_entry.data = {}
+    
+    with pytest.raises(ValueError, match="No token data available for refresh"):
+        await provider.refresh_token(mock_legacy_config_entry)
+"""Test config flow for Hisense AC Plugin."""
+
+from __future__ import annotations
+
+from unittest.mock import MagicMock, patch
+
+import pytest
+from homeassistant import config_entries
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from custom_components.hisense_connectlife.config_flow import OAuth2FlowHandler
+from custom_components.hisense_connectlife.const import DOMAIN
+
+
+@pytest.mark.asyncio
+async def test_user_step_initial_form(mock_hass):
+    """Test initial user step shows form."""
+    flow = OAuth2FlowHandler()
+    flow.hass = mock_hass
+
+    result = await flow.async_step_user()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert "confirm_auth" in result["data_schema"].schema
+
+
+@pytest.mark.asyncio
+async def test_user_step_with_input(mock_hass, mock_oauth2_implementation):
+    """Test user step with user input."""
+    flow = OAuth2FlowHandler()
+    flow.hass = mock_hass
+
+    with patch("custom_components.hisense_connectlife.config_flow.HisenseOAuth2Implementation") as mock_impl:
+        mock_impl.return_value = mock_oauth2_implementation
+        
+        result = await flow.async_step_user({"confirm_auth": True})
+
+        assert result["type"] == FlowResultType.EXTERNAL_STEP
+        assert result["step_id"] == "auth"
+        assert "url" in result
+
+
+@pytest.mark.asyncio
+async def test_oauth_create_entry(mock_hass, mock_oauth2_implementation):
+    """Test OAuth create entry step."""
+    flow = OAuth2FlowHandler()
+    flow.hass = mock_hass
+    flow.flow_impl = mock_oauth2_implementation
+
+    data = {
+        "access_token": "test_token",
+        "refresh_token": "test_refresh",
+        "expires_in": 3600,
+    }
+
+    result = await flow.async_oauth_create_entry(data)
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Hisense AC"
+    assert result["data"]["auth_implementation"] == DOMAIN
+    assert result["data"]["implementation"] == DOMAIN
+
+
+@pytest.mark.asyncio
+async def test_single_instance_allowed(mock_hass):
+    """Test that only one instance is allowed."""
+    flow = OAuth2FlowHandler()
+    flow.hass = mock_hass
+
+    # Mock existing entries
+    mock_hass.config_entries.async_entries.return_value = [MagicMock()]
+
+    result = await flow.async_step_user()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+@pytest.mark.asyncio
+async def test_authorize_url_fail(mock_hass, mock_oauth2_implementation):
+    """Test authorize URL generation failure."""
+    flow = OAuth2FlowHandler()
+    flow.hass = mock_hass
+
+    # Mock implementation that raises exception
+    mock_oauth2_implementation.async_generate_authorize_url.side_effect = Exception("Test error")
+
+    with patch("custom_components.hisense_connectlife.config_flow.HisenseOAuth2Implementation") as mock_impl:
+        mock_impl.return_value = mock_oauth2_implementation
+        
+        result = await flow.async_step_user({"confirm_auth": True})
+
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "authorize_url_fail"
+
+
+@pytest.mark.asyncio
+async def test_options_flow(mock_config_entry, mock_hass):
+    """Test options flow."""
+    from custom_components.hisense_connectlife.config_flow import HisenseOptionsFlowHandler
+
+    flow = HisenseOptionsFlowHandler(mock_config_entry)
+    flow.hass = mock_hass
+
+    # Test initial form
+    result = await flow.async_step_init()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert "refresh_devices" in result["data_schema"].schema
+    assert "refresh_token" in result["data_schema"].schema
+
+
+@pytest.mark.asyncio
+async def test_options_flow_refresh_devices(mock_config_entry, mock_hass, mock_coordinator):
+    """Test options flow refresh devices."""
+    from custom_components.hisense_connectlife.config_flow import HisenseOptionsFlowHandler
+
+    flow = HisenseOptionsFlowHandler(mock_config_entry)
+    flow.hass = mock_hass
+    flow.hass.data[DOMAIN] = {mock_config_entry.entry_id: mock_coordinator}
+
+    result = await flow.async_step_init({"refresh_devices": True})
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"]["refresh_devices"] is True
+
+
+@pytest.mark.asyncio
+async def test_options_flow_refresh_token(mock_config_entry, mock_hass, mock_coordinator):
+    """Test options flow refresh token."""
+    from custom_components.hisense_connectlife.config_flow import HisenseOptionsFlowHandler
+
+    flow = HisenseOptionsFlowHandler(mock_config_entry)
+    flow.hass = mock_hass
+    flow.hass.data[DOMAIN] = {mock_config_entry.entry_id: mock_coordinator}
+
+    result = await flow.async_step_init({"refresh_token": True})
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"]["refresh_token"] is True
+
+
+@pytest.mark.asyncio
+async def test_oauth_create_entry_with_error(mock_hass, mock_oauth2_implementation):
+    """Test OAuth create entry step with error."""
+    flow = OAuth2FlowHandler()
+    flow.hass = mock_hass
+    flow.flow_impl = mock_oauth2_implementation
+
+    # Mock implementation that raises exception
+    mock_oauth2_implementation.async_resolve_external_data.side_effect = Exception("Test error")
+
+    data = {
+        "access_token": "test_token",
+        "refresh_token": "test_refresh",
+        "expires_in": 3600,
+    }
+
+    result = await flow.async_oauth_create_entry(data)
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+
+
+@pytest.mark.asyncio
+async def test_oauth_create_entry_missing_token(mock_hass, mock_oauth2_implementation):
+    """Test OAuth create entry step with missing token."""
+    flow = OAuth2FlowHandler()
+    flow.hass = mock_hass
+    flow.flow_impl = mock_oauth2_implementation
+
+    data = {
+        "refresh_token": "test_refresh",
+        "expires_in": 3600,
+    }
+
+    result = await flow.async_oauth_create_entry(data)
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+
+
+@pytest.mark.asyncio
+async def test_oauth_create_entry_invalid_data(mock_hass, mock_oauth2_implementation):
+    """Test OAuth create entry step with invalid data."""
+    flow = OAuth2FlowHandler()
+    flow.hass = mock_hass
+    flow.flow_impl = mock_oauth2_implementation
+
+    # Mock implementation that returns None
+    mock_oauth2_implementation.async_resolve_external_data.return_value = None
+
+    data = {
+        "access_token": "test_token",
+        "refresh_token": "test_refresh",
+        "expires_in": 3600,
+    }
+
+    result = await flow.async_oauth_create_entry(data)
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+
+
+@pytest.mark.asyncio
+async def test_options_flow_no_coordinator(mock_config_entry, mock_hass):
+    """Test options flow when coordinator is not available."""
+    from custom_components.hisense_connectlife.config_flow import HisenseOptionsFlowHandler
+
+    flow = HisenseOptionsFlowHandler(mock_config_entry)
+    flow.hass = mock_hass
+    flow.hass.data[DOMAIN] = {}
+
+    result = await flow.async_step_init({"refresh_devices": True})
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"]["refresh_devices"] is True
+
+
+@pytest.mark.asyncio
+async def test_options_flow_both_actions(mock_config_entry, mock_hass, mock_coordinator):
+    """Test options flow with both actions selected."""
+    from custom_components.hisense_connectlife.config_flow import HisenseOptionsFlowHandler
+
+    flow = HisenseOptionsFlowHandler(mock_config_entry)
+    flow.hass = mock_hass
+    flow.hass.data[DOMAIN] = {mock_config_entry.entry_id: mock_coordinator}
+
+    result = await flow.async_step_init({
+        "refresh_devices": True,
+        "refresh_token": True
+    })
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"]["refresh_devices"] is True
+    assert result["data"]["refresh_token"] is True
+
+
+@pytest.mark.asyncio
+async def test_options_flow_no_actions(mock_config_entry, mock_hass, mock_coordinator):
+    """Test options flow with no actions selected."""
+    from custom_components.hisense_connectlife.config_flow import HisenseOptionsFlowHandler
+
+    flow = HisenseOptionsFlowHandler(mock_config_entry)
+    flow.hass = mock_hass
+    flow.hass.data[DOMAIN] = {mock_config_entry.entry_id: mock_coordinator}
+
+    result = await flow.async_step_init({
+        "refresh_devices": False,
+        "refresh_token": False
+    })
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"]["refresh_devices"] is False
+    assert result["data"]["refresh_token"] is False
+"""Test diagnostics for Hisense AC Plugin."""
+
+from __future__ import annotations
+
+import pytest
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from custom_components.hisense_connectlife.diagnostics import (
+    async_get_config_entry_diagnostics,
+    async_get_device_diagnostics,
+)
+
+
+@pytest.mark.asyncio
+async def test_get_config_entry_diagnostics_no_coordinator(mock_hass, mock_config_entry):
+    """Test diagnostics when coordinator is not found."""
+    mock_hass.data = {}
+    
+    result = await async_get_config_entry_diagnostics(mock_hass, mock_config_entry)
+    
+    assert result == {"error": "Coordinator not found"}
+
+
+@pytest.mark.asyncio
+async def test_get_config_entry_diagnostics_with_coordinator(mock_hass, mock_config_entry, mock_coordinator, mock_device_info):
+    """Test diagnostics with coordinator."""
+    mock_hass.data = {mock_config_entry.domain: {mock_config_entry.entry_id: mock_coordinator}}
+    mock_coordinator._devices = {"test_device_1": mock_device_info}
+    mock_coordinator.api_client = MagicMock()
+    mock_coordinator.api_client.parsers = {"test_device_1": MagicMock()}
+    mock_coordinator.api_client.static_data = {"test_device_1": {}}
+    
+    result = await async_get_config_entry_diagnostics(mock_hass, mock_config_entry)
+    
+    assert "config_entry" in result
+    assert "coordinator" in result
+    assert "devices" in result
+    assert "api_client" in result
+    assert "websocket" in result
+    
+    # Check that sensitive data is redacted
+    assert "access_token" not in str(result)
+    assert "refresh_token" not in str(result)
+    assert "puid" not in str(result)
+
+
+@pytest.mark.asyncio
+async def test_get_device_diagnostics_no_coordinator(mock_hass, mock_config_entry):
+    """Test device diagnostics when coordinator is not found."""
+    mock_hass.data = {}
+    
+    result = await async_get_device_diagnostics(mock_hass, mock_config_entry, "test_device_1")
+    
+    assert result == {"error": "Coordinator not found"}
+
+
+@pytest.mark.asyncio
+async def test_get_device_diagnostics_device_not_found(mock_hass, mock_config_entry, mock_coordinator):
+    """Test device diagnostics when device is not found."""
+    mock_hass.data = {mock_config_entry.domain: {mock_config_entry.entry_id: mock_coordinator}}
+    mock_coordinator.get_device.return_value = None
+    
+    result = await async_get_device_diagnostics(mock_hass, mock_config_entry, "test_device_1")
+    
+    assert result == {"error": "Device test_device_1 not found"}
+
+
+@pytest.mark.asyncio
+async def test_get_device_diagnostics_success(mock_hass, mock_config_entry, mock_coordinator, mock_device_info):
+    """Test successful device diagnostics."""
+    mock_hass.data = {mock_config_entry.domain: {mock_config_entry.entry_id: mock_coordinator}}
+    mock_coordinator.get_device.return_value = mock_device_info
+    mock_coordinator.api_client = MagicMock()
+    mock_coordinator.api_client.parsers = {"test_device_1": MagicMock()}
+    mock_coordinator.api_client.parsers["test_device_1"].attributes = {"test_attr": "test_value"}
+    
+    result = await async_get_device_diagnostics(mock_hass, mock_config_entry, "test_device_1")
+    
+    assert "device" in result
+    assert "parser" in result
+    assert result["device"]["device_id"] == "test_device_1"
+    assert result["device"]["name"] == "Test AC Unit"
+    
+    # Check that sensitive data is redacted
+    assert "access_token" not in str(result)
+    assert "refresh_token" not in str(result)
+    assert "puid" not in str(result)
+
+
+@pytest.mark.asyncio
+async def test_diagnostics_redaction():
+    """Test that sensitive data is properly redacted."""
+    from custom_components.hisense_connectlife.diagnostics import TO_REDACT
+    
+    # Test data with sensitive information
+    test_data = {
+        "access_token": "secret_token",
+        "refresh_token": "secret_refresh",
+        "puid": "secret_puid",
+        "deviceId": "secret_device_id",
+        "sourceId": "secret_source_id",
+        "appId": "secret_app_id",
+        "timeStamp": "1234567890",
+        "randStr": "secret_random",
+        "safe_data": "this_should_not_be_redacted",
+        "nested": {
+            "access_token": "nested_secret",
+            "safe_nested": "this_should_not_be_redacted",
+        },
+    }
+    
+    # Mock the redact function
+    with patch("custom_components.hisense_connectlife.diagnostics.async_redact_data") as mock_redact:
+        mock_redact.return_value = test_data
+        
+        # The actual redaction would be done by Home Assistant's async_redact_data
+        # We just verify that our TO_REDACT list contains the expected keys
+        for key in ["access_token", "refresh_token", "puid", "deviceId", "sourceId", "appId", "timeStamp", "randStr"]:
+            assert key in TO_REDACT
+"""Test package for Hisense AC Plugin."""

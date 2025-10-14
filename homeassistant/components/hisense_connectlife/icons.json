@@ -1,0 +1,8 @@
+{
+  "mdi:air-conditioner": "climate",
+  "mdi:water-thermometer": "water_heater",
+  "mdi:water-percent": "humidifier",
+  "mdi:thermometer": "sensor",
+  "mdi:toggle-switch": "switch",
+  "mdi:counter": "number"
+}
