@@ -1582,7 +1582,7 @@ async def test_rpc_device_virtual_number_sensor_with_device_class(
     entity_id = f"{SENSOR_DOMAIN}.test_name_humidity_2"
     config = deepcopy(mock_rpc_device.config)
     config["number:203"] = {
-        "name": "Humidity",
+        "name": "Current humidity",
         "min": 0,
         "max": 100,
         "meta": {"ui": {"step": 1, "unit": "%", "view": "label"}},
@@ -1613,7 +1613,7 @@ async def test_rpc_object_role_sensor(
     """Test object role based sensor."""
     config = deepcopy(mock_rpc_device.config)
     config["object:200"] = {
-        "name": "Water",
+        "name": "Water consumption",
         "meta": {"ui": {"unit": "m3"}},
         "role": "water_consumption",
     }
@@ -1626,7 +1626,7 @@ async def test_rpc_object_role_sensor(
 
     await init_integration(hass, 3)
 
-    assert (state := hass.states.get("sensor.test_name_water"))
+    assert (state := hass.states.get("sensor.test_name_water_consumption"))
     assert state.state == "5.4"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfVolume.CUBIC_METERS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER

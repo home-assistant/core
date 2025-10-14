@@ -222,7 +222,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("device", "deviceTemp"): BlockSensorDescription(
         key="device|deviceTemp",
-        translation_placeholders={"channel_name": "Device"},
+        translation_key="device_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -238,7 +238,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("device", "neutralCurrent"): BlockSensorDescription(
         key="device|neutralCurrent",
-        translation_placeholders={"channel_name": "Neutral"},
+        translation_key="neutral_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -835,7 +835,7 @@ RPC_SENSORS: Final = {
     "n_current": RpcSensorDescription(
         key="em",
         sub_key="n_current",
-        translation_placeholders={"channel_name": "Neutral"},
+        translation_key="neutral_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1439,7 +1439,7 @@ RPC_SENSORS: Final = {
     "number_water_pressure": RpcSensorDescription(
         key="number",
         sub_key="value",
-        translation_placeholders={"channel_name": "Water"},
+        translation_key="water_pressure",
         native_unit_of_measurement=UnitOfPressure.KPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1448,7 +1448,7 @@ RPC_SENSORS: Final = {
     "number_water_temperature": RpcSensorDescription(
         key="number",
         sub_key="value",
-        translation_placeholders={"channel_name": "Water"},
+        translation_key="water_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -1509,6 +1509,7 @@ RPC_SENSORS: Final = {
     "object_water_consumption": RpcSensorDescription(
         key="object",
         sub_key="value",
+        translation_key="water_consumption",
         value=lambda status, _: float(status["counter"]["total"]),
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         suggested_display_precision=3,

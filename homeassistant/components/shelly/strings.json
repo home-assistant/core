@@ -188,6 +188,12 @@
       "energy_consumed_with_channel_name": {
         "name": "{channel_name} energy consumed"
       },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
+      "neutral_current": {
+        "name": "Neutral current"
+      },
       "gas_concentration": {
         "name": "Gas concentration"
       },
@@ -250,6 +256,15 @@
       },
       "water_flow_rate": {
         "name": "Water flow rate"
+      },
+      "water_pressure": {
+        "name": "Water pressure"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      },
+      "water_consumption": {
+        "name": "Water consumption"
       },
       "charger_state": {
         "name": "Charger state",
