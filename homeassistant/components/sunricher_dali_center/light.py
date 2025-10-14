@@ -55,7 +55,6 @@ async def async_setup_entry(
         if is_light_device(device.dev_type)
     ]
     async_add_entities(new_lights)
-    _LOGGER.debug("Setting up light platform: %d devices", len(new_lights))
 
 
 class DaliCenterLight(LightEntity):
