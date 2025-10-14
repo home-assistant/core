@@ -9,6 +9,8 @@ from collections.abc import MutableMapping
 from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_AUTH_MODE,
+    CONF_AUTH_MODE_EXPLICIT,
+    CONF_AUTH_MODE_IMPLICIT,
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
     CONF_SECRET_ACCESS_KEY,
@@ -17,6 +19,15 @@ from .const import (
 
 class S3ConfigModel(MutableMapping[str, str]):
     """Configuration model for AWS S3 integration, supporting multiple authentication modes and error tracking."""
+
+    _AuthModeBlanks = {
+        None: {},
+        CONF_AUTH_MODE_EXPLICIT: {},
+        CONF_AUTH_MODE_IMPLICIT: {
+            CONF_ACCESS_KEY_ID,
+            CONF_SECRET_ACCESS_KEY,
+        },
+    }
 
     def __init__(self) -> None:
         """Initialize the S3ConfigModel with the given flow ID and default values."""
@@ -54,7 +65,10 @@ class S3ConfigModel(MutableMapping[str, str]):
                 self[k] = data[k]
 
     def __setitem__(self, key, value):
-        """Set the value for the given configuration key."""
+        """Set a configuration value, handling blanking for auth mode changes."""
+        if key == CONF_AUTH_MODE:
+            if self[CONF_AUTH_MODE] != value and value in S3ConfigModel._AuthModeBlanks:
+                self._blank(S3ConfigModel._AuthModeBlanks[value])
         self._data[key] = value
 
     def __getitem__(self, key):
@@ -72,6 +86,11 @@ class S3ConfigModel(MutableMapping[str, str]):
     def __len__(self):
         """Return the number of configuration items."""
         return len(self._data)
+
+    def _blank(self, blank: set[str]) -> None:
+        for i in blank:
+            if i in self:
+                self[i] = None
 
     def record_error(self, error_context: str, error_identifier: str) -> None:
         """Record an error for a specific context with the given identifier.
