@@ -10,7 +10,7 @@ from typing import Any, cast
 from asusrouter import AsusRouterError
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import (
+from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
