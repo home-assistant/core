@@ -164,6 +164,13 @@
       }
     }
   },
+  "entity": {
+    "event": {
+      "update_event": {
+        "name": "Update event"
+      }
+    }
+  },
   "services": {
     "send_message": {
       "name": "Send message",

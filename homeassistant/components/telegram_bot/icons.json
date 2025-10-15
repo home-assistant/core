@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "event": {
+      "update_event": {
+        "default": "mdi:message-reply"
+      }
+    }
+  },
   "services": {
     "send_message": {
       "service": "mdi:send"

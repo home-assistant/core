@@ -1,7 +1,7 @@
 """Event platform for Telegram bot integration."""
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .bot import TelegramBotConfigEntry
@@ -51,7 +51,8 @@ class TelegramBotEventEntity(TelegramBotEntity, EventEntity):
                 self.hass.bus.async_listen(event_type, self._async_handle_event)
             )
 
+    @callback
     def _async_handle_event(self, _: Event) -> None:
         """Handle the event."""
         self._trigger_event(str(_.event_type), dict(_.data))
-        # self.async_write_ha_state()
+        self.async_write_ha_state()
