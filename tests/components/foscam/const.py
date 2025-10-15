@@ -9,6 +9,7 @@ VALID_CONFIG = {
     config_flow.CONF_PASSWORD: "1234",
     config_flow.CONF_STREAM: "Main",
     config_flow.CONF_RTSP_PORT: 554,
+    config_flow.CONF_WEBHOOK_ID: "webhook_id",
 }
 OPERATOR_CONFIG = {
     config_flow.CONF_USERNAME: "operator",

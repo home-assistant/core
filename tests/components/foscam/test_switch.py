@@ -23,7 +23,7 @@ async def test_entities(
     """Test that coordinator returns the data we expect after the first refresh."""
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, entry_id=ENTRY_ID)
     entry.add_to_hass(hass)
-
+    hass.config.internal_url = "http://localhost:8123"
     with (
         # Mock a valid camera instance"
         patch("homeassistant.components.foscam.FoscamCamera") as mock_foscam_camera,

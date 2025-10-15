@@ -38,6 +38,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_STREAM, default=STREAMS[0]): vol.In(STREAMS),
         vol.Required(CONF_RTSP_PORT, default=DEFAULT_RTSP_PORT): int,
+        vol.Required(CONF_WEBHOOK_ID, default=CONF_WEBHOOK_ID): str,
     }
 )
 

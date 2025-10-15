@@ -1,7 +1,6 @@
 """The foscam component."""
 
 import base64
-from contextlib import suppress
 from http import HTTPStatus
 
 from aiohttp.web import Request, Response
@@ -71,8 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bo
     )
 
     coordinator = FoscamCoordinator(hass, entry, session)
-    with suppress(ValueError):
-        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     webhook.async_register(
         hass, DOMAIN, entry.title, entry.data[CONF_WEBHOOK_ID], handle_webhook
     )

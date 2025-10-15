@@ -21,7 +21,6 @@ async def test_user_valid(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
-
     with (
         patch(
             "homeassistant.components.foscam.config_flow.FoscamCamera",
@@ -39,7 +38,7 @@ async def test_user_valid(hass: HomeAssistant) -> None:
         )
 
         await hass.async_block_till_done()
-
+        result["data"][config_flow.CONF_WEBHOOK_ID] = "webhook_id"
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == CAMERA_NAME
         assert result["data"] == VALID_CONFIG
@@ -136,6 +135,7 @@ async def test_user_invalid_response(hass: HomeAssistant) -> None:
 async def test_user_already_configured(hass: HomeAssistant) -> None:
     """Test we handle already configured from user input."""
 
+    hass.config.internal_url = "http://localhost:8123"
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
         data=VALID_CONFIG,

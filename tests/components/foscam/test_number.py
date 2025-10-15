@@ -28,7 +28,7 @@ async def test_number_entities(
     """Test creation of number entities."""
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, entry_id=ENTRY_ID)
     entry.add_to_hass(hass)
-
+    hass.config.internal_url = "http://localhost:8123"
     with (
         # Mock a valid camera instance
         patch("homeassistant.components.foscam.FoscamCamera") as mock_foscam_camera,
@@ -43,6 +43,7 @@ async def test_number_entities(
 async def test_setting_number(hass: HomeAssistant) -> None:
     """Test setting a number entity calls the correct method on the camera."""
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, entry_id=ENTRY_ID)
+    hass.config.internal_url = "http://localhost:8123"
     entry.add_to_hass(hass)
 
     with patch("homeassistant.components.foscam.FoscamCamera") as mock_foscam_camera:
