@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from roborock import MultiMapsList
 from roborock.exceptions import RoborockException
 from vacuum_map_parser_base.config.color import SupportedColor
 
@@ -91,9 +92,12 @@ async def test_visible_background(
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
     coordinator: RoborockDataUpdateCoordinator = mock_roborock_entry.runtime_data.v1[0]
-    assert coordinator.map_parser._palette.get_color(  # pylint: disable=protected-access
-        SupportedColor.MAP_OUTSIDE
-    ) != (0, 0, 0, 0)
+    assert coordinator.map_parser._palette.get_color(SupportedColor.MAP_OUTSIDE) != (
+        0,
+        0,
+        0,
+        0,
+    )
 
 
 @pytest.mark.parametrize(
@@ -135,3 +139,30 @@ async def test_dynamic_local_scan_interval(
         async_fire_time_changed(hass, dt_util.utcnow() + interval)
 
     assert hass.states.get("sensor.roborock_s7_maxv_battery").state == "20"
+
+
+async def test_no_maps(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    bypass_api_fixture: None,
+) -> None:
+    """Test that a device with no maps is handled correctly."""
+    prop = copy.deepcopy(PROP)
+    prop.status.map_status = 252
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
+            return_value=prop,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_multi_maps_list",
+            return_value=MultiMapsList(
+                max_multi_map=1, max_bak_map=1, multi_map_count=0, map_info=[]
+            ),
+        ),
+        patch(
+            "homeassistant.components.roborock.RoborockMqttClientV1.load_multi_map"
+        ) as load_map,
+    ):
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    assert load_map.call_count == 0

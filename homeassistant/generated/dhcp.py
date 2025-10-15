@@ -9,6 +9,11 @@ from typing import Final
 
 DHCP: Final[list[dict[str, str | bool]]] = [
     {
+        "domain": "actron_air",
+        "hostname": "neo-*",
+        "macaddress": "FC0FE7*",
+    },
+    {
         "domain": "airthings",
         "hostname": "airthings-view",
     },
@@ -562,6 +567,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "playstation_network",
         "macaddress": "84E657*",
+    },
+    {
+        "domain": "pooldose",
+        "hostname": "kommspot",
     },
     {
         "domain": "powerwall",

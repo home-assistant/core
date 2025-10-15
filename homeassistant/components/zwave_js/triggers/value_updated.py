@@ -4,28 +4,19 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import functools
+from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value, get_value_id_str
 
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_PLATFORM,
-    MATCH_ALL,
-)
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_OPTIONS, MATCH_ALL
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.trigger import (
-    Trigger,
-    TriggerActionType,
-    TriggerInfo,
-    move_top_level_schema_fields_to_options,
-)
+from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
 from homeassistant.helpers.typing import ConfigType
 
 from ..config_validation import VALUE_SCHEMA
@@ -98,12 +89,7 @@ async def async_validate_trigger_config(
 
 
 async def async_attach_trigger(
-    hass: HomeAssistant,
-    options: ConfigType,
-    action: TriggerActionType,
-    trigger_info: TriggerInfo,
-    *,
-    platform_type: str = PLATFORM_TYPE,
+    hass: HomeAssistant, options: ConfigType, run_action: TriggerActionRunner
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     dev_reg = dr.async_get(hass)
@@ -119,9 +105,6 @@ async def async_attach_trigger(
     endpoint = options.get(ATTR_ENDPOINT)
     property_key = options.get(ATTR_PROPERTY_KEY)
     unsubs: list[Callable] = []
-    job = HassJob(action)
-
-    trigger_data = trigger_info["trigger_data"]
 
     @callback
     def async_on_value_updated(
@@ -150,10 +133,8 @@ async def async_attach_trigger(
                 return
 
         device_name = device.name_by_user or device.name
-
+        description = f"Z-Wave value {value.value_id} updated on {device_name}"
         payload = {
-            **trigger_data,
-            CONF_PLATFORM: platform_type,
             ATTR_DEVICE_ID: device.id,
             ATTR_NODE_ID: value.node.node_id,
             ATTR_COMMAND_CLASS: value.command_class,
@@ -167,10 +148,9 @@ async def async_attach_trigger(
             ATTR_PREVIOUS_VALUE_RAW: prev_value_raw,
             ATTR_CURRENT_VALUE: curr_value,
             ATTR_CURRENT_VALUE_RAW: curr_value_raw,
-            "description": f"Z-Wave value {value.value_id} updated on {device_name}",
         }
 
-        hass.async_run_hass_job(job, {"trigger": payload})
+        run_action(payload, description)
 
     @callback
     def async_remove() -> None:
@@ -221,16 +201,17 @@ async def async_attach_trigger(
 class ValueUpdatedTrigger(Trigger):
     """Z-Wave JS value updated trigger."""
 
-    _hass: HomeAssistant
-    _options: ConfigType
+    _options: dict[str, Any]
 
     @classmethod
     async def async_validate_complete_config(
-        cls, hass: HomeAssistant, config: ConfigType
+        cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
         """Validate complete config."""
-        config = move_top_level_schema_fields_to_options(config, _OPTIONS_SCHEMA_DICT)
-        return await super().async_validate_complete_config(hass, config)
+        complete_config = move_top_level_schema_fields_to_options(
+            complete_config, _OPTIONS_SCHEMA_DICT
+        )
+        return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
     async def async_validate_config(
@@ -239,17 +220,14 @@ class ValueUpdatedTrigger(Trigger):
         """Validate config."""
         return await async_validate_trigger_config(hass, config)
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
-        self._hass = hass
-        self._options = config[CONF_OPTIONS]
+        super().__init__(hass, config)
+        assert config.options is not None
+        self._options = config.options
 
-    async def async_attach(
-        self,
-        action: TriggerActionType,
-        trigger_info: TriggerInfo,
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
-        return await async_attach_trigger(
-            self._hass, self._options, action, trigger_info
-        )
+        return await async_attach_trigger(self._hass, self._options, run_action)

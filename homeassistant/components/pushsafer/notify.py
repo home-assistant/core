@@ -88,7 +88,7 @@ class PushsaferNotificationService(BaseNotificationService):
             _LOGGER.debug("%s target(s) specified", len(targets))
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        data = kwargs.get(ATTR_DATA, {})
+        data = kwargs.get(ATTR_DATA) or {}
 
         # Converting the specified image to base64
         picture1 = data.get(ATTR_PICTURE1)

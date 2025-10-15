@@ -40,6 +40,7 @@ ENTITY_DESCRIPTIONS: dict[str, tuple[OneWireEntityDescription, ...]] = {
             read_mode=READ_MODE_INT,
             options=["9", "10", "11", "12"],
             translation_key="tempres",
+            entity_registry_enabled_default=False,
         ),
     ),
 }
@@ -105,6 +106,6 @@ class OneWireSelectEntity(OneWireEntity, SelectEntity):
         """Return the selected entity option to represent the entity state."""
         return str(self._state)
 
-    def select_option(self, option: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._write_value(option.encode("ascii"))
+        await self._write_value(option.encode("ascii"))
