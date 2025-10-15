@@ -390,8 +390,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 if not attributes.get("MACAddress"):
                     continue
 
-                wan_access = attributes["X_AVM-DE_WANAccess"]
-                wan_access_result: bool | None = "granted" in wan_access
+                if (wan_access := attributes.get("X_AVM-DE_WANAccess")) is not None:
+                    wan_access_result = "granted" in wan_access
+                else:
+                    wan_access_result = None
 
                 hosts[attributes["MACAddress"]] = Device(
                     name=attributes["HostName"],
