@@ -1,5 +1,5 @@
 rules:
-  #bronze
+  # Bronze
   action-setup: done
   appropriate-polling:
     status: exempt

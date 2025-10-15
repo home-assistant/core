@@ -816,6 +816,17 @@ ZEROCONF = {
             "name": "brother*",
         },
     ],
+    "_quickbars._tcp.local.": [
+        {
+            "domain": "quickbars",
+        },
+        {
+            "domain": "quickbars",
+            "properties": {
+                "api": "1",
+            },
+        },
+    ],
     "_rabbitair._udp.local.": [
         {
             "domain": "rabbitair",

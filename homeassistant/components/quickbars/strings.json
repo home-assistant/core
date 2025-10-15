@@ -54,7 +54,7 @@
     "error": {
       "no_snapshot": "No snapshot available. Pull one first.",
       "no_quickbars": "No QuickBars were found in the snapshot.",
-      "creds_invalid": "Could not connect with the provided URL/token. {hint}",
+      "creds_invalid": "Could not connect with the provided URL/token.",
       "tv_unreachable": "TV not reachable. Make sure the app is open and the pairing screen is visible.",
       "bad_code": "Invalid code. Try again.",
       "no_unique_id": "Could not get a stable device ID from the TV. Please try again.",
@@ -66,11 +66,43 @@
   },
   "options": {
     "step": {
+      "menu": {
+        "title": "QuickBars Configuration",
+        "description": "What would you like to configure?",
+        "data": {
+          "action": "Action"
+        },
+        "data_description": {
+          "action": "Action"
+        }
+      },
       "init": {
         "title": "QuickBars Editor",
-        "description": "Pull / Edit / Push"
+        "description": "Choose an action"
+      },
+      "manage_saved_pick": {
+        "title": "Manage Saved Entities",
+        "description": "Pick an entity to edit",
+        "data": {
+          "entity": "Entity"
+        },
+        "data_description": {
+          "entity": "Entity"
+        }
+      },
+      "manage_saved": {
+        "title": "Edit Saved Entity",
+        "description": "Editing: {entity}",
+        "data": {
+          "display_name": "Display name"
+        },
+        "data_description": {
+          "display_name": "Display name"
+        }
       },
       "qb_pick": {
+        "title": "Manage QuickBars",
+        "description": "Select a QuickBar to edit, or create a new one.",
         "data": {
           "quickbar": "QuickBar"
         },
@@ -80,7 +112,7 @@
       },
       "qb_manage": {
         "title": "QuickBars Options",
-        "description": "Configure automatic close domains and QuickBar behavior",
+        "description": "Adjust settings and submit to save. Note: Top/Bottom/Left position and Grid layout are Plus features.",
         "data": {
           "quickbar_name": "QuickBar name",
           "saved_entities": "Saved entities",
@@ -123,33 +155,10 @@
         "data_description": {
           "saved": "Entities"
         }
-      },
-      "menu": {
-        "data":{
-          "action": "Menu action"
-        },
-        "data_description": {
-          "action": "Menu action"
-        }
-      },
-      "manage_saved_pick": {
-        "data": {
-          "entity": "Entity"
-        },
-        "data_description": {
-          "entity": "Entity"
-        }
-      },
-      "manage_saved": {
-        "data":{
-          "display_name": "Display name"
-        },
-        "data_description": {
-          "display_name": "Display name"
-        }
       }
     },
     "error": {
+      "no_quickbars": "No QuickBars found.",
       "ws_error": "Could not communicate with QuickBars on the TV.",
       "invalid_selection": "Please select at least one entity.",
       "no_entities": "No entities available to export.",

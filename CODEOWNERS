@@ -1263,6 +1263,8 @@ build.json @home-assistant/supervisor
 /tests/components/qnap_qsw/ @Noltari
 /homeassistant/components/quantum_gateway/ @cisasteelersfan
 /tests/components/quantum_gateway/ @cisasteelersfan
+/homeassistant/components/quickbars/ @Trooped
+/tests/components/quickbars/ @Trooped
 /homeassistant/components/qvr_pro/ @oblogic7
 /homeassistant/components/qwikswitch/ @kellerza
 /tests/components/qwikswitch/ @kellerza

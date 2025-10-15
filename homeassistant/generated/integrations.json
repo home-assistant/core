@@ -5361,6 +5361,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "quickbars": {
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "qvr_pro": {
       "name": "QVR Pro",
       "integration_type": "hub",
@@ -8049,6 +8054,7 @@
     "nmap_tracker",
     "plant",
     "proximity",
+    "quickbars",
     "random",
     "remote_calendar",
     "rpi_power",

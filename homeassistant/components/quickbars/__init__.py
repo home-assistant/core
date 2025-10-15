@@ -16,12 +16,31 @@ from zeroconf.asyncio import AsyncServiceBrowser
 
 from homeassistant import config_entries
 from homeassistant.components import persistent_notification, zeroconf as ha_zc
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.components.zeroconf import HaAsyncZeroconf
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .constants import DOMAIN, EVENT_NAME, POS_CHOICES, SERVICE_TYPE
+from .constants import (
+    ATTR_ALIAS,
+    ATTR_AUTO_HIDE,
+    ATTR_CAMERA_ALIAS,
+    ATTR_CAMERA_ENTITY,
+    ATTR_DEVICE_ID,
+    ATTR_HEIGHT,
+    ATTR_POSITION,
+    ATTR_RTSP_URL,
+    ATTR_SHOW_TITLE,
+    ATTR_SIZE,
+    ATTR_SIZE_PX,
+    ATTR_WIDTH,
+    DOMAIN,
+    EVENT_NAME,
+    POS_CHOICES,
+    SERVICE_TYPE,
+    SIZE_CHOICES,
+)
 from .coordinator import QuickBarsCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -30,6 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Typed config entry for this integration
 type QuickBarsConfigEntry = config_entries.ConfigEntry["QuickBarsRuntime"]
+
 
 @dataclass(slots=True)
 class QuickBarsRuntime:
@@ -44,38 +64,38 @@ class QuickBarsRuntime:
 # ----- Service Schemas -----
 QUICKBAR_SCHEMA = vol.Schema(
     {
-        vol.Required("alias"): cv.string,
-        vol.Optional("device_id"): cv.string,
+        vol.Required(ATTR_ALIAS): cv.string,
+        vol.Optional(ATTR_DEVICE_ID): cv.string,
     }
 )
 
 CAMERA_SCHEMA = vol.Schema(
     {
         # Exactly one of these:
-        vol.Exclusive("camera_alias", "cam_id"): cv.string,
-        vol.Exclusive("camera_entity", "cam_id"): cv.entity_id,
-        vol.Optional("rtsp_url"): cv.string,
+        vol.Exclusive(ATTR_CAMERA_ALIAS, "cam_id"): cv.string,
+        vol.Exclusive(ATTR_CAMERA_ENTITY, "cam_id"): cv.entity_id,
+        vol.Optional(ATTR_RTSP_URL): cv.string,
         # Optional rendering options
-        vol.Optional("position"): vol.In(POS_CHOICES),
+        vol.Optional(ATTR_POSITION): vol.In(POS_CHOICES),
         # Either preset size OR custom size in px
-        vol.Exclusive("size", "cam_size"): vol.In(["small", "medium", "large"]),
-        vol.Exclusive("size_px", "cam_size"): vol.Schema(
+        vol.Exclusive(ATTR_SIZE, "cam_size"): vol.In(SIZE_CHOICES),
+        vol.Exclusive(ATTR_SIZE_PX, "cam_size"): vol.Schema(
             {
-                vol.Required("w"): vol.All(
+                vol.Required(ATTR_WIDTH): vol.All(
                     vol.Coerce(int), vol.Range(min=48, max=3840)
                 ),
-                vol.Required("h"): vol.All(
+                vol.Required(ATTR_HEIGHT): vol.All(
                     vol.Coerce(int), vol.Range(min=48, max=2160)
                 ),
             }
         ),
         # Auto-hide in seconds: 0 = never, 15..300 otherwise
-        vol.Optional("auto_hide", default=30): vol.All(
+        vol.Optional(ATTR_AUTO_HIDE, default=30): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=300)
         ),
         # Show title overlay?
-        vol.Optional("show_title", default=True): cv.boolean,
-        vol.Optional("device_id"): cv.string,
+        vol.Optional(ATTR_SHOW_TITLE, default=True): cv.boolean,
+        vol.Optional(ATTR_DEVICE_ID): cv.string,
     }
 )
 
@@ -87,13 +107,14 @@ class _Presence:
         self.hass = hass
         self.entry = entry
         self._browser: AsyncServiceBrowser | None = None
-        self._aiozc = None
+        self._aiozc: HaAsyncZeroconf | None = None
 
     async def start(self) -> None:
         self._aiozc = await ha_zc.async_get_async_instance(self.hass)
-        self._browser = AsyncServiceBrowser(
-            self._aiozc.zeroconf, SERVICE_TYPE, handlers=[self._on_change]
-        )
+        if self._aiozc:
+            self._browser = AsyncServiceBrowser(
+                self._aiozc.zeroconf, SERVICE_TYPE, handlers=[self._on_change]
+            )
 
     async def stop(self) -> None:
         if self._browser:
@@ -107,9 +128,15 @@ class _Presence:
             state_change = kwargs.get("state_change")
         else:
             _, service_type, name, state_change = args
-        self.hass.async_create_task(
-            self._handle_change(service_type, name, state_change)
-        )
+
+        if (
+            isinstance(service_type, str)
+            and isinstance(name, str)
+            and isinstance(state_change, ServiceStateChange)
+        ):
+            self.hass.async_create_task(
+                self._handle_change(service_type, name, state_change)
+            )
 
     async def _handle_change(
         self, service_type: str, name: str, state_change: ServiceStateChange
@@ -117,9 +144,14 @@ class _Presence:
         if service_type != SERVICE_TYPE:
             return
 
-        wanted_id = (self.entry.data.get("id") or "").strip().lower()
+        wanted_id = (
+            (self.entry.data.get(CONF_ID) or self.entry.unique_id or "").strip().lower()
+        )
 
         if state_change is ServiceStateChange.Removed:
+            return
+
+        if self._aiozc is None:
             return
 
         info = await self._aiozc.async_get_service_info(service_type, name, 3000)
@@ -136,7 +168,7 @@ class _Presence:
         if not found_id or found_id != wanted_id:
             return
 
-        host = (info.parsed_addresses() or [self.entry.data.get(CONF_HOST)])[0]
+        host = (info.parsed_addresses() or [self.entry.data.get(CONF_HOST) or ""])[0]
         port = info.port or self.entry.data.get(CONF_PORT)
         if (
             host
@@ -166,7 +198,11 @@ def _entry_for_device(
             ident = next((v for (d, v) in dev.identifiers if d == DOMAIN), None)
             if ident:
                 for ent in entries:
-                    if ent.data.get("id") == ident or ent.entry_id == ident:
+                    if ident in (
+                        ent.data.get(CONF_ID),
+                        ent.unique_id,
+                        ent.entry_id,
+                    ):
                         return ent
     if len(entries) == 1:
         return entries[0]
@@ -175,12 +211,12 @@ def _entry_for_device(
 
 async def _handle_quickbar(hass: HomeAssistant, call: ServiceCall) -> None:
     """Service handler for quickbar_toggle."""
-    data: dict[str, Any] = {"alias": call.data["alias"]}
-    target_device_id = call.data.get("device_id")
+    data: dict[str, Any] = {ATTR_ALIAS: call.data[ATTR_ALIAS]}
+    target_device_id = call.data.get(ATTR_DEVICE_ID)
     if target_device_id:
         ent = _entry_for_device(hass, target_device_id)
         if ent:
-            data["id"] = ent.data.get("id") or ent.entry_id
+            data[CONF_ID] = ent.data.get(CONF_ID) or ent.unique_id or ent.entry_id
     hass.bus.async_fire(EVENT_NAME, data)
 
 
@@ -189,61 +225,66 @@ async def _handle_camera(hass: HomeAssistant, call: ServiceCall) -> None:
     data: dict[str, Any] = {}
 
     # optional device targeting
-    target_device_id = call.data.get("device_id")
+    target_device_id = call.data.get(ATTR_DEVICE_ID)
     if target_device_id:
         ent = _entry_for_device(hass, target_device_id)
         if ent:
-            data["id"] = ent.data.get("id") or ent.entry_id
+            data[CONF_ID] = ent.data.get(CONF_ID) or ent.unique_id or ent.entry_id
 
     # id/alias
-    alias = call.data.get("camera_alias")
-    entity = call.data.get("camera_entity")
+    alias = call.data.get(ATTR_CAMERA_ALIAS)
+    entity = call.data.get(ATTR_CAMERA_ENTITY)
     if alias:
-        data["camera_alias"] = alias
+        data[ATTR_CAMERA_ALIAS] = alias
     if entity:
-        data["camera_entity"] = entity
+        data[ATTR_CAMERA_ENTITY] = entity
 
-    data["rtsp_url"] = call.data.get("rtsp_url")
+    data[ATTR_RTSP_URL] = call.data.get(ATTR_RTSP_URL)
 
     # options
-    pos = call.data.get("position")
+    pos = call.data.get(ATTR_POSITION)
     if pos in POS_CHOICES:
-        data["position"] = pos
+        data[ATTR_POSITION] = pos
 
-    if "size" in call.data:
-        data["size"] = call.data["size"]  # small|medium|large
-    elif "size_px" in call.data:
-        sp = call.data["size_px"] or {}
+    if ATTR_SIZE in call.data:
+        data[ATTR_SIZE] = call.data[ATTR_SIZE]  # small|medium|large
+    elif ATTR_SIZE_PX in call.data:
+        sp = call.data[ATTR_SIZE_PX] or {}
         try:
-            w = int(sp.get("w"))
-            h = int(sp.get("h"))
-            if w > 0 and h > 0:
-                data["size_px"] = {"w": w, "h": h}
+            width_val = sp.get(ATTR_WIDTH)
+            height_val = sp.get(ATTR_HEIGHT)
+            if width_val is not None and height_val is not None:
+                w = int(width_val)
+                h = int(height_val)
+                if w > 0 and h > 0:
+                    data[ATTR_SIZE_PX] = {ATTR_WIDTH: w, ATTR_HEIGHT: h}
         except (TypeError, ValueError):
             # ignore invalid size objects
             pass
 
-    auto_hide = call.data.get("auto_hide")
+    auto_hide = call.data.get(ATTR_AUTO_HIDE)
     if isinstance(auto_hide, int):
         if auto_hide != 0 and auto_hide < 5:
             auto_hide = 5
-        data["auto_hide"] = auto_hide
+        data[ATTR_AUTO_HIDE] = auto_hide
 
-    show_title = call.data.get("show_title")
+    show_title = call.data.get(ATTR_SHOW_TITLE)
     if isinstance(show_title, bool):
-        data["show_title"] = show_title
+        data[ATTR_SHOW_TITLE] = show_title
 
     hass.bus.async_fire(EVENT_NAME, data)
 
 
 async def _svc_notify(hass: HomeAssistant, call: ServiceCall) -> None:
     """Service handler for notify."""
-    target_device_id = call.data.get("device_id")
+    target_device_id = call.data.get(ATTR_DEVICE_ID)
     entry2 = _entry_for_device(hass, target_device_id) if target_device_id else None
 
     payload = await build_notify_payload(hass, call.data)
     if entry2:
-        payload["id"] = entry2.data.get("id") or entry2.entry_id
+        payload[CONF_ID] = (
+            entry2.data.get(CONF_ID) or entry2.unique_id or entry2.entry_id
+        )
 
     cid = call.data.get("cid") or secrets.token_urlsafe(8)
     payload["cid"] = cid
@@ -284,7 +325,7 @@ async def async_setup_entry(
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.data.get("id") or entry.entry_id)},
+        identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
         manufacturer="QuickBars",
         name=entry.title or "QuickBars TV",
     )
@@ -299,8 +340,9 @@ async def async_setup_entry(
     # Bridge TV button clicks -> HA event (per-entry)
     def _on_action(evt):
         data = evt.data or {}
-        exp_id = entry.data.get("id") or entry.entry_id
-        if data.get("id") and data.get("id") != exp_id:
+        exp_id = entry.data.get(CONF_ID) or entry.unique_id or entry.entry_id
+        incoming_id = data.get(CONF_ID)
+        if incoming_id and incoming_id != exp_id:
             return
         hass.bus.async_fire(
             f"{DOMAIN}.notification_action",

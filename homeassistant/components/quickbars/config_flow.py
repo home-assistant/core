@@ -23,7 +23,6 @@ from quickbars_bridge.hass_flow import (
     qb_pick_options,
     saved_pick_options,
     schema_expose,
-    schema_manage_saved_pick,
     schema_menu,
     schema_qb_manage,
     schema_qb_pick,
@@ -41,10 +40,9 @@ from quickbars_bridge.qb import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, OptionsFlow
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import State, callback
-from homeassistant.data_entry_flow import FlowResult as ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import selector
@@ -52,18 +50,25 @@ from homeassistant.helpers.selector import selector
 from .constants import DOMAIN
 
 if TYPE_CHECKING:
-    from homeassistant.components.zeroconf import (
-        ZeroconfServiceInfo,  # type: ignore[attr-defined]
-    )
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
 
+def schema_host_port(default_host: str | None, default_port: int | None) -> vol.Schema:
+    """Return schema for host/port input form."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST, default=default_host): str,
+            vol.Required(
+                CONF_PORT, default=default_port if default_port is not None else 9123
+            ): int,
+        }
+    )
+
+
 class QuickBarsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the QuickBars config flow."""
-
-    VERSION = 1
-    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize flow state."""
@@ -83,13 +88,7 @@ class QuickBarsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Start the flow: collect host/port and request a pairing code."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): str,
-                        vol.Required(CONF_PORT, default=9123): int,
-                    }
-                ),
+                step_id="user", data_schema=schema_host_port(None, 9123)
             )
 
         self._host = user_input[CONF_HOST]
@@ -98,22 +97,17 @@ class QuickBarsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             client = QuickBarsClient(self._host, self._port)
             resp = await client.get_pair_code()
-            self._pair_sid = resp.get("sid")
-        except (TimeoutError, OSError, ClientError) as e:
+        except (TimeoutError, OSError, ClientError):
             _LOGGER.exception(
                 "Step_user: get_pair_code failed for %s:%s", self._host, self._port
             )
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST, default=self._host): str,
-                        vol.Required(CONF_PORT, default=self._port): int,
-                    }
-                ),
+                data_schema=schema_host_port(self._host, self._port),
                 errors={"base": "tv_unreachable"},
-                description_placeholders={"hint": f"{type(e).__name__}: {e}"},
             )
+        else:
+            self._pair_sid = resp.get("sid")
 
         return await self.async_step_pair()
 
@@ -145,20 +139,21 @@ class QuickBarsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="pair",
                 data_schema=schema,
                 errors={"base": "no_unique_id"},
-                description_placeholders={
-                    "hint": "QuickBars did not return a stable device ID"
-                },
             )
 
         qb_name = resp.get("name") or "QuickBars TV App"
         self._paired_name = qb_name
         self.context["title_placeholders"] = {"name": qb_name}
-        qb_port = int(resp.get("port") or self._port)
+        port_val = resp.get("port")
+        if port_val is None:
+            qb_port = int(self._port) if self._port is not None else 9123
+        else:
+            qb_port = int(port_val)
         has_token = bool(resp.get("has_token"))
 
         await self.async_set_unique_id(qb_id)
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self._host, CONF_PORT: qb_port, "id": qb_id}
+            updates={CONF_HOST: self._host, CONF_PORT: qb_port, CONF_ID: qb_id}
         )
         self._port = qb_port
 
@@ -167,7 +162,7 @@ class QuickBarsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=self._paired_name,
-            data={CONF_HOST: self._host, CONF_PORT: qb_port, "id": qb_id},
+            data={CONF_HOST: self._host, CONF_PORT: qb_port, CONF_ID: qb_id},
         )
 
     async def async_step_token(
@@ -187,24 +182,25 @@ class QuickBarsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             client = QuickBarsClient(self._host, self._port)
             res = await client.set_credentials(url, token)
             if not res.get("ok"):
-                reason = (res.get("reason") or "creds_invalid").replace("_", " ")
                 return self.async_show_form(
                     step_id="token",
                     data_schema=schema_token(url, token),
                     errors={"base": "creds_invalid"},
-                    description_placeholders={"hint": reason},
                 )
-        except (TimeoutError, OSError, ClientError) as e:
+        except (TimeoutError, OSError, ClientError):
             return self.async_show_form(
                 step_id="token",
                 data_schema=schema_token(url, token),
                 errors={"base": "tv_unreachable"},
-                description_placeholders={"hint": f"{type(e).__name__}: {e}"},
             )
 
         return self.async_create_entry(
             title=self._paired_name or "QuickBars TV",
-            data={CONF_HOST: self._host, CONF_PORT: self._port, "id": self.unique_id},
+            data={
+                CONF_HOST: self._host,
+                CONF_PORT: self._port,
+                CONF_ID: self.unique_id,
+            },
         )
 
     # -------- Zeroconf path --------
@@ -222,7 +218,7 @@ class QuickBarsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if unique:
             await self.async_set_unique_id(unique)
             self._abort_if_unique_id_configured(
-                updates={CONF_HOST: host, CONF_PORT: port, "id": unique}
+                updates={CONF_HOST: host, CONF_PORT: port, CONF_ID: unique}
             )
 
         self._host, self._port = host, port
@@ -253,8 +249,7 @@ class QuickBarsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             client = QuickBarsClient(self._host, self._port)
             resp = await client.get_pair_code()
-            self._pair_sid = resp.get("sid")
-        except (TimeoutError, OSError, ClientError) as e:
+        except (TimeoutError, OSError, ClientError):
             _LOGGER.exception(
                 "Step_zeroconf_confirm: get_pair_code failed for %s:%s",
                 self._host,
@@ -262,21 +257,17 @@ class QuickBarsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST, default=self._host): str,
-                        vol.Required(CONF_PORT, default=self._port): int,
-                    }
-                ),
+                data_schema=schema_host_port(self._host, self._port),
                 errors={"base": "tv_unreachable"},
-                description_placeholders={"hint": f"{type(e).__name__}: {e}"},
             )
+        else:
+            self._pair_sid = resp.get("sid")
 
         return await self.async_step_pair()
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> "QuickBarsOptionsFlow":
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Expose per-entry options flow so the Configure button appears."""
         return QuickBarsOptionsFlow()
 
@@ -302,7 +293,6 @@ class QuickBarsOptionsFlow(OptionsFlow):
             step_id=step_id,
             data_schema=schema or vol.Schema({}),
             errors={"base": "tv_unreachable"},
-            description_placeholders={"hint": hint or f"{type(e).__name__}: {e}"},
         )
 
     async def _ensure_snapshot(self, step_id_for_error: str) -> bool:
@@ -334,15 +324,13 @@ class QuickBarsOptionsFlow(OptionsFlow):
                 return self.async_show_form(
                     step_id="init",
                     errors={"base": "tv_unreachable"},
-                    description_placeholders={"hint": "WS ping failed"},
                     data_schema=vol.Schema({}),
                 )
-        except Exception as e:
+        except Exception:
             _LOGGER.exception("Options:init ws_ping raised")
             return self.async_show_form(
                 step_id="init",
                 errors={"base": "tv_unreachable"},
-                description_placeholders={"hint": f"{type(e).__name__}: {e}"},
                 data_schema=vol.Schema({}),
             )
 
@@ -352,12 +340,11 @@ class QuickBarsOptionsFlow(OptionsFlow):
             self._snapshot = await ws_get_snapshot(
                 self.hass, self.config_entry, timeout=15.0
             )
-        except Exception as e:
+        except Exception:
             _LOGGER.exception("Options:init ws_get_snapshot raised")
             return self.async_show_form(
                 step_id="init",
                 errors={"base": "tv_unreachable"},
-                description_placeholders={"hint": f"{type(e).__name__}: {e}"},
                 data_schema=vol.Schema({}),
             )
 
@@ -369,14 +356,7 @@ class QuickBarsOptionsFlow(OptionsFlow):
         """Show the options menu and route to the chosen action."""
         if user_input is None:
             schema = schema_menu()
-            return self.async_show_form(
-                step_id="menu",
-                data_schema=schema,
-                description_placeholders={
-                    "title": "QuickBars Configuration",
-                    "description": "What would you like to configure?",
-                },
-            )
+            return self.async_show_form(step_id="menu", data_schema=schema)
 
         # Handle selected action
         action = user_input.get("action", "")
@@ -395,20 +375,14 @@ class QuickBarsOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select and save the set of 'saved' entities in the TV app."""
-        entities: list[dict[str, Any]] = list(self._snapshot.get("entities", []))
+        entities: list[dict[str, Any]] = list(
+            (self._snapshot or {}).get("entities", [])
+        )
         saved_ids = [e.get("id") for e in entities if e.get("id")]
 
         if user_input is None:
             schema = schema_expose(saved_ids)
-
-            return self.async_show_form(
-                step_id="expose",
-                data_schema=schema,
-                description_placeholders={
-                    "title": "Saved entities",
-                    "description": "Select which entities are saved in the QuickBars app.",
-                },
-            )
+            return self.async_show_form(step_id="expose", data_schema=schema)
 
         # Build replacement list
         selected: list[str] = list(user_input.get("saved") or [])
@@ -424,7 +398,7 @@ class QuickBarsOptionsFlow(OptionsFlow):
                 title="", data=dict(self.config_entry.options)
             )
 
-        except Exception as e:
+        except Exception:
             _LOGGER.exception("Entities_replace failed")
             schema = vol.Schema(
                 {
@@ -437,9 +411,7 @@ class QuickBarsOptionsFlow(OptionsFlow):
                 step_id="expose",
                 data_schema=schema,
                 errors={"base": "tv_unreachable"},
-                description_placeholders={"hint": f"{type(e).__name__}: {e}"},
             )
-        
 
     # ---------- 2) Manage Saved Entities (placeholder for now) ----------
     async def async_step_manage_saved_pick(
@@ -452,31 +424,28 @@ class QuickBarsOptionsFlow(OptionsFlow):
             return self._error_form(
                 "manage_saved_pick", Exception("snapshot"), hint="Snapshot unavailable"
             )
-        
+
         def _pick_schema(options):
             """Build pick schema from options list."""
-            return vol.Schema({
-                vol.Optional("entity"): selector({
-                    "select": {
-                        "options": options,  # [{"value": "...", "label": "..."}]
-                        "multiple": False,
-                        "mode": "dropdown",
-                    }
-                })
-            })
+            return vol.Schema(
+                {
+                    vol.Optional("entity"): selector(
+                        {
+                            "select": {
+                                "options": options,  # [{"value": "...", "label": "..."}]
+                                "multiple": False,
+                                "mode": "dropdown",
+                            }
+                        }
+                    )
+                }
+            )
 
-        options = saved_pick_options(self._snapshot)
+        options = saved_pick_options(self._snapshot or {})
         schema = _pick_schema(options)
 
         if user_input is None:
-            return self.async_show_form(
-                step_id="manage_saved_pick",
-                data_schema=schema,
-                description_placeholders={
-                    "title": "Manage Saved Entities",
-                    "description": "Pick an entity to edit.",
-                },
-            )
+            return self.async_show_form(step_id="manage_saved_pick", data_schema=schema)
 
         # Empty submission -> re-show pick step
         if "entity" not in user_input or not user_input["entity"]:
@@ -495,17 +464,18 @@ class QuickBarsOptionsFlow(OptionsFlow):
                 self._snapshot = await ws_get_snapshot(
                     self.hass, self.config_entry, timeout=15.0
                 )
-            except (TimeoutError, OSError, ClientError) as e:
+            except (TimeoutError, OSError, ClientError):
+                entity_label = getattr(self, "_entity_id", "") or "Entity"
                 return self.async_show_form(
                     step_id="manage_saved",
                     errors={"base": "tv_unreachable"},
-                    description_placeholders={"hint": f"{type(e).__name__}: {e}"},
                     data_schema=vol.Schema({}),
+                    description_placeholders={"entity": entity_label},
                 )
 
         ents: list[dict[str, Any]] = [
             e
-            for e in (self._snapshot.get("entities") or [])
+            for e in (self._snapshot.get("entities", []) or [])
             if e.get("isSaved") and e.get("id")
         ]
         by_id = {e["id"]: e for e in ents}
@@ -515,6 +485,9 @@ class QuickBarsOptionsFlow(OptionsFlow):
 
         entity = by_id[self._entity_id]
         cur_name = entity.get("customName") or entity.get("friendlyName") or ""
+        entity_label = (
+            entity.get("customName") or entity.get("friendlyName") or entity["id"]
+        )
 
         if user_input is None:
             schema = vol.Schema(
@@ -522,13 +495,11 @@ class QuickBarsOptionsFlow(OptionsFlow):
                     vol.Required("display_name", default=cur_name): str,
                 }
             )
+            # Show which entity we're editing via translatable placeholder.
             return self.async_show_form(
                 step_id="manage_saved",
                 data_schema=schema,
-                description_placeholders={
-                    "title": "Edit Saved Entity",
-                    "description": f"Editing: {entity.get('customName') or entity.get('friendlyName') or entity['id']}",
-                },
+                description_placeholders={"entity": entity_label},
             )
 
         # Save
@@ -543,7 +514,7 @@ class QuickBarsOptionsFlow(OptionsFlow):
             return self.async_create_entry(
                 title="", data=dict(self.config_entry.options)
             )
-        except Exception as e:
+        except Exception:
             _LOGGER.exception("Entities_update failed")
             return self.async_show_form(
                 step_id="manage_saved",
@@ -551,7 +522,7 @@ class QuickBarsOptionsFlow(OptionsFlow):
                     {vol.Required("display_name", default=new_name): str}
                 ),
                 errors={"base": "tv_unreachable"},
-                description_placeholders={"hint": f"{type(e).__name__}: {e}"},
+                description_placeholders={"entity": entity_label},
             )
 
     # ---------- 3) Manage QuickBars ----------
@@ -566,15 +537,16 @@ class QuickBarsOptionsFlow(OptionsFlow):
                 "qb_pick", Exception("snapshot"), hint="Snapshot unavailable"
             )
 
-        qb_list: list[dict[str, Any]] = list(self._snapshot.get("quick_bars", []))
+        snapshot_dict: dict[str, Any] = self._snapshot or {}
+        qb_list_raw: list[dict[str, Any]] | None = snapshot_dict.get("quick_bars")
+        if qb_list_raw is None:
+            qb_list_raw = []
+        qb_list: list[dict[str, Any]] = list(qb_list_raw)
         if not qb_list:
             return self.async_show_form(
                 step_id="qb_pick",
                 data_schema=vol.Schema({}),
-                description_placeholders={
-                    "title": "Manage QuickBars",
-                    "description": "No QuickBars found.",
-                },
+                errors={"base": "no_quickbars"},
             )
 
         options = qb_pick_options(qb_list)
@@ -586,14 +558,7 @@ class QuickBarsOptionsFlow(OptionsFlow):
 
         if user_input is None:
             schema = schema_qb_pick(options, default_idx)
-            return self.async_show_form(
-                step_id="qb_pick",
-                data_schema=schema,
-                description_placeholders={
-                    "title": "Manage QuickBars",
-                    "description": "Select a QuickBar to edit, or create a new one.",
-                },
-            )
+            return self.async_show_form(step_id="qb_pick", data_schema=schema)
 
         choice = str(user_input.get("quickbar", str(default_idx)))
 
@@ -602,6 +567,8 @@ class QuickBarsOptionsFlow(OptionsFlow):
             name = unique_qb_name("QuickBar", existing_names)
             new_qb = default_quickbar(name)
             qb_list.append(new_qb)
+            if self._snapshot is None:
+                self._snapshot = {}
             self._snapshot["quick_bars"] = qb_list
             self._qb_index = len(qb_list) - 1
             return await self.async_step_qb_manage()
@@ -624,7 +591,9 @@ class QuickBarsOptionsFlow(OptionsFlow):
                     "qb_manage", Exception("snapshot"), hint="Snapshot unavailable"
                 )
 
-        qb_list: list[dict[str, Any]] = list(self._snapshot.get("quick_bars", []))
+        qb_list: list[dict[str, Any]] = list(
+            (self._snapshot or {}).get("quick_bars", [])
+        )
         if (
             not qb_list
             or not isinstance(self._qb_index, int)
@@ -634,19 +603,12 @@ class QuickBarsOptionsFlow(OptionsFlow):
 
         qb = qb_list[self._qb_index]
         cur = defaults_from_qb(qb)
-        saved_options, saved_ids = saved_options_from_snapshot(self._snapshot)
+        saved_options, saved_ids = saved_options_from_snapshot(self._snapshot or {})
 
         if user_input is None:
             return self.async_show_form(
                 step_id="qb_manage",
                 data_schema=schema_qb_manage(qb, saved_options, cur),
-                description_placeholders={
-                    "title": "Manage QuickBar",
-                    "description": (
-                        "Adjust settings and submit to save. "
-                        "Note: Top/Bottom/Left position and Grid layout are Plus features."
-                    ),
-                },
             )
 
         new_name = (user_input.get("quickbar_name", cur["name"]) or "").strip()
@@ -656,31 +618,23 @@ class QuickBarsOptionsFlow(OptionsFlow):
                 step_id="qb_manage",
                 data_schema=schema_qb_manage(qb, saved_options, attempted),
                 errors={"base": "name_taken"},
-                description_placeholders={
-                    "title": "Manage QuickBar",
-                    "description": (
-                        "Adjust settings and submit to save. "
-                        "Note: Top/Bottom/Left position and Grid layout are Plus features."
-                    ),
-                },
             )
 
         # Apply edits and persist
         apply_edits(qb, cur, user_input, saved_ids)
         try:
-            payload = {"quick_bars": self._snapshot.get("quick_bars", [])}
+            payload = {"quick_bars": (self._snapshot or {}).get("quick_bars", [])}
             await ws_put_snapshot(self.hass, self.config_entry, payload, timeout=20.0)
             return self.async_create_entry(
                 title="", data=dict(self.config_entry.options)
             )
-        except Exception as e:
+        except Exception:
             _LOGGER.exception("Quickbar update failed")
             attempted = defaults_from_qb(qb)  # show what we now have on the qb
             return self.async_show_form(
                 step_id="qb_manage",
                 data_schema=schema_qb_manage(qb, saved_options, attempted),
                 errors={"base": "tv_unreachable"},
-                description_placeholders={"hint": f"{type(e).__name__}: {e}"},
             )
 
     async def async_step_done(

@@ -5,7 +5,7 @@ Patches zeroconf/network and persistent notifications to avoid real I/O.
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -19,8 +19,8 @@ DOMAIN = "quickbars"
 
 
 @pytest.fixture
-def mock_bus_unsub(hass):
-
+def mock_bus_unsub(hass: HomeAssistant):
+    """Mock the EventBus listener unsubscription used by the integration."""
     unsub = Mock(name="unsub")
 
     # match EventBus.async_listen(self, event_type, callback) signature
@@ -47,7 +47,7 @@ def patch_zeroconf():
     """Prevent real zeroconf I/O and satisfy code paths in __init__."""
 
     class _DummyAsyncZC:
-        def __init__(self):
+        def __init__(self) -> None:
             # Provide a minimal attribute that looks like the real object
             # (it won't be used because we stub the browser too)
             self.zeroconf = object()
@@ -63,7 +63,7 @@ def patch_zeroconf():
         return _DummyAsyncZC()
 
     class _DummyBrowser:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             pass
 
         async def async_cancel(self):
@@ -81,7 +81,6 @@ def patch_zeroconf():
         ),
     ):
         yield
-
 
 
 @pytest.fixture

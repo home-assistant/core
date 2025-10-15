@@ -11,11 +11,11 @@ async def test_setup_and_unload_entry(
 ) -> None:
     """Integration loads & unloads cleanly and cancels the bus listener."""
     entry = setup_integration
-    assert entry.state is ConfigEntryState.LOADED
+    assert entry.state == ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert entry.state == ConfigEntryState.NOT_LOADED
 
     # unsub called once on unload
     mock_bus_unsub.assert_called_once()

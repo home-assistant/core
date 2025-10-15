@@ -1,5 +1,24 @@
 """Constants for the QuickBars integration."""
 
+# Attribute keys used by services/actions
+ATTR_ALIAS = "alias"
+ATTR_DEVICE_ID = "device_id"
+
+ATTR_CAMERA_ALIAS = "camera_alias"
+ATTR_CAMERA_ENTITY = "camera_entity"
+ATTR_RTSP_URL = "rtsp_url"
+ATTR_POSITION = "position"
+ATTR_SIZE = "size"
+ATTR_SIZE_PX = "size_px"
+ATTR_WIDTH = "w"
+ATTR_HEIGHT = "h"
+ATTR_AUTO_HIDE = "auto_hide"
+ATTR_SHOW_TITLE = "show_title"
+
+
+SIZE_CHOICES = ["small", "medium", "large"]
+
+
 ALLOWED_DOMAINS = [
     "light",
     "switch",

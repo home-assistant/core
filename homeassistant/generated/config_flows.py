@@ -531,6 +531,7 @@ FLOWS = {
         "qingping",
         "qnap",
         "qnap_qsw",
+        "quickbars",
         "rabbitair",
         "rachio",
         "radarr",
