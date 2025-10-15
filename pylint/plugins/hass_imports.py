@@ -147,7 +147,6 @@ _IGNORE_ROOT_IMPORT = (
     "script",
     "sensor",
     "stream",
-    "zha",
 )
 
 
