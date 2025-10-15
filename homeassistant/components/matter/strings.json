@@ -193,10 +193,13 @@
         "name": "Altitude above sea level"
       },
       "cook_time": {
-        "name": "Cook time"
+        "name": "Cooking time"
       },
       "pump_setpoint": {
         "name": "Setpoint"
+      },
+      "user_code_temporary_disable_time": {
+        "name": "User code temporary disable time"
       },
       "temperature_offset": {
         "name": "Temperature offset"
@@ -218,6 +221,9 @@
       },
       "valve_configuration_and_control_default_open_duration": {
         "name": "Default open duration"
+      },
+      "wrong_code_entry_limit": {
+        "name": "Wrong code limit"
       }
     },
     "light": {
@@ -435,6 +441,9 @@
       "evse_soc": {
         "name": "State of charge"
       },
+      "nitrogen_dioxide": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
+      },
       "pump_control_mode": {
         "name": "Control mode",
         "state": {
@@ -482,6 +491,9 @@
       "apparent_current": {
         "name": "Apparent current"
       },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
       "reactive_current": {
         "name": "Reactive current"
       },
@@ -502,11 +514,17 @@
       "power": {
         "name": "Power"
       },
+      "speaker_mute": {
+        "name": "Mute"
+      },
       "child_lock": {
         "name": "Child lock"
       },
       "evse_charging_switch": {
         "name": "Enable charging"
+      },
+      "privacy_mode_button": {
+        "name": "Privacy mode button"
       }
     },
     "vacuum": {

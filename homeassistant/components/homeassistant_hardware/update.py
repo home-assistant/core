@@ -22,7 +22,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import FirmwareUpdateCoordinator
 from .helpers import async_register_firmware_info_callback
-from .util import ApplicationType, FirmwareInfo, async_flash_silabs_firmware
+from .util import (
+    ApplicationType,
+    FirmwareInfo,
+    ResetTarget,
+    async_flash_silabs_firmware,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +86,7 @@ class BaseFirmwareUpdateEntity(
 
     # Subclasses provide the mapping between firmware types and entity descriptions
     entity_description: FirmwareUpdateEntityDescription
-    bootloader_reset_type: str | None = None
+    bootloader_reset_methods: list[ResetTarget] = []
 
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
@@ -268,8 +273,9 @@ class BaseFirmwareUpdateEntity(
                 device=self._current_device,
                 fw_data=fw_data,
                 expected_installed_firmware_type=self.entity_description.expected_firmware_type,
-                bootloader_reset_type=self.bootloader_reset_type,
+                bootloader_reset_methods=self.bootloader_reset_methods,
                 progress_callback=self._update_progress,
+                domain=self._config_entry.domain,
             )
         finally:
             self._attr_in_progress = False

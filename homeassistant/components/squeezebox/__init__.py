@@ -1,5 +1,6 @@
 """The Squeezebox integration."""
 
+import asyncio
 from asyncio import timeout
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -31,11 +32,11 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     CONF_HTTPS,
     DISCOVERY_INTERVAL,
-    DISCOVERY_TASK,
     DOMAIN,
     SERVER_MANUFACTURER,
     SERVER_MODEL,
@@ -63,6 +64,8 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
+
+SQUEEZEBOX_HASS_DATA: HassKey[asyncio.Task] = HassKey(DOMAIN)
 
 
 @dataclass
@@ -193,7 +196,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
             if player.player_id in entry.runtime_data.known_player_ids:
                 await player.async_update()
                 async_dispatcher_send(
-                    hass, SIGNAL_PLAYER_REDISCOVERED, player.player_id, player.connected
+                    hass,
+                    SIGNAL_PLAYER_REDISCOVERED + entry.entry_id,
+                    player.player_id,
+                    player.connected,
                 )
             else:
                 _LOGGER.debug("Adding new entity: %s", player)
@@ -203,7 +209,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
                 await player_coordinator.async_refresh()
                 entry.runtime_data.known_player_ids.add(player.player_id)
                 async_dispatcher_send(
-                    hass, SIGNAL_PLAYER_DISCOVERED, player_coordinator
+                    hass, SIGNAL_PLAYER_DISCOVERED + entry.entry_id, player_coordinator
                 )
 
         if players := await lms.async_get_players():
@@ -240,7 +246,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) 
     current_entries = hass.config_entries.async_entries(DOMAIN)
     if len(current_entries) == 1 and current_entries[0] == entry:
         _LOGGER.debug("Stopping server discovery task")
-        hass.data[DOMAIN][DISCOVERY_TASK].cancel()
-        hass.data[DOMAIN].pop(DISCOVERY_TASK)
+        hass.data[SQUEEZEBOX_HASS_DATA].cancel()
+        hass.data.pop(SQUEEZEBOX_HASS_DATA)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -92,7 +92,11 @@ from homeassistant.components.http.ban import (
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.network import is_cloud_connection
+from homeassistant.helpers.network import (
+    NoURLAvailableError,
+    get_url,
+    is_cloud_connection,
+)
 from homeassistant.util.network import is_local
 
 from . import indieauth
@@ -125,17 +129,29 @@ class WellKnownOAuthInfoView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Return the well known OAuth2 authorization info."""
-        return self.json(
-            {
-                "authorization_endpoint": "/auth/authorize",
-                "token_endpoint": "/auth/token",
-                "revocation_endpoint": "/auth/revoke",
-                "response_types_supported": ["code"],
-                "service_documentation": (
-                    "https://developers.home-assistant.io/docs/auth_api"
-                ),
-            }
-        )
+        hass = request.app[KEY_HASS]
+        # Some applications require absolute urls, so we prefer using the
+        # current requests url if possible, with fallback to a relative url.
+        try:
+            url_prefix = get_url(hass, require_current_request=True)
+        except NoURLAvailableError:
+            url_prefix = ""
+
+        metadata = {
+            "authorization_endpoint": f"{url_prefix}/auth/authorize",
+            "token_endpoint": f"{url_prefix}/auth/token",
+            "revocation_endpoint": f"{url_prefix}/auth/revoke",
+            "response_types_supported": ["code"],
+            "service_documentation": (
+                "https://developers.home-assistant.io/docs/auth_api"
+            ),
+        }
+
+        # Add issuer only when we have a valid base URL (RFC 8414 compliance)
+        if url_prefix:
+            metadata["issuer"] = url_prefix
+
+        return self.json(metadata)
 
 
 class AuthProvidersView(HomeAssistantView):

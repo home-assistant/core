@@ -21,6 +21,9 @@ CONDITION_DESCRIPTIONS = {
     "valid": {
         CONDITION_DESCRIPTION_FILENAME: """
             _:
+              target:
+                entity:
+                  domain: light
               fields:
                 after:
                   example: sunrise

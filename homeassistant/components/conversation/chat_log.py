@@ -507,14 +507,18 @@ class ChatLog:
     async def async_provide_llm_data(
         self,
         llm_context: llm.LLMContext,
-        user_llm_hass_api: str | list[str] | None = None,
+        user_llm_hass_api: str | list[str] | llm.API | None = None,
         user_llm_prompt: str | None = None,
         user_extra_system_prompt: str | None = None,
     ) -> None:
         """Set the LLM system prompt."""
         llm_api: llm.APIInstance | None = None
 
-        if user_llm_hass_api:
+        if not user_llm_hass_api:
+            pass
+        elif isinstance(user_llm_hass_api, llm.API):
+            llm_api = await user_llm_hass_api.async_get_api_instance(llm_context)
+        else:
             try:
                 llm_api = await llm.async_get_api(
                     self.hass,
