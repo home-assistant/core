@@ -45,5 +45,34 @@
     "timeout_connect": {
       "message": "A timeout occurred while trying to connect to the Firefly instance: {error}"
     }
+  },
+  "entity": {
+    "sensor": {
+      "account_balance": {
+        "name": "Account Balance"
+      },
+      "account_role": {
+        "name": "Account Role",
+        "state": {
+          "default_asset": "Default asset",
+          "shared_asset": "Shared asset",
+          "saving_asset": "Saving asset",
+          "cc_asset": "Credit card asset",
+          "cash_wallet_asset": "Cash wallet asset"
+        }
+      },
+      "account_type": {
+        "name": "Account Type",
+        "state": {
+          "asset": "Asset",
+          "expense": "Expense",
+          "revenue": "Revenue",
+          "liability": "Liability"
+        }
+      },
+      "category": {
+        "name": "Earned/Spent"
+      }
+    }
   }
 }
