@@ -15,7 +15,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) ->
     # Perform a migration to ensure the model is added to the config entry schema.
     if CONF_MODEL not in entry.data:
         # The config entry adds the model number of the device to the start of its title
-        entry.data[CONF_MODEL] = entry.title.split(" ")[0]
+        entry.data = {
+            **entry.data,
+            CONF_MODEL: entry.title.split(" ")[0]
+        }
     coordinator = ProbePlusDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
