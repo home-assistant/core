@@ -54,13 +54,6 @@ from .entity import NetatmoModuleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-logging.getLogger("homeassistant.components.netatmo.data_handler").setLevel(
-    logging.DEBUG
-)
-logging.getLogger("homeassistant.components.netatmo.binary_sensor").setLevel(
-    logging.DEBUG
-)
-
 
 def process_opening_status_string(status: StateType) -> StateType | None:
     """Process opening status and return bool."""

@@ -160,14 +160,12 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn camera floodlight on."""
-        _LOGGER.debug("Turn camera light '%s' on", self.device.name)
-        self._attr_is_on = True
+        _LOGGER.debug("Turn camera '%s' on", self.device.name)
         await self.device.async_floodlight_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn camera floodlight into auto mode."""
-        _LOGGER.debug("Turn camera light '%s' to auto mode", self.device.name)
-        self._attr_is_on = False
+        _LOGGER.debug("Turn camera '%s' to auto mode", self.device.name)
         await self.device.async_floodlight_auto()
 
     @callback

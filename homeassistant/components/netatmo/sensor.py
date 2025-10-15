@@ -142,23 +142,6 @@ def process_rf_strength_string(rf_strength: StateType) -> str | None:
     return "Full"
 
 
-# Note: Cannot use this function till full refactoring of sensor is done
-def process_rf_strength(module: Module, netatmo_name: str) -> str | None:
-    """Process Module rf_strength for display."""
-    rf_strength = getattr(module, netatmo_name)
-    value = process_rf_strength_string(rf_strength)
-
-    _LOGGER.debug(
-        "RF strength (%s) translated from '%s' to '%s' for module '%s'",
-        netatmo_name,
-        rf_strength,
-        value,
-        module.name,
-    )
-
-    return value
-
-
 def process_battery_state_string(battery_state: StateType) -> int | None:
     """Process battery state string and return percent (int) for display."""
     _LOGGER.debug(
