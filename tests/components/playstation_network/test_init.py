@@ -130,7 +130,7 @@ async def test_trophy_title_coordinator(
     assert config_entry.state is ConfigEntryState.LOADED
     assert len(mock_psnawpapi.user.return_value.trophy_titles.mock_calls) == 1
 
-    freezer.tick(timedelta(days=1))
+    freezer.tick(timedelta(days=1, seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -155,7 +155,7 @@ async def test_trophy_title_coordinator_auth_failed(
         PSNAWPAuthenticationError
     )
 
-    freezer.tick(timedelta(days=1))
+    freezer.tick(timedelta(days=1, seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -192,7 +192,7 @@ async def test_trophy_title_coordinator_update_data_failed(
 
     mock_psnawpapi.user.return_value.trophy_titles.side_effect = exception
 
-    freezer.tick(timedelta(days=1))
+    freezer.tick(timedelta(days=1, seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -223,7 +223,7 @@ async def test_trophy_title_coordinator_doesnt_update(
     assert config_entry.state is ConfigEntryState.LOADED
     assert len(mock_psnawpapi.user.return_value.trophy_titles.mock_calls) == 1
 
-    freezer.tick(timedelta(days=1))
+    freezer.tick(timedelta(days=1, seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -252,7 +252,7 @@ async def test_trophy_title_coordinator_play_new_game(
 
     mock_psnawpapi.user.return_value.trophy_titles.return_value = _tmp
 
-    freezer.tick(timedelta(days=1))
+    freezer.tick(timedelta(days=1, seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     await hass.async_block_till_done(wait_background_tasks=True)
