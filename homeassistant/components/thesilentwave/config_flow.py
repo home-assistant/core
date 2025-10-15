@@ -11,7 +11,7 @@ from pysilentwave.exceptions import SilentWaveError
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -42,9 +42,8 @@ class TheSilentWaveConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self._async_check_device(user_input[CONF_HOST])
 
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title=f"TheSilentWave",
                     data={
-                        CONF_NAME: user_input[CONF_NAME],
                         CONF_HOST: user_input[CONF_HOST],
                     },
                 )
@@ -60,7 +59,6 @@ class TheSilentWaveConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default="TheSilentWave"): str,
                     vol.Required(CONF_HOST): str,
                 }
             ),
