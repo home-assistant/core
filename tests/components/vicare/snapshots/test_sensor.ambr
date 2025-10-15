@@ -3001,7 +3001,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3019,14 +3021,14 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Signal strength',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'zigbee_signal_strength',
     'unique_id': 'gateway0_zigbee_################-zigbee_signal_strength',
     'unit_of_measurement': '%',
   })
@@ -3034,8 +3036,8 @@
 # name: test_all_entities_with_zigbee_devices[sensor.model0_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
       'friendly_name': 'model0 Signal strength',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -3159,7 +3161,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3177,14 +3181,14 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Signal strength',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'zigbee_signal_strength',
     'unique_id': 'gateway1_zigbee_################-zigbee_signal_strength',
     'unit_of_measurement': '%',
   })
@@ -3192,8 +3196,8 @@
 # name: test_all_entities_with_zigbee_devices[sensor.model1_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
       'friendly_name': 'model1 Signal strength',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,

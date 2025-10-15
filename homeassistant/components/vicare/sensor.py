@@ -945,7 +945,8 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
     ViCareSensorEntityDescription(
         key="zigbee_signal_strength",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        translation_key="zigbee_signal_strength",
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         value_getter=lambda api: api.getZigbeeSignalStrength(),

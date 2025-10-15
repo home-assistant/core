@@ -22,6 +22,9 @@
       "one_time_charge": {
         "default": "mdi:shower-head"
       },
+      "mounting_mode": {
+        "default": "mdi:wrench"
+      },
       "valve": {
         "default": "mdi:pipe-valve"
       }
@@ -93,6 +96,9 @@
       },
       "ventilation_level": {
         "default": "mdi:fan"
+      },
+      "zigbee_signal_strength": {
+        "default": "mdi:wifi"
       },
       "valve_position": {
         "default": "mdi:pipe-valve"

@@ -509,7 +509,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mounting mode',
     'platform': 'vicare',
@@ -524,7 +524,6 @@
 # name: test_all_entities_with_zigbee_devices[binary_sensor.model0_mounting_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
       'friendly_name': 'model0 Mounting mode',
     }),
     'context': <ANY>,
