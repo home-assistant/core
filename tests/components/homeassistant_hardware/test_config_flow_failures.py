@@ -442,3 +442,17 @@ async def test_options_flow_thread_to_zigbee_otbr_configured(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "otbr_still_using_stick"
+
+
+@pytest.mark.parametrize(
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
+)
+async def test_config_flow_user(hass: HomeAssistant) -> None:
+    """Test config flow manually initiated by user aborts with error message."""
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "user"}
+    )
+
+    assert init_result["type"] is FlowResultType.ABORT
+    assert init_result["reason"] == "not_user_configurable"
