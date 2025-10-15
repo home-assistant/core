@@ -452,7 +452,7 @@ class OneWireSensorEntity(OneWireEntity, SensorEntity):
     """Implementation of a 1-Wire sensor."""
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | int | None:
         """Return the state of the entity."""
         if (raw_value := self._state) is None:
             return None
