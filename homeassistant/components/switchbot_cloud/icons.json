@@ -50,6 +50,22 @@
           }
         }
       }
+    },
+    "climate": {
+      "smart_radiator_thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "schedule": "mdi:calendar-clock",
+              "manual": "mdi:wrench",
+              "off": "mdi:power",
+              "energy_saving": "mdi:home-battery",
+              "comfort": "mdi:thermostat-auto",
+              "fast_heating": "mdi:heating-coil"
+            }
+          }
+        }
+      }
     }
   }
 }

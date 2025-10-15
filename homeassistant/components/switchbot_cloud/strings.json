@@ -52,6 +52,22 @@
           }
         }
       }
+    },
+    "climate": {
+      "smart_radiator_thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "schedule": "Schedule",
+              "manual": "[%key:common::state::manual%]",
+              "off": "[%key:common::state::off%]",
+              "energy_saving": "Energy Saving",
+              "comfort": "Comfort",
+              "fast_heating": "Fast Heating"
+            }
+          }
+        }
+      }
     }
   }
 }
