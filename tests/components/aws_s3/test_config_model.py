@@ -1,7 +1,15 @@
 """Test the AWS S3 config flow model."""
 
 from itertools import combinations
+from unittest.mock import patch
 
+from botocore.exceptions import (
+    ClientError,
+    EndpointConnectionError,
+    NoCredentialsError,
+    ParamValidationError,
+    TokenRetrievalError,
+)
 import pytest
 
 from homeassistant.components.aws_s3.config_model import S3ConfigModel
@@ -13,6 +21,8 @@ from homeassistant.components.aws_s3.const import (
 )
 
 from .const import USER_INPUT
+
+from tests.typing import MagicMock
 
 
 def test_init() -> None:
@@ -102,3 +112,97 @@ async def test_async_validate_access_success() -> None:
     model.from_dict(USER_INPUT)
     await model.async_validate_access()
     assert not model.has_errors(set(model.keys()))
+
+
+_validate_access_errors = [
+    (
+        USER_INPUT,
+        ParamValidationError(report="Invalid bucket name"),
+        {CONF_BUCKET: "invalid_bucket_name"},
+    ),
+    (
+        USER_INPUT,
+        ValueError(),
+        {CONF_ENDPOINT_URL: "invalid_endpoint_url"},
+    ),
+    (
+        USER_INPUT,
+        NoCredentialsError(),
+        {
+            CONF_ACCESS_KEY_ID: "invalid_credentials",
+            CONF_SECRET_ACCESS_KEY: "invalid_credentials",
+        },
+    ),
+    (
+        USER_INPUT,
+        ClientError(
+            error_response={"Error": {"Code": "InvalidAccessKeyId"}},
+            operation_name="head_bucket",
+        ),
+        {
+            CONF_ACCESS_KEY_ID: "invalid_credentials",
+            CONF_SECRET_ACCESS_KEY: "invalid_credentials",
+        },
+    ),
+    (
+        USER_INPUT,
+        TokenRetrievalError(provider="TestProvider", error_msg="Test error"),
+        {
+            CONF_ACCESS_KEY_ID: "invalid_credentials",
+            CONF_SECRET_ACCESS_KEY: "invalid_credentials",
+        },
+    ),
+    (
+        USER_INPUT,
+        EndpointConnectionError(endpoint_url="https://example.com"),
+        {CONF_ENDPOINT_URL: "cannot_connect"},
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("data", "exception", "expected_errors"), _validate_access_errors
+)
+async def test_async_validate_access_session_errors(
+    data: dict[str, str], exception: Exception, expected_errors: dict[str, str]
+) -> None:
+    """Test async_validate_access handles session creation errors and maps them to model errors."""
+    model = S3ConfigModel()
+    model.from_dict(data)
+    with patch("aiobotocore.session.AioSession.__init__", side_effect=exception):
+        await model.async_validate_access()
+        errors = model.get_errors()
+        assert errors == expected_errors
+
+
+@pytest.mark.parametrize(
+    ("data", "exception", "expected_errors"), _validate_access_errors
+)
+async def test_async_validate_access_client_errors(
+    data: dict[str, str], exception: Exception, expected_errors: dict[str, str]
+) -> None:
+    """Test async_validate_access handles client creation errors and maps them to model errors."""
+    model = S3ConfigModel()
+    model.from_dict(data)
+    with patch("aiobotocore.session.AioSession.create_client", side_effect=exception):
+        await model.async_validate_access()
+        errors = model.get_errors()
+        assert errors == expected_errors
+
+
+@pytest.mark.parametrize(
+    ("data", "exception", "expected_errors"), _validate_access_errors
+)
+async def test_async_validate_access_bucket_head_errors(
+    mock_client: MagicMock,
+    data: dict[str, str],
+    exception: Exception,
+    expected_errors: dict[str, str],
+) -> None:
+    """Test async_validate_access handles head_bucket errors and maps them to model errors."""
+    model = S3ConfigModel()
+    model.from_dict(data)
+    mock_client.head_bucket.side_effect = exception
+    await model.async_validate_access()
+    errors = model.get_errors()
+    assert errors == expected_errors
