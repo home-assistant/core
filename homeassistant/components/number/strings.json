@@ -157,6 +157,9 @@
     "temperature": {
       "name": "[%key:component::sensor::entity_component::temperature::name%]"
     },
+    "temperature_delta": {
+      "name": "[%key:component::sensor::entity_component::temperature_delta::name%]"
+    },
     "volatile_organic_compounds": {
       "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
     },
