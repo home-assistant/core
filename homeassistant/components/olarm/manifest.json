@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/olarm",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["olarmflowclient==1.0.1"]
+  "requirements": ["olarmflowclient==1.0.2"]
 }

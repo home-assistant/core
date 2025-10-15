@@ -178,5 +178,10 @@ class OlarmFlowClientMQTT:
     async def async_stop(self) -> None:
         """Stop the MQTT client and clean up connections."""
         if self._olarm_flow_client:
-            # stop_mqtt is synchronous, so run it in an executor
-            await self._hass.async_add_executor_job(self._olarm_flow_client.stop_mqtt)
+            try:
+                # stop_mqtt is synchronous, so run it in an executor
+                await self._hass.async_add_executor_job(
+                    self._olarm_flow_client.stop_mqtt
+                )
+            except Exception as e:  # noqa: BLE001
+                _LOGGER.warning("Error stopping MQTT client: %s", e)
