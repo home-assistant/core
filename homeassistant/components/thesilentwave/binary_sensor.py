@@ -30,7 +30,7 @@ class TheSilentWaveBinarySensor(TheSilentWaveEntity, BinarySensorEntity):
         """Initialize the binary sensor."""
         super().__init__(coordinator, entry_id)
         # Set a more specific unique_id for this sensor entity
-        self._attr_unique_id = f"{DOMAIN}_{entry_id}_status"
+        self._attr_unique_id = f"{entry_id}_status"
 
     @property
     def is_on(self) -> bool | None:
