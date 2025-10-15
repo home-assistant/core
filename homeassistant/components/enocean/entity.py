@@ -80,7 +80,9 @@ class EnOceanEntity(Entity):
                 "manufacturer": self.dev_type.manufacturer,
                 "model": self.dev_type.model,
                 "model_id": "model id",
-                "serial_number": self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].chip_id,
+                "serial_number": self.hass.data[DATA_ENOCEAN][
+                    ENOCEAN_DONGLE
+                ].chip_id.to_string(),
                 "sw_version": self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].sw_version,
                 "hw_version": self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].chip_version,
             }

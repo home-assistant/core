@@ -1,24 +1,30 @@
 {
     "config": {
         "abort": {
-            "invalid_dongle_path": "Invalid dongle path",
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "invalid_dongle_path": "Invalid dongle path"
         },
         "error": {
             "invalid_device_id": "No valid dongle found for this path"
         },
+        "flow_title": "{name}",
         "step": {
             "detect": {
                 "data": {
-                    "path": "USB dongle path"
+                    "device": "USB dongle"
                 },
-                "title": "Select the path to your ENOcean dongle"
+                "data_description": {
+                    "device": "Path to your EnOcean USB dongle."
+                },
+                "description": "Select your EnOcean USB dongle."
             },
             "manual": {
                 "data": {
-                    "path": "USB dongle path"
+                    "device": "USB dongle"
                 },
-                "title": "Enter the path to your ENOcean dongle"
+                "data_description": {
+                    "device": "Path to your EnOcean USB dongle."
+                },
+                "description": "Enter the path to your EnOcean USB dongle."
             }
         }
     },
@@ -36,7 +42,7 @@
                     "device_type_id": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
                     "id": "Device ID",
                     "name": "Name",
-                    "sender_id": "Sender ID (can be left empty for sensors)"
+                    "sender_id": "Sender ID (defaults to dongle's base ID; do not change unless necessary)"
                 },
                 "description": "To add an EnOcean device you need to specify at least its device type and its ID.",
                 "title": "Add new EnOcean device"
@@ -53,7 +59,7 @@
                     "device_type_id": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
                     "id": "Device ID",
                     "name": "Name",
-                    "sender_id": "Sender ID (can be left empty for sensors)"
+                    "sender_id": "Sender ID (defaults to dongle's base ID; do not change unless necessary)"
                 },
                 "description": "You can change the EnOcean device's model or EEP, its name or the EnOcean ID which is used to send data to this device. Note that editing the model or EEP of the EnOcean device will also change the Home Assistant device and its entities.",
                 "title": "Edit EnOcean device"
@@ -72,6 +78,13 @@
                 },
                 "description": "Select the EnOcean device whose settings you want to change.",
                 "title": "Select EnOcean device for editing"
+            }
+        }
+    },
+    "selector": {
+        "devices": {
+            "options": {
+                "manual": "Custom path"
             }
         }
     }

@@ -10,9 +10,11 @@ from enocean.utils import to_hex_string
 import serial
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import selector
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 
 from .const import SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .enocean_id import EnOceanID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,23 +31,25 @@ class EnOceanDongle:
 
         # callback needs to be set after initialization
         # in order for chip_id and base_id to be available
-        self._communicator = SerialCommunicator(
-            port=serial_path  # , callback=self.callback
-        )
+        self._communicator = SerialCommunicator(port=serial_path)
         self.serial_path = serial_path
         self.identifier = basename(normpath(serial_path))
         self.hass = hass
         self.dispatcher_disconnect_handle = None
-        self._base_id = "00:00:00:00"
-        self._chip_id = "00:00:00:00"
+        self._base_id: EnOceanID | None = None
+        self._chip_id: EnOceanID | None = None
         self._chip_version = "n/a"
         self._sw_version = "n/a"
 
     async def async_setup(self):
         """Finish the setup of the bridge and supported platforms."""
         self._communicator.start()
-        self._chip_id = to_hex_string(self._communicator.chip_id)
-        self._base_id = to_hex_string(self._communicator.base_id)
+        if not self._chip_id:
+            self._chip_id = EnOceanID(to_hex_string(self._communicator.chip_id))
+
+        if not self._base_id:
+            self._base_id = EnOceanID(to_hex_string(self._communicator.base_id))
+
         self._chip_version = self._communicator.version_info.chip_version
 
         self._sw_version = (
@@ -59,8 +63,6 @@ class EnOceanDongle:
         # in order for chip_id and base_id to be available
         self._communicator.callback = self.callback
 
-        #  _LOGGER.warning("Chip id: %s", self.chip_id)
-        #  _LOGGER.warning("Base id: %s", self.base_id)
         self.dispatcher_disconnect_handle = async_dispatcher_connect(
             self.hass, SIGNAL_SEND_MESSAGE, self._send_message_callback
         )
@@ -71,24 +73,52 @@ class EnOceanDongle:
             self.dispatcher_disconnect_handle()
             self.dispatcher_disconnect_handle = None
 
+        if self._communicator:
+            if self._communicator.is_alive():
+                self._communicator.stop()
+
     @property
-    def base_id(self):
+    def base_id(self) -> EnOceanID | None:
         """Get the dongle's base id."""
         return self._base_id
 
     @property
-    def chip_id(self):
+    def chip_id(self) -> EnOceanID | None:
         """Get the dongle's chip id (REQUIRES UPDATE OF ENOCEAN LIBRARY)."""
         return self._chip_id
 
-    def valid_sender_ids(self):
-        """Return a list of valid sender ids (currently only the base id)."""
-        valid_senders = [self._chip_id]
-        # base_id_int = int(self._base_id.replace(":", ""), 16)
-        # for i in range(1, 255):
-        #     id_string
-        #     valid_senders.append(to_hex_string(base_id_int + i))
-        valid_senders.append(self._base_id)
+    def valid_sender_ids(self) -> list[selector.SelectOptionDict] | None:
+        """Return a list of valid sender ids."""
+
+        if not self._base_id or not self._chip_id:
+            return None
+
+        valid_senders = [
+            selector.SelectOptionDict(
+                value=self._chip_id.to_string(),
+                label="Chip ID (" + self._chip_id.to_string() + ")",
+            ),
+            selector.SelectOptionDict(
+                value=self._base_id.to_string(),
+                label="Base ID (" + self._base_id.to_string() + ")",
+            ),
+        ]
+        base_id_int = self._base_id.to_number()
+        valid_senders.extend(
+            [
+                selector.SelectOptionDict(
+                    value=EnOceanID(base_id_int + i).to_string(),
+                    label="Base ID + "
+                    + str(i)
+                    + " ("
+                    + EnOceanID(base_id_int + i).to_string()
+                    + ")",
+                )
+                for i in range(1, 128)
+            ]
+        )
+
+        return valid_senders
 
     @property
     def chip_version(self):

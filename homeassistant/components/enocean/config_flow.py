@@ -4,8 +4,6 @@ from copy import deepcopy
 from typing import Any
 
 from enocean.utils import from_hex_string, to_hex_string
-
-# from home_assistant_enocean.enocean_id import EnOceanID
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -27,7 +25,6 @@ from .const import (
     CONF_ENOCEAN_SENDER_ID,
     DATA_ENOCEAN,
     DOMAIN,
-    ENOCEAN_DEFAULT_DEVICE_ID,
     ENOCEAN_DEFAULT_DEVICE_NAME,
     ENOCEAN_DEVICE_TYPE_ID,
     ENOCEAN_DONGLE,
@@ -44,8 +41,8 @@ from .const import (
     ENOCEAN_STEP_ID_INIT,
     ENOCEAN_STEP_ID_SELECT_DEVICE,
     ERROR_INVALID_DONGLE_PATH,
-    LOGGER,
 )
+from .enocean_id import EnOceanID
 from .supported_device_type import (
     EnOceanSupportedDeviceType,
     get_supported_enocean_device_types,
@@ -62,17 +59,6 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the EnOcean config flow."""
         self.dongle_path = None
         self.discovery_info = None
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import a yaml configuration."""
-        if not await self.validate_enocean_conf(import_data):
-            LOGGER.warning(
-                "Cannot import yaml configuration: %s is not a valid dongle path",
-                import_data[CONF_DEVICE],
-            )
-            return self.async_abort(reason="invalid_dongle_path")
-
-        return self.create_enocean_entry(import_data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -154,8 +140,6 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlow):
     """Handle an option flow for EnOcean."""
 
-    # id: EnOceanID = None
-
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Show menu displaying the options."""
         devices = self.config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
@@ -183,44 +167,64 @@ class OptionsFlowHandler(OptionsFlow):
         add_device_schema = None
 
         default_device_type = ""
-        default_device_id = ENOCEAN_DEFAULT_DEVICE_ID
-        default_device_name = ENOCEAN_DEFAULT_DEVICE_NAME
-        default_sender_id = ""
+        default_device_id = ""
+        default_device_name = ""
+        default_sender_id = self.hass.data[DATA_ENOCEAN][
+            ENOCEAN_DONGLE
+        ].base_id.to_string()
+
+        device_id: EnOceanID | None = None
+        device_name: str | None = None
+        sender_id: EnOceanID | None = None
 
         if user_input is not None:
-            device_id = user_input[CONF_ENOCEAN_DEVICE_ID].strip()
-            if self.validate_enocean_id_string(device_id):
-                device_id = self.normalize_enocean_id_string(device_id)
+            # device id must be a valid EnOcean ID and not already configured
+            if not EnOceanID.validate_string(user_input[CONF_ENOCEAN_DEVICE_ID]):
+                errors[CONF_ENOCEAN_DEVICE_ID] = ENOCEAN_ERROR_INVALID_DEVICE_ID
+
+            else:
+                device_id = EnOceanID(user_input[CONF_ENOCEAN_DEVICE_ID])
 
                 for dev in devices:
-                    if dev[CONF_ENOCEAN_DEVICE_ID] == device_id:
+                    if not EnOceanID.validate_string(dev[CONF_ENOCEAN_DEVICE_ID]):
+                        continue
+                    if (
+                        EnOceanID(dev[CONF_ENOCEAN_DEVICE_ID]).to_number()
+                        == device_id.to_number()
+                    ):
                         errors[CONF_ENOCEAN_DEVICE_ID] = (
                             ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED
                         )
-            else:
-                errors[CONF_ENOCEAN_DEVICE_ID] = ENOCEAN_ERROR_INVALID_DEVICE_ID
+                        break
 
             device_type_id = user_input[ENOCEAN_DEVICE_TYPE_ID]
             device_type = get_supported_enocean_device_types()[device_type_id]
 
-            sender_id = user_input[CONF_ENOCEAN_SENDER_ID].strip()
-            if sender_id != "":
-                if self.validate_enocean_id_string(sender_id):
-                    sender_id = self.normalize_enocean_id_string(sender_id)
-                else:
-                    errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
+            # sender id must be a valid EnOceanID string
+            if user_input[CONF_ENOCEAN_SENDER_ID].strip() == "":
+                sender_id = self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].base_id
+            elif not EnOceanID.validate_string(user_input[CONF_ENOCEAN_SENDER_ID]):
+                errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
+            else:
+                sender_id = EnOceanID(user_input[CONF_ENOCEAN_SENDER_ID])
 
+            # if the device name was not set, use a default name
             device_name = user_input[CONF_ENOCEAN_DEVICE_NAME].strip()
             if device_name == "":
-                errors[CONF_ENOCEAN_DEVICE_NAME] = ENOCEAN_ERROR_DEVICE_NAME_EMPTY
+                device_name = ENOCEAN_DEFAULT_DEVICE_NAME + (
+                    " " + device_id.to_string() if device_id else ""
+                )
 
+            # append to the configuration if no errors
+            assert device_id is not None
+            assert sender_id is not None
             if not errors:
                 devices.append(
                     {
-                        CONF_ENOCEAN_DEVICE_ID: device_id,
+                        CONF_ENOCEAN_DEVICE_ID: device_id.to_string(),
                         CONF_ENOCEAN_DEVICE_TYPE_ID: device_type.unique_id,
                         CONF_ENOCEAN_DEVICE_NAME: device_name,
-                        CONF_ENOCEAN_SENDER_ID: sender_id,
+                        CONF_ENOCEAN_SENDER_ID: sender_id.to_string(),
                     }
                 )
 
@@ -229,9 +233,9 @@ class OptionsFlowHandler(OptionsFlow):
                 )
 
             default_device_type = device_type_id
-            default_device_id = device_id
+            default_device_id = device_id.to_string()
             default_device_name = device_name
-            default_sender_id = sender_id
+            default_sender_id = sender_id.to_string()
 
         supported_devices = [
             esd.select_option_dict
@@ -248,8 +252,7 @@ class OptionsFlowHandler(OptionsFlow):
                     selector.SelectSelectorConfig(options=supported_devices)
                 ),
                 vol.Required(
-                    CONF_ENOCEAN_DEVICE_ID,
-                    default=default_device_id,
+                    CONF_ENOCEAN_DEVICE_ID, default=default_device_id
                 ): selector.SelectSelector(
                     # For now, the list of devices will be empty. For a
                     # later version, it shall be pre-filled with all those
@@ -258,7 +261,7 @@ class OptionsFlowHandler(OptionsFlow):
                     # Hence the use of a SelectSelector.
                     selector.SelectSelectorConfig(options=[], custom_value=True)
                 ),
-                vol.Required(
+                vol.Optional(
                     CONF_ENOCEAN_DEVICE_NAME,
                     default=default_device_name,
                 ): str,
@@ -266,15 +269,11 @@ class OptionsFlowHandler(OptionsFlow):
                     CONF_ENOCEAN_SENDER_ID,
                     default=default_sender_id,
                 ): selector.SelectSelector(
-                    # For now, the list of sender_ids will be empty. For a
-                    # later version, it shall be pre-filled with the dongles # chip ID and its base IDs. (FUTURE WORK, requires update # of EnOcean lib)
-                    # Hence the use of a SelectSelector.
                     selector.SelectSelectorConfig(
-                        options=[
-                            self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].base_id,
-                            self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].chip_id,
-                        ],
-                        custom_value=True,
+                        options=self.hass.data[DATA_ENOCEAN][
+                            ENOCEAN_DONGLE
+                        ].valid_sender_ids(),
+                        custom_value=False,
                     )
                 ),
             }
@@ -357,7 +356,7 @@ class OptionsFlowHandler(OptionsFlow):
             # sender id must be either empty or a valid EnOcean ID
             sender_id = user_input[CONF_ENOCEAN_SENDER_ID].strip()
             if sender_id != "":
-                if self.validate_enocean_id_string(sender_id):
+                if EnOceanID.validate_string(sender_id):
                     sender_id = self.normalize_enocean_id_string(sender_id)
                 else:
                     errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
@@ -409,7 +408,12 @@ class OptionsFlowHandler(OptionsFlow):
                     # chip ID and its base IDs. (FUTURE WORK, requires update
                     # of enocean lib).
                     # Hence the use of a SelectSelector.
-                    selector.SelectSelectorConfig(options=[], custom_value=True)
+                    selector.SelectSelectorConfig(
+                        options=self.hass.data[DATA_ENOCEAN][
+                            ENOCEAN_DONGLE
+                        ].valid_sender_ids(),
+                        custom_value=False,
+                    )
                 ),
             }
         )
@@ -464,23 +468,6 @@ class OptionsFlowHandler(OptionsFlow):
             step_id=ENOCEAN_STEP_ID_DELETE_DEVICE,
             data_schema=delete_device_schema,
         )
-
-    def validate_enocean_id_string(self, id_string: str) -> bool:
-        """Check that the supplied string is a valid EnOcean id."""
-        parts = id_string.split(":")
-
-        if len(parts) < 4:
-            return False
-        try:
-            for part in parts:
-                if len(part) > 2:
-                    return False
-                int(part, 16)
-
-        except ValueError:
-            return False
-
-        return True
 
     def normalize_enocean_id_string(self, id_string: str) -> str:
         """Normalize the supplied EnOcean ID string."""
