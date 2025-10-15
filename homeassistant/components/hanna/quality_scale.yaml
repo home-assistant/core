@@ -34,11 +34,14 @@ rules:
 
   # Silver
   action-exceptions: todo
-  config-entry-unloading: todo
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration does not have any configuration parameters.
+  docs-installation-parameters: done
   entity-unavailable: todo
-  integration-owner: todo
+  integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
   reauthentication-flow: todo
@@ -58,7 +61,7 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: todo
-  entity-device-class: todo
+  entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: todo
   exception-translations: todo
