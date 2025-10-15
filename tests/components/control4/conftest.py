@@ -1,15 +1,12 @@
 """Common fixtures for the Control4 tests."""
 
 from collections.abc import AsyncGenerator, Generator
-from contextlib import ExitStack
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant.components.control4.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -110,66 +107,29 @@ def mock_climate_variables() -> dict:
 
 
 @pytest.fixture
+def mock_climate_update_variables(
+    mock_climate_variables: dict,
+) -> Generator[AsyncMock]:
+    """Mock update_variables for climate platform."""
+
+    async def _mock_update_variables(*args, **kwargs):
+        return mock_climate_variables
+
+    with patch(
+        "homeassistant.components.control4.climate.update_variables_for_config_entry",
+        new=_mock_update_variables,
+    ) as mock_update:
+        yield mock_update
+
+
+@pytest.fixture
 def platforms() -> list[str]:
     """Platforms which should be loaded during the test."""
     return ["media_player"]
 
 
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_c4_account: MagicMock,
-    mock_c4_director: MagicMock,
-    mock_climate_variables: dict,
-    platforms: list[str],
-) -> MockConfigEntry:
-    """Set up the Control4 integration for testing."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    mock_config_entry.add_to_hass(hass)
-
-    async def mock_update_variables_unified(*args, **kwargs):
-        """Mock update variables function that merges media and climate data."""
-        # Merge media player variables (room 1) and climate variables (device 123)
-        variables = {}
-        if "media_player" in platforms:
-            variables[1] = {
-                "POWER_STATE": True,
-                "CURRENT_VOLUME": 50,
-                "IS_MUTED": False,
-                "CURRENT_VIDEO_DEVICE": 100,
-                "CURRENT MEDIA INFO": {},
-                "PLAYING": False,
-                "PAUSED": False,
-                "STOPPED": False,
-            }
-        if "climate" in platforms:
-            variables.update(mock_climate_variables)
-        return variables
-
-    # Patch update_variables in each platform module where it's used
-    with ExitStack() as stack:
-        stack.enter_context(
-            patch("homeassistant.components.control4.PLATFORMS", platforms)
-        )
-
-        # Add platform-specific patches based on which platforms are being loaded
-        if "climate" in platforms:
-            stack.enter_context(
-                patch(
-                    "homeassistant.components.control4.climate.update_variables_for_config_entry",
-                    new=mock_update_variables_unified,
-                )
-            )
-        if "media_player" in platforms:
-            stack.enter_context(
-                patch(
-                    "homeassistant.components.control4.media_player.update_variables_for_config_entry",
-                    new=mock_update_variables_unified,
-                )
-            )
-
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return mock_config_entry
+@pytest.fixture(autouse=True)
+async def mock_patch_platforms(platforms: list[str]) -> AsyncGenerator[None]:
+    """Fixture to set up platforms for tests."""
+    with patch("homeassistant.components.control4.PLATFORMS", platforms):
+        yield
