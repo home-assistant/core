@@ -73,7 +73,8 @@
         "otbr_still_using_stick": "This {model} is in use by the OpenThread Border Router add-on. If you use the Thread network, make sure you have alternative border routers. Uninstall the add-on and try again.",
         "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or add-on is currently trying to communicate with the device. If you are running Home Assistant OS in a virtual machine or in Docker, please make sure that permissions are set correctly for the device.",
         "fw_download_failed": "{firmware_name} firmware for your {model} failed to download. Make sure Home Assistant has internet access and try again.",
-        "fw_install_failed": "{firmware_name} firmware failed to install, check Home Assistant logs for more information."
+        "fw_install_failed": "{firmware_name} firmware failed to install, check Home Assistant logs for more information.",
+        "not_user_configurable": "This integration is not user configurable. Please plug in supported Home Assistant hardware and configure it using the discovered device."
       },
       "progress": {
         "install_firmware": "Installing {firmware_name} firmware.\n\nDo not make any changes to your hardware or software until this finishes.",

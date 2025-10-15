@@ -577,6 +577,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
     """Base config flow for installing firmware."""
 
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Setup started by user."""
+        return self.async_abort(reason="not_user_configurable")
+
     @staticmethod
     @callback
     @abstractmethod
