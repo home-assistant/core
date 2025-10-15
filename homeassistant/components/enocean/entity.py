@@ -21,13 +21,13 @@ class EnOceanEntity(Entity):
 
     def __init__(
         self,
-        dev_id,
+        device_id,
         dev_name="EnOcean entity",
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
     ) -> None:
         """Initialize the device."""
-        self.dev_id = dev_id
+        self._device_id = device_id
         self.dev_name = dev_name
         self.dev_type = dev_type
         self._attr_name = name
@@ -46,7 +46,7 @@ class EnOceanEntity(Entity):
 
     def _message_received_callback(self, packet):
         """Handle incoming packets."""
-        if packet.sender_int == combine_hex(self.dev_id):
+        if packet.sender_int == combine_hex(self._device_id):
             self.value_changed(packet)
 
     def value_changed(self, packet):
@@ -59,7 +59,7 @@ class EnOceanEntity(Entity):
 
     def dev_id_number(self):
         """Return the EnOcean id as integer."""
-        return combine_hex(self.dev_id)
+        return combine_hex(self._device_id)
 
     def dev_id_string(self):
         """Return the EnOcean id as colon-separated hex string."""

@@ -55,3 +55,9 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+
+ENOCEAN_BINARY_SENSOR_EEPS = [
+    "F6-02-01",  # Rocker Switch 1BS
+    "F6-02-02",  # Rocker Switch 2BS
+]

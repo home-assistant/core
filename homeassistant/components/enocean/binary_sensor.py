@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
+from .const import ENOCEAN_BINARY_SENSOR_EEPS
 from .entity import EnOceanEntity
 from .supported_device_type import (
     EnOceanSupportedDeviceType,
@@ -29,13 +30,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
 
-    # config_entry.options.get(CONF_DEVICE)
     # enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
     async_add_entities(
         [
             EnOceanBinarySensor(
                 dev_id=from_hex_string("00:00:00:00"),
-                dev_name="Gateway",
+                dev_name="EnOcean Gateway",
                 name="Teach-In Active",
                 dev_type=EnOceanSupportedDeviceType(
                     manufacturer="EnOcean", model="TCM300/310 Transmitter", eep=""
@@ -51,7 +51,7 @@ async def async_setup_entry(
         device_type = get_supported_enocean_device_types()[device_type_id]
         eep = device_type.eep
 
-        if eep in ["F6-02-01", "F6-02-02"]:
+        if eep in ENOCEAN_BINARY_SENSOR_EEPS:
             device_id = from_hex_string(device["id"])
 
             async_add_entities(
@@ -88,8 +88,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         """Initialize the EnOcean binary sensor."""
         super().__init__(dev_id, dev_name, dev_type, name)
         self._device_class = device_class
-        self.which = -1
-        self.onoff = -1
+
         self._attr_unique_id = (
             f"{to_hex_string(dev_id).upper()}-{device_class}-{channel}"
         )
@@ -122,54 +121,36 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
             ['0xf6', '0x00', '0x00', '0x2d', '0xcf', '0x45', '0x20']
         """
         # Energy Bow
-        pushed = None
+        # pushed = None
 
-        if packet.data[6] == 0x30:
-            pushed = 1
-        elif packet.data[6] == 0x20:
-            pushed = 0
+        # if packet.data[6] == 0x30:
+        #     pushed = 1
+        # elif packet.data[6] == 0x20:
+        #     pushed = 0
 
         action = packet.data[1]
         if action == 0x70:
-            self.which = 0
-            self.onoff = 0
             if self._channel == "A0":
                 self._attr_on = True
         elif action == 0x50:
-            self.which = 0
-            self.onoff = 1
             if self._channel == "A1":
                 self._attr_on = True
         elif action == 0x30:
-            self.which = 1
-            self.onoff = 0
             if self._channel == "B0":
                 self._attr_on = True
         elif action == 0x10:
-            self.which = 1
-            self.onoff = 1
             if self._channel == "B1":
                 self._attr_on = True
         elif action == 0x37:
-            self.which = 10
-            self.onoff = 0
             if self._channel in ("A0", "B0", "AB0"):
                 self._attr_on = True
         elif action == 0x15:
-            self.which = 10
-            self.onoff = 1
             if self._channel in ("A1", "B1", "AB1"):
                 self._attr_on = True
-
         elif action == 0x17:
-            self.which = 10
-            self.onoff = 1
             if self._channel in ("A0", "B1"):
                 self._attr_on = True
-
         elif action == 0x35:
-            self.which = 10
-            self.onoff = 1
             if self._channel in ("A1", "B0"):
                 self._attr_on = True
 
@@ -180,13 +161,3 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
             self._attr_on = False
 
         self.schedule_update_ha_state()
-
-        self.hass.bus.fire(
-            EVENT_BUTTON_PRESSED,
-            {
-                "id": self.dev_id,
-                "pushed": pushed,
-                "which": self.which,
-                "onoff": self.onoff,
-            },
-        )

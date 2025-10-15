@@ -138,7 +138,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         optional = [0x03]
-        optional.extend(self.dev_id)
+        optional.extend(self._device_id)
         optional.extend([0xFF, 0x00])
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00],
@@ -150,7 +150,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         optional = [0x03]
-        optional.extend(self.dev_id)
+        optional.extend(self._device_id)
         optional.extend([0xFF, 0x00])
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],

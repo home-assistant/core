@@ -104,7 +104,9 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def __init__(self, sender_id, dev_id, dev_name, dev_type, name) -> None:
         """Initialize the EnOcean Cover."""
-        super().__init__(dev_id=dev_id, dev_name=dev_name, dev_type=dev_type, name=name)
+        super().__init__(
+            device_id=dev_id, dev_name=dev_name, dev_type=dev_type, name=name
+        )
         self._attr_device_class = CoverDeviceClass.BLIND
         self._position = None
         self._is_closed = None
@@ -249,7 +251,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             rorg=RORG.VLD,
             rorg_func=0x05,
             rorg_type=0x00,
-            destination=self.dev_id,
+            destination=self._device_id,
             sender=self._sender_id,
             command=command.value,
             POS=position,
