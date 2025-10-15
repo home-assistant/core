@@ -44,15 +44,6 @@ def _mock_gateway(**overrides: Any) -> MagicMock:
     return gateway
 
 
-async def test_user_step_form(hass: HomeAssistant) -> None:
-    """Test the initial user step shows the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
 async def test_discovery_flow_success(
     hass: HomeAssistant,
     mock_setup_entry,
@@ -65,6 +56,9 @@ async def test_discovery_flow_success(
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert init_result["type"] is FlowResultType.FORM
+    assert init_result["step_id"] == "user"
+
     discovery_result = await hass.config_entries.flow.async_configure(
         init_result["flow_id"], {}
     )
