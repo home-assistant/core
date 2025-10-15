@@ -903,7 +903,7 @@ async def test_unavailable_boot(
 
     config = {"sensor": config}
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, STATE_UNAVAILABLE, {})
+    hass.states.async_set(entity_id, STATE_UNAVAILABLE, {"unit_of_measurement": "kWh"})
     await hass.async_block_till_done()
 
     assert await async_setup_component(hass, "sensor", config)

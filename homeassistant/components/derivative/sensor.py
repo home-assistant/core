@@ -218,20 +218,19 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         )
 
     def _derive_and_set_attributes_from_state(self, source_state: State | None) -> None:
-        if (
-            self._unit_template
-            and source_state
-            and (
-                source_state.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-                or source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            )
-        ):
+        if self._unit_template and source_state:
             original_unit = self._attr_native_unit_of_measurement
             source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             self._attr_native_unit_of_measurement = self._unit_template.format(
                 "" if source_unit is None else source_unit
             )
             if original_unit != self._attr_native_unit_of_measurement:
+                _LOGGER.debug(
+                    "%s: Derivative sensor switched UoM from %s to %s, resetting state to 0",
+                    self.entity_id,
+                    original_unit,
+                    self._attr_native_unit_of_measurement,
+                )
                 self._state_list = []
                 self._attr_native_value = round(Decimal(0), self._round_digits)
 
