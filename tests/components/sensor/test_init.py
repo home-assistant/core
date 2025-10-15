@@ -92,17 +92,9 @@ TEST_DOMAIN = "test"
 
 
 @pytest.mark.parametrize(
-    (
-        "device_class",
-        "unit_system",
-        "native_unit",
-        "state_unit",
-        "native_value",
-        "state_value",
-    ),
+    ("unit_system", "native_unit", "state_unit", "native_value", "state_value"),
     [
         (
-            SensorDeviceClass.TEMPERATURE,
             US_CUSTOMARY_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.FAHRENHEIT,
@@ -110,7 +102,6 @@ TEST_DOMAIN = "test"
             100,
         ),
         (
-            SensorDeviceClass.TEMPERATURE,
             US_CUSTOMARY_SYSTEM,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.FAHRENHEIT,
@@ -118,7 +109,6 @@ TEST_DOMAIN = "test"
             100.4,
         ),
         (
-            SensorDeviceClass.TEMPERATURE,
             METRIC_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.CELSIUS,
@@ -126,7 +116,6 @@ TEST_DOMAIN = "test"
             pytest.approx(37.77778),
         ),
         (
-            SensorDeviceClass.TEMPERATURE,
             METRIC_SYSTEM,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.CELSIUS,
@@ -137,7 +126,6 @@ TEST_DOMAIN = "test"
 )
 async def test_temperature_conversion(
     hass: HomeAssistant,
-    device_class,
     unit_system,
     native_unit,
     state_unit,
@@ -150,7 +138,7 @@ async def test_temperature_conversion(
         name="Test",
         native_value=str(native_value),
         native_unit_of_measurement=native_unit,
-        device_class=device_class,
+        device_class=SensorDeviceClass.TEMPERATURE,
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 

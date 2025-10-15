@@ -174,6 +174,8 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "suggested_unit_of_measurement",
 }
 
+TEMPERATURE_UNITS = {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
+
 
 class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for sensor entities."""
@@ -534,9 +536,8 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Third priority: Legacy temperature conversion, which applies
         # to both registered and non registered entities
         if (
-            native_unit_of_measurement
-            in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT)
-            and self.device_class == SensorDeviceClass.TEMPERATURE
+            native_unit_of_measurement in TEMPERATURE_UNITS
+            and self.device_class is SensorDeviceClass.TEMPERATURE
         ):
             return self.hass.config.units.temperature_unit
 

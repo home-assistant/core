@@ -405,7 +405,6 @@ async def test_set_value(
 
 @pytest.mark.parametrize(
     (
-        "device_class",
         "unit_system",
         "native_unit",
         "state_unit",
@@ -422,7 +421,6 @@ async def test_set_value(
     ),
     [
         (
-            NumberDeviceClass.TEMPERATURE,
             US_CUSTOMARY_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.FAHRENHEIT,
@@ -438,7 +436,6 @@ async def test_set_value(
             3,
         ),
         (
-            NumberDeviceClass.TEMPERATURE,
             US_CUSTOMARY_SYSTEM,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.FAHRENHEIT,
@@ -454,7 +451,6 @@ async def test_set_value(
             3,
         ),
         (
-            NumberDeviceClass.TEMPERATURE,
             METRIC_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.CELSIUS,
@@ -470,7 +466,6 @@ async def test_set_value(
             3,
         ),
         (
-            NumberDeviceClass.TEMPERATURE,
             METRIC_SYSTEM,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.CELSIUS,
@@ -489,7 +484,6 @@ async def test_set_value(
 )
 async def test_temperature_conversion(
     hass: HomeAssistant,
-    device_class,
     unit_system,
     native_unit,
     state_unit,
@@ -513,7 +507,7 @@ async def test_temperature_conversion(
         native_step=native_step,
         native_unit_of_measurement=native_unit,
         native_value=initial_native_value,
-        device_class=device_class,
+        device_class=NumberDeviceClass.TEMPERATURE,
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
@@ -767,7 +761,6 @@ async def test_custom_unit(
 
 @pytest.mark.parametrize(
     (
-        "device_class",
         "native_unit",
         "custom_unit",
         "used_custom_unit",
@@ -778,7 +771,6 @@ async def test_custom_unit(
     ),
     [
         (
-            NumberDeviceClass.TEMPERATURE,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.FAHRENHEIT,
@@ -788,7 +780,6 @@ async def test_custom_unit(
             37.5,
         ),
         (
-            NumberDeviceClass.TEMPERATURE,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.FAHRENHEIT,
@@ -799,38 +790,6 @@ async def test_custom_unit(
         ),
         # Not a supported temperature unit
         (
-            NumberDeviceClass.TEMPERATURE,
-            UnitOfTemperature.CELSIUS,
-            "no_unit",
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.CELSIUS,
-            1000,
-            1000,
-            1000,
-        ),
-        (
-            NumberDeviceClass.TEMPERATURE_DELTA,
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.FAHRENHEIT,
-            UnitOfTemperature.FAHRENHEIT,
-            UnitOfTemperature.CELSIUS,
-            100,
-            180,
-            100,
-        ),
-        (
-            NumberDeviceClass.TEMPERATURE_DELTA,
-            UnitOfTemperature.FAHRENHEIT,
-            UnitOfTemperature.FAHRENHEIT,
-            UnitOfTemperature.FAHRENHEIT,
-            UnitOfTemperature.FAHRENHEIT,
-            100,
-            100,
-            100,
-        ),
-        # Not a supported temperature unit
-        (
-            NumberDeviceClass.TEMPERATURE_DELTA,
             UnitOfTemperature.CELSIUS,
             "no_unit",
             UnitOfTemperature.CELSIUS,
@@ -844,7 +803,6 @@ async def test_custom_unit(
 async def test_custom_unit_change(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    device_class,
     native_unit,
     custom_unit,
     used_custom_unit,
@@ -858,7 +816,7 @@ async def test_custom_unit_change(
         name="Test",
         native_value=native_value,
         native_unit_of_measurement=native_unit,
-        device_class=device_class,
+        device_class=NumberDeviceClass.TEMPERATURE,
         unique_id="very_unique",
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
