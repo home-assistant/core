@@ -24,11 +24,11 @@ class TheSilentWaveBinarySensor(TheSilentWaveEntity, BinarySensorEntity):
     """Representation of a TheSilentWave binary sensor."""
 
     _attr_translation_key = "status"
+    _attr_name = None  # Set to None to use device name as this is the main sensor
 
     def __init__(self, coordinator: TheSilentWaveCoordinator, entry_id: str) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator, entry_id)
-        self._attr_name = None  # Set to None to use device name as this is the main sensor
         self._unsubscribe_callback = None
         # Set a more specific unique_id for this sensor entity
         self._attr_unique_id = f"{DOMAIN}_{entry_id}_status"
