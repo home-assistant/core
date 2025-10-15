@@ -145,7 +145,7 @@ async def _discover_devices(
             identifiers={(DOMAIN, device_id)},
             manufacturer=DEVICE_MANUFACTURER.get(device_family, MANUFACTURER_MAXIM),
             model=device_type,
-            model_id=None,  # cleanup previously incorrect model_id
+            model_id=None,  # cleanup from #135279
             name=device_id,
             serial_number=device_id[3:],
         )
