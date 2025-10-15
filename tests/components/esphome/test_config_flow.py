@@ -13,6 +13,7 @@ from aioesphomeapi import (
     InvalidEncryptionKeyAPIError,
     RequiresEncryptionAPIError,
     ResolveAPIError,
+    wifi_mac_to_bluetooth_mac,
 )
 import aiohttp
 import pytest
@@ -2208,7 +2209,6 @@ async def test_user_flow_name_conflict_overwrite(
         result["flow_id"], user_input={"next_step_id": "name_conflict_overwrite"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -2572,16 +2572,15 @@ async def test_reconfig_name_conflict_overwrite(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "name_conflict_overwrite"}
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
-    assert result["data"] == {
-        CONF_HOST: "127.0.0.2",
-        CONF_PORT: 6053,
-        CONF_PASSWORD: "",
-        CONF_NOISE_PSK: "",
-        CONF_DEVICE_NAME: "test",
-    }
-    assert result["context"]["unique_id"] == "11:22:33:44:55:bb"
+    assert (
+        hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, "11:22:33:44:55:bb"
+        )
+        is not None
+    )
     assert (
         hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, "11:22:33:44:55:aa"
@@ -2819,3 +2818,79 @@ async def test_user_flow_zwave_discovery_aborts(
 
     # Verify next_flow was NOT set since Z-Wave flow aborted
     assert "next_flow" not in result
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_zeroconf_notifies_improv_ble(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+) -> None:
+    """Test that zeroconf discovery notifies improv_ble integration."""
+    service_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={
+            "mac": "aabbccddeeff",
+        },
+        type="mock_type",
+    )
+
+    # Patch improv_ble to ensure it's available and track calls
+    with patch(
+        "homeassistant.components.improv_ble.async_register_next_flow"
+    ) as mock_register:
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=service_info,
+        )
+
+    assert flow["type"] is FlowResultType.FORM
+    assert flow["step_id"] == "discovery_confirm"
+
+    # Verify improv_ble.async_register_next_flow was called with correct parameters
+    assert len(mock_register.mock_calls) == 1
+    call_args = mock_register.mock_calls[0].args
+    assert call_args[0] is hass  # HomeAssistant instance
+    # WiFi MAC aabbccddeeff + 1 = Bluetooth MAC aabbccddee00
+    # (wifi_mac_to_bluetooth_mac from aioesphomeapi)
+    expected_ble_mac = wifi_mac_to_bluetooth_mac("aa:bb:cc:dd:ee:ff")
+    assert call_args[1] == expected_ble_mac  # BLE MAC address
+    assert call_args[2] == flow["flow_id"]  # Flow ID
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_zeroconf_when_improv_ble_not_available(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+) -> None:
+    """Test that zeroconf discovery works when improv_ble is not available."""
+    service_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={
+            "mac": "aabbccddeeff",
+        },
+        type="mock_type",
+    )
+
+    # Mock async_import_module to return None (simulating improv_ble not available)
+    with patch(
+        "homeassistant.components.esphome.config_flow.async_import_module",
+        return_value=None,
+    ):
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=service_info,
+        )
+
+    # Flow should still work even without improv_ble
+    assert flow["type"] is FlowResultType.FORM
+    assert flow["step_id"] == "discovery_confirm"
