@@ -1751,13 +1751,12 @@ class IncludedEntitiesMixin(Entity):
         """Update the group members if the entity registry is updated."""
         entity_registry = er.async_get(self.hass)
         assert self.entity_id is not None
-        platform_domain = self.entity_id.split(".")[0]
 
         def _update_group_entity_ids() -> None:
             self._attr_included_entities = []
             for included_id in self.included_unique_ids:
                 if entity_id := entity_registry.async_get_entity_id(
-                    platform_domain, self._integration_domain, included_id
+                    self.platform.domain, self._integration_domain, included_id
                 ):
                     self._attr_included_entities.append(entity_id)
 
