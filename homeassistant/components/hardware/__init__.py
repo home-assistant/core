@@ -15,9 +15,7 @@ from .models import BoardInfo, HardwareData, HardwareInfo, SystemStatus, USBInfo
 
 __all__ = [
     "BoardInfo",
-    "HardwareData",
     "HardwareInfo",
-    "SystemStatus",
     "USBInfo",
 ]
 
