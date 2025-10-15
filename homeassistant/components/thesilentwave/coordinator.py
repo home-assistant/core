@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pysilentwave import SilentWaveClient
 from pysilentwave.exceptions import SilentWaveError
@@ -20,10 +21,10 @@ UPDATE_INTERVAL = timedelta(seconds=10)
 type TheSilentWaveConfigEntry = ConfigEntry[TheSilentWaveCoordinator]
 
 
-class TheSilentWaveCoordinator(DataUpdateCoordinator):
+class TheSilentWaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching the data from the API."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the coordinator."""
         websession = async_get_clientsession(hass)
         self.entry = entry
@@ -47,7 +48,7 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
         )
 
     @property
-    def device_name(self):
+    def device_name(self) -> str:
         """Return the name of the device."""
         return self._device_name
 
@@ -56,7 +57,7 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
         """Return the host address."""
         return self._host
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the API."""
         try:
             status = await self.client.get_status()
