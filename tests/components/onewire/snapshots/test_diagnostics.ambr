@@ -12,7 +12,7 @@
           ]),
           'manufacturer': 'Hobby Boards',
           'model': 'HB_HUB',
-          'model_id': 'HB_HUB',
+          'model_id': None,
           'name': 'EF.111111111113',
           'serial_number': '111111111113',
           'sw_version': '3.2',
