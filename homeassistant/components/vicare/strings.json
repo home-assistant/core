@@ -73,7 +73,7 @@
       "mounting_mode": {
         "name": "Mounting mode"
       },
-      "child_safety_lock": {
+      "child_safety_lock_mode": {
         "name": "Child safety lock"
       },
       "valve": {
