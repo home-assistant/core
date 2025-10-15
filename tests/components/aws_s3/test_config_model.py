@@ -94,3 +94,11 @@ def test_del_item() -> None:
     del model[CONF_BUCKET]
     keys_after = set(model.keys())
     assert keys_before - keys_after == {CONF_BUCKET}
+
+
+async def test_async_validate_access_success() -> None:
+    """Test async_validate_access succeeds with valid explicit credentials."""
+    model = S3ConfigModel()
+    model.from_dict(USER_INPUT)
+    await model.async_validate_access()
+    assert not model.has_errors(set(model.keys()))
