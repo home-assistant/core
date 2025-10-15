@@ -12,7 +12,8 @@ from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 from aiohttp import ClientSession
 from asusrouter import AsusRouter, AsusRouterError
 from asusrouter.config import ARConfigKey
-from asusrouter.modules.client import AsusClient, ConnectionState
+from asusrouter.modules.client import AsusClient
+from asusrouter.modules.connection import ConnectionState
 from asusrouter.modules.data import AsusData
 from asusrouter.modules.homeassistant import convert_to_ha_data, convert_to_ha_sensors
 from asusrouter.tools.connection import get_cookie_jar
