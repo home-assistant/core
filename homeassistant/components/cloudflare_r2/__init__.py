@@ -7,7 +7,12 @@ from typing import cast
 
 from aiobotocore.client import AioBaseClient as S3Client
 from aiobotocore.session import AioSession
-from botocore.exceptions import ClientError, ConnectionError, ParamValidationError
+from botocore.exceptions import (
+    ClientError,
+    ConnectionError,
+    EndpointConnectionError,
+    ParamValidationError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -58,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> bool:
             translation_domain=DOMAIN,
             translation_key="invalid_endpoint_url",
         ) from err
-    except ConnectionError as err:
+    except (ConnectionError, EndpointConnectionError) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",

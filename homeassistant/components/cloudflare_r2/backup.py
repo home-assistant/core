@@ -308,9 +308,12 @@ class R2BackupAgent(BackupAgent):
             return self._backup_cache
 
         backups = {}
-        response = await self._client.list_objects_v2(
-            Bucket=self._bucket, Prefix=(self._prefix + "/") if self._prefix else None
-        )
+        # Only pass Prefix if a prefix is configured; some S3-compatible APIs
+        # (and type checkers) do not like Prefix=None.
+        list_kwargs = {"Bucket": self._bucket}
+        if self._prefix:
+            list_kwargs["Prefix"] = self._prefix + "/"
+        response = await self._client.list_objects_v2(**list_kwargs)
 
         # Filter for metadata files only
         metadata_files = [

@@ -6,7 +6,12 @@ from typing import Any
 from urllib.parse import urlparse
 
 from aiobotocore.session import AioSession
-from botocore.exceptions import ClientError, ConnectionError, ParamValidationError
+from botocore.exceptions import (
+    ClientError,
+    ConnectionError,
+    EndpointConnectionError,
+    ParamValidationError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -83,11 +88,17 @@ class R2ConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors[CONF_BUCKET] = "invalid_bucket_name"
                 except ValueError:
                     errors[CONF_ENDPOINT_URL] = "invalid_endpoint_url"
+                except EndpointConnectionError:
+                    errors[CONF_ENDPOINT_URL] = "cannot_connect"
                 except ConnectionError:
                     errors[CONF_ENDPOINT_URL] = "cannot_connect"
                 else:
+                    # Do not persist empty optional values
+                    data = dict(user_input)
+                    if not data.get(CONF_PREFIX):
+                        data.pop(CONF_PREFIX, None)
                     return self.async_create_entry(
-                        title=user_input[CONF_BUCKET], data=user_input
+                        title=user_input[CONF_BUCKET], data=data
                     )
 
         return self.async_show_form(
