@@ -29,10 +29,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     # Initialize first refresh/request and wait for parsed JSON data from coordinator
     try:
-        # await coordinator.async_config_entry_first_refresh()
+        # From await coordinator.async_config_entry_first_refresh()
         # Collect all entities (entities are part of device)
         sensors_start = []
-        # sensors_start_txt = []
         for entity_id in coordinator.data:
             sensor_id = coordinator.data[entity_id]["sensor_id"]
             if entity_id not in coordinator.sensor_entity_list:
@@ -50,9 +49,8 @@ async def async_setup_entry(
             f"Station not available: {error}"
         ) from error  # Catch errors here
 
-    # Find new sensors in coordinator data
     async def async_discover_new_entities():
-        """Find new sensors and register them."""
+        """Find new sensors in coordinator data and register them."""
         coordinator = entry.runtime_data
 
         new_sensors = []
@@ -68,18 +66,14 @@ async def async_setup_entry(
         if new_sensors:
             async_add_entities(new_sensors)
 
-    # Attach it to the coordinator itself ?
-    # coordinator.async_discover_new_entities = async_discover_new_entities
-
     # Save function in Home Assistant so that it can be called as service
     hass.data[DOMAIN][
         entry.entry_id
     ].async_discover_new_entities = async_discover_new_entities
 
 
-# ---- TFA.me sensor entity ----
 class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
-    """Represents in Home Assistant a single measurement of a sensor."""
+    """TFA.me sensor entity, represents in HA a single measurement value of a sensor."""
 
     _attr_has_entity_name = True
     _attr_should_poll = True
@@ -146,9 +140,8 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
         except (ValueError, TypeError, KeyError):
             return
 
-    # ---- Called when coordinator has new data, used to update rain histories ----
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """Called when coordinator has new data, used to update rain histories."""
 
         if "rain_hour" in self.entity_id:
             try:
@@ -171,17 +164,15 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
         # Update state in HA
         super()._handle_coordinator_update()
 
-    # ---- String helper for sensor names ----
     def format_string_tfa_id(self, s: str, gw_id: str, multiple_entities: bool):
-        """Convert string 'xxxxxxxxx' into 'TFA.me XXX-XXX-XXX'."""
+        """String helper for sensor names, convert string 'xxxxxxxxx' into 'TFA.me XXX-XXX-XXX'."""
         if multiple_entities:
             return f"TFA.me {s[:3].upper()}-{s[3:6].upper()}-{s[6:].upper()}({gw_id.upper()})"
-        # else:
+
         return f"TFA.me {s[:3].upper()}-{s[3:6].upper()}-{s[6:].upper()}"
 
-    # ---- String helper for sensor/station types ----
     def format_string_tfa_type(self, s: str):
-        """Convert string 'xxxxxxxxx' into 'Sensor/station type XX'."""
+        """String helper for sensor/station types, convert string 'xxxxxxxxx' into 'Sensor/station type XX'."""
 
         type_id: str = (s[:2]).upper()
         info_str: str = "?"
@@ -191,17 +182,14 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
             info_str = "?"
         return info_str
 
-    # ---- Property: Unique entity ID ----
-    # "sensor.id_measurement" e.g. "sensor.a12345678_temperature"
     @property
     def unique_id(self) -> str:
-        """Unique entity ID for Home Assistant."""
+        """Unique entity ID for Home Assistant, "sensor.id_measurement" e.g. "sensor.a12345678_temperature"."""
         return f"tfame_{self.entity_id}"
 
-    # ---- Property: Name of sensor entity in HA: "ID MEASUEREMENT",  e.g. "A01234456 Temperature" ----
     @property
     def name(self) -> str:
-        """Name of sensors in Home Assistant."""
+        """Name of sensors in Home Assistant, "ID MEASUEREMENT",  e.g. "A01234456 Temperature."""
         try:
             sensor_data = self.coordinator.data[self.entity_id]
             str1 = f"{sensor_data['sensor_name']} {sensor_data['measurement'].capitalize()}"
@@ -211,10 +199,9 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
         except (ValueError, TypeError, KeyError):
             return "None"
 
-    # ---- Property: Name of measurement value in HA: "measurement", e.g. "temperature" ----
     @property
     def measurement_name(self):
-        """Name of measurement."""
+        """Name of measurement, "measurement", e.g. "temperature."""
         try:
             measurement_name = self.coordinator.data[self.entity_id]["measurement"]
         except (ValueError, TypeError, KeyError):
@@ -222,12 +209,11 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
 
         return measurement_name
 
-    # ---- Property: measurement value of an entity itself ----
     @property
     def native_value(self) -> StateType:  # None | int | float | str | StateType:
-        """Actual measurement value."""
+        """Actual measurement value of an entity itself."""
         try:
-            # Is measurement value still valid or old
+            # Is measurement value still valid or old ?
             last_update_ts: int = int(self.coordinator.data[self.entity_id]["ts"])
             utc_now = datetime.now()
             utc_now_ts = int(utc_now.timestamp())
@@ -235,7 +221,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
             if (utc_now_ts - last_update_ts) <= (timeout):
                 measurement_value = self.coordinator.data[self.entity_id]["value"]
 
-                # Is this rain sensor relative values
+                # Is this rain sensor relative value?
                 if "rain_rel" in self.entity_id:
                     reset_rain = self.coordinator.data[self.entity_id]["reset_rain"]
                     if reset_rain:
@@ -247,16 +233,15 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                     )
                     measurement_value = round(measurement_value, 1)
 
-                # Is this rain sensor last hour
+                # Is this rain sensor last hour ?
                 if "rain_hour" in self.entity_id:
-                    # try:
                     measurement_value = float(0)
                     if len(self.rain_history.data) >= 2:
                         oldest, newest = self.rain_history.get_oldest_and_newest()
                         measurement_value = float(newest[0]) - float(oldest[0])
                         measurement_value = round(measurement_value, 1)
 
-                # Is this rain sensor last 24 hours
+                # Is this rain sensor last 24 hours ?
                 if "rain_24hours" in self.entity_id:
                     measurement_value = float(0)
                     if len(self.rain_history_24.data) >= 2:
@@ -292,26 +277,20 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
 
         return measurement_value
 
-    # ---- Property: Unit of measurement value, e.g. for wind speed unit is "m/s" ----
     @property
     def native_unit_of_measurement(self) -> str | None:
-        """Unit of measurement value."""
+        """Unit of measurement value,  e.g. for wind speed unit is "m/s"."""
         try:
             unit = self.coordinator.data[self.entity_id]["unit"]
             if unit is None:
-                return None  # Home Assistant shows "unavailable"
+                return None  # HA shows "unavailable"
             return str(unit)
         except (ValueError, TypeError, KeyError):
             return ""
 
-    # ---- Property: Extra attributes dictionary for an entity ----
-    # "sensor_name": Sensor ID, e.g. "A01234456"
-    # "measurement": Name of measurement value, e.g. "temperature"
-    # "timestamp"  : UTC timestamp, e.g. "2025-03-06T08:46:01Z"
-    # "icon"       : Icon for a measurement value, e.g. "mdi:water-percent"
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Additional attributes."""
+        """Extra attributes dictionary for an entity: sensor_name, measurement, timestamp, icon."""
 
         try:
             sensor_data = self.coordinator.data[self.entity_id]
@@ -324,17 +303,14 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
         except (ValueError, TypeError, KeyError):
             return {}
 
-    # ---- Property: Icon for a measurement value ----
     @property
     def icon(self) -> str:
         """Returns icon based on actual measurement value."""
         value = self.native_value
-        # get the icon
         return self.get_icon(self.measurement_name, value)
 
-    # ---- Get an icon for measurement type based on measurement value (see MDI list) ----
     def get_icon(self, measurement_type, value_state):
-        """Return icon for a sensor type."""
+        """Return an icon for measurement type based on measurement value (see MDI list)."""
 
         if value_state is None:
             value = value_state  # use None
@@ -417,7 +393,6 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
         # Unknown measurement type
         return "mdi:help-circle"  # Fallback-Icon
 
-    # ---- Get an icon for rain ----
     def get_rain_icon(self, value):
         """Return icon for rain based on value."""
         if value is None:
@@ -431,10 +406,10 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
         # if value >= 4:
         return ICON_MAPPING["rain"]["heavy"]
 
-    # ---- Get an icon for wind direction based on values (0...15) ----
-    # Remark: there are only 8 arrows for direction but 16 wind direction so icon does not match optimal
     def get_wind_direction_icon(self, value):
         """Return icon for wind direction based on value 0 to 15."""
+
+        # Remark: there are only 8 MDI arrows for direction but 16 wind direction so icon does not match optimal.
         if value is None:
             return "mdi:compass-outline"
 
@@ -456,7 +431,6 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
             return "mdi:arrow-bottom-right"  # NW (North-West)
         return "mdi:compass-outline"  # Fallback, should not happen
 
-    # ---- Get the timeout time for a station or a sensor ----
     def get_timeout(self, sensor_id: str):
         """Return the timeout time for a station or sensor."""
 
@@ -466,15 +440,13 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
             timeout_val = 0
         return timeout_val
 
-    # ---- Update ----
     async def async_update(self) -> None:
         """Manual Updating."""
         await self.coordinator.async_request_refresh()
 
 
-# ---- Class to store a history, specially for rain sensor to calculate rain of "last hour", "last 24 hours" ----
 class SensorHistory:
-    """History queue."""
+    """Class to store a history, specially for rain sensor to calculate rain of last hour & last 24 hours)."""
 
     def __init__(self, max_age_minutes=60) -> None:
         """Initalaize history queue."""

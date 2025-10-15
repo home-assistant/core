@@ -9,7 +9,7 @@ type TFAmeConfigEntry = ConfigEntry[TFAmeData]
 
 @dataclass
 class TFAmeData:
-    """Store runtime data."""
+    """Store TFA.me runtime data."""
 
     def __init__(self, host: str) -> None:
         """Initialize client with host."""
@@ -20,8 +20,7 @@ class TFAmeData:
         self.host = host
 
     async def get_identifier(self) -> str:
-        """Request a unique ID from a device."""
-        # We just take the host name
+        """Request a unique ID from a device, we just take the host name."""
         return self.host
 
 

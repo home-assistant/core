@@ -1,9 +1,9 @@
 """TFA.me station integration: config_flow.py."""
 
 import logging
-import re
 from typing import Any
 
+from tfa_me_ha_local.validators import TFAmeValidator
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -37,7 +37,6 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-# ---- TFA.me config flow ----
 class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for TFA.me stations."""
 
@@ -76,8 +75,9 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
         # Get IP or mDNS host name
         ip_host_str = user_input.get("ip_address")
 
-        # if user_input is not None:
-        if is_valid_ip_or_tfa_me(user_input):
+        # If user_input is not None:
+        validator = TFAmeValidator()
+        if validator.is_valid_ip_or_tfa_me(ip_host_str):
             title_str: str = "TFA.me Station"
             if isinstance(ip_host_str, str):
                 title_str = "TFA.me Station '" + ip_host_str.upper() + "'"
@@ -97,7 +97,7 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Create a TFA.me device entry
                 return self.async_create_entry(title=title_str, data=user_input)
 
-        # error
+        # Update error list
         errors[CONF_IP_ADDRESS] = "invalid_ip_host"
 
         # Error, validation failed
@@ -112,36 +112,8 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler()
 
 
-# ---- Verify if user input is valid IP V4 or valid TFA.me station ----
-def is_valid_ip_or_tfa_me(to_verify: dict) -> bool:
-    """Verify if input is an IP or a valid mDNS host name."""
-
-    host = to_verify.get("ip_address")  # Get value as string
-    if not isinstance(host, str):
-        return False  # ip_address not available or not a string
-
-    # IPv4 verify:
-    # ipv4_pattern: str = r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"
-    ipv4_pattern = (
-        r"^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}"
-        r"(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$"
-    )
-    if re.match(ipv4_pattern, host):
-        return True
-
-    # Special format for mDNS name verification: "tfa-me-XXX-XXX-XXX.local"
-    # mdns_pattern: str = r"^tfa-me-[0-9A-Fa-f]{3}-[0-9A-Fa-f]{3}-[0-9A-Fa-f]{3}\.local$"
-    # Special format for mDNS name verification: "XXX-XXX-XXX"
-    mdns_pattern: str = r"^[0-9A-Fa-f]{3}-[0-9A-Fa-f]{3}-[0-9A-Fa-f]{3}$"
-    if re.match(mdns_pattern, host):
-        return True
-
-    return False
-
-
-# ---- Options handler: set poll interval ----
 class OptionsFlowHandler(OptionsFlow):
-    """Options flow for for TFA.me integration."""
+    """Options flow handler (reset rain, etc.) for TFA.me integration."""
 
     async def async_step_init(self, user_input: None) -> ConfigFlowResult:
         """Handle options menu flow."""
@@ -179,11 +151,10 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(step_id="init", data_schema=options_schema)
 
-    # ---- Change option: Reset all rain sensors ----
     async def async_step_action_rain(self, user_input=None) -> ConfigFlowResult:
         """Entry point for option: Reset all rain sensors."""
-        if user_input is not None:  # Remove?
-            if user_input["select_option"] == "action_rain":  #  remove?
+        if user_input is not None:
+            if user_input["select_option"] == "action_rain":
                 coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
                 coordinator.reset_rain_sensors = True
                 # Store in options
@@ -205,20 +176,19 @@ class OptionsFlowHandler(OptionsFlow):
                 return self.async_create_entry(
                     title="action_rain", data=self.config_entry.options
                 )
-        # Remove ?
+
         action_schema_rain = vol.Schema({vol.Required("action_rain"): vol.Boolean()})
         return self.async_show_form(
             step_id="action_rain",
             data_schema=action_schema_rain,
         )
 
-    # ---- Change option: Reload all sensor data ----
     async def async_update_data(self, user_input=None) -> ConfigFlowResult:
         """Entry point for option: Reload all sensor data."""
         if user_input is not None:
             if user_input["select_option"] == "update_data":
                 coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
-                await coordinator.async_refresh()  # get sensor data
+                await coordinator.async_refresh()  # get sensor data from station
 
                 # Update all entities on dashboard
                 for entity_id in coordinator.sensor_entity_list:
@@ -233,7 +203,6 @@ class OptionsFlowHandler(OptionsFlow):
             title="update_data", data=self.config_entry.options
         )
 
-    # ---- Change option: Discover new sensors ----
     async def async_discover_sensors(self, user_input=None) -> ConfigFlowResult:
         """Entry point for option: Discover new sensors."""
         if user_input is not None:

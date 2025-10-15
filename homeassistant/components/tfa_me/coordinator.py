@@ -36,7 +36,7 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
         multiple_entities: bool,
     ) -> None:
         """Initialize data update coordinator."""
-        self.host = host  # config_entry.data[CONF_IP_ADDRESS]
+        self.host = host  # from config_entry.data[CONF_IP_ADDRESS]
         self.first_init = 0
         self.ha = hass
         self.config_entry = config_entry
@@ -46,7 +46,7 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
             multiple_entities  # from config_entry.data[CONF_MULTIPLE_ENTITIES]
         )
         self.gateway_id = ""
-        self.poll_interval = interval  # from config_entry.data[CONF_INTERVAL]
+        self.poll_interval = interval  # former from config_entry.data[CONF_INTERVAL]
 
         super().__init__(
             hass,
@@ -84,7 +84,7 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
             parsed_data = tfa_me_data.json_to_entities(json_data=json_data)
             self.gateway_id = tfa_me_data.get_gateway_id()
 
-        # --- Specific error mapping ---
+        # Specific error mapping
         except (TFAmeTimeoutError, TFAmeConnectionError) as err:
             # Device not reachable → after first start "NotReady", then "UpdateFailed"
             msg: str = "Timeout general connection error: " + str(err.__doc__)
@@ -125,7 +125,6 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
             # values are available with self.coordinator.data[self.entity_id]["keyword"]
             return parsed_data
 
-    # ---- Try to resolve host name ----
     async def resolve_mdns(self, host_str: str) -> str:
         """Try to resolve host name and to get IP."""
         try:

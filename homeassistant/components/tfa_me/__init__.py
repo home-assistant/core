@@ -1,6 +1,5 @@
 """TFA.me station integration: ___init___.py."""
 
-# from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -15,21 +14,19 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-# ---- TFA.me station setup ----
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> bool:  # TFAmeConfigEntry) -> bool:
     """Set up a TFA.me station."""
-    hass.data.setdefault(DOMAIN, {})
-
+    # Get IP or station ID
     host = entry.data[CONF_IP_ADDRESS]
     # Use default poll interval
     delta_interval = timedelta(seconds=LOCAL_POLL_INTERVAL)
 
-    # Use multiple entities
+    # Use multiple entities option
     multiple_entities = entry.data[CONF_MULTIPLE_ENTITIES]
 
-    # DataUpdateCoordinator for cyclic requests
+    # New DataUpdateCoordinator for cyclic requests
     coordinator = TFAmeDataCoordinator(
         hass, entry, host, delta_interval, multiple_entities
     )
@@ -43,8 +40,8 @@ async def async_setup_entry(
     # First request for sensor data
     await coordinator.async_config_entry_first_refresh()
 
-    # Save coordinator
-    entry.runtime_data = coordinator
+    # Set coordinator data ?? here is something wrong ???
+    entry.runtime_data = coordinator.data  # TO DO fix it
 
     assert entry.unique_id
 
@@ -68,9 +65,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-# ---- Options update listener: option is pull/request interval ----
 async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
-    """Will be called when options are changed."""
+    """Will be called when options are changed via UI."""
 
     reset_rain = entry.options.get("action_rain", False)
     msg: str = "Options 'reset rain': " + str(reset_rain)
