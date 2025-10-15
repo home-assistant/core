@@ -11,9 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import snapshot_platform
-
-from tests.common import MockConfigEntry, SnapshotAssertion
+from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 
 def _get_light_entity_id(hass: HomeAssistant, unique_id: str) -> str:
