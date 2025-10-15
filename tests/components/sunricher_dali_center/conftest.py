@@ -130,9 +130,15 @@ def mock_discovery() -> Generator[MagicMock]:
 @pytest.fixture
 def mock_dali_gateway() -> Generator[MagicMock]:
     """Return a mocked DaliGateway."""
-    with patch(
-        "homeassistant.components.sunricher_dali_center.DaliGateway", autospec=True
-    ) as mock_gateway_class:
+    with (
+        patch(
+            "homeassistant.components.sunricher_dali_center.DaliGateway", autospec=True
+        ) as mock_gateway_class,
+        patch(
+            "homeassistant.components.sunricher_dali_center.config_flow.DaliGateway",
+            new=mock_gateway_class,
+        ),
+    ):
         mock_gateway = mock_gateway_class.return_value
         mock_gateway.gw_sn = "6A242121110E"
         mock_gateway.name = "Test Gateway"
