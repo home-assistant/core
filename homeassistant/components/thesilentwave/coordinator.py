@@ -23,14 +23,17 @@ type TheSilentWaveConfigEntry = ConfigEntry[TheSilentWaveCoordinator]
 class TheSilentWaveCoordinator(DataUpdateCoordinator):
     """Class to manage fetching the data from the API."""
 
-    def __init__(self, hass: HomeAssistant, name: str, host: str):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         """Initialize the coordinator."""
         websession = async_get_clientsession(hass)
-        self.client = SilentWaveClient(host, session=websession)
+        self.entry = entry
+        self._device_name = entry.data["name"]
+        self._host = entry.data["host"]
+        self.client = SilentWaveClient(self._host, session=websession)
 
         # Store the name directly to be accessed by entities.
-        self._device_name = name
-        self._host = host
+        self._device_name = self._device_name
+        self._host = self._host
 
         # Track connection state to avoid log spam.
         self.has_connection = True
@@ -39,7 +42,7 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=name,
+            name=self._device_name,
             update_interval=UPDATE_INTERVAL,
         )
 
@@ -47,6 +50,11 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
     def device_name(self):
         """Return the name of the device."""
         return self._device_name
+    
+    @property
+    def host(self) -> str:
+        """Return the host address."""
+        return self._host
 
     async def _async_update_data(self):
         """Fetch data from the API."""
