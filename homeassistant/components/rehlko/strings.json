@@ -103,11 +103,11 @@
       "last_run": {
         "name": "Last run"
       },
-      "last_maintainance": {
-        "name": "Last maintainance"
+      "last_maintenance": {
+        "name": "Last maintenance"
       },
-      "next_maintainance": {
-        "name": "Next maintainance"
+      "next_maintenance": {
+        "name": "Next maintenance"
       },
       "next_exercise": {
         "name": "Next exercise"
