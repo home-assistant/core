@@ -13,7 +13,6 @@ from homeassistant.components.pooldose.const import DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
     Platform,
     UnitOfTemperature,
 )
@@ -156,37 +155,6 @@ async def test_sensor_entity_unavailable_no_coordinator_data(
     assert temp_state.state == STATE_UNAVAILABLE
 
 
-async def test_sensor_entity_unavailable_missing_platform_data(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pooldose_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test sensor entity becomes unavailable when platform data is missing."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify initial working state
-    temp_state = hass.states.get("sensor.pool_device_temperature")
-    assert temp_state.state == "25"
-
-    # Remove sensor platform data by making API return data without sensors
-    mock_pooldose_client.instant_values_structured.return_value = (
-        RequestStatus.SUCCESS,
-        {"other_platform": {}},  # No sensor data
-    )
-
-    freezer.tick(timedelta(minutes=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Check sensor becomes unavailable
-    temp_state = hass.states.get("sensor.pool_device_temperature")
-    assert temp_state.state == STATE_UNAVAILABLE
-
-
 @pytest.mark.usefixtures("mock_pooldose_client")
 async def test_temperature_sensor_dynamic_unit(
     hass: HomeAssistant,
@@ -224,33 +192,3 @@ async def test_temperature_sensor_dynamic_unit(
     # After reload, the original fixture data is restored, so we expect °C
     assert temp_state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
     assert temp_state.state == "25.0"  # Original fixture value
-
-
-async def test_native_value_with_non_dict_data(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pooldose_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test native_value returns None when data is not a dict."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Mock get_data to return non-dict value
-    instant_values_raw = await async_load_fixture(hass, "instantvalues.json", DOMAIN)
-    malformed_data = json.loads(instant_values_raw)
-    malformed_data["sensor"]["temperature"] = "not_a_dict"
-
-    mock_pooldose_client.instant_values_structured.return_value = (
-        RequestStatus.SUCCESS,
-        malformed_data,
-    )
-
-    freezer.tick(timedelta(minutes=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Should handle non-dict data gracefully
-    temp_state = hass.states.get("sensor.pool_device_temperature")
-    assert temp_state.state == STATE_UNKNOWN

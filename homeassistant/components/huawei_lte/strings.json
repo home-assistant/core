@@ -41,7 +41,7 @@
         },
         "data_description": {
           "password": "Password for accessing the router's API. Typically, the same as the one used for the router's web interface.",
-          "url": "Base URL to the API of the router. Typically, something like `http://192.168.X.1`. This is the beginning of the location shown in a browser when accessing the router's web interface.",
+          "url": "Base URL to the API of the router. Typically, something like `{sample_ip}`. This is the beginning of the location shown in a browser when accessing the router's web interface.",
           "username": "Username for accessing the router's API. Typically, the same as the one used for the router's web interface. Usually, either `admin`, or left empty (recommended if that works).",
           "verify_ssl": "Whether to verify the SSL certificate of the router when accessing it. Applicable only if the router is accessed via HTTPS."
         },
