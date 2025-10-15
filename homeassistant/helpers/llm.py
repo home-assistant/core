@@ -681,7 +681,6 @@ def _get_exposed_entities(
         info: dict[str, Any] = {
             "names": ", ".join(names),
             "domain": state.domain,
-            "entity_id": state.entity_id,
         }
 
         if include_state:
