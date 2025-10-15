@@ -486,7 +486,7 @@ async def test_rpc_rssi_sensor_removal(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC RSSI sensor removal if no WiFi stations enabled."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_rssi"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_signal_strength"
     entry = await init_integration(hass, 2)
 
     # WiFi1 enabled, do not remove sensor
@@ -926,7 +926,7 @@ async def test_rpc_pulse_counter_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-input:2-pulse_counter"
 
-    entity_id = f"{SENSOR_DOMAIN}.test_name_gas_counter_value"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_gas_pulse_counter_value"
     assert (state := hass.states.get(entity_id))
     assert state.state == "561.74"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
@@ -948,7 +948,7 @@ async def test_rpc_disabled_pulse_counter_sensors(
     entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter"
     assert hass.states.get(entity_id) is None
 
-    entity_id = f"{SENSOR_DOMAIN}.gas_counter_value"
+    entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter_value"
     assert hass.states.get(entity_id) is None
 
 
