@@ -6,6 +6,15 @@ and error tracking for the configuration of the AWS S3 Home Assistant integratio
 
 from collections.abc import MutableMapping
 
+from aiobotocore.session import AioSession
+from botocore.exceptions import (
+    ClientError,
+    ConnectionError,
+    NoCredentialsError,
+    ParamValidationError,
+    TokenRetrievalError,
+)
+
 from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
@@ -70,6 +79,35 @@ class S3ConfigModel(MutableMapping[str, str]):
     def __len__(self):
         """Return the number of configuration items."""
         return len(self._data)
+
+    async def async_validate_access(self) -> None:
+        """Test the connection to the bucket."""
+        self._errors.clear()
+        try:
+            session = AioSession()
+            async with session.create_client(
+                "s3",
+                endpoint_url=self[CONF_ENDPOINT_URL],
+                aws_secret_access_key=self[CONF_SECRET_ACCESS_KEY],
+                aws_access_key_id=self[CONF_ACCESS_KEY_ID],
+            ) as client:
+                await client.head_bucket(Bucket=self[CONF_BUCKET])
+        except NoCredentialsError:
+            self.record_error(CONF_ACCESS_KEY_ID, "invalid_credentials")
+            self.record_error(CONF_SECRET_ACCESS_KEY, "invalid_credentials")
+        except ClientError:
+            self.record_error(CONF_ACCESS_KEY_ID, "invalid_credentials")
+            self.record_error(CONF_SECRET_ACCESS_KEY, "invalid_credentials")
+        except TokenRetrievalError:
+            self.record_error(CONF_ACCESS_KEY_ID, "invalid_credentials")
+            self.record_error(CONF_SECRET_ACCESS_KEY, "invalid_credentials")
+        except ParamValidationError as err:
+            if "Invalid bucket name" in str(err):
+                self.record_error(CONF_BUCKET, "invalid_bucket_name")
+        except ValueError:
+            self.record_error(CONF_ENDPOINT_URL, "invalid_endpoint_url")
+        except ConnectionError:
+            self.record_error(CONF_ENDPOINT_URL, "cannot_connect")
 
     def record_error(self, error_context: str, error_identifier: str) -> None:
         """Record an error for a specific context with the given identifier.
