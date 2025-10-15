@@ -69,7 +69,6 @@ async def test_discovery_flow_success(
         discovery_result["flow_id"],
         {"selected_gateway": gateway.gw_sn},
     )
-    await hass.async_block_till_done()
 
     assert select_result["type"] is FlowResultType.CREATE_ENTRY
     assert select_result["title"] == gateway.name
