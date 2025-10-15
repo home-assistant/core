@@ -169,7 +169,7 @@ class EnergyPreferencesValidation:
 
 
 @callback
-def _async_validate_usage_stat(
+def _async_validate_stat_common(
     hass: HomeAssistant,
     metadata: dict[str, tuple[int, recorder.models.StatisticMetaData]],
     stat_id: str,
@@ -177,37 +177,41 @@ def _async_validate_usage_stat(
     allowed_units: Mapping[str, Sequence[str]],
     unit_error: str,
     issues: ValidationIssues,
-) -> None:
-    """Validate a statistic."""
+    check_negative: bool = False,
+) -> str | None:
+    """Validate common aspects of a statistic.
+
+    Returns the entity_id if validation succeeds, None otherwise.
+    """
     if stat_id not in metadata:
         issues.add_issue(hass, "statistics_not_defined", stat_id)
 
     has_entity_source = valid_entity_id(stat_id)
 
     if not has_entity_source:
-        return
+        return None
 
     entity_id = stat_id
 
     if not recorder.is_entity_recorded(hass, entity_id):
         issues.add_issue(hass, "recorder_untracked", entity_id)
-        return
+        return None
 
     if (state := hass.states.get(entity_id)) is None:
         issues.add_issue(hass, "entity_not_defined", entity_id)
-        return
+        return None
 
     if state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
         issues.add_issue(hass, "entity_unavailable", entity_id, state.state)
-        return
+        return None
 
     try:
         current_value: float | None = float(state.state)
     except ValueError:
         issues.add_issue(hass, "entity_state_non_numeric", entity_id, state.state)
-        return
+        return None
 
-    if current_value is not None and current_value < 0:
+    if check_negative and current_value is not None and current_value < 0:
         issues.add_issue(hass, "entity_negative_state", entity_id, current_value)
 
     device_class = state.attributes.get(ATTR_DEVICE_CLASS)
@@ -221,6 +225,36 @@ def _async_validate_usage_stat(
         if device_class and unit not in allowed_units.get(device_class, []):
             issues.add_issue(hass, unit_error, entity_id, unit)
 
+    return entity_id
+
+
+@callback
+def _async_validate_usage_stat(
+    hass: HomeAssistant,
+    metadata: dict[str, tuple[int, recorder.models.StatisticMetaData]],
+    stat_id: str,
+    allowed_device_classes: Sequence[str],
+    allowed_units: Mapping[str, Sequence[str]],
+    unit_error: str,
+    issues: ValidationIssues,
+) -> None:
+    """Validate a statistic."""
+    entity_id = _async_validate_stat_common(
+        hass,
+        metadata,
+        stat_id,
+        allowed_device_classes,
+        allowed_units,
+        unit_error,
+        issues,
+        check_negative=True,
+    )
+
+    if entity_id is None:
+        return
+
+    state = hass.states.get(entity_id)
+    assert state is not None
     state_class = state.attributes.get(sensor.ATTR_STATE_CLASS)
 
     allowed_state_classes = [
@@ -276,45 +310,22 @@ def _async_validate_power_stat(
     issues: ValidationIssues,
 ) -> None:
     """Validate a power statistic."""
-    if stat_id not in metadata:
-        issues.add_issue(hass, "statistics_not_defined", stat_id)
+    entity_id = _async_validate_stat_common(
+        hass,
+        metadata,
+        stat_id,
+        allowed_device_classes,
+        allowed_units,
+        unit_error,
+        issues,
+        check_negative=False,
+    )
 
-    has_entity_source = valid_entity_id(stat_id)
-
-    if not has_entity_source:
+    if entity_id is None:
         return
 
-    entity_id = stat_id
-
-    if not recorder.is_entity_recorded(hass, entity_id):
-        issues.add_issue(hass, "recorder_untracked", entity_id)
-        return
-
-    if (state := hass.states.get(entity_id)) is None:
-        issues.add_issue(hass, "entity_not_defined", entity_id)
-        return
-
-    if state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-        issues.add_issue(hass, "entity_unavailable", entity_id, state.state)
-        return
-
-    try:
-        float(state.state)
-    except ValueError:
-        issues.add_issue(hass, "entity_state_non_numeric", entity_id, state.state)
-        return
-
-    device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-    if device_class not in allowed_device_classes:
-        issues.add_issue(
-            hass, "entity_unexpected_device_class", entity_id, device_class
-        )
-    else:
-        unit = state.attributes.get("unit_of_measurement")
-
-        if device_class and unit not in allowed_units.get(device_class, []):
-            issues.add_issue(hass, unit_error, entity_id, unit)
-
+    state = hass.states.get(entity_id)
+    assert state is not None
     state_class = state.attributes.get(sensor.ATTR_STATE_CLASS)
 
     if state_class != sensor.SensorStateClass.MEASUREMENT:
