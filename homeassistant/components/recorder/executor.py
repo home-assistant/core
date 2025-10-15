@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from concurrent.futures.thread import _threads_queues, _worker
+import sys
 import threading
 from typing import Any
 import weakref
@@ -53,6 +54,18 @@ class DBInterruptibleThreadPoolExecutor(InterruptibleThreadPoolExecutor):
         ) -> None:
             q.put(None)
 
+        if sys.version_info >= (3, 14):
+            additional_args = (
+                self._create_worker_context(),
+                self._work_queue,
+            )
+        else:
+            additional_args = (
+                self._work_queue,
+                self._initializer,
+                self._initargs,
+            )
+
         num_threads = len(self._threads)
         if num_threads < self._max_workers:
             thread_name = f"{self._thread_name_prefix or self}_{num_threads}"
@@ -63,9 +76,7 @@ class DBInterruptibleThreadPoolExecutor(InterruptibleThreadPoolExecutor):
                     self._shutdown_hook,
                     self.recorder_and_worker_thread_ids,
                     weakref.ref(self, weakref_cb),
-                    self._work_queue,
-                    self._initializer,
-                    self._initargs,
+                    *(additional_args),
                 ),
             )
             executor_thread.start()
