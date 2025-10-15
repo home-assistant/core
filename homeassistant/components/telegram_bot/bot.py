@@ -103,6 +103,7 @@ from .const import (
     SERVICE_SEND_VOICE,
 )
 
+_FILE_TYPES = ("animation", "document", "photo", "sticker", "video", "voice")
 _LOGGER = logging.getLogger(__name__)
 
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
@@ -444,33 +445,22 @@ class TelegramNotificationService:
         context: Context | None = None,
         **kwargs_msg: Any,
     ) -> dict[int, int]:
+        """Sends a message to each of the targets.
+
+        If there is only 1 targtet, an error is raised if the send fails.
+        For multiple targets, errors are logged and the caller is responsible for checking which target is successful/failed based on the return value.
+
+        :return: dict with chat_id keys and message_id values for successful sends
+        """
         chat_ids = self.get_target_chat_ids(kwargs_msg.pop(ATTR_TARGET, None))
-
-        if len(chat_ids) == 1:
-            msg: Message = await self._send_msg(
-                func_send,
-                msg_error,
-                message_tag,
-                chat_ids[0],
-                *args_msg,
-                context=context,
-                **kwargs_msg,
-            )
-            return {chat_ids[0]: msg.id}
-
         msg_ids = {}
         for chat_id in chat_ids:
             _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
 
-            for file_type in (
-                "photo",
-                "sticker",
-                "video",
-                "document",
-                "voice",
-                "animation",
-            ):
-                if file_type in kwargs_msg:
+            for file_type in _FILE_TYPES:
+                if file_type in kwargs_msg and isinstance(
+                    kwargs_msg[file_type], io.BytesIO
+                ):
                     kwargs_msg[file_type].seek(0)
 
             response: Message = await self._send_msg(
@@ -480,7 +470,7 @@ class TelegramNotificationService:
                 chat_id,
                 *args_msg,
                 context=context,
-                suppress_error=True,
+                suppress_error=len(chat_ids) > 1,
                 **kwargs_msg,
             )
             if response:
