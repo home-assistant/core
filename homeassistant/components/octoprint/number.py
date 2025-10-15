@@ -20,15 +20,17 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def is_extruder(tool_name: str) -> bool:
-    """Return True if the tool name indicates an extruder."""
-    return tool_name.startswith("tool") and tool_name[4:].isdigit()
-
-
 def is_bed(tool_name: str) -> bool:
     """Return True if the tool name indicates a bed."""
     return tool_name == "bed"
 
+def is_extruder(tool_name: str) -> bool:
+    """Return True if the tool name indicates an extruder."""
+    return tool_name.startswith("tool") and tool_name[4:].isdigit()
+
+def is_first_extruder(tool_name: str) -> bool:
+    """Return True if the tool name indicates the first extruder."""
+    return tool_name == "tool0"
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -103,11 +105,11 @@ class OctoPrintTemperatureNumber(
         self._device_id = device_id
         if is_bed(tool):
             self._attr_translation_key = "bed_temperature"
+        elif is_first_extruder(tool):
+            self._attr_translation_key = "extruder_temperature"
         else:
-            # When multiple tools are present,
-            # Home Assistant automatically appends a sequence number to the entity name
-            # to avoid duplicate names.
-            self._attr_translation_key = "tool_temperature"
+            self._attr_translation_key = "extruder_n_temperature"
+            self._attr_translation_placeholders = {"n": tool[4:]}
 
     @property
     def native_value(self) -> float | None:

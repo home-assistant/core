@@ -1,12 +1,16 @@
 """The tests for OctoPrint number module."""
 
 from datetime import UTC, datetime
-
-from freezegun.api import FrozenDateTimeFactory
-from homeassistant.components import number
 from unittest.mock import patch
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
+from freezegun.api import FrozenDateTimeFactory
+
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -26,6 +30,7 @@ async def test_numbers(
         },
         "temperature": {
             "tool0": {"actual": 18.83136, "target": 37.83136},
+            "tool1": {"actual": 21.0, "target": 31.0},
             "bed": {"actual": 25.5, "target": 60.0},
         },
     }
@@ -42,7 +47,22 @@ async def test_numbers(
     assert state.attributes.get("max") == 300
     assert state.attributes.get("step") == 1
     entry = entity_registry.async_get("number.octoprint_extruder_temperature")
-    assert entry.unique_id == "uuid_tool0_temperature" # Verify that unique_id uses the API name
+    assert (
+        entry.unique_id == "uuid_tool0_temperature"
+    )  # Verify that unique_id uses the API name
+
+    state = hass.states.get("number.octoprint_extruder_1_temperature")
+    assert state is not None
+    assert state.state == "31.0"
+    assert state.name == "OctoPrint Extruder 1 temperature"
+    assert state.attributes.get("unit_of_measurement") == UnitOfTemperature.CELSIUS
+    assert state.attributes.get("min") == 0
+    assert state.attributes.get("max") == 300
+    assert state.attributes.get("step") == 1
+    entry = entity_registry.async_get("number.octoprint_extruder_1_temperature")
+    assert (
+        entry.unique_id == "uuid_tool1_temperature"
+    )  # Verify that unique_id uses the API name
 
     state = hass.states.get("number.octoprint_bed_temperature")
     assert state is not None
@@ -109,12 +129,17 @@ async def test_set_tool_temp(
     with patch(
         "pyoctoprintapi.OctoprintClient.set_tool_temperature"
     ) as mock_set_tool_temp:
-        entity_component = hass.data[number.DOMAIN]
+        entity_component = hass.data[NUMBER_DOMAIN]
+
         entity = entity_component.get_entity("number.octoprint_extruder_temperature")
         assert entity is not None
 
-        await entity.async_set_native_value(200.4)
-
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: 200.4},
+            blocking=True,
+        )
         assert len(mock_set_tool_temp.mock_calls) == 1
         # Verify that we pass integer, expected by the pyoctoprintapi
         mock_set_tool_temp.assert_called_with("tool0", 200)
@@ -139,15 +164,58 @@ async def test_set_bed_temp(
     with patch(
         "pyoctoprintapi.OctoprintClient.set_bed_temperature"
     ) as mock_set_bed_temp:
-        entity_component = hass.data[number.DOMAIN]
+        entity_component = hass.data[NUMBER_DOMAIN]
         entity = entity_component.get_entity("number.octoprint_bed_temperature")
         assert entity is not None
 
-        await entity.async_set_native_value(80.6)
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: 80.6},
+            blocking=True,
+        )
 
         assert len(mock_set_bed_temp.mock_calls) == 1
         # Verify that we pass integer, expected by the pyoctoprintapi, and that it's rounded down
         mock_set_bed_temp.assert_called_with(80)
+
+
+async def test_set_tool_n_temp(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test setting tool temperature via number entity when multiple tools are present."""
+    printer = {
+        "state": {
+            "flags": {"printing": False},
+            "text": "Operational",
+        },
+        "temperature": {
+            "tool0": {"actual": 20.0, "target": 30.0},
+            "tool1": {"actual": 21.0, "target": 31.0}
+        },
+    }
+    job = __standard_job()
+    freezer.move_to(datetime(2020, 2, 20, 9, 10, 0))
+    await init_integration(hass, "number", printer=printer, job=job)
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.set_tool_temperature"
+    ) as mock_set_tool_temp:
+        entity_component = hass.data[NUMBER_DOMAIN]
+
+        entity = entity_component.get_entity("number.octoprint_extruder_1_temperature")
+        assert entity is not None
+
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: 41.0},
+            blocking=True,
+        )
+        assert len(mock_set_tool_temp.mock_calls) == 1
+        # Verify that we pass integer, expected by the pyoctoprintapi
+        mock_set_tool_temp.assert_called_with("tool1", 41)
 
 
 async def test_numbers_printer_disconnected(
