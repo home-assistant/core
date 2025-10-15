@@ -21,7 +21,7 @@
     }),
     'manufacturer': 'Maxim Integrated',
     'model': 'DS2401',
-    'model_id': 'DS2401',
+    'model_id': None,
     'name': '01.111111111111',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
