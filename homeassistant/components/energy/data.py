@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 import voluptuous as vol
 
@@ -61,7 +61,7 @@ class FlowToGridSourceType(TypedDict):
 class GridPowerSourceType(TypedDict):
     """Dictionary holding the source of grid power consumption."""
 
-    # statistic_id of an power meter (kW)
+    # statistic_id of a power meter (kW)
     # negative values indicate grid return
     stat_power: str
 
@@ -73,7 +73,7 @@ class GridSourceType(TypedDict):
 
     flow_from: list[FlowFromGridSourceType]
     flow_to: list[FlowToGridSourceType]
-    power: list[GridPowerSourceType] | None
+    power: NotRequired[list[GridPowerSourceType]]
 
     cost_adjustment_day: float
 
@@ -245,7 +245,7 @@ GRID_SOURCE_SCHEMA = vol.Schema(
             [FLOW_TO_GRID_SOURCE_SCHEMA],
             _generate_unique_value_validator("stat_energy_to"),
         ),
-        vol.Optional("power"): vol.All(
+        vol.Required("power"): vol.All(
             [GRID_POWER_SOURCE_SCHEMA],
             _generate_unique_value_validator("stat_power"),
         ),
