@@ -7,7 +7,7 @@
 
 -c homeassistant/package_constraints.txt
 -r requirements_test_pre_commit.txt
-astroid==3.3.11
+astroid==4.0.1
 coverage==7.10.6
 freezegun==1.5.2
 go2rtc-client==0.2.1
@@ -17,8 +17,8 @@ license-expression==30.4.3
 mock-open==1.4.0
 mypy-dev==1.19.0a4
 pre-commit==4.2.0
-pydantic==2.12.0
-pylint==3.3.8
+pydantic==2.12.2
+pylint==4.0.0
 pylint-per-file-ignores==1.4.0
 pipdeptree==2.26.1
 pytest-asyncio==1.2.0
