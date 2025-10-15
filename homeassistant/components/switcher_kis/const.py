@@ -14,3 +14,7 @@ SERVICE_TURN_ON_WITH_TIMER_NAME = "turn_on_with_timer"
 
 # Defines the maximum interval device must send an update before it marked unavailable
 MAX_UPDATE_INTERVAL_SEC = 30
+
+PREREQUISITES_URL = (
+    "https://www.home-assistant.io/integrations/switcher_kis/#prerequisites"
+)

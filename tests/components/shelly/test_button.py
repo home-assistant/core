@@ -39,7 +39,7 @@ async def test_block_button(
     """Test block device reboot button."""
     await init_integration(hass, 1)
 
-    entity_id = "button.test_name_reboot"
+    entity_id = "button.test_name_restart"
 
     # reboot button
     assert (state := hass.states.get(entity_id))
@@ -66,7 +66,7 @@ async def test_rpc_button(
     """Test rpc device OTA button."""
     await init_integration(hass, 2)
 
-    entity_id = "button.test_name_reboot"
+    entity_id = "button.test_name_restart"
 
     # reboot button
     assert (state := hass.states.get(entity_id))
@@ -89,11 +89,11 @@ async def test_rpc_button(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for button.test_name_reboot of Test name",
+            "Device communication error occurred while calling action for button.test_name_restart of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for button.test_name_reboot of Test name",
+            "RPC call error occurred while calling action for button.test_name_restart of Test name",
         ),
     ],
 )
@@ -112,7 +112,7 @@ async def test_rpc_button_exc(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_name_reboot"},
+            {ATTR_ENTITY_ID: "button.test_name_restart"},
             blocking=True,
         )
 
@@ -128,7 +128,7 @@ async def test_rpc_button_reauth_error(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_name_reboot"},
+        {ATTR_ENTITY_ID: "button.test_name_restart"},
         blocking=True,
     )
 
@@ -169,7 +169,7 @@ async def test_migrate_unique_id(
     entry = await init_integration(hass, gen, skip_setup=True)
 
     entity = entity_registry.async_get_or_create(
-        suggested_object_id="test_name_reboot",
+        suggested_object_id="test_name_restart",
         disabled_by=None,
         domain=BUTTON_DOMAIN,
         platform=DOMAIN,
@@ -181,12 +181,12 @@ async def test_migrate_unique_id(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get("button.test_name_reboot")
+    entity_entry = entity_registry.async_get("button.test_name_restart")
     assert entity_entry
     assert entity_entry.unique_id == new_unique_id
 
     assert (
-        bool("Migrating unique_id for button.test_name_reboot" in caplog.text)
+        bool("Migrating unique_id for button.test_name_restart" in caplog.text)
         == migration
     )
 

@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections import namedtuple
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any
+from typing import Any, NamedTuple
 
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 from aiohttp import ClientSession
@@ -61,7 +60,14 @@ SENSORS_TYPE_RATES = "sensors_rates"
 SENSORS_TYPE_TEMPERATURES = "sensors_temperatures"
 SENSORS_TYPE_UPTIME = "sensors_uptime"
 
-WrtDevice = namedtuple("WrtDevice", ["ip", "name", "connected_to"])  # noqa: PYI024
+
+class WrtDevice(NamedTuple):
+    """WrtDevice structure."""
+
+    ip: str | None
+    name: str | None
+    conneted_to: str | None
+
 
 _LOGGER = logging.getLogger(__name__)
 
