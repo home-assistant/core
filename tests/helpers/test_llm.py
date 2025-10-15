@@ -579,83 +579,105 @@ async def test_assist_api_prompt(
     exposed_entities_prompt = """Live Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
+  entity_id: light.1
   state: unavailable
   areas: Test Area 2
 - names: Kitchen
   domain: light
+  entity_id: light.kitchen
   state: 'on'
   attributes:
     temperature: '0.9'
     humidity: '65'
 - names: Living Room
   domain: light
+  entity_id: light.living_room
   state: 'on'
   areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
+  entity_id: light.test_device
   state: unavailable
   areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
+  entity_id: light.test_device_2
   state: unavailable
   areas: Test Area 2
 - names: Test Device 3
   domain: light
+  entity_id: light.test_device_3
   state: unavailable
   areas: Test Area 2
 - names: Test Device 4
   domain: light
+  entity_id: light.test_device_4
   state: unavailable
   areas: Test Area 2
 - names: Test Service
   domain: light
+  entity_id: light.test_service
   state: unavailable
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
+  entity_id: light.test_service_2
   state: unavailable
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
+  entity_id: light.test_service_3
   state: unavailable
   areas: Test Area, Alternative name
 - names: Unnamed Device
   domain: light
+  entity_id: light.unnamed_device
   state: unavailable
   areas: Test Area 2
 """
     stateless_exposed_entities_prompt = """Static Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
+  entity_id: light.1
   areas: Test Area 2
 - names: Kitchen
   domain: light
+  entity_id: light.kitchen
 - names: Living Room
   domain: light
+  entity_id: light.living_room
   areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
+  entity_id: light.test_device
   areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
+  entity_id: light.test_device_2
   areas: Test Area 2
 - names: Test Device 3
   domain: light
+  entity_id: light.test_device_3
   areas: Test Area 2
 - names: Test Device 4
   domain: light
+  entity_id: light.test_device_4
   areas: Test Area 2
 - names: Test Service
   domain: light
+  entity_id: light.test_service
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
+  entity_id: light.test_service_2
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
+  entity_id: light.test_service_3
   areas: Test Area, Alternative name
 - names: Unnamed Device
   domain: light
+  entity_id: light.unnamed_device
   areas: Test Area 2
 """
     first_part_prompt = (
