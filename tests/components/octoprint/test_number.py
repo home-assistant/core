@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -16,11 +17,14 @@ from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
+from tests.common import snapshot_platform
+
 
 async def test_numbers(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the underlying number entities."""
     printer = {
@@ -36,44 +40,9 @@ async def test_numbers(
     }
     job = __standard_job()
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 13, 543, tzinfo=UTC))
-    await init_integration(hass, "number", printer=printer, job=job)
+    config_entry = await init_integration(hass, "number", printer=printer, job=job)
 
-    state = hass.states.get("number.octoprint_extruder_temperature")
-    assert state is not None
-    assert state.state == "37.83136" # Verify that the entity performs no rounding
-    assert state.name == "OctoPrint Extruder temperature"
-    assert state.attributes.get("unit_of_measurement") == UnitOfTemperature.CELSIUS
-    assert state.attributes.get("min") == 0
-    assert state.attributes.get("max") == 300
-    assert state.attributes.get("step") == 1
-    entry = entity_registry.async_get("number.octoprint_extruder_temperature")
-    assert (
-        entry.unique_id == "uuid_tool0_temperature"
-    )  # Verify that unique_id uses the API name
-
-    state = hass.states.get("number.octoprint_extruder_1_temperature")
-    assert state is not None
-    assert state.state == "31.0"
-    assert state.name == "OctoPrint Extruder 1 temperature"
-    assert state.attributes.get("unit_of_measurement") == UnitOfTemperature.CELSIUS
-    assert state.attributes.get("min") == 0
-    assert state.attributes.get("max") == 300
-    assert state.attributes.get("step") == 1
-    entry = entity_registry.async_get("number.octoprint_extruder_1_temperature")
-    assert (
-        entry.unique_id == "uuid_tool1_temperature"
-    )  # Verify that unique_id uses the API name
-
-    state = hass.states.get("number.octoprint_bed_temperature")
-    assert state is not None
-    assert state.state == "60.0"
-    assert state.name == "OctoPrint Bed temperature"
-    assert state.attributes.get("unit_of_measurement") == UnitOfTemperature.CELSIUS
-    assert state.attributes.get("min") == 0
-    assert state.attributes.get("max") == 300
-    assert state.attributes.get("step") == 1
-    entry = entity_registry.async_get("number.octoprint_bed_temperature")
-    assert entry.unique_id == "uuid_bed_temperature"
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_numbers_no_target_temp(
