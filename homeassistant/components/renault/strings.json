@@ -166,6 +166,18 @@
       },
       "res_state_code": {
         "name": "Remote engine start code"
+      },
+      "front_left_pressure": {
+        "name": "Front left tyre pressure"
+      },
+      "front_right_pressure": {
+        "name": "Front right tyre pressure"
+      },
+      "rear_left_pressure": {
+        "name": "Rear left tyre pressure"
+      },
+      "rear_right_pressure": {
+        "name": "Rear right tyre pressure"
       }
     }
   },
