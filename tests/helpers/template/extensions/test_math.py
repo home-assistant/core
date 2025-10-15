@@ -10,10 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 
-
-def render(hass: HomeAssistant, template_str: str) -> str:
-    """Render template and return result."""
-    return template.Template(template_str, hass).async_render()
+from tests.helpers.template.helpers import render
 
 
 def test_math_constants(hass: HomeAssistant) -> None:
