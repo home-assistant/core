@@ -84,7 +84,7 @@ class EnOceanDongle:
 
     @property
     def chip_id(self) -> EnOceanID | None:
-        """Get the dongle's chip id (REQUIRES UPDATE OF ENOCEAN LIBRARY)."""
+        """Get the dongle's chip id."""
         return self._chip_id
 
     def valid_sender_ids(self) -> list[selector.SelectOptionDict] | None:

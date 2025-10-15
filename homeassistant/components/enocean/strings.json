@@ -36,7 +36,7 @@
   "options": {
     "error": {
       "invalid_device_id": "Device ID is not a valid EnOcean ID. A valid EnOcean ID consists of four hexadecimal parts (with at most two digits) separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7').",
-      "invalid_sender_id": "Sender ID is not a valid EnOcean ID. A valid EnOcean ID consists of four hexadecimal parts (with at most two digits) separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7'). Even though it is possible to set any valid EnOcean ID here, only the dongle's base IDs or its chip ID can be used for actual sending.",
+      "invalid_sender_id": "Sender ID is not a valid EnOcean ID. A valid EnOcean ID consists of four hexadecimal parts (with at most two digits) separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7'). Only the dongle's base IDs or its chip ID can be used for sending.",
       "device_already_configured": "An EnOcean device with this device ID is already configured. Duplicate entries are not possible.",
       "device_name_empty": "Device name is empty."
     },
