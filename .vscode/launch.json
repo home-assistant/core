@@ -38,7 +38,7 @@
       "module": "pytest",
       "justMyCode": false,
       "args": [
-        "--picked"
+        "tests/components/roborock/test_config_flow.py",
       ],
     },
     {
