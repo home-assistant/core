@@ -232,9 +232,19 @@ class BLEScannerMode(StrEnum):
 
 
 BLE_SCANNER_MIN_FIRMWARE = "1.5.1"
-DEPRECATED_FIRMWARES = {
-    MODEL_WALL_DISPLAY: {"min_firmware": "2.3.0", "ha_version": "2025.10.0"},
-}
+
+# Provide firmware deprecation data:
+# key: device model
+# value: dict with:
+#   min_firmware: minimum supported firmware version
+#   ha_version: Home Assistant version when older firmware will be deprecated
+# Example:
+# DEPRECATED_FIRMWARES = {
+#   MODEL_WALL_DISPLAY: {
+#   "min_firmware": "2.3.0", "ha_version": "2025.10.0"
+#   }
+# }
+DEPRECATED_FIRMWARES: dict[str, dict[str, str]] = {}
 
 MAX_PUSH_UPDATE_FAILURES = 5
 PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
