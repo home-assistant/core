@@ -169,6 +169,11 @@
       "radio_firmware": {
         "name": "Radio firmware"
       }
+    },
+    "switch": {
+      "beta_firmware": {
+        "name": "Beta firmware updates"
+      }
     }
   }
 }

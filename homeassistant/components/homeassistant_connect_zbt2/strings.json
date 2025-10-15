@@ -234,5 +234,12 @@
     "device_disconnected": {
       "message": "The device is not plugged in"
     }
+  },
+  "entity": {
+    "switch": {
+      "beta_firmware": {
+        "name": "Beta firmware updates"
+      }
+    }
   }
 }
