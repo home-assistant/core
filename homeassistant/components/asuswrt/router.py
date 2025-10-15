@@ -176,7 +176,7 @@ class AsusWrtRouter:
 
         self._on_close: list[Callable] = []
 
-        self._options: dict[str, Any] = {
+        self._options: dict[str, str | bool | int] = {
             CONF_DNSMASQ: DEFAULT_DNSMASQ,
             CONF_INTERFACE: DEFAULT_INTERFACE,
             CONF_REQUIRE_IP: True,
@@ -299,16 +299,15 @@ class AsusWrtRouter:
             _LOGGER.warning("Reconnected to ASUS router %s", self.host)
 
         self._connected_devices = len(wrt_devices)
-        consider_home: int = self._options.get(
+        consider_home = self._options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
-        track_unknown: bool = self._options.get(
-            CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN
-        )
+        track_unknown = self._options.get(CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN)
 
         for device_mac, device in self._devices.items():
             dev_info = wrt_devices.pop(device_mac, None)
-            device.update(dev_info, consider_home)
+            if isinstance(consider_home, int):
+                device.update(dev_info, consider_home)
 
         for device_mac, dev_info in wrt_devices.items():
             if not track_unknown and not dev_info.name:

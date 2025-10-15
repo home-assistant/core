@@ -116,7 +116,7 @@ class AsusWrtBridge(ABC):
     def get_bridge(
         hass: HomeAssistant,
         conf: dict[str, str | int],
-        options: dict[str, str] | None = None,
+        options: dict[str, str | bool | int] | None = None,
     ) -> AsusWrtBridge:
         """Get Bridge instance."""
         if conf[CONF_PROTOCOL] in (PROTOCOL_HTTPS, PROTOCOL_HTTP):
