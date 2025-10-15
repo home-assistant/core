@@ -11,12 +11,6 @@ from . import HA_INELS_PATH
 from .common import DOMAIN, MockConfigEntry, get_entity, set_mock_mqtt
 
 
-@pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations: None):
-    """Enable custom integrations for testing."""
-    return
-
-
 @pytest.fixture(name="mock_mqtt")
 def mock_inelsmqtt_fixture():
     """Mock inels mqtt lib."""
