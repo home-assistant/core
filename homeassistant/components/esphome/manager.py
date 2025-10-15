@@ -346,8 +346,9 @@ class ESPHomeManager:
                 try:
                     # Render response template
                     tmpl = Template(response_template, self.hass)
-                    response = template.render_complex(
-                        tmpl, {"response": action_response}
+                    response = tmpl.async_render(
+                        variables={"response": action_response},
+                        strict=True,
                     )
                     response_dict = {"response": response}
 
