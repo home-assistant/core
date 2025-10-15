@@ -245,7 +245,7 @@ GRID_SOURCE_SCHEMA = vol.Schema(
             [FLOW_TO_GRID_SOURCE_SCHEMA],
             _generate_unique_value_validator("stat_energy_to"),
         ),
-        vol.Required("power"): vol.All(
+        vol.Optional("power"): vol.All(
             [GRID_POWER_SOURCE_SCHEMA],
             _generate_unique_value_validator("stat_power"),
         ),
