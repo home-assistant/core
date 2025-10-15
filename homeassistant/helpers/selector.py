@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+from copy import deepcopy
 from enum import StrEnum
 from functools import cache
 import importlib
@@ -1153,7 +1154,7 @@ class ObjectSelectorField(TypedDict, total=False):
 
     label: str
     required: bool
-    selector: Required[dict[str, Any]]
+    selector: Required[Selector | dict[str, Any]]
 
 
 class ObjectSelectorConfig(BaseSelectorConfig, total=False):
@@ -1176,7 +1177,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         {
             vol.Optional("fields"): {
                 str: {
-                    vol.Required("selector"): validate_selector,
+                    vol.Required("selector"): vol.Any(Selector, validate_selector),
                     vol.Optional("required"): bool,
                     vol.Optional("label"): str,
                 }
@@ -1191,6 +1192,21 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
     def __init__(self, config: ObjectSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
+
+    def serialize(self) -> dict[str, dict[str, ObjectSelectorConfig]]:
+        """Serialize ObjectSelector for voluptuous_serialize."""
+        _config = deepcopy(self.config)
+        if "fields" in _config:
+            for field_items in _config["fields"].values():
+                if isinstance(field_items["selector"], ObjectSelector):
+                    field_items["selector"] = field_items["selector"].serialize()
+                elif isinstance(field_items["selector"], Selector):
+                    field_items["selector"] = {
+                        field_items["selector"].selector_type: field_items[
+                            "selector"
+                        ].config
+                    }
+        return {"selector": {self.selector_type: _config}}
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""

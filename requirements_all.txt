@@ -109,7 +109,10 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==8.0
+RestrictedPython==8.0;python_version<'3.14'
+
+# homeassistant.components.python_script
+RestrictedPython==8.1a1.dev0;python_version>='3.14'
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -175,6 +178,9 @@ aio-geojson-usgs-earthquakes==0.3
 # homeassistant.components.gdacs
 aio-georss-gdacs==0.10
 
+# homeassistant.components.onewire
+aio-ownet==0.0.4
+
 # homeassistant.components.acaia
 aioacaia==0.1.17
 
@@ -188,7 +194,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.1
 
 # homeassistant.components.alexa_devices
-aioamazondevices==6.4.3
+aioamazondevices==6.4.4
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -250,7 +256,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.15.0
+aioesphomeapi==41.16.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -265,7 +271,7 @@ aiogithubapi==24.6.0
 aioguardian==2022.07.0
 
 # homeassistant.components.harmony
-aioharmony==0.5.3
+aioharmony==0.5.3;python_version<'3.14'
 
 # homeassistant.components.hassio
 aiohasupervisor==0.3.3
@@ -378,7 +384,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.8.2
+aiorussound==4.9.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -387,7 +393,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.13.0
+aioshelly==13.14.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -429,7 +435,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==1.2.1
+aiovodafone==2.0.1
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -880,7 +886,7 @@ elmax-api==0.0.6.4rc0
 elvia==0.1.0
 
 # homeassistant.components.xmpp
-emoji==2.8.0
+emoji==2.8.0;python_version<'3.14'
 
 # homeassistant.components.emulated_roku
 emulated-roku==0.3.0
@@ -1124,7 +1130,7 @@ gspread==5.5.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.5
+guppy3==3.1.5;python_version<'3.14'
 
 # homeassistant.components.iaqualink
 h2==4.3.0
@@ -1270,7 +1276,7 @@ inkbird-ble==1.1.0
 insteon-frontend-home-assistant==0.5.0
 
 # homeassistant.components.intellifire
-intellifire4py==4.1.9
+intellifire4py==4.2.1
 
 # homeassistant.components.iometer
 iometer==0.2.0
@@ -1358,7 +1364,7 @@ lektricowifi==0.1
 letpot==0.6.2
 
 # homeassistant.components.foscam
-libpyfoscamcgi==0.0.7
+libpyfoscamcgi==0.0.8
 
 # homeassistant.components.vivotek
 libpyvivotek==0.6.1
@@ -1400,7 +1406,7 @@ loqedAPI==2.1.10
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.4.8
+lunatone-rest-api-client==0.5.3
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -1642,6 +1648,9 @@ openevsewifi==1.1.2
 # homeassistant.components.openhome
 openhomedevice==2.2.0
 
+# homeassistant.components.openrgb
+openrgb-python==0.3.5
+
 # homeassistant.components.opensensemap
 opensensemap-api==0.2.0
 
@@ -1794,7 +1803,7 @@ py-improv-ble-client==1.0.3
 py-madvr2==1.6.40
 
 # homeassistant.components.melissa
-py-melissa-climate==2.1.4
+py-melissa-climate==3.0.2
 
 # homeassistant.components.nextbus
 py-nextbusnext==2.3.0
@@ -1879,7 +1888,7 @@ pyatag==0.3.5.3
 pyatmo==9.2.3
 
 # homeassistant.components.apple_tv
-pyatv==0.16.1
+pyatv==0.16.1;python_version<'3.14'
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.1.5
@@ -2213,7 +2222,7 @@ pynetio==0.1.9.1
 pynina==0.3.6
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==1.1.1
+pynintendoparental==1.1.2
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
@@ -2267,9 +2276,6 @@ pyotp==2.9.0
 
 # homeassistant.components.overkiz
 pyoverkiz==1.19.0
-
-# homeassistant.components.onewire
-pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.19
@@ -2843,7 +2849,7 @@ skyboxremote==0.0.6
 slack_sdk==3.33.4
 
 # homeassistant.components.xmpp
-slixmpp==1.10.0
+slixmpp==1.10.0;python_version<'3.14'
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.5.5
@@ -3054,7 +3060,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.21.1
+uiprotect==7.22.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3147,7 +3153,7 @@ weatherflow4py==1.4.1
 webexpythonsdk==2.0.1
 
 # homeassistant.components.nasweb
-webio-api==0.1.11
+webio-api==0.1.12
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
