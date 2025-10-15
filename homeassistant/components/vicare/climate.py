@@ -8,6 +8,7 @@ from typing import Any
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareFloorHeating import FloorHeating as PyViCareFloorHeating
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareRadiatorActuator import (
     RadiatorActuator as PyViCareRadiatorActuator,
@@ -29,7 +30,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     UnitOfTemperature,
@@ -85,14 +85,19 @@ CHANGABLE_HEATING_PROGRAMS = [
 
 def _build_entities(
     device_list: list[ViCareDevice],
-) -> list[ViCareTRV | ViCareClimate]:
+) -> list[ViCareTRV | ViCareFHT | ViCareClimate]:
     """Create ViCare climate entities for a device."""
-    entities: list[ViCareTRV | ViCareClimate] = []
+    entities: list[ViCareTRV | ViCareFHT | ViCareClimate] = []
     for device in device_list:
         # add TRV devices
         if isinstance(device.api, PyViCareRadiatorActuator):
             entities.append(
                 ViCareTRV(get_device_serial(device.api), device.config, device.api)
+            )
+        # add heating devices
+        elif isinstance(device.api, PyViCareFloorHeating):
+            entities.append(
+                ViCareFHT(get_device_serial(device.api), device.config, device.api)
             )
         # add heating devices
         else:
@@ -135,16 +140,10 @@ async def async_setup_entry(
 class ViCareTRV(ViCareEntity, ClimateEntity):
     """Representation of the ViCare TRV device."""
 
+    _attr_hvac_mode = HVACMode.AUTO
     _attr_hvac_modes = []
-    _attr_hvac_mode = None
-    _attr_min_temp = 8
-    _attr_max_temp = 30
-    _attr_precision = PRECISION_TENTHS
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "trv"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -157,12 +156,6 @@ class ViCareTRV(ViCareEntity, ClimateEntity):
             self._attr_translation_key, device_serial, device_config, device
         )
 
-    def set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperatures."""
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            self._api.setTargetTemperature(temp)
-            self._attr_target_temperature = temp
-
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
         try:
@@ -171,6 +164,46 @@ class ViCareTRV(ViCareEntity, ClimateEntity):
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_target_temperature = self._api.getTargetTemperature()
+
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("Unable to retrieve data from ViCare server")
+        except PyViCareRateLimitError as limit_exception:
+            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
+        except ValueError:
+            _LOGGER.error("Unable to decode data from ViCare server")
+        except PyViCareInvalidDataError as invalid_data_exception:
+            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+
+
+class ViCareFHT(ViCareEntity, ClimateEntity):
+    """Representation of the ViCare FHT device."""
+
+    _attr_hvac_mode = None
+    _attr_hvac_modes = []
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "fht"
+
+    def __init__(
+        self,
+        device_serial: str | None,
+        device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+    ) -> None:
+        """Initialize the climate device."""
+        super().__init__(
+            self._attr_translation_key, device_serial, device_config, device
+        )
+
+    def update(self) -> None:
+        """Let HA know there has been an update from the ViCare API."""
+        try:
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attr_current_temperature = self._api.getSupplyTemperature()
+
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attr_hvac_mode = VICARE_TO_HA_HVAC_HEATING.get(
+                    self._api.getActiveMode()
+                )
 
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")

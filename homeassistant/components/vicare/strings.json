@@ -74,6 +74,9 @@
       }
     },
     "climate": {
+      "fht": {
+        "name": "Underfloor heating"
+      },
       "heating": {
         "name": "Heating"
       },
