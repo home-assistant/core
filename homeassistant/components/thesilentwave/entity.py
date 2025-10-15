@@ -15,9 +15,7 @@ class TheSilentWaveEntity(CoordinatorEntity):
     def __init__(self, coordinator: TheSilentWaveCoordinator, entry_id: str) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._entry_id = entry_id
         self._attr_unique_id = f"{DOMAIN}_{entry_id}"
-        self._attr_should_poll = False
         # Name property will be handled by the specific entity class.
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
