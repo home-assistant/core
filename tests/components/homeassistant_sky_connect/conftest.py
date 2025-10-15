@@ -57,3 +57,14 @@ def mock_usb_path_exists() -> Generator[None]:
         return_value=True,
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_push_dataset_to_otbr() -> Generator[None]:
+    """Mock _push_dataset_to_otbr to avoid timeout waiting for OTBR discovery."""
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareInstallFlow._push_dataset_to_otbr",
+        new=AsyncMock(),
+    ):
+        yield

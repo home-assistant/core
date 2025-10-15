@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator, Sequence
 import contextlib
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
@@ -51,6 +52,8 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 TEST_DOMAIN = "test_firmware_domain"
 TEST_DEVICE = "/dev/SomeDevice123"
@@ -769,9 +772,9 @@ async def test_config_flow_auto_confirm_if_running(hass: HomeAssistant) -> None:
 async def test_config_flow_thread(
     hass: HomeAssistant,
     set_addon_options: AsyncMock,
-    start_addon: AsyncMock,
+    start_addon_with_otbr_discovery: AsyncMock,
 ) -> None:
-    """Test the config flow."""
+    """Test the config flow and dataset push to OTBR."""
     init_result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": "hardware"}
     )
@@ -779,9 +782,17 @@ async def test_config_flow_thread(
     assert init_result["type"] is FlowResultType.MENU
     assert init_result["step_id"] == "pick_firmware"
 
-    with mock_firmware_info(
-        probe_app_type=ApplicationType.EZSP,
-        flash_app_type=ApplicationType.SPINEL,
+    mock_dataset = "abcdabcdabcdabcdabcdab" * 10
+
+    with (
+        mock_firmware_info(
+            probe_app_type=ApplicationType.EZSP,
+            flash_app_type=ApplicationType.SPINEL,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.async_get_preferred_dataset",
+            return_value=mock_dataset,
+        ),
     ):
         # Pick the menu option
         pick_result = await hass.config_entries.flow.async_configure(
@@ -832,15 +843,27 @@ async def test_config_flow_thread(
                 },
             ),
         )
-        assert start_addon.call_count == 1
-        assert start_addon.call_args == call("core_openthread_border_router")
+        assert start_addon_with_otbr_discovery.call_count == 1
+        assert start_addon_with_otbr_discovery.call_args == call(
+            "core_openthread_border_router"
+        )
+
+        # Verify the preferred dataset was pushed to OTBR
+        otbr_entries = hass.config_entries.async_entries("otbr")
+        assert len(otbr_entries) == 1
+        otbr_entry = otbr_entries[0]
+
+        assert otbr_entry.runtime_data.set_active_dataset_tlvs.mock_calls == [
+            call(bytes.fromhex(mock_dataset))
+        ]
+        assert otbr_entry.runtime_data.set_enabled.mock_calls == [call(True)]
 
 
 @pytest.mark.usefixtures("addon_installed")
 async def test_config_flow_thread_addon_already_installed(
     hass: HomeAssistant,
     set_addon_options: AsyncMock,
-    start_addon: AsyncMock,
+    start_addon_with_otbr_discovery: AsyncMock,
 ) -> None:
     """Test the Thread config flow, addon is already installed."""
     init_result = await hass.config_entries.flow.async_init(
@@ -880,8 +903,10 @@ async def test_config_flow_thread_addon_already_installed(
             },
         ),
     )
-    assert start_addon.call_count == 1
-    assert start_addon.call_args == call("core_openthread_border_router")
+    assert start_addon_with_otbr_discovery.call_count == 1
+    assert start_addon_with_otbr_discovery.call_args == call(
+        "core_openthread_border_router"
+    )
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
     assert create_result["result"].data == {
         "firmware": "spinel",
@@ -895,7 +920,7 @@ async def test_options_flow_zigbee_to_thread(
     hass: HomeAssistant,
     install_addon: AsyncMock,
     set_addon_options: AsyncMock,
-    start_addon: AsyncMock,
+    start_addon_with_otbr_discovery: AsyncMock,
 ) -> None:
     """Test the options flow, migrating Zigbee to Thread."""
     config_entry = MockConfigEntry(
@@ -967,8 +992,10 @@ async def test_options_flow_zigbee_to_thread(
             },
         ),
     )
-    assert start_addon.call_count == 1
-    assert start_addon.call_args == call("core_openthread_border_router")
+    assert start_addon_with_otbr_discovery.call_count == 1
+    assert start_addon_with_otbr_discovery.call_args == call(
+        "core_openthread_border_router"
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     # The firmware type has been updated
