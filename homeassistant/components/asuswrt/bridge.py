@@ -86,7 +86,7 @@ def handle_errors_and_zip[_AsusWrtBridgeT: AsusWrtBridge](
         """Run library methods and zip results or manage exceptions."""
 
         @functools.wraps(func)
-        async def _wrapper(self: _AsusWrtBridgeT) -> dict[str, Any]:
+        async def _wrapper(self: _AsusWrtBridgeT) -> dict[str, str]:
             try:
                 data = await func(self)
             except exceptions as exc:
