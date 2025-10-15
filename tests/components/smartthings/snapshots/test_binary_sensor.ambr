@@ -1,4 +1,102 @@
 # serializer version: 1
+# name: test_all_entities[aeotec_ms6][binary_sensor.parent_s_bedroom_sensor_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.parent_s_bedroom_sensor_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00f9233e-fdaa-4020-99d4-e0073e53996a_main_motionSensor_motion_motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][binary_sensor.parent_s_bedroom_sensor_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': "Parent's Bedroom Sensor Motion",
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.parent_s_bedroom_sensor_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][binary_sensor.parent_s_bedroom_sensor_tamper-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.parent_s_bedroom_sensor_tamper',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
+    'original_icon': None,
+    'original_name': 'Tamper',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00f9233e-fdaa-4020-99d4-e0073e53996a_main_tamperAlert_tamper_tamper',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][binary_sensor.parent_s_bedroom_sensor_tamper-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'tamper',
+      'friendly_name': "Parent's Bedroom Sensor Tamper",
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.parent_s_bedroom_sensor_tamper',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.2nd_floor_hallway_motion-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -679,6 +777,55 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_filter_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.refrigerator_filter_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Filter status',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_status',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_custom.waterFilter_waterFilterStatus_waterFilterStatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_filter_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Refrigerator Filter status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.refrigerator_filter_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_freezer_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -826,6 +973,55 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_filter_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.refrigerator_filter_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Filter status',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_status',
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_custom.waterFilter_waterFilterStatus_waterFilterStatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_filter_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Refrigerator Filter status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.refrigerator_filter_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_freezer_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -924,6 +1120,55 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_ref_normal_01011][binary_sensor.frigo_filter_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.frigo_filter_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Filter status',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_status',
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_custom.waterFilter_waterFilterStatus_waterFilterStatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][binary_sensor.frigo_filter_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Frigo Filter status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.frigo_filter_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ref_normal_01011][binary_sensor.frigo_freezer_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1016,6 +1261,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.frigo_fridge_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][binary_sensor.lodowka_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.lodowka_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '271d82e0-5b0c-e4b8-058e-cdf23a188610_main_contactSensor_contact_contact',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][binary_sensor.lodowka_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Lodówka Door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.lodowka_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2370,6 +2664,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.child_bedroom_presence',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[gas_detector][binary_sensor.gas_detector_gas-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gas_detector_gas',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.GAS: 'gas'>,
+    'original_icon': None,
+    'original_name': 'Gas',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'd830b46f-f094-4560-b8c3-7690032fdb4c_main_gasDetector_gas_gas',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[gas_detector][binary_sensor.gas_detector_gas-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'gas',
+      'friendly_name': 'Gas Detector Gas',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gas_detector_gas',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

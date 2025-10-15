@@ -13,11 +13,13 @@ from pytraccar import (
     GeofenceModel,
     PositionModel,
     SubscriptionData,
+    TraccarAuthenticationException,
     TraccarException,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -31,7 +33,7 @@ from .const import (
     EVENTS,
     LOGGER,
 )
-from .helpers import get_device, get_first_geofence
+from .helpers import get_device, get_first_geofence, get_geofence_ids
 
 
 class TraccarServerCoordinatorDataDevice(TypedDict):
@@ -90,6 +92,8 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 self.client.get_positions(),
                 self.client.get_geofences(),
             )
+        except TraccarAuthenticationException:
+            raise ConfigEntryAuthFailed from None
         except TraccarException as ex:
             raise UpdateFailed(f"Error while updating device data: {ex}") from ex
 
@@ -131,7 +135,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 "device": device,
                 "geofence": get_first_geofence(
                     geofences,
-                    position["geofenceIds"] or [],
+                    get_geofence_ids(device, position),
                 ),
                 "position": position,
                 "attributes": attr,
@@ -187,7 +191,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             self.data[device_id]["attributes"] = attr
             self.data[device_id]["geofence"] = get_first_geofence(
                 self._geofences,
-                position["geofenceIds"] or [],
+                get_geofence_ids(self.data[device_id]["device"], position),
             )
             update_devices.add(device_id)
 
@@ -236,6 +240,8 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
         """Subscribe to events."""
         try:
             await self.client.subscribe(self.handle_subscription_data)
+        except TraccarAuthenticationException:
+            raise ConfigEntryAuthFailed from None
         except TraccarException as ex:
             if self._should_log_subscription_error:
                 self._should_log_subscription_error = False

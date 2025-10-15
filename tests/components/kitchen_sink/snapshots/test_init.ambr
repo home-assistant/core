@@ -5,9 +5,11 @@
       dict({
         'data': dict({
           'metadata_unit': 'm³',
+          'metadata_unit_class': 'volume',
           'state_unit': 'W',
+          'state_unit_class': 'power',
           'statistic_id': 'sensor.statistics_issues_issue_1',
-          'supported_unit': 'CCF, L, fl. oz., ft³, gal, mL, m³',
+          'supported_unit': 'CCF, L, MCF, fl. oz., ft³, gal, mL, m³',
         }),
         'type': 'units_changed',
       }),
@@ -16,7 +18,9 @@
       dict({
         'data': dict({
           'metadata_unit': 'cats',
+          'metadata_unit_class': None,
           'state_unit': 'dogs',
+          'state_unit_class': None,
           'statistic_id': 'sensor.statistics_issues_issue_2',
           'supported_unit': 'cats',
         }),
@@ -33,9 +37,11 @@
       dict({
         'data': dict({
           'metadata_unit': 'm³',
+          'metadata_unit_class': 'volume',
           'state_unit': 'W',
+          'state_unit_class': 'power',
           'statistic_id': 'sensor.statistics_issues_issue_3',
-          'supported_unit': 'CCF, L, fl. oz., ft³, gal, mL, m³',
+          'supported_unit': 'CCF, L, MCF, fl. oz., ft³, gal, mL, m³',
         }),
         'type': 'units_changed',
       }),

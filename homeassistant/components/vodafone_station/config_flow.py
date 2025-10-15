@@ -5,18 +5,31 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from aiovodafone import VodafoneStationSercommApi, exceptions as aiovodafone_exceptions
+from aiovodafone import exceptions as aiovodafone_exceptions
+from aiovodafone.api import VodafoneStationCommonApi, init_api_class
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 
-from .const import _LOGGER, DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
+from .const import (
+    _LOGGER,
+    CONF_DEVICE_DETAILS,
+    DEFAULT_HOST,
+    DEFAULT_USERNAME,
+    DEVICE_TYPE,
+    DEVICE_URL,
+    DOMAIN,
+)
 from .coordinator import VodafoneConfigEntry
 from .utils import async_client_session
 
@@ -36,26 +49,37 @@ def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
     session = await async_client_session(hass)
-    api = VodafoneStationSercommApi(
-        data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD], session
+
+    device_type, url = await VodafoneStationCommonApi.get_device_type(
+        data[CONF_HOST],
+        session,
     )
+
+    api = init_api_class(url, device_type, data, session)
 
     try:
         await api.login()
     finally:
         await api.logout()
 
-    return {"title": data[CONF_HOST]}
+    return {
+        "title": data[CONF_HOST],
+        CONF_DEVICE_DETAILS: {
+            DEVICE_TYPE: device_type,
+            DEVICE_URL: str(url),
+        },
+    }
 
 
 class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Vodafone Station."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -93,7 +117,10 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+            return self.async_create_entry(
+                title=info["title"],
+                data=user_input | {CONF_DEVICE_DETAILS: info[CONF_DEVICE_DETAILS]},
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=user_form_schema(user_input), errors=errors
@@ -180,7 +207,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class VodafoneStationOptionsFlowHandler(OptionsFlow):
+class VodafoneStationOptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow."""
 
     async def async_step_init(

@@ -7,6 +7,6 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["aioamazondevices"],
-  "quality_scale": "bronze",
-  "requirements": ["aioamazondevices==3.1.12"]
+  "quality_scale": "platinum",
+  "requirements": ["aioamazondevices==6.4.4"]
 }

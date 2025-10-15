@@ -6,6 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/letpot",
   "integration_type": "hub",
   "iot_class": "cloud_push",
-  "quality_scale": "bronze",
-  "requirements": ["letpot==0.4.0"]
+  "loggers": ["letpot"],
+  "quality_scale": "silver",
+  "requirements": ["letpot==0.6.2"]
 }

@@ -5,7 +5,8 @@ import logging
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyenphase.const import PHASENAMES
+from pyenphase.const import PHASENAMES, PhaseNames
+from pyenphase.models.meters import CtType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -776,6 +777,70 @@ async def test_sensor_inverter_data(
     ("mock_envoy"),
     [
         "envoy",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_inverter_detailed_data(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test enphase_envoy inverter detailed entities values."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    entity_base = f"{Platform.SENSOR}.inverter"
+
+    for sn, inverter in mock_envoy.data.inverters.items():
+        assert (dc_voltage := hass.states.get(f"{entity_base}_{sn}_dc_voltage"))
+        assert float(dc_voltage.state) == (inverter.dc_voltage)
+        assert (dc_current := hass.states.get(f"{entity_base}_{sn}_dc_current"))
+        assert float(dc_current.state) == (inverter.dc_current)
+        assert (ac_voltage := hass.states.get(f"{entity_base}_{sn}_ac_voltage"))
+        assert float(ac_voltage.state) == (inverter.ac_voltage)
+        assert (ac_current := hass.states.get(f"{entity_base}_{sn}_ac_current"))
+        assert float(ac_current.state) == (inverter.ac_current)
+        assert (frequency := hass.states.get(f"{entity_base}_{sn}_frequency"))
+        assert float(frequency.state) == (inverter.ac_frequency)
+        assert (temperature := hass.states.get(f"{entity_base}_{sn}_temperature"))
+        assert int(temperature.state) == (inverter.temperature)
+        assert (
+            lifetime_energy := hass.states.get(
+                f"{entity_base}_{sn}_lifetime_energy_production"
+            )
+        )
+        assert float(lifetime_energy.state) == (inverter.lifetime_energy / 1000.0)
+        assert (
+            energy_produced_today := hass.states.get(
+                f"{entity_base}_{sn}_energy_production_today"
+            )
+        )
+        assert int(energy_produced_today.state) == (inverter.energy_today)
+        assert (
+            last_report_duration := hass.states.get(
+                f"{entity_base}_{sn}_last_report_duration"
+            )
+        )
+        assert int(last_report_duration.state) == (inverter.last_report_duration)
+        assert (
+            energy_produced := hass.states.get(
+                f"{entity_base}_{sn}_energy_production_since_previous_report"
+            )
+        )
+        assert float(energy_produced.state) == (inverter.energy_produced)
+        assert (
+            lifetime_maximum_power := hass.states.get(
+                f"{entity_base}_{sn}_lifetime_maximum_power"
+            )
+        )
+        assert int(lifetime_maximum_power.state) == (inverter.max_report_watts)
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy",
         "envoy_1p_metered",
         "envoy_eu_batt",
         "envoy_metered_batt_relay",
@@ -797,9 +862,23 @@ async def test_sensor_inverter_disabled_by_integration(
     INVERTER_BASE = f"{Platform.SENSOR}.inverter"
 
     assert all(
-        f"{INVERTER_BASE}_{sn}_last_reported"
+        f"{INVERTER_BASE}_{sn}_{key}"
         in integration_disabled_entities(entity_registry, config_entry)
         for sn in mock_envoy.data.inverters
+        for key in (
+            "dc_voltage",
+            "dc_current",
+            "ac_voltage",
+            "ac_current",
+            "frequency",
+            "temperature",
+            "lifetime_energy_production",
+            "energy_production_today",
+            "last_report_duration",
+            "energy_production_since_previous_report",
+            "last_reported",
+            "lifetime_maximum_power",
+        )
     )
 
 
@@ -1059,7 +1138,7 @@ async def test_sensor_missing_data(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test enphase_envoy sensor platform midding data handling."""
+    """Test enphase_envoy sensor platform missing data handling."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
 
@@ -1075,6 +1154,12 @@ async def test_sensor_missing_data(
     mock_envoy.data.ctmeter_production_phases = None
     mock_envoy.data.ctmeter_consumption_phases = None
     mock_envoy.data.ctmeter_storage_phases = None
+    del mock_envoy.data.ctmeters[CtType.NET_CONSUMPTION]
+    del mock_envoy.data.ctmeters_phases[CtType.NET_CONSUMPTION][PhaseNames.PHASE_2]
+    del mock_envoy.data.ctmeters[CtType.PRODUCTION]
+    del mock_envoy.data.ctmeters_phases[CtType.PRODUCTION][PhaseNames.PHASE_2]
+    del mock_envoy.data.ctmeters[CtType.STORAGE]
+    del mock_envoy.data.ctmeters_phases[CtType.STORAGE][PhaseNames.PHASE_2]
 
     # use different inverter serial to test 'expected inverter missing' code
     mock_envoy.data.inverters["2"] = mock_envoy.data.inverters.pop("1")
@@ -1104,6 +1189,25 @@ async def test_sensor_missing_data(
     # test the original inverter is now unknown
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == STATE_UNKNOWN
+
+    del mock_envoy.data.ctmeters_phases[CtType.PRODUCTION]
+    del mock_envoy.data.ctmeters_phases[CtType.STORAGE]
+    # force HA to detect changed data by changing raw
+    mock_envoy.data.raw = {"I": "am changed again"}
+
+    # Move time to next update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity in (
+        "metering_status_production_ct",
+        "metering_status_production_ct_l1",
+        "metering_status_storage_ct",
+        "metering_status_storage_ct_l1",
+    ):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{entity}"))
+        assert entity_state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(

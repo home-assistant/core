@@ -38,15 +38,6 @@ ERROR_STATES = [
 
 
 @callback
-def _check_error_free(mower_attributes: MowerAttributes) -> bool:
-    """Check if the mower has any errors."""
-    return (
-        mower_attributes.mower.state not in ERROR_STATES
-        or mower_attributes.mower.activity not in ERROR_ACTIVITIES
-    )
-
-
-@callback
 def _work_area_translation_key(work_area_id: int, key: str) -> str:
     """Return the translation key."""
     if work_area_id == 0:
@@ -98,12 +89,12 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         """Initialize AutomowerEntity."""
         super().__init__(coordinator)
         self.mower_id = mower_id
+        parts = self.mower_attributes.system.model.split(maxsplit=2)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mower_id)},
-            manufacturer="Husqvarna",
-            model=self.mower_attributes.system.model.removeprefix(
-                "HUSQVARNA "
-            ).removeprefix("Husqvarna "),
+            manufacturer=parts[0],
+            model=parts[1],
+            model_id=parts[2],
             name=self.mower_attributes.system.name,
             serial_number=self.mower_attributes.system.serial_number,
             suggested_area="Garden",
@@ -114,26 +105,26 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         """Get the mower attributes of the current mower."""
         return self.coordinator.data[self.mower_id]
 
+    @property
+    def available(self) -> bool:
+        """Return True if the device is available."""
+        return super().available and self.mower_id in self.coordinator.data
 
-class AutomowerAvailableEntity(AutomowerBaseEntity):
+
+class AutomowerControlEntity(AutomowerBaseEntity):
     """Replies available when the mower is connected."""
 
     @property
     def available(self) -> bool:
         """Return True if the device is available."""
-        return super().available and self.mower_attributes.metadata.connected
+        return (
+            super().available
+            and self.mower_attributes.metadata.connected
+            and self.mower_attributes.mower.state != MowerStates.OFF
+        )
 
 
-class AutomowerControlEntity(AutomowerAvailableEntity):
-    """Replies available when the mower is connected and not in error state."""
-
-    @property
-    def available(self) -> bool:
-        """Return True if the device is available."""
-        return super().available and _check_error_free(self.mower_attributes)
-
-
-class WorkAreaAvailableEntity(AutomowerAvailableEntity):
+class WorkAreaAvailableEntity(AutomowerControlEntity):
     """Base entity for work areas."""
 
     def __init__(

@@ -1,0 +1,277 @@
+# serializer version: 1
+# name: test_state[media_player.test_client_1_snapcast_client-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'Test Stream 1',
+        'Test Stream 2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.test_client_1_snapcast_client',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': 'test_client_1 Snapcast Client',
+    'platform': 'snapcast',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 526348>,
+    'translation_key': None,
+    'unique_id': 'snapcast_client_127.0.0.1:1705_00:21:6a:7d:74:fc#1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[media_player.test_client_1_snapcast_client-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'entity_picture': '/api/media_player_proxy/media_player.test_client_1_snapcast_client?token=mock_token&cache=6e2dee674d9d1dc7',
+      'friendly_name': 'test_client_1 Snapcast Client',
+      'group_members': list([
+        'media_player.test_client_1_snapcast_client',
+      ]),
+      'is_volume_muted': False,
+      'latency': 6,
+      'media_album_artist': 'Test Album Artist 1, Test Album Artist 2',
+      'media_album_name': 'Test Album',
+      'media_artist': 'Test Artist 1, Test Artist 2',
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'media_duration': 60,
+      'media_position': 30,
+      'media_title': 'Test Title',
+      'media_track': 10,
+      'source': 'test_stream_1',
+      'source_list': list([
+        'Test Stream 1',
+        'Test Stream 2',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 526348>,
+      'volume_level': 0.48,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_client_1_snapcast_client',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_state[media_player.test_client_2_snapcast_client-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'Test Stream 1',
+        'Test Stream 2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.test_client_2_snapcast_client',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': 'test_client_2 Snapcast Client',
+    'platform': 'snapcast',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 526348>,
+    'translation_key': None,
+    'unique_id': 'snapcast_client_127.0.0.1:1705_00:21:6a:7d:74:fc#2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[media_player.test_client_2_snapcast_client-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'test_client_2 Snapcast Client',
+      'group_members': list([
+        'media_player.test_client_2_snapcast_client',
+      ]),
+      'is_volume_muted': False,
+      'latency': 6,
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'source': 'test_stream_2',
+      'source_list': list([
+        'Test Stream 1',
+        'Test Stream 2',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 526348>,
+      'volume_level': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_client_2_snapcast_client',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_state[media_player.test_group_1_snapcast_group-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'Test Stream 1',
+        'Test Stream 2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.test_group_1_snapcast_group',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': 'Test Group 1 Snapcast Group',
+    'platform': 'snapcast',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 2060>,
+    'translation_key': None,
+    'unique_id': 'snapcast_group_127.0.0.1:1705_4dcc4e3b-c699-a04b-7f0c-8260d23c43e1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[media_player.test_group_1_snapcast_group-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'entity_picture': '/api/media_player_proxy/media_player.test_group_1_snapcast_group?token=mock_token&cache=6e2dee674d9d1dc7',
+      'friendly_name': 'Test Group 1 Snapcast Group',
+      'is_volume_muted': False,
+      'media_album_artist': 'Test Album Artist 1, Test Album Artist 2',
+      'media_album_name': 'Test Album',
+      'media_artist': 'Test Artist 1, Test Artist 2',
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'media_duration': 60,
+      'media_position': 30,
+      'media_title': 'Test Title',
+      'media_track': 10,
+      'source': 'test_stream_1',
+      'source_list': list([
+        'Test Stream 1',
+        'Test Stream 2',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 2060>,
+      'volume_level': 0.48,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_group_1_snapcast_group',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_state[media_player.test_group_2_snapcast_group-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'Test Stream 1',
+        'Test Stream 2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.test_group_2_snapcast_group',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': 'Test Group 2 Snapcast Group',
+    'platform': 'snapcast',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 2060>,
+    'translation_key': None,
+    'unique_id': 'snapcast_group_127.0.0.1:1705_4dcc4e3b-c699-a04b-7f0c-8260d23c43e2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[media_player.test_group_2_snapcast_group-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Test Group 2 Snapcast Group',
+      'is_volume_muted': False,
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'source': 'test_stream_2',
+      'source_list': list([
+        'Test Stream 1',
+        'Test Stream 2',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 2060>,
+      'volume_level': 0.65,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_group_2_snapcast_group',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

@@ -6,7 +6,8 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyownet import protocol
+from aio_ownet.exceptions import OWServerError
+from aio_ownet.proxy import OWServerStatelessProxy
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -36,7 +37,7 @@ class OneWireEntity(Entity):
         device_id: str,
         device_info: DeviceInfo,
         device_file: str,
-        owproxy: protocol._Proxy,
+        owproxy: OWServerStatelessProxy,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
@@ -53,24 +54,21 @@ class OneWireEntity(Entity):
         """Return the state attributes of the entity."""
         return {
             "device_file": self._device_file,
-            # raw_value attribute is deprecated and can be removed in 2025.8
-            "raw_value": self._value_raw,
         }
 
-    def _read_value(self) -> str:
+    async def _read_value(self) -> str:
         """Read a value from the server."""
-        read_bytes: bytes = self._owproxy.read(self._device_file)
-        return read_bytes.decode().lstrip()
+        return (await self._owproxy.read(self._device_file)).decode().lstrip()
 
-    def _write_value(self, value: bytes) -> None:
+    async def _write_value(self, value: bytes) -> None:
         """Write a value to the server."""
-        self._owproxy.write(self._device_file, value)
+        await self._owproxy.write(self._device_file, value)
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data from the device."""
         try:
-            self._value_raw = float(self._read_value())
-        except protocol.Error as exc:
+            self._value_raw = float(await self._read_value())
+        except OWServerError as exc:
             if self._last_update_success:
                 _LOGGER.error("Error fetching %s data: %s", self.name, exc)
                 self._last_update_success = False

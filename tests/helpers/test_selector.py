@@ -1,9 +1,12 @@
 """Test selectors."""
 
+from collections.abc import Callable, Iterable
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from enum import Enum
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.helpers import selector
@@ -42,7 +45,11 @@ def test_invalid_base_schema(schema) -> None:
 
 
 def _test_selector(
-    selector_type, schema, valid_selections, invalid_selections, converter=None
+    selector_type: str,
+    schema: dict,
+    valid_selections: Iterable[Any],
+    invalid_selections: Iterable[Any],
+    converter: Callable[[Any], Any] | None = None,
 ):
     """Help test a selector."""
 
@@ -88,7 +95,6 @@ def _test_selector(
         ({"integration": "zha"}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf"}, ("abc123",), (None,)),
         ({"model": "mock-model"}, ("abc123",), (None,)),
-        ({"model_id": "mock-model_id"}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf", "model": "mock-model"}, ("abc123",), (None,)),
         (
             {"integration": "zha", "manufacturer": "mock-manuf", "model": "mock-model"},
@@ -128,6 +134,7 @@ def _test_selector(
                     "integration": "zha",
                     "manufacturer": "mock-manuf",
                     "model": "mock-model",
+                    "model_id": "mock-model_id",
                 }
             },
             ("abc123",),
@@ -140,11 +147,13 @@ def _test_selector(
                         "integration": "zha",
                         "manufacturer": "mock-manuf",
                         "model": "mock-model",
+                        "model_id": "mock-model_id",
                     },
                     {
                         "integration": "matter",
                         "manufacturer": "other-mock-manuf",
                         "model": "other-mock-model",
+                        "model_id": "other-mock-model_id",
                     },
                 ]
             },
@@ -156,6 +165,19 @@ def _test_selector(
 def test_device_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test device selector."""
     _test_selector("device", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        # model_id should be used under the filter key
+        {"model_id": "mock-model_id"},
+    ],
+)
+def test_device_selector_schema_error(schema) -> None:
+    """Test device selector."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"device": schema})
 
 
 @pytest.mark.parametrize(
@@ -215,6 +237,11 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
                 ["sensor.abc123", "sensor.jkl123"],
                 ["sensor.abc123", "sensor.ghi789"],
             ),
+        ),
+        (
+            {"multiple": True, "reorder": True},
+            ((["sensor.abc123", "sensor.def456"],)),
+            (None, "abc123", ["sensor.abc123", None]),
         ),
         (
             {"filter": {"domain": "light"}},
@@ -290,10 +317,12 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"filter": [{"supported_features": ["light.FooEntityFeature.blah"]}]},
         # Unknown feature enum member
         {"filter": [{"supported_features": ["light.LightEntityFeature.blah"]}]},
+        # supported_features should be used under the filter key
+        {"supported_features": ["light.LightEntityFeature.EFFECT"]},
     ],
 )
 def test_entity_selector_schema_error(schema) -> None:
-    """Test number selector."""
+    """Test entity selector."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"entity": schema})
 
@@ -396,7 +425,13 @@ def test_assist_pipeline_selector_schema(
         ({"min": -100, "max": 100, "step": 5}, (), ()),
         ({"min": -20, "max": -10, "mode": "box"}, (), ()),
         (
-            {"min": 0, "max": 100, "unit_of_measurement": "seconds", "mode": "slider"},
+            {
+                "min": 0,
+                "max": 100,
+                "unit_of_measurement": "seconds",
+                "mode": "slider",
+                "translation_key": "foo",
+            },
             (),
             (),
         ),
@@ -404,6 +439,7 @@ def test_assist_pipeline_selector_schema(
         ({"mode": "box"}, (10,), ()),
         ({"mode": "box", "step": "any"}, (), ()),
         ({"mode": "slider", "min": 0, "max": 1, "step": "any"}, (), ()),
+        ({}, (), ()),
     ],
 )
 def test_number_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -411,10 +447,28 @@ def test_number_selector_schema(schema, valid_selections, invalid_selections) ->
     _test_selector("number", schema, valid_selections, invalid_selections)
 
 
+def test_number_selector_schema_default_mode() -> None:
+    """Test number selector default mode set on min/max."""
+    assert selector.selector({"number": {"min": 10, "max": 50}}).config == {
+        "mode": "slider",
+        "min": 10.0,
+        "max": 50.0,
+        "step": 1.0,
+    }
+    assert selector.selector({"number": {}}).config == {
+        "mode": "box",
+        "step": 1.0,
+    }
+    assert selector.selector({"number": {"min": "10"}}).config == {
+        "mode": "box",
+        "min": 10.0,
+        "step": 1.0,
+    }
+
+
 @pytest.mark.parametrize(
     "schema",
     [
-        {},  # Must have mandatory fields
         {"mode": "slider"},  # Must have min+max in slider mode
     ],
 )
@@ -516,7 +570,17 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections) -> N
         (
             {"entity_id": "sensor.abc"},
             ("on", "armed"),
-            (None, True, 1),
+            (None, True, 1, ["on"]),
+        ),
+        (
+            {"entity_id": "sensor.abc", "multiple": True},
+            (["on"], ["on", "off"], []),
+            (None, True, 1, [True], [1], "on"),
+        ),
+        (
+            {"hide_states": ["unknown", "unavailable"]},
+            (),
+            (),
         ),
     ],
 )
@@ -590,11 +654,250 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
-    [({}, ("abc123",), ())],
+    [
+        ({}, ("abc123", None, {"key": "value"}), ()),
+        ({"multiple": False}, ("abc123", None, {"key": "value"}), ()),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": False,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            (
+                {"name": "abc123", "percentage": 3},
+                {"name": "abc123"},
+            ),
+            (
+                "abc123",
+                None,
+                {"name": "abc123", "percentage": "nope"},
+                [
+                    {"name": "abc123", "percentage": 3},
+                    {"name": "def987", "percentage": 5},
+                ],
+                [{"name": "abc123"}],
+            ),
+        ),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            (
+                [
+                    {"name": "abc123", "percentage": 3},
+                    {"name": "def987", "percentage": 5},
+                ],
+                [{"name": "abc123"}],
+            ),
+            (
+                "abc123",
+                None,
+                [{"name": "abc123", "percentage": "nope"}],
+                [{"name": "abc123", "percentage": 3, "not_exist": 5}],
+            ),
+        ),
+    ],
 )
 def test_object_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test object selector."""
     _test_selector("object", schema, valid_selections, invalid_selections)
+
+
+def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
+    """Test ObjectSelector custom serializer for using Selector in ObjectSelectorField."""
+
+    selector_type = "object"
+    schema = {
+        "fields": {
+            "name": {
+                "required": True,
+                "selector": selector.TextSelector(),
+            },
+            "percentage": {
+                "selector": selector.NumberSelector(
+                    selector.NumberSelectorConfig(min=0, max=100)
+                ),
+            },
+        },
+        "multiple": True,
+        "label_field": "name",
+        "description_field": "percentage",
+    }
+
+    # Validate selector configuration
+    config = {selector_type: schema}
+    selector.validate_selector(config)
+    selector_instance = selector.selector(config)
+
+    # Serialize selector
+    selector_instance = selector.selector({selector_type: schema})
+    assert selector_instance.serialize() != {
+        "selector": {selector_type: selector_instance.config}
+    }
+    assert selector_instance.serialize() == snapshot()
+
+    # Test serialized selector can be dumped to YAML
+    yaml_util.dump(selector_instance.serialize())
+
+
+def test_nested_object_selectors(snapshot: SnapshotAssertion) -> None:
+    """Test ObjectSelector custom serializer with nested ObjectSelectors."""
+
+    selector_type = "object"
+    schema = {
+        "fields": {
+            "name": {
+                "required": True,
+                "selector": selector.TextSelector(),
+            },
+            "object": {
+                "selector": selector.ObjectSelector(
+                    selector.ObjectSelectorConfig(
+                        fields={
+                            "no_name": {
+                                "required": True,
+                                "selector": selector.TextSelector(),
+                            },
+                            "other_name": {
+                                "required": True,
+                                "selector": selector.TextSelector(),
+                            },
+                            "new_object": {
+                                "required": True,
+                                "selector": selector.ObjectSelector(
+                                    selector.ObjectSelectorConfig(
+                                        fields={
+                                            "title": {
+                                                "required": True,
+                                                "selector": selector.TextSelector(),
+                                            },
+                                            "description": {
+                                                "required": True,
+                                                "selector": selector.TextSelector(),
+                                            },
+                                        },
+                                        multiple=False,
+                                        label_field="title",
+                                        description_field="description",
+                                    )
+                                ),
+                            },
+                        },
+                        multiple=False,
+                        label_field="no_name",
+                        description_field="other_name",
+                    )
+                ),
+            },
+        },
+        "multiple": True,
+        "label_field": "name",
+        "description_field": "percentage",
+    }
+
+    # Validate selector configuration
+    config = {selector_type: schema}
+    selector.validate_selector(config)
+    selector_instance = selector.selector(config)
+
+    # Serialize selector
+    selector_instance = selector.selector({selector_type: schema})
+    assert selector_instance.serialize() != {
+        "selector": {selector_type: selector_instance.config}
+    }
+    assert selector_instance.serialize() == snapshot()
+
+    # Test serialized selector can be dumped to YAML
+    yaml_util.dump(selector_instance.serialize())
+
+
+@pytest.mark.parametrize(
+    ("schema", "raises"),
+    [
+        ({}, does_not_raise()),
+        ({"multiple": False}, does_not_raise()),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": selector.TextSelector(),
+                    },
+                    "percentage": {
+                        "selector": selector.NumberSelector(),
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"not_exist": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            pytest.raises(vol.Invalid),
+        ),
+        ({"multiple": "False"}, pytest.raises(vol.Invalid)),
+    ],
+)
+def test_object_selector_validate_schema(
+    schema: dict, raises: AbstractContextManager
+) -> None:
+    """Test object selector schemas."""
+    # Validate selector configuration
+
+    with raises:
+        selector.validate_selector({"object": schema})
 
 
 @pytest.mark.parametrize(
@@ -815,7 +1118,44 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
                     "metadata": {},
                 },
             ),
-            (None, "abc", {}),
+            (
+                None,
+                "abc",
+                {},
+                # We require entity_id when accept is not set
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+            ),
+        ),
+        (
+            {
+                "accept": ["image/*"],
+            },
+            (
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+            (
+                None,
+                "abc",
+                {},
+                {
+                    # We do not allow entity_id when accept is set
+                    "entity_id": "sensor.abc",
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
         ),
     ],
 )
@@ -1045,6 +1385,7 @@ def test_constant_selector_schema(schema, valid_selections, invalid_selections) 
 @pytest.mark.parametrize(
     "schema",
     [
+        None,  # Value is mandatory
         {},  # Value is mandatory
         {"value": []},  # Value must be str, int or bool
         {"value": 123, "label": 123},  # Label must be str
@@ -1262,3 +1603,30 @@ def test_label_selector_schema(schema, valid_selections, invalid_selections) -> 
 def test_floor_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test floor selector."""
     _test_selector("floor", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {},
+            ("sensor.temperature",),
+            (None, ["sensor.temperature"]),
+        ),
+        (
+            {"multiple": True},
+            (["sensor.temperature", "sensor:external_temperature"], []),
+            ("sensor.temperature",),
+        ),
+        (
+            {"multiple": False},
+            ("sensor.temperature",),
+            (None, ["sensor.temperature"]),
+        ),
+    ],
+)
+def test_statistic_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test statistic selector."""
+    _test_selector("statistic", schema, valid_selections, invalid_selections)

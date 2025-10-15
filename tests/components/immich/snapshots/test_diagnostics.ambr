@@ -3,23 +3,23 @@
   dict({
     'data': dict({
       'server_about': dict({
-        'build': '14709928600',
-        'build_image': 'v1.132.3',
+        'build': '15281783550',
+        'build_image': 'v1.134.0',
         'build_image_url': 'https://github.com/immich-app/immich/pkgs/container/immich-server',
-        'build_url': 'https://github.com/immich-app/immich/actions/runs/14709928600',
+        'build_url': 'https://github.com/immich-app/immich/actions/runs/15281783550',
         'exiftool': '13.00',
-        'ffmpeg': '7.0.2-7',
+        'ffmpeg': '7.0.2-9',
         'imagemagick': '7.1.1-47',
         'libvips': '8.16.1',
         'licensed': False,
         'nodejs': 'v22.14.0',
         'repository': 'immich-app/immich',
         'repository_url': 'https://github.com/immich-app/immich',
-        'source_commit': '02994883fe3f3972323bb6759d0170a4062f5236',
-        'source_ref': 'v1.132.3',
-        'source_url': 'https://github.com/immich-app/immich/commit/02994883fe3f3972323bb6759d0170a4062f5236',
-        'version': 'v1.132.3',
-        'version_url': 'https://github.com/immich-app/immich/releases/tag/v1.132.3',
+        'source_commit': '58ae77ec9204a2e43a8cb2f1fd27482af40d0891',
+        'source_ref': 'v1.134.0',
+        'source_url': 'https://github.com/immich-app/immich/commit/58ae77ec9204a2e43a8cb2f1fd27482af40d0891',
+        'version': 'v1.134.0',
+        'version_url': 'https://github.com/immich-app/immich/releases/tag/v1.134.0',
       }),
       'server_storage': dict({
         'disk_available': '136.3 GiB',
@@ -48,6 +48,10 @@
         'usage_photos': 54291170551,
         'usage_videos': 65234281361,
         'videos': 1836,
+      }),
+      'server_version_check': dict({
+        'checked_at': '2025-06-21T16:35:10.352000+00:00',
+        'release_version': 'v1.135.3',
       }),
     }),
     'entry': dict({

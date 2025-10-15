@@ -84,9 +84,19 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.update_interval = update_interval
         self._shutdown_requested = False
         if config_entry is UNDEFINED:
+            # late import to avoid circular imports
+            from . import frame  # noqa: PLC0415
+
+            # It is not planned to enforce this for custom integrations.
+            # see https://github.com/home-assistant/core/pull/138161#discussion_r1958184241
+            frame.report_usage(
+                "relies on ContextVar, but should pass the config entry explicitly.",
+                core_behavior=frame.ReportBehavior.ERROR,
+                custom_integration_behavior=frame.ReportBehavior.IGNORE,
+                breaks_in_ha_version="2026.8",
+            )
+
             self.config_entry = config_entries.current_entry.get()
-            # This should be deprecated once all core integrations are updated
-            # to pass in the config entry explicitly.
         else:
             self.config_entry = config_entry
         self.always_update = always_update
@@ -118,10 +128,10 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 logger,
                 cooldown=REQUEST_REFRESH_DEFAULT_COOLDOWN,
                 immediate=REQUEST_REFRESH_DEFAULT_IMMEDIATE,
-                function=self.async_refresh,
+                function=self._async_refresh,
             )
         else:
-            request_refresh_debouncer.function = self.async_refresh
+            request_refresh_debouncer.function = self._async_refresh
 
         self._debounced_refresh = request_refresh_debouncer
 
@@ -267,7 +277,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     async def _handle_refresh_interval(self, _now: datetime | None = None) -> None:
         """Handle a refresh interval occurrence."""
         self._unsub_refresh = None
-        await self._async_refresh(log_failures=True, scheduled=True)
+        async with self._debounced_refresh.async_lock():
+            await self._async_refresh(log_failures=True, scheduled=True)
 
     async def async_request_refresh(self) -> None:
         """Request a refresh.
@@ -289,13 +300,22 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
+        async with self._debounced_refresh.async_lock():
+            await self._async_config_entry_first_refresh()
+
+    async def _async_config_entry_first_refresh(self) -> None:
+        """Refresh data for the first time when a config entry is setup.
+
+        Will automatically raise ConfigEntryNotReady if the refresh
+        fails. Additionally logging is handled by config entry setup
+        to ensure that multiple retries do not cause log spam.
+        """
         if self.config_entry is None:
-            report_usage(
-                "uses `async_config_entry_first_refresh`, which is only supported "
-                "for coordinators with a config entry",
-                breaks_in_ha_version="2025.11",
+            raise ConfigEntryError(
+                "Detected code that uses `async_config_entry_first_refresh`,"
+                " which is only supported for coordinators with a config entry"
             )
-        elif (
+        if (
             self.config_entry.state
             is not config_entries.ConfigEntryState.SETUP_IN_PROGRESS
         ):
@@ -355,7 +375,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""
-        await self._async_refresh(log_failures=True)
+        async with self._debounced_refresh.async_lock():
+            await self._async_refresh(log_failures=True)
 
     async def _async_refresh(  # noqa: C901
         self,

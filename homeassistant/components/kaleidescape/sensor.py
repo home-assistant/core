@@ -2,24 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+
+from kaleidescape import Device as KaleidescapeDevice
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from . import KaleidescapeConfigEntry
 from .entity import KaleidescapeEntity
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from kaleidescape import Device as KaleidescapeDevice
-
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-    from homeassistant.helpers.typing import StateType
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -132,11 +127,11 @@ SENSOR_TYPES: tuple[KaleidescapeSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: KaleidescapeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform from a config entry."""
-    device: KaleidescapeDevice = hass.data[DOMAIN][entry.entry_id]
+    device = entry.runtime_data
     async_add_entities(
         KaleidescapeSensor(device, description) for description in SENSOR_TYPES
     )
