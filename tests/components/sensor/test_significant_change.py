@@ -31,12 +31,12 @@ TEMP_FREEDOM_ATTRS = {
     ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
 }
 
-TEMP_INTERVAL_CELSIUS_ATTRS = {
+TEMP_DELTA_CELSIUS_ATTRS = {
     ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE_DELTA,
     ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
 }
 
-TEMP_INTERVAL_FAHRENHEIT_ATTRS = {
+TEMP_DELTA_FAHRENHEIT_ATTRS = {
     ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE_DELTA,
     ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
 }
@@ -64,11 +64,11 @@ TEMP_INTERVAL_FAHRENHEIT_ATTRS = {
         ("70", "70.5", TEMP_FREEDOM_ATTRS, False),
         ("fail", "70", TEMP_FREEDOM_ATTRS, True),
         ("70", "fail", TEMP_FREEDOM_ATTRS, False),
-        ("12", "12", TEMP_INTERVAL_CELSIUS_ATTRS, False),
-        ("12", "13", TEMP_INTERVAL_CELSIUS_ATTRS, True),
-        ("12.1", "12.2", TEMP_INTERVAL_CELSIUS_ATTRS, False),
-        ("7", "8", TEMP_INTERVAL_FAHRENHEIT_ATTRS, True),
-        ("7", "7.5", TEMP_INTERVAL_FAHRENHEIT_ATTRS, False),
+        ("12", "12", TEMP_DELTA_CELSIUS_ATTRS, False),
+        ("12", "13", TEMP_DELTA_CELSIUS_ATTRS, True),
+        ("12.1", "12.2", TEMP_DELTA_CELSIUS_ATTRS, False),
+        ("7", "8", TEMP_DELTA_FAHRENHEIT_ATTRS, True),
+        ("7", "7.5", TEMP_DELTA_FAHRENHEIT_ATTRS, False),
     ],
 )
 async def test_significant_change_temperature(
