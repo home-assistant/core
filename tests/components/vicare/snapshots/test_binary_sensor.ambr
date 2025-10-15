@@ -438,6 +438,54 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_all_entities_with_zigbee_devices[binary_sensor.model0_child_safety_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.model0_child_safety_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child safety lock',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_safety_lock_mode',
+    'unique_id': 'gateway0_zigbee_################-child_safety_lock_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities_with_zigbee_devices[binary_sensor.model0_child_safety_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Child safety lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_child_safety_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_all_entities_with_zigbee_devices[binary_sensor.model0_identification_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -528,55 +576,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_mounting_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_all_entities_with_zigbee_devices[binary_sensor.model0_safety-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.model0_safety',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
-    'original_icon': None,
-    'original_name': 'Safety',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'child_safety_lock_mode',
-    'unique_id': 'gateway0_zigbee_################-child_safety_lock_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities_with_zigbee_devices[binary_sensor.model0_safety-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'safety',
-      'friendly_name': 'model0 Safety',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.model0_safety',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
