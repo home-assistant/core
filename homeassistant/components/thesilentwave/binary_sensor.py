@@ -2,7 +2,7 @@
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import TheSilentWaveCoordinator, TheSilentWaveConfigEntry
@@ -31,6 +31,7 @@ class TheSilentWaveBinarySensor(TheSilentWaveEntity, BinarySensorEntity):
         super().__init__(coordinator, entry_id)
         # Set a more specific unique_id for this sensor entity
         self._attr_unique_id = f"{entry_id}_status"
+        self._subscription_active = False
 
     @property
     def is_on(self) -> bool | None:
@@ -43,15 +44,52 @@ class TheSilentWaveBinarySensor(TheSilentWaveEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
         await super().async_added_to_hass()
+
+        # Listen for coordinator updates to retry event subscription if needed
+        @callback
+        def _update_listener():
+            """Handle updated data from the coordinator."""
+            # Try subscribing to events if connection becomes available
+            if (
+                self.coordinator.has_connection
+                and not self._subscription_active
+                and hasattr(self.coordinator.client, "subscribe_to_events")
+            ):
+                self.hass.async_create_task(self._subscribe_to_events())
+
+        # Register our listener
+        self.async_on_remove(self.coordinator.async_add_listener(_update_listener))
+
+        # Also try subscribing immediately
         # Only subscribe to events if we have a connection to the device
         if self.coordinator.has_connection and hasattr(
             self.coordinator.client, "subscribe_to_events"
         ):
+            await self._subscribe_to_events()
+
+    async def _subscribe_to_events(self) -> None:
+        """Subscribe to device events."""
+        if self._subscription_active:
+            return
+
+        try:
             unsubscribe_callback = await self.coordinator.client.subscribe_to_events(
                 self.async_write_ha_state
             )
-            self.async_on_remove(unsubscribe_callback)
+            self._subscription_active = True
+            self.async_on_remove(
+                lambda: self._handle_unsubscribe(unsubscribe_callback)
+            )
+        except Exception:
+            # If subscription fails, we'll retry on the next coordinator update
+            self._subscription_active = False
+
+    def _handle_unsubscribe(self, unsubscribe_callback) -> None:
+        """Handle unsubscription from events."""
+        self._subscription_active = False
+        unsubscribe_callback()
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from events when entity is removed."""
+        self._subscription_active = False
         await super().async_will_remove_from_hass()
