@@ -17,7 +17,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor from a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities([TheSilentWaveBinarySensor(coordinator, entry.entry_id)], True)
+    async_add_entities([TheSilentWaveBinarySensor(coordinator, entry.entry_id)])
 
 
 class TheSilentWaveBinarySensor(TheSilentWaveEntity, BinarySensorEntity):
