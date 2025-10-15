@@ -502,9 +502,6 @@ class NetatmoCommonSensor(NetatmoModuleEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
 
-        if not isinstance(netatmo_device.device, Module):
-            return
-
         name_suffix = (
             description.translation_key
             if description.translation_key
@@ -782,9 +779,6 @@ async def async_setup_entry(
 
     @callback
     def _create_weather_sensor_entity(netatmo_device: NetatmoDevice) -> None:
-        if not isinstance(netatmo_device.device, Module):
-            return
-
         async_add_entities(
             NetatmoWeatherSensor(netatmo_device, description)
             for description in SENSOR_TYPES
@@ -799,9 +793,6 @@ async def async_setup_entry(
 
     @callback
     def _create_sensor_entity(netatmo_device: NetatmoDevice) -> None:
-        if not isinstance(netatmo_device.device, Module):
-            return
-
         if netatmo_device.device.device_category is None:
             _LOGGER.warning(
                 "Device %s is missing a device_category, cannot create sensors",
@@ -906,13 +897,6 @@ async def async_setup_entry(
     @callback
     def _create_common_sensor_entity(netatmo_device: NetatmoDevice) -> None:
         """Create new sensor entities."""
-
-        if not isinstance(netatmo_device.device, Module):
-            _LOGGER.debug(
-                "Skipping device that is not a module: %s",
-                netatmo_device.device.name,
-            )
-            return
 
         if netatmo_device.device.device_category is None:
             _LOGGER.warning(
@@ -1032,18 +1016,7 @@ class NetatmoClimateBatterySensor(NetatmoModuleEntity, SensorEntity):
         super().__init__(netatmo_device)
         self.entity_description = BATTERY_SENSOR_DESCRIPTION
 
-        if isinstance(netatmo_device.device, Module):
-            self._publishers.extend(
-                [
-                    {
-                        "name": HOME,
-                        "home_id": netatmo_device.device.home.entity_id,
-                        SIGNAL_NAME: netatmo_device.signal_name,
-                    },
-                ]
-            )
-        else:
-            self._publishers.extend([])
+        self._publishers.extend([])
 
         self._attr_unique_id = f"{netatmo_device.parent_id}-{self.device.entity_id}-{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(

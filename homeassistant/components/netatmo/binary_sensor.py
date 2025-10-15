@@ -271,13 +271,6 @@ async def async_setup_entry(
     def _create_binary_sensor_entity(netatmo_device: NetatmoDevice) -> None:
         """Create new binary sensor entities."""
 
-        if not isinstance(netatmo_device.device, Module):
-            _LOGGER.debug(
-                "Skipping device that is not a module: %s",
-                netatmo_device.device.name,
-            )
-            return
-
         if netatmo_device.device.device_category is None:
             _LOGGER.warning(
                 "Device %s is missing a device_category, cannot create binary sensors",
@@ -359,9 +352,6 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         description: NetatmoBinarySensorEntityDescription,
     ) -> None:
         """Initialize a Netatmo binary sensor."""
-
-        if not isinstance(netatmo_device.device, Module):
-            return
 
         if description.device_class_fn:
             self._attr_device_class = description.device_class_fn(netatmo_device)

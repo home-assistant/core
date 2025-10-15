@@ -98,14 +98,13 @@ class NetatmoDevice:
     def __init__(
         self,
         data_handler: NetatmoDataHandler,
-        device: pyatmo.Home | pyatmo.Module,
+        device: pyatmo.Module,
         parent_id: str,
         signal_name: str,
     ) -> None:
         """Initialize the Netatmo device."""
         self.data_handler = data_handler
         self.device = device
-        self.module = device  # This line is the key fix
         self.parent_id = parent_id
         self.signal_name = signal_name
 
@@ -117,8 +116,6 @@ class NetatmoDevice:
     @property
     def home_id(self) -> str:
         """Return the Netatmo home id."""
-        if isinstance(self.device, pyatmo.Home):
-            return self.device.entity_id
         return self.device.home.entity_id
 
 
