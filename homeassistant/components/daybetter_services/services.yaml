@@ -1,0 +1,13 @@
+# DayBetter Services
+
+# Manual MQTT connection trigger service
+trigger_mqtt_connection:
+  fields: {}
+
+# Refresh device list service
+refresh_devices:
+  fields: {}
+
+# Test logging service
+test_chinese_log:
+  fields: {}

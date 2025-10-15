@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Connect to DayBetter Services",
+        "data": {
+          "user_code": "User Code"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Re-authenticate with DayBetter Services",
+        "data": {
+          "user_code": "User Code"
+        }
+      }
+    },
+    "error": {
+      "auth_failed": "Authentication failed. Please check your user code.",
+      "connection_error": "Failed to connect to DayBetter services.",
+      "invalid_auth": "Invalid authentication credentials.",
+      "cannot_connect": "Unable to connect to DayBetter services.",
+      "unknown": "Unexpected error occurred."
+    },
+    "abort": {
+      "reauth_successful": "Re-authentication was successful."
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "domain": "daybetter_services",
+  "name": "DayBetter Services",
+  "codeowners": ["@THDayBetter"],
+  "config_flow": true,
+  "dependencies": ["mqtt"],
+  "documentation": "https://www.home-assistant.io/integrations/daybetter_services",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": ["aiohttp==3.12.15"]
+}
