@@ -436,15 +436,15 @@ def get_rpc_sub_device_name(
 
 
 def get_rpc_entity_name(
-    device: RpcDevice, key: str, description: str | None = None, role: str | None = None
+    device: RpcDevice, key: str, name: str | None = None, role: str | None = None
 ) -> str | None:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
-    if description:
+    if name:
         if role and role != "generic":
-            return description
-        return f"{channel_name} {description.lower()}" if channel_name else description
+            return name
+        return f"{channel_name} {name.lower()}" if channel_name else name
 
     return channel_name
 
