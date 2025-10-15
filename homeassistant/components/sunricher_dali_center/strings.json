@@ -5,7 +5,7 @@
         "title": "Set up DALI Center gateway",
         "description": "**Three-step process:**\n\n1. Ensure the gateway is powered and on the same network.\n2. Select **Submit** to start discovery (searches for up to 3 minutes)\n3. While discovery is in progress, press the **Reset** button on your DALI gateway device **once**.\n\nThe gateway will respond immediately after the button press."
       },
-      "discovery": {
+      "select_gateway": {
         "title": "Select DALI gateway",
         "description": "Select the DALI gateway you want to configure.",
         "data": {

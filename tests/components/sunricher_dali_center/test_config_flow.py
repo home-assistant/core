@@ -69,7 +69,7 @@ async def test_discovery_flow_success(
         init_result["flow_id"], {}
     )
     assert discovery_result["type"] is FlowResultType.FORM
-    assert discovery_result["step_id"] == "discovery"
+    assert discovery_result["step_id"] == "select_gateway"
 
     select_result = await hass.config_entries.flow.async_configure(
         discovery_result["flow_id"],
@@ -108,7 +108,7 @@ async def test_discovery_no_gateways_found(
     )
 
     assert discovery_result["type"] is FlowResultType.FORM
-    assert discovery_result["step_id"] == "discovery"
+    assert discovery_result["step_id"] == "select_gateway"
     assert discovery_result["errors"]["base"] == "no_devices_found"
     assert mock_discovery.discover_gateways.await_count == 1
 
@@ -128,7 +128,7 @@ async def test_discovery_gateway_error(
     )
 
     assert discovery_result["type"] is FlowResultType.FORM
-    assert discovery_result["step_id"] == "discovery"
+    assert discovery_result["step_id"] == "select_gateway"
     assert discovery_result["errors"]["base"] == "discovery_failed"
     assert mock_discovery.discover_gateways.await_count == 1
 
@@ -156,7 +156,7 @@ async def test_discovery_device_not_found(
     )
 
     assert select_result["type"] is FlowResultType.FORM
-    assert select_result["step_id"] == "discovery"
+    assert select_result["step_id"] == "select_gateway"
     assert select_result["errors"]["base"] == "device_not_found"
     assert mock_discovery.discover_gateways.await_count == 2
 
@@ -178,7 +178,7 @@ async def test_discovery_connection_failure(
     )
 
     assert discovery_result["type"] is FlowResultType.FORM
-    assert discovery_result["step_id"] == "discovery"
+    assert discovery_result["step_id"] == "select_gateway"
 
     select_result = await hass.config_entries.flow.async_configure(
         discovery_result["flow_id"],
@@ -186,7 +186,7 @@ async def test_discovery_connection_failure(
     )
 
     assert select_result["type"] is FlowResultType.FORM
-    assert select_result["step_id"] == "discovery"
+    assert select_result["step_id"] == "select_gateway"
     assert select_result["errors"]["base"] == "cannot_connect"
     assert gateway.connect.await_count == 1
     assert gateway.disconnect.await_count == 0
@@ -222,7 +222,7 @@ async def test_discovery_duplicate_filtered(
     )
 
     assert discovery_result["type"] is FlowResultType.FORM
-    assert discovery_result["step_id"] == "discovery"
+    assert discovery_result["step_id"] == "select_gateway"
     assert discovery_result["errors"]["base"] == "no_devices_found"
     assert mock_discovery.discover_gateways.await_count == 1
 

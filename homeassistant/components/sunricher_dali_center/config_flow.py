@@ -38,14 +38,14 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
-            return await self.async_step_discovery()
+            return await self.async_step_select_gateway()
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({}),
         )
 
-    async def async_step_discovery(
+    async def async_step_select_gateway(
         self, discovery_info: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle gateway discovery."""
@@ -110,7 +110,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not self._discovered_gateways:
             return self.async_show_form(
-                step_id="discovery",
+                step_id="select_gateway",
                 errors=errors if errors else {"base": "no_devices_found"},
                 data_schema=vol.Schema({}),
             )
@@ -121,7 +121,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_show_form(
-            step_id="discovery",
+            step_id="select_gateway",
             data_schema=vol.Schema(
                 {
                     vol.Required("selected_gateway"): vol.In(gateway_options),
