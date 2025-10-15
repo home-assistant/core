@@ -94,6 +94,7 @@ def mock_all(
                         "version_latest": "2.0.1",
                         "repository": "core",
                         "url": "https://github.com/home-assistant/addons/test",
+                        "icon": False,
                     },
                     {
                         "name": "test2",
@@ -105,6 +106,7 @@ def mock_all(
                         "version_latest": "3.1.0",
                         "repository": "core",
                         "url": "https://github.com",
+                        "icon": False,
                     },
                 ],
             },

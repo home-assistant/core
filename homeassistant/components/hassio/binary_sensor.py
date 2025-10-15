@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import itertools
 
 from aiohasupervisor.models.mounts import MountState
 
@@ -62,24 +63,26 @@ async def async_setup_entry(
     coordinator = hass.data[ADDONS_COORDINATOR]
 
     async_add_entities(
-        [
-            HassioAddonBinarySensor(
-                addon=addon,
-                coordinator=coordinator,
-                entity_description=entity_description,
-            )
-            for addon in coordinator.data[DATA_KEY_ADDONS].values()
-            for entity_description in ADDON_ENTITY_DESCRIPTIONS
-        ]
-        + [
-            HassioMountBinarySensor(
-                mount=mount,
-                coordinator=coordinator,
-                entity_description=entity_description,
-            )
-            for mount in coordinator.data[DATA_KEY_MOUNTS].values()
-            for entity_description in MOUNT_ENTITY_DESCRIPTIONS
-        ]
+        itertools.chain(
+            [
+                HassioAddonBinarySensor(
+                    addon=addon,
+                    coordinator=coordinator,
+                    entity_description=entity_description,
+                )
+                for addon in coordinator.data[DATA_KEY_ADDONS].values()
+                for entity_description in ADDON_ENTITY_DESCRIPTIONS
+            ],
+            [
+                HassioMountBinarySensor(
+                    mount=mount,
+                    coordinator=coordinator,
+                    entity_description=entity_description,
+                )
+                for mount in coordinator.data[DATA_KEY_MOUNTS].values()
+                for entity_description in MOUNT_ENTITY_DESCRIPTIONS
+            ],
+        )
     )
 
 

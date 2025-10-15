@@ -121,7 +121,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         """Return the icon of the add-on if any."""
         if not self.available:
             return None
-        if self._addon_data.get(ATTR_ICON):
+        if self._addon_data[ATTR_ICON]:
             return f"/api/hassio/addons/{self._addon_slug}/icon"
         return None
 
