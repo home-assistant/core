@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import timedelta
 import hmac
 import itertools
@@ -91,11 +92,12 @@ class AuthStore:
         local_only: bool | None = None,
     ) -> models.User:
         """Create a new user."""
-        groups = []
+        """groups = []
         for group_id in group_ids or []:
             if (group := self._groups.get(group_id)) is None:
                 raise ValueError(f"Invalid group specified {group_id}")
-            groups.append(group)
+            groups.append(group)"""
+        groups = self._get_groups_by_ids(group_ids or [])  # TODO
 
         kwargs: dict[str, Any] = {
             "name": name,
@@ -159,13 +161,16 @@ class AuthStore:
     ) -> None:
         """Update a user."""
         if group_ids is not None:
-            groups = []
+            """groups = []
             for grid in group_ids:
                 if (group := self._groups.get(grid)) is None:
                     raise ValueError("Invalid group specified.")
                 groups.append(group)
 
-            user.groups = groups
+            user.groups = groups"""
+        user.groups = self._get_groups_by_ids(
+            group_ids
+        )  # TODO lagt till detta, tagit bort ovan
 
         for attr_name, value in (
             ("name", name),
@@ -257,14 +262,16 @@ class AuthStore:
         self, token: str
     ) -> models.RefreshToken | None:
         """Get refresh token by token."""
-        found = None
+        # TODO (gammal) found = None
 
         for user in self._users.values():
             for refresh_token in user.refresh_tokens.values():
                 if hmac.compare_digest(refresh_token.token, token):
-                    found = refresh_token
+                    # TODO gammal found = refresh_token
+                    return refresh_token  # TODO NY
 
-        return found
+        # return found
+        return None  # TODO NY
 
     @callback
     def async_get_refresh_tokens(self) -> list[models.RefreshToken]:
@@ -340,7 +347,8 @@ class AuthStore:
         has_admin_group = False
         has_user_group = False
         has_read_only_group = False
-        group_without_policy = None
+        # TODO gammal group_without_policy = None
+        group_id_without_policy = None  # TODO Ny
 
         # When creating objects we mention each attribute explicitly. This
         # prevents crashing if user rolls back HA version after a new property
@@ -378,7 +386,8 @@ class AuthStore:
             # We don't want groups without a policy that are not system groups
             # This is part of migrating from state 1
             if policy is None:
-                group_without_policy = group_dict["id"]
+                # TODO gammal group_without_policy = group_dict["id"]
+                group_id_without_policy = group_dict["id"]  # TODO Ny
                 continue
 
             groups[group_dict["id"]] = models.Group(
@@ -390,14 +399,17 @@ class AuthStore:
 
         # If there are no groups, add all existing users to the admin group.
         # This is part of migrating from state 2
-        migrate_users_to_admin_group = not groups and group_without_policy is None
+        # TODO gammal migrate_users_to_admin_group = not groups and group_without_policy is None
+        migrate_users_to_admin_group = (
+            not groups and group_id_without_policy is None
+        )  # TODO Ny
 
         # If we find a no_policy_group, we need to migrate all users to the
         # admin group. We only do this if there are no other groups, as is
         # the expected state. If not expected state, not marking people admin.
         # This is part of migrating from state 1
-        if groups and group_without_policy is not None:
-            group_without_policy = None
+        if groups and group_id_without_policy is not None:  # TODO lagt till id i namnet
+            group_id_without_policy = None  # TODO lagt till id i namnet
 
         # This is part of migrating from state 1 and 2
         if not has_admin_group:
@@ -418,7 +430,7 @@ class AuthStore:
             user_groups = []
             for group_id in user_dict.get("group_ids", []):
                 # This is part of migrating from state 1
-                if group_id == group_without_policy:
+                if group_id == group_id_without_policy:  # TODO lagt till id
                     group_id = GROUP_ID_ADMIN
                 user_groups.append(groups[group_id])
 
@@ -518,6 +530,18 @@ class AuthStore:
     def _async_schedule_save(self, delay: float = DEFAULT_SAVE_DELAY) -> None:
         """Save users."""
         self._store.async_delay_save(self._data_to_save, delay)
+
+    def _get_groups_by_ids(
+        self, group_ids: Iterable[str]
+    ) -> list[models.Group]:  # TODO Ny!
+        """Return groups matching the provided IDs."""
+        groups: list[models.Group] = []
+        for group_id in group_ids:
+            if (group := self._groups.get(group_id)) is None:
+                raise ValueError(f"Invalid group specified {group_id}")
+            groups.append(group)
+
+        return groups
 
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
