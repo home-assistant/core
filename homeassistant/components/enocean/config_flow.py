@@ -216,9 +216,9 @@ class OptionsFlowHandler(OptionsFlow):
                 )
 
             # append to the configuration if no errors
-            assert device_id is not None
-            assert sender_id is not None
             if not errors:
+                assert device_id is not None
+                assert sender_id is not None
                 devices.append(
                     {
                         CONF_ENOCEAN_DEVICE_ID: device_id.to_string(),
@@ -233,9 +233,9 @@ class OptionsFlowHandler(OptionsFlow):
                 )
 
             default_device_type = device_type_id
-            default_device_id = device_id.to_string()
+            default_device_id = device_id.to_string() if device_id else ""
             default_device_name = device_name
-            default_sender_id = sender_id.to_string()
+            default_sender_id = sender_id.to_string() if sender_id else ""
 
         supported_devices = [
             esd.select_option_dict
