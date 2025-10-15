@@ -5,7 +5,6 @@ from typing import Any
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
-    ATTR_GPS_ACCURACY,
     ATTR_LOCATION_NAME,
     TrackerEntity,
 )
@@ -13,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
+    ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
 )
