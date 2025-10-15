@@ -50,7 +50,7 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
     def device_name(self):
         """Return the name of the device."""
         return self._device_name
-    
+
     @property
     def host(self) -> str:
         """Return the host address."""
