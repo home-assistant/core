@@ -10,9 +10,7 @@ from .const import DOMAIN
 class TheSilentWaveEntity(CoordinatorEntity):
     """Base entity class for TheSilentWave integration."""
 
-    _attr_has_entity_name = (
-        True  # This makes the entity use the device name as a prefix.
-    )
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator: TheSilentWaveCoordinator, entry_id: str) -> None:
         """Initialize the entity."""
