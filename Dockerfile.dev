@@ -36,7 +36,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 USER vscode
 
-ENV UV_PYTHON=3.13.2
+COPY .python-version ./
 RUN uv python install
 
 ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
