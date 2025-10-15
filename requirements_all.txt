@@ -1364,7 +1364,7 @@ lektricowifi==0.1
 letpot==0.6.2
 
 # homeassistant.components.foscam
-libpyfoscamcgi==0.0.7
+libpyfoscamcgi==0.0.8
 
 # homeassistant.components.vivotek
 libpyvivotek==0.6.1
@@ -1647,6 +1647,9 @@ openevsewifi==1.1.2
 
 # homeassistant.components.openhome
 openhomedevice==2.2.0
+
+# homeassistant.components.openrgb
+openrgb-python==0.3.5
 
 # homeassistant.components.opensensemap
 opensensemap-api==0.2.0
@@ -3057,7 +3060,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.21.1
+uiprotect==7.22.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

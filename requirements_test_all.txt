@@ -1186,7 +1186,7 @@ lektricowifi==0.1
 letpot==0.6.2
 
 # homeassistant.components.foscam
-libpyfoscamcgi==0.0.7
+libpyfoscamcgi==0.0.8
 
 # homeassistant.components.libre_hardware_monitor
 librehardwaremonitor-api==1.4.0
@@ -1415,6 +1415,9 @@ openerz-api==0.3.0
 
 # homeassistant.components.openhome
 openhomedevice==2.2.0
+
+# homeassistant.components.openrgb
+openrgb-python==0.3.5
 
 # homeassistant.components.enigma2
 openwebifpy==4.3.1
@@ -2534,7 +2537,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.21.1
+uiprotect==7.22.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
