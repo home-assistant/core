@@ -263,7 +263,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "sense": {"sense-energy": {"async-timeout"}},
     "slimproto": {"aioslimproto": {"async-timeout"}},
     "songpal": {"async-upnp-client": {"async-timeout"}},
-    "squeezebox": {"pysqueezebox": {"async-timeout"}},
     "ssdp": {"async-upnp-client": {"async-timeout"}},
     "surepetcare": {"surepy": {"async-timeout"}},
     "travisci": {
@@ -336,8 +335,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "obihai": {"homeassistant": {"pyobihai"}},
     # https://github.com/iamkubi/pydactyl
     "pterodactyl": {"homeassistant": {"py-dactyl"}},
-    # https://github.com/markusressel/raspyrfm-client
-    "raspyrfm": {"homeassistant": {"raspyrfm-client"}},
     # https://github.com/sstallion/sensorpush-api
     "sensorpush_cloud": {
         "homeassistant": {"sensorpush-api"},

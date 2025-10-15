@@ -7,7 +7,7 @@
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "url": "The full URL, including port, of the SABnzbd server. Example: `http://localhost:8080` or `http://a02368d7-sabnzbd:8080`, if you are using the add-on.",
+          "url": "The full URL, including port, of the SABnzbd server. Example: `{sabnzbd_full_url_local}` or `{sabnzbd_full_url_addon}`, if you are using the add-on.",
           "api_key": "The API key of the SABnzbd server. This can be found in the SABnzbd web interface under Config cog (top right) > General > Security."
         }
       }

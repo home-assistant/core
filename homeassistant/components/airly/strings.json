@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "To generate API key go to https://developer.airly.eu/register",
+        "description": "To generate API key go to {developer_registration_url}",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
