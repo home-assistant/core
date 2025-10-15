@@ -87,18 +87,19 @@ async def test_serial_flow_success(hass: HomeAssistant) -> None:
 
 async def test_serial_no_comports(hass: HomeAssistant) -> None:
     """Test abort when no serial ports are found."""
+    choose_transport_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-    with patch("serial.tools.list_ports.comports", return_value=[]):
-        choose_transport_result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
+    assert choose_transport_result["errors"] == {}
     assert choose_transport_result["type"] is FlowResultType.FORM
     assert choose_transport_result["step_id"] == "choose_transport"
 
-    configure_serial_result = await hass.config_entries.flow.async_configure(
-        choose_transport_result["flow_id"], {CONF_TRANSPORT: TRANSPORT_SERIAL}
-    )
+    with patch("serial.tools.list_ports.comports", return_value=[]):
+        configure_serial_result = await hass.config_entries.flow.async_configure(
+            choose_transport_result["flow_id"], {CONF_TRANSPORT: TRANSPORT_SERIAL}
+        )
+
     assert configure_serial_result["type"] is FlowResultType.ABORT
     assert configure_serial_result["reason"] == "no_serial_ports"
 
