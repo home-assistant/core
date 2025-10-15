@@ -21,12 +21,16 @@
         'sensors': dict({
           'dnd': dict({
             'error': False,
+            'error_msg': None,
+            'error_type': None,
             'name': 'dnd',
             'scale': None,
             'value': False,
           }),
           'temperature': dict({
             'error': False,
+            'error_msg': None,
+            'error_type': None,
             'name': 'temperature',
             'scale': 'CELSIUS',
             'value': '22.5',
@@ -63,12 +67,16 @@
         'sensors': dict({
           'dnd': dict({
             'error': False,
+            'error_msg': None,
+            'error_type': None,
             'name': 'dnd',
             'scale': None,
             'value': False,
           }),
           'temperature': dict({
             'error': False,
+            'error_msg': None,
+            'error_type': None,
             'name': 'temperature',
             'scale': 'CELSIUS',
             'value': '22.5',

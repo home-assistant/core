@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up London Underground",
+        "description": "Select which tube lines you want to monitor",
+        "data": {
+          "line": "Tube lines"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure London Underground",
+        "description": "[%key:component::london_underground::config::step::user::description%]",
+        "data": {
+          "line": "[%key:component::london_underground::config::step::user::data::line%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue": {
+      "title": "London Underground YAML configuration deprecated",
+      "description": "Configuring London Underground using YAML sensor platform is deprecated.\n\nWhile importing your configuration, an error occurred when trying to connect to the Transport for London API. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI."
+    }
+  }
+}

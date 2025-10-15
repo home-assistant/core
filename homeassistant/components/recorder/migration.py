@@ -103,7 +103,11 @@ from .queries import (
     migrate_single_short_term_statistics_row_to_timestamp,
     migrate_single_statistics_row_to_timestamp,
 )
-from .statistics import cleanup_statistics_timestamp_migration, get_start_time
+from .statistics import (
+    _PRIMARY_UNIT_CONVERTERS,
+    cleanup_statistics_timestamp_migration,
+    get_start_time,
+)
 from .tasks import RecorderTask
 from .util import (
     database_job_retry_wrapper,
@@ -2037,6 +2041,21 @@ class _SchemaVersion50Migrator(_SchemaVersionMigrator, target_version=50):
             connection.execute(text("UPDATE statistics_meta SET has_mean=NULL"))
 
 
+class _SchemaVersion51Migrator(_SchemaVersionMigrator, target_version=51):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # Add unit class column to StatisticsMeta
+        _add_columns(self.session_maker, "statistics_meta", ["unit_class VARCHAR(255)"])
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            for conv in _PRIMARY_UNIT_CONVERTERS:
+                connection.execute(
+                    update(StatisticsMeta)
+                    .where(StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS))
+                    .values(unit_class=conv.UNIT_CLASS)
+                )
+
+
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(
     hass: HomeAssistant,
     instance: Recorder,
@@ -2490,7 +2509,7 @@ class BaseMigration(ABC):
         start_schema_version: int,
         migration_changes: dict[str, int],
     ) -> None:
-        """Initialize a new BaseRunTimeMigration.
+        """Initialize a new BaseMigration.
 
         :param initial_schema_version: The schema version the database was created with.
         :param start_schema_version: The schema version when starting the migration.
@@ -2964,7 +2983,12 @@ class EventIDPostMigration(BaseRunTimeMigration):
                     _drop_foreign_key_constraints(
                         session_maker, instance.engine, TABLE_STATES, "event_id"
                     )
-                except (InternalError, OperationalError):
+                except (InternalError, OperationalError) as err:
+                    _LOGGER.debug(
+                        "Could not drop foreign key constraint on states.event_id, "
+                        "will try again later",
+                        exc_info=err,
+                    )
                     fk_remove_ok = False
                 else:
                     fk_remove_ok = True
