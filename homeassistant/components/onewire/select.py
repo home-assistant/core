@@ -40,6 +40,7 @@ ENTITY_DESCRIPTIONS: dict[str, tuple[OneWireEntityDescription, ...]] = {
             read_mode=READ_MODE_INT,
             options=["9", "10", "11", "12"],
             translation_key="tempres",
+            entity_registry_enabled_default=False,
         ),
     ),
 }
