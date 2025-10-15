@@ -70,3 +70,42 @@ class S3ConfigModel(MutableMapping[str, str]):
     def __len__(self):
         """Return the number of configuration items."""
         return len(self._data)
+
+    def record_error(self, error_context: str, error_identifier: str) -> None:
+        """Record an error for a specific context with the given identifier.
+
+        Args:
+            error_context: The configuration key or context where the error occurred.
+            error_identifier: The error code or identifier describing the error.
+        """
+        self._errors[error_context] = error_identifier
+
+    def has_errors(self, keys: set[str]) -> bool:
+        """Return True if any of the specified keys have recorded errors.
+
+        Args:
+            keys: A set of configuration keys to check for errors.
+
+        Returns:
+            True if any of the specified keys have errors, False otherwise.
+        """
+        return len(keys.intersection(self._errors.keys())) > 0
+
+    def get_errors(self) -> dict[str, str]:
+        """Return and clear all recorded errors.
+
+        Returns:
+            A dictionary mapping error contexts to error identifiers.
+        """
+        error_list = dict(self._errors.items())
+        self._errors.clear()
+        return error_list
+
+    def filter_errors(self, keys: set[str]) -> None:
+        """Filter the recorded errors to only include those for the specified keys.
+
+        Args:
+            keys: A set of configuration keys to retain errors for.
+        """
+        error_list = {k: v for k, v in self._errors.items() if k in keys}
+        self._errors = error_list
