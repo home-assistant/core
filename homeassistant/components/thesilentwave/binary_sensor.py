@@ -29,7 +29,6 @@ class TheSilentWaveBinarySensor(TheSilentWaveEntity, BinarySensorEntity):
     def __init__(self, coordinator: TheSilentWaveCoordinator, entry_id: str) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator, entry_id)
-        self._unsubscribe_callback = None
         # Set a more specific unique_id for this sensor entity
         self._attr_unique_id = f"{DOMAIN}_{entry_id}_status"
 
@@ -48,16 +47,11 @@ class TheSilentWaveBinarySensor(TheSilentWaveEntity, BinarySensorEntity):
         if self.coordinator.has_connection and hasattr(
             self.coordinator.client, "subscribe_to_events"
         ):
-            self._unsubscribe_callback = (
-                await self.coordinator.client.subscribe_to_events(
-                    self.async_write_ha_state
-                )
+            unsubscribe_callback = await self.coordinator.client.subscribe_to_events(
+                self.async_write_ha_state
             )
+            self.async_on_remove(unsubscribe_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from events when entity is removed."""
-        # Clean up subscriptions.
-        if self._unsubscribe_callback is not None:
-            self._unsubscribe_callback()
-            self._unsubscribe_callback = None
         await super().async_will_remove_from_hass()
