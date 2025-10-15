@@ -393,7 +393,7 @@ async def test_smart_radiator_thermostat_set_preset_mode(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, "preset_mode": "OFF"},
+            {ATTR_ENTITY_ID: entity_id, "preset_mode": "off"},
         )
     mock_send_command.assert_called_once_with(
         "ac-device-id-1",
@@ -406,7 +406,7 @@ async def test_smart_radiator_thermostat_set_preset_mode(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, "preset_mode": "MANUAL"},
+            {ATTR_ENTITY_ID: entity_id, "preset_mode": "manual"},
         )
     mock_send_command.assert_called_once_with(
         "ac-device-id-1",
