@@ -10,7 +10,6 @@ from libpyfoscamcgi.foscamcgi import (
 )
 import voluptuous as vol
 
-from homeassistant.components.webhook import async_generate_id
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -22,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONF_RTSP_PORT, CONF_STREAM, CONF_WEBHOOK_ID, DOMAIN, LOGGER
+from .const import CONF_RTSP_PORT, CONF_STREAM, DOMAIN, LOGGER
 
 STREAMS = ["Main", "Sub"]
 
@@ -38,7 +37,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_STREAM, default=STREAMS[0]): vol.In(STREAMS),
         vol.Required(CONF_RTSP_PORT, default=DEFAULT_RTSP_PORT): int,
-        vol.Required(CONF_WEBHOOK_ID, default=CONF_WEBHOOK_ID): str,
     }
 )
 
@@ -91,8 +89,6 @@ class FoscamConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         name = data.pop(CONF_NAME, dev_name)
-        webhook_id = async_generate_id()
-        data[CONF_WEBHOOK_ID] = webhook_id
 
         return self.async_create_entry(title=name, data=data)
 

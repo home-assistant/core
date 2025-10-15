@@ -9,14 +9,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_WEBHOOK_ID, DOMAIN, EVENT, MAP_EVENTS
+from .const import DOMAIN, EVENT, MAP_EVENTS
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
 from .entity import FoscamEntity
 
 
 @dataclass(kw_only=True, frozen=True)
 class FoscamEventEntityDescription(EventEntityDescription):
-    """Sleep as Android sensor description."""
+    """foscam event description."""
 
 
 EVENT_DESCRIPTIONS: list[FoscamEventEntityDescription] = [
@@ -24,17 +24,17 @@ EVENT_DESCRIPTIONS: list[FoscamEventEntityDescription] = [
         key="motion_detect_event",
         translation_key="motion_detect_event",
         event_types=[
-            "Motion detection alarm",
-            "Human detection alarm",
-            "Facial detection alarm",
-            "Vehicle detection alarm",
-            "Pet detection alarm",
+            "motion",
+            "human",
+            "facial",
+            "vehicle",
+            "pet",
         ],
     ),
     FoscamEventEntityDescription(
         key="sound_detect_event",
         translation_key="sound_detect_event",
-        event_types=["Sound detection alarm"],
+        event_types=["sound"],
     ),
 ]
 
@@ -70,11 +70,21 @@ class FoscamEventEntity(FoscamEntity, EventEntity):
 
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
-        self.webhook_id = coordinator.config_entry.data[CONF_WEBHOOK_ID]
         self._disconnect_dispatcher = async_dispatcher_connect(
             coordinator.hass,
             DOMAIN,
             self._async_handle_event,
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Establish monitoring."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                DOMAIN,
+                self._async_handle_event,
+            )
         )
 
     @callback
@@ -82,8 +92,7 @@ class FoscamEventEntity(FoscamEntity, EventEntity):
         """Handle the foscam event."""
         event = MAP_EVENTS.get(data[EVENT], data[EVENT])
         if (
-            webhook_id == self.webhook_id
-            and self.entity_description.event_types is not None
+            self.entity_description.event_types is not None
             and event in self.entity_description.event_types
         ):
             self._trigger_event(event)

@@ -24,7 +24,7 @@ SUPPORTED_SWITCHES = [
     "hdr_switch",
     "wdr_switch",
 ]
-CONF_WEBHOOK_ID = "webhook_id"
+CONF_WEBHOOK_ID = "webhookid"
 
 EVENT = "alarm_type"
 VALUE1 = "devname"
@@ -32,11 +32,10 @@ VALUE2 = "alarm_type"
 VALUE3 = "timestamp"
 
 MAP_EVENTS = {
-    "0": "Motion detection alarm",
-    "1": "Sound detection alarm",
-    "5": "Human detection alarm",
-    "9": "Call the doorbell",
-    "12": "Facial detection alarm",
-    "13": "Vehicle detection alarm",
-    "14": "Pet detection alarm",
+    "0": "motion",
+    "1": "sound",
+    "5": "human",
+    "12": "facial",
+    "13": "vehicle",
+    "14": "pet",
 }

@@ -1,6 +1,5 @@
 """The foscam component."""
 
-import base64
 from http import HTTPStatus
 
 from aiohttp.web import Request, Response
@@ -8,7 +7,7 @@ from libpyfoscamcgi import FoscamCamera
 import voluptuous as vol
 
 from homeassistant.components import webhook
-from homeassistant.components.webhook import async_generate_url
+from homeassistant.components.webhook import async_generate_id, async_generate_url
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -21,19 +20,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
 from .config_flow import DEFAULT_RTSP_PORT
-from .const import (
-    CONF_RTSP_PORT,
-    CONF_WEBHOOK_ID,
-    DOMAIN,
-    LOGGER,
-    VALUE1,
-    VALUE2,
-    VALUE3,
-)
+from .const import CONF_RTSP_PORT, DOMAIN, LOGGER, VALUE1, VALUE2, VALUE3
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
 
 PLATFORMS = [Platform.CAMERA, Platform.EVENT, Platform.NUMBER, Platform.SWITCH]
-
 WEBHOOK_SCHEMA = vol.Schema(
     {
         vol.Required(VALUE1): str,
@@ -70,13 +60,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bo
     )
 
     coordinator = FoscamCoordinator(hass, entry, session)
-    webhook.async_register(
-        hass, DOMAIN, entry.title, entry.data[CONF_WEBHOOK_ID], handle_webhook
-    )
-    webhook_url = async_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
-    encoded_url = base64.urlsafe_b64encode(webhook_url.encode("utf-8")).decode("utf-8")
+    WEBHOOK_ID = async_generate_id()
+    webhook.async_register(hass, DOMAIN, entry.title, WEBHOOK_ID, handle_webhook)
+    webhook_url = async_generate_url(hass, WEBHOOK_ID)
     await hass.async_add_executor_job(
-        coordinator.session.setAlarmHttpServer, encoded_url
+        coordinator.session.setAlarmHttpServer, webhook_url
     )
     await coordinator.async_config_entry_first_refresh()
 

@@ -73,10 +73,28 @@
     },
     "event": {
       "motion_detect_event": {
-        "name": "Motion detect event"
+        "name": "Motion detect event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Motion detection alarm",
+              "human": "Human detection alarm",
+              "facial": "Facial detection alarm",
+              "vehicle": "Vehicle detection alarm",
+              "pet": "Pet detection alarm"
+            }
+          }
+        }
       },
       "sound_detect_event": {
-        "name": "Sound detect event"
+        "name": "Sound detect event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "sound": "Sound detection alarm"
+            }
+          }
+        }
       }
     }
   },

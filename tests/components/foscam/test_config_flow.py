@@ -38,7 +38,6 @@ async def test_user_valid(hass: HomeAssistant) -> None:
         )
 
         await hass.async_block_till_done()
-        result["data"][config_flow.CONF_WEBHOOK_ID] = "webhook_id"
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == CAMERA_NAME
         assert result["data"] == VALID_CONFIG
