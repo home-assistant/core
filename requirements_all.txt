@@ -109,7 +109,10 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==8.0
+RestrictedPython==8.0;python_version<'3.14'
+
+# homeassistant.components.python_script
+RestrictedPython==8.1a1.dev0;python_version>='3.14'
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -268,7 +271,7 @@ aiogithubapi==24.6.0
 aioguardian==2022.07.0
 
 # homeassistant.components.harmony
-aioharmony==0.5.3
+aioharmony==0.5.3;python_version<'3.14'
 
 # homeassistant.components.hassio
 aiohasupervisor==0.3.3
@@ -883,7 +886,7 @@ elmax-api==0.0.6.4rc0
 elvia==0.1.0
 
 # homeassistant.components.xmpp
-emoji==2.8.0
+emoji==2.8.0;python_version<'3.14'
 
 # homeassistant.components.emulated_roku
 emulated-roku==0.3.0
@@ -1127,7 +1130,7 @@ gspread==5.5.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.5
+guppy3==3.1.5;python_version<'3.14'
 
 # homeassistant.components.iaqualink
 h2==4.3.0
@@ -1885,7 +1888,7 @@ pyatag==0.3.5.3
 pyatmo==9.2.3
 
 # homeassistant.components.apple_tv
-pyatv==0.16.1
+pyatv==0.16.1;python_version<'3.14'
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.1.5
@@ -2846,7 +2849,7 @@ skyboxremote==0.0.6
 slack_sdk==3.33.4
 
 # homeassistant.components.xmpp
-slixmpp==1.10.0
+slixmpp==1.10.0;python_version<'3.14'
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.5.5
