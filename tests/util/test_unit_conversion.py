@@ -44,6 +44,7 @@ from homeassistant.util.unit_conversion import (
     AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
+    CarbonMonoxideConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -61,6 +62,7 @@ from homeassistant.util.unit_conversion import (
     ReactivePowerConverter,
     SpeedConverter,
     TemperatureConverter,
+    TemperatureDeltaConverter,
     UnitlessRatioConverter,
     VolumeConverter,
     VolumeFlowRateConverter,
@@ -78,6 +80,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         AreaConverter,
         BloodGlucoseConcentrationConverter,
         MassVolumeConcentrationConverter,
+        CarbonMonoxideConcentrationConverter,
         ConductivityConverter,
         DataRateConverter,
         DistanceConverter,
@@ -94,6 +97,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         ReactivePowerConverter,
         SpeedConverter,
         TemperatureConverter,
+        TemperatureDeltaConverter,
         UnitlessRatioConverter,
         EnergyDistanceConverter,
         VolumeConverter,
@@ -113,6 +117,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
         18,
+    ),
+    CarbonMonoxideConcentrationConverter: (
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_MILLION,
+        1.16441,
     ),
     ConductivityConverter: (
         UnitOfConductivity.MICROSIEMENS_PER_CM,
@@ -167,6 +176,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         1.609343,
     ),
     TemperatureConverter: (
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
+        0.555556,
+    ),
+    TemperatureDeltaConverter: (
         UnitOfTemperature.CELSIUS,
         UnitOfTemperature.FAHRENHEIT,
         0.555556,
@@ -280,49 +294,48 @@ _CONVERTED_VALUE: dict[
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         ),
     ],
+    CarbonMonoxideConcentrationConverter: [
+        # PPM to other units
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1.16441,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1164.41,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        # MILLIGRAMS_PER_CUBIC_METER to other units
+        (
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            103.05655,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            120000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        # MICROGRAMS_PER_CUBIC_METER to other units
+        (
+            120000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            103.05655,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            120000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
+    ],
     ConductivityConverter: [
-        # Deprecated to deprecated
-        (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
-        (5, UnitOfConductivity.SIEMENS, 5e6, UnitOfConductivity.MICROSIEMENS),
-        (5, UnitOfConductivity.MILLISIEMENS, 5e3, UnitOfConductivity.MICROSIEMENS),
-        (5, UnitOfConductivity.MILLISIEMENS, 5e-3, UnitOfConductivity.SIEMENS),
-        (5e6, UnitOfConductivity.MICROSIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
-        (5e6, UnitOfConductivity.MICROSIEMENS, 5, UnitOfConductivity.SIEMENS),
-        # Deprecated to new
-        (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS_PER_CM),
-        (5, UnitOfConductivity.SIEMENS, 5e6, UnitOfConductivity.MICROSIEMENS_PER_CM),
-        (
-            5,
-            UnitOfConductivity.MILLISIEMENS,
-            5e3,
-            UnitOfConductivity.MICROSIEMENS_PER_CM,
-        ),
-        (5, UnitOfConductivity.MILLISIEMENS, 5e-3, UnitOfConductivity.SIEMENS_PER_CM),
-        (
-            5e6,
-            UnitOfConductivity.MICROSIEMENS,
-            5e3,
-            UnitOfConductivity.MILLISIEMENS_PER_CM,
-        ),
-        (5e6, UnitOfConductivity.MICROSIEMENS, 5, UnitOfConductivity.SIEMENS_PER_CM),
-        # New to deprecated
-        (5, UnitOfConductivity.SIEMENS_PER_CM, 5e3, UnitOfConductivity.MILLISIEMENS),
-        (5, UnitOfConductivity.SIEMENS_PER_CM, 5e6, UnitOfConductivity.MICROSIEMENS),
-        (
-            5,
-            UnitOfConductivity.MILLISIEMENS_PER_CM,
-            5e3,
-            UnitOfConductivity.MICROSIEMENS,
-        ),
-        (5, UnitOfConductivity.MILLISIEMENS_PER_CM, 5e-3, UnitOfConductivity.SIEMENS),
-        (
-            5e6,
-            UnitOfConductivity.MICROSIEMENS_PER_CM,
-            5e3,
-            UnitOfConductivity.MILLISIEMENS,
-        ),
-        (5e6, UnitOfConductivity.MICROSIEMENS_PER_CM, 5, UnitOfConductivity.SIEMENS),
-        # New to new
         (
             5,
             UnitOfConductivity.SIEMENS_PER_CM,
@@ -669,6 +682,7 @@ _CONVERTED_VALUE: dict[
     PressureConverter: [
         (1000, UnitOfPressure.HPA, 14.5037743897, UnitOfPressure.PSI),
         (1000, UnitOfPressure.HPA, 29.5299801647, UnitOfPressure.INHG),
+        (1000, UnitOfPressure.HPA, 100000000, UnitOfPressure.MILLIPASCAL),
         (1000, UnitOfPressure.HPA, 100000, UnitOfPressure.PA),
         (1000, UnitOfPressure.HPA, 100, UnitOfPressure.KPA),
         (1000, UnitOfPressure.HPA, 1000, UnitOfPressure.MBAR),
@@ -676,6 +690,7 @@ _CONVERTED_VALUE: dict[
         (1000, UnitOfPressure.HPA, 401.46307866177, UnitOfPressure.INH2O),
         (100, UnitOfPressure.KPA, 14.5037743897, UnitOfPressure.PSI),
         (100, UnitOfPressure.KPA, 29.5299801647, UnitOfPressure.INHG),
+        (100, UnitOfPressure.KPA, 100000000, UnitOfPressure.MILLIPASCAL),
         (100, UnitOfPressure.KPA, 100000, UnitOfPressure.PA),
         (100, UnitOfPressure.KPA, 1000, UnitOfPressure.HPA),
         (100, UnitOfPressure.KPA, 1000, UnitOfPressure.MBAR),
@@ -683,6 +698,7 @@ _CONVERTED_VALUE: dict[
         (100, UnitOfPressure.INH2O, 3.6127291827353996, UnitOfPressure.PSI),
         (100, UnitOfPressure.INH2O, 186.83201548767, UnitOfPressure.MMHG),
         (100, UnitOfPressure.INH2O, 7.3555912463681, UnitOfPressure.INHG),
+        (100, UnitOfPressure.INH2O, 24908890.833333, UnitOfPressure.MILLIPASCAL),
         (100, UnitOfPressure.INH2O, 24908.890833333, UnitOfPressure.PA),
         (100, UnitOfPressure.INH2O, 249.08890833333, UnitOfPressure.HPA),
         (100, UnitOfPressure.INH2O, 249.08890833333, UnitOfPressure.MBAR),
@@ -692,6 +708,7 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.INHG, 101.59167, UnitOfPressure.KPA),
         (30, UnitOfPressure.INHG, 1015.9167, UnitOfPressure.HPA),
         (30, UnitOfPressure.INHG, 101591.67, UnitOfPressure.PA),
+        (30, UnitOfPressure.INHG, 101591670, UnitOfPressure.MILLIPASCAL),
         (30, UnitOfPressure.INHG, 1015.9167, UnitOfPressure.MBAR),
         (30, UnitOfPressure.INHG, 101.59167, UnitOfPressure.CBAR),
         (30, UnitOfPressure.INHG, 762, UnitOfPressure.MMHG),
@@ -700,6 +717,7 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.MMHG, 3.99967, UnitOfPressure.KPA),
         (30, UnitOfPressure.MMHG, 39.9967, UnitOfPressure.HPA),
         (30, UnitOfPressure.MMHG, 3999.67, UnitOfPressure.PA),
+        (30, UnitOfPressure.MMHG, 3999670, UnitOfPressure.MILLIPASCAL),
         (30, UnitOfPressure.MMHG, 39.9967, UnitOfPressure.MBAR),
         (30, UnitOfPressure.MMHG, 3.99967, UnitOfPressure.CBAR),
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
@@ -836,6 +854,34 @@ _CONVERTED_VALUE: dict[
         (100, UnitOfTemperature.KELVIN, -173.15, UnitOfTemperature.CELSIUS),
         (100, UnitOfTemperature.KELVIN, -279.6699, UnitOfTemperature.FAHRENHEIT),
     ],
+    TemperatureDeltaConverter: [
+        (
+            100,
+            UnitOfTemperature.CELSIUS,
+            180,
+            UnitOfTemperature.FAHRENHEIT,
+        ),
+        (100, UnitOfTemperature.CELSIUS, 100, UnitOfTemperature.KELVIN),
+        (
+            100,
+            UnitOfTemperature.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperature.CELSIUS,
+        ),
+        (
+            100,
+            UnitOfTemperature.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperature.KELVIN,
+        ),
+        (100, UnitOfTemperature.KELVIN, 100, UnitOfTemperature.CELSIUS),
+        (
+            100,
+            UnitOfTemperature.KELVIN,
+            180,
+            UnitOfTemperature.FAHRENHEIT,
+        ),
+    ],
     UnitlessRatioConverter: [
         (5, None, 500, PERCENTAGE),
         (5, None, 5000000000, CONCENTRATION_PARTS_PER_BILLION),
@@ -965,6 +1011,12 @@ _CONVERTED_VALUE: dict[
             UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
             7.48051948,
             UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+            0.264172052,
+            UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
         ),
         (
             9,
@@ -1194,6 +1246,18 @@ def test_unit_conversion_factory_allow_none_with_none() -> None:
         )(None)
         is None
     )
+    assert (
+        TemperatureDeltaConverter.converter_factory_allow_none(
+            UnitOfTemperature.CELSIUS, UnitOfTemperature.CELSIUS
+        )(1)
+        == 1
+    )
+    assert (
+        TemperatureDeltaConverter.converter_factory_allow_none(
+            UnitOfTemperature.CELSIUS, UnitOfTemperature.CELSIUS
+        )(None)
+        is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -1243,3 +1307,42 @@ def test_temperature_convert_with_interval(
     """Test conversion to other units."""
     expected = pytest.approx(expected)
     assert TemperatureConverter.convert_interval(value, from_unit, to_unit) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "from_unit", "expected", "to_unit"),
+    [
+        (
+            100,
+            UnitOfTemperature.CELSIUS,
+            180,
+            UnitOfTemperature.FAHRENHEIT,
+        ),
+        (100, UnitOfTemperature.CELSIUS, 100, UnitOfTemperature.KELVIN),
+        (
+            100,
+            UnitOfTemperature.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperature.CELSIUS,
+        ),
+        (
+            100,
+            UnitOfTemperature.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperature.KELVIN,
+        ),
+        (100, UnitOfTemperature.KELVIN, 100, UnitOfTemperature.CELSIUS),
+        (
+            100,
+            UnitOfTemperature.KELVIN,
+            180,
+            UnitOfTemperature.FAHRENHEIT,
+        ),
+    ],
+)
+def test_temperature_delta_convert(
+    value: float, from_unit: str, expected: float, to_unit: str
+) -> None:
+    """Test conversion to other units."""
+    expected = pytest.approx(expected)
+    assert TemperatureDeltaConverter.convert(value, from_unit, to_unit) == expected

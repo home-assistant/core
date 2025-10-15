@@ -332,8 +332,8 @@ async def test_data_moving_average_with_zeroes(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert len(events[2:]) == len(times)
-    for time, event in zip(times, events[2:], strict=True):
+    assert len(events[1:]) == len(times)
+    for time, event in zip(times, events[1:], strict=True):
         state = event.data["new_state"]
         derivative = round(float(state.state), config["sensor"]["round"])
 
@@ -882,12 +882,12 @@ async def test_unavailable_boot(
                     "sensor.power",
                     restore_state,
                     {
-                        "unit_of_measurement": "W",
+                        "unit_of_measurement": "kWh/s",
                     },
                 ),
                 {
                     "native_value": restore_state,
-                    "native_unit_of_measurement": "W",
+                    "native_unit_of_measurement": "kWh/s",
                 },
             ),
         ],
@@ -903,7 +903,7 @@ async def test_unavailable_boot(
 
     config = {"sensor": config}
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, STATE_UNAVAILABLE, {})
+    hass.states.async_set(entity_id, STATE_UNAVAILABLE, {"unit_of_measurement": "kWh"})
     await hass.async_block_till_done()
 
     assert await async_setup_component(hass, "sensor", config)
@@ -917,7 +917,7 @@ async def test_unavailable_boot(
     base = dt_util.utcnow()
     with freeze_time(base) as freezer:
         freezer.move_to(base + timedelta(seconds=1))
-        hass.states.async_set(entity_id, 10, {})
+        hass.states.async_set(entity_id, 10, {"unit_of_measurement": "kWh"})
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.power")
@@ -927,10 +927,74 @@ async def test_unavailable_boot(
         assert state.state == restore_state
 
         freezer.move_to(base + timedelta(seconds=2))
-        hass.states.async_set(entity_id, 15, {})
+        hass.states.async_set(entity_id, 15, {"unit_of_measurement": "kWh"})
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.power")
         assert state is not None
         # Now that the source sensor has two valid datapoints, we can calculate derivative
         assert state.state == "5.00"
+        assert state.attributes.get("unit_of_measurement") == "kWh/s"
+
+
+async def test_source_unit_change(
+    hass: HomeAssistant,
+) -> None:
+    """Test how derivative responds when the source sensor changes unit."""
+    source_id = "sensor.source"
+    config = {
+        "sensor": {
+            "platform": "derivative",
+            "name": "derivative",
+            "source": source_id,
+            "unit_time": "s",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    entity_id = "sensor.derivative"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes.get("unit_of_measurement") is None
+
+    time = dt_util.utcnow()
+    with freeze_time(time) as freezer:
+        # First state update of the source.
+        # Derivative does not learn the UoM yet.
+        hass.states.async_set(source_id, "5", {"unit_of_measurement": "cats"})
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        assert state.state == "0.000"
+        assert state.attributes.get("unit_of_measurement") == "cats/s"
+
+        # Second state update of the source.
+        time += timedelta(seconds=1)
+        freezer.move_to(time)
+        hass.states.async_set(source_id, "7", {"unit_of_measurement": "cats"})
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        assert state.state == "2.000"
+        assert state.attributes.get("unit_of_measurement") == "cats/s"
+
+        # Third state update of the source, source unit changes to dogs.
+        # Derivative switches to dogs/s, and resets state to zero, as we
+        # don't want to generate bogus data from the change.
+        time += timedelta(seconds=1)
+        freezer.move_to(time)
+        hass.states.async_set(source_id, "12", {"unit_of_measurement": "dogs"})
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        assert state.state == "0.000"
+        assert state.attributes.get("unit_of_measurement") == "dogs/s"
+
+        # Fourth state update of the source, still dogs.
+        # Now correctly updating derivative as dogs/s.
+        time += timedelta(seconds=1)
+        freezer.move_to(time)
+        hass.states.async_set(source_id, "20", {"unit_of_measurement": "dogs"})
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        assert state.state == "8.000"
+        assert state.attributes.get("unit_of_measurement") == "dogs/s"

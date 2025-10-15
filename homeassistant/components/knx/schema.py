@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import OrderedDict
+import math
 from typing import ClassVar, Final
 
 import voluptuous as vol
@@ -86,7 +87,7 @@ def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
         raise vol.Invalid(f"'type: {value_type}' is not a valid numeric sensor type.")
     # Infinity is not supported by Home Assistant frontend so user defined
     # config is required if if xknx DPTNumeric subclass defines it as limit.
-    if min_config is None and dpt_class.value_min == float("-inf"):
+    if min_config is None and dpt_class.value_min == -math.inf:
         raise vol.Invalid(f"'min' key required for value type '{value_type}'")
     if min_config is not None and min_config < dpt_class.value_min:
         raise vol.Invalid(
@@ -94,7 +95,7 @@ def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
             f" of value type '{value_type}': {dpt_class.value_min}"
         )
 
-    if max_config is None and dpt_class.value_max == float("inf"):
+    if max_config is None and dpt_class.value_max == math.inf:
         raise vol.Invalid(f"'max' key required for value type '{value_type}'")
     if max_config is not None and max_config > dpt_class.value_max:
         raise vol.Invalid(
