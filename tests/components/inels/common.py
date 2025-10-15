@@ -2,16 +2,15 @@
 
 from homeassistant.components import inels
 from homeassistant.components.inels.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import Entity
 
 from tests.common import MockConfigEntry
 
 __all__ = [
     "MockConfigEntry",
-    "get_entity",
     "get_entity_id",
+    "get_entity_state",
     "inels",
     "old_entity_and_device_removal",
     "set_mock_mqtt",
@@ -30,8 +29,10 @@ def get_entity_id(entity_config: dict, index: int) -> str:
     return f"{base_id}{f'_{index:03}'}" if index is not None else base_id
 
 
-def get_entity(hass: HomeAssistant, entity_config: dict, index: int) -> Entity:
-    """Return instance of the entity."""
+def get_entity_state(
+    hass: HomeAssistant, entity_config: dict, index: int
+) -> State | None:
+    """Return the state of the entity from the state machine."""
     entity_id = get_entity_id(entity_config, index)
     return hass.states.get(entity_id)
 

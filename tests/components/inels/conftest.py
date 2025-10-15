@@ -8,7 +8,7 @@ import pytest
 from homeassistant.core import HomeAssistant
 
 from . import HA_INELS_PATH
-from .common import DOMAIN, MockConfigEntry, get_entity, set_mock_mqtt
+from .common import DOMAIN, MockConfigEntry, get_entity_state, set_mock_mqtt
 
 
 @pytest.fixture(name="mock_mqtt")
@@ -87,7 +87,7 @@ def setup_entity(hass: HomeAssistant, mock_mqtt):
             last_value=last_value,
         )
         await setup_inels_test_integration(hass)
-        return get_entity(hass, entity_config, index)
+        return get_entity_state(hass, entity_config, index)
 
     return _setup
 
