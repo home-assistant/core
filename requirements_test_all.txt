@@ -164,7 +164,7 @@ aio-geojson-usgs-earthquakes==0.3
 aio-georss-gdacs==0.10
 
 # homeassistant.components.onewire
-aio-ownet==0.0.3
+aio-ownet==0.0.4
 
 # homeassistant.components.acaia
 aioacaia==0.1.17
