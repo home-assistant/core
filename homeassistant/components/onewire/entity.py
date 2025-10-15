@@ -33,7 +33,7 @@ class OneWireEntity(Entity):
         self._attr_unique_id = f"/{device_id}/{description.key}"
         self._attr_device_info = device_info
         self._device_file = device_file
-        self._raw_value: str | None = None
+        self._state: str | None = None
         self._owproxy = owproxy
 
     @property
@@ -50,14 +50,14 @@ class OneWireEntity(Entity):
     async def async_update(self) -> None:
         """Get the latest data from the device."""
         try:
-            value = await self._owproxy.read(self._device_file)
+            state = await self._owproxy.read(self._device_file)
         except OWServerError as exc:
             if self._last_update_success:
                 _LOGGER.error("Error fetching %s data: %s", self.name, exc)
                 self._last_update_success = False
-            self._raw_value = None
+            self._state = None
         else:
             if not self._last_update_success:
                 self._last_update_success = True
                 _LOGGER.debug("Fetching %s data recovered", self.name)
-            self._raw_value = value.decode("ascii").strip()
+            self._state = state.decode("ascii").strip()

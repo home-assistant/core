@@ -454,6 +454,6 @@ class OneWireSensorEntity(OneWireEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the entity."""
-        if (raw_value := self._raw_value) is None:
+        if (raw_value := self._state) is None:
             return None
         return float(raw_value) if "." in raw_value else int(raw_value)

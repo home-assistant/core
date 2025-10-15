@@ -206,7 +206,7 @@ class OneWireSwitchEntity(OneWireEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        if (raw_value := self._raw_value) is None:
+        if (raw_value := self._state) is None:
             return None
         return raw_value == "1"
 
