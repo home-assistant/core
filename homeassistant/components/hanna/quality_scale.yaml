@@ -1,22 +1,18 @@
 rules:
   # Bronze
   action-setup:
-    status: done
+    status: exempt
+    comment: |
+      This integration doesn't add actions.
   appropriate-polling:
     status: done
-  brands:
-    status: done
-    comment: |
-      PR: https://github.com/home-assistant/brands/pull/7244
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions: done
-  docs-high-level-description:
-    status: done
-    comment: |
-      PR: https://github.com/home-assistant/home-assistant.io/pull/39614
+  docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup:
