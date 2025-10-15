@@ -39,7 +39,7 @@
     "remove_checklist_item_description": "Remove items from a task's checklist.",
     "score_checklist_item_name": "Complete items",
     "score_checklist_item_description": "Mark items from a task's checklist as completed.",
-    "unscore_checklist_item_name": "Uncomplete items",
+    "unscore_checklist_item_name": "Incomplete items",
     "unscore_checklist_item_description": "Undo completion of items of a task's checklist.",
     "checklist_options_name": "Checklist",
     "checklist_options_description": "Add, remove, or update status of an item on a task's checklist.",
