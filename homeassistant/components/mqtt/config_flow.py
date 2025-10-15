@@ -46,6 +46,14 @@ from homeassistant.components.light import (
     VALID_COLOR_MODES,
     valid_supported_color_modes,
 )
+from homeassistant.components.number import (
+    DEFAULT_MAX_VALUE,
+    DEFAULT_MIN_VALUE,
+    DEFAULT_STEP,
+    DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
+    NumberDeviceClass,
+    NumberMode,
+)
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_UNITS,
@@ -80,6 +88,7 @@ from homeassistant.const import (
     CONF_EFFECT,
     CONF_ENTITY_CATEGORY,
     CONF_HOST,
+    CONF_MODE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PASSWORD,
@@ -100,6 +109,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     EntityCategory,
+    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, async_get_hass, callback
@@ -141,6 +151,7 @@ from .const import (
     CONF_ACTION_TOPIC,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_AVAILABILITY_TOPIC,
+    CONF_AVAILABLE_TONES,
     CONF_BIRTH_MESSAGE,
     CONF_BLUE_TEMPLATE,
     CONF_BRIGHTNESS_COMMAND_TEMPLATE,
@@ -212,7 +223,9 @@ from .const import (
     CONF_IMAGE_TOPIC,
     CONF_KEEPALIVE,
     CONF_LAST_RESET_VALUE_TEMPLATE,
+    CONF_MAX,
     CONF_MAX_KELVIN,
+    CONF_MIN,
     CONF_MIN_KELVIN,
     CONF_MODE_COMMAND_TEMPLATE,
     CONF_MODE_COMMAND_TOPIC,
@@ -294,7 +307,10 @@ from .const import (
     CONF_STATE_UNLOCKED,
     CONF_STATE_UNLOCKING,
     CONF_STATE_VALUE_TEMPLATE,
+    CONF_STEP,
     CONF_SUGGESTED_DISPLAY_PRECISION,
+    CONF_SUPPORT_DURATION,
+    CONF_SUPPORT_VOLUME_SET,
     CONF_SUPPORTED_COLOR_MODES,
     CONF_SUPPORTED_FEATURES,
     CONF_SWING_HORIZONTAL_MODE_COMMAND_TEMPLATE,
@@ -402,7 +418,6 @@ from .const import (
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
     VALUES_ON_COMMAND_TYPE,
-    Platform,
 )
 from .models import MqttAvailabilityData, MqttDeviceData, MqttSubentryData
 from .util import (
@@ -445,7 +460,10 @@ SUBENTRY_PLATFORMS = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NOTIFY,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
 ]
 
@@ -455,6 +473,26 @@ _CODE_VALIDATION_MODE = {
 }
 EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY}
 PWD_NOT_CHANGED = "__**password_not_changed**__"
+
+DEVELOPER_DOCUMENTATION_URL = "https://developers.home-assistant.io/"
+USER_DOCUMENTATION_URL = "https://www.home-assistant.io/"
+
+INTEGRATION_URL = f"{USER_DOCUMENTATION_URL}integrations/{DOMAIN}/"
+TEMPLATING_URL = f"{USER_DOCUMENTATION_URL}docs/configuration/templating/"
+AVAILABLE_STATE_CLASSES_URL = (
+    f"{DEVELOPER_DOCUMENTATION_URL}docs/core/entity/sensor/#available-state-classes"
+)
+NAMING_ENTITIES_URL = f"{INTEGRATION_URL}#naming-of-mqtt-entities"
+REGISTRY_PROPERTIES_URL = (
+    f"{DEVELOPER_DOCUMENTATION_URL}docs/core/entity/#registry-properties"
+)
+
+TRANSLATION_DESCRIPTION_PLACEHOLDERS = {
+    "templating_url": TEMPLATING_URL,
+    "available_state_classes_url": AVAILABLE_STATE_CLASSES_URL,
+    "naming_entities_url": NAMING_ENTITIES_URL,
+    "registry_properties_url": REGISTRY_PROPERTIES_URL,
+}
 
 # Common selectors
 BOOLEAN_SELECTOR = BooleanSelector()
@@ -680,6 +718,24 @@ LIGHT_SCHEMA_SELECTOR = SelectSelector(
         translation_key="light_schema",
     )
 )
+MIN_MAX_SELECTOR = NumberSelector(NumberSelectorConfig(step=1e-3))
+NUMBER_DEVICE_CLASS_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[device_class.value for device_class in NumberDeviceClass],
+        mode=SelectSelectorMode.DROPDOWN,
+        # The number device classes are all shared with the sensor device classes
+        translation_key="device_class_sensor",
+        sort=True,
+    )
+)
+NUMBER_MODE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[mode.value for mode in NumberMode],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key="number_mode",
+        sort=True,
+    )
+)
 ON_COMMAND_TYPE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=VALUES_ON_COMMAND_TYPE,
@@ -727,6 +783,7 @@ SENSOR_STATE_CLASS_SELECTOR = SelectSelector(
         translation_key=CONF_STATE_CLASS,
     )
 )
+STEP_SELECTOR = NumberSelector(NumberSelectorConfig(min=1e-3, step=1e-3))
 SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[platform.value for platform in VALID_COLOR_MODES],
@@ -764,10 +821,7 @@ TEMPERATURE_UNIT_SELECTOR = SelectSelector(
 @callback
 def configured_target_temperature_feature(config: dict[str, Any]) -> str:
     """Calculate current target temperature feature from config."""
-    if (
-        config == {CONF_PLATFORM: Platform.CLIMATE.value}
-        or CONF_TEMP_COMMAND_TOPIC in config
-    ):
+    if config == {CONF_PLATFORM: Platform.CLIMATE} or CONF_TEMP_COMMAND_TOPIC in config:
         # default to single on initial set
         return "single"
     if CONF_TEMP_HIGH_COMMAND_TOPIC in config:
@@ -877,6 +931,23 @@ def unit_of_measurement_selector(user_data: dict[str, Any | None]) -> Selector:
     return SelectSelector(
         SelectSelectorConfig(
             options=[str(uom) for uom in DEVICE_CLASS_UNITS[device_class]],
+            sort=True,
+            custom_value=True,
+        )
+    )
+
+
+@callback
+def number_unit_of_measurement_selector(user_data: dict[str, Any | None]) -> Selector:
+    """Return a context based unit of measurement selector for number entities."""
+
+    if (
+        device_class := user_data.get(CONF_DEVICE_CLASS)
+    ) is None or device_class not in NUMBER_DEVICE_CLASS_UNITS:
+        return TEXT_SELECTOR
+    return SelectSelector(
+        SelectSelectorConfig(
+            options=[str(uom) for uom in NUMBER_DEVICE_CLASS_UNITS[device_class]],
             sort=True,
             custom_value=True,
         )
@@ -1007,6 +1078,29 @@ def validate_light_platform_config(user_data: dict[str, Any]) -> dict[str, str]:
 
 
 @callback
+def validate_number_platform_config(config: dict[str, Any]) -> dict[str, str]:
+    """Validate MQTT number configuration."""
+    errors: dict[str, Any] = {}
+    if (
+        CONF_MIN in config
+        and CONF_MAX in config
+        and config[CONF_MIN] > config[CONF_MAX]
+    ):
+        errors[CONF_MIN] = "max_below_min"
+        errors[CONF_MAX] = "max_below_min"
+
+    if (
+        (device_class := config.get(CONF_DEVICE_CLASS)) is not None
+        and device_class in NUMBER_DEVICE_CLASS_UNITS
+        and config.get(CONF_UNIT_OF_MEASUREMENT)
+        not in NUMBER_DEVICE_CLASS_UNITS[device_class]
+    ):
+        errors[CONF_UNIT_OF_MEASUREMENT] = "invalid_uom"
+
+    return errors
+
+
+@callback
 def validate_sensor_platform_config(
     config: dict[str, Any],
 ) -> dict[str, str]:
@@ -1059,17 +1153,20 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Callable[[dict[str, Any]], dict[str, str]] | None,
 ] = {
     Platform.ALARM_CONTROL_PANEL: None,
-    Platform.BINARY_SENSOR.value: None,
-    Platform.BUTTON.value: None,
-    Platform.CLIMATE.value: validate_climate_platform_config,
-    Platform.COVER.value: validate_cover_platform_config,
-    Platform.FAN.value: validate_fan_platform_config,
-    Platform.IMAGE.value: None,
-    Platform.LIGHT.value: validate_light_platform_config,
-    Platform.LOCK.value: None,
-    Platform.NOTIFY.value: None,
-    Platform.SENSOR.value: validate_sensor_platform_config,
-    Platform.SWITCH.value: None,
+    Platform.BINARY_SENSOR: None,
+    Platform.BUTTON: None,
+    Platform.CLIMATE: validate_climate_platform_config,
+    Platform.COVER: validate_cover_platform_config,
+    Platform.FAN: validate_fan_platform_config,
+    Platform.IMAGE: None,
+    Platform.LIGHT: validate_light_platform_config,
+    Platform.LOCK: None,
+    Platform.NOTIFY: None,
+    Platform.NUMBER: validate_number_platform_config,
+    Platform.SELECT: None,
+    Platform.SENSOR: validate_sensor_platform_config,
+    Platform.SIREN: None,
+    Platform.SWITCH: None,
 }
 
 
@@ -1116,8 +1213,8 @@ SHARED_PLATFORM_ENTITY_FIELDS: dict[str, PlatformField] = {
         default=None,
     ),
 }
-PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
-    Platform.ALARM_CONTROL_PANEL.value: {
+PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
+    Platform.ALARM_CONTROL_PANEL: {
         CONF_SUPPORTED_FEATURES: PlatformField(
             selector=ALARM_CONTROL_PANEL_FEATURES_SELECTOR,
             required=True,
@@ -1134,7 +1231,7 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             else "local_code",
         ),
     },
-    Platform.BINARY_SENSOR.value: {
+    Platform.BINARY_SENSOR: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=BINARY_SENSOR_DEVICE_CLASS_SELECTOR,
             required=False,
@@ -1145,13 +1242,13 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             default=None,
         ),
     },
-    Platform.BUTTON.value: {
+    Platform.BUTTON: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=BUTTON_DEVICE_CLASS_SELECTOR,
             required=False,
         ),
     },
-    Platform.CLIMATE.value: {
+    Platform.CLIMATE: {
         CONF_TEMPERATURE_UNIT: PlatformField(
             selector=TEMPERATURE_UNIT_SELECTOR,
             validator=validate(cv.temperature_unit),
@@ -1223,13 +1320,13 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             default=lambda config: bool(config.get(CONF_POWER_COMMAND_TOPIC)),
         ),
     },
-    Platform.COVER.value: {
+    Platform.COVER: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=COVER_DEVICE_CLASS_SELECTOR,
             required=False,
         ),
     },
-    Platform.FAN.value: {
+    Platform.FAN: {
         "fan_feature_speed": PlatformField(
             selector=BOOLEAN_SELECTOR,
             required=False,
@@ -1255,7 +1352,7 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             default=lambda config: bool(config.get(CONF_DIRECTION_COMMAND_TOPIC)),
         ),
     },
-    Platform.IMAGE.value: {
+    Platform.IMAGE: {
         "image_processing_mode": PlatformField(
             selector=IMAGE_PROCESSING_MODE_SELECTOR,
             required=True,
@@ -1267,7 +1364,7 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             ),
         )
     },
-    Platform.LIGHT.value: {
+    Platform.LIGHT: {
         CONF_SCHEMA: PlatformField(
             selector=LIGHT_SCHEMA_SELECTOR,
             required=True,
@@ -1281,9 +1378,21 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             is_schema_default=True,
         ),
     },
-    Platform.LOCK.value: {},
-    Platform.NOTIFY.value: {},
-    Platform.SENSOR.value: {
+    Platform.LOCK: {},
+    Platform.NOTIFY: {},
+    Platform.NUMBER: {
+        CONF_DEVICE_CLASS: PlatformField(
+            selector=NUMBER_DEVICE_CLASS_SELECTOR,
+            required=False,
+        ),
+        CONF_UNIT_OF_MEASUREMENT: PlatformField(
+            selector=number_unit_of_measurement_selector,
+            required=False,
+            custom_filtering=True,
+        ),
+    },
+    Platform.SELECT: {},
+    Platform.SENSOR: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=SENSOR_DEVICE_CLASS_SELECTOR, required=False
         ),
@@ -1312,13 +1421,14 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             default=None,
         ),
     },
-    Platform.SWITCH.value: {
+    Platform.SIREN: {},
+    Platform.SWITCH: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=SWITCH_DEVICE_CLASS_SELECTOR, required=False
         ),
     },
 }
-PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
+PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
     Platform.ALARM_CONTROL_PANEL: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
@@ -1405,7 +1515,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="alarm_control_panel_payload_settings",
         ),
     },
-    Platform.BINARY_SENSOR.value: {
+    Platform.BINARY_SENSOR: {
         CONF_STATE_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -1441,7 +1551,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="advanced_settings",
         ),
     },
-    Platform.BUTTON.value: {
+    Platform.BUTTON: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -1461,7 +1571,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         ),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
-    Platform.CLIMATE.value: {
+    Platform.CLIMATE: {
         # operation mode settings
         CONF_MODE_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
@@ -1951,7 +2061,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             conditions=({"climate_feature_swing_horizontal_modes": True},),
         ),
     },
-    Platform.COVER.value: {
+    Platform.COVER: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
@@ -2130,7 +2240,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="cover_tilt_settings",
         ),
     },
-    Platform.FAN.value: {
+    Platform.FAN: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -2350,7 +2460,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             conditions=({"fan_feature_direction": True},),
         ),
     },
-    Platform.IMAGE.value: {
+    Platform.IMAGE: {
         CONF_IMAGE_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -2384,7 +2494,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             error="invalid_template",
         ),
     },
-    Platform.LIGHT.value: {
+    Platform.LIGHT: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -2865,7 +2975,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="advanced_settings",
         ),
     },
-    Platform.LOCK.value: {
+    Platform.LOCK: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -2952,7 +3062,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
         CONF_OPTIMISTIC: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
-    Platform.NOTIFY.value: {
+    Platform.NOTIFY: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -2967,7 +3077,87 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         ),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
-    Platform.SENSOR.value: {
+    Platform.NUMBER: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_MIN: PlatformField(
+            selector=MIN_MAX_SELECTOR,
+            required=True,
+            default=DEFAULT_MIN_VALUE,
+        ),
+        CONF_MAX: PlatformField(
+            selector=MIN_MAX_SELECTOR,
+            required=True,
+            default=DEFAULT_MAX_VALUE,
+        ),
+        CONF_STEP: PlatformField(
+            selector=STEP_SELECTOR,
+            required=True,
+            default=DEFAULT_STEP,
+        ),
+        CONF_MODE: PlatformField(
+            selector=NUMBER_MODE_SELECTOR,
+            required=True,
+            default=NumberMode.AUTO.value,
+        ),
+        CONF_PAYLOAD_RESET: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_RESET,
+        ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+    },
+    Platform.SELECT: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_OPTIONS: PlatformField(selector=OPTIONS_SELECTOR, required=True),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+    },
+    Platform.SENSOR: {
         CONF_STATE_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -2994,7 +3184,72 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="advanced_settings",
         ),
     },
-    Platform.SWITCH.value: {
+    Platform.SIREN: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_PAYLOAD_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_OFF,
+        ),
+        CONF_PAYLOAD_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_ON,
+        ),
+        CONF_STATE_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+        ),
+        CONF_STATE_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+        ),
+        CONF_AVAILABLE_TONES: PlatformField(
+            selector=OPTIONS_SELECTOR,
+            required=False,
+        ),
+        CONF_SUPPORT_DURATION: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+        ),
+        CONF_SUPPORT_VOLUME_SET: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+        ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+        CONF_OPTIMISTIC: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+        CONF_COMMAND_OFF_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="siren_advanced_settings",
+        ),
+    },
+    Platform.SWITCH: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -4081,7 +4336,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="entity_platform_config",
             data_schema=data_schema,
-            description_placeholders={
+            description_placeholders=TRANSLATION_DESCRIPTION_PLACEHOLDERS
+            | {
                 "mqtt_device": device_name,
                 CONF_PLATFORM: platform,
                 "entity": full_entity_name,
@@ -4134,7 +4390,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="mqtt_platform_config",
             data_schema=data_schema,
-            description_placeholders={
+            description_placeholders=TRANSLATION_DESCRIPTION_PLACEHOLDERS
+            | {
                 "mqtt_device": device_name,
                 CONF_PLATFORM: platform,
                 "entity": full_entity_name,
@@ -4350,9 +4607,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             step_id="export_yaml",
             last_step=False,
             data_schema=data_schema,
-            description_placeholders={
-                "url": "https://www.home-assistant.io/integrations/mqtt/"
-            },
+            description_placeholders={"url": INTEGRATION_URL},
         )
 
     async def async_step_export_discovery(
@@ -4404,9 +4659,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             step_id="export_discovery",
             last_step=False,
             data_schema=data_schema,
-            description_placeholders={
-                "url": "https://www.home-assistant.io/integrations/mqtt/"
-            },
+            description_placeholders={"url": INTEGRATION_URL},
         )
 
 

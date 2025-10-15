@@ -5,39 +5,34 @@ from __future__ import annotations
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from elevenlabs.core import ApiError
-from elevenlabs.types import GetVoicesResponse, VoiceSettings
+from elevenlabs.types import VoiceSettings
 import pytest
 
 from homeassistant.components import tts
 from homeassistant.components.elevenlabs.const import (
     ATTR_MODEL,
-    CONF_MODEL,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STYLE,
     CONF_USE_SPEAKER_BOOST,
-    CONF_VOICE,
     DEFAULT_SIMILARITY,
     DEFAULT_STABILITY,
     DEFAULT_STYLE,
     DEFAULT_USE_SPEAKER_BOOST,
-    DOMAIN,
 )
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
 
-from .const import MOCK_MODELS, MOCK_VOICES
-
-from tests.common import MockConfigEntry, async_mock_service
+from tests.common import async_mock_service
 from tests.components.tts.common import retrieve_media
 from tests.typing import ClientSessionGenerator
 
@@ -79,83 +74,6 @@ async def setup_internal_url(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.fixture
-def mock_similarity():
-    """Mock similarity."""
-    return DEFAULT_SIMILARITY / 2
-
-
-@pytest.fixture(name="setup")
-async def setup_fixture(
-    hass: HomeAssistant,
-    config_data: dict[str, Any],
-    config_options: dict[str, Any],
-    config_options_voice: dict[str, Any],
-    request: pytest.FixtureRequest,
-    mock_async_client: AsyncMock,
-) -> AsyncMock:
-    """Set up the test environment."""
-    if request.param == "mock_config_entry_setup":
-        await mock_config_entry_setup(hass, config_data, config_options)
-    elif request.param == "mock_config_entry_setup_voice":
-        await mock_config_entry_setup(hass, config_data, config_options_voice)
-    else:
-        raise RuntimeError("Invalid setup fixture")
-
-    await hass.async_block_till_done()
-
-    return mock_async_client
-
-
-@pytest.fixture(name="config_data")
-def config_data_fixture() -> dict[str, Any]:
-    """Return config data."""
-    return {}
-
-
-@pytest.fixture(name="config_options")
-def config_options_fixture() -> dict[str, Any]:
-    """Return config options."""
-    return {}
-
-
-@pytest.fixture(name="config_options_voice")
-def config_options_voice_fixture(mock_similarity) -> dict[str, Any]:
-    """Return config options."""
-    return {
-        CONF_SIMILARITY: mock_similarity,
-        CONF_STABILITY: DEFAULT_STABILITY,
-        CONF_STYLE: DEFAULT_STYLE,
-        CONF_USE_SPEAKER_BOOST: DEFAULT_USE_SPEAKER_BOOST,
-    }
-
-
-async def mock_config_entry_setup(
-    hass: HomeAssistant, config_data: dict[str, Any], config_options: dict[str, Any]
-) -> None:
-    """Mock config entry setup."""
-    default_config_data = {
-        CONF_API_KEY: "api_key",
-    }
-    default_config_options = {
-        CONF_VOICE: "voice1",
-        CONF_MODEL: "model1",
-    }
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=default_config_data | config_data,
-        options=default_config_options | config_options,
-    )
-    config_entry.add_to_hass(hass)
-    client_mock = AsyncMock()
-    client_mock.voices.get_all.return_value = GetVoicesResponse(voices=MOCK_VOICES)
-    client_mock.models.list.return_value = MOCK_MODELS
-    with patch(
-        "homeassistant.components.elevenlabs.AsyncElevenLabs", return_value=client_mock
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-
-
 @pytest.mark.parametrize(
     "config_data",
     [
@@ -173,7 +91,7 @@ async def mock_config_entry_setup(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {},
@@ -183,7 +101,7 @@ async def mock_config_entry_setup(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2"},
@@ -193,7 +111,7 @@ async def mock_config_entry_setup(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {ATTR_MODEL: "model2"},
@@ -203,7 +121,7 @@ async def mock_config_entry_setup(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2", ATTR_MODEL: "model2"},
@@ -263,7 +181,7 @@ async def test_tts_service_speak(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "de",
@@ -274,7 +192,7 @@ async def test_tts_service_speak(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "es",
@@ -326,7 +244,7 @@ async def test_tts_service_speak_lang_config(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice1"},
@@ -382,20 +300,24 @@ async def test_tts_service_speak_error(
     ],
 )
 @pytest.mark.parametrize(
-    ("setup", "tts_service", "service_data"),
+    ("config_options", "tts_service", "service_data"),
     [
         (
-            "mock_config_entry_setup_voice",
+            {
+                CONF_SIMILARITY: DEFAULT_SIMILARITY / 2,
+                CONF_STABILITY: DEFAULT_STABILITY,
+                CONF_STYLE: DEFAULT_STYLE,
+                CONF_USE_SPEAKER_BOOST: DEFAULT_USE_SPEAKER_BOOST,
+            },
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2"},
             },
         ),
     ],
-    indirect=["setup"],
 )
 async def test_tts_service_speak_voice_settings(
     setup: AsyncMock,
@@ -413,7 +335,7 @@ async def test_tts_service_speak_voice_settings(
     )
     assert tts_entity._voice_settings == VoiceSettings(
         stability=DEFAULT_STABILITY,
-        similarity_boost=mock_similarity,
+        similarity_boost=DEFAULT_SIMILARITY / 2,
         style=DEFAULT_STYLE,
         use_speaker_boost=DEFAULT_USE_SPEAKER_BOOST,
     )
@@ -446,7 +368,7 @@ async def test_tts_service_speak_voice_settings(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.mock_title",
+                ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {},

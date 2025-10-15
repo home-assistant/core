@@ -270,7 +270,7 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 
 CONF_GEN = "gen"
 
-VIRTUAL_COMPONENTS = ("boolean", "button", "enum", "input", "number", "text")
+VIRTUAL_COMPONENTS = ("boolean", "button", "enum", "number", "text")
 VIRTUAL_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
     "button": {"types": ["button"], "modes": ["button"]},
@@ -308,3 +308,5 @@ MODEL_NEO_WATER_VALVE = "NeoWaterValve"
 MODEL_FRANKEVER_WATER_VALVE = "WaterValve"
 MODEL_LINKEDGO_ST802_THERMOSTAT = "ST-802"
 MODEL_LINKEDGO_ST1820_THERMOSTAT = "ST1820"
+MODEL_TOP_EV_CHARGER_EVE01 = "EVE01"
+MODEL_FRANKEVER_IRRIGATION_CONTROLLER = "Irrigation"
