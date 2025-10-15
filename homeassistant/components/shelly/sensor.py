@@ -1489,6 +1489,7 @@ RPC_SENSORS: Final = {
     "number_current_humidity": RpcSensorDescription(
         key="number",
         sub_key="value",
+        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
@@ -1498,6 +1499,7 @@ RPC_SENSORS: Final = {
     "number_current_temperature": RpcSensorDescription(
         key="number",
         sub_key="value",
+        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
