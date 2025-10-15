@@ -25,6 +25,9 @@
       "mounting_mode": {
         "default": "mdi:wrench"
       },
+      "child_safety_lock_mode": {
+        "default": "mdi:lock"
+      },
       "valve": {
         "default": "mdi:pipe-valve"
       }
