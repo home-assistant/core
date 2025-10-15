@@ -11,7 +11,13 @@ from homeassistant.helpers.typing import ConfigType
 from . import websocket_api
 from .const import DATA_HARDWARE, DOMAIN
 from .hardware import async_process_hardware_platforms
-from .models import HardwareData, SystemStatus
+from .models import (  # noqa: F401
+    BoardInfo,
+    HardwareData,
+    HardwareInfo,
+    SystemStatus,
+    USBInfo,
+)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
