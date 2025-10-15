@@ -13,7 +13,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
-    ATTR_ENTITY_ID,
     ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -33,13 +32,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    HassJobType,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import Event, HassJobType, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
@@ -50,7 +43,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import (
+    Entity,
+    IncludedEntitiesMixin,
+    async_generate_entity_id,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
@@ -471,78 +468,28 @@ def async_setup_entity_entry_helper(
     _async_setup_entities()
 
 
-class MqttAttributesMixin(Entity):
+class MqttAttributesMixin(IncludedEntitiesMixin):
     """Mixin used for platforms that support JSON attributes."""
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
     _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
-    _default_group_icon: str | None = None
-    _group_entity_ids: list[str] | None = None
     _message_callback: Callable[
         [MessageCallbackType, set[str] | None, ReceiveMessage], None
     ]
     _process_update_extra_state_attributes: Callable[[dict[str, Any]], None]
-    _monitor_member_updates_callback: CALLBACK_TYPE
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
         self._attributes_config = config
 
-    def _monitor_member_updates(self) -> None:
-        """Update the group members if the entity registry is updated."""
-        entity_registry = er.async_get(self.hass)
-
-        async def _handle_entity_registry_updated(event: Event[Any]) -> None:
-            """Handle registry update event."""
-            if (
-                event.data["action"] in {"create", "update"}
-                and (entry := entity_registry.async_get(event.data["entity_id"]))
-                and entry.unique_id in self._attributes_config[CONF_GROUP]
-            ) or (
-                event.data["action"] == "remove"
-                and self._group_entity_ids is not None
-                and event.data["entity_id"] in self._group_entity_ids
-            ):
-                self._update_group_entity_ids()
-                self._attr_extra_state_attributes[ATTR_ENTITY_ID] = (
-                    self._group_entity_ids
-                )
-                self.async_write_ha_state()
-
-        self.async_on_remove(
-            self.hass.bus.async_listen(
-                er.EVENT_ENTITY_REGISTRY_UPDATED,
-                _handle_entity_registry_updated,
-            )
-        )
-
-    def _update_group_entity_ids(self) -> None:
-        """Set the entity_id property if the entity represents a group of entities.
-
-        Setting entity_id in the extra state attributes will show the discovered entity
-        as a group and will show the member entities in the UI.
-        """
-        if CONF_GROUP not in self._attributes_config:
-            self._default_entity_icon = None
-            return
-        self._attr_icon = self._attr_icon or self._default_group_icon
-        entity_registry = er.async_get(self.hass)
-
-        self._group_entity_ids = []
-        for resource_id in self._attributes_config[CONF_GROUP]:
-            if entity_id := entity_registry.async_get_entity_id(
-                self.entity_id.split(".")[0], DOMAIN, resource_id
-            ):
-                self._group_entity_ids.append(entity_id)
-
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
-        self._update_group_entity_ids()
-        if self._group_entity_ids is not None:
-            self._monitor_member_updates()
-            self._attr_extra_state_attributes = {ATTR_ENTITY_ID: self._group_entity_ids}
+        if CONF_GROUP in self._attributes_config:
+            self.async_set_included_entities(
+                DOMAIN, self._attributes_config[CONF_GROUP]
+            )
 
         self._attributes_prepare_subscribe_topics()
         self._attributes_subscribe_topics()
@@ -616,8 +563,6 @@ class MqttAttributesMixin(Entity):
                     if k not in MQTT_ATTRIBUTES_BLOCKED
                     and k not in self._attributes_extra_blocked
                 }
-                if self._group_entity_ids is not None:
-                    filtered_dict[ATTR_ENTITY_ID] = self._group_entity_ids
                 if hasattr(self, "_process_update_extra_state_attributes"):
                     self._process_update_extra_state_attributes(filtered_dict)
                 else:
