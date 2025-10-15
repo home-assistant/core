@@ -27,6 +27,30 @@ class S3ConfigModel(MutableMapping[str, str]):
         self._errors: dict[str, str] = {}
         super().__init__()
 
+    def as_dict(self, only: None | set[str] = None) -> dict[str, str]:
+        """Return a dictionary representation of the config.
+
+        Args:
+            only: An optional set of keys to include in the result. If None, include all keys.
+
+        Returns:
+             A dictionary containing the selected configuration items.
+        """
+        if only is None:
+            return dict(self.items())
+
+        return {k: v for k, v in self.items() if k in only}
+
+    def from_dict(self, data: dict[str, str]) -> None:
+        """Update the configuration from a dictionary.
+
+        Args:
+            data: A dictionary containing configuration values to update.
+        """
+        for k in self.keys():
+            if k in data:
+                self[k] = data[k]
+
     def __setitem__(self, key, value):
         """Set the value for the given configuration key."""
         self._data[key] = value
