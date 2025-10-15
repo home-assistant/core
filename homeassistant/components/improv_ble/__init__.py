@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from homeassistant.core import HomeAssistant, callback
@@ -15,7 +16,9 @@ __all__ = ["async_register_next_flow"]
 
 
 @callback
-def async_get_provisioning_futures(hass: HomeAssistant) -> dict:
+def async_get_provisioning_futures(
+    hass: HomeAssistant,
+) -> dict[str, asyncio.Future[str]]:
     """Get the provisioning futures registry, creating it if needed.
 
     This is a helper function for internal use and testing.
