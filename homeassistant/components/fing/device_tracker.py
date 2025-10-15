@@ -105,8 +105,6 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
             current_device_ip != new_device_ip
             or self._device.active != new_device.active
             or self._device.type != new_device.type
-            or self._device.make != new_device.make
-            or self._device.model != new_device.model
             or self._attr_name != new_device.name
             or self._attr_icon != get_icon_from_type(new_device.type)
         )
@@ -121,4 +119,9 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
             self._device = updated_device_data
             self._attr_name = updated_device_data.name
             self._attr_icon = get_icon_from_type(updated_device_data.type)
+            er.async_get(self.hass).async_update_entity(
+                entity_id=self.entity_id,
+                original_name=self._attr_name,
+                original_icon=self._attr_icon,
+            )
             self.async_write_ha_state()
