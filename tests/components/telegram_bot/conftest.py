@@ -265,10 +265,17 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
             ConfigSubentryData(
                 unique_id="123456",
                 data={CONF_CHAT_ID: 123456},
-                subentry_id="mock_id",
+                subentry_id="mock_id1",
                 subentry_type=CONF_ALLOWED_CHAT_IDS,
-                title="mock chat",
-            )
+                title="mock chat 1",
+            ),
+            ConfigSubentryData(
+                unique_id="654321",
+                data={CONF_CHAT_ID: 654321},
+                subentry_id="mock_id2",
+                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                title="mock chat 2",
+            ),
         ],
     )
 
