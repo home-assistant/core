@@ -565,6 +565,25 @@ MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET = {
         "entity_picture": "https://example.com/e9261f6feed443e7b7d5f3fbe2a47412",
     },
 }
+MOCK_SUBENTRY_SIREN_COMPONENT = {
+    "3faf1318023c46c5aea26707eeb6f12e": {
+        "platform": "siren",
+        "name": "Siren",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "command_off_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "payload_off": "OFF",
+        "payload_on": "ON",
+        "available_tones": ["Happy hour", "Cooling alarm"],
+        "support_volume_set": True,
+        "support_duration": True,
+        "entity_picture": "https://example.com/3faf1318023c46c5aea26707eeb6f12e",
+        "optimistic": True,
+    },
+}
 MOCK_SUBENTRY_SWITCH_COMPONENT = {
     "3faf1318016c46c5aea26707eeb6f12e": {
         "platform": "switch",
@@ -606,43 +625,43 @@ MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 
-MOCK_ALARM_CONTROL_PANEL_LOCAL_CODE_SUBENTRY_DATA_SINGLE = {
+MOCK_ALARM_CONTROL_PANEL_LOCAL_CODE_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_LOCAL_CODE,
 }
-MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_TEXT_SUBENTRY_DATA_SINGLE = {
+MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_TEXT_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
     "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE_TEXT,
 }
-MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_SUBENTRY_DATA_SINGLE = {
+MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
     "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE,
 }
-MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE = {
+MOCK_BINARY_SENSOR_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
     "components": MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT,
 }
-MOCK_BUTTON_SUBENTRY_DATA_SINGLE = {
+MOCK_BUTTON_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
     "components": MOCK_SUBENTRY_BUTTON_COMPONENT,
 }
-MOCK_CLIMATE_SUBENTRY_DATA_SINGLE = {
+MOCK_CLIMATE_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_CLIMATE_COMPONENT,
 }
-MOCK_CLIMATE_HIGH_LOW_SUBENTRY_DATA_SINGLE = {
+MOCK_CLIMATE_HIGH_LOW_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
     "components": MOCK_SUBENTRY_CLIMATE_HIGH_LOW_COMPONENT,
 }
-MOCK_CLIMATE_NO_TARGET_TEMP_SUBENTRY_DATA_SINGLE = {
+MOCK_CLIMATE_NO_TARGET_TEMP_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
     "components": MOCK_SUBENTRY_CLIMATE_NO_TARGET_TEMP_COMPONENT,
 }
-MOCK_COVER_SUBENTRY_DATA_SINGLE = {
+MOCK_COVER_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_COVER_COMPONENT,
 }
-MOCK_FAN_SUBENTRY_DATA_SINGLE = {
+MOCK_FAN_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_FAN_COMPONENT,
 }
@@ -654,15 +673,15 @@ MOCK_IMAGE_SUBENTRY_DATA_IMAGE_URL = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_IMAGE_COMPONENT_URL,
 }
-MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE = {
+MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT,
 }
-MOCK_LOCK_SUBENTRY_DATA_SINGLE = {
+MOCK_LOCK_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_LOCK_COMPONENT,
 }
-MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
+MOCK_NOTIFY_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
 }
@@ -686,19 +705,23 @@ MOCK_SELECT_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SELECT_COMPONENT,
 }
-MOCK_SENSOR_SUBENTRY_DATA_SINGLE = {
+MOCK_SENSOR_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT,
 }
-MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS = {
+MOCK_SENSOR_SUBENTRY_DATA_STATE_CLASS = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS,
 }
-MOCK_SENSOR_SUBENTRY_DATA_SINGLE_LAST_RESET_TEMPLATE = {
+MOCK_SENSOR_SUBENTRY_DATA_LAST_RESET_TEMPLATE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET,
 }
-MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS = {
+MOCK_SIREN_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_SIREN_COMPONENT,
+}
+MOCK_SWITCH_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SWITCH_COMPONENT,
 }
