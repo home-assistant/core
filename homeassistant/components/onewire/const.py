@@ -13,6 +13,7 @@ DEVICE_KEYS_A_B = ("A", "B")
 DEVICE_KEYS_A_D = ("A", "B", "C", "D")
 
 DEVICE_SUPPORT = {
+    "01": (),
     "05": (),
     "10": (),
     "12": (),

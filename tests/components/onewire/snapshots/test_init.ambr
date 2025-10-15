@@ -1,4 +1,35 @@
 # serializer version: 1
+# name: test_registry[01.111111111111-entry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'onewire',
+        '01.111111111111',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Maxim Integrated',
+    'model': 'DS2401',
+    'model_id': 'DS2401',
+    'name': '01.111111111111',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '111111111111',
+    'sw_version': '3.2',
+    'via_device_id': None,
+  })
+# ---
 # name: test_registry[05.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
