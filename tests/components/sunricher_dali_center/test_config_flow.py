@@ -1,21 +1,17 @@
 """Test the DALI Center config flow."""
 
 from typing import Any
+from unittest.mock import AsyncMock, MagicMock
 
 from PySrDaliGateway.exceptions import DaliGatewayError
 
 from homeassistant import config_entries
-from homeassistant.components.sunricher_dali_center.const import (
-    CONF_CHANNEL_TOTAL,
-    CONF_SN,
-    DOMAIN,
-)
+from homeassistant.components.sunricher_dali_center.const import CONF_SN, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SSL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -23,16 +19,29 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-MOCK_GATEWAY_DATA: dict[str, Any] = {
+_GATEWAY_DEFAULTS: dict[str, Any] = {
     "gw_sn": "TEST123",
     "gw_ip": "192.168.1.100",
     "port": 1883,
     "name": "Test Gateway",
     "username": "gateway_user",
     "passwd": "gateway_pass",
-    "channel_total": [1, 2, 3],
-    "is_tls": True,
 }
+
+
+def _mock_gateway(**overrides: Any) -> MagicMock:
+    """Create a mocked gateway with the expected interface."""
+    info = _GATEWAY_DEFAULTS | overrides
+    gateway = MagicMock()
+    gateway.gw_sn = info["gw_sn"]
+    gateway.gw_ip = info["gw_ip"]
+    gateway.port = info["port"]
+    gateway.name = info["name"]
+    gateway.username = info["username"]
+    gateway.passwd = info["passwd"]
+    gateway.connect = AsyncMock()
+    gateway.disconnect = AsyncMock()
+    return gateway
 
 
 async def test_user_step_form(hass: HomeAssistant) -> None:
@@ -48,10 +57,10 @@ async def test_discovery_flow_success(
     hass: HomeAssistant,
     mock_setup_entry,
     mock_discovery,
-    mock_config_flow_gateway,
 ) -> None:
     """Test a successful discovery flow."""
-    mock_discovery.discover_gateways.return_value = [MOCK_GATEWAY_DATA]
+    gateway = _mock_gateway()
+    mock_discovery.discover_gateways.return_value = [gateway]
 
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -64,26 +73,24 @@ async def test_discovery_flow_success(
 
     select_result = await hass.config_entries.flow.async_configure(
         discovery_result["flow_id"],
-        {"selected_gateway": MOCK_GATEWAY_DATA["gw_sn"]},
+        {"selected_gateway": gateway.gw_sn},
     )
     await hass.async_block_till_done()
 
     assert select_result["type"] is FlowResultType.CREATE_ENTRY
-    assert select_result["title"] == MOCK_GATEWAY_DATA["name"]
+    assert select_result["title"] == gateway.name
     assert select_result["data"] == {
-        CONF_SN: MOCK_GATEWAY_DATA["gw_sn"],
-        CONF_HOST: MOCK_GATEWAY_DATA["gw_ip"],
-        CONF_PORT: MOCK_GATEWAY_DATA["port"],
-        CONF_NAME: MOCK_GATEWAY_DATA["name"],
-        CONF_USERNAME: MOCK_GATEWAY_DATA["username"],
-        CONF_PASSWORD: MOCK_GATEWAY_DATA["passwd"],
-        CONF_CHANNEL_TOTAL: MOCK_GATEWAY_DATA["channel_total"],
-        CONF_SSL: MOCK_GATEWAY_DATA["is_tls"],
+        CONF_SN: gateway.gw_sn,
+        CONF_HOST: gateway.gw_ip,
+        CONF_PORT: gateway.port,
+        CONF_NAME: gateway.name,
+        CONF_USERNAME: gateway.username,
+        CONF_PASSWORD: gateway.passwd,
     }
     assert mock_discovery.discover_gateways.await_count == 1
     mock_setup_entry.assert_called_once()
-    assert mock_config_flow_gateway.connect.await_count == 1
-    assert mock_config_flow_gateway.disconnect.await_count == 1
+    assert gateway.connect.await_count == 1
+    assert gateway.disconnect.await_count == 1
 
 
 async def test_discovery_no_gateways_found(
@@ -131,7 +138,8 @@ async def test_discovery_device_not_found(
     mock_discovery,
 ) -> None:
     """Test selection error when the gateway no longer exists."""
-    mock_discovery.discover_gateways.return_value = [MOCK_GATEWAY_DATA]
+    gateway = _mock_gateway()
+    mock_discovery.discover_gateways.return_value = [gateway]
 
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -144,7 +152,7 @@ async def test_discovery_device_not_found(
 
     select_result = await hass.config_entries.flow.async_configure(
         flow_id,
-        {"selected_gateway": MOCK_GATEWAY_DATA["gw_sn"]},
+        {"selected_gateway": gateway.gw_sn},
     )
 
     assert select_result["type"] is FlowResultType.FORM
@@ -156,11 +164,11 @@ async def test_discovery_device_not_found(
 async def test_discovery_connection_failure(
     hass: HomeAssistant,
     mock_discovery,
-    mock_config_flow_gateway,
 ) -> None:
     """Test connection failure when validating the selected gateway."""
-    mock_discovery.discover_gateways.return_value = [MOCK_GATEWAY_DATA]
-    mock_config_flow_gateway.connect.side_effect = DaliGatewayError("failure")
+    gateway = _mock_gateway()
+    mock_discovery.discover_gateways.return_value = [gateway]
+    gateway.connect.side_effect = DaliGatewayError("failure")
 
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -174,14 +182,14 @@ async def test_discovery_connection_failure(
 
     select_result = await hass.config_entries.flow.async_configure(
         discovery_result["flow_id"],
-        {"selected_gateway": MOCK_GATEWAY_DATA["gw_sn"]},
+        {"selected_gateway": gateway.gw_sn},
     )
 
     assert select_result["type"] is FlowResultType.FORM
     assert select_result["step_id"] == "discovery"
     assert select_result["errors"]["base"] == "cannot_connect"
-    assert mock_config_flow_gateway.connect.await_count == 1
-    assert mock_config_flow_gateway.disconnect.await_count == 0
+    assert gateway.connect.await_count == 1
+    assert gateway.disconnect.await_count == 0
 
 
 async def test_discovery_duplicate_filtered(
@@ -189,23 +197,22 @@ async def test_discovery_duplicate_filtered(
     mock_discovery,
 ) -> None:
     """Test that already configured gateways are filtered out."""
+    gateway = _mock_gateway()
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_SN: MOCK_GATEWAY_DATA["gw_sn"],
-            CONF_HOST: MOCK_GATEWAY_DATA["gw_ip"],
-            CONF_PORT: MOCK_GATEWAY_DATA["port"],
-            CONF_NAME: MOCK_GATEWAY_DATA["name"],
-            CONF_USERNAME: MOCK_GATEWAY_DATA["username"],
-            CONF_PASSWORD: MOCK_GATEWAY_DATA["passwd"],
-            CONF_CHANNEL_TOTAL: MOCK_GATEWAY_DATA["channel_total"],
-            CONF_SSL: MOCK_GATEWAY_DATA["is_tls"],
+            CONF_SN: gateway.gw_sn,
+            CONF_HOST: gateway.gw_ip,
+            CONF_PORT: gateway.port,
+            CONF_NAME: gateway.name,
+            CONF_USERNAME: gateway.username,
+            CONF_PASSWORD: gateway.passwd,
         },
-        unique_id=MOCK_GATEWAY_DATA["gw_sn"],
+        unique_id=gateway.gw_sn,
     )
     existing_entry.add_to_hass(hass)
 
-    mock_discovery.discover_gateways.return_value = [MOCK_GATEWAY_DATA]
+    mock_discovery.discover_gateways.return_value = [gateway]
 
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -225,7 +232,8 @@ async def test_discovery_unique_id_already_configured(
     mock_discovery,
 ) -> None:
     """Test duplicate protection when the entry appears during the flow."""
-    mock_discovery.discover_gateways.return_value = [MOCK_GATEWAY_DATA]
+    gateway = _mock_gateway()
+    mock_discovery.discover_gateways.return_value = [gateway]
 
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -237,22 +245,20 @@ async def test_discovery_unique_id_already_configured(
     duplicate_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_SN: MOCK_GATEWAY_DATA["gw_sn"],
-            CONF_HOST: MOCK_GATEWAY_DATA["gw_ip"],
-            CONF_PORT: MOCK_GATEWAY_DATA["port"],
-            CONF_NAME: MOCK_GATEWAY_DATA["name"],
-            CONF_USERNAME: MOCK_GATEWAY_DATA["username"],
-            CONF_PASSWORD: MOCK_GATEWAY_DATA["passwd"],
-            CONF_CHANNEL_TOTAL: MOCK_GATEWAY_DATA["channel_total"],
-            CONF_SSL: MOCK_GATEWAY_DATA["is_tls"],
+            CONF_SN: gateway.gw_sn,
+            CONF_HOST: gateway.gw_ip,
+            CONF_PORT: gateway.port,
+            CONF_NAME: gateway.name,
+            CONF_USERNAME: gateway.username,
+            CONF_PASSWORD: gateway.passwd,
         },
-        unique_id=MOCK_GATEWAY_DATA["gw_sn"],
+        unique_id=gateway.gw_sn,
     )
     duplicate_entry.add_to_hass(hass)
 
     select_result = await hass.config_entries.flow.async_configure(
         discovery_result["flow_id"],
-        {"selected_gateway": MOCK_GATEWAY_DATA["gw_sn"]},
+        {"selected_gateway": gateway.gw_sn},
     )
 
     assert select_result["type"] is FlowResultType.ABORT

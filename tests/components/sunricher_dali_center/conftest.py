@@ -5,17 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.sunricher_dali_center.const import (
-    CONF_CHANNEL_TOTAL,
-    CONF_SN,
-    DOMAIN,
-)
+from homeassistant.components.sunricher_dali_center.const import CONF_SN, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SSL,
     CONF_USERNAME,
 )
 
@@ -34,8 +29,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_NAME: "Test Gateway",
             CONF_USERNAME: "gateway_user",
             CONF_PASSWORD: "gateway_pass",
-            CONF_CHANNEL_TOTAL: [1, 2],
-            CONF_SSL: False,
         },
         unique_id="6A242121110E",
         title="Test Gateway",
@@ -118,9 +111,7 @@ def mock_devices(mock_dali_gateway: MagicMock) -> Generator[list[MagicMock]]:
         devices = [device1, device2, device3, device4, device_duplicate]
         mock_device_class.side_effect = devices
 
-        mock_dali_gateway.discover_devices = AsyncMock(
-            return_value=[{"dev_id": device.dev_id} for device in devices]
-        )
+        mock_dali_gateway.discover_devices = AsyncMock(return_value=devices)
 
         yield devices
 
@@ -145,19 +136,6 @@ def mock_dali_gateway() -> Generator[MagicMock]:
         mock_gateway = mock_gateway_class.return_value
         mock_gateway.gw_sn = "6A242121110E"
         mock_gateway.name = "Test Gateway"
-        mock_gateway.connect = AsyncMock()
-        mock_gateway.disconnect = AsyncMock()
-        yield mock_gateway
-
-
-@pytest.fixture
-def mock_config_flow_gateway() -> Generator[MagicMock]:
-    """Return a mocked DaliGateway for the config flow."""
-    with patch(
-        "homeassistant.components.sunricher_dali_center.config_flow.DaliGateway",
-        autospec=True,
-    ) as mock_gateway_class:
-        mock_gateway = mock_gateway_class.return_value
         mock_gateway.connect = AsyncMock()
         mock_gateway.disconnect = AsyncMock()
         yield mock_gateway

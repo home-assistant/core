@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from PySrDaliGateway import DaliGateway, DaliGatewayType
+from PySrDaliGateway import DaliGateway
 from PySrDaliGateway.discovery import DaliGatewayDiscovery
 from PySrDaliGateway.exceptions import DaliGatewayError
 import voluptuous as vol
@@ -16,11 +16,10 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SSL,
     CONF_USERNAME,
 )
 
-from .const import CONF_CHANNEL_TOTAL, CONF_SN, DOMAIN
+from .const import CONF_SN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_gateways: dict[str, DaliGatewayType] = {}
+        self._discovered_gateways: dict[str, DaliGateway] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -58,37 +57,32 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
             selected_gateway = self._discovered_gateways.get(selected_sn)
 
             if selected_gateway:
-                await self.async_set_unique_id(selected_gateway["gw_sn"])
+                await self.async_set_unique_id(selected_gateway.gw_sn)
                 self._abort_if_unique_id_configured()
 
-                title = selected_gateway["name"]
+                title = selected_gateway.name
 
-                gateway_data: dict[str, Any] = {
-                    CONF_SN: selected_gateway["gw_sn"],
-                    CONF_HOST: selected_gateway["gw_ip"],
-                    CONF_PORT: selected_gateway["port"],
-                    CONF_NAME: selected_gateway["name"],
-                    CONF_USERNAME: selected_gateway["username"],
-                    CONF_PASSWORD: selected_gateway["passwd"],
-                    CONF_CHANNEL_TOTAL: selected_gateway["channel_total"],
-                    CONF_SSL: selected_gateway.get("is_tls", False),
-                }
-
-                gateway = DaliGateway(selected_gateway)
                 try:
-                    await gateway.connect()
+                    await selected_gateway.connect()
                 except DaliGatewayError as err:
                     _LOGGER.debug(
                         "Failed to connect to gateway %s during config flow",
-                        selected_gateway["gw_sn"],
+                        selected_gateway.gw_sn,
                         exc_info=err,
                     )
                     errors["base"] = "cannot_connect"
                 else:
-                    await gateway.disconnect()
+                    await selected_gateway.disconnect()
                     return self.async_create_entry(
                         title=title,
-                        data=gateway_data,
+                        data={
+                            CONF_SN: selected_gateway.gw_sn,
+                            CONF_HOST: selected_gateway.gw_ip,
+                            CONF_PORT: selected_gateway.port,
+                            CONF_NAME: selected_gateway.name,
+                            CONF_USERNAME: selected_gateway.username,
+                            CONF_PASSWORD: selected_gateway.passwd,
+                        },
                     )
             else:
                 errors["base"] = "device_not_found"
@@ -109,9 +103,9 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
 
                 self._discovered_gateways = {
-                    gw["gw_sn"]: gw
+                    gw.gw_sn: gw
                     for gw in discovered
-                    if gw["gw_sn"] not in configured_gateways
+                    if gw.gw_sn not in configured_gateways
                 }
 
         if not self._discovered_gateways:
@@ -122,7 +116,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         gateway_options = {
-            sn: f"{sn} ({gateway['gw_ip']})"
+            sn: f"{sn} ({gateway.gw_ip})"
             for sn, gateway in self._discovered_gateways.items()
         }
 

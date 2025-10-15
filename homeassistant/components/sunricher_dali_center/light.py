@@ -41,7 +41,7 @@ async def async_setup_entry(
     """Set up DALI Center light entities from config entry."""
     runtime_data = entry.runtime_data
     gateway = runtime_data.gateway
-    devices = [Device(gateway, device) for device in runtime_data.device_data_list]
+    devices = runtime_data.devices
 
     def _on_light_status(dev_id: str, status: LightStatus) -> None:
         signal = f"{DOMAIN}_update_{dev_id}"

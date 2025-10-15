@@ -3,4 +3,3 @@
 DOMAIN = "sunricher_dali_center"
 MANUFACTURER = "Sunricher"
 CONF_SN = "gateway_sn"
-CONF_CHANNEL_TOTAL = "gateway_channel_total"
