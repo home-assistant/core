@@ -98,6 +98,9 @@ class ReolinkOptionsFlowHandler(OptionsFlowWithReload):
                     ),
                 }
             ),
+            description_placeholders={
+                "sample_ip": "http://192.168.1.10:8123",
+            },
         )
 
 
@@ -226,7 +229,10 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_user(self._user_input)
 
         assert self._user_input is not None
-        placeholders = {"host": self._user_input[CONF_HOST]}
+        placeholders = {
+            "host": self._user_input[CONF_HOST],
+            "sample_ip": "http://192.168.1.10:8123",
+        }
         return self.async_show_form(
             step_id="privacy",
             description_placeholders=placeholders,
@@ -347,6 +353,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_BC_PORT, default=DEFAULT_BC_PORT): cv.port,
                 }
             )
+        placeholders["sample_ip"] = "http://192.168.1.10:8123"
 
         return self.async_show_form(
             step_id="user",

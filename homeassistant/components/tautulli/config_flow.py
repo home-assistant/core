@@ -47,6 +47,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(data_schema),
             errors=errors or {},
+            description_placeholders={"sample_ip": "http://192.168.0.10:8181"},
         )
 
     async def async_step_reauth(
@@ -70,6 +71,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
             errors=errors,
+            description_placeholders={"sample_ip": "http://192.168.0.10:8181"},
         )
 
     async def validate_input(self, user_input: dict[str, Any]) -> str | None:

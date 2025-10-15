@@ -182,7 +182,10 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={"documentation_url": "https://example.com/sse"},
         )
 
     async def async_step_auth_discovery(
@@ -312,7 +315,12 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                description_placeholders={
+                    "documentation_url": "https://example.com/sse"
+                },
+            )
         config_entry = self._get_reauth_entry()
         self.data = {**config_entry.data}
         self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]

@@ -84,7 +84,10 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=STEP_USER_SCHEMA,
-                description_placeholders={CONF_URL: self._oauth_values.auth_url},
+                description_placeholders={
+                    CONF_URL: self._oauth_values.auth_url,
+                    "documentation_url": "http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code",
+                },
             )
 
         auth_code = user_input[CONF_AUTH_CODE]
@@ -102,7 +105,10 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=STEP_USER_SCHEMA,
                 errors={CONF_AUTH_CODE: "invalid_auth_code_length"},
-                description_placeholders={CONF_URL: self._oauth_values.auth_url},
+                description_placeholders={
+                    CONF_URL: self._oauth_values.auth_url,
+                    "documentation_url": "http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code",
+                },
             )
 
         errors = {}
@@ -124,7 +130,10 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=STEP_USER_SCHEMA,
                 errors=errors,
-                description_placeholders={CONF_URL: self._oauth_values.auth_url},
+                description_placeholders={
+                    CONF_URL: self._oauth_values.auth_url,
+                    "documentation_url": "http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code",
+                },
             )
 
         simplisafe_user_id = str(simplisafe.user_id)
@@ -172,4 +181,7 @@ class SimpliSafeOptionsFlowHandler(OptionsFlow):
                     ): str
                 }
             ),
+            description_placeholders={
+                "documentation_url": "http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code"
+            },
         )

@@ -107,7 +107,11 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is None:
             return self.async_show_form(
-                step_id="reauth_confirm", data_schema=REAUTH_SCHEMA
+                step_id="reauth_confirm",
+                data_schema=REAUTH_SCHEMA,
+                description_placeholders={
+                    "sample_ip": "http://192.168.1.10:8123",
+                },
             )
 
         conf = {
@@ -140,7 +144,12 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="reauth_confirm", data_schema=REAUTH_SCHEMA, errors=errors
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "sample_ip": "http://192.168.1.10:8123",
+            },
         )
 
     async def async_step_validate(
@@ -177,4 +186,7 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
             errors=errors,
+            description_placeholders={
+                "sample_ip": "http://192.168.1.10:8123",
+            },
         )
