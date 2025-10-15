@@ -26,7 +26,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-async def label_entities(hass: HomeAssistant) -> None:
+async def label_entities(hass: HomeAssistant) -> list[str]:
     """Create multiple entities associated with labels."""
     await async_setup_component(hass, "light", {})
 
@@ -233,8 +233,9 @@ async def test_light_state_condition_behavior_all(
         hass.states.async_set(entity_id, condition_state)
     assert await has_calls_after_trigger(hass, service_calls)
 
-    # Set one light to unavailable -> condition should still pass
+    # Set one light to unavailable -> condition fail
     hass.states.async_set(label_entities[0], STATE_UNAVAILABLE)
+    assert not await has_calls_after_trigger(hass, service_calls)
 
     # Set all lights to unavailable -> condition fail
     for entity_id in label_entities:
