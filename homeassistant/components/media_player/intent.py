@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 import logging
 import time
-from typing import cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -378,7 +378,12 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
         return response
 
 
-def get_entities(hass, slots, intent_obj, component):
+def retrieve_target_media_players(
+    hass: HomeAssistant,
+    slots: dict[str, Any],
+    intent_obj: intent.Intent,
+) -> intent.MatchTargetsResult:
+    """Get matching media players. If multiple are found, the playing one is returned. Otherwise all are returned."""
     # Entity name to match
     name_slot = slots.get("name", {})
     entity_name: str | None = name_slot.get("value")
@@ -463,7 +468,7 @@ class MediaSetVolumeHandler(intent.IntentHandler):
 
         volume_level = slots["volume_level"]["value"]
 
-        match_result = get_entities(hass, slots, intent_obj, component)
+        match_result = retrieve_target_media_players(hass, slots, intent_obj)
         target_entity_ids = {s.entity_id for s in match_result.states}
         target_entities = [
             e for e in component.entities if e.entity_id in target_entity_ids
@@ -514,7 +519,7 @@ class MediaSetVolumeRelativeHandler(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
         volume_step = slots["volume_step"]["value"]
 
-        match_result = get_entities(hass, slots, intent_obj, component)
+        match_result = retrieve_target_media_players(hass, slots, intent_obj)
 
         target_entity_ids = {s.entity_id for s in match_result.states}
         target_entities = [
