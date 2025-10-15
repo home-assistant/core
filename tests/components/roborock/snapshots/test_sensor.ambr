@@ -43,11 +43,11 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
-        'friendly_name': 'Roborock S7 MaxV Dock Duration',
+        'friendly_name': 'Roborock S7 MaxV Dock Maintenance brush time left',
         'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.roborock_s7_maxv_dock_duration',
+      'entity_id': 'sensor.roborock_s7_maxv_dock_maintenance_brush_time_left',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
@@ -56,11 +56,11 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
-        'friendly_name': 'Roborock S7 MaxV Dock Duration',
+        'friendly_name': 'Roborock S7 MaxV Dock Strainer time left',
         'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.roborock_s7_maxv_dock_duration_2',
+      'entity_id': 'sensor.roborock_s7_maxv_dock_strainer_time_left',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
@@ -366,11 +366,11 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
-        'friendly_name': 'Roborock S7 2 Dock Duration',
+        'friendly_name': 'Roborock S7 2 Dock Maintenance brush time left',
         'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.roborock_s7_2_dock_duration',
+      'entity_id': 'sensor.roborock_s7_2_dock_maintenance_brush_time_left',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
@@ -379,11 +379,11 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
-        'friendly_name': 'Roborock S7 2 Dock Duration',
+        'friendly_name': 'Roborock S7 2 Dock Strainer time left',
         'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.roborock_s7_2_dock_duration_2',
+      'entity_id': 'sensor.roborock_s7_2_dock_strainer_time_left',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
