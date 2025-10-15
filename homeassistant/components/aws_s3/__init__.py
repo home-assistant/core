@@ -36,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
     model.from_dict(cast(dict, entry.data))
 
     try:
+        client = None
         session = AioSession()
         # pylint: disable-next=unnecessary-dunder-call
         client = await session.create_client(
@@ -46,22 +47,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
         ).__aenter__()
         await client.head_bucket(Bucket=model[CONF_BUCKET])
     except ClientError as err:
+        if client is not None:
+            await client.__aexit__(None, None, None)
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",
         ) from err
     except ParamValidationError as err:
+        if client is not None:
+            await client.__aexit__(None, None, None)
+
         if "Invalid bucket name" in str(err):
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_bucket_name",
             ) from err
     except ValueError as err:
+        if client is not None:
+            await client.__aexit__(None, None, None)
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_endpoint_url",
         ) from err
     except ConnectionError as err:
+        if client is not None:
+            await client.__aexit__(None, None, None)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
