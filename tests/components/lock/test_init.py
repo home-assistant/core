@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from enum import Enum
 import re
 from typing import Any
 
 import pytest
 
-from homeassistant.components import lock
 from homeassistant.components.lock import (
     ATTR_CODE,
     CONF_DEFAULT_CODE,
@@ -25,8 +23,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .conftest import MockLock
-
-from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 
 
 async def help_test_async_lock_service(
@@ -382,38 +378,3 @@ async def test_lock_with_illegal_default_code(
         == rf"The code for lock.test_lock doesn't match pattern ^\d{{{4}}}$"
     )
     assert exc.value.translation_key == "add_default_code"
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(lock)
-
-
-def _create_tuples(
-    enum: type[Enum], constant_prefix: str, remove_in_version: str
-) -> list[tuple[Enum, str]]:
-    return [
-        (enum_field, constant_prefix, remove_in_version)
-        for enum_field in enum
-        if enum_field
-        not in [
-            lock.LockState.OPEN,
-            lock.LockState.OPENING,
-        ]
-    ]
-
-
-@pytest.mark.parametrize(
-    ("enum", "constant_prefix", "remove_in_version"),
-    _create_tuples(lock.LockState, "STATE_", "2025.10"),
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: Enum,
-    constant_prefix: str,
-    remove_in_version: str,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, lock, enum, constant_prefix, remove_in_version
-    )
