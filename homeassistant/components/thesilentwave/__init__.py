@@ -26,15 +26,8 @@ async def async_setup_entry(
 ) -> bool:
     """Set up TheSilentWave from a config entry."""
     entry.runtime_data = coordinator = TheSilentWaveCoordinator(hass, entry)
-
-    # Try to do the first refresh to verify that the device is reachable.
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except SilentWaveError as exc:
-        _LOGGER.debug("Failed to communicate with device: %s", exc)
-        raise ConfigEntryNotReady(f"Cannot connect to device at {coordinator.host}") from exc
-
-    # Add the binary sensor entity to Home Assistant.
+    
+    await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
