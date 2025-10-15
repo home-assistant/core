@@ -744,7 +744,9 @@ class ManifestJSONView(HomeAssistantView):
 @websocket_api.websocket_command(
     {
         "type": "frontend/get_icons",
-        vol.Required("category"): vol.In({"entity", "entity_component", "services"}),
+        vol.Required("category"): vol.In(
+            {"entity", "entity_component", "services", "triggers"}
+        ),
         vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
     }
 )
