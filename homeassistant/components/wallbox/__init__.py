@@ -33,16 +33,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> b
         jwtTokenDrift=UPDATE_INTERVAL,
     )
 
-    if entry.options.get(CHARGER_JWT_TOKEN) and check_token_validity(
-        jwtTokenTTL=entry.options.get(CHARGER_JWT_TTL, 0), jwtTokenDrift=UPDATE_INTERVAL
+    if entry.data.get(CHARGER_JWT_TOKEN) and check_token_validity(
+        jwt_token_ttl=entry.data.get(CHARGER_JWT_TTL, 0),
+        jwt_token_drift=UPDATE_INTERVAL,
     ):
-        wallbox.jwtToken = entry.options.get(CHARGER_JWT_TOKEN)
-        wallbox.jwtRefreshToken = entry.options.get(CHARGER_JWT_REFRESH_TOKEN)
-        wallbox.jwtTokenTtl = entry.options.get(CHARGER_JWT_TTL)
-        wallbox.jwtRefreshTokenTtl = entry.options.get(CHARGER_JWT_REFRESH_TTL)
-        wallbox.headers["Authorization"] = (
-            f"Bearer {entry.options.get(CHARGER_JWT_TOKEN)}"
-        )
+        wallbox.jwtToken = entry.data.get(CHARGER_JWT_TOKEN)
+        wallbox.jwtRefreshToken = entry.data.get(CHARGER_JWT_REFRESH_TOKEN)
+        wallbox.jwtTokenTtl = entry.data.get(CHARGER_JWT_TTL)
+        wallbox.jwtRefreshTokenTtl = entry.data.get(CHARGER_JWT_REFRESH_TTL)
+        wallbox.headers["Authorization"] = f"Bearer {entry.data.get(CHARGER_JWT_TOKEN)}"
 
     wallbox_coordinator = WallboxCoordinator(hass, entry, wallbox)
     await wallbox_coordinator.async_config_entry_first_refresh()

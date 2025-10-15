@@ -105,15 +105,9 @@ async def test_form_validate_input(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with (
-        patch(
-            "homeassistant.components.wallbox.Wallbox.authenticate",
-            return_value=WALLBOX_AUTHORISATION_RESPONSE,
-        ),
-        patch(
-            "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
-            return_value=test_response,
-        ),
+    with patch(
+        "homeassistant.components.wallbox.Wallbox.authenticate",
+        return_value=WALLBOX_AUTHORISATION_RESPONSE,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -126,6 +120,7 @@ async def test_form_validate_input(hass: HomeAssistant) -> None:
 
     assert result2["title"] == "Wallbox Portal"
     assert result2["data"]["station"] == "12345"
+    assert result2["data"]["username"] == "test-username"
 
 
 async def test_form_reauth(

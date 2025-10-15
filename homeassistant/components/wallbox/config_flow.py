@@ -43,14 +43,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     await async_validate_input(hass, wallbox)
 
-    options = {
-        CHARGER_JWT_TOKEN: wallbox.jwtToken,
-        CHARGER_JWT_REFRESH_TOKEN: wallbox.jwtRefreshToken,
-        CHARGER_JWT_TTL: wallbox.jwtTokenTtl,
-        CHARGER_JWT_REFRESH_TTL: wallbox.jwtRefreshTokenTtl,
-    }
+    data[CHARGER_JWT_TOKEN] = wallbox.jwtToken
+    data[CHARGER_JWT_REFRESH_TOKEN] = wallbox.jwtRefreshToken
+    data[CHARGER_JWT_TTL] = wallbox.jwtTokenTtl
+    data[CHARGER_JWT_REFRESH_TTL] = wallbox.jwtRefreshTokenTtl
+
     # Return info that you want to store in the config entry.
-    return {"title": "Wallbox Portal", "options": options}
+    return {"title": "Wallbox Portal", "data": data}
 
 
 class WallboxConfigFlow(ConfigFlow, domain=COMPONENT_DOMAIN):
@@ -81,8 +80,7 @@ class WallboxConfigFlow(ConfigFlow, domain=COMPONENT_DOMAIN):
                 validation_data = await validate_input(self.hass, user_input)
                 return self.async_create_entry(
                     title=validation_data["title"],
-                    data=user_input,
-                    options=validation_data["options"],
+                    data=validation_data["data"],
                 )
             reauth_entry = self._get_reauth_entry()
             if user_input["station"] == reauth_entry.data[CONF_STATION]:

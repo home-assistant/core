@@ -48,9 +48,6 @@ def entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_USERNAME: "test_username",
             CONF_PASSWORD: "test_password",
             CONF_STATION: "12345",
-        },
-        entry_id="testEntry",
-        options={
             CHARGER_JWT_TOKEN: "test_token",
             CHARGER_JWT_REFRESH_TOKEN: "test_refresh_token",
             CHARGER_JWT_TTL: (
@@ -60,6 +57,7 @@ def entry(hass: HomeAssistant) -> MockConfigEntry:
                 datetime.timestamp(datetime.now() + timedelta(hours=1)) * 1000
             ),
         },
+        entry_id="testEntry",
     )
     entry.add_to_hass(hass)
     return entry

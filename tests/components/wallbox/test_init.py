@@ -58,11 +58,11 @@ async def test_wallbox_refresh_failed_error_auth(
     await setup_integration(hass, entry)
     assert entry.state is ConfigEntryState.LOADED
 
-    options = dict(entry.options)
-    options[CHARGER_JWT_TTL] = (
+    data = dict(entry.data)
+    data[CHARGER_JWT_TTL] = (
         datetime.timestamp(datetime.now() - timedelta(hours=1)) * 1000
     )
-    hass.config_entries.async_update_entry(entry, options=options)
+    hass.config_entries.async_update_entry(entry, data=data)
 
     with (
         patch.object(mock_wallbox, "authenticate", side_effect=http_403_error),

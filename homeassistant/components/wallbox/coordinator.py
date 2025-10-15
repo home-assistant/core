@@ -100,9 +100,9 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
     return require_authentication
 
 
-def check_token_validity(jwtTokenTTL: int, jwtTokenDrift: int) -> bool:
+def check_token_validity(jwt_token_ttl: int, jwt_token_drift: int) -> bool:
     """Check if the jwtToken is still valid in order to reuse if possible."""
-    return round((jwtTokenTTL / 1000) - jwtTokenDrift, 0) > datetime.timestamp(
+    return round((jwt_token_ttl / 1000) - jwt_token_drift, 0) > datetime.timestamp(
         datetime.now()
     )
 
@@ -146,17 +146,13 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _authenticate(self) -> dict[str, str]:
         """Authenticate using Wallbox API. First check token validity."""
-        options = dict(self.config_entry.options)
+        data = dict(self.config_entry.data)
         if not check_token_validity(
-            jwtTokenTTL=options.get(CHARGER_JWT_TTL, 0),
-            jwtTokenDrift=UPDATE_INTERVAL,
+            jwt_token_ttl=data.get(CHARGER_JWT_TTL, 0),
+            jwt_token_drift=UPDATE_INTERVAL,
         ):
             try:
                 self._wallbox.authenticate()
-                options[CHARGER_JWT_TOKEN] = self._wallbox.jwtToken
-                options[CHARGER_JWT_REFRESH_TOKEN] = self._wallbox.jwtRefreshToken
-                options[CHARGER_JWT_TTL] = self._wallbox.jwtTokenTtl
-                options[CHARGER_JWT_REFRESH_TTL] = self._wallbox.jwtRefreshTokenTtl
             except requests.exceptions.HTTPError as wallbox_connection_error:
                 if (
                     wallbox_connection_error.response.status_code
@@ -168,12 +164,17 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="api_failed"
                 ) from wallbox_connection_error
-        return options
+            else:
+                data[CHARGER_JWT_TOKEN] = self._wallbox.jwtToken
+                data[CHARGER_JWT_REFRESH_TOKEN] = self._wallbox.jwtRefreshToken
+                data[CHARGER_JWT_TTL] = self._wallbox.jwtTokenTtl
+                data[CHARGER_JWT_REFRESH_TTL] = self._wallbox.jwtRefreshTokenTtl
+        return data
 
     async def async_authenticate(self) -> None:
         """Authenticate using Wallbox API."""
-        options = await self.hass.async_add_executor_job(self._authenticate)
-        self.hass.config_entries.async_update_entry(self.config_entry, options=options)
+        data = await self.hass.async_add_executor_job(self._authenticate)
+        self.hass.config_entries.async_update_entry(self.config_entry, data=data)
 
     def _get_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
