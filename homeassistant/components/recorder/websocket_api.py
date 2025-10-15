@@ -39,6 +39,7 @@ from homeassistant.util.unit_conversion import (
     ReactivePowerConverter,
     SpeedConverter,
     TemperatureConverter,
+    TemperatureDeltaConverter,
     UnitlessRatioConverter,
     VolumeConverter,
     VolumeFlowRateConverter,
@@ -94,6 +95,9 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("reactive_power"): vol.In(ReactivePowerConverter.VALID_UNITS),
         vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
         vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional("temperature_delta"): vol.In(
+            TemperatureDeltaConverter.VALID_UNITS
+        ),
         vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),
         vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
         vol.Optional("volume_flow_rate"): vol.In(VolumeFlowRateConverter.VALID_UNITS),
