@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from enum import StrEnum
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import ClientError
 from ha_silabs_firmware_client import FirmwareUpdateClient, ManifestMissing
@@ -18,10 +18,16 @@ from homeassistant.components.hassio import (
     AddonInfo,
     AddonManager,
     AddonState,
+    hostname_from_addon_slug,
 )
+from homeassistant.components.otbr import OTBRConfigEntry
+from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import (
+    SIGNAL_CONFIG_ENTRY_CHANGED,
     ConfigEntry,
     ConfigEntryBaseFlow,
+    ConfigEntryChange,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     FlowType,
@@ -31,6 +37,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, progress_step
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.hassio import is_hassio
 
 from .const import OTBR_DOMAIN, ZHA_DOMAIN
@@ -48,6 +55,8 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+OTBR_INTEGRATION_SETUP_TIMEOUT = 30  # seconds
 
 STEP_PICK_FIRMWARE_THREAD = "pick_firmware_thread"
 STEP_PICK_FIRMWARE_ZIGBEE = "pick_firmware_zigbee"
@@ -312,6 +321,58 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             ) from err
 
         await otbr_manager.async_start_addon_waiting()
+
+        # Push the preferred Thread dataset to the OTBR addon after it starts
+        await self._push_dataset_to_otbr()
+
+    async def _push_dataset_to_otbr(self) -> None:
+        """Push the preferred Thread dataset to the OTBR addon after migration."""
+        otbr_manager = get_otbr_addon_manager(self.hass)
+        addon_hostname = hostname_from_addon_slug(otbr_manager.addon_slug)
+
+        # Wait for hassio discovery to create or update an OTBR config entry
+        otbr_entry_future: asyncio.Future[OTBRConfigEntry] = (
+            asyncio.get_running_loop().create_future()
+        )
+
+        @callback
+        def handle_config_entry_change(
+            change_type: ConfigEntryChange, entry: ConfigEntry
+        ) -> None:
+            """Handle config entry changes to find our OTBR entry."""
+            if (
+                entry.domain == OTBR_DOMAIN
+                and entry.state is ConfigEntryState.LOADED
+                and f"http://{addon_hostname}:" in entry.data["url"]
+                and not otbr_entry_future.done()
+            ):
+                otbr_entry_future.set_result(cast(OTBRConfigEntry, entry))
+
+        unsub = async_dispatcher_connect(
+            self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, handle_config_entry_change
+        )
+
+        try:
+            async with asyncio.timeout(OTBR_INTEGRATION_SETUP_TIMEOUT):
+                otbr_entry = await otbr_entry_future
+        except TimeoutError:
+            _LOGGER.warning("Timed out waiting for the OTBR integration to start")
+            return
+        finally:
+            unsub()
+
+        thread_dataset_tlv = await async_get_preferred_dataset(self.hass)
+
+        # If we have no preferred dataset, OTBR will have started up with random
+        # settings so we can just use those
+        if thread_dataset_tlv is None:
+            return
+
+        _LOGGER.debug("Pushing preferred Thread dataset to OTBR")
+        await otbr_entry.runtime_data.set_active_dataset_tlvs(
+            bytes.fromhex(thread_dataset_tlv)
+        )
+        await otbr_entry.runtime_data.set_enabled(True)
 
     async def async_step_firmware_download_failed(
         self, user_input: dict[str, Any] | None = None
