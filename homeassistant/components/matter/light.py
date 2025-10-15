@@ -467,10 +467,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterLightEntityDescription(
             key="MatterLight",
             name=None,
-            labeling_list=(
-                "label",  # Used by Inovelli VTM30 / VTM31
-                "devicetype",  # Used by Inovelli VTM35
-            ),
         ),
         entity_class=MatterLight,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),

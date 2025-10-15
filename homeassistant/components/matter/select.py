@@ -16,7 +16,7 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import LabelPlacement, MatterEntity, MatterEntityDescription
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -349,12 +349,6 @@ DISCOVERY_SCHEMAS = [
                 "toggle": 2,
                 "previous": None,
             }.get,
-            label_placement=LabelPlacement.APPEND,
-            labeling_list=(
-                "label",  # Used by Inovelli VTM30 / VTM31
-                "devicetype",  # Used by Inovelli VTM35
-                "orientation",  # Used by Eve Energy US outlet
-            ),
         ),
         entity_class=MatterAttributeSelectEntity,
         required_attributes=(clusters.OnOff.Attributes.StartUpOnOff,),

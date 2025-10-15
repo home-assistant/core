@@ -1393,7 +1393,7 @@
     'state': 'Lemon',
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_dimmablelight-entry]
+# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1413,7 +1413,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.inovelli_power_on_behavior_on_startup_dimmablelight',
+    'entity_id': 'select.inovelli_power_on_behavior_on_startup_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1425,7 +1425,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior on startup (DimmableLight)',
+    'original_name': 'Power-on behavior on startup (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1435,10 +1435,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_dimmablelight-state]
+# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Power-on behavior on startup (DimmableLight)',
+      'friendly_name': 'Inovelli Power-on behavior on startup (1)',
       'options': list([
         'on',
         'off',
@@ -1447,7 +1447,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.inovelli_power_on_behavior_on_startup_dimmablelight',
+    'entity_id': 'select.inovelli_power_on_behavior_on_startup_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -177,10 +177,6 @@ DISCOVERY_SCHEMAS = [
             key="MatterPlug",
             device_class=SwitchDeviceClass.OUTLET,
             name=None,
-            labeling_list=(
-                "label",  # Used by Inovelli VTM30, VTM31, VTM35
-                "orientation",  # Used by Eve Energy US outlet
-            ),
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),

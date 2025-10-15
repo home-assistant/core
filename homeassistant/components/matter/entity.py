@@ -37,18 +37,23 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
-# Due to variances in labeling implementations, some manufacturers
-# use generic labels that are not useful for naming.
-# This blocklist is used to filter out those labels.
-# The blocklist is a tuple of:
-# vendorid (attributeKey 0/40/2)
-# productid (attributeKey 0/40/4)
-# hw version (attributeKey 0/40/8)
-# sw version (attributeKey 0/40/10)
-LABELING_BLOCKLIST = (
-    (5020, 65376, "1.0.0", "1.0.0"),  # Zemismart MT25B roller shade motor
-    (4895, 8192, "1.0", "v2.0"),  # Logan Link HVAC
-)
+# Due to variances in labeling implementations, labels are vendor and product specific.
+# This dictionary defines which labels to use for specific vendor/product combinations.
+# The keys are vendor IDs, the values are dictionaries with product IDs as keys
+# and lists of label names to use as values. If the value is None, no labels are used
+VENDOR_LABELING_LIST: dict[int, dict] = {
+    4874: {105: ["orientation"]},  # Eve Energy dual Outlet US
+    4961: {
+        1: ["label", "name", "button"],  # Inovelli VTM31
+        2: ["label", "devicetype", "button"],  # Inovelli VTM35
+        4: None,  # Inovelli VTM36
+        16: ["label", "name", "button"],  # Inovelli VTM30
+    },
+    65521: {32768: ["label"]},  # Home Assistant Mock device used in testing
+}
+
+# Default labeling list if vendor ID is not found or product ID not found for vendor
+DEFAULT_LABELING_LIST: list | None = None
 
 
 def catch_matter_error[_R, **P](
@@ -83,33 +88,22 @@ class MatterEntityLabeling:
 
     # A label can be used to modify an entity's name by appending the text
     # or replacing the name. This class holds the information needed to do that.
-
-    # Where to place the Label text in the entity name.
     # Can be "RENAME", "APPEND", "IGNORE". APPEND is the default.
 
     label_placement: LabelPlacement = LabelPlacement.APPEND
 
-    # Priority-ordered set of labels used for locating the name modifier
-    # Set in an entity's discovery schema.
-    # Always uses lower case for matching.
-    labeling_list: tuple[str, ...] | None = None
-
     # When labels are matched, use the concatenator string to join them.
     # Examples: ", " or "-" or " " (space).
     # if set to None or empty string, then only the first match is used.
-    label_concatenator: str | None = ", "
+    label_concatenator: str | None = None
 
     def find_matching_labels(self, entity: MatterEntity) -> list[str]:
         """Find all labels for a Matter entity."""
 
         device_info = entity._endpoint.device_info  # noqa: SLF001
-        if (
-            device_info.vendorID,
-            device_info.productID,
-            device_info.hardwareVersionString,
-            device_info.softwareVersionString,
-        ) in LABELING_BLOCKLIST:
-            return []
+        labeling_list = VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
+            device_info.productID, DEFAULT_LABELING_LIST
+        )
 
         # get the labels from the UserLabel and FixedLabel clusters
         user_label_list: list[clusters.UserLabel.Structs.LabelStruct] = (
@@ -123,7 +117,7 @@ class MatterEntityLabeling:
 
         found_labels: list[str] = [
             lbl.value
-            for label in self.labeling_list or []
+            for label in labeling_list or []
             for lbl in (*user_label_list, *fixed_label_list)
             if lbl.label.lower() == label.lower()
         ]

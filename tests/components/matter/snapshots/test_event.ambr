@@ -125,7 +125,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_events[generic_switch_multi][event.mock_generic_switch_button_fancy_button-entry]
+# name: test_events[generic_switch_multi][event.mock_generic_switch_button_fancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -147,7 +147,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.mock_generic_switch_button_fancy_button',
+    'entity_id': 'event.mock_generic_switch_button_fancy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -159,7 +159,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (Fancy Button)',
+    'original_name': 'Button (Fancy)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -169,7 +169,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[generic_switch_multi][event.mock_generic_switch_button_fancy_button-state]
+# name: test_events[generic_switch_multi][event.mock_generic_switch_button_fancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -182,10 +182,10 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Mock Generic Switch Button (Fancy Button)',
+      'friendly_name': 'Mock Generic Switch Button (Fancy)',
     }),
     'context': <ANY>,
-    'entity_id': 'event.mock_generic_switch_button_fancy_button',
+    'entity_id': 'event.mock_generic_switch_button_fancy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -779,7 +779,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[fan][button.mocked_fan_switch_identify-entry]
+# name: test_buttons[fan][button.mocked_fan_switch_identify_fan-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -792,7 +792,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.mocked_fan_switch_identify',
+    'entity_id': 'button.mocked_fan_switch_identify_fan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -804,7 +804,7 @@
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (Fan)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -814,14 +814,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[fan][button.mocked_fan_switch_identify-state]
+# name: test_buttons[fan][button.mocked_fan_switch_identify_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',
-      'friendly_name': 'Mocked Fan Switch Identify',
+      'friendly_name': 'Mocked Fan Switch Identify (Fan)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.mocked_fan_switch_identify',
+    'entity_id': 'button.mocked_fan_switch_identify_fan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1310,7 +1310,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_3-entry]
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_config-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1323,7 +1323,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.inovelli_identify_3',
+    'entity_id': 'button.inovelli_identify_config',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1335,105 +1335,7 @@
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify (3)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-3-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Inovelli Identify (3)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.inovelli_identify_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.inovelli_identify_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify (4)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-4-IdentifyButton-3-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Inovelli Identify (4)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.inovelli_identify_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.inovelli_identify_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-    'original_icon': None,
-    'original_name': 'Identify (5)',
+    'original_name': 'Identify (Config)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1443,21 +1345,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_5-state]
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_config-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',
-      'friendly_name': 'Inovelli Identify (5)',
+      'friendly_name': 'Inovelli Identify (Config)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.inovelli_identify_5',
+    'entity_id': 'button.inovelli_identify_config',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_6-entry]
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1470,7 +1372,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.inovelli_identify_6',
+    'entity_id': 'button.inovelli_identify_down',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1482,7 +1384,56 @@
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify (6)',
+    'original_name': 'Identify (Down)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-4-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Inovelli Identify (Down)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.inovelli_identify_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_led_bar-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.inovelli_identify_led_bar',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (LED Bar)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1492,14 +1443,63 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[multi_endpoint_light][button.inovelli_identify_6-state]
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_led_bar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',
-      'friendly_name': 'Inovelli Identify (6)',
+      'friendly_name': 'Inovelli Identify (LED Bar)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.inovelli_identify_6',
+    'entity_id': 'button.inovelli_identify_led_bar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.inovelli_identify_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (Up)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-3-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[multi_endpoint_light][button.inovelli_identify_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Inovelli Identify (Up)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.inovelli_identify_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

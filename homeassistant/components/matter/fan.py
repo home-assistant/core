@@ -19,7 +19,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import LabelPlacement, MatterEntity, MatterEntityDescription
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -317,8 +317,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterFanEntityDescription(
             key="MatterFan",
             name=None,
-            label_placement=LabelPlacement.APPEND,
-            labeling_list=("devicetype",),
         ),
         entity_class=MatterFan,
         # FanEntityFeature
