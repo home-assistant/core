@@ -48,6 +48,11 @@
       "suspend_software": {
         "name": "Suspend software"
       }
+    },
+    "number": {
+      "today_max_screentime": {
+        "name": "Max screentime today"
+      }
     }
   },
   "exceptions": {
@@ -56,6 +61,9 @@
     },
     "bedtime_alarm_out_of_range": {
       "message": "{value} not accepted. Bedtime Alarm must be between {bedtime_alarm_min} and {bedtime_alarm_max}. To disable, set to {bedtime_alarm_disable}."
+    },
+    "daily_playtime_out_of_range": {
+      "message": "{value} not accepted. Maximum allowed Daily Playtime values must be between {daily_playtime_min} and {daily_playtime_max}. To allow unlimited time, set to {daily_playtime_unlimited}."
     }
   }
 }
