@@ -130,6 +130,7 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         translation_key="mounting_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_getter=lambda api: api.getMountingMode(),
+        entity_registry_enabled_default=False,
     ),
     ViCareBinarySensorEntityDescription(
         key="child_safety_lock_mode",

@@ -950,6 +950,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         value_getter=lambda api: api.getZigbeeSignalStrength(),
+        entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="valve_position",
