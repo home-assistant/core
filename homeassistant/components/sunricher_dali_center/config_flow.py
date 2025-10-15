@@ -54,39 +54,35 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if discovery_info and "selected_gateway" in discovery_info:
             selected_sn = discovery_info["selected_gateway"]
-            selected_gateway = self._discovered_gateways.get(selected_sn)
+            selected_gateway = self._discovered_gateways[selected_sn]
 
-            if selected_gateway:
-                await self.async_set_unique_id(selected_gateway.gw_sn)
-                self._abort_if_unique_id_configured()
+            await self.async_set_unique_id(selected_gateway.gw_sn)
+            self._abort_if_unique_id_configured()
 
-                title = selected_gateway.name
+            title = selected_gateway.name
 
-                try:
-                    await selected_gateway.connect()
-                except DaliGatewayError as err:
-                    _LOGGER.debug(
-                        "Failed to connect to gateway %s during config flow",
-                        selected_gateway.gw_sn,
-                        exc_info=err,
-                    )
-                    errors["base"] = "cannot_connect"
-                else:
-                    await selected_gateway.disconnect()
-                    return self.async_create_entry(
-                        title=title,
-                        data={
-                            CONF_SN: selected_gateway.gw_sn,
-                            CONF_HOST: selected_gateway.gw_ip,
-                            CONF_PORT: selected_gateway.port,
-                            CONF_NAME: selected_gateway.name,
-                            CONF_USERNAME: selected_gateway.username,
-                            CONF_PASSWORD: selected_gateway.passwd,
-                        },
-                    )
+            try:
+                await selected_gateway.connect()
+            except DaliGatewayError as err:
+                _LOGGER.debug(
+                    "Failed to connect to gateway %s during config flow",
+                    selected_gateway.gw_sn,
+                    exc_info=err,
+                )
+                errors["base"] = "cannot_connect"
             else:
-                errors["base"] = "device_not_found"
-                retry_discovery = True
+                await selected_gateway.disconnect()
+                return self.async_create_entry(
+                    title=title,
+                    data={
+                        CONF_SN: selected_gateway.gw_sn,
+                        CONF_HOST: selected_gateway.gw_ip,
+                        CONF_PORT: selected_gateway.port,
+                        CONF_NAME: selected_gateway.name,
+                        CONF_USERNAME: selected_gateway.username,
+                        CONF_PASSWORD: selected_gateway.passwd,
+                    },
+                )
 
         if not self._discovered_gateways or retry_discovery:
             _LOGGER.debug("Starting gateway discovery")
