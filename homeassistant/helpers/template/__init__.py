@@ -64,11 +64,9 @@ from homeassistant.helpers import (
     label_registry as lr,
     location as loc_helper,
 )
-from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.translation import async_translate_state
 from homeassistant.helpers.typing import TemplateVarsType
-from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as location_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
@@ -196,29 +194,6 @@ def async_setup(hass: HomeAssistant) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()))
     return True
-
-
-@bind_hass
-@deprecated_function(
-    "automatic setting of Template.hass introduced by HA Core PR #89242",
-    breaks_in_ha_version="2025.10",
-)
-def attach(hass: HomeAssistant, obj: Any) -> None:
-    """Recursively attach hass to all template instances in list and dict."""
-    return _attach(hass, obj)
-
-
-def _attach(hass: HomeAssistant, obj: Any) -> None:
-    """Recursively attach hass to all template instances in list and dict."""
-    if isinstance(obj, list):
-        for child in obj:
-            _attach(hass, child)
-    elif isinstance(obj, collections.abc.Mapping):
-        for child_key, child_value in obj.items():
-            _attach(hass, child_key)
-            _attach(hass, child_value)
-    elif isinstance(obj, Template):
-        obj.hass = hass
 
 
 def render_complex(
@@ -561,15 +536,16 @@ class Template:
             finally:
                 self.hass.loop.call_soon_threadsafe(finish_event.set)
 
+        template_render_thread = ThreadWithException(target=_render_template)
         try:
-            template_render_thread = ThreadWithException(target=_render_template)
             template_render_thread.start()
             async with asyncio.timeout(timeout):
                 await finish_event.wait()
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
         except TimeoutError:
-            template_render_thread.raise_exc(TimeoutError)
+            if template_render_thread.is_alive():
+                template_render_thread.raise_exc(TimeoutError)
             return True
         finally:
             template_render_thread.join()

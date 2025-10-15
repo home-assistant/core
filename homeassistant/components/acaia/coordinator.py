@@ -12,11 +12,13 @@ from homeassistant.components.bluetooth import async_get_scanner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_IS_NEW_STYLE_SCALE
 
 SCAN_INTERVAL = timedelta(seconds=15)
+UPDATE_DEBOUNCE_TIME = 0.2
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,11 +40,19 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
             config_entry=entry,
         )
 
+        debouncer = Debouncer(
+            hass=hass,
+            logger=_LOGGER,
+            cooldown=UPDATE_DEBOUNCE_TIME,
+            immediate=True,
+            function=self.async_update_listeners,
+        )
+
         self._scale = AcaiaScale(
             address_or_ble_device=entry.data[CONF_ADDRESS],
             name=entry.title,
             is_new_style_scale=entry.data[CONF_IS_NEW_STYLE_SCALE],
-            notify_callback=self.async_update_listeners,
+            notify_callback=debouncer.async_schedule_call,
             scanner=async_get_scanner(hass),
         )
 
