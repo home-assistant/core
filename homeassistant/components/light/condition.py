@@ -1,5 +1,6 @@
 """Provides conditions for lights."""
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Final, override
 
 import voluptuous as vol
@@ -101,6 +102,7 @@ class StateCondition(Condition):
                 matched = True
             return matched
 
+        matcher: Callable[[set[str]], bool]
         if self._behavior == BEHAVIOR_ANY:
             matcher = check_any_match_state
         elif self._behavior == BEHAVIOR_ALL:
