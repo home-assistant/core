@@ -175,6 +175,9 @@ aio-geojson-usgs-earthquakes==0.3
 # homeassistant.components.gdacs
 aio-georss-gdacs==0.10
 
+# homeassistant.components.onewire
+aio-ownet==0.0.3
+
 # homeassistant.components.acaia
 aioacaia==0.1.17
 
@@ -429,7 +432,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==1.2.1
+aiovodafone==2.0.1
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -1270,7 +1273,7 @@ inkbird-ble==1.1.0
 insteon-frontend-home-assistant==0.5.0
 
 # homeassistant.components.intellifire
-intellifire4py==4.1.9
+intellifire4py==4.2.1
 
 # homeassistant.components.iometer
 iometer==0.2.0
@@ -1400,7 +1403,7 @@ loqedAPI==2.1.10
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.4.8
+lunatone-rest-api-client==0.5.3
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -1642,6 +1645,9 @@ openevsewifi==1.1.2
 # homeassistant.components.openhome
 openhomedevice==2.2.0
 
+# homeassistant.components.openrgb
+openrgb-python==0.3.5
+
 # homeassistant.components.opensensemap
 opensensemap-api==0.2.0
 
@@ -1794,7 +1800,7 @@ py-improv-ble-client==1.0.3
 py-madvr2==1.6.40
 
 # homeassistant.components.melissa
-py-melissa-climate==2.1.4
+py-melissa-climate==3.0.2
 
 # homeassistant.components.nextbus
 py-nextbusnext==2.3.0
@@ -2267,9 +2273,6 @@ pyotp==2.9.0
 
 # homeassistant.components.overkiz
 pyoverkiz==1.19.0
-
-# homeassistant.components.onewire
-pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.19
@@ -3054,7 +3057,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.21.1
+uiprotect==7.22.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3147,7 +3150,7 @@ weatherflow4py==1.4.1
 webexpythonsdk==2.0.1
 
 # homeassistant.components.nasweb
-webio-api==0.1.11
+webio-api==0.1.12
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
