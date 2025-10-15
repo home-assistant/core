@@ -1,6 +1,6 @@
 """Test repairs handling for Shelly."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from aioshelly.const import MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
@@ -225,7 +225,11 @@ async def test_deprecated_firmware_issue(
     issue_id = DEPRECATED_FIRMWARE_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
-    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+    with patch(
+        "homeassistant.components.shelly.DEPRECATED_FIRMWARES",
+        {MODEL_WALL_DISPLAY: {"min_firmware": "2.3.0", "ha_version": "2025.10.0"}},
+    ):
+        await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     # The default fw version in tests is 1.0.0, the repair issue should be created.
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
