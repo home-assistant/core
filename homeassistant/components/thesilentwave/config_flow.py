@@ -30,13 +30,13 @@ class TheSilentWaveConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            # Check for duplicate entries.
+            await self.async_set_unique_id(user_input[CONF_HOST])
+            self._abort_if_unique_id_configured()
+
             try:
                 # Validate IP address.
                 ipaddress.ip_address(user_input[CONF_HOST])
-
-                # Check for duplicate entries.
-                await self.async_set_unique_id(user_input[CONF_HOST])
-                self._abort_if_unique_id_configured()
 
                 # Check if device is reachable.
                 await self._async_check_device(user_input[CONF_HOST])
