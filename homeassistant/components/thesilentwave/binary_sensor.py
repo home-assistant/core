@@ -5,14 +5,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import TheSilentWaveCoordinator
+from .coordinator import TheSilentWaveCoordinator, TheSilentWaveConfigEntry
 from .entity import TheSilentWaveEntity
 from .const import DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TheSilentWaveConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry."""
