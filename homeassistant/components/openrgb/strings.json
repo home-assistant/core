@@ -1,0 +1,70 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up your OpenRGB SDK server to allow control from within Home Assistant.",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "name": "A name for this integration entry, like the name of the computer running the OpenRGB SDK server.",
+          "host": "The IP address or hostname of the computer running the OpenRGB SDK server.",
+          "port": "The port number that the OpenRGB SDK server is running on."
+        }
+      }
+    },
+    "error": {
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "light": {
+      "openrgb_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "breathing": "Breathing",
+              "chase": "Chase",
+              "chase_fade": "Chase fade",
+              "cram": "Cram",
+              "flashing": "Flashing",
+              "music": "Music",
+              "neon": "Neon",
+              "rainbow": "Rainbow",
+              "random": "Random",
+              "random_flicker": "Random flicker",
+              "scan": "Scan",
+              "spectrum_cycle": "Spectrum cycle",
+              "spring": "Spring",
+              "stack": "Stack",
+              "strobe": "Strobe",
+              "water": "Water",
+              "wave": "Wave"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Failed to communicate with OpenRGB SDK server {server_address}: {error}"
+    },
+    "openrgb_error": {
+      "message": "An OpenRGB error occurred: {error}"
+    },
+    "unsupported_effect": {
+      "message": "Effect `{effect}` is not supported by {device_name}"
+    },
+    "effect_no_color_support": {
+      "message": "Effect `{effect}` does not support color control on {device_name}"
+    }
+  }
+}

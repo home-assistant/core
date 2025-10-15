@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from switchbot_api import Device, SwitchBotAPI
+from switchbot_api import Device, Remote, SwitchBotAPI
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,7 +22,8 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
@@ -37,8 +38,15 @@ SENSOR_TYPE_CO2 = "CO2"
 SENSOR_TYPE_POWER = "power"
 SENSOR_TYPE_VOLTAGE = "voltage"
 SENSOR_TYPE_CURRENT = "electricCurrent"
+SENSOR_TYPE_POWER_CONSUMPTION = "weight"
 SENSOR_TYPE_USED_ELECTRICITY = "usedElectricity"
 SENSOR_TYPE_LIGHTLEVEL = "lightLevel"
+
+
+RELAY_SWITCH_2PM_SENSOR_TYPE_POWER = "Power"
+RELAY_SWITCH_2PM_SENSOR_TYPE_VOLTAGE = "Voltage"
+RELAY_SWITCH_2PM_SENSOR_TYPE_CURRENT = "ElectricCurrent"
+RELAY_SWITCH_2PM_SENSOR_TYPE_ELECTRICITY = "UsedElectricity"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -113,6 +121,41 @@ CO2_DESCRIPTION = SensorEntityDescription(
     native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
 )
 
+POWER_CONSUMPTION_DESCRIPTION = SensorEntityDescription(
+    key=SENSOR_TYPE_POWER_CONSUMPTION,
+    device_class=SensorDeviceClass.POWER,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfPower.WATT,
+)
+
+RELAY_SWITCH_2PM_POWER_DESCRIPTION = SensorEntityDescription(
+    key=RELAY_SWITCH_2PM_SENSOR_TYPE_POWER,
+    device_class=SensorDeviceClass.POWER,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfPower.WATT,
+)
+
+RELAY_SWITCH_2PM_VOLTAGE_DESCRIPTION = SensorEntityDescription(
+    key=RELAY_SWITCH_2PM_SENSOR_TYPE_VOLTAGE,
+    device_class=SensorDeviceClass.VOLTAGE,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+)
+
+RELAY_SWITCH_2PM_CURRENT_DESCRIPTION = SensorEntityDescription(
+    key=RELAY_SWITCH_2PM_SENSOR_TYPE_CURRENT,
+    device_class=SensorDeviceClass.CURRENT,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+)
+
+RELAY_SWITCH_2PM_ElECTRICITY_DESCRIPTION = SensorEntityDescription(
+    key=RELAY_SWITCH_2PM_SENSOR_TYPE_ELECTRICITY,
+    device_class=SensorDeviceClass.ENERGY,
+    state_class=SensorStateClass.TOTAL_INCREASING,
+    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+)
+
 LIGHTLEVEL_DESCRIPTION = SensorEntityDescription(
     key="lightLevel",
     translation_key="light_level",
@@ -145,10 +188,12 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Plug Mini (US)": (
         VOLTAGE_DESCRIPTION,
         CURRENT_DESCRIPTION_IN_MA,
+        POWER_CONSUMPTION_DESCRIPTION,
     ),
     "Plug Mini (JP)": (
         VOLTAGE_DESCRIPTION,
         CURRENT_DESCRIPTION_IN_MA,
+        POWER_CONSUMPTION_DESCRIPTION,
     ),
     "Plug Mini (EU)": (
         POWER_DESCRIPTION,
@@ -175,6 +220,12 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock Lite": (BATTERY_DESCRIPTION,),
     "Smart Lock Pro": (BATTERY_DESCRIPTION,),
     "Smart Lock Ultra": (BATTERY_DESCRIPTION,),
+    "Relay Switch 2PM": (
+        RELAY_SWITCH_2PM_POWER_DESCRIPTION,
+        RELAY_SWITCH_2PM_VOLTAGE_DESCRIPTION,
+        RELAY_SWITCH_2PM_CURRENT_DESCRIPTION,
+        RELAY_SWITCH_2PM_ElECTRICITY_DESCRIPTION,
+    ),
     "Curtain": (BATTERY_DESCRIPTION,),
     "Curtain3": (BATTERY_DESCRIPTION,),
     "Roller Shade": (BATTERY_DESCRIPTION,),
@@ -203,12 +254,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
-
-    async_add_entities(
-        SwitchBotCloudSensor(data.api, device, coordinator, description)
-        for device, coordinator in data.devices.sensors
-        for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]
-    )
+    entities: list[SwitchBotCloudSensor] = []
+    for device, coordinator in data.devices.sensors:
+        for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]:
+            if device.device_type == "Relay Switch 2PM":
+                entities.append(
+                    SwitchBotCloudRelaySwitch2PMSensor(
+                        data.api, device, coordinator, description, "1"
+                    )
+                )
+                entities.append(
+                    SwitchBotCloudRelaySwitch2PMSensor(
+                        data.api, device, coordinator, description, "2"
+                    )
+                )
+            else:
+                entities.append(
+                    _async_make_entity(data.api, device, coordinator, description)
+                )
+    async_add_entities(entities)
 
 
 class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
@@ -230,14 +294,49 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
-        if isinstance(
-            self.entity_description,
-            SwitchbotCloudSensorEntityDescription,
-        ):
-            self._attr_native_value = self.entity_description.value_fn(
-                self.coordinator.data
-            )
-        else:
-            self._attr_native_value = self.coordinator.data.get(
-                self.entity_description.key
-            )
+        self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
+
+
+class SwitchBotCloudRelaySwitch2PMSensor(SwitchBotCloudSensor):
+    """Representation of a SwitchBot Cloud Relay Switch 2PM sensor entity."""
+
+    def __init__(
+        self,
+        api: SwitchBotAPI,
+        device: Device,
+        coordinator: SwitchBotCoordinator,
+        description: SensorEntityDescription,
+        channel: str,
+    ) -> None:
+        """Initialize SwitchBot Cloud sensor entity."""
+        super().__init__(api, device, coordinator, description)
+
+        self.entity_description = description
+        self._channel = channel
+        self._attr_unique_id = f"{device.device_id}-{description.key}-{channel}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{device.device_name}-channel-{channel}")},
+            manufacturer="SwitchBot",
+            model=device.device_type,
+            model_id="RelaySwitch2PM",
+            name=f"{device.device_name} Channel {channel}",
+        )
+
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
+        if not self.coordinator.data:
+            return
+        self._attr_native_value = self.coordinator.data.get(
+            f"switch{self._channel}{self.entity_description.key.strip()}"
+        )
+
+
+@callback
+def _async_make_entity(
+    api: SwitchBotAPI,
+    device: Device | Remote,
+    coordinator: SwitchBotCoordinator,
+    description: SensorEntityDescription,
+) -> SwitchBotCloudSensor:
+    """Make a SwitchBotCloudSensor or SwitchBotCloudRelaySwitch2PMSensor."""
+    return SwitchBotCloudSensor(api, device, coordinator, description)
