@@ -87,7 +87,7 @@ async def test_switch_availability(
 ) -> None:
     """Test switch availability and state under different gateway and device availability conditions."""
 
-    switch = await setup_entity(
+    switch_state = await setup_entity(
         entity_config,
         status_value=entity_config["switch_on_value"],
         gw_available=gw_available,
@@ -95,8 +95,8 @@ async def test_switch_availability(
         index=0 if entity_config["device_type"] == "bit" else None,
     )
 
-    assert switch is not None
-    assert switch.state == expected_state
+    assert switch_state is not None
+    assert switch_state.state == expected_state
 
 
 @pytest.mark.parametrize(
@@ -112,12 +112,12 @@ async def test_switch_turn_on(
     hass: HomeAssistant, setup_entity, entity_config, index
 ) -> None:
     """Test turning on a switch."""
-    switch = await setup_entity(
+    switch_state = await setup_entity(
         entity_config, status_value=entity_config["switch_off_value"], index=index
     )
 
-    assert switch is not None
-    assert switch.state == STATE_OFF
+    assert switch_state is not None
+    assert switch_state.state == STATE_OFF
 
     with patch("inelsmqtt.devices.Device.set_ha_value") as mock_set_state:
         await hass.services.async_call(
@@ -146,12 +146,12 @@ async def test_switch_turn_off(
     hass: HomeAssistant, setup_entity, entity_config, index
 ) -> None:
     """Test turning off a switch."""
-    switch = await setup_entity(
+    switch_state = await setup_entity(
         entity_config, status_value=entity_config["switch_on_value"], index=index
     )
 
-    assert switch is not None
-    assert switch.state == STATE_ON
+    assert switch_state is not None
+    assert switch_state.state == STATE_ON
 
     with patch("inelsmqtt.devices.Device.set_ha_value") as mock_set_state:
         await hass.services.async_call(
