@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 from homeassistant.util import dt as dt_util
 
@@ -55,7 +55,7 @@ HostAttributes = TypedDict(
         "X_AVM-DE_Guest": bool,
         "X_AVM-DE_RequestClient": str,
         "X_AVM-DE_VPN": bool,
-        "X_AVM-DE_WANAccess": str,
+        "X_AVM-DE_WANAccess": NotRequired[str],
         "X_AVM-DE_Disallow": bool,
         "X_AVM-DE_IsMeshable": str,
         "X_AVM-DE_Priority": str,
