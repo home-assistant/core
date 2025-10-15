@@ -4,7 +4,7 @@ This module defines S3ConfigModel, which manages configuration state, authentica
 and error tracking for the configuration of the AWS S3 Home Assistant integration.
 """
 
-from collections.abc import MutableMapping
+from collections.abc import Collection, MutableMapping
 
 from aiobotocore.session import AioSession
 from botocore.exceptions import (
@@ -27,7 +27,7 @@ class S3ConfigModel(MutableMapping[str, str]):
     """Configuration model for AWS S3 integration, supporting multiple authentication modes and error tracking."""
 
     def __init__(self) -> None:
-        """Initialize the S3ConfigModel with the given flow ID and default values."""
+        """Initialize the S3ConfigModel with default values."""
         self._data: dict[str, str] = {}
         self[CONF_BUCKET] = None
         self[CONF_ENDPOINT_URL] = None
@@ -36,7 +36,7 @@ class S3ConfigModel(MutableMapping[str, str]):
         self._errors: dict[str, str] = {}
         super().__init__()
 
-    def as_dict(self, only: None | set[str] = None) -> dict[str, str]:
+    def as_dict(self, only: None | Collection[str] = None) -> dict[str, str]:
         """Return a dictionary representation of the config.
 
         Args:
@@ -65,7 +65,7 @@ class S3ConfigModel(MutableMapping[str, str]):
         self._data[key] = value
 
     def __getitem__(self, key):
-        """Return the value for the given configuration key."""
+        """Return the value for the given configuration key, or None if it is not set."""
         return self._data.get(key)
 
     def __delitem__(self, key):
