@@ -75,7 +75,7 @@ def get_actual_arrival_time_str(data: Trip) -> str | None:
 def get_status(data: Trip) -> str | None:
     """Get status from trip data."""
     status = _get_trip_attribute(data, "status")
-    return status.capitalize() if status else None
+    return status if status else None
 
 
 def get_transfers(data: Trip) -> int:
