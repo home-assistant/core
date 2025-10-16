@@ -31,6 +31,7 @@ class IPPEntity(CoordinatorEntity[IPPDataUpdateCoordinator]):
             manufacturer=self.coordinator.data.info.manufacturer,
             model=self.coordinator.data.info.model,
             name=self.coordinator.data.info.name,
+            serial_number=self.coordinator.data.info.serial,
             sw_version=self.coordinator.data.info.version,
             configuration_url=self.coordinator.data.info.more_info,
         )
