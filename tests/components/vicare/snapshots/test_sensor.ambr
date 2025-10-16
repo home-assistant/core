@@ -311,7 +311,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'model3 Battery',
+      'friendly_name': 'model4 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -363,7 +363,7 @@
 # name: test_all_entities[None-vicare/VitoValor.json][sensor.model3_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model3 Signal strength',
+      'friendly_name': 'model4 Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -419,7 +419,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'model3 Temperature',
+      'friendly_name': 'model4 Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -471,7 +471,7 @@
 # name: test_all_entities[None-vicare/VitoValor.json][sensor.model3_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model3 Valve position',
+      'friendly_name': 'model4 Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -2026,7 +2026,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'model3 Battery',
+      'friendly_name': 'model4 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -2078,7 +2078,7 @@
 # name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model3_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model3 Signal strength',
+      'friendly_name': 'model4 Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -2134,7 +2134,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'model3 Temperature',
+      'friendly_name': 'model4 Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -2186,7 +2186,7 @@
 # name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model3_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model3 Valve position',
+      'friendly_name': 'model4 Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -2618,7 +2618,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'model3 Battery',
+      'friendly_name': 'model4 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -2670,7 +2670,7 @@
 # name: test_all_entities[type:ess-vicare/VitoChargeVX3.json][sensor.model3_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model3 Signal strength',
+      'friendly_name': 'model4 Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -2726,7 +2726,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'model3 Temperature',
+      'friendly_name': 'model4 Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -2778,7 +2778,7 @@
 # name: test_all_entities[type:ess-vicare/VitoChargeVX3.json][sensor.model3_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model3 Valve position',
+      'friendly_name': 'model4 Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -4733,7 +4733,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'model3 Battery',
+      'friendly_name': 'model4 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -4785,7 +4785,7 @@
 # name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model3_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model3 Signal strength',
+      'friendly_name': 'model4 Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -4841,7 +4841,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'model3 Temperature',
+      'friendly_name': 'model4 Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -4893,7 +4893,7 @@
 # name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model3_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model3 Valve position',
+      'friendly_name': 'model4 Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -5399,7 +5399,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'model3 Battery',
+      'friendly_name': 'model4 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -5451,7 +5451,7 @@
 # name: test_all_entities[type:ventilation-vicare/ViAir300F.json][sensor.model3_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model3 Signal strength',
+      'friendly_name': 'model4 Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -5507,7 +5507,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'model3 Temperature',
+      'friendly_name': 'model4 Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -5559,7 +5559,7 @@
 # name: test_all_entities[type:ventilation-vicare/ViAir300F.json][sensor.model3_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model3 Valve position',
+      'friendly_name': 'model4 Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),

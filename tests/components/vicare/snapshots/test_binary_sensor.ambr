@@ -476,7 +476,7 @@
 # name: test_all_entities[binary_sensor.model1_child_safety_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model1 Child safety lock',
+      'friendly_name': 'model2 Child safety lock',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model1_child_safety_lock',
@@ -524,7 +524,7 @@
 # name: test_all_entities[binary_sensor.model1_identification_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model1 Identification mode',
+      'friendly_name': 'model2 Identification mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model1_identification_mode',
@@ -572,7 +572,7 @@
 # name: test_all_entities[binary_sensor.model1_mounting_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model1 Mounting mode',
+      'friendly_name': 'model2 Mounting mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model1_mounting_mode',
@@ -621,7 +621,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'model1 Valve',
+      'friendly_name': 'model2 Valve',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model1_valve',
