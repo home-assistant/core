@@ -120,7 +120,7 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
     def is_on(self) -> bool | None:
         """Return if switch is on."""
         current_state = self.entity_description.get_state_fn(self._device, self._index)
-        return current_state.is_on  # type: ignore[no-any-return] # dataclasses properly typed, mypy limitation
+        return current_state.is_on
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
