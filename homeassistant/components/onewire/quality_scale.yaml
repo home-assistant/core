@@ -1,8 +1,6 @@
 rules:
   ## Bronze
-  config-flow:
-    status: todo
-    comment: missing data_description on options flow
+  config-flow: done
   test-before-configure: done
   unique-config-entry:
     status: done
@@ -16,27 +14,19 @@ rules:
   entity-event-setup:
     status: exempt
     comment: entities do not subscribe to events
-  dependency-transparency:
-    status: todo
-    comment: The package is not built and published inside a CI pipeline
+  dependency-transparency: done
   action-setup:
     status: exempt
     comment: No service actions currently available
   common-modules:
     status: done
     comment: base entity available, but no coordinator
-  docs-high-level-description:
-    status: todo
-    comment: Under review
-  docs-installation-instructions:
-    status: todo
-    comment: Under review
-  docs-removal-instructions:
-    status: todo
-    comment: Under review
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   docs-actions:
-    status: todo
-    comment: Under review
+    status: exempt
+    comment: No service actions currently available
   brands: done
 
   ## Silver
