@@ -309,6 +309,22 @@
       "odometer": {
         "name": "Odometer"
       },
+      "service_warning": {
+        "name": "Service",
+        "state": {
+          "distance_driven_almost_time_for_service": "Almost time for distance service",
+          "distance_driven_overdue_for_service": "Distance service overdue",
+          "distance_driven_time_for_service": "Time for distance service",
+          "engine_hours_almost_time_for_service": "Almost time for engine service",
+          "engine_hours_overdue_for_service": "Engine service overdue",
+          "engine_hours_time_for_service": "Time for engine service",
+          "no_warning": "No warning",
+          "regular_maintenance_almost_time_for_service": "Almost time for service",
+          "regular_maintenance_overdue_for_service": "Service overdue",
+          "regular_maintenance_time_for_service": "Time for service",
+          "unknown_warning": "Unknown warning"
+        }
+      },
       "target_battery_charge_level": {
         "name": "Target battery charge level"
       },
