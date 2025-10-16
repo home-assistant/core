@@ -217,7 +217,7 @@ async def async_setup_entry(
             config_entry,
             async_add_entities,
             RPC_BUTTONS,
-            RpcSleepingButton,
+            RpcSleepingSmokeMuteButton,
         )
     else:
         async_setup_entry_rpc(
@@ -366,8 +366,8 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
         await self.coordinator.device.button_trigger(self._id, "single_push")
 
 
-class RpcSleepingButton(ShellySleepingRpcAttributeEntity, ButtonEntity):
-    """Defines a Shelly RPC virtual component button."""
+class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity):
+    """Defines a Shelly RPC Smoke mute alarm button."""
 
     entity_description: RpcButtonDescription
 
@@ -377,7 +377,8 @@ class RpcSleepingButton(ShellySleepingRpcAttributeEntity, ButtonEntity):
         if TYPE_CHECKING:
             assert isinstance(self.coordinator, ShellyRpcCoordinator)
 
-        await self.coordinator.device.smoke_mute_alarm(self._id)
+        _id = int(self.key.split(":")[-1])
+        await self.coordinator.device.smoke_mute_alarm(_id)
 
 
 RPC_BUTTONS = {
@@ -410,6 +411,5 @@ RPC_BUTTONS = {
         sub_key="mute",
         name="Mute alarm",
         translation_key="mute",
-        entity_class=RpcSleepingButton,
     ),
 }
