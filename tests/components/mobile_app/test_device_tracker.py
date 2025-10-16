@@ -55,12 +55,12 @@ async def setup_zone(hass: HomeAssistant) -> None:
             "home",
         ),
         (
-            {"gps": [20, 30], "location_name": "office"},
+            {"gps": [20, 30], "location_name": "Office"},
             {"latitude": 20, "longitude": 30, "gps_accuracy": 30},
             "office",
         ),
         (
-            {"gps": [30, 40], "location_name": "school"},
+            {"gps": [30, 40], "location_name": "School"},
             {"latitude": 30, "longitude": 40, "gps_accuracy": 30},
             "school",
         ),
@@ -71,12 +71,12 @@ async def setup_zone(hass: HomeAssistant) -> None:
             "home",
         ),
         (
-            {"gps": [10, 10], "location_name": "office"},
+            {"gps": [10, 10], "location_name": "Office"},
             {"latitude": 10, "longitude": 10, "gps_accuracy": 30},
             "office",
         ),
         (
-            {"gps": [10, 10], "location_name": "school"},
+            {"gps": [10, 10], "location_name": "School"},
             {"latitude": 10, "longitude": 10, "gps_accuracy": 30},
             "school",
         ),
