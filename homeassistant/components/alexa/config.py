@@ -93,9 +93,9 @@ class AbstractConfig(ABC):
     async def async_disable_proactive_mode(self) -> None:
         """Disable proactive mode."""
         _LOGGER.debug("Disable proactive mode")
-        if unsub_func := self._unsub_proactive_report:
-            unsub_func()
-        self._unsub_proactive_report = None
+        if (unsub_func := self._unsub_proactive_report) is not None:
+            self._unsub_proactive_report = None
+            await self.hass.async_add_executor_job(unsub_func)
 
     @callback
     def should_expose(self, entity_id: str) -> bool:
