@@ -3,15 +3,20 @@
 from __future__ import annotations
 
 from datetime import datetime
+from functools import partial
 import logging
+from typing import Any
 
 import caldav
+from caldav.lib.error import DAVError
+import requests
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
     CalendarEntity,
+    CalendarEntityFeature,
     CalendarEvent,
     is_offset_reached,
 )
@@ -23,6 +28,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
@@ -175,6 +181,8 @@ async def async_setup_entry(
 class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
 
+    _attr_supported_features = CalendarEntityFeature.CREATE_EVENT
+
     def __init__(
         self,
         name: str | None,
@@ -202,6 +210,31 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         return await self.coordinator.async_get_events(hass, start_date, end_date)
+
+    async def async_create_event(self, **kwargs: Any) -> None:
+        """Create a new event in the calendar."""
+        _LOGGER.debug("Event: %s", kwargs)
+
+        item_data: dict[str, Any] = {
+            "summary": kwargs["summary"],
+            "dtstart": kwargs["dtstart"],
+            "dtend": kwargs["dtend"],
+        }
+        if description := kwargs.get("description"):
+            item_data["description"] = description
+        if location := kwargs.get("location"):
+            item_data["location"] = location
+        if rrule := kwargs.get("rrule"):
+            item_data["rrule"] = rrule
+
+        _LOGGER.debug("ICS data %s", item_data)
+
+        try:
+            await self.hass.async_add_executor_job(
+                partial(self.coordinator.calendar.add_event, **item_data),
+            )
+        except (requests.ConnectionError, DAVError) as err:
+            raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
     @callback
     def _handle_coordinator_update(self) -> None:
