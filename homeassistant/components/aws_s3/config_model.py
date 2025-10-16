@@ -23,7 +23,7 @@ from .const import (
 )
 
 
-class S3ConfigModel(MutableMapping[str, str]):
+class S3ConfigModel(MutableMapping[str, str | None]):
     """Configuration model for AWS S3 integration, supporting multiple authentication modes and error tracking."""
 
     def __init__(self) -> None:
@@ -65,7 +65,7 @@ class S3ConfigModel(MutableMapping[str, str]):
         self._data[key] = value
 
     def __getitem__(self, key):
-        """Return the value for the given configuration key, or None if it is not set."""
+        """Return the value for the given configuration key, or None if the key is not set."""
         return self._data.get(key)
 
     def __delitem__(self, key):
