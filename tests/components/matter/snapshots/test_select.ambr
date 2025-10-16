@@ -981,6 +981,678 @@
     'state': 'previous',
   })
 # ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_button_press_delay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'No Delay',
+        '300ms',
+        '400ms',
+        '500ms',
+        '600ms',
+        '700ms',
+        '800ms',
+        '900ms',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_button_press_delay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Button Press Delay',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-5-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_button_press_delay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Button Press Delay',
+      'options': list([
+        'No Delay',
+        '300ms',
+        '400ms',
+        '500ms',
+        '600ms',
+        '700ms',
+        '800ms',
+        '900ms',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_button_press_delay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '300ms',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_dimming_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Instant',
+        '500ms',
+        '800ms',
+        '1s',
+        '1.5s',
+        '2s',
+        '2.5s',
+        '3s',
+        '3.5s',
+        '4s',
+        '5s',
+        '6s',
+        '7s',
+        '8s',
+        '10s',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_dimming_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dimming Speed',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-4-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_dimming_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Dimming Speed',
+      'options': list([
+        'Instant',
+        '500ms',
+        '800ms',
+        '1s',
+        '1.5s',
+        '2s',
+        '2.5s',
+        '3s',
+        '3.5s',
+        '4s',
+        '5s',
+        '6s',
+        '7s',
+        '8s',
+        '10s',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_dimming_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Instant',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Red',
+        'Orange',
+        'Lemon',
+        'Lime',
+        'Green',
+        'Teal',
+        'Cyan',
+        'Aqua',
+        'Blue',
+        'Violet',
+        'Magenta',
+        'Pink',
+        'White',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_led_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED Color',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-6-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch LED Color',
+      'options': list([
+        'Red',
+        'Orange',
+        'Lemon',
+        'Lime',
+        'Green',
+        'Teal',
+        'Cyan',
+        'Aqua',
+        'Blue',
+        'Violet',
+        'Magenta',
+        'Pink',
+        'White',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_led_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Green',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_effect-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Solid',
+        'Fast Blink',
+        'Slow Blink',
+        'Middle Chase',
+        'Open Close',
+        'Small To Big',
+        'Slow Falling',
+        'Middle Falling',
+        'Fast Falling',
+        'Slow Rising',
+        'Middle Rising',
+        'Fast Rising',
+        'Middle Blink',
+        'Slow Chase',
+        'Fast Chase',
+        'Slow Siren',
+        'Fast Siren',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_led_effect',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED Effect',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-7-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_effect-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch LED Effect',
+      'options': list([
+        'Solid',
+        'Fast Blink',
+        'Slow Blink',
+        'Middle Chase',
+        'Open Close',
+        'Small To Big',
+        'Slow Falling',
+        'Middle Falling',
+        'Fast Falling',
+        'Slow Rising',
+        'Middle Rising',
+        'Fast Rising',
+        'Middle Blink',
+        'Slow Chase',
+        'Fast Chase',
+        'Slow Siren',
+        'Fast Siren',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_led_effect',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Solid',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_load_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_load_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Load Control',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_load_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Load Control',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_load_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_protection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Local Protection Disable',
+        'Local Protection Enable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_local_protection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Local Protection',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-8-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_protection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Local Protection',
+      'options': list([
+        'Local Protection Disable',
+        'Local Protection Enable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_local_protection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Local Protection Disable',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_timer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Local Timer Disable',
+        'Local Timer Enable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_local_timer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Local Timer',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-3-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Local Timer',
+      'options': list([
+        'Local Timer Disable',
+        'Local Timer Enable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_local_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Local Timer Disable',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_rgb_indicator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_rgb_indicator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'RGB Indicator',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-6-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_rgb_indicator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch RGB Indicator',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_rgb_indicator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_smart_bulb_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Smart Bulb Disable',
+        'Smart Bulb Enable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_smart_bulb_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Smart Bulb Mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-2-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_smart_bulb_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Smart Bulb Mode',
+      'options': list([
+        'Smart Bulb Disable',
+        'Smart Bulb Enable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_smart_bulb_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Smart Bulb Disable',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_switch_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'On/Off+Single',
+        'On/Off+AUX',
+        'Dimmer+Single',
+        'Dimmer+AUX',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_switch_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch Mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_switch_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Switch Mode',
+      'options': list([
+        'On/Off+Single',
+        'On/Off+AUX',
+        'Dimmer+Single',
+        'Dimmer+AUX',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_switch_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'On/Off+Single',
+  })
+# ---
 # name: test_selects[laundry_dryer][select.mock_laundrydryer_temperature_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

@@ -153,6 +153,15 @@
         "record_video_note": "Recording video note",
         "upload_video_note": "Uploading video note"
       }
+    },
+    "media_type": {
+      "options": {
+        "animation": "Animation",
+        "audio": "Audio",
+        "document": "Document",
+        "photo": "Photo",
+        "video": "Video"
+      }
     }
   },
   "services": {
@@ -814,6 +823,64 @@
         }
       }
     },
+    "edit_message_media": {
+      "name": "Edit message media",
+      "description": "Edits the media content of a previously sent message.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to edit the message media."
+        },
+        "message_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
+          "description": "[%key:component::telegram_bot::services::edit_message::fields::message_id::description%]"
+        },
+        "chat_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
+          "description": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::description%]"
+        },
+        "media_type": {
+          "name": "Media type",
+          "description": "Type for the new media."
+        },
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "Remote path to the media."
+        },
+        "file": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::file::name%]",
+          "description": "Local path to the media."
+        },
+        "caption": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]",
+          "description": "The title of the media."
+        },
+        "username": {
+          "name": "[%key:common::config_flow::data::username%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::username::description%]"
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::password::description%]"
+        },
+        "authentication": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::authentication::description%]"
+        },
+        "verify_ssl": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
+        },
+        "timeout": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::timeout::name%]",
+          "description": "Timeout for sending the media in seconds."
+        },
+        "inline_keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        }
+      }
+    },
     "edit_caption": {
       "name": "Edit caption",
       "description": "Edits the caption of a previously sent message.",
@@ -960,6 +1027,9 @@
     "invalid_chat_ids": {
       "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."
     },
+    "invalid_inline_keyboard": {
+      "message": "Invalid value for inline keyboard. Only strings or lists are accepted."
+    },
     "failed_chat_ids": {
       "message": "Failed targets: {chat_ids}. Please verify that the chat IDs for {bot_name} have been configured."
     },
@@ -974,6 +1044,9 @@
     },
     "failed_to_load_file": {
       "message": "Failed to load file: {error}"
+    },
+    "action_failed": {
+      "message": "Action failed. {error}"
     }
   },
   "issues": {
