@@ -41,7 +41,7 @@
   },
   "issues": {
     "cloud_api_used": {
-      "title": "Cloud API Used",
+      "title": "Cloud API used",
       "description": "The Roborock integration is unable to connect directly to {device_name} and falling back to the cloud API. This is not recommended as it can lead to rate limiting. We recommend making your vacuum accessible by your Home Assistant instance."
     }
   },
