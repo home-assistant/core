@@ -1085,7 +1085,8 @@ async def test_update_failed_retry_after(
     """
     entry = MockConfigEntry()
     entry.mock_state(
-        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
+        hass,
+        config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
     )
     crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
     setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
@@ -1102,7 +1103,7 @@ async def test_update_failed_retry_after(
 
 
 @pytest.mark.parametrize(
-    "err_msg",
+    ("exc", "expected_exception", "message"),
     [
         (
             update_coordinator.UpdateFailed(retry_after=60),
@@ -1112,7 +1113,9 @@ async def test_update_failed_retry_after(
     ],
 )
 async def test_refresh_known_errors_retry_after(
-    err_msg: tuple[Exception, type[Exception], str],
+    exc: update_coordinator.UpdateFailed,
+    expected_exception: type[Exception],
+    message: str,
     crd: update_coordinator.DataUpdateCoordinator[int],
     caplog: pytest.LogCaptureFixture,
     hass: HomeAssistant,
@@ -1120,7 +1123,7 @@ async def test_refresh_known_errors_retry_after(
     """Test raising known errors, this time with retry_after."""
     unsub = crd.async_add_listener(lambda: None)
 
-    crd.update_method = AsyncMock(side_effect=err_msg[0])
+    crd.update_method = AsyncMock(side_effect=exc)
 
     with (
         patch.object(hass.loop, "time", return_value=1_000.0),
@@ -1130,12 +1133,12 @@ async def test_refresh_known_errors_retry_after(
 
         assert crd.data is None
         assert crd.last_update_success is False
-        assert isinstance(crd.last_exception, err_msg[1])
-        assert err_msg[2] in caplog.text
+        assert isinstance(crd.last_exception, expected_exception)
+        assert message in caplog.text
 
         when = mock_call_at.call_args[0][0]
 
-        expected = 1_000.0 + crd._microsecond + err_msg[0].retry_after
+        expected = 1_000.0 + crd._microsecond + exc.retry_after
         assert abs(when - expected) < 0.005, (when, expected)
 
         assert crd._retry_after is None
