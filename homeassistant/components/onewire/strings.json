@@ -139,8 +139,12 @@
     "step": {
       "device_selection": {
         "data": {
-          "clear_device_options": "Clear all device configurations",
-          "device_selection": "[%key:component::onewire::options::error::device_not_selected%]"
+          "clear_device_options": "Reset all device customisations",
+          "device_selection": "Customise specific devices"
+        },
+        "data_description": {
+          "clear_device_options": "Use this to reset all device specific options to default values.",
+          "device_selection": "Customise behaviour of individual devices."
         },
         "description": "Select what configuration steps to process",
         "title": "1-Wire device options"
@@ -148,6 +152,9 @@
       "configure_device": {
         "data": {
           "precision": "Sensor precision"
+        },
+        "data_description": {
+          "precision": "The lower the precision, the faster the sensor will respond, but with less accuracy."
         },
         "description": "Select sensor precision for {sensor_id}",
         "title": "1-Wire sensor precision"
