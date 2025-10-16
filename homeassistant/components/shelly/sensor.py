@@ -1509,7 +1509,7 @@ RPC_SENSORS: Final = {
     "number_flow_rate": RpcSensorDescription(
         key="number",
         sub_key="value",
-        name="Water flow",
+        name="Water flow rate",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
