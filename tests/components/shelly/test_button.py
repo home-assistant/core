@@ -484,13 +484,13 @@ async def test_migrate_unique_id_virtual_components_roles(
     assert "Migrating unique_id for button.test_name_test_button" in caplog.text
 
 
-async def test_rpc_sleeping_button(
+async def test_rpc_smoke_mute_alarm_button(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test RPC online sleeping button."""
+    """Test RPC smoke mute alarm button."""
     entity_id = f"{BUTTON_DOMAIN}.test_name_mute_alarm"
     status = {
         "sys": {"wakeup_period": 1000},
