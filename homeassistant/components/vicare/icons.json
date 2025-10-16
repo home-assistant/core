@@ -21,6 +21,15 @@
       },
       "one_time_charge": {
         "default": "mdi:shower-head"
+      },
+      "mounting_mode": {
+        "default": "mdi:wrench"
+      },
+      "child_safety_lock_mode": {
+        "default": "mdi:lock"
+      },
+      "valve": {
+        "default": "mdi:pipe-valve"
       }
     },
     "button": {
@@ -90,6 +99,12 @@
       },
       "ventilation_level": {
         "default": "mdi:fan"
+      },
+      "zigbee_signal_strength": {
+        "default": "mdi:wifi"
+      },
+      "valve_position": {
+        "default": "mdi:pipe-valve"
       }
     }
   },
