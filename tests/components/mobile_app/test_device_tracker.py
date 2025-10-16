@@ -104,7 +104,6 @@ async def setup_zone(hass: HomeAssistant) -> None:
 )
 async def test_sending_location(
     hass: HomeAssistant,
-    setup_zone: None,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
     extra_webhook_data: dict[str, Any],
