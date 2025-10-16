@@ -1084,7 +1084,7 @@ async def test_update_failed_retry_after(
     a decreasing level of logging once the first message is logged.
     """
     entry = MockConfigEntry()
-    entry._async_set_state(
+    entry.mock_state(
         hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
     )
     crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
