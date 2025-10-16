@@ -204,7 +204,7 @@ class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
 class HabiticaPartyCoordinator(HabiticaBaseCoordinator[HabiticaPartyData]):
     """Habitica Party Coordinator."""
 
-    _update_interval = timedelta(seconds=15)
+    _update_interval = timedelta(minutes=15)
 
     async def _update_data(self) -> HabiticaPartyData:
         """Fetch the latest party data."""
