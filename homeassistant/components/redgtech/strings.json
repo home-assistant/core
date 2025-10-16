@@ -30,17 +30,8 @@
     "authentication_failed": {
       "message": "Authentication failed. Please check your credentials."
     },
-    "switch_turn_on_failed": {
-      "message": "Failed to turn on switch"
-    },
-    "switch_turn_off_failed": {
-      "message": "Failed to turn off switch"
-    },
     "connection_error": {
-      "message": "Connection error with Redgtech API"
-    },
-    "switch_auth_error": {
-      "message": "Authentication failed when controlling Redgtech switch"
+      "message": "Connection error"
     }
   }
 }
