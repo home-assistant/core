@@ -14,7 +14,6 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import HABITICA_KEY
 from .const import DOMAIN, MANUFACTURER, NAME
 from .coordinator import (
     HabiticaConfigEntry,
@@ -101,11 +100,12 @@ class HabiticaPartyMemberBase(HabiticaBase):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-
+        if TYPE_CHECKING:
+            assert self.subentry
+            assert self.subentry.unique_id
         return (
             super().available
-            and (party := self.user.party.id) is not None
-            and party in self.hass.data[HABITICA_KEY]
+            and UUID(self.subentry.unique_id) in self.party_coordinator.data.members
         )
 
     async def async_added_to_hass(self) -> None:

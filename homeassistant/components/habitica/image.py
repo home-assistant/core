@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from uuid import UUID
 
 from habiticalib import Avatar, ContentData, extract_avatar
 
@@ -49,17 +50,21 @@ async def async_setup_entry(
             )
         )
         for subentry_id, subentry in config_entry.subentries.items():
-            async_add_entities(
-                [
-                    HabiticaPartyMemberImage(
-                        hass,
-                        coordinator,
-                        party_coordinator,
-                        subentry,
-                    )
-                ],
-                config_subentry_id=subentry_id,
-            )
+            if (
+                subentry.unique_id
+                and UUID(subentry.unique_id) in party_coordinator.data.members
+            ):
+                async_add_entities(
+                    [
+                        HabiticaPartyMemberImage(
+                            hass,
+                            coordinator,
+                            party_coordinator,
+                            subentry,
+                        )
+                    ],
+                    config_subentry_id=subentry_id,
+                )
 
     async_add_entities(entities)
 
@@ -90,7 +95,7 @@ class HabiticaImage(HabiticaBase, ImageEntity):
     def _handle_coordinator_update(self) -> None:
         """Check if equipped gear and other things have changed since last avatar image generation."""
 
-        if self._avatar != self.user:
+        if self.available and self._avatar != self.user:
             self._avatar = extract_avatar(self.user)
             self._attr_image_last_updated = dt_util.utcnow()
             self._cache = None

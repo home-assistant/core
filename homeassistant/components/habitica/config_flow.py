@@ -409,10 +409,7 @@ class PartyMembersSubentryFlowHandler(ConfigSubentryFlow):
         entry: HabiticaConfigEntry = self._get_entry()
         if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="config_entry_disabled")
-        if (
-            not (party := entry.runtime_data.data.user.party.id)
-            or party not in self.hass.data[HABITICA_KEY]
-        ):
+        if (party := entry.runtime_data.data.user.party.id) is None:
             return self.async_abort(reason="not_in_a_party")
 
         party_members = self.hass.data[HABITICA_KEY][party].data.members

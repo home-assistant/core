@@ -8,6 +8,7 @@ from datetime import datetime
 from enum import StrEnum
 import logging
 from typing import Any
+from uuid import UUID
 
 from habiticalib import ContentData, GroupData, HabiticaClass, TaskData, UserData, ha
 
@@ -408,18 +409,22 @@ async def async_setup_entry(
             for description in SENSOR_DESCRIPTIONS_PARTY
         )
         for subentry_id, subentry in config_entry.subentries.items():
-            async_add_entities(
-                [
-                    HabiticaPartyMemberSensor(
-                        coordinator,
-                        party_coordinator,
-                        description,
-                        subentry,
-                    )
-                    for description in SENSOR_DESCRIPTIONS_COMMON
-                ],
-                config_subentry_id=subentry_id,
-            )
+            if (
+                subentry.unique_id
+                and UUID(subentry.unique_id) in party_coordinator.data.members
+            ):
+                async_add_entities(
+                    [
+                        HabiticaPartyMemberSensor(
+                            coordinator,
+                            party_coordinator,
+                            description,
+                            subentry,
+                        )
+                        for description in SENSOR_DESCRIPTIONS_COMMON
+                    ],
+                    config_subentry_id=subentry_id,
+                )
 
 
 class HabiticaSensor(HabiticaBase, SensorEntity):
@@ -443,13 +448,17 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
-        if self.entity_description.key is HabiticaSensorEntity.CLASS and (
-            _class := self.user.stats.Class
+        if (
+            self.available
+            and self.entity_description.key is HabiticaSensorEntity.CLASS
+            and (_class := self.user.stats.Class)
         ):
             return SVG_CLASS[_class]
 
-        if self.entity_description.key is HabiticaSensorEntity.DISPLAY_NAME and (
-            img_url := self.user.profile.imageUrl
+        if (
+            self.available
+            and self.entity_description.key is HabiticaSensorEntity.DISPLAY_NAME
+            and (img_url := self.user.profile.imageUrl)
         ):
             return img_url
 
