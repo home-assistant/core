@@ -14,23 +14,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import CONF_API_KEY, CONF_NAME, EntityCategory
+from homeassistant.const import CONF_API_KEY, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_FROM,
-    CONF_ROUTES,
-    CONF_TIME,
-    CONF_TO,
-    CONF_VIA,
-    DOMAIN,
-    INTEGRATION_TITLE,
-    ROUTE_MODEL,
-)
+from .const import CONF_ROUTES, DOMAIN, INTEGRATION_TITLE, ROUTE_MODEL, ROUTES_SCHEMA
 from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
 from .utils import (
     get_arrival_delay,
@@ -42,18 +33,6 @@ from .utils import (
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0  # since we use coordinator pattern
-
-ROUTE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_FROM): cv.string,
-        vol.Required(CONF_TO): cv.string,
-        vol.Optional(CONF_VIA): cv.string,
-        vol.Optional(CONF_TIME): cv.time,
-    }
-)
-
-ROUTES_SCHEMA = vol.All(cv.ensure_list, [ROUTE_SCHEMA])
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_API_KEY): cv.string, vol.Optional(CONF_ROUTES): ROUTES_SCHEMA}
