@@ -1,4 +1,4 @@
-"""Test the Nederlandse Spoorwegen sensor."""
+"""Test the Nederlandse Spoorwegen binary sensor."""
 
 from unittest.mock import AsyncMock
 
