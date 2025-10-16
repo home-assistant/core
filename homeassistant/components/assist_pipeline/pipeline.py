@@ -719,6 +719,9 @@ class PipelineRun:
         audio_chunks_for_stt: list[EnhancedAudioChunk],
     ) -> wake_word.DetectionResult | None:
         """Run wake-word-detection portion of pipeline. Returns detection result."""
+
+        # Setup metadata and event
+
         metadata_dict = asdict(
             stt.SpeechMetadata(
                 language="",
@@ -731,9 +734,7 @@ class PipelineRun:
         )
 
         wake_word_settings = self.wake_word_settings or WakeWordSettings()
-
-        # Remove language since it doesn't apply to wake words yet
-        metadata_dict.pop("language", None)
+        metadata_dict.pop("language", None)  # Remove language since it doesn’t apply to wake words yet
 
         self.process_event(
             PipelineEvent(
@@ -749,39 +750,21 @@ class PipelineRun:
         if self.debug_recording_queue is not None:
             self.debug_recording_queue.put_nowait(f"00_wake-{self.wake_word_entity_id}")
 
-        wake_word_vad: VoiceActivityTimeout | None = None
-        if (wake_word_settings.timeout is not None) and (
-            wake_word_settings.timeout > 0
-        ):
-            # Use VAD to determine timeout
-            wake_word_vad = VoiceActivityTimeout(wake_word_settings.timeout)
+        # Prepare wake-word timeout and buffer
 
-        # Audio chunk buffer. This audio will be forwarded to speech-to-text
-        # after wake-word-detection.
-        num_audio_chunks_to_buffer = int(
-            (wake_word_settings.audio_seconds_to_buffer * SAMPLE_RATE)
-            / SAMPLES_PER_CHUNK
-        )
+        wake_word_vad = self._create_wake_word_vad(wake_word_settings)
+        stt_audio_buffer = self._create_stt_audio_buffer(wake_word_settings)
 
-        stt_audio_buffer: deque[EnhancedAudioChunk] | None = None
-        if num_audio_chunks_to_buffer > 0:
-            stt_audio_buffer = deque(maxlen=num_audio_chunks_to_buffer)
+        # Run wake-word detection
 
         try:
-            # Detect wake word(s)
-            result = await self.wake_word_entity.async_process_audio_stream(
-                self._wake_word_audio_stream(
-                    audio_stream=stream,
-                    stt_audio_buffer=stt_audio_buffer,
-                    wake_word_vad=wake_word_vad,
-                ),
-                self.pipeline.wake_word_id,
+            result = await self._process_wake_word_audio(
+                stream, stt_audio_buffer, wake_word_vad
             )
-
             if stt_audio_buffer is not None:
-                # All audio kept from right before the wake word was detected as
-                # a single chunk.
+                # All audio kept from right before the wake word was detected as a single chunk.
                 audio_chunks_for_stt.extend(stt_audio_buffer)
+
         except WakeWordDetectionAborted:
             raise
         except WakeWordTimeoutError:
@@ -796,47 +779,17 @@ class PipelineRun:
 
         _LOGGER.debug("wake-word-detection result %s", result)
 
+        # Handle result and cooldown
+
         if result is None:
             wake_word_output: dict[str, Any] = {}
         else:
-            # Avoid duplicate detections by checking cooldown
-            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(
-                result.wake_word_phrase
-            )
-            if last_wake_up is not None:
-                sec_since_last_wake_up = time.monotonic() - last_wake_up
-                if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
-                    _LOGGER.debug(
-                        "Duplicate wake word detection occurred for %s",
-                        result.wake_word_phrase,
-                    )
-                    raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
+            self._enforce_wake_word_cooldown(result)
+            self._store_wake_word_timestamp(result)
+            self._append_queued_audio(result, audio_chunks_for_stt)
+            wake_word_output = self._prepare_wake_word_output(result)
 
-            # Record last wake up time to block duplicate detections
-            self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = (
-                time.monotonic()
-            )
-
-            if result.queued_audio:
-                # Add audio that was pending at detection.
-                #
-                # Because detection occurs *after* the wake word was actually
-                # spoken, we need to make sure pending audio is forwarded to
-                # speech-to-text so the user does not have to pause before
-                # speaking the voice command.
-                audio_chunks_for_stt.extend(
-                    EnhancedAudioChunk(
-                        audio=chunk_ts[0],
-                        timestamp_ms=chunk_ts[1],
-                        speech_probability=None,
-                    )
-                    for chunk_ts in result.queued_audio
-                )
-
-            wake_word_output = asdict(result)
-
-            # Remove non-JSON fields
-            wake_word_output.pop("queued_audio", None)
+        # Emit final event and return
 
         self.process_event(
             PipelineEvent(
@@ -846,6 +799,79 @@ class PipelineRun:
         )
 
         return result
+
+    # Helper methods (same logic, extracted for clarity and cognitive simplicity)
+
+    def _create_wake_word_vad(self, wake_word_settings) -> VoiceActivityTimeout | None:
+        """Create a VoiceActivityTimeout object if timeout is set."""
+        if not wake_word_settings.timeout or wake_word_settings.timeout <= 0:
+            return None
+        return VoiceActivityTimeout(wake_word_settings.timeout)
+
+    def _create_stt_audio_buffer(self, wake_word_settings) -> deque[EnhancedAudioChunk] | None:
+        """Create a bounded deque to buffer STT audio."""
+        num_audio_chunks_to_buffer = int(
+            (wake_word_settings.audio_seconds_to_buffer * SAMPLE_RATE) / SAMPLES_PER_CHUNK
+        )
+        return deque(maxlen=num_audio_chunks_to_buffer) if num_audio_chunks_to_buffer > 0 else None
+
+    async def _process_wake_word_audio(
+        self,
+        stream: AsyncIterable[EnhancedAudioChunk],
+        stt_audio_buffer: deque[EnhancedAudioChunk] | None,
+        wake_word_vad: VoiceActivityTimeout | None,
+    ):
+        """Run async wake-word audio detection with buffering."""
+        return await self.wake_word_entity.async_process_audio_stream(
+            self._wake_word_audio_stream(
+                audio_stream=stream,
+                stt_audio_buffer=stt_audio_buffer,
+                wake_word_vad=wake_word_vad,
+            ),
+            self.pipeline.wake_word_id,
+        )
+
+    def _enforce_wake_word_cooldown(self, result):
+        """Raise if detection is within cooldown window."""
+        last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(result.wake_word_phrase)
+        if last_wake_up is None:
+            return
+        sec_since_last_wake_up = time.monotonic() - last_wake_up
+        if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
+            _LOGGER.debug(
+                "Duplicate wake word detection occurred for %s", result.wake_word_phrase
+            )
+            raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
+
+    def _store_wake_word_timestamp(self, result):
+        """Record last wake word detection time."""
+        self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = time.monotonic()
+
+    def _append_queued_audio(
+        self, result: wake_word.DetectionResult, audio_chunks_for_stt: list[EnhancedAudioChunk]
+    ):
+        """Forward queued audio to STT input."""
+        if not result.queued_audio:
+            return
+
+        # Add audio that was pending at detection.
+        # Because detection occurs *after* the wake word was actually
+        # spoken, we need to make sure pending audio is forwarded to
+        # speech-to-text so the user does not have to pause before speaking.
+        audio_chunks_for_stt.extend(
+            EnhancedAudioChunk(
+                audio=chunk_ts[0],
+                timestamp_ms=chunk_ts[1],
+                speech_probability=None,
+            )
+            for chunk_ts in result.queued_audio
+        )
+
+    def _prepare_wake_word_output(self, result: wake_word.DetectionResult) -> dict[str, Any]:
+        """Convert detection result to serializable dict."""
+        wake_word_output = asdict(result)
+        wake_word_output.pop("queued_audio", None)  # Remove non-JSON fields
+        return wake_word_output
 
     async def _wake_word_audio_stream(
         self,
