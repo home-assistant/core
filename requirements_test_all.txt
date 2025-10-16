@@ -2240,6 +2240,9 @@ qnapstats==0.4.0
 # homeassistant.components.quantum_gateway
 quantum-gateway==0.0.8
 
+# homeassistant.components.quickbars
+quickbars-bridge==0.0.6
+
 # homeassistant.components.radio_browser
 radios==0.3.2
 

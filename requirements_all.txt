@@ -2688,6 +2688,9 @@ qnapstats==0.4.0
 # homeassistant.components.quantum_gateway
 quantum-gateway==0.0.8
 
+# homeassistant.components.quickbars
+quickbars-bridge==0.0.6
+
 # homeassistant.components.radio_browser
 radios==0.3.2
 
@@ -3266,6 +3269,3 @@ zwave-js-server-python==0.67.1
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
-
-# homeassistant.components.quickbars
-quickbars-bridge==0.0.6
