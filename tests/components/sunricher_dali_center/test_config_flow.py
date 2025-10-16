@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 from PySrDaliGateway.exceptions import DaliGatewayError
 
-from homeassistant import config_entries
 from homeassistant.components.sunricher_dali_center.const import CONF_SN, DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -54,7 +54,7 @@ async def test_discovery_flow_success(
     mock_discovery.discover_gateways.return_value = [gateway]
 
     init_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert init_result["type"] is FlowResultType.FORM
     assert init_result["step_id"] == "user"
@@ -94,7 +94,7 @@ async def test_discovery_no_gateways_found(
     mock_discovery.discover_gateways.return_value = []
 
     init_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     discovery_result = await hass.config_entries.flow.async_configure(
         init_result["flow_id"], {}
@@ -114,7 +114,7 @@ async def test_discovery_gateway_error(
     mock_discovery.discover_gateways.side_effect = DaliGatewayError("failure")
 
     init_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     discovery_result = await hass.config_entries.flow.async_configure(
         init_result["flow_id"], {}
@@ -135,7 +135,7 @@ async def test_discovery_device_not_found(
     mock_discovery.discover_gateways.return_value = [gateway]
 
     init_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     flow_id = init_result["flow_id"]
     _ = await hass.config_entries.flow.async_configure(flow_id, {})
@@ -164,7 +164,7 @@ async def test_discovery_connection_failure(
     gateway.connect.side_effect = DaliGatewayError("failure")
 
     init_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     discovery_result = await hass.config_entries.flow.async_configure(
         init_result["flow_id"], {}
@@ -208,7 +208,7 @@ async def test_discovery_duplicate_filtered(
     mock_discovery.discover_gateways.return_value = [gateway]
 
     init_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     discovery_result = await hass.config_entries.flow.async_configure(
         init_result["flow_id"], {}
@@ -229,7 +229,7 @@ async def test_discovery_unique_id_already_configured(
     mock_discovery.discover_gateways.return_value = [gateway]
 
     init_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     discovery_result = await hass.config_entries.flow.async_configure(
         init_result["flow_id"], {}
