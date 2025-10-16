@@ -1,4 +1,5 @@
 """Provide an authentication layer for Home Assistant."""
+# Test change by Ylva – verifying Git
 
 from __future__ import annotations
 
