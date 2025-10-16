@@ -49,15 +49,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> bool
         await coordinator.async_config_entry_first_refresh()
         entry.runtime_data[subentry.subentry_id] = coordinator
 
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
+    entry.async_on_unload(entry.add_update_listener(async_update_entry))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_update_options(hass: HomeAssistant, entry: WAQIConfigEntry) -> None:
-    """Update options."""
+async def async_update_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> None:
+    """Update entry."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
