@@ -182,12 +182,10 @@ async def test_cloud_api_repair(
 
     issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == 2
-    issue = list(issue_registry.issues.values())[0]
-    assert issue.translation_key == "cloud_api_used"
-    assert issue.translation_placeholders == {"device_name": "Roborock S7 MaxV"}
-    issue = list(issue_registry.issues.values())[1]
-    assert issue.translation_key == "cloud_api_used"
-    assert issue.translation_placeholders == {"device_name": "Roborock S7 2"}
+    # Check that both expected device names are present, regardless of order
+    assert all(issue.translation_key == "cloud_api_used" for issue in issue_registry.issues.values())
+    names = {issue.translation_placeholders["device_name"] for issue in issue_registry.issues.values()}
+    assert names == {"Roborock S7 MaxV", "Roborock S7 2"}
     await hass.config_entries.async_unload(mock_roborock_entry.entry_id)
     # Now change to using the local api
     with patch(
