@@ -132,7 +132,7 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_CURRENT_POSITION] == 80
     assert state.state == ValveState.OPEN
 
-    # test cover is at requested position
+    # test valve is at requested position
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
         VALVE_DOMAIN,
