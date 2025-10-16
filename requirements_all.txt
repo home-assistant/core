@@ -256,7 +256,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.16.0
+aioesphomeapi==42.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -277,7 +277,7 @@ aioharmony==0.5.3;python_version<'3.14'
 aiohasupervisor==0.3.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.20.0
+aiohomeconnect==0.22.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -2201,7 +2201,7 @@ pymochad==0.2.0
 pymodbus==3.11.2
 
 # homeassistant.components.monoprice
-pymonoprice==0.4
+pymonoprice==0.5
 
 # homeassistant.components.msteams
 pymsteams==0.1.12

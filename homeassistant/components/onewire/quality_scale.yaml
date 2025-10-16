@@ -115,12 +115,8 @@ rules:
     comment: Under review
 
   ## Platinum
-  async-dependency:
-    status: todo
-    comment: The dependency is not async
+  async-dependency: done
   inject-websession:
     status: exempt
     comment: No websession
-  strict-typing:
-    status: todo
-    comment: The dependency is not typed
+  strict-typing: done
