@@ -1015,7 +1015,7 @@ habiticalib==0.4.5
 habluetooth==5.7.0
 
 # homeassistant.components.cloud
-hass-nabucasa==1.3.0
+hass-nabucasa==1.4.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
