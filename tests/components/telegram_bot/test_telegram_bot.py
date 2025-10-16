@@ -41,6 +41,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
     ATTR_FILE_ID,
+    ATTR_FILE_NAME,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
     ATTR_MEDIA_TYPE,
@@ -1457,23 +1458,41 @@ async def test_set_message_reaction(
     )
 
 
+@pytest.mark.parametrize(
+    ("file_id", "hass_file_name", "telegram_file_name", "expected_file_name"),
+    [
+        (
+            "some-file-id",
+            None,
+            "file_name.jpg",
+            "file_name.jpg",
+        ),  # user didn't provide file_name - use telegram file name
+        (
+            "some-file-id",
+            "custom_name.jpg",
+            "file_name.jpg",
+            "custom_name.jpg",
+        ),  # user provide file_name
+    ],
+)
 async def test_download_file(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
+    file_id: str,
+    hass_file_name: str | None,
+    telegram_file_name: str,
+    expected_file_name: str,
 ) -> None:
     """Test download file."""
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    TEST_FILE_ID = "some-file-id"
-    TEST_FILE_NAME = "file_name.jpg"
-    CUSTOM_PATH = f"/custom/path/{TEST_FILE_NAME}"
     TELEGRAM_FILE = File(
-        file_id=TEST_FILE_ID,
+        file_id=file_id,
         file_unique_id="blabla",
-        file_path=f"file/path/{TEST_FILE_NAME}",
+        file_path=f"file/path/{telegram_file_name}",
     )
 
     with tempfile.TemporaryDirectory() as tempdirname:
@@ -1483,23 +1502,28 @@ async def test_download_file(
                 AsyncMock(return_value=TELEGRAM_FILE),
             ) as get_file_mock,
             patch(
-                "telegram.File.download_to_drive", AsyncMock(return_value=CUSTOM_PATH)
+                "telegram.File.download_to_drive",
+                AsyncMock(return_value=f"/custom/path/{telegram_file_name}"),
             ) as download_to_drive_mock,
         ):
+            schema_request = {
+                ATTR_FILE_ID: file_id,
+                ATTR_DIRECTORY_PATH: tempdirname,
+            }
+            if hass_file_name:
+                schema_request[ATTR_FILE_NAME] = hass_file_name
+
             await hass.services.async_call(
                 DOMAIN,
                 "download_file",
-                {
-                    ATTR_FILE_ID: TEST_FILE_ID,
-                    ATTR_DIRECTORY_PATH: tempdirname,
-                },
+                schema_request,
                 blocking=True,
             )
 
         await hass.async_block_till_done()
         get_file_mock.assert_called_once_with(
-            file_id=TEST_FILE_ID,
+            file_id=file_id,
         )
         download_to_drive_mock.assert_called_once_with(
-            custom_path=f"{tempdirname}/{TEST_FILE_NAME}",  # the fact we have file name here means we got it from telegram File
+            custom_path=f"{tempdirname}/{expected_file_name}",
         )
