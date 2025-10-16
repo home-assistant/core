@@ -9,7 +9,6 @@ from homeassistant.components.sunricher_dali_center.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
@@ -20,6 +19,15 @@ def _get_light_entity_id(hass: HomeAssistant, unique_id: str) -> str:
     entity_id = entity_registry.async_get_entity_id("light", DOMAIN, unique_id)
     assert entity_id is not None
     return entity_id
+
+
+def _dispatch_status(
+    mock_gateway: MagicMock, device_id: str, status: dict[str, Any]
+) -> None:
+    """Invoke the status callback registered on the gateway mock."""
+    callback = mock_gateway.on_light_status
+    assert callable(callback)
+    callback(device_id, status)
 
 
 @pytest.fixture
@@ -132,6 +140,7 @@ async def test_dispatcher_connection(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_devices: list[MagicMock],
+    mock_dali_gateway: MagicMock,
 ) -> None:
     """Test that dispatcher signals are properly connected."""
     entity_id = _get_light_entity_id(hass, "01010000026A242121110E")
@@ -145,9 +154,7 @@ async def test_dispatcher_connection(
 
     status_update: dict[str, Any] = {"is_on": True, "brightness": 128}
 
-    async_dispatcher_send(
-        hass, "sunricher_dali_center_update_01010000026A242121110E", status_update
-    )
+    _dispatch_status(mock_dali_gateway, "01010000026A242121110E", status_update)
     await hass.async_block_till_done()
 
     state_after = hass.states.get(entity_id)
@@ -157,40 +164,35 @@ async def test_dispatcher_connection(
 async def test_color_temp_status_update(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    mock_dali_gateway: MagicMock,
 ) -> None:
     """Test status update with color temperature for CCT device."""
     status_update = {"color_temp_kelvin": 3000}
-    async_dispatcher_send(
-        hass, "sunricher_dali_center_update_01020000036A242121110E", status_update
-    )
+    _dispatch_status(mock_dali_gateway, "01020000036A242121110E", status_update)
     await hass.async_block_till_done()
 
 
 async def test_hs_color_status_update(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    mock_dali_gateway: MagicMock,
 ) -> None:
     """Test status update with HS color for HS device."""
     status_update = {"hs_color": (120.0, 50.0)}
-    async_dispatcher_send(
-        hass, "sunricher_dali_center_update_01030000046A242121110E", status_update
-    )
+    _dispatch_status(mock_dali_gateway, "01030000046A242121110E", status_update)
     await hass.async_block_till_done()
 
 
 async def test_rgbw_status_update(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    mock_dali_gateway: MagicMock,
 ) -> None:
     """Test status update with RGBW color and white level."""
     status_update1 = {"rgbw_color": (255, 128, 64, 32)}
-    async_dispatcher_send(
-        hass, "sunricher_dali_center_update_01040000056A242121110E", status_update1
-    )
+    _dispatch_status(mock_dali_gateway, "01040000056A242121110E", status_update1)
     await hass.async_block_till_done()
 
     status_update2 = {"white_level": 200}
-    async_dispatcher_send(
-        hass, "sunricher_dali_center_update_01040000056A242121110E", status_update2
-    )
+    _dispatch_status(mock_dali_gateway, "01040000056A242121110E", status_update2)
     await hass.async_block_till_done()
