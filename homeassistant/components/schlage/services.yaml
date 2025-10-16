@@ -1,24 +1,15 @@
 get_codes:
-  fields:
-    entity_id:
-      required: true
-      selector:
-        entity:
-          filter:
-            domain: lock
-            integration: schlage
-          multiple: true
+  target:
+    entity:
+      domain: lock
+      integration: schlage
 
 add_code:
+  target:
+    entity:
+      domain: lock
+      integration: schlage
   fields:
-    entity_id:
-      required: true
-      selector:
-        entity:
-          filter:
-            domain: lock
-            integration: schlage
-          multiple: true
     name:
       required: true
       example: "Example Person"
@@ -33,15 +24,11 @@ add_code:
           multiline: false
 
 delete_code:
+  target:
+    entity:
+      domain: lock
+      integration: schlage
   fields:
-    entity_id:
-      required: true
-      selector:
-        entity:
-          filter:
-            domain: lock
-            integration: schlage
-          multiple: true
     name:
       required: true
       example: "Example Person"

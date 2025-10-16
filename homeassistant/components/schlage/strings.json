@@ -77,10 +77,6 @@
       "name": "Add PIN code",
       "description": "Add a PIN code to a lock.",
       "fields": {
-        "entity_id": {
-          "name": "Lock",
-          "description": "The lock to add the PIN code to."
-        },
         "name": {
           "name": "PIN Name",
           "description": "Name for PIN code. Must be unique to lock."
@@ -95,10 +91,6 @@
       "name": "Delete PIN code",
       "description": "Delete a PIN code from a lock.",
       "fields": {
-        "entity_id": {
-          "name": "Lock",
-          "description": "The lock to delete the PIN code from."
-        },
         "name": {
           "name": "PIN Name",
           "description": "Name of PIN code to delete."
@@ -107,13 +99,7 @@
     },
     "get_codes": {
       "name": "Get PIN codes",
-      "description": "Retrieve all PIN codes from the lock",
-      "fields": {
-        "entity_id": {
-          "name": "Lock",
-          "description": "The lock to retrieve PIN codes from."
-        }
-      }
+      "description": "Retrieve all PIN codes from the lock"
     }
   }
 }
