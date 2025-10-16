@@ -1085,7 +1085,7 @@ async def test_update_failed_retry_after(
     """
     entry = MockConfigEntry()
     entry.mock_state(
-        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
     )
     crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
     setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
