@@ -36,15 +36,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
     model.from_dict(cast(dict, entry.data))
 
     try:
-        client = None
         session = AioSession()
-        # pylint: disable-next=unnecessary-dunder-call
-        client = await session.create_client(
+        client_creator_context = session.create_client(
             "s3",
             endpoint_url=model[CONF_ENDPOINT_URL],
             aws_secret_access_key=model[CONF_SECRET_ACCESS_KEY],
             aws_access_key_id=model[CONF_ACCESS_KEY_ID],
-        ).__aenter__()
+        )
+        # pylint: disable-next=unnecessary-dunder-call
+        client = await client_creator_context.__aenter__()
         await client.head_bucket(Bucket=model[CONF_BUCKET])
     except ClientError as err:
         raise ConfigEntryError(
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
             translation_key="cannot_connect",
         ) from err
     finally:
-        if client is not None:
+        if "client" in locals() and client is not None:
             await client.__aexit__(None, None, None)
 
     entry.runtime_data = client
