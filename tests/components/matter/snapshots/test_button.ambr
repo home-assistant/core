@@ -2380,7 +2380,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[temperature_sensor][button.mock_temperature_sensor_identify-entry]
+# name: test_buttons[temperature_sensor][button.mock_temperature_sensor_identify_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2393,7 +2393,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.mock_temperature_sensor_identify',
+    'entity_id': 'button.mock_temperature_sensor_identify_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2405,7 +2405,7 @@
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (0)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2415,14 +2415,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[temperature_sensor][button.mock_temperature_sensor_identify-state]
+# name: test_buttons[temperature_sensor][button.mock_temperature_sensor_identify_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',
-      'friendly_name': 'Mock Temperature Sensor Identify',
+      'friendly_name': 'Mock Temperature Sensor Identify (0)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.mock_temperature_sensor_identify',
+    'entity_id': 'button.mock_temperature_sensor_identify_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -106,7 +106,7 @@ class MatterEntity(Entity):
             ep
             for ep in self._endpoint.node.endpoints.values()
             if ep != self._endpoint
-            and ep.has_attribute(None, entity_info.primary_attribute)
+            and ep.has_cluster(entity_info.primary_attribute.cluster_id)
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
             if self._platform_translation_key and not self.translation_key:

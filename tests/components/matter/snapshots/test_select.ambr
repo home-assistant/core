@@ -2744,7 +2744,7 @@
     'state': 'Bake',
   })
 # ---
-# name: test_selects[oven][select.mock_oven_temperature_level-entry]
+# name: test_selects[oven][select.mock_oven_temperature_level_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2763,7 +2763,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.mock_oven_temperature_level',
+    'entity_id': 'select.mock_oven_temperature_level_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2775,7 +2775,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature level',
+    'original_name': 'Temperature level (4)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2785,10 +2785,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[oven][select.mock_oven_temperature_level-state]
+# name: test_selects[oven][select.mock_oven_temperature_level_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Oven Temperature level',
+      'friendly_name': 'Mock Oven Temperature level (4)',
       'options': list([
         'Low',
         'Medium',
@@ -2796,7 +2796,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_oven_temperature_level',
+    'entity_id': 'select.mock_oven_temperature_level_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

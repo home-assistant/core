@@ -1671,7 +1671,7 @@
     'state': '33',
   })
 # ---
-# name: test_numbers[multi_endpoint_light][number.inovelli_off_transition_time-entry]
+# name: test_numbers[multi_endpoint_light][number.inovelli_off_transition_time_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1689,7 +1689,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.inovelli_off_transition_time',
+    'entity_id': 'number.inovelli_off_transition_time_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1701,7 +1701,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Off transition time',
+    'original_name': 'Off transition time (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1711,10 +1711,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[multi_endpoint_light][number.inovelli_off_transition_time-state]
+# name: test_numbers[multi_endpoint_light][number.inovelli_off_transition_time_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Off transition time',
+      'friendly_name': 'Inovelli Off transition time (1)',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -1722,7 +1722,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.inovelli_off_transition_time',
+    'entity_id': 'number.inovelli_off_transition_time_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1843,7 +1843,7 @@
     'state': '254',
   })
 # ---
-# name: test_numbers[multi_endpoint_light][number.inovelli_on_off_transition_time-entry]
+# name: test_numbers[multi_endpoint_light][number.inovelli_on_off_transition_time_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1861,7 +1861,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.inovelli_on_off_transition_time',
+    'entity_id': 'number.inovelli_on_off_transition_time_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1873,7 +1873,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'On/Off transition time',
+    'original_name': 'On/Off transition time (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1883,10 +1883,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[multi_endpoint_light][number.inovelli_on_off_transition_time-state]
+# name: test_numbers[multi_endpoint_light][number.inovelli_on_off_transition_time_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli On/Off transition time',
+      'friendly_name': 'Inovelli On/Off transition time (1)',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -1894,14 +1894,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.inovelli_on_off_transition_time',
+    'entity_id': 'number.inovelli_on_off_transition_time_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.5',
   })
 # ---
-# name: test_numbers[multi_endpoint_light][number.inovelli_on_transition_time-entry]
+# name: test_numbers[multi_endpoint_light][number.inovelli_on_transition_time_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1919,7 +1919,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.inovelli_on_transition_time',
+    'entity_id': 'number.inovelli_on_transition_time_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1931,7 +1931,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'On transition time',
+    'original_name': 'On transition time (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1941,10 +1941,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[multi_endpoint_light][number.inovelli_on_transition_time-state]
+# name: test_numbers[multi_endpoint_light][number.inovelli_on_transition_time_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli On transition time',
+      'friendly_name': 'Inovelli On transition time (1)',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -1952,7 +1952,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.inovelli_on_transition_time',
+    'entity_id': 'number.inovelli_on_transition_time_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2767,7 +2767,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[oven][number.mock_oven_temperature_setpoint-entry]
+# name: test_numbers[oven][number.mock_oven_temperature_setpoint_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2785,7 +2785,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.mock_oven_temperature_setpoint',
+    'entity_id': 'number.mock_oven_temperature_setpoint_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2797,7 +2797,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature setpoint',
+    'original_name': 'Temperature setpoint (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2807,10 +2807,10 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[oven][number.mock_oven_temperature_setpoint-state]
+# name: test_numbers[oven][number.mock_oven_temperature_setpoint_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Oven Temperature setpoint',
+      'friendly_name': 'Mock Oven Temperature setpoint (2)',
       'max': 288.0,
       'min': 76.0,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -2818,7 +2818,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_oven_temperature_setpoint',
+    'entity_id': 'number.mock_oven_temperature_setpoint_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
