@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from pyfirefly.models import Account, Category
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass, StateType
-from homeassistant.components.sensor.const import SensorDeviceClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+    StateType,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback

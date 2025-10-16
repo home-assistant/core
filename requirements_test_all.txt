@@ -798,7 +798,7 @@ epicstore-api==0.1.7
 epion==0.0.3
 
 # homeassistant.components.epson
-epson-projector==0.5.1
+epson-projector==0.6.0
 
 # homeassistant.components.eq3btsmart
 eq3btsmart==2.3.0
@@ -1009,13 +1009,13 @@ ha-philipsjs==3.2.4
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.4.5
+habiticalib==0.4.6
 
 # homeassistant.components.bluetooth
 habluetooth==5.7.0
 
 # homeassistant.components.cloud
-hass-nabucasa==1.3.0
+hass-nabucasa==1.4.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1843,7 +1843,7 @@ pymochad==0.2.0
 pymodbus==3.11.2
 
 # homeassistant.components.monoprice
-pymonoprice==0.4
+pymonoprice==0.5
 
 # homeassistant.components.mysensors
 pymysensors==0.26.0
