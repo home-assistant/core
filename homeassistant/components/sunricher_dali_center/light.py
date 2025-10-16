@@ -134,7 +134,7 @@ class DaliCenterLight(LightEntity):
             async_dispatcher_connect(self.hass, signal, self._handle_availability)
         )
 
-        self._light.read_status()
+        await self.hass.async_add_executor_job(self._light.read_status)
 
     @callback
     def _handle_availability(self, available: bool) -> None:
