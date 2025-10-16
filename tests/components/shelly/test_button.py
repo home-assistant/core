@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3
+from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_SMOKE
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -476,3 +476,53 @@ async def test_migrate_unique_id_virtual_components_roles(
     assert entity_entry.unique_id == new_unique_id
 
     assert "Migrating unique_id for button.test_name_test_button" in caplog.text
+
+
+async def test_rpc_sleeping_button(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC online sleeping button."""
+    entity_id = f"{BUTTON_DOMAIN}.test_name_mute_alarm"
+    status = {
+        "sys": {"wakeup_period": 1000},
+        "smoke:0": {
+            "id": 0,
+            "alarm:": False,
+            "mute": False,
+        },
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    config = {"smoke:0": {"id": 0, "name": None}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    entry = await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
+
+    # Sensor should be created when device is online
+    assert hass.states.get(entity_id) is None
+
+    register_entity(
+        hass,
+        BUTTON_DOMAIN,
+        "test_name_mute_alarm",
+        "smoke:0-smoke_mute",
+        entry,
+    )
+
+    # Make device online
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.mock_update()
+    mock_rpc_device.smoke_mute_alarm.assert_called_once_with(0)

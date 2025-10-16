@@ -24,6 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
     MODEL_FRANKEVER_WATER_VALVE,
@@ -34,6 +35,7 @@ from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoo
 from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
+    ShellySleepingRpcAttributeEntity,
     async_setup_entry_rpc,
     get_entity_block_device_info,
     get_entity_rpc_device_info,
@@ -190,9 +192,10 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert coordinator is not None
 
-    await er.async_migrate_entries(
-        hass, config_entry.entry_id, partial(async_migrate_unique_ids, coordinator)
-    )
+    if coordinator.device.initialized:
+        await er.async_migrate_entries(
+            hass, config_entry.entry_id, partial(async_migrate_unique_ids, coordinator)
+        )
 
     entities: list[ShellyButton] = []
 
@@ -208,22 +211,31 @@ async def async_setup_entry(
         return
 
     # add RPC buttons
-    async_setup_entry_rpc(
-        hass, config_entry, async_add_entities, RPC_BUTTONS, RpcVirtualButton
-    )
+    if config_entry.data[CONF_SLEEP_PERIOD]:
+        async_setup_entry_rpc(
+            hass,
+            config_entry,
+            async_add_entities,
+            RPC_BUTTONS,
+            RpcSleepingButton,
+        )
+    else:
+        async_setup_entry_rpc(
+            hass, config_entry, async_add_entities, RPC_BUTTONS, RpcVirtualButton
+        )
 
-    # the user can remove virtual components from the device configuration, so
-    # we need to remove orphaned entities
-    virtual_button_component_ids = get_virtual_component_ids(
-        coordinator.device.config, BUTTON_PLATFORM
-    )
-    async_remove_orphaned_entities(
-        hass,
-        config_entry.entry_id,
-        coordinator.mac,
-        BUTTON_PLATFORM,
-        virtual_button_component_ids,
-    )
+        # the user can remove virtual components from the device configuration, so
+        # we need to remove orphaned entities
+        virtual_button_component_ids = get_virtual_component_ids(
+            coordinator.device.config, BUTTON_PLATFORM
+        )
+        async_remove_orphaned_entities(
+            hass,
+            config_entry.entry_id,
+            coordinator.mac,
+            BUTTON_PLATFORM,
+            virtual_button_component_ids,
+        )
 
 
 class ShellyBaseButton(
@@ -354,6 +366,20 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
         await self.coordinator.device.button_trigger(self._id, "single_push")
 
 
+class RpcSleepingButton(ShellySleepingRpcAttributeEntity, ButtonEntity):
+    """Defines a Shelly RPC virtual component button."""
+
+    entity_description: RpcButtonDescription
+
+    @rpc_call
+    async def async_press(self) -> None:
+        """Triggers the Shelly button press service."""
+        if TYPE_CHECKING:
+            assert isinstance(self.coordinator, ShellyRpcCoordinator)
+
+        await self.coordinator.device.smoke_mute_alarm(self._id)
+
+
 RPC_BUTTONS = {
     "button_generic": RpcButtonDescription(
         key="button",
@@ -378,5 +404,12 @@ RPC_BUTTONS = {
         entity_category=EntityCategory.CONFIG,
         entity_class=ShellyBluTrvButton,
         models={MODEL_BLU_GATEWAY_G3},
+    ),
+    "smoke_mute": RpcButtonDescription(
+        key="smoke",
+        sub_key="mute",
+        name="Mute alarm",
+        translation_key="mute",
+        entity_class=RpcSleepingButton,
     ),
 }
