@@ -1591,8 +1591,11 @@ class PipelineRun:
         assert self.audio_enhancer is not None
 
         timestamp_ms = 0
+        # Refactor: Use math.isclose to safely compare floating point values
+        volume_multiplier = self.audio_settings.volume_multiplier
+        apply_volume = not math.isclose(volume_multiplier, 1.0, rel_tol=1e-6)
         async for dirty_samples in audio_stream:
-            if self.audio_settings.volume_multiplier != 1.0:
+            if apply_volume:
                 # Static gain
                 dirty_samples = _multiply_volume(
                     dirty_samples, self.audio_settings.volume_multiplier
