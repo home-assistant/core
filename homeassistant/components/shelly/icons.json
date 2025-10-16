@@ -50,8 +50,14 @@
       "valve_status": {
         "default": "mdi:valve"
       },
+      "vial_name": {
+        "default": "mdi:scent"
+      },
       "illuminance_level": {
         "default": "mdi:brightness-5"
+      },
+      "vial_level": {
+        "default": "mdi:bottle-tonic-outline"
       }
     },
     "switch": {
@@ -60,6 +66,16 @@
         "state": {
           "off": "mdi:valve-closed",
           "on": "mdi:valve-open"
+        }
+      },
+      "cury_boost": {
+        "default": "mdi:rocket-launch"
+      },
+      "cury_slot": {
+        "default": "mdi:scent",
+        "state": {
+          "off": "mdi:scent-off",
+          "on": "mdi:scent"
         }
       }
     }
