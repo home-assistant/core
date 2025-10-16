@@ -112,8 +112,6 @@ async def test_sending_location(
     expected_state: str,
 ) -> None:
     """Test sending a location via a webhook."""
-    # await setup_zone(hass)
-
     resp = await webhook_client.post(
         f"/api/webhook/{create_registrations[1]['webhook_id']}",
         json={
