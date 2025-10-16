@@ -134,7 +134,7 @@ def get_departure_delay(trip: Trip) -> bool:
 
 def get_coordinator_attribute(coordinator, attribute: str) -> Any:
     """Get attribute from coordinator data with error handling."""
-    if not coordinator or not hasattr(coordinator, attribute):
+    if not coordinator:
         return None
     return getattr(coordinator, attribute, None)
 
