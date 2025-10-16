@@ -227,7 +227,7 @@ async def test_map_duplicate(
     mock_config_entry: MockConfigEntry,
     second_mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test duplicate station number handling."""
+    """Test duplicate location handling."""
     mock_config_entry.add_to_hass(hass)
     second_mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.subentries.async_init(
