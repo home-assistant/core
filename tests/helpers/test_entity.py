@@ -2936,9 +2936,7 @@ async def test_included_entities_mixin(
 
             return None
 
-    class MockHelloIncludedEntitiesClass(
-        MockHelloBaseClass, entity.IncludedEntitiesMixin
-    ):
+    class MockHelloIncludedEntitiesClass(MockHelloBaseClass, entity.Entity):
         """.Mock hello grouped entity class for a test integration."""
 
     platform = MockEntityPlatform(hass, domain="hello")
