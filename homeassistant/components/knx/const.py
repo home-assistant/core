@@ -14,7 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from .knx_module import KNXModule
 
 DOMAIN: Final = "knx"
 KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)

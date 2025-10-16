@@ -23,12 +23,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f0af21a2-d5a1-437c-b10a-b34a87394b71_main_energyMeter_energy_energy',
@@ -75,12 +79,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f0af21a2-d5a1-437c-b10a-b34a87394b71_main_powerMeter_power_power',
@@ -133,6 +141,7 @@
     'original_name': 'Voltage',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f0af21a2-d5a1-437c-b10a-b34a87394b71_main_voltageMeasurement_voltage_voltage',
@@ -152,6 +161,484 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.parent_s_bedroom_sensor_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00f9233e-fdaa-4020-99d4-e0073e53996a_main_battery_battery_battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': "Parent's Bedroom Sensor Battery",
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.parent_s_bedroom_sensor_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.parent_s_bedroom_sensor_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00f9233e-fdaa-4020-99d4-e0073e53996a_main_relativeHumidityMeasurement_humidity_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': "Parent's Bedroom Sensor Humidity",
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.parent_s_bedroom_sensor_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60.0',
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_illuminance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.parent_s_bedroom_sensor_illuminance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': 'Illuminance',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00f9233e-fdaa-4020-99d4-e0073e53996a_main_illuminanceMeasurement_illuminance_illuminance',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_illuminance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'illuminance',
+      'friendly_name': "Parent's Bedroom Sensor Illuminance",
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.parent_s_bedroom_sensor_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.parent_s_bedroom_sensor_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00f9233e-fdaa-4020-99d4-e0073e53996a_main_temperatureMeasurement_temperature_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': "Parent's Bedroom Sensor Temperature",
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.parent_s_bedroom_sensor_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.2',
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_uv_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.parent_s_bedroom_sensor_uv_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'UV index',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uv_index',
+    'unique_id': '00f9233e-fdaa-4020-99d4-e0073e53996a_main_ultravioletIndex_ultravioletIndex_ultravioletIndex',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][sensor.parent_s_bedroom_sensor_uv_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': "Parent's Bedroom Sensor UV index",
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.parent_s_bedroom_sensor_uv_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aq_sensor_3_ikea_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'e44d4e5c-45ea-498f-a653-f5d0c3d97bb8_main_relativeHumidityMeasurement_humidity_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'aq-sensor-3-ikea Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aq_sensor_3_ikea_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '53.0',
+  })
+# ---
+# name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_pm2_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aq_sensor_3_ikea_pm2_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
+    'original_icon': None,
+    'original_name': 'PM2.5',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'e44d4e5c-45ea-498f-a653-f5d0c3d97bb8_main_fineDustSensor_fineDustLevel_fineDustLevel',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_pm2_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm25',
+      'friendly_name': 'aq-sensor-3-ikea PM2.5',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aq_sensor_3_ikea_pm2_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aq_sensor_3_ikea_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'e44d4e5c-45ea-498f-a653-f5d0c3d97bb8_main_temperatureMeasurement_temperature_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'aq-sensor-3-ikea Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aq_sensor_3_ikea_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.0',
+  })
+# ---
+# name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_volatile_organic_compounds_parts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aq_sensor_3_ikea_volatile_organic_compounds_parts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
+    'original_icon': None,
+    'original_name': 'Volatile organic compounds parts',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'e44d4e5c-45ea-498f-a653-f5d0c3d97bb8_main_tvocMeasurement_tvocLevel_tvocLevel',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_volatile_organic_compounds_parts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'volatile_organic_compounds_parts',
+      'friendly_name': 'aq-sensor-3-ikea Volatile organic compounds parts',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aq_sensor_3_ikea_volatile_organic_compounds_parts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.1',
   })
 # ---
 # name: test_all_entities[aux_ac][sensor.aux_a_c_on_off_temperature-entry]
@@ -178,12 +665,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'bf53a150-f8a4-45d1-aac4-86252475d551_main_temperatureMeasurement_temperature_temperature',
@@ -230,12 +721,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '68e786a6-7f61-4c3a-9e13-70b803cf782b_main_energyMeter_energy_energy',
@@ -282,12 +777,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '68e786a6-7f61-4c3a-9e13-70b803cf782b_main_powerMeter_power_power',
@@ -338,6 +837,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '286ba274-4093-4bcb-849c-a1a3efe7b1e5_main_battery_battery_battery',
@@ -383,12 +883,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '286ba274-4093-4bcb-849c-a1a3efe7b1e5_main_temperatureMeasurement_temperature_temperature',
@@ -446,6 +950,7 @@
     'original_name': 'Alarm',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm',
     'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd_main_alarm_alarm_alarm',
@@ -500,6 +1005,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd_main_battery_battery_battery',
@@ -545,12 +1051,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'd0268a69-abfb-4c92-a646-61cec2e510ad_main_powerMeter_power_power',
@@ -601,6 +1111,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2d9a892b-1c93-45a5-84cb-0e81889498c6_main_battery_battery_battery',
@@ -646,12 +1157,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2d9a892b-1c93-45a5-84cb-0e81889498c6_main_temperatureMeasurement_temperature_temperature',
@@ -704,6 +1219,7 @@
     'original_name': 'Air quality',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_airQualitySensor_airQuality_airQuality',
@@ -755,6 +1271,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_carbonDioxideMeasurement_carbonDioxide_carbonDioxide',
@@ -807,6 +1324,7 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_relativeHumidityMeasurement_humidity_humidity',
@@ -857,6 +1375,7 @@
     'original_name': 'Odor sensor',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'odor_sensor',
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_odorSensor_odorLevel_odorLevel',
@@ -906,10 +1425,11 @@
     'original_name': 'PM1',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_veryFineDustSensor_veryFineDustLevel_veryFineDustLevel',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm1-state]
@@ -918,7 +1438,7 @@
       'device_class': 'pm1',
       'friendly_name': '에어모니터 플러스 PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eeomoniteo_peulreoseu_pm1',
@@ -958,10 +1478,11 @@
     'original_name': 'PM10',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_dustSensor_dustLevel_dustLevel',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm10-state]
@@ -970,7 +1491,7 @@
       'device_class': 'pm10',
       'friendly_name': '에어모니터 플러스 PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eeomoniteo_peulreoseu_pm10',
@@ -1010,10 +1531,11 @@
     'original_name': 'PM2.5',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_dustSensor_fineDustLevel_fineDustLevel',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm2_5-state]
@@ -1022,7 +1544,7 @@
       'device_class': 'pm25',
       'friendly_name': '에어모니터 플러스 PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eeomoniteo_peulreoseu_pm2_5',
@@ -1056,12 +1578,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_temperatureMeasurement_temperature_temperature',
@@ -1082,6 +1608,446 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '23.0',
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ar_varanda_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '23c6d296-4656-20d8-f6eb-2ff13e041753_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Ar Varanda Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ar_varanda_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '83.16',
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_energy_difference-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ar_varanda_energy_difference',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy difference',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_difference',
+    'unique_id': '23c6d296-4656-20d8-f6eb-2ff13e041753_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_energy_difference-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Ar Varanda Energy difference',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ar_varanda_energy_difference',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_energy_saved-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ar_varanda_energy_saved',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy saved',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_saved',
+    'unique_id': '23c6d296-4656-20d8-f6eb-2ff13e041753_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_energy_saved-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Ar Varanda Energy saved',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ar_varanda_energy_saved',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ar_varanda_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '23c6d296-4656-20d8-f6eb-2ff13e041753_main_relativeHumidityMeasurement_humidity_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Ar Varanda Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ar_varanda_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '59',
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ar_varanda_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '23c6d296-4656-20d8-f6eb-2ff13e041753_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Ar Varanda Power',
+      'power_consumption_end': '2025-08-19T12:18:52Z',
+      'power_consumption_start': '2025-08-19T02:01:25Z',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ar_varanda_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_power_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ar_varanda_power_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Power energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_energy',
+    'unique_id': '23c6d296-4656-20d8-f6eb-2ff13e041753_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_power_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Ar Varanda Power energy',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ar_varanda_power_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ar_varanda_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '23c6d296-4656-20d8-f6eb-2ff13e041753_main_temperatureMeasurement_temperature_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Ar Varanda Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ar_varanda_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28',
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ar_varanda_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_volume',
+    'unique_id': '23c6d296-4656-20d8-f6eb-2ff13e041753_main_audioVolume_volume_volume',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][sensor.ar_varanda_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ar Varanda Volume',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ar_varanda_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
   })
 # ---
 # name: test_all_entities[da_ac_ehs_01001][sensor.heat_pump_energy-entry]
@@ -1117,6 +2083,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -1172,6 +2139,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -1227,6 +2195,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -1282,6 +2251,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -1339,6 +2309,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -1394,6 +2365,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -1449,6 +2421,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -1504,6 +2477,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -1556,6 +2530,7 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_relativeHumidityMeasurement_humidity_humidity',
@@ -1611,6 +2586,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -1668,6 +2644,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -1714,12 +2691,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_temperatureMeasurement_temperature_temperature',
@@ -1770,6 +2751,7 @@
     'original_name': 'Volume',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'audio_volume',
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_audioVolume_volume_volume',
@@ -1790,7 +2772,7 @@
     'state': '100',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy-entry]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1805,7 +2787,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.office_airfree_energy',
+    'entity_id': 'sensor.clim_salon_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1823,29 +2805,30 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unique_id': '1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977_main_powerConsumptionReport_powerConsumption_energy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy-state]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Office AirFree Energy',
+      'friendly_name': 'Clim Salon Energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_energy',
+    'entity_id': 'sensor.clim_salon_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '602.171',
+    'state': '6652.713',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy_difference-entry]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_energy_difference-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1860,7 +2843,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.office_airfree_energy_difference',
+    'entity_id': 'sensor.clim_salon_energy_difference',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1878,29 +2861,30 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unique_id': '1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy_difference-state]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_energy_difference-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Office AirFree Energy difference',
+      'friendly_name': 'Clim Salon Energy difference',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_energy_difference',
+    'entity_id': 'sensor.clim_salon_energy_difference',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0.002',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy_saved-entry]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_energy_saved-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1915,7 +2899,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.office_airfree_energy_saved',
+    'entity_id': 'sensor.clim_salon_energy_saved',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1933,29 +2917,30 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unique_id': '1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977_main_powerConsumptionReport_powerConsumption_energySaved_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy_saved-state]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_energy_saved-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Office AirFree Energy saved',
+      'friendly_name': 'Clim Salon Energy saved',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_energy_saved',
+    'entity_id': 'sensor.clim_salon_energy_saved',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_humidity-entry]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1970,7 +2955,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.office_airfree_humidity',
+    'entity_id': 'sensor.clim_salon_humidity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1985,29 +2970,30 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_relativeHumidityMeasurement_humidity_humidity',
+    'unique_id': '1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977_main_relativeHumidityMeasurement_humidity_humidity',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_humidity-state]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
-      'friendly_name': 'Office AirFree Humidity',
+      'friendly_name': 'Clim Salon Humidity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_humidity',
+    'entity_id': 'sensor.clim_salon_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '48',
+    'state': '59',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_power-entry]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2022,7 +3008,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.office_airfree_power',
+    'entity_id': 'sensor.clim_salon_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2040,31 +3026,32 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unique_id': '1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977_main_powerConsumptionReport_powerConsumption_power_meter',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_power-state]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Office AirFree Power',
-      'power_consumption_end': '2025-03-27T05:40:02Z',
-      'power_consumption_start': '2025-03-27T05:29:22Z',
+      'friendly_name': 'Clim Salon Power',
+      'power_consumption_end': '2025-10-04T15:55:07Z',
+      'power_consumption_start': '2025-10-04T15:54:24Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_power',
+    'entity_id': 'sensor.clim_salon_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '143',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_power_energy-entry]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_power_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2079,7 +3066,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.office_airfree_power_energy',
+    'entity_id': 'sensor.clim_salon_power_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2097,29 +3084,30 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unique_id': '1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_power_energy-state]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_power_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Office AirFree Power energy',
+      'friendly_name': 'Clim Salon Power energy',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_power_energy',
+    'entity_id': 'sensor.clim_salon_power_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0.00174704861111111',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_temperature-entry]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2134,7 +3122,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.office_airfree_temperature',
+    'entity_id': 'sensor.clim_salon_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2143,35 +3131,39 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977_main_temperatureMeasurement_temperature_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_temperature-state]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Office AirFree Temperature',
+      'friendly_name': 'Clim Salon Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_temperature',
+    'entity_id': 'sensor.clim_salon_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '26',
+    'state': '20',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_volume-entry]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2184,7 +3176,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.office_airfree_volume',
+    'entity_id': 'sensor.clim_salon_volume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2199,20 +3191,21 @@
     'original_name': 'Volume',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'audio_volume',
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_audioVolume_volume_volume',
+    'unique_id': '1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977_main_audioVolume_volume_volume',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_volume-state]
+# name: test_all_entities[da_ac_rac_000003][sensor.clim_salon_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office AirFree Volume',
+      'friendly_name': 'Clim Salon Volume',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_volume',
+    'entity_id': 'sensor.clim_salon_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2252,6 +3245,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -2307,6 +3301,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -2362,6 +3357,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -2414,6 +3410,7 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_relativeHumidityMeasurement_humidity_humidity',
@@ -2469,6 +3466,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -2526,6 +3524,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -2572,12 +3571,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_temperatureMeasurement_temperature_temperature',
@@ -2628,6 +3631,7 @@
     'original_name': 'Volume',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'audio_volume',
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_audioVolume_volume_volume',
@@ -2678,6 +3682,7 @@
     'original_name': 'Air quality',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_airQualitySensor_airQuality_airQuality',
@@ -2729,10 +3734,11 @@
     'original_name': 'PM10',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_dustSensor_dustLevel_dustLevel',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[da_ac_rac_100001][sensor.corridor_a_c_pm10-state]
@@ -2741,7 +3747,7 @@
       'device_class': 'pm10',
       'friendly_name': 'Corridor A/C PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.corridor_a_c_pm10',
@@ -2781,10 +3787,11 @@
     'original_name': 'PM2.5',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_dustSensor_fineDustLevel_fineDustLevel',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[da_ac_rac_100001][sensor.corridor_a_c_pm2_5-state]
@@ -2793,7 +3800,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Corridor A/C PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.corridor_a_c_pm2_5',
@@ -2827,12 +3834,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_temperatureMeasurement_temperature_temperature',
@@ -2889,6 +3900,7 @@
     'original_name': 'Burner 1 heating mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_mode',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-01_samsungce.cooktopHeatingPower_heatingMode_heatingMode',
@@ -2942,6 +3954,7 @@
     'original_name': 'Burner 1 level',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_level',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-01_samsungce.cooktopHeatingPower_manualLevel_manualLevel',
@@ -2995,6 +4008,7 @@
     'original_name': 'Burner 2 heating mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_mode',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-02_samsungce.cooktopHeatingPower_heatingMode_heatingMode',
@@ -3048,6 +4062,7 @@
     'original_name': 'Burner 2 level',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_level',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-02_samsungce.cooktopHeatingPower_manualLevel_manualLevel',
@@ -3101,6 +4116,7 @@
     'original_name': 'Burner 3 heating mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_mode',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-03_samsungce.cooktopHeatingPower_heatingMode_heatingMode',
@@ -3154,6 +4170,7 @@
     'original_name': 'Burner 3 level',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_level',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-03_samsungce.cooktopHeatingPower_manualLevel_manualLevel',
@@ -3207,6 +4224,7 @@
     'original_name': 'Burner 4 heating mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_mode',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-04_samsungce.cooktopHeatingPower_heatingMode_heatingMode',
@@ -3260,6 +4278,7 @@
     'original_name': 'Burner 4 level',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_level',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_burner-04_samsungce.cooktopHeatingPower_manualLevel_manualLevel',
@@ -3313,6 +4332,7 @@
     'original_name': 'Operating state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cooktop_operating_state',
     'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_main_custom.cooktopOperatingState_cooktopOperatingState_cooktopOperatingState',
@@ -3366,6 +4386,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_completionTime_completionTime',
@@ -3434,6 +4455,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_job_state',
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_ovenJobState_ovenJobState',
@@ -3507,6 +4529,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_machine_state',
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_machineState_machineState',
@@ -3588,6 +4611,7 @@
     'original_name': 'Oven mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_mode',
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenMode_ovenMode_ovenMode',
@@ -3657,12 +4681,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_setpoint',
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenSetpoint_ovenSetpoint_ovenSetpoint',
@@ -3708,12 +4736,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_temperatureMeasurement_temperature_temperature',
@@ -3733,7 +4765,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17',
+    'state': '-17.2222222222222',
   })
 # ---
 # name: test_all_entities[da_ks_oven_01061][sensor.oven_completion_time-entry]
@@ -3764,6 +4796,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenOperatingState_completionTime_completionTime',
@@ -3832,6 +4865,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_job_state',
     'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenOperatingState_ovenJobState_ovenJobState',
@@ -3905,6 +4939,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_machine_state',
     'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenOperatingState_machineState_machineState',
@@ -3986,6 +5021,7 @@
     'original_name': 'Oven mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_mode',
     'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenMode_ovenMode_ovenMode',
@@ -4055,12 +5091,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_setpoint',
     'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenSetpoint_ovenSetpoint_ovenSetpoint',
@@ -4106,12 +5146,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_temperatureMeasurement_temperature_temperature',
@@ -4162,6 +5206,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenOperatingState_completionTime_completionTime',
@@ -4230,6 +5275,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_job_state',
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenOperatingState_ovenJobState_ovenJobState',
@@ -4303,6 +5349,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_machine_state',
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenOperatingState_machineState_machineState',
@@ -4361,6 +5408,7 @@
     'original_name': 'Operating state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cooktop_operating_state',
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_custom.cooktopOperatingState_cooktopOperatingState_cooktopOperatingState',
@@ -4441,6 +5489,7 @@
     'original_name': 'Oven mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_mode',
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenMode_ovenMode_ovenMode',
@@ -4510,12 +5559,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_setpoint',
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenSetpoint_ovenSetpoint_ovenSetpoint',
@@ -4534,7 +5587,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '218',
+    'state': '218.333333333333',
   })
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_temperature-entry]
@@ -4561,12 +5614,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_temperatureMeasurement_temperature_temperature',
@@ -4586,7 +5643,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '218',
+    'state': '218.333333333333',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_energy-entry]
@@ -4622,6 +5679,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -4677,6 +5735,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -4732,6 +5791,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -4778,12 +5838,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Freezer temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'freezer_temperature',
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_freezer_temperatureMeasurement_temperature_temperature',
@@ -4803,7 +5867,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-18',
+    'state': '-17.7777777777778',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_fridge_temperature-entry]
@@ -4830,12 +5894,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Fridge temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cooler_temperature',
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_cooler_temperatureMeasurement_temperature_temperature',
@@ -4855,7 +5923,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '2.77777777777778',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_power-entry]
@@ -4891,6 +5959,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -4948,6 +6017,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -4968,6 +6038,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0135559777781698',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_water_filter_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.refrigerator_water_filter_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water filter usage',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_filter_usage',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_custom.waterFilter_waterFilterUsage_waterFilterUsage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_water_filter_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Water filter usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_water_filter_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy-entry]
@@ -5003,6 +6125,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -5058,6 +6181,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -5113,6 +6237,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -5159,12 +6284,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Freezer temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'freezer_temperature',
     'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_freezer_temperatureMeasurement_temperature_temperature',
@@ -5184,7 +6313,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-18',
+    'state': '-17.7777777777778',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_fridge_temperature-entry]
@@ -5211,12 +6340,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Fridge temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cooler_temperature',
     'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_cooler_temperatureMeasurement_temperature_temperature',
@@ -5236,7 +6369,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '2.77777777777778',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_power-entry]
@@ -5272,6 +6405,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -5329,6 +6463,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -5349,6 +6484,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0270189050030708',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_water_filter_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.refrigerator_water_filter_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water filter usage',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_filter_usage',
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_custom.waterFilter_waterFilterUsage_waterFilterUsage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_water_filter_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Water filter usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_water_filter_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '52',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy-entry]
@@ -5384,6 +6571,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -5403,7 +6591,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '66.571',
+    'state': '229.226',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_difference-entry]
@@ -5439,6 +6627,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -5458,7 +6647,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.019',
+    'state': '0.01',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_saved-entry]
@@ -5494,6 +6683,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -5540,12 +6730,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Freezer temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'freezer_temperature',
     'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_freezer_temperatureMeasurement_temperature_temperature',
@@ -5565,7 +6759,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17',
+    'state': '-22.2222222222222',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_fridge_temperature-entry]
@@ -5592,12 +6786,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Fridge temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cooler_temperature',
     'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_cooler_temperatureMeasurement_temperature_temperature',
@@ -5617,7 +6815,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6',
+    'state': '2.22222222222222',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_power-entry]
@@ -5653,6 +6851,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -5664,8 +6863,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Frigo Power',
-      'power_consumption_end': '2025-03-30T18:38:18Z',
-      'power_consumption_start': '2025-03-30T18:21:37Z',
+      'power_consumption_end': '2025-06-16T16:45:48Z',
+      'power_consumption_start': '2025-06-16T16:30:09Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -5674,7 +6873,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '61',
+    'state': '17',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_power_energy-entry]
@@ -5710,6 +6909,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -5729,7 +6929,875 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0189117822202047',
+    'state': '0.0143511805540986',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][sensor.frigo_water_filter_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.frigo_water_filter_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water filter usage',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_filter_usage',
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_custom.waterFilter_waterFilterUsage_waterFilterUsage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][sensor.frigo_water_filter_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Frigo Water filter usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.frigo_water_filter_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '97',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lodowka_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '271d82e0-5b0c-e4b8-058e-cdf23a188610_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Lodówka Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lodowka_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.861',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_energy_difference-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lodowka_energy_difference',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy difference',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_difference',
+    'unique_id': '271d82e0-5b0c-e4b8-058e-cdf23a188610_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_energy_difference-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Lodówka Energy difference',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lodowka_energy_difference',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_energy_saved-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lodowka_energy_saved',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy saved',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_saved',
+    'unique_id': '271d82e0-5b0c-e4b8-058e-cdf23a188610_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_energy_saved-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Lodówka Energy saved',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lodowka_energy_saved',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lodowka_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '271d82e0-5b0c-e4b8-058e-cdf23a188610_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Lodówka Power',
+      'power_consumption_end': '2025-08-14T07:21:35Z',
+      'power_consumption_start': '2025-08-14T07:04:50Z',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lodowka_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_power_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lodowka_power_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Power energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_energy',
+    'unique_id': '271d82e0-5b0c-e4b8-058e-cdf23a188610_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][sensor.lodowka_power_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Lodówka Power energy',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lodowka_power_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.00027936416665713',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.robot_vacuum_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_battery_battery_battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Robot vacuum Battery',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.robot_vacuum_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '59',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_cleaning_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'part',
+        'repeat',
+        'manual',
+        'stop',
+        'map',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.robot_vacuum_cleaning_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Cleaning mode',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'robot_cleaner_cleaning_mode',
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_robotCleanerCleaningMode_robotCleanerCleaningMode_robotCleanerCleaningMode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_cleaning_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Robot vacuum Cleaning mode',
+      'options': list([
+        'auto',
+        'part',
+        'repeat',
+        'manual',
+        'stop',
+        'map',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.robot_vacuum_cleaning_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'stop',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.robot_vacuum_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Robot vacuum Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.robot_vacuum_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.981',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_energy_difference-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.robot_vacuum_energy_difference',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy difference',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_difference',
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_energy_difference-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Robot vacuum Energy difference',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.robot_vacuum_energy_difference',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.021',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_energy_saved-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.robot_vacuum_energy_saved',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy saved',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_saved',
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_energy_saved-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Robot vacuum Energy saved',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.robot_vacuum_energy_saved',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_movement-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'homing',
+        'idle',
+        'charging',
+        'alarm',
+        'off',
+        'reserve',
+        'point',
+        'after',
+        'cleaning',
+        'pause',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.robot_vacuum_movement',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Movement',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'robot_cleaner_movement',
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_robotCleanerMovement_robotCleanerMovement_robotCleanerMovement',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_movement-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Robot vacuum Movement',
+      'options': list([
+        'homing',
+        'idle',
+        'charging',
+        'alarm',
+        'off',
+        'reserve',
+        'point',
+        'after',
+        'cleaning',
+        'pause',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.robot_vacuum_movement',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cleaning',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.robot_vacuum_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Robot vacuum Power',
+      'power_consumption_end': '2025-07-10T11:20:22Z',
+      'power_consumption_start': '2025-07-10T11:11:22Z',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.robot_vacuum_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_power_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.robot_vacuum_power_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Power energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_energy',
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_power_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Robot vacuum Power energy',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.robot_vacuum_power_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_turbo_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'silence',
+        'extra_silence',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.robot_vacuum_turbo_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Turbo mode',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'robot_cleaner_turbo_mode',
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_robotCleanerTurboMode_robotCleanerTurboMode_robotCleanerTurboMode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_turbo_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Robot vacuum Turbo mode',
+      'options': list([
+        'on',
+        'off',
+        'silence',
+        'extra_silence',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.robot_vacuum_turbo_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'extra_silence',
   })
 # ---
 # name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_battery-entry]
@@ -5760,6 +7828,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main_battery_battery_battery',
@@ -5818,6 +7887,7 @@
     'original_name': 'Cleaning mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'robot_cleaner_cleaning_mode',
     'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main_robotCleanerCleaningMode_robotCleanerCleaningMode_robotCleanerCleaningMode',
@@ -5887,6 +7957,7 @@
     'original_name': 'Movement',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'robot_cleaner_movement',
     'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main_robotCleanerMovement_robotCleanerMovement_robotCleanerMovement',
@@ -5954,6 +8025,7 @@
     'original_name': 'Turbo mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'robot_cleaner_turbo_mode',
     'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main_robotCleanerTurboMode_robotCleanerTurboMode_robotCleanerTurboMode',
@@ -6013,6 +8085,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -6068,6 +8141,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -6123,6 +8197,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -6178,6 +8253,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -6235,6 +8311,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -6290,6 +8367,7 @@
     'original_name': 'Valve position',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'diverter_valve_position',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsDiverterValve_position_position',
@@ -6347,6 +8425,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -6402,6 +8481,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -6457,6 +8537,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -6512,6 +8593,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -6569,6 +8651,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -6624,6 +8707,7 @@
     'original_name': 'Valve position',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'diverter_valve_position',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsDiverterValve_position_position',
@@ -6681,6 +8765,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -6736,6 +8821,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -6791,6 +8877,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -6846,6 +8933,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -6903,6 +8991,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -6958,6 +9047,7 @@
     'original_name': 'Valve position',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'diverter_valve_position',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsDiverterValve_position_position',
@@ -7010,6 +9100,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_completionTime_completionTime',
@@ -7063,6 +9154,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -7118,6 +9210,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -7173,6 +9266,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -7236,6 +9330,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dishwasher_job_state',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_dishwasherJobState_dishwasherJobState',
@@ -7302,6 +9397,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dishwasher_machine_state',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_machineState_machineState',
@@ -7360,6 +9456,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -7417,6 +9514,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -7467,6 +9565,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_dryerOperatingState_completionTime_completionTime',
@@ -7520,6 +9619,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -7575,6 +9675,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -7630,6 +9731,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -7698,6 +9800,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_job_state',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_dryerOperatingState_dryerJobState_dryerJobState',
@@ -7769,6 +9872,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_machine_state',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_dryerOperatingState_machineState_machineState',
@@ -7827,6 +9931,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -7884,6 +9989,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -7934,6 +10040,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_completionTime_completionTime',
@@ -7987,6 +10094,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -8042,6 +10150,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -8097,6 +10206,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -8165,6 +10275,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_job_state',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_dryerJobState_dryerJobState',
@@ -8236,6 +10347,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_machine_state',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_machineState_machineState',
@@ -8294,6 +10406,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -8351,6 +10464,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -8401,6 +10515,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState_completionTime_completionTime',
@@ -8454,6 +10569,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -8509,6 +10625,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -8564,6 +10681,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -8632,6 +10750,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_job_state',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState_dryerJobState_dryerJobState',
@@ -8703,6 +10822,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_machine_state',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState_machineState_machineState',
@@ -8761,6 +10881,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -8818,6 +10939,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -8868,6 +10990,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_completionTime_completionTime',
@@ -8921,6 +11044,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -8976,6 +11100,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -9031,6 +11156,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -9100,6 +11226,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_job_state',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_washerJobState_washerJobState',
@@ -9172,6 +11299,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_machine_state',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_machineState_machineState',
@@ -9230,6 +11358,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -9287,6 +11416,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -9337,6 +11467,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState_completionTime_completionTime',
@@ -9390,6 +11521,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -9445,6 +11577,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -9500,6 +11633,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -9569,6 +11703,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_job_state',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState_washerJobState_washerJobState',
@@ -9641,6 +11776,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_machine_state',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState_machineState_machineState',
@@ -9699,6 +11835,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -9756,6 +11893,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -9806,6 +11944,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_washerOperatingState_completionTime_completionTime',
@@ -9859,6 +11998,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -9914,6 +12054,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -9969,6 +12110,7 @@
     'original_name': 'Energy saved',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_energySaved_meter',
@@ -10038,6 +12180,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_job_state',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_washerOperatingState_washerJobState_washerJobState',
@@ -10110,6 +12253,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_machine_state',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_washerOperatingState_machineState_machineState',
@@ -10168,6 +12312,7 @@
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_power_meter',
@@ -10225,6 +12370,7 @@
     'original_name': 'Power energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
@@ -10271,12 +12417,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Water consumption',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_consumption',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.waterConsumptionReport_waterConsumption_waterConsumption',
@@ -10327,6 +12477,7 @@
     'original_name': 'Completion time',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
     'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_washerOperatingState_completionTime_completionTime',
@@ -10394,6 +12545,7 @@
     'original_name': 'Job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_job_state',
     'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_washerOperatingState_washerJobState_washerJobState',
@@ -10466,6 +12618,7 @@
     'original_name': 'Machine state',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'washer_machine_state',
     'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_washerOperatingState_machineState_machineState',
@@ -10515,12 +12668,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'd5dc3299-c266-41c7-bd08-f540aea54b89_main_temperatureMeasurement_temperature_temperature',
@@ -10540,7 +12697,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '22',
+    'state': '21.6666666666667',
   })
 # ---
 # name: test_all_entities[ecobee_thermostat][sensor.main_floor_humidity-entry]
@@ -10573,6 +12730,7 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '028469cb-6e89-4f14-8d9a-bfbca5e0fbfc_main_relativeHumidityMeasurement_humidity_humidity',
@@ -10619,12 +12777,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '028469cb-6e89-4f14-8d9a-bfbca5e0fbfc_main_temperatureMeasurement_temperature_temperature',
@@ -10644,7 +12806,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '22',
+    'state': '21.6666666666667',
   })
 # ---
 # name: test_all_entities[ecobee_thermostat_offline][sensor.downstairs_humidity-entry]
@@ -10677,6 +12839,7 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1888b38f-6246-4f1e-911b-bfcfb66999db_main_relativeHumidityMeasurement_humidity_humidity',
@@ -10729,6 +12892,7 @@
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1888b38f-6246-4f1e-911b-bfcfb66999db_main_temperatureMeasurement_temperature_temperature',
@@ -10748,6 +12912,110 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[gas_detector][sensor.gas_detector_link_quality-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gas_detector_link_quality',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Link quality',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'link_quality',
+    'unique_id': 'd830b46f-f094-4560-b8c3-7690032fdb4c_main_signalStrength_lqi_lqi',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[gas_detector][sensor.gas_detector_link_quality-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gas Detector Link quality',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gas_detector_link_quality',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '148',
+  })
+# ---
+# name: test_all_entities[gas_detector][sensor.gas_detector_signal_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gas_detector_signal_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Signal strength',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'd830b46f-f094-4560-b8c3-7690032fdb4c_main_signalStrength_rssi_rssi',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_all_entities[gas_detector][sensor.gas_detector_signal_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Gas Detector Signal strength',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gas_detector_signal_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-71',
   })
 # ---
 # name: test_all_entities[gas_meter][sensor.gas_meter_gas-entry]
@@ -10774,6 +13042,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
       }),
@@ -10783,6 +13054,7 @@
     'original_name': 'Gas',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeterVolume_gasMeterVolume',
@@ -10802,7 +13074,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '40',
+    'state': '39.6435852288',
   })
 # ---
 # name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter-entry]
@@ -10829,12 +13101,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Gas meter',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_meter',
     'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeter_gasMeter',
@@ -10885,6 +13161,7 @@
     'original_name': 'Gas meter calorific',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_meter_calorific',
     'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeterCalorific_gasMeterCalorific',
@@ -10932,6 +13209,7 @@
     'original_name': 'Gas meter time',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_meter_time',
     'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeterTime_gasMeterTime',
@@ -10982,6 +13260,7 @@
     'original_name': 'Link quality',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_quality',
     'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a_main_signalStrength_lqi_lqi',
@@ -11032,6 +13311,7 @@
     'original_name': 'Signal strength',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a_main_signalStrength_rssi_rssi',
@@ -11078,12 +13358,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a_main_temperatureMeasurement_temperature_temperature',
@@ -11134,6 +13418,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_main_battery_battery_battery',
@@ -11179,12 +13464,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '69a271f6-6537-4982-8cd9-979866872692_main_energyMeter_energy_energy',
@@ -11231,12 +13520,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '69a271f6-6537-4982-8cd9-979866872692_main_powerMeter_power_power',
@@ -11283,12 +13576,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '69a271f6-6537-4982-8cd9-979866872692_main_temperatureMeasurement_temperature_temperature',
@@ -11339,6 +13636,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '71afed1c-006d-4e48-b16e-e7f88f9fd638_main_battery_battery_battery',
@@ -11384,6 +13682,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
@@ -11393,6 +13694,7 @@
     'original_name': 'Atmospheric pressure',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '692ea4e9-2022-4ed8-8a57-1b884a59cc38_main_atmosphericPressureMeasurement_atmosphericPressure_atmosphericPressure',
@@ -11412,7 +13714,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1000',
+    'state': '1000.0',
   })
 # ---
 # name: test_all_entities[lumi][sensor.outdoor_temp_battery-entry]
@@ -11443,6 +13745,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '692ea4e9-2022-4ed8-8a57-1b884a59cc38_main_battery_battery_battery',
@@ -11494,6 +13797,7 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '692ea4e9-2022-4ed8-8a57-1b884a59cc38_main_relativeHumidityMeasurement_humidity_humidity',
@@ -11540,12 +13844,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '692ea4e9-2022-4ed8-8a57-1b884a59cc38_main_temperatureMeasurement_temperature_temperature',
@@ -11565,7 +13873,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '24.4',
+    'state': '24.4444444444444',
   })
 # ---
 # name: test_all_entities[multipurpose_sensor][sensor.deck_door_battery-entry]
@@ -11596,6 +13904,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_battery_battery_battery',
@@ -11641,12 +13950,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_temperatureMeasurement_temperature_temperature',
@@ -11666,7 +13979,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '19.4',
+    'state': '19.4444444444444',
   })
 # ---
 # name: test_all_entities[multipurpose_sensor][sensor.deck_door_x_coordinate-entry]
@@ -11697,6 +14010,7 @@
     'original_name': 'X coordinate',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'x_coordinate',
     'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_threeAxis_threeAxis_x_coordinate',
@@ -11744,6 +14058,7 @@
     'original_name': 'Y coordinate',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'y_coordinate',
     'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_threeAxis_threeAxis_y_coordinate',
@@ -11791,6 +14106,7 @@
     'original_name': 'Z coordinate',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'z_coordinate',
     'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_threeAxis_threeAxis_z_coordinate',
@@ -11840,6 +14156,7 @@
     'original_name': 'Humidity',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2409a73c-918a-4d1f-b4f5-c27468c71d70_main_relativeHumidityMeasurement_humidity_humidity',
@@ -11886,12 +14203,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2409a73c-918a-4d1f-b4f5-c27468c71d70_main_temperatureMeasurement_temperature_temperature',
@@ -11911,7 +14232,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '23.6',
+    'state': '23.6111111111111',
   })
 # ---
 # name: test_all_entities[sensibo_airconditioner_1][sensor.office_air_conditioner_mode-entry]
@@ -11942,6 +14263,7 @@
     'original_name': 'Air conditioner mode',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_conditioner_mode',
     'unique_id': 'bf4b1167-48a3-4af7-9186-0900a678ffa5_main_airConditionerMode_airConditionerMode_airConditionerMode',
@@ -11983,12 +14305,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Cooling setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thermostat_cooling_setpoint',
     'unique_id': 'bf4b1167-48a3-4af7-9186-0900a678ffa5_main_thermostatCoolingSetpoint_coolingSetpoint_coolingSetpoint',
@@ -12008,6 +14334,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
+  })
+# ---
+# name: test_all_entities[tesla_powerwall][sensor.powerwall_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.powerwall_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'd2595c45-df6e-41ac-a7af-8e275071c19b_main_battery_battery_battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[tesla_powerwall][sensor.powerwall_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Powerwall Battery',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.powerwall_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35',
   })
 # ---
 # name: test_all_entities[tplink_p110][sensor.spulmaschine_energy-entry]
@@ -12043,6 +14419,7 @@
     'original_name': 'Energy',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '6602696a-1e48-49e4-919f-69406f5b5da1_main_powerConsumptionReport_powerConsumption_energy_meter',
@@ -12098,6 +14475,7 @@
     'original_name': 'Energy difference',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
     'unique_id': '6602696a-1e48-49e4-919f-69406f5b5da1_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
@@ -12150,6 +14528,7 @@
     'original_name': 'Brightness intensity',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'brightness_intensity',
     'unique_id': '5cc1c096-98b9-460c-8f1c-1045509ec605_main_relativeBrightness_brightnessIntensity_brightnessIntensity',
@@ -12199,6 +14578,7 @@
     'original_name': 'TV channel',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tv_channel',
     'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_main_tvChannel_tvChannel_tvChannel',
@@ -12246,6 +14626,7 @@
     'original_name': 'TV channel name',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tv_channel_name',
     'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_main_tvChannel_tvChannelName_tvChannelName',
@@ -12293,6 +14674,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2894dc93-0f11-49cc-8a81-3a684cebebf6_main_battery_battery_battery',
@@ -12338,12 +14720,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2894dc93-0f11-49cc-8a81-3a684cebebf6_main_temperatureMeasurement_temperature_temperature',
@@ -12363,7 +14749,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4734.552604985020',
+    'state': '4734.55260498502',
   })
 # ---
 # name: test_all_entities[virtual_water_sensor][sensor.asd_battery-entry]
@@ -12394,6 +14780,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a2a6018b-2663-4727-9d1d-8f56953b5116_main_battery_battery_battery',
@@ -12443,6 +14830,7 @@
     'original_name': 'Battery',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a9f587c5-5d8b-4273-8907-e7f609af5158_main_battery_battery_battery',

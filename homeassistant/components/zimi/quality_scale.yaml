@@ -16,6 +16,7 @@ rules:
     status: done
     comment: |
       https://mark_hannon@bitbucket.org/mark_hannon/zcc.git
+      https://bitbucket.org/mark_hannon/zcc/src/master/bitbucket-pipelines.yml
   docs-actions:
     status: exempt
     comment: |

@@ -55,12 +55,6 @@ from homeassistant.const import (  # noqa: F401
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
@@ -75,26 +69,6 @@ from .browse_media import (  # noqa: F401
     async_process_play_media_url,
 )
 from .const import (  # noqa: F401
-    _DEPRECATED_MEDIA_CLASS_DIRECTORY,
-    _DEPRECATED_SUPPORT_BROWSE_MEDIA,
-    _DEPRECATED_SUPPORT_CLEAR_PLAYLIST,
-    _DEPRECATED_SUPPORT_GROUPING,
-    _DEPRECATED_SUPPORT_NEXT_TRACK,
-    _DEPRECATED_SUPPORT_PAUSE,
-    _DEPRECATED_SUPPORT_PLAY,
-    _DEPRECATED_SUPPORT_PLAY_MEDIA,
-    _DEPRECATED_SUPPORT_PREVIOUS_TRACK,
-    _DEPRECATED_SUPPORT_REPEAT_SET,
-    _DEPRECATED_SUPPORT_SEEK,
-    _DEPRECATED_SUPPORT_SELECT_SOUND_MODE,
-    _DEPRECATED_SUPPORT_SELECT_SOURCE,
-    _DEPRECATED_SUPPORT_SHUFFLE_SET,
-    _DEPRECATED_SUPPORT_STOP,
-    _DEPRECATED_SUPPORT_TURN_OFF,
-    _DEPRECATED_SUPPORT_TURN_ON,
-    _DEPRECATED_SUPPORT_VOLUME_MUTE,
-    _DEPRECATED_SUPPORT_VOLUME_SET,
-    _DEPRECATED_SUPPORT_VOLUME_STEP,
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_ENTITY_PICTURE_LOCAL,
@@ -161,6 +135,8 @@ CACHE_LOCK: Final = "lock"
 CACHE_URL: Final = "url"
 CACHE_CONTENT: Final = "content"
 
+ATTR_MEDIA = "media"
+
 
 class MediaPlayerEnqueue(StrEnum):
     """Enqueue types for playing media."""
@@ -186,18 +162,25 @@ class MediaPlayerDeviceClass(StrEnum):
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(MediaPlayerDeviceClass))
 
 
-# DEVICE_CLASS* below are deprecated as of 2021.12
-# use the MediaPlayerDeviceClass enum instead.
-_DEPRECATED_DEVICE_CLASS_TV = DeprecatedConstantEnum(
-    MediaPlayerDeviceClass.TV, "2025.10"
-)
-_DEPRECATED_DEVICE_CLASS_SPEAKER = DeprecatedConstantEnum(
-    MediaPlayerDeviceClass.SPEAKER, "2025.10"
-)
-_DEPRECATED_DEVICE_CLASS_RECEIVER = DeprecatedConstantEnum(
-    MediaPlayerDeviceClass.RECEIVER, "2025.10"
-)
 DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]
+
+
+def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
+    """If 'media' key exists, promote its fields to the top level."""
+    if ATTR_MEDIA in data and isinstance(data[ATTR_MEDIA], dict):
+        if ATTR_MEDIA_CONTENT_TYPE in data or ATTR_MEDIA_CONTENT_ID in data:
+            raise vol.Invalid(
+                f"Play media cannot contain '{ATTR_MEDIA}' and '{ATTR_MEDIA_CONTENT_ID}' or '{ATTR_MEDIA_CONTENT_TYPE}'"
+            )
+        media_data = data[ATTR_MEDIA]
+
+        if ATTR_MEDIA_CONTENT_TYPE in media_data:
+            data[ATTR_MEDIA_CONTENT_TYPE] = media_data[ATTR_MEDIA_CONTENT_TYPE]
+        if ATTR_MEDIA_CONTENT_ID in media_data:
+            data[ATTR_MEDIA_CONTENT_ID] = media_data[ATTR_MEDIA_CONTENT_ID]
+
+        del data[ATTR_MEDIA]
+    return data
 
 
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
@@ -436,6 +419,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_PLAY_MEDIA,
         vol.All(
+            _promote_media_fields,
             cv.make_entity_service_schema(MEDIA_PLAYER_PLAY_MEDIA_SCHEMA),
             _rewrite_enqueue,
             _rename_keys(
@@ -814,19 +798,6 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Flag media player features that are supported."""
         return self._attr_supported_features
 
-    @property
-    def supported_features_compat(self) -> MediaPlayerEntityFeature:
-        """Return the supported features as MediaPlayerEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:
-            new_features = MediaPlayerEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
-
     def turn_on(self) -> None:
         """Turn the media player on."""
         raise NotImplementedError
@@ -966,87 +937,85 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def support_play(self) -> bool:
         """Boolean if play is supported."""
-        return MediaPlayerEntityFeature.PLAY in self.supported_features_compat
+        return MediaPlayerEntityFeature.PLAY in self.supported_features
 
     @final
     @property
     def support_pause(self) -> bool:
         """Boolean if pause is supported."""
-        return MediaPlayerEntityFeature.PAUSE in self.supported_features_compat
+        return MediaPlayerEntityFeature.PAUSE in self.supported_features
 
     @final
     @property
     def support_stop(self) -> bool:
         """Boolean if stop is supported."""
-        return MediaPlayerEntityFeature.STOP in self.supported_features_compat
+        return MediaPlayerEntityFeature.STOP in self.supported_features
 
     @final
     @property
     def support_seek(self) -> bool:
         """Boolean if seek is supported."""
-        return MediaPlayerEntityFeature.SEEK in self.supported_features_compat
+        return MediaPlayerEntityFeature.SEEK in self.supported_features
 
     @final
     @property
     def support_volume_set(self) -> bool:
         """Boolean if setting volume is supported."""
-        return MediaPlayerEntityFeature.VOLUME_SET in self.supported_features_compat
+        return MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
 
     @final
     @property
     def support_volume_mute(self) -> bool:
         """Boolean if muting volume is supported."""
-        return MediaPlayerEntityFeature.VOLUME_MUTE in self.supported_features_compat
+        return MediaPlayerEntityFeature.VOLUME_MUTE in self.supported_features
 
     @final
     @property
     def support_previous_track(self) -> bool:
         """Boolean if previous track command supported."""
-        return MediaPlayerEntityFeature.PREVIOUS_TRACK in self.supported_features_compat
+        return MediaPlayerEntityFeature.PREVIOUS_TRACK in self.supported_features
 
     @final
     @property
     def support_next_track(self) -> bool:
         """Boolean if next track command supported."""
-        return MediaPlayerEntityFeature.NEXT_TRACK in self.supported_features_compat
+        return MediaPlayerEntityFeature.NEXT_TRACK in self.supported_features
 
     @final
     @property
     def support_play_media(self) -> bool:
         """Boolean if play media command supported."""
-        return MediaPlayerEntityFeature.PLAY_MEDIA in self.supported_features_compat
+        return MediaPlayerEntityFeature.PLAY_MEDIA in self.supported_features
 
     @final
     @property
     def support_select_source(self) -> bool:
         """Boolean if select source command supported."""
-        return MediaPlayerEntityFeature.SELECT_SOURCE in self.supported_features_compat
+        return MediaPlayerEntityFeature.SELECT_SOURCE in self.supported_features
 
     @final
     @property
     def support_select_sound_mode(self) -> bool:
         """Boolean if select sound mode command supported."""
-        return (
-            MediaPlayerEntityFeature.SELECT_SOUND_MODE in self.supported_features_compat
-        )
+        return MediaPlayerEntityFeature.SELECT_SOUND_MODE in self.supported_features
 
     @final
     @property
     def support_clear_playlist(self) -> bool:
         """Boolean if clear playlist command supported."""
-        return MediaPlayerEntityFeature.CLEAR_PLAYLIST in self.supported_features_compat
+        return MediaPlayerEntityFeature.CLEAR_PLAYLIST in self.supported_features
 
     @final
     @property
     def support_shuffle_set(self) -> bool:
         """Boolean if shuffle is supported."""
-        return MediaPlayerEntityFeature.SHUFFLE_SET in self.supported_features_compat
+        return MediaPlayerEntityFeature.SHUFFLE_SET in self.supported_features
 
     @final
     @property
     def support_grouping(self) -> bool:
         """Boolean if player grouping is supported."""
-        return MediaPlayerEntityFeature.GROUPING in self.supported_features_compat
+        return MediaPlayerEntityFeature.GROUPING in self.supported_features
 
     async def async_toggle(self) -> None:
         """Toggle the power on the media player."""
@@ -1056,7 +1025,8 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if self.state in {
             MediaPlayerState.OFF,
-            MediaPlayerState.STANDBY,
+            # Not comparing to MediaPlayerState.STANDBY to avoid deprecation warning
+            "standby",
         }:
             await self.async_turn_on()
         else:
@@ -1074,7 +1044,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (
             self.volume_level is not None
             and self.volume_level < 1
-            and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features_compat
+            and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
         ):
             await self.async_set_volume_level(
                 min(1, self.volume_level + self.volume_step)
@@ -1092,7 +1062,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (
             self.volume_level is not None
             and self.volume_level > 0
-            and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features_compat
+            and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
         ):
             await self.async_set_volume_level(
                 max(0, self.volume_level - self.volume_step)
@@ -1135,7 +1105,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {}
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
 
         if (
             source_list := self.source_list
@@ -1189,6 +1159,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         media_content_id: str | None = None,
         media_filter_classes: list[MediaClass] | None = None,
     ) -> SearchMedia:
+        """Search for media."""
         return await self.async_search_media(
             query=SearchMediaQuery(
                 search_query=search_query,
@@ -1364,7 +1335,7 @@ async def websocket_browse_media(
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
         return
 
-    if MediaPlayerEntityFeature.BROWSE_MEDIA not in player.supported_features_compat:
+    if MediaPlayerEntityFeature.BROWSE_MEDIA not in player.supported_features:
         connection.send_message(
             websocket_api.error_message(
                 msg["id"], ERR_NOT_SUPPORTED, "Player does not support browsing media"
@@ -1447,7 +1418,7 @@ async def websocket_search_media(
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
         return
 
-    if MediaPlayerEntityFeature.SEARCH_MEDIA not in player.supported_features_compat:
+    if MediaPlayerEntityFeature.SEARCH_MEDIA not in player.supported_features:
         connection.send_message(
             websocket_api.error_message(
                 msg["id"], ERR_NOT_SUPPORTED, "Player does not support searching media"
@@ -1503,13 +1474,3 @@ async def async_fetch_image(
         logger.warning("Error retrieving proxied image from %s", url)
 
     return content, content_type
-
-
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

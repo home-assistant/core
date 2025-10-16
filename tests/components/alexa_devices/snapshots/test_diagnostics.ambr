@@ -1,0 +1,88 @@
+# serializer version: 1
+# name: test_device_diagnostics
+  dict({
+    'account name': 'Echo Test',
+    'capabilities': list([
+      'AUDIO_PLAYER',
+      'MICROPHONE',
+    ]),
+    'device cluster members': list([
+      'echo_test_serial_number',
+    ]),
+    'device family': 'mine',
+    'device type': 'echo',
+    'online': True,
+    'sensors': dict({
+      'dnd': dict({
+        '__type': "<class 'aioamazondevices.api.AmazonDeviceSensor'>",
+        'repr': "AmazonDeviceSensor(name='dnd', value=False, error=False, error_type=None, error_msg=None, scale=None)",
+      }),
+      'temperature': dict({
+        '__type': "<class 'aioamazondevices.api.AmazonDeviceSensor'>",
+        'repr': "AmazonDeviceSensor(name='temperature', value='22.5', error=False, error_type=None, error_msg=None, scale='CELSIUS')",
+      }),
+    }),
+    'serial number': 'echo_test_serial_number',
+    'software version': 'echo_test_software_version',
+  })
+# ---
+# name: test_entry_diagnostics
+  dict({
+    'device_info': dict({
+      'devices': list([
+        dict({
+          'account name': 'Echo Test',
+          'capabilities': list([
+            'AUDIO_PLAYER',
+            'MICROPHONE',
+          ]),
+          'device cluster members': list([
+            'echo_test_serial_number',
+          ]),
+          'device family': 'mine',
+          'device type': 'echo',
+          'online': True,
+          'sensors': dict({
+            'dnd': dict({
+              '__type': "<class 'aioamazondevices.api.AmazonDeviceSensor'>",
+              'repr': "AmazonDeviceSensor(name='dnd', value=False, error=False, error_type=None, error_msg=None, scale=None)",
+            }),
+            'temperature': dict({
+              '__type': "<class 'aioamazondevices.api.AmazonDeviceSensor'>",
+              'repr': "AmazonDeviceSensor(name='temperature', value='22.5', error=False, error_type=None, error_msg=None, scale='CELSIUS')",
+            }),
+          }),
+          'serial number': 'echo_test_serial_number',
+          'software version': 'echo_test_software_version',
+        }),
+      ]),
+      'last_exception': 'None',
+      'last_update success': True,
+    }),
+    'entry': dict({
+      'data': dict({
+        'login_data': dict({
+          'session': 'test-session',
+          'site': 'https://www.amazon.com',
+        }),
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'alexa_devices',
+      'minor_version': 3,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': 'fake_email@gmail.com',
+      'version': 1,
+    }),
+  })
+# ---

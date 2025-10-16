@@ -1,41 +1,4 @@
 # serializer version: 1
-# name: test_device_registry
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        'aa:bb:cc:dd:ee:ff',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'squeezebox',
-        'aa:bb:cc:dd:ee:ff',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'Ralph Irving & Adrian Smith',
-    'model': 'SqueezeLite',
-    'model_id': None,
-    'name': 'Test Player',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': <ANY>,
-  })
-# ---
 # name: test_entity_registry[media_player.test_player-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -65,6 +28,7 @@
     'original_name': None,
     'platform': 'squeezebox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 8320959>,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff',

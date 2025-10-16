@@ -15,7 +15,7 @@
           "modbus_unit": "Modbus unit identifier"
         },
         "data_description": {
-          "modbus_url": "Modbus URL that describes the connection to your heat pump or MODBUS40 unit. It should be in the form:\n - `tcp://[HOST]:[PORT]` for Modbus TCP connection\n - `serial://[LOCAL DEVICE]` for a local Modbus RTU connection\n - `rfc2217://[HOST]:[PORT]` for a remote Telnet-based Modbus RTU connection.",
+          "modbus_url": "Modbus URL that describes the connection to your heat pump or MODBUS40 unit. It should be in the form:\n - `{tcp}` for Modbus TCP connection\n - `{serial}` for a local Modbus RTU connection\n - `{rfc2217}` for a remote Telnet-based Modbus RTU connection.",
           "modbus_unit": "Unit identification for your heat pump. Can usually be left at 0."
         }
       },
@@ -44,6 +44,14 @@
       "model": "The selected model doesn't seem to support MODBUS40",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "url": "The specified URL is not well formed nor supported"
+    }
+  },
+  "exceptions": {
+    "write_timeout": {
+      "message": "Timeout while writing coil {address}"
+    },
+    "write_failed": {
+      "message": "Writing of coil {address} with value `{value}` failed with error `{error}`"
     }
   }
 }

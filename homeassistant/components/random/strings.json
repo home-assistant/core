@@ -82,6 +82,7 @@
     },
     "sensor_device_class": {
       "options": {
+        "absolute_humidity": "[%key:component::sensor::entity_component::absolute_humidity::name%]",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
         "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
         "area": "[%key:component::sensor::entity_component::area::name%]",
@@ -113,6 +114,7 @@
         "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
         "ph": "[%key:component::sensor::entity_component::ph::name%]",
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
         "power": "[%key:component::sensor::entity_component::power::name%]",
@@ -129,7 +131,7 @@
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
         "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
-        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
+        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
         "volume": "[%key:component::sensor::entity_component::volume::name%]",
         "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",

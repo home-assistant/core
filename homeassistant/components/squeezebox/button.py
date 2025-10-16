@@ -132,7 +132,9 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, _player_discovered)
+        async_dispatcher_connect(
+            hass, SIGNAL_PLAYER_DISCOVERED + entry.entry_id, _player_discovered
+        )
     )
 
 
@@ -152,11 +154,6 @@ class SqueezeboxButtonEntity(SqueezeboxEntity, ButtonEntity):
         self._attr_unique_id = (
             f"{format_mac(self._player.player_id)}_{entity_description.key}"
         )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.available and super().available
 
     async def async_press(self) -> None:
         """Execute the button action."""

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -24,15 +23,14 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .const import (
+    _LOGGER,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
 )
-from .entity import BasePlatform
+from .entity import ModbusBaseEntity
 from .modbus import ModbusHub
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -61,7 +59,7 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
+class ModbusBinarySensor(ModbusBaseEntity, RestoreEntity, BinarySensorEntity):
     """Modbus binary sensor."""
 
     def __init__(
@@ -108,7 +106,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
 
         # do not allow multiple active calls to the same platform
         result = await self._hub.async_pb_call(
-            self._slave, self._address, self._count, self._input_type
+            self._device_address, self._address, self._count, self._input_type
         )
         if result is None:
             self._attr_available = False
@@ -159,5 +157,8 @@ class SlaveSensor(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
-        self._attr_is_on = bool(result[self._result_inx] & 1) if result else None
+        if not result or self._result_inx >= len(result):
+            self._attr_is_on = None
+        else:
+            self._attr_is_on = bool(result[self._result_inx] & 1)
         super()._handle_coordinator_update()

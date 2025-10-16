@@ -9,7 +9,7 @@ from pypaperless.exceptions import (
     PaperlessInvalidTokenError,
 )
 
-from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -26,7 +26,7 @@ from .coordinator import (
     PaperlessStatusCoordinator,
 )
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> bool:
@@ -44,11 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
     except ConfigEntryNotReady as err:
         # Catch the error so the integration doesn't fail just because status coordinator fails.
         LOGGER.warning("Could not initialize status coordinator: %s", err)
-
-    entry.runtime_data = PaperlessData(
-        status=status_coordinator,
-        statistics=statistics_coordinator,
-    )
 
     entry.runtime_data = PaperlessData(
         status=status_coordinator,
@@ -74,7 +69,7 @@ async def _get_paperless_api(
     api = Paperless(
         entry.data[CONF_URL],
         entry.data[CONF_API_KEY],
-        session=async_get_clientsession(hass),
+        session=async_get_clientsession(hass, entry.data.get(CONF_VERIFY_SSL, True)),
     )
 
     try:
@@ -101,7 +96,7 @@ async def _get_paperless_api(
             translation_key="forbidden",
         ) from err
     except InitializationError as err:
-        raise ConfigEntryError(
+        raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err

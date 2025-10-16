@@ -10,7 +10,7 @@ from unittest.mock import patch
 from pydeconz.websocket import Signal
 import pytest
 
-from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
+from homeassistant.components.deconz.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
@@ -53,7 +53,7 @@ def fixture_config_entry(
 ) -> MockConfigEntry:
     """Define a config entry fixture."""
     return MockConfigEntry(
-        domain=DECONZ_DOMAIN,
+        domain=DOMAIN,
         entry_id="1",
         unique_id=BRIDGE_ID,
         data=config_entry_data,

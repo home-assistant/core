@@ -1,9 +1,178 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "description": "To create a Telegram bot, follow these steps:\n\n1. Open Telegram and start a chat with [{botfather_username}]({botfather_url}).\n1. Send the command `/newbot`.\n1. Follow the instructions to create your bot and get your API token.",
+        "data": {
+          "platform": "Platform",
+          "api_key": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "platform": "Telegram bot implementation",
+          "api_key": "The API token of your bot."
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "Advanced settings",
+            "data": {
+              "proxy_url": "Proxy URL"
+            },
+            "data_description": {
+              "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n(socks5://username:password@proxy_ip:proxy_port)"
+            }
+          }
+        }
+      },
+      "webhooks": {
+        "title": "Webhooks network configuration",
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "trusted_networks": "Trusted networks"
+        },
+        "data_description": {
+          "url": "Allow to overwrite the external URL from the Home Assistant configuration for different setups.",
+          "trusted_networks": "Telegram server access ACL as list.\nDefault: 149.154.160.0/20, 91.108.4.0/22"
+        }
+      },
+      "reconfigure": {
+        "title": "Telegram bot setup",
+        "description": "Reconfigure Telegram bot",
+        "data": {
+          "platform": "[%key:component::telegram_bot::config::step::user::data::platform%]"
+        },
+        "data_description": {
+          "platform": "[%key:component::telegram_bot::config::step::user::data_description::platform%]"
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::name%]",
+            "data": {
+              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data::proxy_url%]"
+            },
+            "data_description": {
+              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data_description::proxy_url%]"
+            }
+          }
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate Telegram bot",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::telegram_bot::config::step::user::data_description::api_key%]"
+        }
+      }
+    },
+    "error": {
+      "telegram_error": "Error from Telegram: {error_message}",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "invalid_proxy_url": "{proxy_url_error}",
+      "no_url_available": "URL is required since you have not configured an external URL in Home Assistant",
+      "invalid_url": "URL must start with https",
+      "invalid_trusted_networks": "Invalid trusted network: {error_message}"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Telegram bot",
+        "data": {
+          "parse_mode": "Parse mode"
+        },
+        "data_description": {
+          "parse_mode": "Default parse mode for messages if not explicit in message data."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "allowed_chat_ids": {
+      "initiate_flow": {
+        "user": "Add allowed chat ID"
+      },
+      "step": {
+        "user": {
+          "title": "Add chat",
+          "data": {
+            "chat_id": "Chat ID"
+          },
+          "data_description": {
+            "chat_id": "ID representing the user or group chat to which messages can be sent."
+          }
+        }
+      },
+      "error": {
+        "chat_not_found": "Chat not found"
+      },
+      "abort": {
+        "already_configured": "Chat already configured"
+      }
+    }
+  },
+  "selector": {
+    "platforms": {
+      "options": {
+        "broadcast": "Broadcast",
+        "polling": "Polling",
+        "webhooks": "Webhooks"
+      }
+    },
+    "parse_mode": {
+      "options": {
+        "markdown": "Markdown (Legacy)",
+        "markdownv2": "MarkdownV2",
+        "html": "HTML",
+        "plain_text": "Plain text"
+      }
+    },
+    "authentication": {
+      "options": {
+        "basic": "Basic",
+        "digest": "Digest",
+        "bearer_token": "Bearer token"
+      }
+    },
+    "chat_action": {
+      "options": {
+        "typing": "Typing",
+        "upload_photo": "Uploading photo",
+        "record_video": "Recording video",
+        "upload_video": "Uploading video",
+        "record_voice": "Recording voice",
+        "upload_voice": "Uploading voice",
+        "upload_document": "Uploading document",
+        "choose_sticker": "Choosing sticker",
+        "find_location": "Finding location",
+        "record_video_note": "Recording video note",
+        "upload_video_note": "Uploading video note"
+      }
+    },
+    "media_type": {
+      "options": {
+        "animation": "Animation",
+        "audio": "Audio",
+        "document": "Document",
+        "photo": "Photo",
+        "video": "Video"
+      }
+    }
+  },
   "services": {
     "send_message": {
       "name": "Send message",
       "description": "Sends a notification.",
       "fields": {
+        "config_entry_id": {
+          "name": "Config entry ID",
+          "description": "The config entry representing the Telegram bot to send the message."
+        },
         "message": {
           "name": "Message",
           "description": "Message body of the notification."
@@ -54,10 +223,36 @@
         }
       }
     },
+    "send_chat_action": {
+      "name": "Send chat action",
+      "description": "Sends a chat action.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to send the chat action."
+        },
+        "chat_action": {
+          "name": "Chat action",
+          "description": "Chat action to be sent."
+        },
+        "target": {
+          "name": "Target",
+          "description": "An array of pre-authorized chat IDs to send the chat action to. If not present, first allowed chat ID is the default."
+        },
+        "message_thread_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
+        }
+      }
+    },
     "send_photo": {
       "name": "Send photo",
       "description": "Sends a photo.",
       "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to send the photo."
+        },
         "url": {
           "name": "[%key:common::config_flow::data::url%]",
           "description": "Remote path to an image."
@@ -72,15 +267,15 @@
         },
         "username": {
           "name": "[%key:common::config_flow::data::username%]",
-          "description": "Username for a URL which require HTTP authentication."
+          "description": "Username for a URL that requires 'Basic' or 'Digest' authentication."
         },
         "password": {
           "name": "[%key:common::config_flow::data::password%]",
-          "description": "Password (or bearer token) for a URL which require HTTP authentication."
+          "description": "Password (or bearer token) for a URL that requires authentication."
         },
         "authentication": {
           "name": "Authentication method",
-          "description": "Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`."
+          "description": "Define which authentication method to use. Set to 'Basic' for HTTP basic authentication, 'Digest' for HTTP digest authentication, or 'Bearer token' for OAuth 2.0 bearer token authentication."
         },
         "target": {
           "name": "Target",
@@ -128,6 +323,10 @@
       "name": "Send sticker",
       "description": "Sends a sticker.",
       "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to send the sticker."
+        },
         "url": {
           "name": "[%key:common::config_flow::data::url%]",
           "description": "Remote path to a static .webp or animated .tgs sticker."
@@ -194,6 +393,10 @@
       "name": "Send animation",
       "description": "Sends an animation.",
       "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to send the animation."
+        },
         "url": {
           "name": "[%key:common::config_flow::data::url%]",
           "description": "Remote path to a GIF or H.264/MPEG-4 AVC video without sound."
@@ -264,6 +467,10 @@
       "name": "Send video",
       "description": "Sends a video.",
       "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to send the video."
+        },
         "url": {
           "name": "[%key:common::config_flow::data::url%]",
           "description": "Remote path to a video."
@@ -334,6 +541,10 @@
       "name": "Send voice",
       "description": "Sends a voice message.",
       "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to send the voice message."
+        },
         "url": {
           "name": "[%key:common::config_flow::data::url%]",
           "description": "Remote path to a voice message."
@@ -400,6 +611,10 @@
       "name": "Send document",
       "description": "Sends a document.",
       "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to send the document."
+        },
         "url": {
           "name": "[%key:common::config_flow::data::url%]",
           "description": "Remote path to a document."
@@ -470,6 +685,10 @@
       "name": "Send location",
       "description": "Sends a location.",
       "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to send the location."
+        },
         "latitude": {
           "name": "[%key:common::config_flow::data::latitude%]",
           "description": "The latitude to send."
@@ -516,6 +735,10 @@
       "name": "Send poll",
       "description": "Sends a poll.",
       "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to send the poll."
+        },
         "target": {
           "name": "Target",
           "description": "[%key:component::telegram_bot::services::send_location::fields::target::description%]"
@@ -566,6 +789,10 @@
       "name": "Edit message",
       "description": "Edits a previously sent message.",
       "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to edit the message."
+        },
         "message_id": {
           "name": "Message ID",
           "description": "ID of the message to edit."
@@ -596,10 +823,72 @@
         }
       }
     },
+    "edit_message_media": {
+      "name": "Edit message media",
+      "description": "Edits the media content of a previously sent message.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to edit the message media."
+        },
+        "message_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
+          "description": "[%key:component::telegram_bot::services::edit_message::fields::message_id::description%]"
+        },
+        "chat_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
+          "description": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::description%]"
+        },
+        "media_type": {
+          "name": "Media type",
+          "description": "Type for the new media."
+        },
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "Remote path to the media."
+        },
+        "file": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::file::name%]",
+          "description": "Local path to the media."
+        },
+        "caption": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]",
+          "description": "The title of the media."
+        },
+        "username": {
+          "name": "[%key:common::config_flow::data::username%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::username::description%]"
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::password::description%]"
+        },
+        "authentication": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::authentication::description%]"
+        },
+        "verify_ssl": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
+        },
+        "timeout": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::timeout::name%]",
+          "description": "Timeout for sending the media in seconds."
+        },
+        "inline_keyboard": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        }
+      }
+    },
     "edit_caption": {
       "name": "Edit caption",
       "description": "Edits the caption of a previously sent message.",
       "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to edit the caption."
+        },
         "message_id": {
           "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
           "description": "[%key:component::telegram_bot::services::edit_message::fields::message_id::description%]"
@@ -622,6 +911,10 @@
       "name": "Edit reply markup",
       "description": "Edits the inline keyboard of a previously sent message.",
       "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to edit the reply markup."
+        },
         "message_id": {
           "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
           "description": "[%key:component::telegram_bot::services::edit_message::fields::message_id::description%]"
@@ -640,6 +933,10 @@
       "name": "Answer callback query",
       "description": "Responds to a callback query originated by clicking on an online keyboard button. The answer will be displayed to the user as a notification at the top of the chat screen or as an alert.",
       "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to answer the callback query."
+        },
         "message": {
           "name": "Message",
           "description": "Unformatted text message body of the notification."
@@ -662,6 +959,10 @@
       "name": "Delete message",
       "description": "Deletes a previously sent message.",
       "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to delete the message."
+        },
         "message_id": {
           "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
           "description": "ID of the message to delete."
@@ -671,16 +972,95 @@
           "description": "ID of the chat where to delete the message."
         }
       }
+    },
+    "leave_chat": {
+      "name": "Leave chat",
+      "description": "Removes the bot from the chat.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to leave the chat."
+        },
+        "chat_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
+          "description": "Chat ID of the group from which the bot should be removed."
+        }
+      }
+    },
+    "set_message_reaction": {
+      "name": "Set message reaction",
+      "description": "Sets the bot's reaction for a given message.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to set the message reaction."
+        },
+        "message_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
+          "description": "ID of the message to react to."
+        },
+        "chat_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
+          "description": "ID of the chat containing the message."
+        },
+        "reaction": {
+          "name": "Reaction",
+          "description": "Emoji reaction to use."
+        },
+        "is_big": {
+          "name": "Large animation",
+          "description": "Whether the reaction animation should be large."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "multiple_config_entry": {
+      "message": "Multiple config entries found. Please specify the Telegram bot to use in the Config entry ID field."
+    },
+    "missing_config_entry": {
+      "message": "No config entries found or setup failed. Please set up the Telegram Bot first."
+    },
+    "missing_allowed_chat_ids": {
+      "message": "No allowed chat IDs found. Please add allowed chat IDs for {bot_name}."
+    },
+    "invalid_chat_ids": {
+      "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."
+    },
+    "invalid_inline_keyboard": {
+      "message": "Invalid value for inline keyboard. Only strings or lists are accepted."
+    },
+    "failed_chat_ids": {
+      "message": "Failed targets: {chat_ids}. Please verify that the chat IDs for {bot_name} have been configured."
+    },
+    "missing_input": {
+      "message": "{field} is required."
+    },
+    "failed_to_load_url": {
+      "message": "Failed to load URL: {error}"
+    },
+    "allowlist_external_dirs_error": {
+      "message": "File path has not been configured in allowlist_external_dirs."
+    },
+    "failed_to_load_file": {
+      "message": "Failed to load file: {error}"
+    },
+    "action_failed": {
+      "message": "Action failed. {error}"
     }
   },
   "issues": {
-    "proxy_params_auth_deprecation": {
-      "title": "{telegram_bot}: Proxy authentication should be moved to the URL",
-      "description": "Authentication details for the the proxy configured in the {telegram_bot} integration should be moved into the {proxy_url} instead. Please update your configuration and restart Home Assistant to fix this issue.\n\nThe {proxy_params} config key will be removed in a future release."
+    "deprecated_yaml": {
+      "title": "The {integration_title} YAML configuration is being removed",
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     },
-    "proxy_params_deprecation": {
-      "title": "{telegram_bot}: Proxy params option will be removed",
-      "description": "The {proxy_params} config key for the {telegram_bot} integration will be removed in a future release.\n\nAuthentication can now be provided through the {proxy_url} key.\n\nThe underlying library has changed to {httpx} which is incompatible with previous parameters. If you still need this functionality for other options, please leave a comment on the learn more link.\n\nPlease update your configuration to remove the {proxy_params} key and restart Home Assistant to fix this issue."
+    "deprecated_yaml_import_issue_has_more_platforms": {
+      "title": "The {integration_title} YAML configuration is being removed",
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nThe last entry of your existing YAML configuration ({telegram_bot}) has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue. The other Telegram bots will need to be configured manually in the UI."
+    },
+    "deprecated_yaml_import_issue_error": {
+      "title": "YAML import failed due to invalid {error_field}",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an error while importing your existing configuration ({telegram_bot}): {error_message}.\nSetup will not proceed.\n\nVerify that your {telegram_bot} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
     }
   }
 }

@@ -363,7 +363,7 @@
           "discharging": "[%key:common::state::discharging%]",
           "idle": "[%key:common::state::idle%]",
           "charging": "[%key:common::state::charging%]",
-          "full": "Full"
+          "full": "[%key:common::state::full%]"
         }
       },
       "acb_available_energy": {
@@ -379,7 +379,56 @@
         "name": "Aggregated Battery capacity"
       },
       "aggregated_soc": {
-        "name": "Aggregated battery soc"
+        "name": "Aggregated battery SOC"
+      },
+      "dc_voltage": {
+        "name": "DC voltage"
+      },
+      "dc_current": {
+        "name": "DC current"
+      },
+      "ac_voltage": {
+        "name": "AC voltage"
+      },
+      "ac_current": {
+        "name": "AC current"
+      },
+      "lifetime_energy": {
+        "name": "[%key:component::enphase_envoy::entity::sensor::lifetime_production::name%]"
+      },
+      "energy_today": {
+        "name": "[%key:component::enphase_envoy::entity::sensor::daily_production::name%]"
+      },
+      "energy_produced": {
+        "name": "Energy production since previous report"
+      },
+      "max_reported": {
+        "name": "Lifetime maximum power"
+      },
+      "last_report_duration": {
+        "name": "Last report duration"
+      },
+      "grid_status": {
+        "name": "[%key:component::enphase_envoy::entity::binary_sensor::grid_status::name%]",
+        "state": {
+          "on_grid": "On grid",
+          "off_grid": "Off grid",
+          "synchronizing": "Synchronizing to grid"
+        }
+      },
+      "mid_state": {
+        "name": "MID state",
+        "state": {
+          "open": "[%key:common::state::open%]",
+          "close": "[%key:common::state::closed%]"
+        }
+      },
+      "admin_state": {
+        "name": "Admin state",
+        "state": {
+          "on_grid": "[%key:component::enphase_envoy::entity::sensor::grid_status::state::on_grid%]",
+          "off_grid": "[%key:component::enphase_envoy::entity::sensor::grid_status::state::off_grid%]"
+        }
       }
     },
     "switch": {

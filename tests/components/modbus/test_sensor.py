@@ -1,5 +1,6 @@
 """The tests for the Modbus sensor component."""
 
+import math
 import struct
 
 import pytest
@@ -23,7 +24,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_WORD_BYTE,
     CONF_VIRTUAL_COUNT,
     CONF_ZERO_SUPPRESS,
-    MODBUS_DOMAIN,
+    DOMAIN,
     DataType,
 )
 from homeassistant.components.sensor import (
@@ -428,7 +429,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x89AB],
             False,
-            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
         ),
         (
             {
@@ -631,7 +632,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x8000, 0x0000],
             False,
-            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
         ),
         (
             {
@@ -738,11 +739,11 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             [
                 0x5102,
                 0x0304,
-                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
-                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                int.from_bytes(struct.pack(">f", math.nan)[0:2]),
+                int.from_bytes(struct.pack(">f", math.nan)[2:4]),
             ],
             False,
-            ["34899771392.0", "0.0"],
+            ["34899771392.0", STATE_UNKNOWN],
         ),
         (
             {
@@ -753,11 +754,11 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             [
                 0x5102,
                 0x0304,
-                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
-                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                int.from_bytes(struct.pack(">f", math.nan)[0:2]),
+                int.from_bytes(struct.pack(">f", math.nan)[2:4]),
             ],
             False,
-            ["34899771392.0", "0.0"],
+            ["34899771392.0", STATE_UNKNOWN],
         ),
         (
             {
@@ -802,7 +803,11 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [0x0102, 0x0304, 0x0403, 0x0201, 0x0403],
             False,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN, STATE_UNKNOWN],
+            [
+                STATE_UNKNOWN,
+                STATE_UNKNOWN,
+                STATE_UNKNOWN,
+            ],
         ),
         (
             {
@@ -857,7 +862,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [0x0102, 0x0304, 0x0403, 0x0201],
             True,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+            [STATE_UNAVAILABLE, STATE_UNAVAILABLE],
         ),
         (
             {
@@ -866,7 +871,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [0x0102, 0x0304, 0x0403, 0x0201],
             True,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+            [STATE_UNAVAILABLE, STATE_UNAVAILABLE],
         ),
         (
             {
@@ -875,7 +880,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [],
             False,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+            [STATE_UNKNOWN, STATE_UNKNOWN],
         ),
         (
             {
@@ -884,7 +889,35 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [],
             False,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+            [STATE_UNKNOWN, STATE_UNKNOWN],
+        ),
+        (
+            {
+                CONF_VIRTUAL_COUNT: 4,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_NAN_VALUE: "0x800000",
+            },
+            [
+                0x0,
+                0x35,
+                0x0,
+                0x38,
+                0x80,
+                0x0,
+                0x80,
+                0x0,
+                0xFFFF,
+                0xFFF6,
+            ],
+            False,
+            [
+                "53",
+                "56",
+                STATE_UNKNOWN,
+                STATE_UNKNOWN,
+                "-10",
+            ],
         ),
     ],
 )
@@ -1103,7 +1136,7 @@ async def test_virtual_swap_sensor(
 )
 async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
     """Run test for sensor."""
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
@@ -1128,17 +1161,17 @@ async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
                 CONF_DATA_TYPE: DataType.FLOAT32,
             },
             [
-                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
-                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                int.from_bytes(struct.pack(">f", math.nan)[0:2]),
+                int.from_bytes(struct.pack(">f", math.nan)[2:4]),
             ],
-            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
         ),
         (
             {
                 CONF_DATA_TYPE: DataType.FLOAT32,
             },
             [0x6E61, 0x6E00],
-            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
         ),
         (
             {
@@ -1147,7 +1180,7 @@ async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
                 CONF_STRUCTURE: "4s",
             },
             [0x6E61, 0x6E00],
-            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
         ),
         (
             {
@@ -1192,8 +1225,8 @@ async def test_unpack_ok(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             # floats: nan, 10.600000381469727,
             #         1.000879611487865e-28, 10.566553115844727
             [
-                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
-                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                int.from_bytes(struct.pack(">f", math.nan)[0:2]),
+                int.from_bytes(struct.pack(">f", math.nan)[2:4]),
                 0x4129,
                 0x999A,
                 0x10FD,
@@ -1325,6 +1358,46 @@ async def test_wrap_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None
     assert hass.states.get(ENTITY_ID).state == expected
 
 
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 201,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("config_addon", "register_words", "expected"),
+    [
+        (
+            {
+                CONF_SWAP: CONF_SWAP_WORD,
+                CONF_DATA_TYPE: DataType.UINT32,
+            },
+            [0x0102, 0x0304],
+            "50594050",
+        ),
+    ],
+)
+async def test_wrap_regs_ok_sensor(
+    hass: HomeAssistant, mock_modbus_ha, mock_do_cycle, expected
+) -> None:
+    """Run test for sensor struct."""
+    assert hass.states.get(ENTITY_ID).state == expected
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).state == expected
+
+
 @pytest.fixture(name="mock_restore")
 async def mock_restore(hass: HomeAssistant) -> None:
     """Mock restore cache."""
@@ -1410,7 +1483,7 @@ async def test_no_discovery_info_sensor(
     assert await async_setup_component(
         hass,
         SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
+        {SENSOR_DOMAIN: {CONF_PLATFORM: DOMAIN}},
     )
     await hass.async_block_till_done()
     assert SENSOR_DOMAIN in hass.config.components

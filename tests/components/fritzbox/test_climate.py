@@ -31,11 +31,7 @@ from homeassistant.components.fritzbox.climate import (
     PRESET_HOLIDAY,
     PRESET_SUMMER,
 )
-from homeassistant.components.fritzbox.const import (
-    ATTR_STATE_HOLIDAY_MODE,
-    ATTR_STATE_SUMMER_MODE,
-    DOMAIN as FB_DOMAIN,
-)
+from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_DEVICES, Platform
 from homeassistant.core import HomeAssistant
@@ -66,7 +62,7 @@ async def test_setup(
     device = FritzDeviceClimateMock()
     with patch("homeassistant.components.fritzbox.PLATFORMS", [Platform.CLIMATE]):
         entry = await setup_config_entry(
-            hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+            hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
         )
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
@@ -76,7 +72,7 @@ async def test_hkr_wo_temperature_sensor(hass: HomeAssistant, fritz: Mock) -> No
     """Test hkr without exposing dedicated temperature sensor data block."""
     device = FritzDeviceClimateWithoutTempSensorMock()
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     state = hass.states.get(ENTITY_ID)
@@ -89,7 +85,7 @@ async def test_target_temperature_on(hass: HomeAssistant, fritz: Mock) -> None:
     device = FritzDeviceClimateMock()
     device.target_temperature = 127.0
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     state = hass.states.get(ENTITY_ID)
@@ -102,7 +98,7 @@ async def test_target_temperature_off(hass: HomeAssistant, fritz: Mock) -> None:
     device = FritzDeviceClimateMock()
     device.target_temperature = 126.5
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     state = hass.states.get(ENTITY_ID)
@@ -114,7 +110,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
     """Test update without error."""
     device = FritzDeviceClimateMock()
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     state = hass.states.get(ENTITY_ID)
@@ -145,7 +141,7 @@ async def test_automatic_offset(hass: HomeAssistant, fritz: Mock) -> None:
     device.actual_temperature = 19
     device.target_temperature = 20
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     state = hass.states.get(ENTITY_ID)
@@ -161,7 +157,7 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
     device = FritzDeviceClimateMock()
     fritz().update_devices.side_effect = HTTPError("Boom")
     entry = await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -214,7 +210,7 @@ async def test_set_temperature(
     device.lock = False
 
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     await hass.services.async_call(
@@ -302,7 +298,7 @@ async def test_set_hvac_mode(
         device.nextchange_endperiod = 0
 
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     await hass.services.async_call(
@@ -343,7 +339,7 @@ async def test_set_preset_mode_comfort(
     device.lock = False
     device.comfort_temperature = comfort_temperature
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     await hass.services.async_call(
@@ -376,7 +372,7 @@ async def test_set_preset_mode_eco(
     device.lock = False
     device.eco_temperature = eco_temperature
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     await hass.services.async_call(
@@ -398,7 +394,7 @@ async def test_set_preset_mode_boost(
     device.lock = False
 
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     await hass.services.async_call(
@@ -417,7 +413,7 @@ async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock) -> None:
     device.comfort_temperature = 23
     device.eco_temperature = 20
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     state = hass.states.get(ENTITY_ID)
@@ -462,7 +458,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     """Test adding new discovered devices during runtime."""
     device = FritzDeviceClimateMock()
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     state = hass.states.get(ENTITY_ID)
@@ -501,7 +497,7 @@ async def test_set_temperature_lock(
 
     device.lock = True
     assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     with pytest.raises(
@@ -559,7 +555,7 @@ async def test_set_hvac_mode_lock(
         device.nextchange_endperiod = 0
 
     assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     with pytest.raises(
@@ -582,14 +578,12 @@ async def test_holidy_summer_mode(
     device.lock = False
 
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     # initial state
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.attributes[ATTR_STATE_HOLIDAY_MODE] is False
-    assert state.attributes[ATTR_STATE_SUMMER_MODE] is False
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
     assert state.attributes[ATTR_PRESET_MODE] is None
     assert state.attributes[ATTR_PRESET_MODES] == [
@@ -607,8 +601,6 @@ async def test_holidy_summer_mode(
 
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.attributes[ATTR_STATE_HOLIDAY_MODE]
-    assert state.attributes[ATTR_STATE_SUMMER_MODE] is False
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOLIDAY
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_HOLIDAY]
@@ -643,8 +635,6 @@ async def test_holidy_summer_mode(
 
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.attributes[ATTR_STATE_HOLIDAY_MODE] is False
-    assert state.attributes[ATTR_STATE_SUMMER_MODE]
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_SUMMER
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_SUMMER]
@@ -679,8 +669,6 @@ async def test_holidy_summer_mode(
 
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.attributes[ATTR_STATE_HOLIDAY_MODE] is False
-    assert state.attributes[ATTR_STATE_SUMMER_MODE] is False
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
     assert state.attributes[ATTR_PRESET_MODE] is None
     assert state.attributes[ATTR_PRESET_MODES] == [

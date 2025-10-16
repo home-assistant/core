@@ -33,7 +33,8 @@
     'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
-    'supported_features': <VacuumEntityFeature: 13420>,
+    'suggested_object_id': None,
+    'supported_features': <VacuumEntityFeature: 13356>,
     'translation_key': 'vacuum',
     'unique_id': 'Dummy_Vacuum_1-vacuum',
     'unit_of_measurement': None,
@@ -42,8 +43,6 @@
 # name: test_sensor_states[platforms0-vacuum_device.json][vacuum.robot_vacuum_cleaner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'battery_icon': 'mdi:battery-60',
-      'battery_level': 65,
       'fan_speed': 'normal',
       'fan_speed_list': list([
         'normal',
@@ -51,7 +50,7 @@
         'silent',
       ]),
       'friendly_name': 'Robot vacuum cleaner',
-      'supported_features': <VacuumEntityFeature: 13420>,
+      'supported_features': <VacuumEntityFeature: 13356>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.robot_vacuum_cleaner',
@@ -95,7 +94,8 @@
     'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
-    'supported_features': <VacuumEntityFeature: 13420>,
+    'suggested_object_id': None,
+    'supported_features': <VacuumEntityFeature: 13356>,
     'translation_key': 'vacuum',
     'unique_id': 'Dummy_Vacuum_1-vacuum',
     'unit_of_measurement': None,
@@ -104,8 +104,6 @@
 # name: test_vacuum_states_api_push[platforms0-vacuum_device.json][vacuum.robot_vacuum_cleaner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'battery_icon': 'mdi:battery-60',
-      'battery_level': 65,
       'fan_speed': 'normal',
       'fan_speed_list': list([
         'normal',
@@ -113,7 +111,7 @@
         'silent',
       ]),
       'friendly_name': 'Robot vacuum cleaner',
-      'supported_features': <VacuumEntityFeature: 13420>,
+      'supported_features': <VacuumEntityFeature: 13356>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.robot_vacuum_cleaner',

@@ -1,71 +1,42 @@
 """Test SMHI component setup process."""
 
-from pysmhi.const import API_POINT_FORECAST
+from pysmhi import SMHIPointForecast
 
 from homeassistant.components.smhi.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import ENTITY_ID, TEST_CONFIG, TEST_CONFIG_MIGRATE
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_setup_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
-) -> None:
-    """Test setup entry."""
-    uri = API_POINT_FORECAST.format(
-        TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
-    )
-    aioclient_mock.get(uri, text=api_response)
-    entry = MockConfigEntry(domain=DOMAIN, title="test", data=TEST_CONFIG, version=3)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state
-
-
-async def test_remove_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
+async def test_load_and_unload_config_entry(
+    hass: HomeAssistant, load_int: MockConfigEntry
 ) -> None:
     """Test remove entry."""
-    uri = API_POINT_FORECAST.format(
-        TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
-    )
-    aioclient_mock.get(uri, text=api_response)
-    entry = MockConfigEntry(domain=DOMAIN, title="test", data=TEST_CONFIG, version=3)
-    entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
+    assert load_int.state is ConfigEntryState.LOADED
     state = hass.states.get(ENTITY_ID)
     assert state
 
-    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.config_entries.async_unload(load_int.entry_id)
     await hass.async_block_till_done()
 
+    assert load_int.state is ConfigEntryState.NOT_LOADED
     state = hass.states.get(ENTITY_ID)
-    assert not state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_migrate_entry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
-    api_response: str,
+    mock_client: SMHIPointForecast,
 ) -> None:
     """Test migrate entry data."""
-    uri = API_POINT_FORECAST.format(
-        TEST_CONFIG_MIGRATE["longitude"], TEST_CONFIG_MIGRATE["latitude"]
-    )
-    aioclient_mock.get(uri, text=api_response)
+
     entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG_MIGRATE)
     entry.add_to_hass(hass)
     assert entry.version == 1
@@ -94,13 +65,9 @@ async def test_migrate_entry(
 
 
 async def test_migrate_from_future_version(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
+    hass: HomeAssistant, mock_client: SMHIPointForecast
 ) -> None:
     """Test migrate entry not possible from future version."""
-    uri = API_POINT_FORECAST.format(
-        TEST_CONFIG_MIGRATE["longitude"], TEST_CONFIG_MIGRATE["latitude"]
-    )
-    aioclient_mock.get(uri, text=api_response)
     entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG_MIGRATE, version=4)
     entry.add_to_hass(hass)
     assert entry.version == 4

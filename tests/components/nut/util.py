@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 def _get_mock_nutclient(
@@ -59,9 +59,9 @@ async def async_init_integration(
         list_ups = {"ups1": "UPS 1"}
 
     if ups_fixture is not None:
-        ups_fixture = f"nut/{ups_fixture}.json"
+        ups_fixture = f"{ups_fixture}.json"
         if list_vars is None:
-            list_vars = json.loads(load_fixture(ups_fixture))
+            list_vars = json.loads(await async_load_fixture(hass, ups_fixture, DOMAIN))
 
     mock_pynut = _get_mock_nutclient(
         list_ups=list_ups,
