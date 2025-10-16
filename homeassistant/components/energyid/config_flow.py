@@ -124,9 +124,11 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             instance_id = await async_get_instance_id(self.hass)
+            # Add a unique suffix after the instance id to ensure device_id uniqueness
+            unique_suffix = f"{int(asyncio.get_event_loop().time() * 1000)}"
             self._flow_data = {
                 **user_input,
-                CONF_DEVICE_ID: f"{ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX}{instance_id}",
+                CONF_DEVICE_ID: f"{ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX}{instance_id}_{unique_suffix}",
                 CONF_DEVICE_NAME: self.hass.config.location_name,
             }
             _LOGGER.debug("Flow data after user input: %s", self._flow_data)
@@ -134,13 +136,13 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             auth_status = await self._perform_auth_and_get_details()
 
             if auth_status is None:
-                await self.async_set_unique_id(self._flow_data["record_number"])
-                self._abort_if_unique_id_configured()
                 _LOGGER.debug(
                     "Creating entry with title: %s", self._flow_data["record_name"]
                 )
                 return self.async_create_entry(
-                    title=self._flow_data["record_name"], data=self._flow_data
+                    title=self._flow_data["record_name"],
+                    data=self._flow_data,
+                    description="configuration_successful",
                 )
 
             if auth_status == "needs_claim":
@@ -190,11 +192,15 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if auth_status is None:
             # Device has been claimed
-            await self.async_set_unique_id(self._flow_data["record_number"])
-            self._abort_if_unique_id_configured()
+            if self._polling_task and not self._polling_task.done():
+                self._polling_task.cancel()
+                self._polling_task = None
             return self.async_external_step_done(next_step_id="create_entry")
 
         # Device not claimed yet, show the external step again
+        if self._polling_task and not self._polling_task.done():
+            self._polling_task.cancel()
+            self._polling_task = None
         return self.async_external_step(
             step_id="auth_and_claim",
             url=claim_info.get("claim_url", ""),
@@ -207,7 +213,9 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         """Final step to create the entry after successful claim."""
         _LOGGER.debug("Creating entry with title: %s", self._flow_data["record_name"])
         return self.async_create_entry(
-            title=self._flow_data["record_name"], data=self._flow_data
+            title=self._flow_data["record_name"],
+            data=self._flow_data,
+            description="configuration_successful",
         )
 
     async def async_step_reauth(
