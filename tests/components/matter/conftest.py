@@ -86,6 +86,7 @@ async def integration_fixture(
         "door_lock",
         "door_lock_with_unbolt",
         "eve_contact_sensor",
+        "eve_energy_20ecn4101",
         "eve_energy_plug",
         "eve_energy_plug_patched",
         "eve_thermo",
