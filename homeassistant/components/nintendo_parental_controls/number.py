@@ -7,8 +7,6 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from pynintendoparental.exceptions import DailyPlaytimeOutOfRangeError
-
 from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
@@ -16,15 +14,8 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DAILY_PLAYTIME_MAX,
-    DAILY_PLAYTIME_MIN,
-    DAILY_PLAYTIME_UNLIMITED,
-    DOMAIN,
-)
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
 from .entity import Device, NintendoDevice
 
@@ -97,16 +88,4 @@ class NintendoParentalControlsNumberEntity(NintendoDevice, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update entity state."""
-        try:
-            await self.entity_description.set_native_value_fn(self._device, value)
-        except DailyPlaytimeOutOfRangeError as exc:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="daily_playtime_out_of_range",
-                translation_placeholders={
-                    "value": str(value),
-                    "daily_playtime_min": DAILY_PLAYTIME_MIN,
-                    "daily_playtime_max": DAILY_PLAYTIME_MAX,
-                    "daily_playtime_unlimited": DAILY_PLAYTIME_UNLIMITED,
-                },
-            ) from exc
+        await self.entity_description.set_native_value_fn(self._device, value)
