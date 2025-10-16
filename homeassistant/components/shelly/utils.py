@@ -66,7 +66,6 @@ from .const import (
     GEN2_RELEASE_URL,
     LOGGER,
     MAX_SCRIPT_SIZE,
-    ROLE_FLOW_RATE,
     ROLE_GENERIC,
     RPC_INPUTS_EVENTS_TYPES,
     SHAIR_MAX_WORK_HOURS,
@@ -444,7 +443,7 @@ def get_rpc_entity_name(
     channel_name = get_rpc_channel_name(device, key)
 
     if name:
-        if role and role not in (ROLE_GENERIC, ROLE_FLOW_RATE):
+        if role and role != ROLE_GENERIC:
             return name
         return f"{channel_name} {name.lower()}" if channel_name else name
 

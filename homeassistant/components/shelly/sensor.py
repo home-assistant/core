@@ -41,7 +41,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_SLEEP_PERIOD, ROLE_FLOW_RATE, ROLE_GENERIC
+from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -1513,7 +1513,7 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        role=ROLE_FLOW_RATE,
+        role="flow_rate",
     ),
     "number_water_pressure": RpcSensorDescription(
         key="number",
