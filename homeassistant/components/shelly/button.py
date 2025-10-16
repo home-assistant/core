@@ -380,6 +380,13 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
         _id = int(self.key.split(":")[-1])
         await self.coordinator.device.smoke_mute_alarm(_id)
 
+    @property
+    def available(self) -> bool:
+        """Available."""
+        available = super().available
+
+        return available and self.status.get("alarm", False)
+
 
 RPC_BUTTONS = {
     "button_generic": RpcButtonDescription(

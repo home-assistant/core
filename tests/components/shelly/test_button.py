@@ -11,7 +11,12 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.shelly.const import DOMAIN, MODEL_FRANKEVER_WATER_VALVE
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -20,6 +25,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from . import (
     MOCK_MAC,
     init_integration,
+    mutate_rpc_device_status,
     patch_platforms,
     register_device,
     register_entity,
@@ -514,6 +520,12 @@ async def test_rpc_sleeping_button(
     # Make device online
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "smoke:0", "alarm", True)
+    mock_rpc_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
