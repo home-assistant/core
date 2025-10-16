@@ -28,7 +28,9 @@ from homeassistant.components import (
     tts,
 )
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
-from homeassistant.components.assist_pipeline.pipeline import KEY_ASSIST_PIPELINE
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+    KEY_ASSIST_PIPELINE,
+)
 from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
     AssistSatelliteEntityFeature,
