@@ -104,8 +104,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
             zone = self.hass.states.get("zone." + location_name)
             if zone and "friendly_name" in zone.attributes:
                 return zone.attributes["friendly_name"]
-            else:
-                return location_name
+            return location_name
         return None
 
     @property
