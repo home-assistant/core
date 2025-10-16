@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any, NamedTuple, final, override
+from typing import Any, NamedTuple, override
 
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 from aiohttp import ClientSession
@@ -140,8 +140,8 @@ class AsusWrtBridge(ABC):
 
     def __init__(self, host: str) -> None:
         """Initialize Bridge."""
-        self._configuration_url: str = f"http://{host}"
         self._host: str = host
+        self._configuration_url: str | None = None
         self._firmware: str | None = None
         self._label_mac: str | None = None
         self._model: str | None = None
@@ -149,7 +149,7 @@ class AsusWrtBridge(ABC):
         self._serial_number: str | None = None
 
     @property
-    def configuration_url(self) -> str:
+    def configuration_url(self) -> str | None:
         """Return configuration URL."""
         return self._configuration_url
 
@@ -209,7 +209,6 @@ class AsusWrtBridge(ABC):
         """Return a dictionary of available sensors for this bridge."""
 
 
-@final
 class AsusWrtLegacyBridge(AsusWrtBridge):
     """The Bridge that use legacy library."""
 
@@ -241,6 +240,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
             dnsmasq=opt.get(CONF_DNSMASQ, DEFAULT_DNSMASQ),
         )
 
+    @override
     def _is_connected(self) -> bool:
         """Get connected status."""
         return self._api.is_connected
@@ -288,7 +288,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         """Get label mac information."""
         label_mac = await self._get_nvram_info("LABEL_MAC")
         if label_mac and "label_mac" in label_mac:
-            self._label_mac = format_mac(label_mac["label_mac"])
+            self._label_mac: str | None = format_mac(label_mac["label_mac"])
 
     async def _get_firmware(self) -> None:
         """Get firmware information."""
@@ -297,13 +297,13 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
             firmver: str = firmware["firmver"]
             if "buildno" in firmware:
                 firmver += f" (build {firmware['buildno']})"
-            self._firmware = firmver
+            self._firmware: str | None = firmver
 
     async def _get_model(self) -> None:
         """Get model information."""
         model = await self._get_nvram_info("MODEL")
         if model and "model" in model:
-            self._model = model["model"]
+            self._model: str | None = model["model"]
 
     @override
     async def async_get_available_sensors(self) -> dict[str, dict[str, Any]]:
@@ -354,7 +354,6 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         return await self._api.async_get_temperature()
 
 
-@final
 class AsusWrtHttpBridge(AsusWrtBridge):
     """The Bridge that use HTTP library."""
 
@@ -363,7 +362,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
         super().__init__(conf[CONF_HOST])
         # Get API configuration
         config = self._get_api_config()
-        self._api = self._get_api(conf, session, config)
+        self._api: AsusRouter = self._get_api(conf, session, config)
 
     @staticmethod
     def _get_api(
@@ -390,6 +389,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
             ARConfigKey.NOTIFIED_OPTIMISTIC_TEMPERATURE: True,
         }
 
+    @override
     def _is_connected(self) -> bool:
         """Get connected status."""
         return self._api.connected
@@ -404,12 +404,12 @@ class AsusWrtHttpBridge(AsusWrtBridge):
 
         # get main router properties
         if mac := _identity.mac:
-            self._label_mac = format_mac(mac)
-        self._configuration_url = self._api.webpanel
-        self._firmware = str(_identity.firmware)
-        self._model = _identity.model
-        self._model_id = _identity.product_id
-        self._serial_number = _identity.serial
+            self._label_mac: str | None = format_mac(mac)
+        self._configuration_url: str | None = self._api.webpanel
+        self._firmware: str | None = str(_identity.firmware)
+        self._model: str | None = _identity.model
+        self._model_id: str | None = _identity.product_id
+        self._serial_number: str | None = _identity.serial
 
     @override
     async def async_disconnect(self) -> None:
