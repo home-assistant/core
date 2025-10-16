@@ -42,12 +42,8 @@ rules:
   parallel-updates: done
   test-coverage: done
   integration-owner: done
-  docs-installation-parameters:
-    status: todo
-    comment: Under review
-  docs-configuration-parameters:
-    status: todo
-    comment: Under review
+  docs-installation-parameters: done
+  docs-configuration-parameters: done
 
   ## Gold
   entity-translations: done
