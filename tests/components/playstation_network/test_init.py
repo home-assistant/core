@@ -262,7 +262,7 @@ async def test_trophy_title_coordinator_play_new_game(
     # Wait another 30 seconds in case the PlaystationNetworkUserDataCoordinator,
     # which has a 30 second update interval, updated before the
     # PlaystationNetworkTrophyTitlesCoordinator.
-    freezer.tick(timedelta(seconds=30, seconds=1))
+    freezer.tick(timedelta(seconds=31))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
