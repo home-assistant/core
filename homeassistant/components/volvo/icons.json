@@ -348,6 +348,12 @@
       "odometer": {
         "default": "mdi:counter"
       },
+      "service_warning": {
+        "default": "mdi:wrench-clock",
+        "state": {
+          "no_warning": "mdi:car-wrench"
+        }
+      },
       "target_battery_charge_level": {
         "default": "mdi:battery-medium"
       },
