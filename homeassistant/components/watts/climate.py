@@ -37,7 +37,6 @@ async def async_setup_entry(
     async_add_entities(
         WattsVisionClimate(device_coordinator, device_coordinator.data)
         for device_coordinator in device_coordinators.values()
-        if device_coordinator.data
     )
 
 
@@ -81,7 +80,6 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
         """Return hvac mode."""
         return THERMOSTAT_MODE_TO_HVAC.get(self.device.thermostat_mode)
 
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -92,40 +90,39 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
             await self.coordinator.client.set_thermostat_temperature(
                 self.device_id, temperature
             )
-            _LOGGER.debug(
-                "Successfully set temperature to %s for %s",
-                temperature,
-                self.device_id,
-            )
-
-            self.coordinator.trigger_fast_polling()
-
-            await self.coordinator.async_refresh()
-
         except RuntimeError as err:
             raise HomeAssistantError(
                 f"Error setting temperature for {self.device_id}: {err}"
             ) from err
 
+        _LOGGER.debug(
+            "Successfully set temperature to %s for %s",
+            temperature,
+            self.device_id,
+        )
+
+        self.coordinator.trigger_fast_polling()
+
+        await self.coordinator.async_refresh()
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-
         mode = HVAC_MODE_TO_THERMOSTAT[hvac_mode]
 
         try:
             await self.coordinator.client.set_thermostat_mode(self.device_id, mode)
-            _LOGGER.debug(
-                "Successfully set HVAC mode to %s (ThermostatMode.%s) for %s",
-                hvac_mode,
-                mode.name,
-                self.device_id,
-            )
-
-            self.coordinator.trigger_fast_polling()
-
         except (ValueError, RuntimeError) as err:
             raise HomeAssistantError(
                 f"Error setting HVAC mode for {self.device_id}: {err}"
             ) from err
+
+        _LOGGER.debug(
+            "Successfully set HVAC mode to %s (ThermostatMode.%s) for %s",
+            hvac_mode,
+            mode.name,
+            self.device_id,
+        )
+
+        self.coordinator.trigger_fast_polling()
 
         await self.coordinator.async_refresh()

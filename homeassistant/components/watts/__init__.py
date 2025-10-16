@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
     device_coordinators = {}
     for device_id in hub_coordinator.device_ids:
         device_coordinator = WattsVisionDeviceCoordinator(
-            hass, client, entry, device_id
+            hass, client, entry, hub_coordinator, device_id
         )
         device_coordinator.async_set_updated_data(hub_coordinator.data[device_id])
         device_coordinators[device_id] = device_coordinator
