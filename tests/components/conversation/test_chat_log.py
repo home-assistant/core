@@ -197,7 +197,7 @@ async def test_dynamic_time_injection(
             user_llm_hass_api=None,
             user_llm_prompt=None,
         )
-        assert llm.BASE_PROMPT in rendered_prompts
+        assert llm.DATE_TIME_PROMPT in rendered_prompts
 
     # Case 2: Single API (not assist) -> prompt should contain the time
     with (
@@ -211,7 +211,7 @@ async def test_dynamic_time_injection(
             user_llm_hass_api=["not-assist-1"],
             user_llm_prompt=None,
         )
-        assert llm.BASE_PROMPT in rendered_prompts
+        assert llm.DATE_TIME_PROMPT in rendered_prompts
 
     # Case 3: Single API (assist) -> prompt should NOT contain the time
     with (
@@ -225,7 +225,7 @@ async def test_dynamic_time_injection(
             user_llm_hass_api=[llm.LLM_API_ASSIST],
             user_llm_prompt=None,
         )
-        assert llm.BASE_PROMPT not in rendered_prompts
+        assert llm.DATE_TIME_PROMPT not in rendered_prompts
 
     # Case 4: Merged API (without assist) -> prompt should contain the time
     with (
@@ -239,7 +239,7 @@ async def test_dynamic_time_injection(
             user_llm_hass_api=["not-assist-1", "not-assist-2"],
             user_llm_prompt=None,
         )
-        assert llm.BASE_PROMPT in rendered_prompts
+        assert llm.DATE_TIME_PROMPT in rendered_prompts
 
     # Case 5: Merged API (with assist) -> prompt should NOT contain the time
     with (
@@ -253,7 +253,7 @@ async def test_dynamic_time_injection(
             user_llm_hass_api=[llm.LLM_API_ASSIST, "not-assist-1"],
             user_llm_prompt=None,
         )
-        assert llm.BASE_PROMPT not in rendered_prompts
+        assert llm.DATE_TIME_PROMPT not in rendered_prompts
 
 
 async def test_template_error(
