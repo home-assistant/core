@@ -209,11 +209,8 @@
       "adc": {
         "name": "ADC"
       },
-      "rssi": {
-        "name": "RSSI"
-      },
-      "uptime": {
-        "name": "Uptime"
+      "last_restart": {
+        "name": "Last restart"
       },
       "voltmeter": {
         "name": "Voltmeter"
@@ -240,10 +237,10 @@
         "name": "{channel_name} pulse counter"
       },
       "pulse_counter_value": {
-        "name": "Counter value"
+        "name": "Pulse counter value"
       },
       "pulse_counter_value_with_channel_name": {
-        "name": "{channel_name} counter value"
+        "name": "{channel_name} Pulse counter value"
       },
       "pulse_counter_frequency": {
         "name": "Pulse counter frequency"
