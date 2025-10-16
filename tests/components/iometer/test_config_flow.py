@@ -217,7 +217,7 @@ async def test_user_flow_no_readings(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test flow error due to no readings received."""
-    mock_iometer_client.get_current_status.side_effect = IOmeterNoReadingsError()
+    mock_iometer_client.get_current_reading.side_effect = IOmeterNoReadingsError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -236,7 +236,7 @@ async def test_user_flow_no_readings(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_readings"}
 
-    mock_iometer_client.get_current_status.side_effect = None
+    mock_iometer_client.get_current_reading.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
