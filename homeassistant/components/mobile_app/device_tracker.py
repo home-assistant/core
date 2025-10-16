@@ -8,7 +8,10 @@ from homeassistant.components.device_tracker import (
     ATTR_LOCATION_NAME,
     TrackerEntity,
 )
-from homeassistant.components.zone import HOME_ZONE
+from homeassistant.components.zone import (
+    HOME_ZONE,
+    ENTITY_ID_FORMAT as ZONE_ENTITY_ID_FORMAT,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -103,9 +106,10 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         if location_name := self._data.get(ATTR_LOCATION_NAME):
             if location_name == HOME_ZONE:
                 return STATE_HOME
-            zone_state = self.hass.states.get("zone." + location_name)
-            if zone and "friendly_name" in zone.attributes:
-                return zone.attributes["friendly_name"]
+            if zone_state := self.hass.states.get(
+                ZONE_ENTITY_ID_FORMAT.format(location_name)
+            ):
+                return zone_state.name
             return location_name
         return None
 
