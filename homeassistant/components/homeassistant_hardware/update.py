@@ -275,6 +275,7 @@ class BaseFirmwareUpdateEntity(
                 expected_installed_firmware_type=self.entity_description.expected_firmware_type,
                 bootloader_reset_methods=self.bootloader_reset_methods,
                 progress_callback=self._update_progress,
+                domain=self._config_entry.domain,
             )
         finally:
             self._attr_in_progress = False

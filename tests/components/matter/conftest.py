@@ -78,6 +78,7 @@ async def integration_fixture(
         "air_quality_sensor",
         "aqara_door_window_p2",
         "aqara_motion_p2",
+        "aqara_u200",
         "battery_storage",
         "color_temperature_light",
         "cooktop",
@@ -86,6 +87,7 @@ async def integration_fixture(
         "door_lock",
         "door_lock_with_unbolt",
         "eve_contact_sensor",
+        "eve_energy_20ecn4101",
         "eve_energy_plug",
         "eve_energy_plug_patched",
         "eve_thermo",
@@ -97,6 +99,7 @@ async def integration_fixture(
         "generic_switch",
         "generic_switch_multi",
         "humidity_sensor",
+        "inovelli_vtm30",
         "laundry_dryer",
         "leak_sensor",
         "light_sensor",
@@ -119,7 +122,7 @@ async def integration_fixture(
         "silabs_refrigerator",
         "silabs_water_heater",
         "smoke_detector",
-        "solar_power",
+        "solar_inverter",
         "speaker",
         "switch_unit",
         "switchbot_k11_plus",
@@ -133,6 +136,7 @@ async def integration_fixture(
         "window_covering_pa_tilt",
         "window_covering_tilt",
         "yandex_smart_socket",
+        "zemismart_mt25b",
     ]
 )
 async def matter_devices(

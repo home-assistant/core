@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Copy & paste your [API access credentials](https://access.igloocompany.co/api-access) to give Home Assistant access to your account.",
+        "description": "Copy & paste your [API access credentials]({api_access_url}) to give Home Assistant access to your account.",
         "data": {
           "client_id": "Client ID",
           "client_secret": "Client secret"

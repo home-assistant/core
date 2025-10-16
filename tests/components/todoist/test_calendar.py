@@ -1,6 +1,6 @@
 """Unit tests for the Todoist calendar platform."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -141,7 +141,12 @@ async def test_update_entity_for_custom_project_no_due_date_on(
     [
         Due(
             # Note: This runs before the test fixture that sets the timezone
-            date=(dt_util.now(TIMEZONE) + timedelta(days=3)).strftime("%Y-%m-%d"),
+            date=(
+                datetime(
+                    day=15, month=10, year=2025, hour=23, minute=45, tzinfo=TIMEZONE
+                )
+                + timedelta(days=3)
+            ).strftime("%Y-%m-%d"),
             is_recurring=False,
             string="3 days from today",
         )
@@ -158,9 +163,9 @@ async def test_update_entity_for_calendar_with_due_date_in_the_future(
     assert state.state == "on"
 
     # The end time should be in the user's timezone
-    expected_end_time = (dt_util.now() + timedelta(days=3)).strftime(
-        "%Y-%m-%d 00:00:00"
-    )
+    expected_end_time = (
+        datetime(day=15, month=10, year=2025, hour=23, minute=45) + timedelta(days=3)
+    ).strftime("%Y-%m-%d 00:00:00")
     assert state.attributes["end_time"] == expected_end_time
 
 
