@@ -120,7 +120,7 @@
   "entity": {
     "binary_sensor": {
       "power_with_channel_name": {
-        "name": "{channel_name} power"
+        "name": "{channel_name}"
       },
       "overvoltage": {
         "name": "Overvoltage"
