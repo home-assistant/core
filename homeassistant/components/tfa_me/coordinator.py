@@ -23,6 +23,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type TFAmeConfigEntry = ConfigEntry[TFAmeDataCoordinator]
+
 
 class TFAmeDataCoordinator(DataUpdateCoordinator):
     """Class for managing data updates."""

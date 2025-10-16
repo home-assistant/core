@@ -2,9 +2,7 @@
 
 from dataclasses import dataclass
 
-from homeassistant.config_entries import ConfigEntry
-
-type TFAmeConfigEntry = ConfigEntry[TFAmeData]
+from .coordinator import TFAmeDataCoordinator
 
 
 @dataclass
@@ -18,6 +16,7 @@ class TFAmeData:
             raise TFAmeException("host_empty")
 
         self.host = host
+        self.coordinator: TFAmeDataCoordinator
 
     async def get_identifier(self) -> str:
         """Request a unique ID from a device, we just take the host name."""

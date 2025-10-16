@@ -121,8 +121,6 @@ class OptionsFlowHandler(OptionsFlow):
         # Is an option selected?
         if user_input is not None:
             if "select_option" in user_input:
-                if user_input["select_option"] == "discover_sensors":
-                    return await self.async_discover_sensors(user_input)
                 if user_input["select_option"] == "action_rain":
                     return await self.async_step_action_rain(user_input)
                 if user_input["select_option"] == "update_data":
@@ -131,7 +129,6 @@ class OptionsFlowHandler(OptionsFlow):
         # No option seletced -> build main option menu
         opt_dict = [
             SelectOptionDict(value="none", label="None"),
-            SelectOptionDict(value="discover_sensors", label="Discover new sensors"),
             SelectOptionDict(value="action_rain", label="Reset all rain sensors"),
             SelectOptionDict(value="update_data", label="Reload sensor data"),
         ]
@@ -201,16 +198,4 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_create_entry(
             title="update_data", data=self.config_entry.options
-        )
-
-    async def async_discover_sensors(self, user_input=None) -> ConfigFlowResult:
-        """Entry point for option: Discover new sensors."""
-        if user_input is not None:
-            if user_input["select_option"] == "discover_sensors":
-                coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
-                await coordinator.async_refresh()
-                await coordinator.async_discover_new_entities()
-
-        return self.async_create_entry(
-            title="discover_sensors", data=self.config_entry.options
         )

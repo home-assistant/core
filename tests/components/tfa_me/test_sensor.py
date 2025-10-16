@@ -15,7 +15,10 @@ from homeassistant.components.tfa_me.const import (
     ICON_MAPPING,
     ICON_MAPPING_WIND_DIR,
 )
-from homeassistant.components.tfa_me.coordinator import TFAmeDataCoordinator
+from homeassistant.components.tfa_me.coordinator import (
+    TFAmeConfigEntry,
+    TFAmeDataCoordinator,
+)
 from homeassistant.components.tfa_me.sensor import (
     SensorHistory,
     TFAmeSensorEntity,
@@ -293,9 +296,11 @@ def mock_coordinator():
 @pytest.fixture
 def mock_entry(mock_coordinator):
     """Return a mock ConfigEntry."""
-    entry = AsyncMock()  # MagicMock()
+    entry = AsyncMock()
     entry.entry_id = "1234"
     entry.runtime_data = mock_coordinator
+    # entry.runtime_data = mock_coordinator.data
+    # entry.coordinator = mock_coordinator
     return entry
 
 
@@ -314,7 +319,6 @@ def tfa_me_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-# async def
 @pytest.mark.asyncio
 async def test_async_setup_entry_adds_entities(
     hass: HomeAssistant, mock_entry, mock_coordinator
@@ -322,11 +326,12 @@ async def test_async_setup_entry_adds_entities(
     """Test that async_setup_entry correctly adds entities."""
     added_entities = []
 
+    # Function adds entities to list
     def _async_add_entities(entities, update_before_add=False):
         added_entities.extend(entities)
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][mock_entry.entry_id] = mock_entry.runtime_data
+    hass.data[DOMAIN][mock_entry.entry_id] = mock_entry  # .coordinator
 
     await async_setup_entry(hass, mock_entry, _async_add_entities)
 
@@ -705,18 +710,21 @@ def test_history_class() -> None:
 @pytest.fixture
 def mock_config_entry(hass: HomeAssistant, tfa_me_mock_entry) -> ConfigEntry:
     """Create dummy ConfigEntry."""
-    entry = MagicMock(spec=ConfigEntry)
+    entry = MagicMock(spec=TFAmeConfigEntry)
     entry.entry_id = "test_entry"
     entry.domain = DOMAIN
     entry.data = {}
-    entry.runtime_data = TFAmeDataCoordinator(
+    cordy = TFAmeDataCoordinator(
         hass=hass,
         config_entry=tfa_me_mock_entry,
         host="192.168.1.46",
         interval=timedelta(30),
         multiple_entities=False,
     )
-    entry.runtime_data.sensor_entity_list = []
+    cordy.sensor_entity_list = []
+    cordy.data = {}
+    # entry.coordinator = cordy
+    entry.runtime_data = cordy
     entry.data = {}
     return entry
 
@@ -748,14 +756,13 @@ async def test_async_discover_new_entities(
     }
     mock_coordinator.sensor_entity_list = [entity_id_existing]
 
-    mock_config_entry.runtime_data = mock_coordinator
+    # mock_config_entry.runtime_data = mock_coordinator
+    mock_config_entry.coordinator = mock_coordinator
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][mock_config_entry.entry_id] = mock_config_entry
 
     # Act: Setup Entry -> async_discover_new_entities registers itself
-    await async_setup_entry(
-        hass, mock_config_entry, async_add_entities
-    )  # This is a problem ?
+    await async_setup_entry(hass, mock_config_entry, async_add_entities)
 
     # Add new "received" data entity to coordinator
     entity_id_new = "sensor.a0f169ad1_humidity"
@@ -780,7 +787,7 @@ async def test_async_discover_new_entities(
     # Are all entities in list?
     assert hass.data[DOMAIN][
         mock_config_entry.entry_id
-    ].runtime_data.sensor_entity_list == [
+    ].coordinator.sensor_entity_list == [
         "sensor.a0f169ad1_temperature",
         "sensor.a0f169ad1_humidity",
     ]
@@ -808,7 +815,7 @@ async def test_async_discover_new_entities(
     # Are all entities in list?
     assert hass.data[DOMAIN][
         mock_config_entry.entry_id
-    ].runtime_data.sensor_entity_list == [
+    ].coordinator.sensor_entity_list == [
         "sensor.a0f169ad1_temperature",
         "sensor.a0f169ad1_humidity",
     ]
@@ -869,7 +876,6 @@ async def test_handle_coordinator_update_rain_hour(
     entity._handle_coordinator_update()
 
     # --- Assert ---
-    # entity.rain_history.add_measurement.assert_called_once_with(7.4, int(now))
     entity.rain_history.add_measurement.assert_called_once()
 
 

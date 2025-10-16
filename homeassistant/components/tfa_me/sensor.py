@@ -6,31 +6,29 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, StateType
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEVICE_MAPPING, DOMAIN, ICON_MAPPING, TIMEOUT_MAPPING
-from .coordinator import TFAmeDataCoordinator
+from .coordinator import TFAmeConfigEntry, TFAmeDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,  # TFAmeConfigEntry,
+    entry: TFAmeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TFA.me as Sensor."""
 
     # Get coordinator
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data  # coordinator
     # Initialize first refresh/request and wait for parsed JSON data from coordinator
     try:
-        # From await coordinator.async_config_entry_first_refresh()
-        # Collect all entities (entities are part of device)
+        # Wait for coordinator.async_config_entry_first_refresh() then collect all entities
         sensors_start = []
         for entity_id in coordinator.data:
             sensor_id = coordinator.data[entity_id]["sensor_id"]
@@ -51,7 +49,7 @@ async def async_setup_entry(
 
     async def async_discover_new_entities():
         """Find new sensors in coordinator data and register them."""
-        coordinator = entry.runtime_data
+        coordinator = entry.coordinator
 
         new_sensors = []
         for entity_id in coordinator.data:
@@ -103,7 +101,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                     (
                         DOMAIN,
                         ids_str,
-                    )  # this IDs are used to ground entities from sensors
+                    )  # Entities for sensors
                 },  # Unique ID for device/sensor
                 "name": self.format_string_tfa_id(
                     self.sensor_id, self.gateway_id, self.multiple_entities
@@ -112,9 +110,6 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                 "model": self.format_string_tfa_type(
                     sensor_id
                 ),  # 'Sensor/Station type XX'
-                # "sw_version": "1.0",
-                # "hw_version": "1.0",
-                # "serial_number": "123"
             }
             # History
             self.rain_history: SensorHistory = SensorHistory(max_age_minutes=60)
@@ -122,7 +117,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                 max_age_minutes=(24 * 60)
             )
 
-            # When this is a station add URL to station
+            # If this is a station add URL to station
             hex_value = int(sensor_id[:2], 16)
             if hex_value < 160:
                 self._attr_device_info["configuration_url"] = (
@@ -201,7 +196,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
 
     @property
     def measurement_name(self):
-        """Name of measurement, "measurement", e.g. "temperature."""
+        """Name of measurement, e.g. 'temperature'."""
         try:
             measurement_name = self.coordinator.data[self.entity_id]["measurement"]
         except (ValueError, TypeError, KeyError):
@@ -210,7 +205,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
         return measurement_name
 
     @property
-    def native_value(self) -> StateType:  # None | int | float | str | StateType:
+    def native_value(self) -> StateType:
         """Actual measurement value of an entity itself."""
         try:
             # Is measurement value still valid or old ?
@@ -249,7 +244,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                         measurement_value = float(newest[0]) - float(oldest[0])
                         measurement_value = round(measurement_value, 1)
 
-                # Is this wind sensor, add degrees entity
+                # Is this wind sensor degrees entity ?
                 if "wind_direction_deg" in self.entity_id:
                     try:
                         str_wind_deg = self.entity_id

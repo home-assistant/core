@@ -86,12 +86,6 @@ async def test_setup_entry_bad_ip(
 ) -> None:
     """Test entry setup with bad IP."""
 
-    # simulate dummy reply from gateway
-    # aioclient_mock.get(
-    #    "http://1234/sensors",  # Bad IP, no valid MDNS
-    #    json={"gateway_id": "001", "sensors": []},
-    # )
-
     entry_x = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -102,7 +96,7 @@ async def test_setup_entry_bad_ip(
     )
     entry_x.add_to_hass(hass)
 
-    # Patch den Coordinator, damit kein HTTP-Request passiert
+    # Patch coordinator
     with patch(
         "homeassistant.components.tfa_me.coordinator.TFAmeDataCoordinator._async_update_data",
         side_effect=Exception("invalid ip"),
@@ -266,82 +260,6 @@ async def test_setup_entry_and_action_update_data(
     # Test result
     assert result["type"] == "create_entry"
     assert result["title"] == "update_data"
-
-
-@pytest.mark.asyncio
-async def test_discover_sensors_via_options_flow_xxx(hass: HomeAssistant) -> None:
-    """Test discover_sensors via options flow."""
-
-    # 1) Create a mock up entry
-    entry = create_default_mock_entry(hass)
-
-    now = datetime.now().timestamp()
-
-    # 2) Patch Client: fake simple JSON reply from gateway
-    dummy_json = {
-        "gateway_id": "017654321",
-        "sensors": [
-            {
-                "sensor_id": "a01234567",
-                "name": "A01234567",
-                "ts": int(now),
-                "measurements": {
-                    "temperature": {"value": 21.5, "unit": "°C", "ts": 123}
-                },
-            }
-        ],
-    }
-
-    # 3) Patch Converter: entities like in coordinator.data
-    dummy_entity_map = {
-        "sensor.a01234567_temperature": {
-            "sensor_id": "a01234567",
-            "gateway_id": "017654321",
-            "sensor_name": "A01234567",
-            "measurement": "temperature",
-            "value": 21.5,
-            "unit": "°C",
-            "timestamp": "2025-01-01T00:00:00Z",
-            "ts": int(now),
-        }
-    }
-
-    # Patch dummy data
-    with (
-        patch(
-            "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
-            new=AsyncMock(return_value=dummy_json),
-        ),
-        patch(
-            "homeassistant.components.tfa_me.coordinator.TFAmeDataForHA.json_to_entities",
-            return_value=dummy_entity_map,
-        ),
-    ):
-        ok = await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert ok
-    assert entry.state == ConfigEntryState.LOADED
-
-    # 4) sensor.async_setup_entry was called, function attached to coordinator
-    coord = entry.runtime_data
-    assert hasattr(coord, "async_discover_new_entities"), (
-        "sensor.async_setup_entry did not attach the function"
-    )
-
-    # 5) Register dummy service in case of OptionsFlow calls it
-    hass.services.async_register("homeassistant", "update_entity", lambda call: None)
-
-    # 6) Trigger Options-Flow
-    result = await hass.config_entries.options.async_init(
-        entry.entry_id,
-        context={"source": "user"},
-        data={"select_option": "discover_sensors"},
-    )
-
-    # 7) Asserts
-    assert result["type"] == "create_entry"
-    assert result["title"] == "discover_sensors"
 
 
 @pytest.mark.asyncio
