@@ -1459,20 +1459,31 @@ async def test_set_message_reaction(
 
 
 @pytest.mark.parametrize(
-    ("file_id", "hass_file_name", "telegram_file_name", "expected_file_name"),
+    (
+        "file_id",
+        "hass_file_name",
+        "hass_directory_path",
+        "telegram_file_name",
+    ),
     [
         (
             "some-file-id",
             None,
+            None,
             "file_name.jpg",
-            "file_name.jpg",
-        ),  # user didn't provide file_name - use telegram file name
+        ),  # user didn't provide file_name or directory path - use telegram file name
         (
             "some-file-id",
             "custom_name.jpg",
+            None,
             "file_name.jpg",
+        ),  # user provide file_name but not directory_path
+        (
+            "some-file-id",
             "custom_name.jpg",
-        ),  # user provide file_name
+            "/tmp/tempfolder",  # noqa: S108
+            "file_name.jpg",
+        ),  # user provide file_name and directory_path
     ],
 )
 async def test_download_file(
@@ -1481,8 +1492,8 @@ async def test_download_file(
     mock_external_calls: None,
     file_id: str,
     hass_file_name: str | None,
+    hass_directory_path: str | None,
     telegram_file_name: str,
-    expected_file_name: str,
 ) -> None:
     """Test download file."""
     mock_broadcast_config_entry.add_to_hass(hass)
@@ -1508,10 +1519,19 @@ async def test_download_file(
         ):
             schema_request = {
                 ATTR_FILE_ID: file_id,
-                ATTR_DIRECTORY_PATH: tempdirname,
             }
             if hass_file_name:
+                expected_file_name = hass_file_name
                 schema_request[ATTR_FILE_NAME] = hass_file_name
+            else:
+                expected_file_name = telegram_file_name
+
+            if hass_directory_path:
+                expected_directory_path = hass_directory_path
+            else:
+                # use temp dir as default directory path for test
+                expected_directory_path = tempdirname
+            schema_request[ATTR_DIRECTORY_PATH] = expected_directory_path
 
             await hass.services.async_call(
                 DOMAIN,
@@ -1525,7 +1545,7 @@ async def test_download_file(
             file_id=file_id,
         )
         download_to_drive_mock.assert_called_once_with(
-            custom_path=f"{tempdirname}/{expected_file_name}",
+            custom_path=f"{expected_directory_path}/{expected_file_name}",
         )
 
 
