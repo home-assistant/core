@@ -183,19 +183,23 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["GetLiveContext"]
+    assert [tool.name for tool in api.tools] == ["GetDateTime", "GetLiveContext"]
 
     # Match all
     intent_handler.platforms = None
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["test_intent", "GetLiveContext"]
+    assert [tool.name for tool in api.tools] == [
+        "test_intent",
+        "GetDateTime",
+        "GetLiveContext",
+    ]
 
     # Match specific domain
     intent_handler.platforms = {"light"}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 2
+    assert len(api.tools) == 3
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
@@ -374,6 +378,7 @@ async def test_assist_api_tools(
         "HassUnpauseTimer",
         "HassTimerStatus",
         "Super_crazy_intent_with_unique_name",
+        "GetDateTime",
     ]
 
 
@@ -390,7 +395,7 @@ async def test_assist_api_description(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 1
+    assert len(api.tools) == 2
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "my intent handler"
@@ -579,105 +584,83 @@ async def test_assist_api_prompt(
     exposed_entities_prompt = """Live Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
-  entity_id: light.1
   state: unavailable
   areas: Test Area 2
 - names: Kitchen
   domain: light
-  entity_id: light.kitchen
   state: 'on'
   attributes:
     temperature: '0.9'
     humidity: '65'
 - names: Living Room
   domain: light
-  entity_id: light.living_room
   state: 'on'
   areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
-  entity_id: light.test_device
   state: unavailable
   areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
-  entity_id: light.test_device_2
   state: unavailable
   areas: Test Area 2
 - names: Test Device 3
   domain: light
-  entity_id: light.test_device_3
   state: unavailable
   areas: Test Area 2
 - names: Test Device 4
   domain: light
-  entity_id: light.test_device_4
   state: unavailable
   areas: Test Area 2
 - names: Test Service
   domain: light
-  entity_id: light.test_service
   state: unavailable
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
-  entity_id: light.test_service_2
   state: unavailable
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
-  entity_id: light.test_service_3
   state: unavailable
   areas: Test Area, Alternative name
 - names: Unnamed Device
   domain: light
-  entity_id: light.unnamed_device
   state: unavailable
   areas: Test Area 2
 """
     stateless_exposed_entities_prompt = """Static Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
-  entity_id: light.1
   areas: Test Area 2
 - names: Kitchen
   domain: light
-  entity_id: light.kitchen
 - names: Living Room
   domain: light
-  entity_id: light.living_room
   areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
-  entity_id: light.test_device
   areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
-  entity_id: light.test_device_2
   areas: Test Area 2
 - names: Test Device 3
   domain: light
-  entity_id: light.test_device_3
   areas: Test Area 2
 - names: Test Device 4
   domain: light
-  entity_id: light.test_device_4
   areas: Test Area 2
 - names: Test Service
   domain: light
-  entity_id: light.test_service
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
-  entity_id: light.test_service_2
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
-  entity_id: light.test_service_3
   areas: Test Area, Alternative name
 - names: Unnamed Device
   domain: light
-  entity_id: light.unnamed_device
   areas: Test Area 2
 """
     first_part_prompt = (
@@ -1485,6 +1468,41 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     }
 
 
+async def test_get_date_time_tool(hass: HomeAssistant) -> None:
+    """Test the GetDateTime tool."""
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tool = next((tool for tool in api.tools if tool.name == "GetDateTime"), None)
+    assert tool is not None
+
+    now = dt_util.parse_datetime("2025-09-22 12:30:45Z")
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        result = await tool.async_call(
+            hass,
+            llm.ToolInput("GetDateTime", {}),
+            llm_context,
+        )
+        assert result == {
+            "success": True,
+            "result": {
+                "date": "2025-09-22",
+                "time": "12:30:45",
+                "timezone": "UTC",
+                "weekday": "Monday",
+            },
+        }
+
+
 async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     """Test that tools are not exposed when no entities are exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1497,7 +1515,7 @@ async def test_no_tools_exposed(hass: HomeAssistant) -> None:
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert api.tools == []
+    assert [tool.name for tool in api.tools] == ["GetDateTime"]
 
 
 async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:

@@ -21,8 +21,8 @@ from homeassistant.components.camera import (
     async_get_image,
     async_get_stream_source,
     async_register_webrtc_provider,
+    get_camera_from_entity_id,
 )
-from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.unifiprotect.const import (
     ATTR_BITRATE,
     ATTR_CHANNEL_ID,

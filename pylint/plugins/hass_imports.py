@@ -126,26 +126,19 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
 }
 
 _IGNORE_ROOT_IMPORT = (
-    "assist_pipeline",
     "automation",
     "bluetooth",
-    "camera",
-    "cast",
     "device_automation",
     "device_tracker",
     "ffmpeg",
     "ffmpeg_motion",
     "google_assistant",
-    "hardware",
     "homeassistant",
     "homeassistant_hardware",
     "http",
-    "manual",
-    "plex",
     "recorder",
     "rest",
     "script",
-    "sensor",
     "stream",
 )
 
