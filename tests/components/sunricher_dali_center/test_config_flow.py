@@ -47,8 +47,8 @@ def _mock_gateway(**overrides: Any) -> MagicMock:
 
 async def test_discovery_flow_success(
     hass: HomeAssistant,
-    mock_setup_entry,
-    mock_discovery,
+    mock_setup_entry: AsyncMock,
+    mock_discovery: MagicMock,
 ) -> None:
     """Test a successful discovery flow."""
     gateway = _mock_gateway()
@@ -88,7 +88,7 @@ async def test_discovery_flow_success(
 
 async def test_discovery_no_gateways_found(
     hass: HomeAssistant,
-    mock_discovery,
+    mock_discovery: MagicMock,
 ) -> None:
     """Test discovery step when no gateways are found."""
     mock_discovery.discover_gateways.return_value = []
@@ -113,7 +113,7 @@ async def test_discovery_no_gateways_found(
 
 async def test_discovery_gateway_error(
     hass: HomeAssistant,
-    mock_discovery,
+    mock_discovery: MagicMock,
 ) -> None:
     """Test discovery error handling when gateway search fails."""
     mock_discovery.discover_gateways.side_effect = DaliGatewayError("failure")
@@ -139,7 +139,7 @@ async def test_discovery_gateway_error(
 
 async def test_discovery_device_not_found(
     hass: HomeAssistant,
-    mock_discovery,
+    mock_discovery: MagicMock,
 ) -> None:
     """Test selection error when the gateway no longer exists."""
     gateway = _mock_gateway()
@@ -152,7 +152,7 @@ async def test_discovery_device_not_found(
     result = await hass.config_entries.flow.async_configure(flow_id, {})
 
     flow = hass.config_entries.flow._progress[flow_id]
-    flow.data_schema = vol.Schema({vol.Required("selected_gateway"): str})
+    flow.data_schema = vol.Schema({vol.Optional("selected_gateway"): str})
     flow._discovered_gateways.clear()
 
     result = await hass.config_entries.flow.async_configure(
@@ -174,7 +174,7 @@ async def test_discovery_device_not_found(
 
 async def test_discovery_connection_failure(
     hass: HomeAssistant,
-    mock_discovery,
+    mock_discovery: MagicMock,
 ) -> None:
     """Test connection failure when validating the selected gateway."""
     gateway = _mock_gateway()
@@ -212,7 +212,7 @@ async def test_discovery_connection_failure(
 
 async def test_discovery_duplicate_filtered(
     hass: HomeAssistant,
-    mock_discovery,
+    mock_discovery: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that already configured gateways are filtered out."""
@@ -241,7 +241,7 @@ async def test_discovery_duplicate_filtered(
 
 async def test_discovery_unique_id_already_configured(
     hass: HomeAssistant,
-    mock_discovery,
+    mock_discovery: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate protection when the entry appears during the flow."""
