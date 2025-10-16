@@ -31,8 +31,9 @@ BEHAVIOR_ALL: Final = "all"
 
 STATE_CONDITION_TYPE: Final = "state"
 
+STATE_CONDITION_VALID_STATES: Final = [STATE_ON, STATE_OFF]
 STATE_CONDITION_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
-    vol.Required(CONF_STATE): vol.In([STATE_ON, STATE_OFF]),
+    vol.Required(CONF_STATE): vol.In(STATE_CONDITION_VALID_STATES),
     vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
         [BEHAVIOR_ONE, BEHAVIOR_ANY, BEHAVIOR_ALL]
     ),
@@ -70,39 +71,28 @@ class StateCondition(Condition):
     async def async_get_checker(self) -> ConditionCheckerType:
         """Get the condition checker."""
 
-        def check_any_match_state(entity_ids: set[str]) -> bool:
+        def check_any_match_state(states: list[str]) -> bool:
             """Test if any entity match the state."""
-            return any(
-                entity_state.state == self._state
-                for entity_id in entity_ids
-                if (entity_state := self._hass.states.get(entity_id))
-                is not None  # Ignore unavailable entities
-            )
+            return any(state == self._state for state in states)
 
-        def check_all_match_state(entity_ids: set[str]) -> bool:
+        def check_all_match_state(states: list[str]) -> bool:
             """Test if all entities match the state."""
-            return all(
-                entity_state.state == self._state
-                for entity_id in entity_ids
-                if (entity_state := self._hass.states.get(entity_id))
-                is not None  # Ignore unavailable entities
-            )
+            if not states:
+                return False
+            return all(state == self._state for state in states)
 
-        def check_one_match_state(entity_ids: set[str]) -> bool:
+        def check_one_match_state(states: list[str]) -> bool:
             """Check that only one entity matches the state."""
             matched = False
-            for entity_id in entity_ids:
-                # Ignore unavailable entities
-                if (entity_state := self._hass.states.get(entity_id)) is None:
-                    continue
-                if entity_state.state != self._state:
+            for state in states:
+                if state != self._state:
                     continue
                 if matched:
                     return False
                 matched = True
             return matched
 
-        matcher: Callable[[set[str]], bool]
+        matcher: Callable[[list[str]], bool]
         if self._behavior == BEHAVIOR_ANY:
             matcher = check_any_match_state
         elif self._behavior == BEHAVIOR_ALL:
@@ -125,7 +115,13 @@ class StateCondition(Condition):
                 for entity_id in referenced_entity_ids
                 if split_entity_id(entity_id)[0] == DOMAIN
             }
-            return matcher(light_entity_ids)
+            light_entity_states = [
+                state.state
+                for entity_id in light_entity_ids
+                if (state := hass.states.get(entity_id))
+                and state.state in STATE_CONDITION_VALID_STATES
+            ]
+            return matcher(light_entity_states)
 
         return test_state
 

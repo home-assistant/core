@@ -233,9 +233,9 @@ async def test_light_state_condition_behavior_all(
         hass.states.async_set(entity_id, condition_state)
     assert await has_calls_after_trigger(hass, service_calls)
 
-    # Set one light to unavailable -> condition fail
+    # Set one light to unavailable -> condition still pass
     hass.states.async_set(label_entities[0], STATE_UNAVAILABLE)
-    assert not await has_calls_after_trigger(hass, service_calls)
+    assert await has_calls_after_trigger(hass, service_calls)
 
     # Set all lights to unavailable -> condition fail
     for entity_id in label_entities:
