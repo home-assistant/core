@@ -10,7 +10,6 @@ from homeassistant.components.energyid.const import (
 from homeassistant.components.energyid.energyid_sensor_mapping_flow import (
     EnergyIDSensorMappingFlowHandler,
     _get_suggested_entities,
-    _validate_mapping_input,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import InvalidData
@@ -195,102 +194,30 @@ async def test_no_suitable_entities(
     assert "ha_entity_id" in result["data_schema"].schema
 
 
-# --- 100% coverage for energyid_sensor_mapping_flow.py ---
-def test__get_suggested_entities_empty(hass: HomeAssistant) -> None:
-    """Test _get_suggested_entities returns empty list if no suitable entities."""
-    assert _get_suggested_entities(hass) == []
-
-
-def test__get_suggested_entities_non_sensor(hass: HomeAssistant) -> None:
-    """Test _get_suggested_entities skips non-sensor entities."""
-    ent_reg = er.async_get(hass)
-    ent_reg.async_get_or_create(
-        "light", "test", "not_sensor", suggested_object_id="not_sensor"
-    )
-    assert _get_suggested_entities(hass) == []
-
-
-def test__validate_mapping_input_all_paths(entity_registry: er.EntityRegistry) -> None:
-    """Test all return paths in _validate_mapping_input."""
-    errors = _validate_mapping_input(None, set(), entity_registry)
-    assert errors["base"] == "entity_required"
-    errors = _validate_mapping_input("sensor.unknown", set(), entity_registry)
-    assert errors["base"] == "entity_not_found"
-    entity = entity_registry.async_get_or_create(
-        "sensor", "test", "mapped", suggested_object_id="mapped"
-    )
-    errors = _validate_mapping_input(entity.entity_id, {entity.id}, entity_registry)
-    assert errors["base"] == "entity_already_mapped"
-    errors = _validate_mapping_input(entity.entity_id, set(), entity_registry)
-    assert errors == {}
-
-
-def test__validate_mapping_input_return_path(
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test explicit return at end of _validate_mapping_input."""
-    entity = entity_registry.async_get_or_create(
-        "sensor", "test", "mapped2", suggested_object_id="mapped2"
-    )
-    errors = _validate_mapping_input(entity.entity_id, set(), entity_registry)
-    assert errors == {}
-
-
-async def test_entity_disappears_between_validation_and_lookup(
+@pytest.mark.parametrize(
+    ("entities_to_create"),
+    [
+        ([]),  # empty case
+        ([("light", "test", "not_sensor", "not_sensor")]),  # non-sensor case
+    ],
+)
+def test_get_suggested_entities_no_suitable_entities(
     hass: HomeAssistant,
-    mock_parent_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    entities_to_create: list[tuple[str, str, str, str]],
 ) -> None:
-    """Test entity disappears after validation triggers fallback error."""
-    mock_parent_entry.add_to_hass(hass)
-    entity = entity_registry.async_get_or_create(
-        "sensor", "test", "gone", suggested_object_id="gone"
-    )
-    hass.states.async_set("sensor.gone", "1")
-    # Start the subentry flow
-    result = await hass.config_entries.subentries.async_init(
-        (mock_parent_entry.entry_id, "sensor_mapping"),
-        context={"source": "user"},
-    )
-    assert result["type"] == "form"
-    # Remove entity after validation but before registry lookup
-    # Patch the registry to simulate entity vanishing after validation
-    orig_async_get = entity_registry.async_get
-
-    def fake_async_get(entity_id):
-        if entity_id == entity.entity_id:
-            return None
-        return orig_async_get(entity_id)
-
-    entity_registry.async_get = fake_async_get
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"ha_entity_id": entity.entity_id}
-    )
-    assert result["type"] == "form"
-    assert result["errors"]["base"] == "entity_not_found"  # lines 76-77, 88
-    # Restore
-    entity_registry.async_get = orig_async_get
+    """Test _get_suggested_entities returns empty list if no suitable entities."""
+    for domain, platform, unique_id, suggested_object_id in entities_to_create:
+        entity_registry.async_get_or_create(
+            domain, platform, unique_id, suggested_object_id=suggested_object_id
+        )
+    assert _get_suggested_entities(hass) == []
 
 
 def test_energyid_sensor_mapping_flow_handler_repr() -> None:
     """Test instantiating and repr-ing the handler."""
     handler = EnergyIDSensorMappingFlowHandler()
     assert handler.__class__.__name__ == "EnergyIDSensorMappingFlowHandler"
-
-
-async def test_abort_flow(
-    hass: HomeAssistant, mock_parent_entry: MockConfigEntry
-) -> None:
-    """Test aborting the subentry flow."""
-    mock_parent_entry.add_to_hass(hass)
-    result = await hass.config_entries.subentries.async_init(
-        (mock_parent_entry.entry_id, "sensor_mapping"),
-        context={"source": "user"},
-    )
-    # Simulate abort by passing next_step_id that does not exist (should fallback to form)
-    # If the flow supports abort, you can also test abort reason here
-    # For now, just check the form is still shown
-    assert result["type"] == "form"
 
 
 async def test_duplicate_entity_key(
@@ -325,48 +252,3 @@ async def test_duplicate_entity_key(
         result["flow_id"], {"ha_entity_id": entity2.entity_id}
     )
     assert result["type"] == "create_entry"
-
-
-async def test_sensor_mapping_form_return_no_input(
-    hass: HomeAssistant, mock_parent_entry
-) -> None:
-    """Test form is returned when no user input is provided."""
-    mock_parent_entry.add_to_hass(hass)
-    result = await hass.config_entries.subentries.async_init(
-        (mock_parent_entry.entry_id, "sensor_mapping"),
-        context={"source": "user"},
-    )
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-
-
-async def test_sensor_mapping_entity_disappears_at_lookup(
-    hass: HomeAssistant,
-    mock_parent_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test error if entity disappears after validation but before lookup."""
-    mock_parent_entry.add_to_hass(hass)
-    entity = entity_registry.async_get_or_create(
-        "sensor", "test", "gone2", suggested_object_id="gone2"
-    )
-    hass.states.async_set("sensor.gone2", "1")
-    result = await hass.config_entries.subentries.async_init(
-        (mock_parent_entry.entry_id, "sensor_mapping"),
-        context={"source": "user"},
-    )
-    # Patch registry to simulate entity vanishing after validation
-    orig_async_get = entity_registry.async_get
-
-    def fake_async_get(entity_id):
-        if entity_id == entity.entity_id:
-            return None
-        return orig_async_get(entity_id)
-
-    entity_registry.async_get = fake_async_get
-    result2 = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"ha_entity_id": entity.entity_id}
-    )
-    assert result2["type"] == "form"
-    assert result2["errors"]["base"] == "entity_not_found"
-    entity_registry.async_get = orig_async_get
