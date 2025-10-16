@@ -9,8 +9,8 @@ from homeassistant.components.device_tracker import (
     TrackerEntity,
 )
 from homeassistant.components.zone import (
-    HOME_ZONE,
     ENTITY_ID_FORMAT as ZONE_ENTITY_ID_FORMAT,
+    HOME_ZONE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
