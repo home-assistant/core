@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from blinkpy.auth import Auth, LoginError, TokenRefreshFailed
+from blinkpy.auth import Auth, BlinkTwoFARequiredError, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import Blink, BlinkSetupError
 import voluptuous as vol
 
@@ -21,23 +21,20 @@ from .const import DEVICE_ID, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(auth: Auth) -> None:
+async def validate_input(blink: Blink) -> None:
     """Validate the user input allows us to connect."""
     try:
-        await auth.startup()
+        await blink.start()
     except (LoginError, TokenRefreshFailed) as err:
         raise InvalidAuth from err
-    if auth.check_key_required():
-        raise Require2FA
 
 
-async def _send_blink_2fa_pin(hass: HomeAssistant, auth: Auth, pin: str | None) -> bool:
+async def _send_blink_2fa_pin(
+    hass: HomeAssistant, blink: Blink, pin: str | None
+) -> bool:
     """Send 2FA pin to blink servers."""
-    blink = Blink(session=async_get_clientsession(hass))
-    blink.auth = auth
-    blink.setup_login_ids()
-    blink.setup_urls()
-    return await auth.send_auth_key(blink, pin)
+    await blink.send_2fa_code(pin)
+    return True
 
 
 class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -48,6 +45,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the blink flow."""
         self.auth: Auth | None = None
+        self.blink: Blink | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -60,14 +58,16 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 no_prompt=True,
                 session=async_get_clientsession(self.hass),
             )
+            self.blink = Blink(session=async_get_clientsession(self.hass))
+            self.blink.auth = self.auth
             await self.async_set_unique_id(user_input[CONF_USERNAME])
             if self.source != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
 
             try:
-                await validate_input(self.auth)
+                await validate_input(self.blink)
                 return self._async_finish_flow()
-            except Require2FA:
+            except BlinkTwoFARequiredError:
                 return await self.async_step_2fa()
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
@@ -94,7 +94,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 valid_token = await _send_blink_2fa_pin(
-                    self.hass, self.auth, user_input.get(CONF_PIN)
+                    self.hass, self.blink, user_input.get(CONF_PIN)
                 )
             except BlinkSetupError:
                 errors["base"] = "cannot_connect"
@@ -126,10 +126,6 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Finish with setup."""
         assert self.auth
         return self.async_create_entry(title=DOMAIN, data=self.auth.login_attributes)
-
-
-class Require2FA(HomeAssistantError):
-    """Error to indicate we require 2FA."""
 
 
 class InvalidAuth(HomeAssistantError):

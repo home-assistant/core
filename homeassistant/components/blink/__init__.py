@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -91,10 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> boo
         await blink.start()
     except (ClientError, TimeoutError) as ex:
         raise ConfigEntryNotReady("Can not connect to host") from ex
-
-    if blink.auth.check_key_required():
-        _LOGGER.debug("Attempting a reauth flow")
-        raise ConfigEntryAuthFailed("Need 2FA for Blink")
 
     if not blink.available:
         raise ConfigEntryNotReady
