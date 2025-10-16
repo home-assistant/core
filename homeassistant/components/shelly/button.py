@@ -66,7 +66,7 @@ class RpcButtonDescription(RpcEntityDescription, ButtonEntityDescription):
 BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ShellyButtonDescription[ShellyBlockCoordinator | ShellyRpcCoordinator](
         key="reboot",
-        name="Reboot",
+        name="Restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_reboot",
@@ -173,7 +173,7 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set buttons for device."""
+    """Set up button entities."""
     entry_data = config_entry.runtime_data
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:

@@ -29,6 +29,7 @@ from .entity import (
     ShellyRpcAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import get_device_entry_gen
 
@@ -63,20 +64,20 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up covers for device."""
+    """Set up cover entities."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        return async_setup_rpc_entry(hass, config_entry, async_add_entities)
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-    return async_setup_block_entry(hass, config_entry, async_add_entities)
+    return _async_setup_block_entry(hass, config_entry, async_add_entities)
 
 
 @callback
-def async_setup_block_entry(
+def _async_setup_block_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up cover for device."""
+    """Set up entities for BLOCK device."""
     coordinator = config_entry.runtime_data.block
     assert coordinator
 
@@ -86,7 +87,7 @@ def async_setup_block_entry(
 
 
 @callback
-def async_setup_rpc_entry(
+def _async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
@@ -192,6 +193,7 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
     _attr_supported_features: CoverEntityFeature = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
+    _id: int
 
     def __init__(
         self,
@@ -260,7 +262,7 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         """Update the cover position every second."""
         try:
             while self.is_closing or self.is_opening:
-                await self.coordinator.device.update_status()
+                await self.coordinator.device.update_cover_status(self._id)
                 self.async_write_ha_state()
                 await asyncio.sleep(RPC_COVER_UPDATE_TIME_SEC)
         finally:
@@ -274,39 +276,46 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         if self.is_closing or self.is_opening:
             self.launch_update_task()
 
+    @rpc_call
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self.call_rpc("Cover.Close", {"id": self._id})
+        await self.coordinator.device.cover_close(self._id)
 
+    @rpc_call
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        await self.call_rpc("Cover.Open", {"id": self._id})
+        await self.coordinator.device.cover_open(self._id)
 
+    @rpc_call
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self.call_rpc(
-            "Cover.GoToPosition", {"id": self._id, "pos": kwargs[ATTR_POSITION]}
+        await self.coordinator.device.cover_set_position(
+            self._id, pos=kwargs[ATTR_POSITION]
         )
 
+    @rpc_call
     async def async_stop_cover(self, **_kwargs: Any) -> None:
         """Stop the cover."""
-        await self.call_rpc("Cover.Stop", {"id": self._id})
+        await self.coordinator.device.cover_stop(self._id)
 
+    @rpc_call
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        await self.call_rpc("Cover.GoToPosition", {"id": self._id, "slat_pos": 100})
+        await self.coordinator.device.cover_set_position(self._id, slat_pos=100)
 
+    @rpc_call
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        await self.call_rpc("Cover.GoToPosition", {"id": self._id, "slat_pos": 0})
+        await self.coordinator.device.cover_set_position(self._id, slat_pos=0)
 
+    @rpc_call
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        await self.call_rpc(
-            "Cover.GoToPosition",
-            {"id": self._id, "slat_pos": kwargs[ATTR_TILT_POSITION]},
+        await self.coordinator.device.cover_set_position(
+            self._id, slat_pos=kwargs[ATTR_TILT_POSITION]
         )
 
+    @rpc_call
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self.call_rpc("Cover.Stop", {"id": self._id})
+        await self.coordinator.device.cover_stop(self._id)

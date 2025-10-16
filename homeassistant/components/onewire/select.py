@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import os
 
@@ -12,8 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import READ_MODE_INT
-from .entity import OneWireEntity, OneWireEntityDescription
+from .entity import OneWireEntity
 from .onewirehub import (
     SIGNAL_NEW_DEVICE_CONNECTED,
     OneWireConfigEntry,
@@ -27,19 +25,14 @@ PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-@dataclass(frozen=True)
-class OneWireSelectEntityDescription(OneWireEntityDescription, SelectEntityDescription):
-    """Class describing OneWire select entities."""
-
-
-ENTITY_DESCRIPTIONS: dict[str, tuple[OneWireEntityDescription, ...]] = {
+ENTITY_DESCRIPTIONS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "28": (
-        OneWireSelectEntityDescription(
+        SelectEntityDescription(
             key="tempres",
             entity_category=EntityCategory.CONFIG,
-            read_mode=READ_MODE_INT,
             options=["9", "10", "11", "12"],
             translation_key="tempres",
+            entity_registry_enabled_default=False,
         ),
     ),
 }
@@ -98,13 +91,11 @@ def get_entities(
 class OneWireSelectEntity(OneWireEntity, SelectEntity):
     """Implementation of a 1-Wire switch."""
 
-    entity_description: OneWireSelectEntityDescription
-
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return str(self._state)
+        return self._state
 
-    def select_option(self, option: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._write_value(option.encode("ascii"))
+        await self._write_value(option.encode("ascii"))
