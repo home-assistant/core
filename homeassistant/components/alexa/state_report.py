@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 import aiohttp
+from yarl import URL
 
 from homeassistant.components import event
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_ON
@@ -51,6 +52,45 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 10
 
 TO_REDACT = {"correlationToken", "token"}
+
+
+def _auth_headers(token: str) -> dict[str, Any]:
+    """Return Authorization header for Alexa requests."""
+    return {"Authorization": f"Bearer {token}"}
+
+
+async def _post_with_timeout(
+    hass: HomeAssistant,
+    url: str | URL,
+    headers: Mapping[str, Any],
+    payload: Mapping[str, Any],
+    *,
+    log_entity_id: str,
+) -> tuple[aiohttp.ClientResponse | None, str | None]:
+    """POST JSON with timeout, log debug request/response, return response/text.
+
+    On timeout or client error, logs and returns (None, None).
+    """
+    session = async_get_clientsession(hass)
+    try:
+        async with timeout(DEFAULT_TIMEOUT):
+            response = await session.post(
+                url,
+                headers=headers,
+                json=payload,
+                allow_redirects=True,
+            )
+    except (TimeoutError, aiohttp.ClientError):
+        _LOGGER.error("Timeout sending report to Alexa for %s", log_entity_id)
+        return None, None
+
+    response_text = await response.text()
+
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        _LOGGER.debug("Sent: %s", json.dumps(async_redact_auth_data(payload)))
+        _LOGGER.debug("Received (%s): %s", response.status, response_text)
+
+    return response, response_text
 
 
 class AlexaDirective:
@@ -365,7 +405,13 @@ async def async_send_changereport_message(
         )
         return
 
-    headers: dict[str, Any] = {"Authorization": f"Bearer {token}"}
+    if token is None:
+        await config.set_authorized(False)
+        _LOGGER.error(
+            "Error when sending ChangeReport to Alexa, could not get access token"
+        )
+        return
+    headers: dict[str, Any] = _auth_headers(token)
 
     endpoint = alexa_entity.alexa_id()
 
@@ -380,29 +426,18 @@ async def async_send_changereport_message(
     message.set_endpoint_full(token, endpoint)
 
     message_serialized = message.serialize()
-    session = async_get_clientsession(hass)
 
     assert config.endpoint is not None
-    try:
-        async with timeout(DEFAULT_TIMEOUT):
-            response = await session.post(
-                config.endpoint,
-                headers=headers,
-                json=message_serialized,
-                allow_redirects=True,
-            )
+    response, response_text = await _post_with_timeout(
+        hass,
+        config.endpoint,
+        headers,
+        message_serialized,
+        log_entity_id=alexa_entity.entity_id,
+    )
 
-    except (TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
+    if response is None or response_text is None:
         return
-
-    response_text = await response.text()
-
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        _LOGGER.debug(
-            "Sent: %s", json.dumps(async_redact_auth_data(message_serialized))
-        )
-        _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
     if response.status == HTTPStatus.ACCEPTED:
         return
@@ -521,7 +556,14 @@ async def async_send_doorbell_event_message(
     """
     token = await config.async_get_access_token()
 
-    headers: dict[str, Any] = {"Authorization": f"Bearer {token}"}
+    if token is None:
+        await config.set_authorized(False)
+        _LOGGER.error(
+            "Error when sending DoorbellPress event to Alexa, could not get access token"
+        )
+        return
+
+    headers: dict[str, Any] = _auth_headers(token)
 
     endpoint = alexa_entity.alexa_id()
 
@@ -537,29 +579,18 @@ async def async_send_doorbell_event_message(
     message.set_endpoint_full(token, endpoint)
 
     message_serialized = message.serialize()
-    session = async_get_clientsession(hass)
 
     assert config.endpoint is not None
-    try:
-        async with timeout(DEFAULT_TIMEOUT):
-            response = await session.post(
-                config.endpoint,
-                headers=headers,
-                json=message_serialized,
-                allow_redirects=True,
-            )
+    response, response_text = await _post_with_timeout(
+        hass,
+        config.endpoint,
+        headers,
+        message_serialized,
+        log_entity_id=alexa_entity.entity_id,
+    )
 
-    except (TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
+    if response is None or response_text is None:
         return
-
-    response_text = await response.text()
-
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        _LOGGER.debug(
-            "Sent: %s", json.dumps(async_redact_auth_data(message_serialized))
-        )
-        _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
     if response.status == HTTPStatus.ACCEPTED:
         return
