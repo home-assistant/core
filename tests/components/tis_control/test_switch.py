@@ -39,14 +39,14 @@ async def setup_mock_switch(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
             "homeassistant.components.tis_control.switch.TISAPISwitch"
         ) as mock_api_switch_class,
     ):
-        # --- Configure the main TISApi mock ---
+        # Configure the main TISApi mock.
         # This is the instance that __init__.py will create.
         mock_api_instance = mock_tis_api_class.return_value
 
         # Make its connect() method a harmless async function that returns True.
         mock_api_instance.connect = AsyncMock(return_value=True)
 
-        # --- Configure the TISAPISwitch mock ---
+        # Configure the TISAPISwitch mock.
         # This is the instance that switch.py will create.
         mock_instance = mock_api_switch_class.return_value
         mock_instance.name = "Test Switch"
@@ -109,7 +109,7 @@ async def test_setup_no_switches(hass: HomeAssistant) -> None:
 
     # Patch the main TISApi class to prevent real network calls.
     with patch("homeassistant.components.tis_control.TISApi") as mock_tis_api_class:
-        # Configure the mock instance that TISApi() will return
+        # Configure the mock instance that TISApi() will return.
         mock_api_instance = mock_tis_api_class.return_value
         mock_api_instance.connect = AsyncMock(return_value=True)
 
@@ -135,7 +135,7 @@ async def test_turn_on_service(
     """Test the turn_on service call."""
     mock_api = setup_mock_switch
 
-    # Successful turn_on
+    # Successful turn_on.
     mock_api.turn_switch_on.return_value = True
 
     # Call the turn_on service.
@@ -147,7 +147,7 @@ async def test_turn_on_service(
     mock_api.turn_switch_on.assert_awaited_once()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
-    # Failed turn_on (device offline)
+    # Failed turn_on (device offline).
     mock_api.turn_switch_on.reset_mock()
     mock_api.turn_switch_on.return_value = False
 
@@ -166,7 +166,7 @@ async def test_turn_off_service(
     """Test the turn_off service call."""
     mock_api = setup_mock_switch
 
-    # Successful turn_off
+    # Successful turn_off.
     mock_api.turn_switch_off.return_value = True
 
     await hass.services.async_call(
@@ -176,7 +176,7 @@ async def test_turn_off_service(
     mock_api.turn_switch_off.assert_awaited_once()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    # Failed turn_off
+    # Failed turn_off.
     mock_api.turn_switch_off.reset_mock()
     mock_api.turn_switch_off.return_value = False
 
@@ -199,23 +199,38 @@ async def test_state_updates_from_callback(
     callback = mock_api.register_callback.call_args[0][0]
     assert callable(callback)
 
-    # Device turns ON
-    # Simulate the API object's internal state changing to ON.
+    # Device turns ON.
+    # Simulate the API object's internal state changing.
     mock_api.is_on = True
+    mock_api.available = True  # Ensure it's marked as available
 
     # Trigger the callback to inform Home Assistant.
     callback()
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
-    # Device turns OFF
+    # Device turns OFF.
     mock_api.is_on = False
+    mock_api.available = True
+
     callback()
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    # Device goes OFFLINE
+    # Device goes OFFLINE.
+    # Simulate both properties changing for an offline event.
     mock_api.is_on = None
+    mock_api.available = False
+
     callback()
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # Device comes back ONLINE (and is now ON).
+    # This ensures the entity can recover from an unavailable state.
+    mock_api.is_on = True
+    mock_api.available = True
+
+    callback()
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
