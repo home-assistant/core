@@ -137,7 +137,11 @@ async def test_save_preferences(
                         "number_energy_price": 0.20,
                     },
                 ],
-                "power": [],
+                "power": [
+                    {
+                        "stat_power": "sensor.grid_power",
+                    }
+                ],
                 "cost_adjustment_day": 1.2,
             },
             {

@@ -84,7 +84,7 @@ class SolarSourceType(TypedDict):
     type: Literal["solar"]
 
     stat_energy_from: str
-    stat_power: str | None
+    stat_power: NotRequired[str]
     config_entry_solar_forecast: list[str] | None
 
 
@@ -96,7 +96,7 @@ class BatterySourceType(TypedDict):
     stat_energy_from: str
     stat_energy_to: str
     # positive when discharging, negative when charging
-    stat_power: str | None
+    stat_power: NotRequired[str]
 
 
 class GasSourceType(TypedDict):
@@ -149,14 +149,14 @@ class DeviceConsumption(TypedDict):
     stat_consumption: str
 
     # optional power meter
-    stat_power: str | None
+    stat_power: NotRequired[str]
 
     # An optional custom name for display in energy graphs
     name: str | None
 
     # An optional statistic_id identifying a device
     # that includes this device's consumption in its total
-    included_in_stat: str | None
+    included_in_stat: NotRequired[str]
 
 
 class EnergyPreferences(TypedDict):
