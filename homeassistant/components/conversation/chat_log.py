@@ -575,7 +575,7 @@ class ChatLog:
             prompt_parts.append(
                 await self._async_expand_prompt_template(
                     llm_context,
-                    llm.BASE_PROMPT,
+                    llm.DATE_TIME_PROMPT,
                     llm_context.language,
                     user_name,
                 )
