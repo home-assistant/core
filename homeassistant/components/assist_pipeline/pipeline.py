@@ -1,7 +1,7 @@
 """Classes for voice assistant pipelines."""
 
 from __future__ import annotations
-
+import math
 import array
 import asyncio
 from collections import defaultdict, deque
@@ -1570,7 +1570,8 @@ class PipelineRun:
         """Apply volume transformation only (no VAD/audio enhancements) with optional chunking."""
         timestamp_ms = 0
         async for chunk in audio_stream:
-            if self.audio_settings.volume_multiplier != 1.0:
+            # Refactor: Use math.isclose to safely compare floating point values
+            if not math.isclose(self.audio_settings.volume_multiplier, 1.0, rel_tol=1e-6):
                 chunk = _multiply_volume(chunk, self.audio_settings.volume_multiplier)
 
             for sub_chunk in chunk_samples(
