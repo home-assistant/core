@@ -188,22 +188,21 @@ async def test_discovery_connection_failure(
 async def test_discovery_duplicate_filtered(
     hass: HomeAssistant,
     mock_discovery,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that already configured gateways are filtered out."""
     gateway = _mock_gateway()
-    existing_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_SN: gateway.gw_sn,
-            CONF_HOST: gateway.gw_ip,
-            CONF_PORT: gateway.port,
-            CONF_NAME: gateway.name,
-            CONF_USERNAME: gateway.username,
-            CONF_PASSWORD: gateway.passwd,
-        },
-        unique_id=gateway.gw_sn,
-    )
-    existing_entry.add_to_hass(hass)
+
+    mock_config_entry.data = {
+        CONF_SN: gateway.gw_sn,
+        CONF_HOST: gateway.gw_ip,
+        CONF_PORT: gateway.port,
+        CONF_NAME: gateway.name,
+        CONF_USERNAME: gateway.username,
+        CONF_PASSWORD: gateway.passwd,
+    }
+    mock_config_entry.unique_id = gateway.gw_sn
+    mock_config_entry.add_to_hass(hass)
 
     mock_discovery.discover_gateways.return_value = [gateway]
 
@@ -223,6 +222,7 @@ async def test_discovery_duplicate_filtered(
 async def test_discovery_unique_id_already_configured(
     hass: HomeAssistant,
     mock_discovery,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate protection when the entry appears during the flow."""
     gateway = _mock_gateway()
