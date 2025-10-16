@@ -57,12 +57,12 @@ async def setup_zone(hass: HomeAssistant) -> None:
         (
             {"gps": [20, 30], "location_name": "office"},
             {"latitude": 20, "longitude": 30, "gps_accuracy": 30},
-            "office",
+            "Office",
         ),
         (
             {"gps": [30, 40], "location_name": "school"},
             {"latitude": 30, "longitude": 40, "gps_accuracy": 30},
-            "school",
+            "School",
         ),
         # Send wrong coordinates + location_name: Location name has precedence
         (
@@ -73,17 +73,17 @@ async def setup_zone(hass: HomeAssistant) -> None:
         (
             {"gps": [10, 10], "location_name": "office"},
             {"latitude": 10, "longitude": 10, "gps_accuracy": 30},
-            "office",
+            "Office",
         ),
         (
             {"gps": [10, 10], "location_name": "school"},
             {"latitude": 10, "longitude": 10, "gps_accuracy": 30},
-            "school",
+            "School",
         ),
         # Send location_name only
         ({"location_name": "home"}, {}, "home"),
-        ({"location_name": "office"}, {}, "office"),
-        ({"location_name": "school"}, {}, "school"),
+        ({"location_name": "office"}, {}, "Office"),
+        ({"location_name": "school"}, {}, "School"),
         # Send coordinates only - location is determined by coordinates
         (
             {"gps": [10, 20]},
