@@ -40,7 +40,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    cync_auth: Auth
+    cync_auth: Auth = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -49,23 +49,12 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input:
-            self.cync_auth = Auth(
-                async_get_clientsession(self.hass),
-                username=user_input[CONF_EMAIL],
-                password=user_input[CONF_PASSWORD],
-            )
             try:
-                await self.cync_auth.login()
-            except AuthFailedError:
-                errors["base"] = "invalid_auth"
+                errors = await self._validate_credentials(user_input)
             except TwoFactorRequiredError:
                 return await self.async_step_two_factor()
-            except CyncError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+
+            if not errors:
                 return await self._create_config_entry(self.cync_auth.username)
 
         return self.async_show_form(
@@ -78,24 +67,18 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         """Attempt login with the two factor auth code sent to the user."""
         errors: dict[str, str] = {}
 
-        if user_input is None:
+        if user_input:
+            errors = await self._validate_credentials(user_input)
+
+            if not errors:
+                return await self._create_config_entry(self.cync_auth.username)
+
             return self.async_show_form(
-                step_id="two_factor", data_schema=STEP_TWO_FACTOR_SCHEMA, errors=errors
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
-        try:
-            await self.cync_auth.login(user_input[CONF_TWO_FACTOR_CODE])
-        except AuthFailedError:
-            errors["base"] = "invalid_auth"
-        except CyncError:
-            errors["base"] = "cannot_connect"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return await self._create_config_entry(self.cync_auth.username)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="two_factor", data_schema=STEP_TWO_FACTOR_SCHEMA, errors=errors
         )
 
     async def async_step_reauth(
@@ -113,23 +96,12 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input:
-            self.cync_auth = Auth(
-                async_get_clientsession(self.hass),
-                username=user_input[CONF_EMAIL],
-                password=user_input[CONF_PASSWORD],
-            )
             try:
-                await self.cync_auth.login()
-            except AuthFailedError:
-                errors["base"] = "invalid_auth"
+                errors = await self._validate_credentials(user_input)
             except TwoFactorRequiredError:
                 return await self.async_step_two_factor()
-            except CyncError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+
+            if not errors:
                 return await self._create_config_entry(self.cync_auth.username)
 
         return self.async_show_form(
@@ -138,6 +110,31 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={CONF_EMAIL: reauth_entry.title},
         )
+
+    async def _validate_credentials(self, user_input: dict[str, Any]) -> dict[str, str]:
+        """Attempt to log in with user email and password, and return the error dict."""
+        errors: dict[str, str] = {}
+
+        if not self.cync_auth:
+            self.cync_auth = Auth(
+                async_get_clientsession(self.hass),
+                username=user_input[CONF_EMAIL],
+                password=user_input[CONF_PASSWORD],
+            )
+
+        try:
+            await self.cync_auth.login(user_input.get(CONF_TWO_FACTOR_CODE))
+        except TwoFactorRequiredError:
+            raise
+        except AuthFailedError:
+            errors["base"] = "invalid_auth"
+        except CyncError:
+            errors["base"] = "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+
+        return errors
 
     async def _create_config_entry(self, user_email: str) -> ConfigFlowResult:
         """Create the Cync config entry using input user data."""

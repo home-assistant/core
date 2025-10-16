@@ -100,17 +100,13 @@ async def test_form_two_factor_success(
 
 async def test_form_reauth_success(
     hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
     auth_client: MagicMock,
 ) -> None:
     """Test we handle re-authentication with two-factor."""
-    mock_added_config_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    [result] = flows
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
 
     auth_client.login.side_effect = TwoFactorRequiredError
@@ -137,7 +133,7 @@ async def test_form_reauth_success(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert mock_added_config_entry.data == {
+    assert mock_config_entry.data == {
         CONF_USER_ID: MOCKED_USER.user_id,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
         CONF_EXPIRES_AT: ANY,
@@ -149,16 +145,12 @@ async def test_form_reauth_success(
 
 async def test_form_reauth_unique_id_mismatch(
     hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     auth_client: MagicMock,
 ) -> None:
     """Test we handle a unique ID mismatch when re-authenticating."""
-    mock_added_config_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    [result] = flows
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
 
     auth_client.user = SECOND_MOCKED_USER
@@ -346,19 +338,15 @@ async def test_form_errors(
 )
 async def test_form_reauth_errors(
     hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
     auth_client: MagicMock,
     error_type: Exception,
     error_string: str,
 ) -> None:
     """Test we handle errors in the reauth flow."""
-    mock_added_config_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    [result] = flows
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
 
     auth_client.login.side_effect = error_type
@@ -387,7 +375,7 @@ async def test_form_reauth_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert mock_added_config_entry.data == {
+    assert mock_config_entry.data == {
         CONF_USER_ID: MOCKED_USER.user_id,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
         CONF_EXPIRES_AT: ANY,
