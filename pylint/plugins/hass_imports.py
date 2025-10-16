@@ -144,7 +144,6 @@ _IGNORE_ROOT_IMPORT = (
     "recorder",
     "rest",
     "script",
-    "sensor",
     "stream",
 )
 
