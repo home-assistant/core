@@ -126,7 +126,6 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
 }
 
 _IGNORE_ROOT_IMPORT = (
-    "assist_pipeline",
     "automation",
     "bluetooth",
     "camera",
@@ -144,7 +143,6 @@ _IGNORE_ROOT_IMPORT = (
     "recorder",
     "rest",
     "script",
-    "sensor",
     "stream",
 )
 
