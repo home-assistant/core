@@ -101,13 +101,8 @@ class HabiticaPartyMemberBase(HabiticaBase):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if TYPE_CHECKING:
-            assert self.subentry
-            assert self.subentry.unique_id
-        return (
-            super().available
-            and UUID(self.subentry.unique_id) in self.party_coordinator.data.members
-        )
+
+        return super().available and self.user is not None
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
