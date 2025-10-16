@@ -98,23 +98,23 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         for attempt in range(1, MAX_POLLING_ATTEMPTS + 1):
             await asyncio.sleep(POLLING_INTERVAL)
 
-            _LOGGER.debug("Polling attempt %s for claim status", attempt)
             auth_status = await self._perform_auth_and_get_details()
 
             if auth_status is None:
-                # Device has been claimed
-                _LOGGER.debug("Device claimed detected during polling")
-                # Trigger the flow to continue
+                # Device claimed - try to advance flow
+                _LOGGER.debug("Device claimed at polling attempt %s", attempt)
                 self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
+                    self.hass.config_entries.flow.async_configure(flow_id=self.flow_id),
+                    eager_start=True,
                 )
                 return
+
             if auth_status != "needs_claim":
-                # Some other error occurred
-                _LOGGER.error("Error during polling: %s", auth_status)
+                # Stop polling on non-transient errors
+                _LOGGER.debug("Polling stopped: %s", auth_status)
                 return
 
-        _LOGGER.debug("Max polling attempts reached without successful claim")
+        _LOGGER.debug("Polling timeout after %s attempts", MAX_POLLING_ATTEMPTS)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -124,11 +124,13 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             instance_id = await async_get_instance_id(self.hass)
-            # Add a unique suffix after the instance id to ensure device_id uniqueness
-            unique_suffix = f"{int(asyncio.get_event_loop().time() * 1000)}"
+            device_suffix = f"{int(asyncio.get_event_loop().time() * 1000)}"
+            device_id = (
+                f"{ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX}{instance_id}_{device_suffix}"
+            )
             self._flow_data = {
                 **user_input,
-                CONF_DEVICE_ID: f"{ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX}{instance_id}_{unique_suffix}",
+                CONF_DEVICE_ID: device_id,
                 CONF_DEVICE_NAME: self.hass.config.location_name,
             }
             _LOGGER.debug("Flow data after user input: %s", self._flow_data)
@@ -136,6 +138,8 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             auth_status = await self._perform_auth_and_get_details()
 
             if auth_status is None:
+                await self.async_set_unique_id(device_id)
+                self._abort_if_unique_id_configured()
                 _LOGGER.debug(
                     "Creating entry with title: %s", self._flow_data["record_name"]
                 )

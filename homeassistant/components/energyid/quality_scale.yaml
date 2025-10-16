@@ -71,8 +71,8 @@ rules:
 
   # Gold
   devices:
-    status: done
-    comment: A device entry is created to represent the connection to the EnergyID service.
+    status: exempt
+    comment: The integration represents a service connection as a single device entry, created automatically by Home Assistant when the config entry is set up. This service device groups the mapped sensor entities but does not create individual device entries for each sensor as the sensors belong to their original integrations.
   diagnostics:
     status: todo
     comment: Diagnostics will be added in a follow-up PR to help with debugging.
