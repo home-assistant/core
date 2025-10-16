@@ -5,8 +5,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.light import (
+    DOMAIN as LIGHT_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.components.sunricher_dali_center.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -16,7 +21,7 @@ from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 def _get_light_entity_id(hass: HomeAssistant, unique_id: str) -> str:
     """Return the entity_id for the given unique_id."""
     entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id("light", DOMAIN, unique_id)
+    entity_id = entity_registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, unique_id)
     assert entity_id is not None
     return entity_id
 
@@ -86,9 +91,9 @@ async def test_turn_on_light(
     entity_id = _get_light_entity_id(hass, "01010000026A242121110E")
 
     await hass.services.async_call(
-        "light",
-        "turn_on",
-        {"entity_id": entity_id},
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -104,9 +109,9 @@ async def test_turn_off_light(
     entity_id = _get_light_entity_id(hass, "01010000026A242121110E")
 
     await hass.services.async_call(
-        "light",
-        "turn_off",
-        {"entity_id": entity_id},
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
