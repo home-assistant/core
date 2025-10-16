@@ -142,8 +142,6 @@ def mock_dali_gateway() -> Generator[MagicMock]:
         mock_gateway = mock_gateway_class.return_value
         mock_gateway.gw_sn = "6A242121110E"
         mock_gateway.name = "Test Gateway"
-        mock_gateway.connect = AsyncMock()
-        mock_gateway.disconnect = AsyncMock()
         yield mock_gateway
 
 
