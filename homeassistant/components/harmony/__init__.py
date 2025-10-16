@@ -1,15 +1,20 @@
 """The Logitech Harmony Hub integration."""
 
+from __future__ import annotations
+
 import logging
+import sys
 
 from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import HARMONY_OPTIONS_UPDATE, PLATFORMS
-from .data import HarmonyConfigEntry, HarmonyData
+if sys.version_info < (3, 14):
+    from .const import HARMONY_OPTIONS_UPDATE, PLATFORMS
+    from .data import HarmonyConfigEntry, HarmonyData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +25,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> b
     # when setting up a config entry, we fallback to adding
     # the options to the config entry and pull them out here if
     # they are missing from the options
+    if sys.version_info >= (3, 14):
+        raise HomeAssistantError(
+            "Logitech Harmony Hub is not supported on Python 3.14. Please use Python 3.13."
+        )
     _async_import_options_from_data_if_missing(hass, entry)
 
     address = entry.data[CONF_HOST]
