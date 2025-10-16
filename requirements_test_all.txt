@@ -798,7 +798,7 @@ epicstore-api==0.1.7
 epion==0.0.3
 
 # homeassistant.components.epson
-epson-projector==0.5.1
+epson-projector==0.6.0
 
 # homeassistant.components.eq3btsmart
 eq3btsmart==2.3.0
@@ -1018,7 +1018,7 @@ habiticalib==0.4.5
 habluetooth==5.7.0
 
 # homeassistant.components.cloud
-hass-nabucasa==1.3.0
+hass-nabucasa==1.4.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
