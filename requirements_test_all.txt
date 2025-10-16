@@ -103,7 +103,10 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==8.0
+RestrictedPython==8.0;python_version<'3.14'
+
+# homeassistant.components.python_script
+RestrictedPython==8.1a1.dev0;python_version>='3.14'
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -164,7 +167,7 @@ aio-geojson-usgs-earthquakes==0.3
 aio-georss-gdacs==0.10
 
 # homeassistant.components.onewire
-aio-ownet==0.0.3
+aio-ownet==0.0.4
 
 # homeassistant.components.acaia
 aioacaia==0.1.17
@@ -241,7 +244,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.16.0
+aioesphomeapi==42.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -253,13 +256,13 @@ aiogithubapi==24.6.0
 aioguardian==2022.07.0
 
 # homeassistant.components.harmony
-aioharmony==0.5.3
+aioharmony==0.5.3;python_version<'3.14'
 
 # homeassistant.components.hassio
 aiohasupervisor==0.3.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.20.0
+aiohomeconnect==0.22.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -988,7 +991,7 @@ gspread==5.5.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.5
+guppy3==3.1.5;python_version<'3.14'
 
 # homeassistant.components.iaqualink
 h2==4.3.0
@@ -1593,7 +1596,7 @@ pyatag==0.3.5.3
 pyatmo==9.2.3
 
 # homeassistant.components.apple_tv
-pyatv==0.16.1
+pyatv==0.16.1;python_version<'3.14'
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.1.5
