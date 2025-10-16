@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
-from iometer import IOmeterConnectionError
+from iometer import IOmeterConnectionError, IOmeterNoReadingsError, IOmeterNoStatusError
 
 from homeassistant.components import zeroconf
 from homeassistant.components.iometer.const import DOMAIN
@@ -93,11 +93,43 @@ async def test_zeroconf_flow_abort_duplicate(
     assert result["reason"] == "already_configured"
 
 
+async def test_zeroconf_flow_abort_no_status(
+    hass: HomeAssistant,
+    mock_iometer_client: MockConfigEntry,
+) -> None:
+    """Test zeroconf flow aborts because no status exception was raised."""
+    mock_iometer_client.get_current_status.side_effect = IOmeterNoStatusError()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_status"
+
+
+async def test_zeroconf_flow_abort_no_readings(
+    hass: HomeAssistant,
+    mock_iometer_client: MockConfigEntry,
+) -> None:
+    """Test zeroconf flow aborts because no readings exception was raised."""
+    mock_iometer_client.get_current_reading.side_effect = IOmeterNoReadingsError()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_readings"
+
+
 async def test_zeroconf_flow_connection_error(
     hass: HomeAssistant,
     mock_iometer_client: AsyncMock,
 ) -> None:
-    """Test zeroconf flow."""
+    """Test zeroconf flow aborts with connection error."""
     mock_iometer_client.get_current_status.side_effect = IOmeterConnectionError()
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -133,6 +165,76 @@ async def test_user_flow_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_iometer_client.get_current_status.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: IP_ADDRESS},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_no_status(
+    hass: HomeAssistant,
+    mock_iometer_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test flow error due to no status received."""
+    mock_iometer_client.get_current_status.side_effect = IOmeterNoStatusError()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: IP_ADDRESS},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_status"}
+
+    mock_iometer_client.get_current_status.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: IP_ADDRESS},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_no_readings(
+    hass: HomeAssistant,
+    mock_iometer_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test flow error due to no readings received."""
+    mock_iometer_client.get_current_status.side_effect = IOmeterNoReadingsError()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: IP_ADDRESS},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_readings"}
 
     mock_iometer_client.get_current_status.side_effect = None
 

@@ -20,6 +20,8 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     },
     "error": {
+      "no_status": "No status received from the IOmeter. Check your device status in the IOmeter App",
+      "no_readings": "No readings received from the IOmeter. Please attach the Core to the electricity meter and wait for the first reading.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
