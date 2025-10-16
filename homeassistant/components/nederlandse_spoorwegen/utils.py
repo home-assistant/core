@@ -98,13 +98,13 @@ def get_departure_time_str(data: Trip) -> str | None:
 
 def get_route(trip: Trip) -> list[str]:
     """Get the route as a list of station names from trip data."""
-    route = []
     trip_parts = _get_trip_attribute(trip, "trip_parts", [])
+    if not trip_parts:
+        return []
+    route = []
     departure = _get_trip_attribute(trip, "departure")
     if departure:
         route.append(departure)
-    if not trip_parts:
-        return route
     route.extend(part.destination for part in trip_parts)
     return route
 
