@@ -58,7 +58,7 @@ ACTION_PARAMETERS_CACHE: HassKey[
 
 LLM_API_ASSIST = "assist"
 
-BASE_PROMPT = (
+DATE_TIME_PROMPT = (
     'Current time is {{ now().strftime("%H:%M:%S") }}. '
     'Today\'s date is {{ now().strftime("%Y-%m-%d") }}.\n'
 )
