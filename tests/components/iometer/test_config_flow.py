@@ -3,7 +3,8 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
-from iometer import IOmeterConnectionError
+from iometer import IOmeterConnectionError, IOmeterNoReadingsError, IOmeterNoStatusError
+import pytest
 
 from homeassistant.components import zeroconf
 from homeassistant.components.iometer.const import DOMAIN
@@ -93,12 +94,25 @@ async def test_zeroconf_flow_abort_duplicate(
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_flow_connection_error(
+@pytest.mark.parametrize(
+    ("method_name", "exception", "reason"),
+    [
+        ("get_current_status", IOmeterConnectionError(), "cannot_connect"),
+        ("get_current_status", IOmeterNoStatusError(), "no_status"),
+        ("get_current_reading", IOmeterNoReadingsError(), "no_readings"),
+    ],
+    ids=["status-connection", "status-missing", "reading-missing"],
+)
+async def test_zeroconf_flow_abort_errors(
     hass: HomeAssistant,
     mock_iometer_client: AsyncMock,
+    method_name: str,
+    exception: Exception,
+    reason: str,
 ) -> None:
-    """Test zeroconf flow."""
-    mock_iometer_client.get_current_status.side_effect = IOmeterConnectionError()
+    """Test zeroconf flow aborts when the client raises an exception."""
+    getattr(mock_iometer_client, method_name).side_effect = exception
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -106,16 +120,28 @@ async def test_zeroconf_flow_connection_error(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == reason
 
 
-async def test_user_flow_connection_error(
+@pytest.mark.parametrize(
+    ("method_name", "exception", "error_key"),
+    [
+        ("get_current_status", IOmeterConnectionError(), "cannot_connect"),
+        ("get_current_status", IOmeterNoStatusError(), "no_status"),
+        ("get_current_reading", IOmeterNoReadingsError(), "no_readings"),
+    ],
+    ids=["status-connection", "status-missing", "reading-missing"],
+)
+async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_iometer_client: AsyncMock,
     mock_setup_entry: AsyncMock,
+    method_name: str,
+    exception: Exception,
+    error_key: str,
 ) -> None:
-    """Test flow error."""
-    mock_iometer_client.get_current_status.side_effect = IOmeterConnectionError()
+    """Test user flow returns errors for client exceptions."""
+    getattr(mock_iometer_client, method_name).side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -130,11 +156,10 @@ async def test_user_flow_connection_error(
         {CONF_HOST: IP_ADDRESS},
     )
     await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_key}
 
-    mock_iometer_client.get_current_status.side_effect = None
+    getattr(mock_iometer_client, method_name).side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
