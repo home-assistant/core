@@ -37,6 +37,7 @@ class HabiticaBase(CoordinatorEntity[HabiticaDataUpdateCoordinator]):
         super().__init__(coordinator)
         if TYPE_CHECKING:
             assert coordinator.config_entry.unique_id
+            assert self.user
         self.entity_description = entity_description
         self.subentry = subentry
         unique_id = (
@@ -70,7 +71,7 @@ class HabiticaBase(CoordinatorEntity[HabiticaDataUpdateCoordinator]):
             )
 
     @property
-    def user(self) -> UserData:
+    def user(self) -> UserData | None:
         """Return the user data."""
         return self.coordinator.data.user
 
@@ -90,12 +91,12 @@ class HabiticaPartyMemberBase(HabiticaBase):
         super().__init__(coordinator, entity_description, subentry)
 
     @property
-    def user(self) -> UserData:
+    def user(self) -> UserData | None:
         """Return the user data of the party member."""
         if TYPE_CHECKING:
             assert self.subentry
             assert self.subentry.unique_id
-        return self.party_coordinator.data.members[UUID(self.subentry.unique_id)]
+        return self.party_coordinator.data.members.get(UUID(self.subentry.unique_id))
 
     @property
     def available(self) -> bool:

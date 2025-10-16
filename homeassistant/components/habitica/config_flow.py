@@ -416,12 +416,10 @@ class PartyMembersSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             config_entries = self.hass.config_entries.async_entries(DOMAIN)
-            if user_input[CONF_PARTY_MEMBER] in {
-                entry.unique_id for entry in config_entries
-            }:
-                return self.async_abort(reason="already_configured_as_entry")
 
             for entry in config_entries:
+                if user_input[CONF_PARTY_MEMBER] == entry.unique_id:
+                    return self.async_abort(reason="already_configured_as_entry")
                 if user_input[CONF_PARTY_MEMBER] in {
                     subentry.unique_id for subentry in entry.subentries.values()
                 }:

@@ -208,6 +208,7 @@ class HabiticaPartyCoordinator(HabiticaBaseCoordinator[HabiticaPartyData]):
 
     async def _update_data(self) -> HabiticaPartyData:
         """Fetch the latest party data."""
+
         return HabiticaPartyData(
             party=(await self.habitica.get_group()).data,
             members={

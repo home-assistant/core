@@ -436,12 +436,16 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
 
-        return self.entity_description.value_fn(self.user, self.coordinator.content)
+        return (
+            self.entity_description.value_fn(self.user, self.coordinator.content)
+            if self.user is not None
+            else None
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, float | None] | None:
         """Return entity specific state attributes."""
-        if func := self.entity_description.attributes_fn:
+        if self.user is not None and (func := self.entity_description.attributes_fn):
             return func(self.user, self.coordinator.content)
         return None
 
@@ -449,15 +453,15 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         if (
-            self.available
-            and self.entity_description.key is HabiticaSensorEntity.CLASS
+            self.entity_description.key is HabiticaSensorEntity.CLASS
+            and self.user is not None
             and (_class := self.user.stats.Class)
         ):
             return SVG_CLASS[_class]
 
         if (
-            self.available
-            and self.entity_description.key is HabiticaSensorEntity.DISPLAY_NAME
+            self.entity_description.key is HabiticaSensorEntity.DISPLAY_NAME
+            and self.user is not None
             and (img_url := self.user.profile.imageUrl)
         ):
             return img_url

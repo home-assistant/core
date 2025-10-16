@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from habiticalib import Avatar, ContentData, extract_avatar
@@ -90,12 +91,14 @@ class HabiticaImage(HabiticaBase, ImageEntity):
         HabiticaBase.__init__(self, coordinator, self.entity_description, subentry)
         ImageEntity.__init__(self, hass)
         self._attr_image_last_updated = dt_util.utcnow()
+        if TYPE_CHECKING:
+            assert self.user
         self._avatar = extract_avatar(self.user)
 
     def _handle_coordinator_update(self) -> None:
         """Check if equipped gear and other things have changed since last avatar image generation."""
 
-        if self.available and self._avatar != self.user:
+        if self.user is not None and self._avatar != self.user:
             self._avatar = extract_avatar(self.user)
             self._attr_image_last_updated = dt_util.utcnow()
             self._cache = None
