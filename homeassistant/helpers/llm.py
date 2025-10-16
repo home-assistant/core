@@ -701,7 +701,7 @@ def _get_exposed_entities(
                 if (parsed_utc := dt_util.parse_datetime(state.state)) is not None:
                     info["state"] = dt_util.as_local(parsed_utc).isoformat()
 
-        if device_name:
+        if device_name and not state.name.lower().startswith(device_name.lower()):
             info["device"] = device_name
 
         if area_names:

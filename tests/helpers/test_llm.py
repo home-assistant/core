@@ -576,9 +576,9 @@ async def test_assist_api_prompt(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             connections={("test", "9876-integer-values")},
-            name=1,
-            manufacturer=2,
-            model=3,
+            name="1",
+            manufacturer="2",
+            model="3",
             suggested_area="Test Area 2",
         )
     )
@@ -586,7 +586,6 @@ async def test_assist_api_prompt(
 - names: '1'
   domain: light
   state: unavailable
-  device: 1
   areas: Test Area 2
 - names: Kitchen
   domain: light
@@ -607,32 +606,26 @@ async def test_assist_api_prompt(
 - names: Test Device 2
   domain: light
   state: unavailable
-  device: Test Device 2
   areas: Test Area 2
 - names: Test Device 3
   domain: light
   state: unavailable
-  device: Test Device 3
   areas: Test Area 2
 - names: Test Device 4
   domain: light
   state: unavailable
-  device: Test Device 4
   areas: Test Area 2
 - names: Test Service
   domain: light
   state: unavailable
-  device: Test Service
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
   state: unavailable
-  device: Test Service
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
   state: unavailable
-  device: Test Service
   areas: Test Area, Alternative name
 - names: Unnamed Device
   domain: light
@@ -642,7 +635,6 @@ async def test_assist_api_prompt(
     stateless_exposed_entities_prompt = """Static Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
-  device: 1
   areas: Test Area 2
 - names: Kitchen
   domain: light
@@ -656,27 +648,21 @@ async def test_assist_api_prompt(
   areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
-  device: Test Device 2
   areas: Test Area 2
 - names: Test Device 3
   domain: light
-  device: Test Device 3
   areas: Test Area 2
 - names: Test Device 4
   domain: light
-  device: Test Device 4
   areas: Test Area 2
 - names: Test Service
   domain: light
-  device: Test Service
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
-  device: Test Service
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
-  device: Test Service
   areas: Test Area, Alternative name
 - names: Unnamed Device
   domain: light
