@@ -2899,11 +2899,11 @@ async def test_platform_state_write_from_init_unique_id(
     assert "Entity id already exists - ignoring: test.test" not in caplog.text
 
 
-async def test_included_entities_mixin(
+async def test_included_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test included entities attribute."""
+    """Test included entities are exposed via the entity_id attribute."""
 
     entity_registry.async_get_or_create(
         domain="hello",
