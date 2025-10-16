@@ -1527,3 +1527,35 @@ async def test_download_file(
         download_to_drive_mock.assert_called_once_with(
             custom_path=f"{tempdirname}/{expected_file_name}",
         )
+
+
+async def test_download_file_when_bot_failed_to_get_file(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test download file when bot failed to get file."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    schema_request = {
+        ATTR_FILE_ID: "some-file-id",
+        ATTR_DIRECTORY_PATH: "/some/path",
+        ATTR_FILE_NAME: "custom_name.jpg",
+    }
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+            AsyncMock(side_effect=TelegramError("failed to get file")),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            schema_request,
+            blocking=True,
+        )
+    await hass.async_block_till_done()

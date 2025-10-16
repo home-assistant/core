@@ -1038,16 +1038,13 @@ class TelegramNotificationService:
         context: Context | None = None,
     ) -> dict[str, JsonValueType]:
         """Download a file from Telegram."""
-        file: File | None = await self._send_msg(
+        file: File = await self._send_msg(
             self.bot.get_file,
             "Error getting file",
             None,
             file_id=file_id,
             context=context,
         )
-        if file is None:
-            _LOGGER.error("Failed to get file %s", file_id)
-            return {}
         if not file_name:
             file_name = (
                 os.path.basename(file.file_path) if file.file_path else "unknown_file"
