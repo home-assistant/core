@@ -36,7 +36,7 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
@@ -471,7 +471,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
 REST_SENSORS: Final = {
     "rssi": RestSensorDescription(
         key="rssi",
-        translation_key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         value=lambda status, _: status["wifi_sta"]["rssi"],
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -481,7 +480,7 @@ REST_SENSORS: Final = {
     ),
     "uptime": RestSensorDescription(
         key="uptime",
-        translation_key="uptime",
+        translation_key="last_restart",
         value=lambda status, last: get_device_uptime(status["uptime"], last),
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
@@ -1233,7 +1232,6 @@ RPC_SENSORS: Final = {
     "rssi": RpcSensorDescription(
         key="wifi",
         sub_key="rssi",
-        translation_key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1245,7 +1243,7 @@ RPC_SENSORS: Final = {
     "uptime": RpcSensorDescription(
         key="sys",
         sub_key="uptime",
-        translation_key="uptime",
+        translation_key="last_restart",
         value=get_device_uptime,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
@@ -1640,33 +1638,20 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up sensors for device."""
+    """Set up sensor entities."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        if config_entry.data[CONF_SLEEP_PERIOD]:
-            async_setup_entry_rpc(
-                hass,
-                config_entry,
-                async_add_entities,
-                RPC_SENSORS,
-                RpcSleepingSensor,
-            )
-        else:
-            coordinator = config_entry.runtime_data.rpc
-            assert coordinator
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-            async_setup_entry_rpc(
-                hass, config_entry, async_add_entities, RPC_SENSORS, RpcSensor
-            )
+    return _async_setup_block_entry(hass, config_entry, async_add_entities)
 
-            async_remove_orphaned_entities(
-                hass,
-                config_entry.entry_id,
-                coordinator.mac,
-                SENSOR_PLATFORM,
-                coordinator.device.status,
-            )
-        return
 
+@callback
+def _async_setup_block_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for BLOCK device."""
     if config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_attribute_entities(
             hass,
@@ -1685,6 +1670,38 @@ async def async_setup_entry(
         )
         async_setup_entry_rest(
             hass, config_entry, async_add_entities, REST_SENSORS, RestSensor
+        )
+
+
+@callback
+def _async_setup_rpc_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for RPC device."""
+    if config_entry.data[CONF_SLEEP_PERIOD]:
+        async_setup_entry_rpc(
+            hass,
+            config_entry,
+            async_add_entities,
+            RPC_SENSORS,
+            RpcSleepingSensor,
+        )
+    else:
+        coordinator = config_entry.runtime_data.rpc
+        assert coordinator
+
+        async_setup_entry_rpc(
+            hass, config_entry, async_add_entities, RPC_SENSORS, RpcSensor
+        )
+
+        async_remove_orphaned_entities(
+            hass,
+            config_entry.entry_id,
+            coordinator.mac,
+            SENSOR_PLATFORM,
+            coordinator.device.status,
         )
 
 

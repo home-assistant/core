@@ -9,6 +9,7 @@ from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.auth import TOKEN_URL
 from volvocarsapi.models import (
     VolvoCarsAvailableCommand,
+    VolvoCarsCommandResult,
     VolvoCarsLocation,
     VolvoCarsValueField,
     VolvoCarsValueStatusField,
@@ -50,6 +51,7 @@ class MockApiData:
     """Container for mock API data."""
 
     vehicle: VolvoCarsVehicle
+    command_result: VolvoCarsCommandResult
     commands: list[VolvoCarsAvailableCommand]
     location: dict[str, VolvoCarsLocation]
     availability: dict[str, VolvoCarsValueField]
@@ -125,6 +127,7 @@ async def mock_api(
         "homeassistant.components.volvo.VolvoCarsApi",
         return_value=api,
     ):
+        api.async_execute_command = AsyncMock(return_value=mock_api_data.command_result)
         api.async_get_brakes_status = AsyncMock(return_value=mock_api_data.brakes)
         api.async_get_command_accessibility = AsyncMock(
             return_value=mock_api_data.availability
@@ -205,6 +208,7 @@ async def _async_load_mock_api_data(
     vehicle_data = await async_load_fixture_as_json(hass, "vehicle", full_model)
     vehicle = VolvoCarsVehicle.from_dict(vehicle_data)
 
+    command_result = VolvoCarsCommandResult(DEFAULT_VIN, "COMPLETED", message="")
     commands_data = (
         await async_load_fixture_as_json(hass, "commands", full_model)
     ).get("data")
@@ -251,6 +255,7 @@ async def _async_load_mock_api_data(
 
     return MockApiData(
         vehicle=vehicle,
+        command_result=command_result,
         commands=commands,
         location=location,
         availability=availability,

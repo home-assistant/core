@@ -212,10 +212,7 @@ def is_block_exclude_from_relay(settings: dict[str, Any], block: Block) -> bool:
     if settings.get("mode") == "roller":
         return True
 
-    if TYPE_CHECKING:
-        assert block.channel is not None
-
-    return is_block_channel_type_light(settings, int(block.channel))
+    return is_block_channel_type_light(settings, block)
 
 
 def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
@@ -502,9 +499,12 @@ def is_rpc_momentary_input(
     return cast(bool, config[key]["type"] == "button")
 
 
-def is_block_channel_type_light(settings: dict[str, Any], channel: int) -> bool:
+def is_block_channel_type_light(settings: dict[str, Any], block: Block) -> bool:
     """Return true if block channel appliance type is set to light."""
-    app_type = settings["relays"][channel].get("appliance_type")
+    if TYPE_CHECKING:
+        assert block.channel is not None
+
+    app_type = settings["relays"][int(block.channel)].get("appliance_type")
     return app_type is not None and app_type.lower().startswith("light")
 
 

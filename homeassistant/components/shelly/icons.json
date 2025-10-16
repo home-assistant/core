@@ -74,6 +74,9 @@
           "on": "mdi:valve-open"
         }
       },
+      "cury_boost": {
+        "default": "mdi:rocket-launch"
+      },
       "cury_slot": {
         "default": "mdi:scent",
         "state": {

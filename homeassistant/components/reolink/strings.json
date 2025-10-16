@@ -427,6 +427,13 @@
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
+      },
+      "io_input": {
+        "name": "IO input {index}",
+        "state": {
+          "off": "[%key:common::state::disconnected%]",
+          "on": "[%key:common::state::connected%]"
+        }
       }
     },
     "button": {
@@ -1018,6 +1025,9 @@
       },
       "manual_record": {
         "name": "Manual record"
+      },
+      "rule": {
+        "name": "Surveillance rule {name}"
       },
       "pre_record": {
         "name": "Pre-recording"

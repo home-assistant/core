@@ -20,6 +20,8 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
 )
 from homeassistant.components.recorder.statistics import (
+    _PRIMARY_UNIT_CONVERTERS,
+    _SECONDARY_UNIT_CONVERTERS,
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     PlatformCompiledStatistics,
     _generate_max_mean_min_statistic_in_sub_period_stmt,
@@ -63,7 +65,6 @@ from .common import (
 
 from tests.common import MockPlatform, MockUser, mock_platform
 from tests.typing import RecorderInstanceContextManager, WebSocketGenerator
-from tests.util.test_unit_conversion import _ALL_CONVERTERS
 
 POWER_SENSOR_KW_ATTRIBUTES = {
     "device_class": "power",
@@ -114,7 +115,13 @@ async def _setup_mock_domain(
 def test_converters_align_with_sensor() -> None:
     """Ensure STATISTIC_UNIT_TO_UNIT_CONVERTER is aligned with UNIT_CONVERTERS."""
     for converter in UNIT_CONVERTERS.values():
-        assert converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
+        assert (
+            converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
+            or converter in _SECONDARY_UNIT_CONVERTERS
+        )
+
+    for converter in _SECONDARY_UNIT_CONVERTERS:
+        assert converter not in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
 
     for converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
         assert converter in UNIT_CONVERTERS.values()
@@ -401,8 +408,8 @@ def mock_sensor_statistics():
         """Generate fake statistics."""
         return {
             "meta": {
-                "has_mean": True,
                 "has_sum": False,
+                "mean_type": StatisticMeanType.ARITHMETIC,
                 "name": None,
                 "statistic_id": entity_id,
                 "unit_class": None,
@@ -668,8 +675,8 @@ async def test_rename_entity_collision(
 
     # Insert metadata for sensor.test99
     metadata_1 = {
-        "has_mean": True,
         "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "sensor.test99",
@@ -775,8 +782,8 @@ async def test_rename_entity_collision_states_meta_check_disabled(
 
     # Insert metadata for sensor.test99
     metadata_1 = {
-        "has_mean": True,
         "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "sensor.test99",
@@ -861,6 +868,13 @@ async def test_statistics_duplicated(
     ],
 )
 @pytest.mark.parametrize(
+    ("external_metadata_extra_2"),
+    [
+        {"has_mean": False},
+        {"mean_type": StatisticMeanType.NONE},
+    ],
+)
+@pytest.mark.parametrize(
     ("source", "statistic_id", "import_fn"),
     [
         ("test", "test:total_energy_import", async_add_external_statistics),
@@ -873,6 +887,7 @@ async def test_import_statistics(
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
     external_metadata_extra: dict[str, str],
+    external_metadata_extra_2: dict[str, Any],
     source,
     statistic_id,
     import_fn,
@@ -903,14 +918,17 @@ async def test_import_statistics(
         "sum": 3,
     }
 
-    external_metadata = {
-        "has_mean": False,
-        "has_sum": True,
-        "name": "Total imported energy",
-        "source": source,
-        "statistic_id": statistic_id,
-        "unit_of_measurement": "kWh",
-    } | external_metadata_extra
+    external_metadata = (
+        {
+            "has_sum": True,
+            "name": "Total imported energy",
+            "source": source,
+            "statistic_id": statistic_id,
+            "unit_of_measurement": "kWh",
+        }
+        | external_metadata_extra
+        | external_metadata_extra_2
+    )
 
     import_fn(hass, external_metadata, (external_statistics1, external_statistics2))
     await async_wait_recording_done(hass)
@@ -1137,8 +1155,8 @@ async def test_external_statistics_errors(
     }
 
     _external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
@@ -1226,8 +1244,8 @@ async def test_import_statistics_errors(
     }
 
     _external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import",
@@ -1564,8 +1582,8 @@ async def test_daily_statistics_sum(
         },
     )
     external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
@@ -1746,8 +1764,8 @@ async def test_multiple_daily_statistics_sum(
         },
     )
     external_metadata1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy 1",
         "source": "test",
         "statistic_id": "test:total_energy_import2",
@@ -1755,8 +1773,8 @@ async def test_multiple_daily_statistics_sum(
         "unit_of_measurement": "kWh",
     }
     external_metadata2 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy 2",
         "source": "test",
         "statistic_id": "test:total_energy_import1",
@@ -1946,8 +1964,8 @@ async def test_weekly_statistics_mean(
         },
     )
     external_metadata = {
-        "has_mean": True,
         "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
@@ -2093,8 +2111,8 @@ async def test_weekly_statistics_sum(
         },
     )
     external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
@@ -2275,8 +2293,8 @@ async def test_monthly_statistics_sum(
         },
     )
     external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
@@ -2605,8 +2623,8 @@ async def test_change(
         },
     )
     external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import",
@@ -2942,8 +2960,8 @@ async def test_change_multiple(
         },
     )
     external_metadata1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import1",
@@ -2951,8 +2969,8 @@ async def test_change_multiple(
         "unit_of_measurement": "kWh",
     }
     external_metadata2 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import2",
@@ -3333,8 +3351,8 @@ async def test_change_with_none(
         },
     )
     external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
@@ -3888,8 +3906,8 @@ async def test_get_statistics_service(
         },
     )
     external_metadata1 = {
-        "has_mean": True,
         "has_sum": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import1",
@@ -3897,8 +3915,8 @@ async def test_get_statistics_service(
         "unit_of_measurement": "kWh",
     }
     external_metadata2 = {
-        "has_mean": True,
         "has_sum": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import2",
@@ -3998,7 +4016,7 @@ def test_STATISTIC_UNIT_TO_UNIT_CONVERTER(uom: str) -> None:
     if other := next(
         (
             c
-            for c in _ALL_CONVERTERS
+            for c in _PRIMARY_UNIT_CONVERTERS
             if unit_converter is not c and uom in c.VALID_UNITS
         ),
         None,
