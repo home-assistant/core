@@ -1,4 +1,4 @@
-"""Config flow for TISControl integration."""
+"""Config flow for TIS Control integration."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TISConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for TISControl."""
+    """Handle a config flow for TIS Control."""
 
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
@@ -28,8 +28,8 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
 
             _LOGGER.info("Received user input %s", user_input)
 
-            # Assuming a function `validate_port` that returns True if the port is valid
-            is_valid = await self.validate_port(user_input[CONF_PORT])
+            # Validating the port user submitted
+            is_valid = self.validate_port(user_input[CONF_PORT])
             if not is_valid:
                 errors["base"] = "invalid_port"  # Custom error key
                 _LOGGER.error("Provided port is invalid: %s", user_input[CONF_PORT])
@@ -60,7 +60,7 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors if errors else {},
         )
 
-    async def validate_port(self, port: int) -> bool:
+    def validate_port(self, port: int) -> bool:
         """Validate the port."""
         if isinstance(port, int):
             if 1 <= port <= 65535:
