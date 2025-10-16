@@ -171,7 +171,7 @@ async def test_async_validate_access_session_errors(
     model.from_dict(data)
     with patch("aiobotocore.session.AioSession.__init__", side_effect=exception):
         await model.async_validate_access()
-        errors = model.get_errors()
+        errors = model.consume_errors()
         assert errors == expected_errors
 
 
@@ -186,7 +186,7 @@ async def test_async_validate_access_client_errors(
     model.from_dict(data)
     with patch("aiobotocore.session.AioSession.create_client", side_effect=exception):
         await model.async_validate_access()
-        errors = model.get_errors()
+        errors = model.consume_errors()
         assert errors == expected_errors
 
 
@@ -204,7 +204,7 @@ async def test_async_validate_access_bucket_head_errors(
     model.from_dict(data)
     mock_client.head_bucket.side_effect = exception
     await model.async_validate_access()
-    errors = model.get_errors()
+    errors = model.consume_errors()
     assert errors == expected_errors
 
 
@@ -228,4 +228,4 @@ def test_filter_errors() -> None:
     assert not model.has_errors({"one", "test"})
     model.filter_errors({"bar"})
     assert not model.has_errors({"foo", "one", "test"})
-    assert len(model.get_errors()) == 0
+    assert len(model.consume_errors()) == 0

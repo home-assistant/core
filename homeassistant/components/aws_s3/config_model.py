@@ -129,7 +129,7 @@ class S3ConfigModel(MutableMapping[str, str]):
         """
         return len(keys.intersection(self._errors.keys())) > 0
 
-    def get_errors(self) -> dict[str, str]:
+    def consume_errors(self) -> dict[str, str]:
         """Return and clear all recorded errors.
 
         Returns:
