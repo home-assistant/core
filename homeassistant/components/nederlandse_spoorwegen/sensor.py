@@ -181,7 +181,7 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
             "arrival_platform_planned": get_planned_arrival_platform(first_trip),
             "arrival_platform_actual": get_actual_arrival_platform(first_trip),
             "next": get_departure_time_str(next_trip) if next_trip else None,
-            "status": status.lower() if status else None,
+            "status": status if status else None,
             "transfers": get_transfers(first_trip),
             "route": route,
             "remarks": None,
