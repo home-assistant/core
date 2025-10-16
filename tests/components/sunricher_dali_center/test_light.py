@@ -10,20 +10,11 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.sunricher_dali_center.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
-
-
-def _get_light_entity_id(hass: HomeAssistant, unique_id: str) -> str:
-    """Return the entity_id for the given unique_id."""
-    entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, unique_id)
-    assert entity_id is not None
-    return entity_id
 
 
 def _dispatch_status(
@@ -88,7 +79,7 @@ async def test_turn_on_light(
     mock_devices: list[MagicMock],
 ) -> None:
     """Test turning on a light."""
-    entity_id = _get_light_entity_id(hass, "01010000026A242121110E")
+    entity_id = "light.dimmer_0000_02"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -106,7 +97,7 @@ async def test_turn_off_light(
     mock_devices: list[MagicMock],
 ) -> None:
     """Test turning off a light."""
-    entity_id = _get_light_entity_id(hass, "01010000026A242121110E")
+    entity_id = "light.dimmer_0000_02"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -124,7 +115,7 @@ async def test_turn_on_with_brightness(
     mock_devices: list[MagicMock],
 ) -> None:
     """Test turning on light with brightness."""
-    entity_id = _get_light_entity_id(hass, "01010000026A242121110E")
+    entity_id = "light.dimmer_0000_02"
 
     await hass.services.async_call(
         "light",
@@ -148,13 +139,10 @@ async def test_dispatcher_connection(
     mock_dali_gateway: MagicMock,
 ) -> None:
     """Test that dispatcher signals are properly connected."""
-    entity_id = _get_light_entity_id(hass, "01010000026A242121110E")
-
-    entity_registry = er.async_get(hass)
-    entity_entry = entity_registry.async_get(entity_id)
+    entity_entry = er.async_get(hass).async_get("light.dimmer_0000_02")
     assert entity_entry is not None
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get("light.dimmer_0000_02")
     assert state is not None
 
     status_update: dict[str, Any] = {"is_on": True, "brightness": 128}
@@ -162,7 +150,7 @@ async def test_dispatcher_connection(
     _dispatch_status(mock_dali_gateway, "01010000026A242121110E", status_update)
     await hass.async_block_till_done()
 
-    state_after = hass.states.get(entity_id)
+    state_after = hass.states.get("light.dimmer_0000_02")
     assert state_after is not None
 
 

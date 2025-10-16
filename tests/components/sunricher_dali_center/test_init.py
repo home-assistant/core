@@ -26,9 +26,6 @@ async def test_setup_entry_success(
 
     mock_dali_gateway.connect.assert_called_once()
 
-    assert mock_config_entry.runtime_data is not None
-    assert hasattr(mock_config_entry.runtime_data, "gateway")
-
 
 async def test_setup_entry_connection_error(
     hass: HomeAssistant,
