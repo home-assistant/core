@@ -125,7 +125,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="select_gateway",
             data_schema=vol.Schema(
                 {
-                    vol.Required("selected_gateway"): vol.In(gateway_options),
+                    vol.Optional("selected_gateway"): vol.In(gateway_options),
                 }
             ),
             errors=errors,
