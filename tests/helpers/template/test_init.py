@@ -52,11 +52,12 @@ from homeassistant.helpers.template.render_info import (
     ALL_STATES_RATE_LIMIT,
     DOMAIN_STATES_RATE_LIMIT,
 )
-from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import UnitSystem
+
+from .helpers import assert_result_info, render, render_to_info
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -75,55 +76,6 @@ def _set_up_units(hass: HomeAssistant) -> None:
         volume=UnitOfVolume.LITERS,
         wind_speed=UnitOfSpeed.KILOMETERS_PER_HOUR,
     )
-
-
-def render(
-    hass: HomeAssistant, template_str: str, variables: TemplateVarsType | None = None
-) -> Any:
-    """Create render info from template."""
-    tmp = template.Template(template_str, hass)
-    return tmp.async_render(variables)
-
-
-def render_to_info(
-    hass: HomeAssistant, template_str: str, variables: TemplateVarsType | None = None
-) -> template.RenderInfo:
-    """Create render info from template."""
-    tmp = template.Template(template_str, hass)
-    return tmp.async_render_to_info(variables)
-
-
-def extract_entities(
-    hass: HomeAssistant, template_str: str, variables: TemplateVarsType | None = None
-) -> set[str]:
-    """Extract entities from a template."""
-    info = render_to_info(hass, template_str, variables)
-    return info.entities
-
-
-def assert_result_info(
-    info: template.RenderInfo,
-    result: Any,
-    entities: Iterable[str] | None = None,
-    domains: Iterable[str] | None = None,
-    all_states: bool = False,
-) -> None:
-    """Check result info."""
-    assert info.result() == result
-    assert info.all_states == all_states
-    assert info.filter("invalid_entity_name.somewhere") == all_states
-    if entities is not None:
-        assert info.entities == frozenset(entities)
-        assert all(info.filter(entity) for entity in entities)
-        if not all_states:
-            assert not info.filter("invalid_entity_name.somewhere")
-    else:
-        assert not info.entities
-    if domains is not None:
-        assert info.domains == frozenset(domains)
-        assert all(info.filter(domain + ".entity") for domain in domains)
-    else:
-        assert not hasattr(info, "_domains")
 
 
 async def test_template_render_missing_hass(hass: HomeAssistant) -> None:
