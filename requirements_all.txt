@@ -2201,7 +2201,7 @@ pymochad==0.2.0
 pymodbus==3.11.2
 
 # homeassistant.components.monoprice
-pymonoprice==0.4
+pymonoprice==0.5
 
 # homeassistant.components.msteams
 pymsteams==0.1.12
