@@ -37,12 +37,6 @@ def mock_parent_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-@pytest.fixture(autouse=True)
-def setup_entity_registry(hass: HomeAssistant) -> None:
-    """Set up the entity registry for tests."""
-    er.async_get(hass)
-
-
 async def test_user_step_form(
     hass: HomeAssistant, mock_parent_entry: MockConfigEntry
 ) -> None:
