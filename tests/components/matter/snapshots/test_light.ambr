@@ -281,6 +281,81 @@
     'state': 'on',
   })
 # ---
+# name: test_lights[inovelli_vtm30][light.white_series_onoff_switch_rgb_indicator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_color_temp_kelvin': 1000000,
+      'max_mireds': 66666,
+      'min_color_temp_kelvin': 15,
+      'min_mireds': 1,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+        <ColorMode.XY: 'xy'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.white_series_onoff_switch_rgb_indicator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'RGB Indicator',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 32>,
+    'translation_key': 'light',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-6-MatterLight-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lights[inovelli_vtm30][light.white_series_onoff_switch_rgb_indicator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': None,
+      'color_mode': None,
+      'color_temp': None,
+      'color_temp_kelvin': None,
+      'friendly_name': 'White Series OnOff Switch RGB Indicator',
+      'hs_color': None,
+      'max_color_temp_kelvin': 1000000,
+      'max_mireds': 66666,
+      'min_color_temp_kelvin': 15,
+      'min_mireds': 1,
+      'rgb_color': None,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+        <ColorMode.XY: 'xy'>,
+      ]),
+      'supported_features': <LightEntityFeature: 32>,
+      'xy_color': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.white_series_onoff_switch_rgb_indicator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_lights[mounted_dimmable_load_control_fixture][light.mock_mounted_dimmable_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
