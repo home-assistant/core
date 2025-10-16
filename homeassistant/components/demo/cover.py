@@ -183,12 +183,8 @@ class DemoCover(CoverEntity):
         if self._position == position:
             return
 
-        if position < (self._position or 0):
-            self._is_opening = False
-            self._is_closing = True
-        else:
-            self._is_opening = True
-            self._is_closing = False
+        self._is_closing = position < (self._position or 0)
+        self._is_opening = not self._is_closing
 
         self._listen_cover()
         self._requested_closing = (
