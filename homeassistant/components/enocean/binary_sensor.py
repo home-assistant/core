@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from enocean.utils import from_hex_string, to_hex_string
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import _LOGGER, ConfigEntry
 from homeassistant.const import Platform
@@ -12,6 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
 from .const import ENOCEAN_BINARY_SENSOR_EEPS
+from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 from .supported_device_type import (
     EnOceanSupportedDeviceType,
@@ -34,8 +33,8 @@ async def async_setup_entry(
     async_add_entities(
         [
             EnOceanBinarySensor(
-                dev_id=from_hex_string("00:00:00:00"),
-                dev_name="EnOcean Gateway",
+                device_id=EnOceanID(0),
+                device_name="EnOcean Gateway",
                 name="Teach-In Active",
                 dev_type=EnOceanSupportedDeviceType(
                     manufacturer="EnOcean", model="TCM300/310 Transmitter", eep=""
@@ -52,13 +51,13 @@ async def async_setup_entry(
         eep = device_type.eep
 
         if eep in ENOCEAN_BINARY_SENSOR_EEPS:
-            device_id = from_hex_string(device["id"])
+            device_id = EnOceanID(device["id"])
 
             async_add_entities(
                 [
                     EnOceanBinarySensor(
-                        dev_id=device_id,
-                        dev_name=device["name"],
+                        device_id=device_id,
+                        device_name=device["name"],
                         channel=channel,
                         dev_type=device_type,
                         name=channel,
@@ -78,20 +77,23 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        dev_id,
-        dev_name,
+        device_id,
+        device_name,
         device_class=Platform.BINARY_SENSOR,
         channel=None,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
     ) -> None:
         """Initialize the EnOcean binary sensor."""
-        super().__init__(dev_id, dev_name, dev_type, name)
+        super().__init__(
+            enocean_device_id=device_id,
+            device_name=device_name,
+            dev_type=dev_type,
+            name=name,
+        )
         self._device_class = device_class
 
-        self._attr_unique_id = (
-            f"{to_hex_string(dev_id).upper()}-{device_class}-{channel}"
-        )
+        self._attr_unique_id = f"{device_id.to_string()}-{device_class}-{channel}"
         self._attr_on = False
 
         self._attr_should_poll = False

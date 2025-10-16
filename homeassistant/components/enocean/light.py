@@ -5,7 +5,6 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from enocean.utils import from_hex_string, to_hex_string
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -25,6 +24,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
+from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 from .importer import (
     EnOceanPlatformConfig,
@@ -73,17 +73,17 @@ async def async_setup_entry(
         device_type = get_supported_enocean_device_types()[device_type_id]
 
         if device_type.unique_id == "Eltako_FUD61NPN":
-            device_id = from_hex_string(device["id"])
-            sender_id = 0
+            device_id = EnOceanID(device["id"])
+            sender_id = EnOceanID(0)
             if device["sender_id"] != "":
-                sender_id = from_hex_string(device["sender_id"])
+                sender_id = EnOceanID(device["sender_id"])
 
             async_add_entities(
                 [
                     EnOceanLight(
                         sender_id=sender_id,
-                        dev_id=device_id,
                         dev_name=device["name"],
+                        dev_id=device_id,
                         dev_type=device_type,
                     )
                 ]
@@ -101,19 +101,19 @@ class EnOceanLight(EnOceanEntity, LightEntity):
     def __init__(
         self,
         sender_id,
-        dev_id,
+        dev_id: EnOceanID,
         dev_name,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
     ) -> None:
         """Initialize the EnOcean light source."""
-        super().__init__(dev_id, dev_name, dev_type, name)
+        super().__init__(
+            enocean_device_id=dev_id, device_name=dev_name, name=name, dev_type=dev_type
+        )
         self._attr_is_on = False
         self._attr_brightness = None
         self._sender_id = sender_id
-        self._attr_unique_id = (
-            f"{to_hex_string(dev_id).upper()}-{Platform.LIGHT.value}-0"
-        )
+        self._attr_unique_id = f"{dev_id.to_string()}-{Platform.LIGHT.value}-0"
         self._attr_should_poll = False
 
     @property

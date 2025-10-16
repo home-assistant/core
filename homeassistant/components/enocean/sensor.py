@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from enocean.utils import from_hex_string, to_hex_string
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -42,6 +41,7 @@ from .config_flow import (
     CONF_ENOCEAN_DEVICES,
 )
 from .const import LOGGER
+from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 from .importer import (
     EnOceanPlatformConfig,
@@ -176,7 +176,7 @@ async def async_setup_entry(
 
     for device in devices:
         # get config data
-        device_id = from_hex_string(device[CONF_ENOCEAN_DEVICE_ID])
+        device_id = EnOceanID(device[CONF_ENOCEAN_DEVICE_ID])
         device_name = device[CONF_ENOCEAN_DEVICE_NAME]
         device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
         device_type = get_supported_enocean_device_types()[device_type_id]
@@ -185,9 +185,7 @@ async def async_setup_entry(
 
         # temperature sensors (EEP A5-02)
         if eep[0:5] == "A5-02":
-            min_temp, max_temp = _get_a5_02_min_max_temp(
-                to_hex_string(device_id).upper(), eep
-            )
+            min_temp, max_temp = _get_a5_02_min_max_temp(device_id.to_string(), eep)
             async_add_entities(
                 [
                     EnOceanTemperatureSensor(
@@ -211,7 +209,7 @@ async def async_setup_entry(
                 LOGGER.warning(
                     "Unsupported sensor EEP %s - ignoring EnOcean device %s",
                     eep,
-                    to_hex_string(device_id).upper(),
+                    device_id.to_string(),
                 )
                 continue
 
@@ -252,7 +250,7 @@ async def async_setup_entry(
                 LOGGER.warning(
                     "Unsupported sensor EEP %s - ignoring EnOcean device %s",
                     eep,
-                    to_hex_string(device_id).upper(),
+                    device_id.to_string(),
                 )
                 continue
 
@@ -260,9 +258,9 @@ async def async_setup_entry(
                 async_add_entities(
                     [
                         EnOceanTemperatureSensor(
-                            device_id,
-                            device_name,
-                            SENSOR_DESC_TEMPERATURE,
+                            dev_id=device_id,
+                            dev_name=device_name,
+                            description=SENSOR_DESC_TEMPERATURE,
                             scale_min=0,
                             scale_max=40,
                             range_from=255,
@@ -322,9 +320,9 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     EnOceanTemperatureSensor(
-                        device_id,
-                        device_name,
-                        SENSOR_DESC_TEMPERATURE,
+                        dev_id=device_id,
+                        dev_name=device_name,
+                        description=SENSOR_DESC_TEMPERATURE,
                         scale_min=0,
                         scale_max=40,
                         range_from=0,
@@ -363,9 +361,11 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         name=None,
     ) -> None:
         """Initialize the EnOcean sensor device."""
-        super().__init__(dev_id, dev_name, dev_type, name)
+        super().__init__(
+            enocean_device_id=dev_id, device_name=dev_name, name=name, dev_type=dev_type
+        )
         self.entity_description = description
-        self._attr_unique_id = description.unique_id(to_hex_string(dev_id).upper())
+        self._attr_unique_id = description.unique_id(dev_id.to_string)
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
@@ -421,7 +421,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
 
     def __init__(
         self,
-        dev_id: list[int],
+        dev_id: EnOceanID,
         dev_name: str,
         description: EnOceanSensorEntityDescription,
         *,
@@ -433,7 +433,13 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         name=None,
     ) -> None:
         """Initialize the EnOcean temperature sensor device."""
-        super().__init__(dev_id, dev_name, description, dev_type, name)
+        super().__init__(
+            dev_id=dev_id,
+            dev_name=dev_name,
+            name=name,
+            description=description,
+            dev_type=dev_type,
+        )
         self._scale_min = scale_min
         self._scale_max = scale_max
         self.range_from = range_from

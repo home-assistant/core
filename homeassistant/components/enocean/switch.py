@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from enocean.utils import from_hex_string, to_hex_string
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -22,6 +21,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
+from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 from .importer import (
     EnOceanPlatformConfig,
@@ -70,7 +70,7 @@ async def async_setup_entry(
         eep = device_type.eep
 
         if eep[0:5] == "D2-01":
-            device_id = from_hex_string(device["id"])
+            device_id = EnOceanID(device["id"])
 
             # number of switches depends on EEP's TYPE value:
             num_switches = 0
@@ -116,19 +116,19 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
     def __init__(
         self,
-        dev_id,
+        dev_id: EnOceanID,
         dev_name,
         channel,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
     ) -> None:
         """Initialize the EnOcean switch device."""
-        super().__init__(dev_id, dev_name, dev_type, name)
+        super().__init__(
+            enocean_device_id=dev_id, device_name=dev_name, name=name, dev_type=dev_type
+        )
         self._light = None
         self.channel = channel
-        self._attr_unique_id = (
-            f"{to_hex_string(dev_id).upper()}-{Platform.SWITCH.value}-{channel}"
-        )
+        self._attr_unique_id = f"{dev_id.to_string()}-{Platform.SWITCH.value}-{channel}"
 
     @property
     def is_on(self) -> bool | None:
@@ -138,7 +138,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         optional = [0x03]
-        optional.extend(self._device_id)
+        optional.extend(self._enocean_device_id.to_bytelist())
         optional.extend([0xFF, 0x00])
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00],
@@ -150,7 +150,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         optional = [0x03]
-        optional.extend(self._device_id)
+        optional.extend(self._enocean_device_id.to_bytelist())
         optional.extend([0xFF, 0x00])
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],

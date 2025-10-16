@@ -9,7 +9,6 @@ from typing import Any
 
 from enocean.protocol.constants import RORG
 from enocean.protocol.packet import RadioPacket
-from enocean.utils import from_hex_string, to_hex_string
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -35,6 +34,7 @@ from .config_flow import (
     CONF_ENOCEAN_SENDER_ID,
 )
 from .const import SIGNAL_SEND_MESSAGE
+from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 from .supported_device_type import get_supported_enocean_device_types
 
@@ -73,17 +73,17 @@ async def async_setup_entry(
         if eep != "D2-05-00":
             continue
 
-        device_id = from_hex_string(device[CONF_ENOCEAN_DEVICE_ID])
-        sender_id = 0
+        device_id = EnOceanID(device[CONF_ENOCEAN_DEVICE_ID])
+        sender_id = EnOceanID(0)
         if device[CONF_ENOCEAN_SENDER_ID] != "":
-            sender_id = from_hex_string(device[CONF_ENOCEAN_SENDER_ID])
+            sender_id = EnOceanID(device[CONF_ENOCEAN_SENDER_ID])
 
         async_add_entities(
             [
                 EnOceanCover(
                     sender_id=sender_id,
-                    dev_id=device_id,
-                    dev_name=device[CONF_ENOCEAN_DEVICE_NAME],
+                    device_id=device_id,
+                    device_name=device[CONF_ENOCEAN_DEVICE_NAME],
                     dev_type=device_type,
                     name=None,
                 )
@@ -102,10 +102,13 @@ class EnOceanCoverCommand(Enum):
 class EnOceanCover(EnOceanEntity, CoverEntity):
     """Representation of an EnOcean Cover (EEP D2-05-00)."""
 
-    def __init__(self, sender_id, dev_id, dev_name, dev_type, name) -> None:
+    def __init__(self, sender_id, device_id, device_name, dev_type, name) -> None:
         """Initialize the EnOcean Cover."""
         super().__init__(
-            device_id=dev_id, dev_name=dev_name, dev_type=dev_type, name=name
+            enocean_device_id=device_id,
+            device_name=device_name,
+            dev_type=dev_type,
+            name=name,
         )
         self._attr_device_class = CoverDeviceClass.BLIND
         self._position = None
@@ -114,7 +117,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._is_closing = False
         self._sender_id = sender_id
         # self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
-        self._attr_unique_id = f"{to_hex_string(dev_id).upper()}"
+        self._attr_unique_id = f"{device_id.to_string()}"
         self._state_changed_by_command = False
         self._stop_suspected = False
         self._watchdog_enabled = False
@@ -247,12 +250,13 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def send_telegram(self, command: EnOceanCoverCommand, position: int = 0):
         """Send an EnOcean telegram with the respective command."""
+        _LOGGER.warning(self.enocean_device_id.to_bytelist())
         packet = RadioPacket.create(
             rorg=RORG.VLD,
             rorg_func=0x05,
             rorg_type=0x00,
-            destination=self._device_id,
-            sender=self._sender_id,
+            destination=self.enocean_device_id.to_bytelist(),
+            sender=self._sender_id.to_bytelist(),
             command=command.value,
             POS=position,
         )

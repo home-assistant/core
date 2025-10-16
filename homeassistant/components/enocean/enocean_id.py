@@ -102,6 +102,15 @@ class EnOceanID:
         """Return the EnOcean ID as JSON string."""
         return self.to_string()
 
+    def to_bytelist(self) -> list[int]:
+        """Return the EnOcean ID as list of bytes."""
+        return [
+            (self._id >> 24) & 0xFF,
+            (self._id >> 16) & 0xFF,
+            (self._id >> 8) & 0xFF,
+            self._id & 0xFF,
+        ]
+
     def __str__(self):
         """Return the EnOcean ID as string."""
         return self.to_string()
