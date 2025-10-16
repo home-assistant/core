@@ -184,9 +184,13 @@ class AsusWrtBridge(ABC):
         return self._serial_number
 
     @property
-    @abstractmethod
     def is_connected(self) -> bool:
         """Get connected status."""
+        return self._is_connected()
+
+    @abstractmethod
+    def _is_connected(self) -> bool:
+        """Call api for connected status."""
 
     @abstractmethod
     async def async_connect(self) -> None:
@@ -237,9 +241,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
             dnsmasq=opt.get(CONF_DNSMASQ, DEFAULT_DNSMASQ),
         )
 
-    @property
-    @override
-    def is_connected(self) -> bool:
+    def _is_connected(self) -> bool:
         """Get connected status."""
         return self._api.is_connected
 
@@ -388,9 +390,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
             ARConfigKey.NOTIFIED_OPTIMISTIC_TEMPERATURE: True,
         }
 
-    @property
-    @override
-    def is_connected(self) -> bool:
+    def _is_connected(self) -> bool:
         """Get connected status."""
         return self._api.connected
 
