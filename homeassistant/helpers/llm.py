@@ -58,7 +58,7 @@ ACTION_PARAMETERS_CACHE: HassKey[
 
 LLM_API_ASSIST = "assist"
 
-BASE_PROMPT = (
+DATE_TIME_PROMPT = (
     'Current time is {{ now().strftime("%H:%M:%S") }}. '
     'Today\'s date is {{ now().strftime("%Y-%m-%d") }}.\n'
 )
@@ -591,6 +591,8 @@ class AssistAPI(API):
             IntentTool(self.cached_slugify(intent_handler.intent_type), intent_handler)
             for intent_handler in intent_handlers
         ]
+
+        tools.append(GetDateTimeTool())
 
         if exposed_entities:
             if exposed_entities[CALENDAR_DOMAIN]:
@@ -1191,4 +1193,30 @@ class GetLiveContextTool(Tool):
         return {
             "success": True,
             "result": "\n".join(prompt),
+        }
+
+
+class GetDateTimeTool(Tool):
+    """Tool for getting the current date and time."""
+
+    name = "GetDateTime"
+    description = "Provides the current date and time."
+
+    async def async_call(
+        self,
+        hass: HomeAssistant,
+        tool_input: ToolInput,
+        llm_context: LLMContext,
+    ) -> JsonObjectType:
+        """Get the current date and time."""
+        now = dt_util.now()
+
+        return {
+            "success": True,
+            "result": {
+                "date": now.strftime("%Y-%m-%d"),
+                "time": now.strftime("%H:%M:%S"),
+                "timezone": now.strftime("%Z"),
+                "weekday": now.strftime("%A"),
+            },
         }
