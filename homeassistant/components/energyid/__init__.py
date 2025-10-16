@@ -79,9 +79,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         raise ConfigEntryNotReady(
             f"Timeout authenticating with EnergyID: {err}"
         ) from err
-    # Specifically catch ConfigEntryNotReady to allow retries
-    except ConfigEntryNotReady:
-        raise
     # Catch all other exceptions as fatal authentication failures
     except Exception as err:
         _LOGGER.exception("Unexpected error during EnergyID authentication")
@@ -154,7 +151,7 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
     new_mappings = set()
     ent_reg = er.async_get(hass)
 
-    subentries = list(entry.subentries.values()) if hasattr(entry, "subentries") else []
+    subentries = list(entry.subentries.values())
     _LOGGER.debug(
         "Found %d subentries in entry.subentries: %s",
         len(subentries),
