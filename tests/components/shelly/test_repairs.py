@@ -226,7 +226,7 @@ async def test_deprecated_firmware_issue(
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
     with patch(
-        "homeassistant.components.shelly.DEPRECATED_FIRMWARES",
+        "homeassistant.components.shelly.repairs.DEPRECATED_FIRMWARES",
         {MODEL_WALL_DISPLAY: {"min_firmware": "2.3.0", "ha_version": "2025.10.0"}},
     ):
         await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)

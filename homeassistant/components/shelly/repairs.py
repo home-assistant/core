@@ -20,6 +20,7 @@ from .const import (
     BLE_SCANNER_MIN_FIRMWARE,
     CONF_BLE_SCANNER_MODE,
     DEPRECATED_FIRMWARE_ISSUE_ID,
+    DEPRECATED_FIRMWARES,
     DOMAIN,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
     BLEScannerMode,
@@ -72,9 +73,6 @@ def async_manage_ble_scanner_firmware_unsupported_issue(
 def async_manage_deprecated_firmware_issue(
     hass: HomeAssistant,
     entry: ShellyConfigEntry,
-    model: str,
-    min_firmware: str,
-    ha_version: str,
 ) -> None:
     """Manage deprecated firmware issue."""
     issue_id = DEPRECATED_FIRMWARE_ISSUE_ID.format(unique=entry.unique_id)
@@ -83,8 +81,12 @@ def async_manage_deprecated_firmware_issue(
         assert entry.runtime_data.rpc is not None
 
     device = entry.runtime_data.rpc.device
+    model = entry.data["model"]
 
-    if entry.data["model"] == model:
+    if model in DEPRECATED_FIRMWARES:
+        min_firmware = DEPRECATED_FIRMWARES[model]["min_firmware"]
+        ha_version = DEPRECATED_FIRMWARES[model]["ha_version"]
+
         firmware = AwesomeVersion(device.shelly["ver"])
         if firmware < min_firmware:
             ir.async_create_issue(
