@@ -1,1 +1,1 @@
-"""The TISControl integration tests."""
+"""The TIS Control integration tests."""
