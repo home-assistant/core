@@ -82,8 +82,8 @@ async def setup_zone(hass: HomeAssistant) -> None:
         ),
         # Send location_name only
         ({"location_name": "home"}, {}, "home"),
-        ({"location_name": "office"}, {}, "office"),
-        ({"location_name": "school"}, {}, "school"),
+        ({"location_name": "office"}, {}, "Office"),
+        ({"location_name": "school"}, {}, "School"),
         # Send coordinates only - location is determined by coordinates
         (
             {"gps": [10, 20]},
