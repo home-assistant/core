@@ -1,1 +1,1 @@
-"""The TISControl integration conftest."""
+"""The TIS Control integration conftest."""
