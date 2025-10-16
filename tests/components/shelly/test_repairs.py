@@ -13,6 +13,7 @@ from homeassistant.components.shelly.const import (
     DOMAIN,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
     BLEScannerMode,
+    DeprecatedFirmwareInfo,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -227,7 +228,11 @@ async def test_deprecated_firmware_issue(
     await hass.async_block_till_done()
     with patch(
         "homeassistant.components.shelly.repairs.DEPRECATED_FIRMWARES",
-        {MODEL_WALL_DISPLAY: {"min_firmware": "2.3.0", "ha_version": "2025.10.0"}},
+        {
+            MODEL_WALL_DISPLAY: DeprecatedFirmwareInfo(
+                {"min_firmware": "2.3.0", "ha_version": "2025.10.0"}
+            )
+        },
     ):
         await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
