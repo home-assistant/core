@@ -1,6 +1,6 @@
 """Tests for the TIS Control config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.tis_control.config_flow import TISConfigFlow
@@ -63,7 +63,7 @@ async def test_valid_port(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.tis_control.async_setup_entry",
-            return_value=True,
+            new=AsyncMock(return_value=True),
         ) as mock_setup_entry,
     ):
         # Configure the flow with valid user input.
@@ -84,7 +84,7 @@ async def test_valid_port(hass: HomeAssistant) -> None:
 
 async def test_duplicate_entry(hass: HomeAssistant) -> None:
     """Test that the flow is aborted when an entry with the same port already exists."""
-    # Step 1: Create the first successful entry.
+    # Create the first successful entry.
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -102,7 +102,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     # Verify the first entry was created.
     assert result2["type"] == FlowResultType.CREATE_ENTRY
 
-    # Step 2: Try to create a second entry with the same port.
+    # Try to create a second entry with the same port.
     result3 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -122,7 +122,7 @@ async def test_validate_port() -> None:
     """Test the validate_port method directly."""
     config_flow = TISConfigFlow()
 
-    assert await config_flow.validate_port(1234) is True
-    assert await config_flow.validate_port(0) is False
-    assert await config_flow.validate_port(65536) is False
-    assert await config_flow.validate_port("invalid") is False  # type: ignore noqa: PGH003
+    assert config_flow.validate_port(1234) is True
+    assert config_flow.validate_port(0) is False
+    assert config_flow.validate_port(65536) is False
+    assert config_flow.validate_port("invalid") is False  # type: ignore noqa: PGH003
