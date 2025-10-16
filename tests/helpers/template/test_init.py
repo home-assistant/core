@@ -531,15 +531,13 @@ def test_add(hass: HomeAssistant) -> None:
 
 def test_apply(hass: HomeAssistant) -> None:
     """Test apply."""
-    assert render(
-        hass,
-        """
+    tpl = """
     {%- macro add_foo(arg) -%}
     {{arg}}foo
     {%- endmacro -%}
     {{ ["a", "b", "c"] | map('apply', add_foo) | list }}
-    """,
-    ) == ["afoo", "bfoo", "cfoo"]
+    """
+    assert render(hass, tpl) == ["afoo", "bfoo", "cfoo"]
 
     assert render(
         hass, "{{ ['1', '2', '3', '4', '5'] | map('apply', int) | list }}"
@@ -549,80 +547,55 @@ def test_apply(hass: HomeAssistant) -> None:
 def test_apply_macro_with_arguments(hass: HomeAssistant) -> None:
     """Test apply macro with positional, named, and mixed arguments."""
     # Test macro with positional arguments
-    assert (
-        render(
-            hass,
-            """
+    tpl = """
                 {%- macro add_numbers(a, b, c) -%}
                 {{ a + b + c }}
                 {%- endmacro -%}
                 {{ apply(5, add_numbers, 10, 15) }}
-                """,
-        )
-        == 30
-    )
+                """
+    assert render(hass, tpl) == 30
 
     # Test macro with named arguments
-    assert (
-        render(
-            hass,
-            """
+    tpl = """
                 {%- macro greet(name, greeting="Hello") -%}
                 {{ greeting }}, {{ name }}!
                 {%- endmacro -%}
                 {{ apply("World", greet, greeting="Hi") }}
-                """,
-        )
-        == "Hi, World!"
-    )
+                """
+    assert render(hass, tpl) == "Hi, World!"
 
     # Test macro with mixed arguments
-    assert (
-        render(
-            hass,
-            """
+    tpl = """
                 {%- macro format_message(prefix, name, suffix="!") -%}
                 {{ prefix }} {{ name }}{{ suffix }}
                 {%- endmacro -%}
                 {{ apply("Welcome", format_message, "John", suffix="...") }}
-                """,
-        )
-        == "Welcome John..."
-    )
+                """
+    assert render(hass, tpl) == "Welcome John..."
 
 
 def test_as_function(hass: HomeAssistant) -> None:
     """Test as_function."""
-    assert (
-        render(
-            hass,
-            """
+    tpl = """
         {%- macro macro_double(num, returns) -%}
         {%- do returns(num * 2) -%}
         {%- endmacro -%}
         {%- set double = macro_double | as_function -%}
         {{ double(5) }}
-        """,
-        )
-        == 10
-    )
+        """
+    assert render(hass, tpl) == 10
 
 
 def test_as_function_no_arguments(hass: HomeAssistant) -> None:
     """Test as_function with no arguments."""
-    assert (
-        render(
-            hass,
-            """
+    tpl = """
         {%- macro macro_get_hello(returns) -%}
         {%- do returns("Hello") -%}
         {%- endmacro -%}
         {%- set get_hello = macro_get_hello | as_function -%}
         {{ get_hello() }}
-        """,
-        )
-        == "Hello"
-    )
+        """
+    assert render(hass, tpl) == "Hello"
 
 
 def test_strptime(hass: HomeAssistant) -> None:
@@ -999,29 +972,20 @@ def test_passing_vars_as_list(hass: HomeAssistant) -> None:
 
 def test_passing_vars_as_list_element(hass: HomeAssistant) -> None:
     """Test passing variables as list."""
-    assert (
-        template.render_complex(
-            template.Template("{{ hello[1] }}", hass), {"hello": ["foo", "bar"]}
-        )
-        == "bar"
-    )
+    tpl = template.Template("{{ hello[1] }}", hass)
+    assert template.render_complex(tpl, {"hello": ["foo", "bar"]}) == "bar"
 
 
 def test_passing_vars_as_dict_element(hass: HomeAssistant) -> None:
     """Test passing variables as list."""
-    assert (
-        template.render_complex(
-            template.Template("{{ hello.foo }}", hass), {"hello": {"foo": "bar"}}
-        )
-        == "bar"
-    )
+    tpl = template.Template("{{ hello.foo }}", hass)
+    assert template.render_complex(tpl, {"hello": {"foo": "bar"}}) == "bar"
 
 
 def test_passing_vars_as_dict(hass: HomeAssistant) -> None:
     """Test passing variables as list."""
-    assert template.render_complex(
-        template.Template("{{ hello }}", hass), {"hello": {"foo": "bar"}}
-    ) == {"foo": "bar"}
+    tpl = template.Template("{{ hello }}", hass)
+    assert template.render_complex(tpl, {"hello": {"foo": "bar"}}) == {"foo": "bar"}
 
 
 def test_render_with_possible_json_value_with_valid_json(hass: HomeAssistant) -> None:
@@ -4302,11 +4266,10 @@ async def test_undefined_symbol_warnings(
 ) -> None:
     """Test a warning is logged on undefined variables."""
 
-    result = render(hass, template_string)
-    assert result == ""
+    assert render(hass, template_string) == ""
     assert (
-        "Template variable warning: 'no_such_variable' is undefined when rendering "
-        f"'{template_string}'" in caplog.text
+        f"Template variable warning: 'no_such_variable' is undefined when rendering '{template_string}'"
+        in caplog.text
     )
 
 
