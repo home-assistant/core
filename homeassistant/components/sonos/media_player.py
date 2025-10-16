@@ -39,7 +39,9 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.components.plex import PLEX_URI_SCHEME
-from homeassistant.components.plex.services import process_plex_payload
+from homeassistant.components.plex.services import (  # pylint: disable=hass-component-root-import
+    process_plex_payload,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
