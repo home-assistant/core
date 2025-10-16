@@ -916,7 +916,7 @@ epicstore-api==0.1.7
 epion==0.0.3
 
 # homeassistant.components.epson
-epson-projector==0.5.1
+epson-projector==0.6.0
 
 # homeassistant.components.eq3btsmart
 eq3btsmart==2.3.0
