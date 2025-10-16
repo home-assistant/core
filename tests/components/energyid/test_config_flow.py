@@ -388,14 +388,26 @@ async def test_config_flow_reauth_success(hass: HomeAssistant) -> None:
         assert updated_entry.data[CONF_PROVISIONING_SECRET] == "new_secret"
 
 
-async def test_config_flow_client_response_error_401(hass: HomeAssistant) -> None:
-    """Test config flow with 401 ClientResponseError (invalid auth)."""
+@pytest.mark.parametrize(
+    ("auth_status", "auth_message", "expected_error"),
+    [
+        (401, "Unauthorized", "invalid_auth"),
+        (500, "Server Error", "cannot_connect"),
+    ],
+)
+async def test_config_flow_client_response_error(
+    hass: HomeAssistant,
+    auth_status: int,
+    auth_message: str,
+    expected_error: str,
+) -> None:
+    """Test config flow with ClientResponseError."""
     mock_client = MagicMock()
     mock_client.authenticate.side_effect = ClientResponseError(
         request_info=MagicMock(),
         history=(),
-        status=401,
-        message="Unauthorized",
+        status=auth_status,
+        message=auth_message,
     )
 
     with patch(
@@ -414,36 +426,7 @@ async def test_config_flow_client_response_error_401(hass: HomeAssistant) -> Non
         )
 
         assert result2["type"] is FlowResultType.FORM
-        assert result2["errors"]["base"] == "invalid_auth"
-
-
-async def test_config_flow_client_response_error_other(hass: HomeAssistant) -> None:
-    """Test config flow with non-401 ClientResponseError."""
-    mock_client = MagicMock()
-    mock_client.authenticate.side_effect = ClientResponseError(
-        request_info=MagicMock(),
-        history=(),
-        status=500,
-        message="Server Error",
-    )
-
-    with patch(
-        "homeassistant.components.energyid.config_flow.WebhookClient",
-        return_value=mock_client,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
-                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
-            },
-        )
-
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["errors"]["base"] == "cannot_connect"
+        assert result2["errors"]["base"] == expected_error
 
 
 async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
