@@ -233,6 +233,19 @@ class BLEScannerMode(StrEnum):
 
 BLE_SCANNER_MIN_FIRMWARE = "1.5.1"
 
+MAX_PUSH_UPDATE_FAILURES = 5
+PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
+
+NOT_CALIBRATED_ISSUE_ID = "not_calibrated_{unique}"
+
+FIRMWARE_UNSUPPORTED_ISSUE_ID = "firmware_unsupported_{unique}"
+
+BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID = "ble_scanner_firmware_unsupported_{unique}"
+OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
+    "outbound_websocket_incorrectly_enabled_{unique}"
+)
+DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
+
 
 class DeprecatedFirmwareInfo(TypedDict):
     """TypedDict for Deprecated Firmware Info."""
@@ -253,19 +266,6 @@ class DeprecatedFirmwareInfo(TypedDict):
 #   ),
 # }
 DEPRECATED_FIRMWARES: dict[str, DeprecatedFirmwareInfo] = {}
-
-MAX_PUSH_UPDATE_FAILURES = 5
-PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
-
-NOT_CALIBRATED_ISSUE_ID = "not_calibrated_{unique}"
-
-FIRMWARE_UNSUPPORTED_ISSUE_ID = "firmware_unsupported_{unique}"
-
-BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID = "ble_scanner_firmware_unsupported_{unique}"
-OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
-    "outbound_websocket_incorrectly_enabled_{unique}"
-)
-DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
 
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
 
