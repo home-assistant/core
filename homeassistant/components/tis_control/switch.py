@@ -55,6 +55,7 @@ class TISSwitch(SwitchEntity):
     def _handle_update(self) -> None:
         """Handle state updates from the TISAPISwitch object."""
         self._attr_is_on = self.device_api.is_on
+        self._attr_available = self.device_api.available
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
