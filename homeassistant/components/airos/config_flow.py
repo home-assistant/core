@@ -88,15 +88,15 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     airos_device: AirOS8
     errors: dict[str, str]
-    discovered_devices: dict[str, dict[str, Any]] = {}
-    discovery_abort_reason: str | None = None
-    selected_device_info: dict[str, Any] = {}
 
     def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
         self.airos_device: AirOS8
         self.errors: dict[str, str] = {}
+        self.discovered_devices: dict[str, dict[str, Any]] = {}
+        self.discovery_abort_reason: str | None = None
+        self.selected_device_info: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -360,7 +360,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         progress_bar = self.hass.async_create_task(self._async_update_progress_bar())
 
         known_mac_addresses = {
-            entry.unique_id
+            entry.unique_id.lower()
             for entry in self.hass.config_entries.async_entries(DOMAIN)
             if entry.unique_id
         }
@@ -370,7 +370,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.discovered_devices = {
                 mac_addr: info
                 for mac_addr, info in devices.items()
-                if mac_addr not in known_mac_addresses
+                if mac_addr.lower() not in known_mac_addresses
             }
             _LOGGER.debug(
                 "Discovery task finished. Found %s new devices",
