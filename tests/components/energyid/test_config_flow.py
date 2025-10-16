@@ -60,6 +60,8 @@ async def test_config_flow_user_step_success_claimed(hass: HomeAssistant) -> Non
         assert result2["title"] == TEST_RECORD_NAME
         assert result2["data"][CONF_PROVISIONING_KEY] == TEST_PROVISIONING_KEY
         assert result2["data"][CONF_PROVISIONING_SECRET] == TEST_PROVISIONING_SECRET
+        assert result2["description"] == "configuration_successful"
+        assert result2["description_placeholders"] == {"name": TEST_RECORD_NAME}
 
 
 @pytest.mark.parametrize("claimed", [False])
@@ -143,6 +145,8 @@ async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> N
 
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
         assert final_result["title"] == TEST_RECORD_NAME
+        assert final_result["description"] == "configuration_successful"
+        assert final_result["description_placeholders"] == {"name": TEST_RECORD_NAME}
 
 
 async def test_config_flow_claim_timeout(hass: HomeAssistant) -> None:
@@ -326,13 +330,10 @@ async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) 
                 CONF_PROVISIONING_SECRET: "y",
             },
         )
-        # Simulate the external step
-        # result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
-
-        # Simulate the device still not being claimed
-        result4 = await hass.config_entries.flow.async_configure(result2["flow_id"])
-        assert result4["type"] is FlowResultType.EXTERNAL_STEP
-        assert result4["step_id"] == "auth_and_claim"
+        # Simulate the device still not being claimed after polling timeout
+        result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
+        assert result3["type"] is FlowResultType.EXTERNAL_STEP
+        assert result3["step_id"] == "auth_and_claim"
 
 
 async def test_config_flow_reauth_success(hass: HomeAssistant) -> None:
