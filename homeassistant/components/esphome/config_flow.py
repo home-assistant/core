@@ -16,6 +16,7 @@ from aioesphomeapi import (
     InvalidEncryptionKeyAPIError,
     RequiresEncryptionAPIError,
     ResolveAPIError,
+    wifi_mac_to_bluetooth_mac,
 )
 import aiohttp
 import voluptuous as vol
@@ -37,6 +38,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -317,6 +319,24 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         await self.async_set_unique_id(mac_address)
+
+        # Convert WiFi MAC to Bluetooth MAC and notify Improv BLE if waiting
+        # ESPHome devices use WiFi MAC + 1 for Bluetooth MAC
+        # Late import to avoid circular dependency
+        # NOTE: Do not change to hass.config.components check - improv_ble is
+        # config_flow only and may not be in the components registry
+        if improv_ble := await async_import_module(
+            self.hass, "homeassistant.components.improv_ble"
+        ):
+            ble_mac = wifi_mac_to_bluetooth_mac(mac_address)
+            improv_ble.async_register_next_flow(self.hass, ble_mac, self.flow_id)
+            _LOGGER.debug(
+                "Notified Improv BLE of flow %s for BLE MAC %s (derived from WiFi MAC %s)",
+                self.flow_id,
+                ble_mac,
+                mac_address,
+            )
+
         await self._async_validate_mac_abort_configured(
             mac_address, self._host, self._port
         )
@@ -500,6 +520,16 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle creating a new entry by removing the old one and creating new."""
         assert self._entry_with_name_conflict is not None
+        if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            return self.async_update_reload_and_abort(
+                self._entry_with_name_conflict,
+                title=self._name,
+                unique_id=self.unique_id,
+                data=self._async_make_config_data(),
+                options={
+                    CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+                },
+            )
         await self.hass.config_entries.async_remove(
             self._entry_with_name_conflict.entry_id
         )
