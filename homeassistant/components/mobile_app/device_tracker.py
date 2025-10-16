@@ -8,6 +8,7 @@ from homeassistant.components.device_tracker import (
     ATTR_LOCATION_NAME,
     TrackerEntity,
 )
+from homeassistant.components.zone import HOME_ZONE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -15,6 +16,7 @@ from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    STATE_HOME,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -99,9 +101,9 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
         if location_name := self._data.get(ATTR_LOCATION_NAME):
-            if location_name == "home":
-                return location_name
-            zone = self.hass.states.get("zone." + location_name)
+            if location_name == HOME_ZONE:
+                return STATE_HOME
+            zone_state = self.hass.states.get("zone." + location_name)
             if zone and "friendly_name" in zone.attributes:
                 return zone.attributes["friendly_name"]
             return location_name
