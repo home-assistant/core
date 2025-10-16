@@ -43,11 +43,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import (
-    Entity,
-    IncludedEntitiesMixin,
-    async_generate_entity_id,
-)
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
@@ -468,7 +464,7 @@ def async_setup_entity_entry_helper(
     _async_setup_entities()
 
 
-class MqttAttributesMixin(IncludedEntitiesMixin):
+class MqttAttributesMixin(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
