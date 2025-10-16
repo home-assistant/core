@@ -136,7 +136,6 @@ _IGNORE_ROOT_IMPORT = (
     "ffmpeg",
     "ffmpeg_motion",
     "google_assistant",
-    "hardware",
     "homeassistant",
     "homeassistant_hardware",
     "http",
@@ -145,9 +144,7 @@ _IGNORE_ROOT_IMPORT = (
     "recorder",
     "rest",
     "script",
-    "sensor",
     "stream",
-    "zha",
 )
 
 

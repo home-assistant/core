@@ -3,6 +3,7 @@
 import logging
 
 from pyHomee import Homee, HomeeAuthFailedException, HomeeConnectionFailedException
+from pyHomee.model import HomeeNode
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
@@ -87,6 +88,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
         model="homee",
         sw_version=homee.settings.version,
     )
+
+    # Remove devices that are no longer present in homee.
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    for device in devices:
+        # Check if the device is still present in homee
+        device_identifiers = {identifier[1] for identifier in device.identifiers}
+        # homee itself uses just the uid, nodes use uid-nodeid
+        is_homee_hub = homee.settings.uid in device_identifiers
+        is_node_present = any(
+            f"{homee.settings.uid}-{node.id}" in device_identifiers
+            for node in homee.nodes
+        )
+        if not is_node_present and not is_homee_hub:
+            _LOGGER.info("Removing device %s", device.name)
+            device_registry.async_update_device(
+                device_id=device.id,
+                remove_config_entry_id=entry.entry_id,
+            )
+
+    # Remove device at runtime when node is removed in homee
+    async def _remove_node_callback(node: HomeeNode, add: bool) -> None:
+        """Call when a node is removed."""
+        if not add:
+            device = device_registry.async_get_device(
+                identifiers={(DOMAIN, f"{entry.runtime_data.settings.uid}-{node.id}")}
+            )
+            if device:
+                _LOGGER.info("Removing device %s", device.name)
+                device_registry.async_update_device(
+                    device_id=device.id,
+                    remove_config_entry_id=entry.entry_id,
+                )
+
+    homee.add_nodes_listener(_remove_node_callback)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

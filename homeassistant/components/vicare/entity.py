@@ -13,7 +13,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, VIESSMANN_DEVELOPER_PORTAL
 
 
 class ViCareEntity(Entity):
@@ -35,7 +35,7 @@ class ViCareEntity(Entity):
         model = device_config.getModel().replace("_", " ")
 
         identifier = (
-            f"{gateway_serial}_{device_serial.replace('zigbee-', 'zigbee_')}"
+            f"{gateway_serial}_{device_serial.replace('-', '_')}"
             if device_serial is not None
             else f"{gateway_serial}_{device_id}"
         )
@@ -64,5 +64,5 @@ class ViCareEntity(Entity):
             name=model,
             manufacturer="Viessmann",
             model=model,
-            configuration_url="https://developer.viessmann.com/",
+            configuration_url=VIESSMANN_DEVELOPER_PORTAL,
         )

@@ -13,27 +13,14 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_TEMPERATURE,
-    PRECISION_HALVES,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_STATE_BATTERY_LOW,
-    ATTR_STATE_HOLIDAY_MODE,
-    ATTR_STATE_SUMMER_MODE,
-    ATTR_STATE_WINDOW_OPEN,
-    DOMAIN,
-    LOGGER,
-)
+from .const import DOMAIN, LOGGER
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
 from .entity import FritzBoxDeviceEntity
-from .model import ClimateExtraAttributes
 from .sensor import value_scheduled_preset
 
 HVAC_MODES = [HVACMode.HEAT, HVACMode.OFF]
@@ -201,26 +188,6 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         """Set preset mode."""
         self.check_active_or_lock_mode()
         await self.async_set_hkr_state(PRESET_API_HKR_STATE_MAPPING[preset_mode])
-
-    @property
-    def extra_state_attributes(self) -> ClimateExtraAttributes:
-        """Return the device specific state attributes."""
-        # deprecated with #143394, can be removed in 2025.11
-        attrs: ClimateExtraAttributes = {
-            ATTR_STATE_BATTERY_LOW: self.data.battery_low,
-        }
-
-        # the following attributes are available since fritzos 7
-        if self.data.battery_level is not None:
-            attrs[ATTR_BATTERY_LEVEL] = self.data.battery_level
-        if self.data.holiday_active is not None:
-            attrs[ATTR_STATE_HOLIDAY_MODE] = self.data.holiday_active
-        if self.data.summer_active is not None:
-            attrs[ATTR_STATE_SUMMER_MODE] = self.data.summer_active
-        if self.data.window_open is not None:
-            attrs[ATTR_STATE_WINDOW_OPEN] = self.data.window_open
-
-        return attrs
 
     def check_active_or_lock_mode(self) -> None:
         """Check if in summer/vacation mode or lock enabled."""
