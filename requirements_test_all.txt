@@ -103,7 +103,10 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==8.0
+RestrictedPython==8.0;python_version<'3.14'
+
+# homeassistant.components.python_script
+RestrictedPython==8.1a1.dev0;python_version>='3.14'
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -163,6 +166,9 @@ aio-geojson-usgs-earthquakes==0.3
 # homeassistant.components.gdacs
 aio-georss-gdacs==0.10
 
+# homeassistant.components.onewire
+aio-ownet==0.0.4
+
 # homeassistant.components.acaia
 aioacaia==0.1.17
 
@@ -176,7 +182,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.1
 
 # homeassistant.components.alexa_devices
-aioamazondevices==6.4.3
+aioamazondevices==6.4.4
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -238,7 +244,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.16.0
+aioesphomeapi==42.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -250,13 +256,13 @@ aiogithubapi==24.6.0
 aioguardian==2022.07.0
 
 # homeassistant.components.harmony
-aioharmony==0.5.3
+aioharmony==0.5.3;python_version<'3.14'
 
 # homeassistant.components.hassio
 aiohasupervisor==0.3.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.20.0
+aiohomeconnect==0.22.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -360,7 +366,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.8.2
+aiorussound==4.9.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -411,7 +417,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==1.2.1
+aiovodafone==2.0.1
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -792,7 +798,7 @@ epicstore-api==0.1.7
 epion==0.0.3
 
 # homeassistant.components.epson
-epson-projector==0.5.1
+epson-projector==0.6.0
 
 # homeassistant.components.eq3btsmart
 eq3btsmart==2.3.0
@@ -985,7 +991,7 @@ gspread==5.5.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.5
+guppy3==3.1.5;python_version<'3.14'
 
 # homeassistant.components.iaqualink
 h2==4.3.0
@@ -1009,7 +1015,7 @@ habiticalib==0.4.5
 habluetooth==5.7.0
 
 # homeassistant.components.cloud
-hass-nabucasa==1.3.0
+hass-nabucasa==1.4.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1107,7 +1113,7 @@ inkbird-ble==1.1.0
 insteon-frontend-home-assistant==0.5.0
 
 # homeassistant.components.intellifire
-intellifire4py==4.1.9
+intellifire4py==4.2.1
 
 # homeassistant.components.iometer
 iometer==0.2.0
@@ -1180,7 +1186,7 @@ lektricowifi==0.1
 letpot==0.6.2
 
 # homeassistant.components.foscam
-libpyfoscamcgi==0.0.7
+libpyfoscamcgi==0.0.8
 
 # homeassistant.components.libre_hardware_monitor
 librehardwaremonitor-api==1.4.0
@@ -1204,7 +1210,7 @@ loqedAPI==2.1.10
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.4.8
+lunatone-rest-api-client==0.5.3
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -1410,6 +1416,9 @@ openerz-api==0.3.0
 # homeassistant.components.openhome
 openhomedevice==2.2.0
 
+# homeassistant.components.openrgb
+openrgb-python==0.3.5
+
 # homeassistant.components.enigma2
 openwebifpy==4.3.1
 
@@ -1587,7 +1596,7 @@ pyatag==0.3.5.3
 pyatmo==9.2.3
 
 # homeassistant.components.apple_tv
-pyatv==0.16.1
+pyatv==0.16.1;python_version<'3.14'
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.1.5
@@ -1834,7 +1843,7 @@ pymochad==0.2.0
 pymodbus==3.11.2
 
 # homeassistant.components.monoprice
-pymonoprice==0.4
+pymonoprice==0.5
 
 # homeassistant.components.mysensors
 pymysensors==0.26.0
@@ -1849,7 +1858,7 @@ pynetgear==0.10.10
 pynina==0.3.6
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==1.1.1
+pynintendoparental==1.1.2
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
@@ -1897,9 +1906,6 @@ pyotp==2.9.0
 
 # homeassistant.components.overkiz
 pyoverkiz==1.19.0
-
-# homeassistant.components.onewire
-pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.19
@@ -2531,7 +2537,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.21.1
+uiprotect==7.22.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

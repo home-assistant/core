@@ -471,6 +471,7 @@ FLOWS = {
         "openexchangerates",
         "opengarage",
         "openhome",
+        "openrgb",
         "opensky",
         "opentherm_gw",
         "openuv",
