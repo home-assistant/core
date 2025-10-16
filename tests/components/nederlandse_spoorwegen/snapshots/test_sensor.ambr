@@ -67,7 +67,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '16:35',
+    'state': '2025-09-15 16:35:00+02:00',
   })
 # ---
 # name: test_sensor[sensor.to_work-entry]
@@ -138,6 +138,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '16:35',
+    'state': '2025-09-15 16:35:00+02:00',
   })
 # ---

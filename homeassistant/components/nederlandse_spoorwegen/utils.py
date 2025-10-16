@@ -75,7 +75,7 @@ def get_actual_arrival_time_str(data: Trip) -> str | None:
 def get_status(data: Trip) -> str | None:
     """Get status from trip data."""
     status = _get_trip_attribute(data, "status")
-    return status.capitalize() if status else None
+    return status if status else None
 
 
 def get_transfers(data: Trip) -> int:
@@ -98,13 +98,13 @@ def get_departure_time_str(data: Trip) -> str | None:
 
 def get_route(trip: Trip) -> list[str]:
     """Get the route as a list of station names from trip data."""
-    route = []
     trip_parts = _get_trip_attribute(trip, "trip_parts", [])
+    if not trip_parts:
+        return []
+    route = []
     departure = _get_trip_attribute(trip, "departure")
     if departure:
         route.append(departure)
-    if not trip_parts:
-        return route
     route.extend(part.destination for part in trip_parts)
     return route
 
@@ -134,7 +134,7 @@ def get_departure_delay(trip: Trip) -> bool:
 
 def get_coordinator_attribute(coordinator, attribute: str) -> Any:
     """Get attribute from coordinator data with error handling."""
-    if not coordinator or not hasattr(coordinator, attribute):
+    if not coordinator:
         return None
     return getattr(coordinator, attribute, None)
 

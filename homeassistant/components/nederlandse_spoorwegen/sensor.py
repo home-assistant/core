@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -34,6 +35,7 @@ from .utils import (
     get_arrival_delay,
     get_coordinator_data_attribute,
     get_departure_delay,
+    get_departure_time,
     get_departure_time_str,
     get_going,
     get_planned_arrival_platform,
@@ -150,10 +152,10 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
         return self._name
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> datetime | None:
         """Return the native value of the sensor."""
         first_trip = get_coordinator_data_attribute(self.coordinator, "first_trip")
-        return get_departure_time_str(first_trip)
+        return get_departure_time(first_trip)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
