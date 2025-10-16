@@ -1,23 +1,45 @@
 rules:
   # Bronze
-  action-setup: todo
-  appropriate-polling: todo
-  brands: todo
-  common-modules: todo
-  config-flow-test-coverage: todo
-  config-flow: todo
-  dependency-transparency: todo
-  docs-actions: todo
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
-  entity-event-setup: todo
-  entity-unique-id: todo
-  has-entity-name: todo
-  runtime-data: todo
-  test-before-configure: todo
-  test-before-setup: todo
-  unique-config-entry: todo
+  action-setup:
+    status: todo
+    comment: needs to move to async_setup
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow:
+    status: todo
+    comment: still needs descriptions
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions:
+    status: todo
+    comment: needs rework, make KLF reboot requirement more prominent
+  docs-removal-instructions:
+    status: todo
+    comment: missing in docs, although simple
+  entity-event-setup:
+    status: todo
+    comment: not checked yet
+  entity-unique-id:
+    status: todo
+    comment: recheck
+  has-entity-name:
+    status: todo
+    comment: recheck
+  runtime-data:
+    status: todo
+    comment: module is currently in hass.data, needs rework
+  test-before-configure:
+    status: todo
+    comment: not checked yet
+  test-before-setup:
+    status: todo
+    comment: not checked yet
+  unique-config-entry:
+    status: todo
+    comment: not checked yet
 
   # Silver
   action-exceptions: todo
