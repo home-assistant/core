@@ -91,9 +91,10 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import json as json_util
 from homeassistant.util.file import write_utf8_file
 
-from tests.common import MockConfigEntry, async_capture_events
+from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
 from tests.typing import ClientSessionGenerator
 
 
@@ -562,6 +563,52 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 
     assert len(events) == 1
     assert events[0].data["data"] == update_callback_query["callback_query"]["data"]
+    assert isinstance(events[0].context, Context)
+
+
+@pytest.mark.parametrize(
+    ("attachment_type"),
+    [
+        ("photo"),
+        ("document"),
+    ],
+)
+async def test_webhook_endpoint_generates_telegram_attachment_event(
+    hass: HomeAssistant,
+    webhook_platform: None,
+    hass_client: ClientSessionGenerator,
+    mock_generate_secret_token: str,
+    attachment_type: str,
+) -> None:
+    """POST to the configured webhook endpoint and assert fired `telegram_attachment` event for photo and document."""
+    client = await hass_client()
+    events = async_capture_events(hass, "telegram_attachment")
+    update_message_attachment = await async_load_fixture(
+        hass, f"update_message_attachment_{attachment_type}.json", DOMAIN
+    )
+
+    response = await client.post(
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
+        data=update_message_attachment,
+        headers={
+            "X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token,
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status == 200
+    assert (await response.read()).decode("utf-8") == ""
+
+    # Make sure event has fired
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    loaded = json_util.json_loads(update_message_attachment)
+    if attachment_type == "photo":
+        expected_file_id = loaded["message"]["photo"][-1]["file_id"]
+    else:
+        expected_file_id = loaded["message"][attachment_type]["file_id"]
+
+    assert events[0].data["file_id"] == expected_file_id
     assert isinstance(events[0].context, Context)
 
 
