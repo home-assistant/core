@@ -1968,7 +1968,7 @@ class PipelineRuns:
             return
         if pipeline_runs := self._pipeline_runs.get(item_id):
             # Create a temporary list in case the list is modified while we iterate
-            for pipeline_run in list(pipeline_runs.values()):
+            for pipeline_run in pipeline_runs.values():
                 pipeline_run.abort_wake_word_detection = True
 
 
