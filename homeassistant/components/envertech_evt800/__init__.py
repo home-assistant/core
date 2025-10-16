@@ -16,13 +16,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: EnvertechEVT800ConfigEntry
 ) -> bool:
     """Set up Envertech EVT800 from a config entry."""
-
-    def on_data(data):
-        if entry.runtime_data:
-            entry.runtime_data.async_set_updated_data(data)
-
     evt800 = pyenvertechevt800.EnvertechEVT800(
-        entry.data[CONF_IP_ADDRESS], entry.data[CONF_PORT], on_data
+        entry.data[CONF_IP_ADDRESS], entry.data[CONF_PORT]
     )
     evt800.start()
 

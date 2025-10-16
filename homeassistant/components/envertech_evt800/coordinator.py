@@ -33,6 +33,7 @@ class EnvertechEVT800Coordinator(DataUpdateCoordinator):
             config_entry=config_entry,
         )
         self.client = client
+        client.set_data_listener(self.async_set_updated_data)
 
     async def _async_update_data(self) -> Any:
         """Fetch data from the device."""

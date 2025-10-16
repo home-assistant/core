@@ -7,5 +7,5 @@
   "iot_class": "local_polling",
   "loggers": ["pyenvertechevt800"],
   "quality_scale": "bronze",
-  "requirements": ["pyenvertechevt800==0.2.2"]
+  "requirements": ["pyenvertechevt800==0.2.4"]
 }

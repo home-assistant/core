@@ -1970,7 +1970,7 @@ pyemoncms==0.1.2
 pyenphase==2.3.0
 
 # homeassistant.components.envertech_evt800
-pyenvertechevt800==0.2.3
+pyenvertechevt800==0.2.4
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
