@@ -1151,7 +1151,7 @@ habiticalib==0.4.5
 habluetooth==5.7.0
 
 # homeassistant.components.hanna
-hanna-cloud==0.0.5
+hanna-cloud==0.0.6
 
 # homeassistant.components.cloud
 hass-nabucasa==1.3.0

@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/hanna",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["hanna-cloud==0.0.5"],
+  "requirements": ["hanna-cloud==0.0.6"],
   "single_config_entry": true
 }
