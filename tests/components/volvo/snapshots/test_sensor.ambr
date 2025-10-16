@@ -6228,6 +6228,82 @@
     'state': '30000',
   })
 # ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
 # name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_target_battery_charge_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
