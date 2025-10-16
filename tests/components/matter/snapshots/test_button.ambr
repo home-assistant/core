@@ -1024,7 +1024,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[fan][button.mocked_fan_switch_identify-entry]
+# name: test_buttons[fan][button.mocked_fan_switch_identify_fan-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1037,7 +1037,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.mocked_fan_switch_identify',
+    'entity_id': 'button.mocked_fan_switch_identify_fan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1049,7 +1049,7 @@
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (Fan)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1059,14 +1059,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[fan][button.mocked_fan_switch_identify-state]
+# name: test_buttons[fan][button.mocked_fan_switch_identify_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',
-      'friendly_name': 'Mocked Fan Switch Identify',
+      'friendly_name': 'Mocked Fan Switch Identify (Fan)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.mocked_fan_switch_identify',
+    'entity_id': 'button.mocked_fan_switch_identify_fan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2625,7 +2625,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[thermostat][button.longan_link_hvac_identify_north-entry]
+# name: test_buttons[thermostat][button.longan_link_hvac_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2638,7 +2638,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.longan_link_hvac_identify_north',
+    'entity_id': 'button.longan_link_hvac_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2650,7 +2650,7 @@
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify (North)',
+    'original_name': 'Identify',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2660,21 +2660,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[thermostat][button.longan_link_hvac_identify_north-state]
+# name: test_buttons[thermostat][button.longan_link_hvac_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',
-      'friendly_name': 'Longan link HVAC Identify (North)',
+      'friendly_name': 'Longan link HVAC Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.longan_link_hvac_identify_north',
+    'entity_id': 'button.longan_link_hvac_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[window_covering_pa_lift][button.longan_link_wncv_da01_identify_north-entry]
+# name: test_buttons[window_covering_pa_lift][button.longan_link_wncv_da01_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2687,7 +2687,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.longan_link_wncv_da01_identify_north',
+    'entity_id': 'button.longan_link_wncv_da01_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2699,7 +2699,7 @@
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify (North)',
+    'original_name': 'Identify',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2709,14 +2709,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[window_covering_pa_lift][button.longan_link_wncv_da01_identify_north-state]
+# name: test_buttons[window_covering_pa_lift][button.longan_link_wncv_da01_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',
-      'friendly_name': 'Longan link WNCV DA01 Identify (North)',
+      'friendly_name': 'Longan link WNCV DA01 Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.longan_link_wncv_da01_identify_north',
+    'entity_id': 'button.longan_link_wncv_da01_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

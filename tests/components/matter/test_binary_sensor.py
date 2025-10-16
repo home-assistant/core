@@ -354,7 +354,7 @@ async def test_thermostat_occupancy(
     matter_node: MatterNode,
 ) -> None:
     """Test thermostat occupancy."""
-    state = hass.states.get("binary_sensor.longan_link_hvac_occupancy_north")
+    state = hass.states.get("binary_sensor.longan_link_hvac_occupancy")
     assert state
     assert state.state == "on"
 
@@ -370,6 +370,6 @@ async def test_thermostat_occupancy(
     )
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("binary_sensor.longan_link_hvac_occupancy_north")
+    state = hass.states.get("binary_sensor.longan_link_hvac_occupancy")
     assert state
     assert state.state == "off"

@@ -38,6 +38,57 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
+# Due to variances in labeling implementations, labels are vendor and product specific.
+# This dictionary defines which labels to use for specific vendor/product combinations.
+# The keys are vendor IDs, the values are dictionaries with product IDs as keys
+# and lists of label names to use as values. If the value is None, no labels are used
+VENDOR_LABELING_LIST: dict[int, dict] = {
+    4874: {105: ["orientation"]},  # Eve Energy dual Outlet US
+    4961: {
+        1: ["label", "name", "button"],  # Inovelli VTM31
+        2: ["label", "devicetype", "button"],  # Inovelli VTM35
+        4: None,  # Inovelli VTM36
+        16: ["label", "name", "button"],  # Inovelli VTM30
+    },
+    65521: {32768: ["label"]},  # Home Assistant Mock device used in testing
+}
+
+# Default labeling list if vendor ID is not found or product ID not found for vendor
+DEFAULT_LABELING_LIST: list | None = None
+
+
+# Due to variances in tagging implementations, tags can be vendor and product specific.
+# This dictionary defines which labels to use for specific vendor/product combinations.
+# The keys are vendor IDs, the values are dictionaries with product IDs as keys
+# and lists of tags to use for a product. If the value is None, a default (complete) set is used
+VENDOR_TAGGING_LIST: dict[int, dict] = {
+    4961: {
+        1: [0x43],  # Inovelli VTM31
+        16: [0x43],  # Inovelli VTM30
+    },
+}
+
+# Default labeling list if vendor ID is not found or product ID not found for vendor
+DEFAULT_TAGGING_LIST: list | None = [
+    0x01,
+    0x02,
+    0x03,
+    0x04,
+    0x05,
+    0x06,
+    0x08,
+    0x11,
+    0x12,
+    0x0A,
+    0x10,
+    0x0E,
+    0x0F,
+    0x41,
+    0x42,
+    0x43,
+    0x07,  # Common Number Namespace (less informative than others, so search it last)
+]
+
 
 def catch_matter_error[_R, **P](
     func: Callable[Concatenate[MatterEntity, P], Coroutine[Any, Any, _R]],
@@ -65,61 +116,32 @@ class LabelPlacement(StrEnum):
     RENAME = "rename"
 
 
-@dataclass(frozen=True)
-class MatterEntityLabeling(EntityDescription):
+@dataclass(frozen=True, kw_only=True)
+class MatterEntityLabeling:
     """Data structure for Matter Tag and Label Information."""
 
-    # A label or tag can be used to modify an entity's name by appending the text
+    # A label can be used to modify an entity's name by appending the text
     # or replacing the name. This class holds the information needed to do that.
-
-    # Where to place the Tag or Label text in the entity name.
-    # Can be "rename", "append", "ignore". Append by default.
+    # Can be "RENAME", "APPEND", "IGNORE". APPEND is the default.
 
     label_placement: LabelPlacement = LabelPlacement.APPEND
 
-    # Priority-ordered default set of labels used for locating the name modifier
-    # Can override this set in an entity's discovery schema.
-    # Always uses lower case for matching.
-    default_label_list: tuple[str, ...] | None = (
-        "label",
-        "button",
-        "orientation",
-        "name",
-    )
-
-    # Priority-ordered default set of tags namespace IDs used for locating the name modifier
-    # Can override this set in an entity's discovery schema.
-    # Uses the numeric tag IDs as defined in the Matter specification.
-    default_tag_list: tuple[int, ...] | None = (
-        0x01,
-        0x02,
-        0x03,
-        0x04,
-        0x05,
-        0x06,
-        0x08,
-        0x11,
-        0x12,
-        0x0A,
-        0x10,
-        0x0E,
-        0x0F,
-        0x41,
-        0x42,
-        0x43,
-        0x07,  # Common Number Namespace (less informative than others, so search it last)
-    )
-
-    # When multiple tags or labels are matched, use the concatenator string to join them.
+    # When labels are matched, use the concatenator string to join them.
     # Examples: ", " or "-" or " " (space).
     # if set to None or empty string, then only the first match is used.
-    label_concatenator: str | None = ", "
+    label_concatenator: str | None = None
+    tag_concatenator: str | None = ", "
 
     # If both tags and labels are found, which one takes precedence.
     prefer_tags: bool = True
 
     def find_matching_labels(self, entity: MatterEntity) -> list[str]:
         """Find all labels for a Matter entity."""
+
+        device_info = entity._endpoint.device_info  # noqa: SLF001
+        labeling_list = VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
+            device_info.productID, DEFAULT_LABELING_LIST
+        )
 
         user_label_list: list[clusters.UserLabel.Structs.LabelStruct] = (
             entity.get_matter_attribute_value(clusters.UserLabel.Attributes.LabelList)
@@ -132,7 +154,7 @@ class MatterEntityLabeling(EntityDescription):
 
         found_labels: list[str] = [
             lbl.value
-            for label in self.default_label_list or []
+            for label in labeling_list or []
             for lbl in (*user_label_list, *fixed_label_list)
             if lbl.label.lower() == label.lower()
         ]
@@ -142,7 +164,12 @@ class MatterEntityLabeling(EntityDescription):
         """Find all tags for a Matter entity."""
 
         tags_as_text: list[str] = []
-        for namespace in self.default_tag_list or []:
+
+        device_info = entity._endpoint.device_info  # noqa: SLF001
+        tagging_list = VENDOR_TAGGING_LIST.get(device_info.vendorID, {}).get(
+            device_info.productID, DEFAULT_TAGGING_LIST
+        )
+        for namespace in tagging_list or []:
             for tag in (
                 entity.get_matter_attribute_value(
                     clusters.Descriptor.Attributes.TagList
@@ -162,8 +189,8 @@ class MatterEntityLabeling(EntityDescription):
         found_tags = self.find_matching_tags(entity)
         if self.prefer_tags and found_tags:
             return (
-                self.label_concatenator.join(found_tags)
-                if self.label_concatenator
+                self.tag_concatenator.join(found_tags)
+                if self.tag_concatenator
                 else found_tags[0]
             )
         if found_labels:
@@ -174,15 +201,15 @@ class MatterEntityLabeling(EntityDescription):
             )
         if not self.prefer_tags and found_tags:
             return (
-                self.label_concatenator.join(found_tags)
-                if self.label_concatenator
+                self.tag_concatenator.join(found_tags)
+                if self.tag_concatenator
                 else found_tags[0]
             )
         return None
 
 
-@dataclass(frozen=True)
-class MatterEntityDescription(MatterEntityLabeling):
+@dataclass(frozen=True, kw_only=True)
+class MatterEntityDescription(MatterEntityLabeling, EntityDescription):
     """Describe the Matter entity."""
 
     # convert the value from the primary attribute to the value used by HA
