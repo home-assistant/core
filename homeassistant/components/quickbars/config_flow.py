@@ -8,24 +8,14 @@ from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError
 from quickbars_bridge import QuickBarsClient
-from quickbars_bridge.events import ws_entities_replace, ws_get_snapshot, ws_ping
-from quickbars_bridge.hass_flow import (
-    ALLOWED_ENTITY_DOMAINS,
-    decode_zeroconf,
-    default_ha_url,
-    map_entity_display_names,
-    schema_expose,
-    schema_token,
-)
+from quickbars_bridge.hass_flow import decode_zeroconf, default_ha_url, schema_token
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
-from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import get_url
-from homeassistant.helpers.selector import selector
 
 from .constants import DOMAIN
 
@@ -260,100 +250,3 @@ class QuickBarsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._pair_sid = resp.get("sid")
 
         return await self.async_step_pair()
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Expose per-entry options flow so the Configure button appears."""
-        return QuickBarsOptionsFlow()
-
-
-class QuickBarsOptionsFlow(OptionsFlow):
-    """Options flow for QuickBars."""
-
-    def __init__(self) -> None:
-        """Initialize options flow."""
-        self._snapshot: dict[str, Any] | None = None  # latest snapshot from TV
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Initialize the options flow: check connectivity and pull a snapshot."""
-        eid = self.config_entry.data.get("id")
-
-        # 1) Quick connectivity check
-        try:
-            ok = await ws_ping(self.hass, self.config_entry, timeout=5.0)
-            if not ok:
-                return self.async_show_form(
-                    step_id="expose",
-                    data_schema=schema_expose([]),
-                    errors={"base": "tv_unreachable"},
-                )
-        except Exception:
-            _LOGGER.exception("Options:init ws_ping raised")
-            return self.async_show_form(
-                step_id="expose",
-                data_schema=schema_expose([]),
-                errors={"base": "tv_unreachable"},
-            )
-
-        # 2) Only then pull the snapshot
-        try:
-            _LOGGER.debug("options:init -> ws_get_snapshot start (expect id=%s)", eid)
-            self._snapshot = await ws_get_snapshot(
-                self.hass, self.config_entry, timeout=15.0
-            )
-        except Exception:
-            _LOGGER.exception("Options:init ws_get_snapshot raised")
-            return self.async_show_form(
-                step_id="expose",
-                data_schema=schema_expose([]),
-                errors={"base": "tv_unreachable"},
-            )
-
-        # Go directly to expose step - we're simplifying the flow by removing the menu
-        return await self.async_step_expose()
-
-    # ---------- Export/remove saved entities ----------
-    async def async_step_expose(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Select and save the set of 'saved' entities in the TV app."""
-        entities: list[dict[str, Any]] = list(
-            (self._snapshot or {}).get("entities", [])
-        )
-        saved_ids = [e.get("id") for e in entities if e.get("id")]
-
-        if user_input is None:
-            schema = schema_expose(saved_ids)
-            return self.async_show_form(step_id="expose", data_schema=schema)
-
-        # Build replacement list
-        selected: list[str] = list(user_input.get("saved") or [])
-
-        try:
-            names = map_entity_display_names(self.hass, selected)
-
-            # Call the helper; no JSON viewer on success, just close.
-            await ws_entities_replace(
-                self.hass, self.config_entry, selected, names=names, timeout=25.0
-            )
-            return self.async_create_entry(
-                title="", data=dict(self.config_entry.options)
-            )
-
-        except Exception:
-            _LOGGER.exception("Entities_replace failed")
-            schema = vol.Schema(
-                {
-                    vol.Required("saved", default=selected): selector(
-                        {"entity": {"multiple": True, "domain": ALLOWED_ENTITY_DOMAINS}}
-                    )
-                }
-            )
-            return self.async_show_form(
-                step_id="expose",
-                data_schema=schema,
-                errors={"base": "tv_unreachable"},
-            )

@@ -12,7 +12,6 @@ from aiohttp import ClientError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -66,24 +65,6 @@ def patch_client_all():
         )
         inst.set_credentials = AsyncMock(return_value={"ok": True})
         yield inst
-
-
-async def _loaded_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Create and load a config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="QB",
-        unique_id="QB-1234",
-        data={CONF_HOST: "192.0.2.10", CONF_PORT: 9123, "id": "QB-1234"},
-    )
-    entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.quickbars.async_setup_entry", return_value=True
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.LOADED
-    return entry
 
 
 def create_zc_stub(ip="192.0.2.20", port=9123, props=None):
@@ -493,111 +474,3 @@ async def test_zeroconf_error_cases(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM and result["step_id"] == "user"
         errors = result["errors"]
         assert errors is not None and errors["base"] == "tv_unreachable"
-
-
-# ---------------------------------------------------------------------------
-# OPTIONS FLOW TESTS
-# ---------------------------------------------------------------------------
-
-
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test options flow success and error cases."""
-    entry = await _loaded_entry(hass)
-    snapshot = {
-        "entities": [{"id": "light.kitchen", "isSaved": True}],
-        "quick_bars": [{"name": "Main"}],
-    }
-
-    # Case 1: TV unreachable at init (ping fails)
-    with patch(
-        "homeassistant.components.quickbars.config_flow.ws_ping",
-        AsyncMock(return_value=False),
-    ):
-        res = await hass.config_entries.options.async_init(entry.entry_id)
-        assert res["type"] is FlowResultType.FORM and res["step_id"] == "expose"
-        errors = res["errors"]
-        assert errors is not None and errors["base"] == "tv_unreachable"
-
-    # Case 2: TV unreachable at init (ping exception)
-    with patch(
-        "homeassistant.components.quickbars.config_flow.ws_ping",
-        AsyncMock(side_effect=Exception("boom")),
-    ):
-        res = await hass.config_entries.options.async_init(entry.entry_id)
-        assert res["type"] is FlowResultType.FORM and res["step_id"] == "expose"
-        errors = res["errors"]
-        assert errors is not None and errors["base"] == "tv_unreachable"
-
-    # Case 3: TV unreachable at init (snapshot exception)
-    with (
-        patch(
-            "homeassistant.components.quickbars.config_flow.ws_ping",
-            AsyncMock(return_value=True),
-        ),
-        patch(
-            "homeassistant.components.quickbars.config_flow.ws_get_snapshot",
-            AsyncMock(side_effect=Exception("down")),
-        ),
-    ):
-        res = await hass.config_entries.options.async_init(entry.entry_id)
-        assert res["type"] is FlowResultType.FORM and res["step_id"] == "expose"
-        errors = res["errors"]
-        assert errors is not None and errors["base"] == "tv_unreachable"
-
-    # Case 4: Expose error during entity update
-    with (
-        patch(
-            "homeassistant.components.quickbars.config_flow.ws_ping",
-            AsyncMock(return_value=True),
-        ),
-        patch(
-            "homeassistant.components.quickbars.config_flow.ws_get_snapshot",
-            AsyncMock(return_value=snapshot),
-        ),
-    ):
-        res = await hass.config_entries.options.async_init(entry.entry_id)
-        assert res["type"] is FlowResultType.FORM and res["step_id"] == "expose"
-
-    with (
-        patch(
-            "homeassistant.components.quickbars.config_flow.map_entity_display_names",
-            side_effect=lambda hass, ids: {i: i for i in ids},
-        ),
-        patch(
-            "homeassistant.components.quickbars.config_flow.ws_entities_replace",
-            AsyncMock(side_effect=Exception("down")),
-        ),
-    ):
-        res = await hass.config_entries.options.async_configure(
-            res["flow_id"], user_input={"saved": ["light.kitchen"]}
-        )
-        assert res["type"] is FlowResultType.FORM and res["step_id"] == "expose"
-        errors = res["errors"]
-        assert errors is not None and errors["base"] == "tv_unreachable"
-
-    # Case 5: Successful flow
-    with (
-        patch(
-            "homeassistant.components.quickbars.config_flow.ws_ping",
-            AsyncMock(return_value=True),
-        ),
-        patch(
-            "homeassistant.components.quickbars.config_flow.ws_get_snapshot",
-            AsyncMock(return_value=snapshot),
-        ),
-        patch(
-            "homeassistant.components.quickbars.config_flow.map_entity_display_names",
-            side_effect=lambda hass, ids: {i: f"Friendly {i}" for i in ids},
-        ),
-        patch(
-            "homeassistant.components.quickbars.config_flow.ws_entities_replace",
-            AsyncMock(return_value=True),
-        ),
-    ):
-        res = await hass.config_entries.options.async_init(entry.entry_id)
-        assert res["type"] is FlowResultType.FORM and res["step_id"] == "expose"
-
-        res = await hass.config_entries.options.async_configure(
-            res["flow_id"], user_input={"saved": ["light.kitchen", "switch.fan"]}
-        )
-        assert res["type"] is FlowResultType.CREATE_ENTRY

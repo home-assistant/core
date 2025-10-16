@@ -7,10 +7,8 @@ from dataclasses import dataclass
 from functools import partial
 import logging
 import secrets
-from typing import Any
 
 from quickbars_bridge.hass_helpers import build_notify_payload
-import voluptuous as vol
 from zeroconf import ServiceStateChange
 from zeroconf.asyncio import AsyncServiceBrowser
 
@@ -22,25 +20,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .constants import (
-    ATTR_ALIAS,
-    ATTR_AUTO_HIDE,
-    ATTR_CAMERA_ALIAS,
-    ATTR_CAMERA_ENTITY,
-    ATTR_DEVICE_ID,
-    ATTR_HEIGHT,
-    ATTR_POSITION,
-    ATTR_RTSP_URL,
-    ATTR_SHOW_TITLE,
-    ATTR_SIZE,
-    ATTR_SIZE_PX,
-    ATTR_WIDTH,
-    DOMAIN,
-    EVENT_NAME,
-    POS_CHOICES,
-    SERVICE_TYPE,
-    SIZE_CHOICES,
-)
+from .constants import ATTR_DEVICE_ID, DOMAIN, SERVICE_TYPE
 from .coordinator import QuickBarsCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -59,45 +39,6 @@ class QuickBarsRuntime:
     presence: _Presence
     coordinator: QuickBarsCoordinator
     unsub_action: Callable[[], None] | None
-
-
-# ----- Service Schemas -----
-QUICKBAR_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ALIAS): cv.string,
-        vol.Optional(ATTR_DEVICE_ID): cv.string,
-    }
-)
-
-CAMERA_SCHEMA = vol.Schema(
-    {
-        # Exactly one of these:
-        vol.Exclusive(ATTR_CAMERA_ALIAS, "cam_id"): cv.string,
-        vol.Exclusive(ATTR_CAMERA_ENTITY, "cam_id"): cv.entity_id,
-        vol.Optional(ATTR_RTSP_URL): cv.string,
-        # Optional rendering options
-        vol.Optional(ATTR_POSITION): vol.In(POS_CHOICES),
-        # Either preset size OR custom size in px
-        vol.Exclusive(ATTR_SIZE, "cam_size"): vol.In(SIZE_CHOICES),
-        vol.Exclusive(ATTR_SIZE_PX, "cam_size"): vol.Schema(
-            {
-                vol.Required(ATTR_WIDTH): vol.All(
-                    vol.Coerce(int), vol.Range(min=48, max=3840)
-                ),
-                vol.Required(ATTR_HEIGHT): vol.All(
-                    vol.Coerce(int), vol.Range(min=48, max=2160)
-                ),
-            }
-        ),
-        # Auto-hide in seconds: 0 = never, 15..300 otherwise
-        vol.Optional(ATTR_AUTO_HIDE, default=30): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=300)
-        ),
-        # Show title overlay?
-        vol.Optional(ATTR_SHOW_TITLE, default=True): cv.boolean,
-        vol.Optional(ATTR_DEVICE_ID): cv.string,
-    }
-)
 
 
 class _Presence:
@@ -209,72 +150,6 @@ def _entry_for_device(
     return None  # ambiguous or none configured
 
 
-async def _handle_quickbar(hass: HomeAssistant, call: ServiceCall) -> None:
-    """Service handler for quickbar_toggle."""
-    data: dict[str, Any] = {ATTR_ALIAS: call.data[ATTR_ALIAS]}
-    target_device_id = call.data.get(ATTR_DEVICE_ID)
-    if target_device_id:
-        ent = _entry_for_device(hass, target_device_id)
-        if ent:
-            data[CONF_ID] = ent.data.get(CONF_ID) or ent.unique_id or ent.entry_id
-    hass.bus.async_fire(EVENT_NAME, data)
-
-
-async def _handle_camera(hass: HomeAssistant, call: ServiceCall) -> None:
-    """Service handler for camera_toggle."""
-    data: dict[str, Any] = {}
-
-    # optional device targeting
-    target_device_id = call.data.get(ATTR_DEVICE_ID)
-    if target_device_id:
-        ent = _entry_for_device(hass, target_device_id)
-        if ent:
-            data[CONF_ID] = ent.data.get(CONF_ID) or ent.unique_id or ent.entry_id
-
-    # id/alias
-    alias = call.data.get(ATTR_CAMERA_ALIAS)
-    entity = call.data.get(ATTR_CAMERA_ENTITY)
-    if alias:
-        data[ATTR_CAMERA_ALIAS] = alias
-    if entity:
-        data[ATTR_CAMERA_ENTITY] = entity
-
-    data[ATTR_RTSP_URL] = call.data.get(ATTR_RTSP_URL)
-
-    # options
-    pos = call.data.get(ATTR_POSITION)
-    if pos in POS_CHOICES:
-        data[ATTR_POSITION] = pos
-
-    if ATTR_SIZE in call.data:
-        data[ATTR_SIZE] = call.data[ATTR_SIZE]  # small|medium|large
-    elif ATTR_SIZE_PX in call.data:
-        sp = call.data[ATTR_SIZE_PX] or {}
-        try:
-            width_val = sp.get(ATTR_WIDTH)
-            height_val = sp.get(ATTR_HEIGHT)
-            if width_val is not None and height_val is not None:
-                w = int(width_val)
-                h = int(height_val)
-                if w > 0 and h > 0:
-                    data[ATTR_SIZE_PX] = {ATTR_WIDTH: w, ATTR_HEIGHT: h}
-        except (TypeError, ValueError):
-            # ignore invalid size objects
-            pass
-
-    auto_hide = call.data.get(ATTR_AUTO_HIDE)
-    if isinstance(auto_hide, int):
-        if auto_hide != 0 and auto_hide < 5:
-            auto_hide = 5
-        data[ATTR_AUTO_HIDE] = auto_hide
-
-    show_title = call.data.get(ATTR_SHOW_TITLE)
-    if isinstance(show_title, bool):
-        data[ATTR_SHOW_TITLE] = show_title
-
-    hass.bus.async_fire(EVENT_NAME, data)
-
-
 async def _svc_notify(hass: HomeAssistant, call: ServiceCall) -> None:
     """Service handler for notify."""
     target_device_id = call.data.get(ATTR_DEVICE_ID)
@@ -306,13 +181,6 @@ async def _svc_notify(hass: HomeAssistant, call: ServiceCall) -> None:
 
 async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
     """Register global service actions so they exist even without entries."""
-    hass.services.async_register(
-        DOMAIN, "quickbar_toggle", partial(_handle_quickbar, hass), QUICKBAR_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, "camera_toggle", partial(_handle_camera, hass), CAMERA_SCHEMA
-    )
-    # Note: no voluptuous schema for notify (by design)
     hass.services.async_register(DOMAIN, "notify", partial(_svc_notify, hass))
     return True
 
