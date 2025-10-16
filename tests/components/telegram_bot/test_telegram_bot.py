@@ -283,6 +283,93 @@ async def test_send_message_with_inline_keyboard(
     assert (response["chats"][0]["message_id"]) == 12345
 
 
+async def test_send_sticker_partial_error(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test the send_sticker service with multiple targets."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.load_data",
+        ) as mock_load_data,
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.send_sticker"
+        ) as mock_send_sticker,
+    ):
+        mock_send_sticker.side_effect = NetworkError("mock network error")
+
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_SEND_STICKER,
+                {
+                    ATTR_URL: "https://mock_sticker_url",
+                    ATTR_TARGET: [123456, 654321],
+                },
+                blocking=True,
+                return_response=True,
+            )
+
+    await hass.async_block_till_done()
+
+    assert mock_load_data.call_count == 1
+    assert mock_send_sticker.call_count == 2
+    assert err.value.translation_key == "failed_chat_ids"
+    assert err.value.args[0] == "Failed targets: [123456, 654321]"
+
+
+async def test_send_sticker_error(hass: HomeAssistant, webhook_platform) -> None:
+    """Test the send_message service with an error."""
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.send_sticker",
+    ) as mock_bot:
+        mock_bot.side_effect = NetworkError("mock network error")
+
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_SEND_STICKER,
+                {
+                    ATTR_STICKER_ID: "mock sticker id",
+                },
+                blocking=True,
+            )
+
+    await hass.async_block_till_done()
+
+    mock_bot.assert_called_once()
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "action_failed"
+
+
+async def test_send_message_with_invalid_inline_keyboard(
+    hass: HomeAssistant,
+    webhook_platform,
+) -> None:
+    """Test the send_message service with invalid inline keyboard."""
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_MESSAGE: "test_message",
+                ATTR_KEYBOARD_INLINE: 1,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    await hass.async_block_till_done()
+    assert err.value.translation_key == "invalid_inline_keyboard"
+
+
 @patch(
     "builtins.open",
     mock_open(

@@ -44,13 +44,12 @@ from .conftest import make_async_get_data_side_effect
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-SENSORS_DEFAULT = [*SENSORS_BYTES, *SENSORS_RATES]
+SENSORS_DEFAULT = [*SENSORS_BYTES, *SENSORS_LOAD_AVG, *SENSORS_RATES]
 
-SENSORS_ALL_LEGACY = [*SENSORS_DEFAULT, *SENSORS_LOAD_AVG, *SENSORS_TEMPERATURES_LEGACY]
+SENSORS_ALL_LEGACY = [*SENSORS_DEFAULT, *SENSORS_TEMPERATURES_LEGACY]
 SENSORS_ALL_HTTP = [
-    *SENSORS_DEFAULT,
     *SENSORS_CPU,
-    *SENSORS_LOAD_AVG,
+    *SENSORS_DEFAULT,
     *SENSORS_MEMORY,
     *SENSORS_TEMPERATURES,
     *SENSORS_UPTIME,
@@ -148,6 +147,9 @@ async def _test_sensors(
     assert hass.states.get(f"{sensor_prefix}_sensor_tx_rates").state == "80.0"
     assert hass.states.get(f"{sensor_prefix}_sensor_tx_bytes").state == "50.0"
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
+    assert hass.states.get(f"{sensor_prefix}_sensor_load_avg1").state == "1.1"
+    assert hass.states.get(f"{sensor_prefix}_sensor_load_avg5").state == "1.2"
+    assert hass.states.get(f"{sensor_prefix}_sensor_load_avg15").state == "1.3"
 
     # remove first tracked device
     mock_devices.pop(MOCK_MACS[0])
@@ -609,13 +611,17 @@ async def test_decorator_errors(
     mock_available_temps,
 ) -> None:
     """Test AsusWRT sensors are unavailable on decorator type check error."""
-    sensors = [*SENSORS_BYTES, *SENSORS_TEMPERATURES_LEGACY]
+    sensors = SENSORS_ALL_LEGACY
     config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_TELNET, sensors)
     config_entry.add_to_hass(hass)
 
     mock_available_temps[1] = True
     connect_legacy.return_value.async_get_bytes_total.return_value = -1
+    connect_legacy.return_value.async_get_current_transfer_rates.return_value = (
+        "bad_response"
+    )
     connect_legacy.return_value.async_get_temperature.return_value = -1
+    connect_legacy.return_value.async_get_loadavg.return_value = -1
 
     # initial devices setup
     assert await hass.config_entries.async_setup(config_entry.entry_id)
