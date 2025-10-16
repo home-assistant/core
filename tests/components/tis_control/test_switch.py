@@ -1,5 +1,6 @@
 """Tests for the TIS Control switch platform."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -11,7 +12,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    STATE_UNKNOWN,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 
@@ -29,16 +30,7 @@ ENTITY_ID = f"{SWITCH_DOMAIN}.test_switch"
 
 
 @pytest.fixture
-def mock_tis_api() -> MagicMock:
-    """Fixture for a mock TISApi object."""
-    api = MagicMock()
-    # Mock the async_get_switches method within the API object.
-    api.async_get_switches = AsyncMock(return_value=[MOCK_SWITCH_DATA])
-    return api
-
-
-@pytest.fixture
-async def setup_mock_switch(hass: HomeAssistant) -> MagicMock:
+async def setup_mock_switch(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
     """Set up the TIS integration with a single mock switch and return the mock API instance."""
     # Patch the main TISApi class from the integration's `__init__.py`.
     with (
@@ -80,7 +72,7 @@ async def setup_mock_switch(hass: HomeAssistant) -> MagicMock:
         # Patch the function that discovers switches.
         with patch(
             "homeassistant.components.tis_control.switch.async_get_switches",
-            return_value=[MOCK_SWITCH_DATA],
+            new=AsyncMock(return_value=[MOCK_SWITCH_DATA]),
         ):
             # Load the integration and its platforms.
             await hass.config_entries.async_setup(entry.entry_id)
@@ -124,7 +116,7 @@ async def test_setup_no_switches(hass: HomeAssistant) -> None:
         # Patch the switch discovery function to return an empty list.
         with patch(
             "homeassistant.components.tis_control.switch.async_get_switches",
-            return_value=[],
+            new=AsyncMock(return_value=[]),
         ) as mock_get_switches:
             # Setup the config entry, which will now use our mock TISApi.
             assert await hass.config_entries.async_setup(entry.entry_id)
@@ -143,7 +135,7 @@ async def test_turn_on_service(
     """Test the turn_on service call."""
     mock_api = setup_mock_switch
 
-    # --- Test 1: Successful turn_on ---
+    # Successful turn_on
     mock_api.turn_switch_on.return_value = True
 
     # Call the turn_on service.
@@ -155,7 +147,7 @@ async def test_turn_on_service(
     mock_api.turn_switch_on.assert_awaited_once()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
-    # --- Test 2: Failed turn_on (device offline) ---
+    # Failed turn_on (device offline)
     mock_api.turn_switch_on.reset_mock()
     mock_api.turn_switch_on.return_value = False
 
@@ -165,7 +157,7 @@ async def test_turn_on_service(
 
     # Verify the API method was called and state becomes unavailable.
     mock_api.turn_switch_on.assert_awaited_once()
-    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_turn_off_service(
@@ -174,7 +166,7 @@ async def test_turn_off_service(
     """Test the turn_off service call."""
     mock_api = setup_mock_switch
 
-    # --- Test 1: Successful turn_off ---
+    # Successful turn_off
     mock_api.turn_switch_off.return_value = True
 
     await hass.services.async_call(
@@ -184,7 +176,7 @@ async def test_turn_off_service(
     mock_api.turn_switch_off.assert_awaited_once()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    # --- Test 2: Failed turn_off ---
+    # Failed turn_off
     mock_api.turn_switch_off.reset_mock()
     mock_api.turn_switch_off.return_value = False
 
@@ -193,7 +185,7 @@ async def test_turn_off_service(
     )
 
     mock_api.turn_switch_off.assert_awaited_once()
-    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_state_updates_from_callback(
@@ -207,7 +199,7 @@ async def test_state_updates_from_callback(
     callback = mock_api.register_callback.call_args[0][0]
     assert callable(callback)
 
-    # --- Test 1: Device turns ON ---
+    # Device turns ON
     # Simulate the API object's internal state changing to ON.
     mock_api.is_on = True
 
@@ -216,14 +208,14 @@ async def test_state_updates_from_callback(
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
-    # --- Test 2: Device turns OFF ---
+    # Device turns OFF
     mock_api.is_on = False
     callback()
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    # --- Test 3: Device goes OFFLINE ---
+    # Device goes OFFLINE
     mock_api.is_on = None
     callback()
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
