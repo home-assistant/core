@@ -11,7 +11,7 @@ from airos.exceptions import (
 import pytest
 
 from homeassistant.components.airos.const import DOMAIN, SECTION_ADVANCED_SETTINGS
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -26,6 +26,7 @@ from tests.common import MockConfigEntry
 
 NEW_PASSWORD = "new_password"
 REAUTH_STEP = "reauth_confirm"
+RECONFIGURE_STEP = "reconfigure"
 
 MOCK_CONFIG = {
     CONF_HOST: "1.1.1.1",
@@ -137,17 +138,46 @@ async def test_form_exception_handling(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_reauth_flow_scenario(
+    hass: HomeAssistant,
+    mock_airos_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful reauthentication."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_airos_client.login.side_effect = AirOSConnectionAuthenticationError
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == REAUTH_STEP
+
+    mock_airos_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"],
+        user_input={CONF_PASSWORD: NEW_PASSWORD},
+    )
+
+    # Always test resolution
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert updated_entry.data[CONF_PASSWORD] == NEW_PASSWORD
+
+
 @pytest.mark.parametrize(
     ("reauth_exception", "expected_error"),
     [
-        (None, None),
         (AirOSConnectionAuthenticationError, "invalid_auth"),
         (AirOSDeviceConnectionError, "cannot_connect"),
         (AirOSKeyDataMissingError, "key_data_missing"),
         (Exception, "unknown"),
     ],
     ids=[
-        "reauth_succes",
         "invalid_auth",
         "cannot_connect",
         "key_data_missing",
@@ -180,19 +210,16 @@ async def test_reauth_flow_scenarios(
         user_input={CONF_PASSWORD: NEW_PASSWORD},
     )
 
-    if expected_error:
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == REAUTH_STEP
-        assert result["errors"] == {"base": expected_error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == REAUTH_STEP
+    assert result["errors"] == {"base": expected_error}
 
-        # Retry
-        mock_airos_client.login.side_effect = None
-        result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            user_input={CONF_PASSWORD: NEW_PASSWORD},
-        )
+    mock_airos_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"],
+        user_input={CONF_PASSWORD: NEW_PASSWORD},
+    )
 
-    # Always test resolution
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
@@ -227,3 +254,151 @@ async def test_reauth_unique_id_mismatch(
 
     updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert updated_entry.data[CONF_PASSWORD] != NEW_PASSWORD
+
+
+async def test_successful_reconfigure(
+    hass: HomeAssistant,
+    mock_airos_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful reconfigure."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == RECONFIGURE_STEP
+
+    user_input = {
+        CONF_PASSWORD: NEW_PASSWORD,
+        SECTION_ADVANCED_SETTINGS: {
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert updated_entry.data[CONF_PASSWORD] == NEW_PASSWORD
+    assert updated_entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL] is True
+    assert updated_entry.data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL] is True
+
+    assert updated_entry.data[CONF_HOST] == MOCK_CONFIG[CONF_HOST]
+    assert updated_entry.data[CONF_USERNAME] == MOCK_CONFIG[CONF_USERNAME]
+
+
+@pytest.mark.parametrize(
+    ("reconfigure_exception", "expected_error"),
+    [
+        (AirOSConnectionAuthenticationError, "invalid_auth"),
+        (AirOSDeviceConnectionError, "cannot_connect"),
+        (AirOSKeyDataMissingError, "key_data_missing"),
+        (Exception, "unknown"),
+    ],
+    ids=[
+        "invalid_auth",
+        "cannot_connect",
+        "key_data_missing",
+        "unknown",
+    ],
+)
+async def test_reconfigure_flow_failure(
+    hass: HomeAssistant,
+    mock_airos_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    reconfigure_exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test reconfigure from start (failure) to finish (success)."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
+    )
+
+    user_input = {
+        CONF_PASSWORD: NEW_PASSWORD,
+        SECTION_ADVANCED_SETTINGS: {
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    }
+
+    mock_airos_client.login.side_effect = reconfigure_exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == RECONFIGURE_STEP
+    assert result["errors"] == {"base": expected_error}
+
+    mock_airos_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert updated_entry.data[CONF_PASSWORD] == NEW_PASSWORD
+
+
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_airos_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration failure when the unique ID changes."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
+    )
+    flow_id = result["flow_id"]
+
+    mock_airos_client.status.return_value.derived.mac = "FF:23:45:67:89:AB"
+
+    user_input = {
+        CONF_PASSWORD: NEW_PASSWORD,
+        SECTION_ADVANCED_SETTINGS: {
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+    updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert updated_entry.data[CONF_PASSWORD] == MOCK_CONFIG[CONF_PASSWORD]
+    assert (
+        updated_entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL]
+        == MOCK_CONFIG[SECTION_ADVANCED_SETTINGS][CONF_SSL]
+    )

@@ -1,7 +1,7 @@
 """Test the Home Assistant Connect ZBT-2 config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
@@ -10,14 +10,19 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
 )
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_notify_firmware_info,
+)
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
 )
+from homeassistant.components.usb import USBDevice
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
+from homeassistant.setup import async_setup_component
 
 from .common import USB_DATA_ZBT2
 
@@ -72,6 +77,13 @@ async def test_config_flow_zigbee(
         step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
+        self._probed_firmware_info = FirmwareInfo(
+            device=usb_data.device,
+            firmware_type=expected_installed_firmware_type,
+            firmware_version=fw_version,
+            owners=[],
+            source="probe",
+        )
         return await getattr(self, f"async_step_{next_step_id}")()
 
     with (
@@ -79,16 +91,6 @@ async def test_config_flow_zigbee(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._install_firmware_step",
             autospec=True,
             side_effect=mock_install_firmware_step,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
-            return_value=FirmwareInfo(
-                device=usb_data.device,
-                firmware_type=fw_type,
-                firmware_version=fw_version,
-                owners=[],
-                source="probe",
-            ),
         ),
     ):
         pick_result = await hass.config_entries.flow.async_configure(
@@ -157,6 +159,13 @@ async def test_config_flow_thread(
         step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
+        self._probed_firmware_info = FirmwareInfo(
+            device=usb_data.device,
+            firmware_type=expected_installed_firmware_type,
+            firmware_version=fw_version,
+            owners=[],
+            source="probe",
+        )
         return await getattr(self, f"async_step_{next_step_id}")()
 
     with (
@@ -164,16 +173,6 @@ async def test_config_flow_thread(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._install_firmware_step",
             autospec=True,
             side_effect=mock_install_firmware_step,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
-            return_value=FirmwareInfo(
-                device=usb_data.device,
-                firmware_type=fw_type,
-                firmware_version=fw_version,
-                owners=[],
-                source="probe",
-            ),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -249,16 +248,18 @@ async def test_options_flow(
     assert description_placeholders["firmware_type"] == "spinel"
     assert description_placeholders["model"] == model
 
-    async def mock_install_firmware_step(
-        self,
-        fw_update_url: str,
-        fw_type: str,
-        firmware_name: str,
-        expected_installed_firmware_type: ApplicationType,
-        step_id: str,
-        next_step_id: str,
-    ) -> ConfigFlowResult:
-        return await getattr(self, f"async_step_{next_step_id}")()
+    mock_update_client = AsyncMock()
+    mock_manifest = Mock()
+    mock_firmware = Mock()
+    mock_firmware.filename = "zbt2_zigbee_ncp_7.4.4.0.gbl"
+    mock_firmware.metadata = {
+        "ezsp_version": "7.4.4.0",
+        "fw_type": "zbt2_zigbee_ncp",
+        "metadata_version": 2,
+    }
+    mock_manifest.firmwares = [mock_firmware]
+    mock_update_client.async_update_data.return_value = mock_manifest
+    mock_update_client.async_fetch_firmware.return_value = b"firmware_data"
 
     with (
         patch(
@@ -266,12 +267,11 @@ async def test_options_flow(
             return_value=[],
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow._install_firmware_step",
-            autospec=True,
-            side_effect=mock_install_firmware_step,
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.FirmwareUpdateClient",
+            return_value=mock_update_client,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.async_flash_silabs_firmware",
             return_value=FirmwareInfo(
                 device=usb_data.device,
                 firmware_type=ApplicationType.EZSP,
@@ -279,6 +279,30 @@ async def test_options_flow(
                 owners=[],
                 source="probe",
             ),
+        ) as flash_mock,
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
+            side_effect=[
+                # First call: probe before installation (returns current SPINEL firmware)
+                FirmwareInfo(
+                    device=usb_data.device,
+                    firmware_type=ApplicationType.SPINEL,
+                    firmware_version="2.4.4.0",
+                    owners=[],
+                    source="probe",
+                ),
+                # Second call: probe after installation (returns new EZSP firmware)
+                FirmwareInfo(
+                    device=usb_data.device,
+                    firmware_type=ApplicationType.EZSP,
+                    firmware_version="7.4.4.0 build 0",
+                    owners=[],
+                    source="probe",
+                ),
+            ],
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
         ),
     ):
         pick_result = await hass.config_entries.options.async_configure(
@@ -306,6 +330,10 @@ async def test_options_flow(
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+
+    # Verify async_flash_silabs_firmware was called with ZBT-2's reset methods
+    assert flash_mock.call_count == 1
+    assert flash_mock.mock_calls[0].kwargs["bootloader_reset_methods"] == ["rts_dtr"]
 
 
 async def test_duplicate_discovery(hass: HomeAssistant) -> None:
@@ -359,3 +387,122 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
     assert result["reason"] == "already_configured"
 
     assert config_entry.data["device"] == USB_DATA_ZBT2.device
+
+
+async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None:
+    """Test that firmware notification triggers import flow that auto-creates config entry."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, "usb", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=USB_DATA_ZBT2
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "pick_firmware"
+
+    usb_device = USBDevice(
+        device=USB_DATA_ZBT2.device,
+        vid=USB_DATA_ZBT2.vid,
+        pid=USB_DATA_ZBT2.pid,
+        serial_number=USB_DATA_ZBT2.serial_number,
+        manufacturer=USB_DATA_ZBT2.manufacturer,
+        description=USB_DATA_ZBT2.description,
+    )
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.helpers.usb_device_from_path",
+        return_value=usb_device,
+    ):
+        await async_notify_firmware_info(
+            hass,
+            "zha",
+            FirmwareInfo(
+                device=USB_DATA_ZBT2.device,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version="7.4.4.0",
+                owners=[],
+                source="zha",
+            ),
+        )
+
+        await hass.async_block_till_done()
+
+    # The config entry was auto-created
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data == {
+        "device": USB_DATA_ZBT2.device,
+        "firmware": ApplicationType.EZSP.value,
+        "firmware_version": "7.4.4.0",
+        "vid": USB_DATA_ZBT2.vid,
+        "pid": USB_DATA_ZBT2.pid,
+        "serial_number": USB_DATA_ZBT2.serial_number,
+        "manufacturer": USB_DATA_ZBT2.manufacturer,
+        "product": USB_DATA_ZBT2.description,
+    }
+
+    # The discovery flow is gone
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+async def test_firmware_callback_updates_existing_entry(hass: HomeAssistant) -> None:
+    """Test that firmware notification updates existing config entry device path."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, "usb", {})
+
+    # Create existing config entry with old device path
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "firmware": ApplicationType.EZSP.value,
+            "firmware_version": "7.4.4.0",
+            "device": "/dev/oldpath",
+            "vid": USB_DATA_ZBT2.vid,
+            "pid": USB_DATA_ZBT2.pid,
+            "serial_number": USB_DATA_ZBT2.serial_number,
+            "manufacturer": USB_DATA_ZBT2.manufacturer,
+            "product": USB_DATA_ZBT2.description,
+        },
+        unique_id=(
+            f"{USB_DATA_ZBT2.vid}:{USB_DATA_ZBT2.pid}_"
+            f"{USB_DATA_ZBT2.serial_number}_"
+            f"{USB_DATA_ZBT2.manufacturer}_"
+            f"{USB_DATA_ZBT2.description}"
+        ),
+    )
+    config_entry.add_to_hass(hass)
+
+    usb_device = USBDevice(
+        device=USB_DATA_ZBT2.device,
+        vid=USB_DATA_ZBT2.vid,
+        pid=USB_DATA_ZBT2.pid,
+        serial_number=USB_DATA_ZBT2.serial_number,
+        manufacturer=USB_DATA_ZBT2.manufacturer,
+        description=USB_DATA_ZBT2.description,
+    )
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.helpers.usb_device_from_path",
+        return_value=usb_device,
+    ):
+        await async_notify_firmware_info(
+            hass,
+            "zha",
+            FirmwareInfo(
+                device=USB_DATA_ZBT2.device,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version="7.4.4.0",
+                owners=[],
+                source="zha",
+            ),
+        )
+
+        await hass.async_block_till_done()
+
+    # The config entry device path should be updated
+    assert config_entry.data["device"] == USB_DATA_ZBT2.device
+
+    # No new config entry was created
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1

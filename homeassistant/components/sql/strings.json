@@ -141,6 +141,7 @@
         "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
         "ph": "[%key:component::sensor::entity_component::ph::name%]",
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
         "power": "[%key:component::sensor::entity_component::power::name%]",
@@ -181,6 +182,10 @@
     "entity_id_query_does_full_table_scan": {
       "title": "SQL query does full table scan",
       "description": "The query `{query}` contains the keyword `entity_id` but does not reference the `states_meta` table. This will cause a full table scan and database instability. Please check the documentation and use `states_meta.entity_id` instead."
+    },
+    "platform_yaml_not_supported": {
+      "title": "Platform YAML is not supported in SQL",
+      "description": "Platform YAML setup is not supported.\nChange from configuring it in the `sensor:` key to using the `sql:` key directly in configuration.yaml.\nTo see the detailed documentation, select Learn more."
     }
   }
 }
