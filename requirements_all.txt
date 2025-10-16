@@ -36,7 +36,7 @@ PSNAWP==3.0.0
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==11.3.0
+Pillow==12.0.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.16
@@ -739,7 +739,7 @@ clx-sdk-xms==1.0.0
 coinbase-advanced-py==1.2.2
 
 # homeassistant.scripts.check_config
-colorlog==6.9.0
+colorlog==6.10.1
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
