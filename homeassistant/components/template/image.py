@@ -127,6 +127,8 @@ class StateImageEntity(TemplateEntity, ImageEntity):
         self._attr_image_last_updated = dt_util.utcnow()
         self._cached_image = None
         self._attr_image_url = result
+        # immediately cache the image because url might be invalid by the time the image is requested
+        self.hass.async_create_task(self._async_cache_image(self._attr_image_url))
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -169,3 +171,5 @@ class TriggerImageEntity(TriggerEntity, ImageEntity):
         self._attr_image_last_updated = dt_util.utcnow()
         self._cached_image = None
         self._attr_image_url = self._rendered.get(CONF_URL)
+        # immediately cache the image because url might be invalid by the time the image is requested
+        self.hass.async_create_task(self._async_cache_image(self._attr_image_url))
