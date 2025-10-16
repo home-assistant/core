@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from PySrDaliGateway.exceptions import DaliGatewayError
+import voluptuous as vol
 
 from homeassistant.components.sunricher_dali_center.const import CONF_SN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -99,15 +100,15 @@ async def test_discovery_no_gateways_found(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_gateway"
-    assert mock_discovery.discover_gateways.await_count == 2
-    assert result["errors"]["base"] == "no_devices_found"
     assert mock_discovery.discover_gateways.await_count == 1
+    assert result["errors"]["base"] == "no_devices_found"
 
     mock_discovery.discover_gateways.return_value = [_mock_gateway()]
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_gateway"
+    assert mock_discovery.discover_gateways.await_count == 2
 
 
 async def test_discovery_gateway_error(
@@ -151,6 +152,7 @@ async def test_discovery_device_not_found(
     result = await hass.config_entries.flow.async_configure(flow_id, {})
 
     flow = hass.config_entries.flow._progress[flow_id]
+    flow["data_schema"] = vol.Schema({vol.Required("selected_gateway"): str})
     flow._discovered_gateways.clear()
 
     result = await hass.config_entries.flow.async_configure(
