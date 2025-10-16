@@ -131,7 +131,7 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     @property
     def available(self) -> bool:

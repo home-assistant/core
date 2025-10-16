@@ -572,7 +572,10 @@ async def test_register_entity_service_non_entity_service_schema(
             vol.Any(vol.Schema({"some": str})),
         )
     ):
-        expected_message = f"The test_domain.hello_{idx} service registers an entity service with a non entity service schema"
+        expected_message = (
+            f"The test_domain.hello_{idx} service registers "
+            "an entity service with a non entity service schema"
+        )
         with pytest.raises(HomeAssistantError, match=expected_message):
             component.async_register_entity_service(f"hello_{idx}", schema, Mock())
 
@@ -681,40 +684,6 @@ async def test_register_entity_service_response_data_multiple_matches_raises(
     )
 
     with pytest.raises(RuntimeError, match="Something went wrong"):
-        await hass.services.async_call(
-            DOMAIN,
-            "hello",
-            service_data={"some": "data"},
-            target={"entity_id": [entity1.entity_id, entity2.entity_id]},
-            blocking=True,
-            return_response=True,
-        )
-
-
-async def test_legacy_register_entity_service_response_data_multiple_matches(
-    hass: HomeAssistant,
-) -> None:
-    """Test asking for legacy service response data but matching many entities."""
-    entity1 = MockEntity(entity_id=f"{DOMAIN}.entity1")
-    entity2 = MockEntity(entity_id=f"{DOMAIN}.entity2")
-
-    async def generate_response(
-        target: MockEntity, call: ServiceCall
-    ) -> ServiceResponse:
-        return {"response-key": "response-value"}
-
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
-    await component.async_setup({})
-    await component.async_add_entities([entity1, entity2])
-
-    component.async_register_legacy_entity_service(
-        "hello",
-        {"some": str},
-        generate_response,
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    with pytest.raises(HomeAssistantError, match="matched more than one entity"):
         await hass.services.async_call(
             DOMAIN,
             "hello",

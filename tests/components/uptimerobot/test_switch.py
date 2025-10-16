@@ -6,6 +6,7 @@ import pytest
 from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.uptimerobot.const import COORDINATOR_UPDATE_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -15,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 from .common import (
     MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA,
@@ -26,7 +28,7 @@ from .common import (
     setup_uptimerobot_integration,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_presentation(hass: HomeAssistant) -> None:
@@ -71,7 +73,7 @@ async def test_switch_off(hass: HomeAssistant) -> None:
 
 
 async def test_switch_on(hass: HomeAssistant) -> None:
-    """Test entity unaviable on update failure."""
+    """Test entity unavailable on update failure."""
 
     mock_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     mock_entry.add_to_hass(hass)
@@ -180,3 +182,43 @@ async def test_switch_api_failure(hass: HomeAssistant) -> None:
         assert exc_info.value.translation_placeholders == {
             "error": "test error from API."
         }
+
+
+async def test_switch_dynamic(hass: HomeAssistant) -> None:
+    """Test switch dynamically added."""
+    await setup_uptimerobot_integration(hass)
+
+    assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY))
+    assert entity.state == STATE_ON
+
+    entity_id_2 = "switch.test_monitor_2"
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_monitors",
+        return_value=mock_uptimerobot_api_response(
+            data=[
+                {
+                    "id": 1234,
+                    "friendly_name": "Test monitor",
+                    "status": 2,
+                    "type": 1,
+                    "url": "http://example.com",
+                },
+                {
+                    "id": 5678,
+                    "friendly_name": "Test monitor 2",
+                    "status": 2,
+                    "type": 1,
+                    "url": "http://example2.com",
+                },
+            ]
+        ),
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + COORDINATOR_UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+
+        assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY))
+        assert entity.state == STATE_ON
+
+        assert (entity := hass.states.get(entity_id_2))
+        assert entity.state == STATE_ON
