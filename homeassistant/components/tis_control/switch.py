@@ -47,6 +47,8 @@ class TISSwitch(SwitchEntity):
         # Set the friendly name for the Home Assistant UI.
         self._attr_name = self.device_api.name
         self._attr_unique_id = self.device_api.unique_id
+        self._attr_should_poll = False
+        self._attr_available = True
 
         self._attr_is_on = self.device_api.is_on
 
@@ -71,9 +73,10 @@ class TISSwitch(SwitchEntity):
         if result:
             # Optimistic update: assume the command succeeded if we got an ack.
             self._attr_is_on = True
+            self._attr_available = True
         else:
             # If no ack was received, the device is likely offline.
-            self._attr_is_on = None
+            self._attr_available = False
 
         self.async_write_ha_state()
 
@@ -85,7 +88,8 @@ class TISSwitch(SwitchEntity):
         # Optimistically update the state based on whether the command was acknowledged.
         if result:
             self._attr_is_on = False
+            self._attr_available = True
         else:
-            self._attr_is_on = None
+            self._attr_available = False
 
         self.async_write_ha_state()
