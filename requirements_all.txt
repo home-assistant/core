@@ -874,7 +874,7 @@ eliqonline==1.2.2
 elkm1-lib==2.2.11
 
 # homeassistant.components.inels
-elkoep-aio-mqtt==0.1.0b3
+elkoep-aio-mqtt==0.1.0b4
 
 # homeassistant.components.elmax
 elmax-api==0.0.6.4rc0
