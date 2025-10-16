@@ -298,6 +298,7 @@ def format_mac(mac: str) -> str:
     return mac
 
 
+@lru_cache(maxsize=512)
 def format_zigbee_ieee(ieee: str) -> str:
     """Format a zigbee ieee address string."""
     to_test = ieee
