@@ -38,6 +38,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util, slugify
@@ -274,6 +279,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             try:
                 await self.api.async_connect()
                 await self.api.ping()
+                async_delete_issue(
+                    self.hass, DOMAIN, f"cloud_api_used_{self.duid_slug}"
+                )
             except RoborockException:
                 _LOGGER.warning(
                     "Using the cloud API for device %s. This is not recommended as it can lead to rate limiting. We recommend making your vacuum accessible by your Home Assistant instance",
@@ -284,6 +292,18 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 self.api = self.cloud_api
                 self.update_interval = V1_CLOUD_NOT_CLEANING_INTERVAL
                 self._is_cloud_api = True
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"cloud_api_used_{self.duid_slug}",
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="cloud_api_used",
+                    translation_placeholders={
+                        "device_name": self.roborock_device_info.device.name
+                    },
+                )
+
                 # Right now this should never be called if the cloud api is the primary api,
                 # but in the future if it is, a new else should be added.
 
