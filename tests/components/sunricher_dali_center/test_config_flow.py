@@ -152,9 +152,7 @@ async def test_discovery_device_not_found(
     result = await hass.config_entries.flow.async_configure(flow_id, {})
 
     flow = hass.config_entries.flow._progress[flow_id]
-    flow.data_schema = vol.Schema(
-        {vol.Optional("selected_gateway"): vol.Any(*flow._discovered_gateways)}
-    )
+    flow.data_schema = vol.Schema({vol.Optional("selected_gateway"): str})
     flow._discovered_gateways.clear()
 
     result = await hass.config_entries.flow.async_configure(
