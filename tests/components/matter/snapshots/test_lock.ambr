@@ -49,7 +49,7 @@
     'state': 'unlocked',
   })
 # ---
-# name: test_locks[door_lock_with_unbolt][lock.mock_door_lock-entry]
+# name: test_locks[door_lock_with_unbolt][lock.mock_door_lock_with_unbolt-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -62,7 +62,7 @@
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
-    'entity_id': 'lock.mock_door_lock',
+    'entity_id': 'lock.mock_door_lock_with_unbolt',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -84,15 +84,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_locks[door_lock_with_unbolt][lock.mock_door_lock-state]
+# name: test_locks[door_lock_with_unbolt][lock.mock_door_lock_with_unbolt-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': 'Unknown',
-      'friendly_name': 'Mock Door Lock',
+      'friendly_name': 'Mock Door Lock with unbolt',
       'supported_features': <LockEntityFeature: 1>,
     }),
     'context': <ANY>,
-    'entity_id': 'lock.mock_door_lock',
+    'entity_id': 'lock.mock_door_lock_with_unbolt',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
