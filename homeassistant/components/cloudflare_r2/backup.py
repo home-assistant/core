@@ -179,7 +179,7 @@ class R2BackupAgent(BackupAgent):
             Body=bytes(file_data),
         )
 
-    async def _upload_multipart(  # same logic as aws_s3/backup.py
+    async def _upload_multipart(
         self,
         tar_filename: str,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
