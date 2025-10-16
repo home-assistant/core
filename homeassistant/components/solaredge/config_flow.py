@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import socket
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError, ClientResponseError
 import aiosolaredge
@@ -104,7 +104,8 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
             if self.source == SOURCE_RECONFIGURE:
-                assert entry
+                if TYPE_CHECKING:
+                    assert entry
                 site_id = entry.data[CONF_SITE_ID]
             else:
                 site_id = user_input[CONF_SITE_ID]
@@ -136,12 +137,14 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
                     data.update(web_auth)
 
                     if self.source == SOURCE_RECONFIGURE:
-                        assert entry
+                        if TYPE_CHECKING:
+                            assert entry
                         return self.async_update_reload_and_abort(entry, data=data)
 
                     return self.async_create_entry(title=name, data=data)
         elif self.source == SOURCE_RECONFIGURE:
-            assert entry
+            if TYPE_CHECKING:
+                assert entry
             user_input = {
                 CONF_SECTION_API_AUTH: {CONF_API_KEY: entry.data.get(CONF_API_KEY, "")},
                 CONF_SECTION_WEB_AUTH: {
@@ -204,7 +207,8 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
         step_id = "user"
         description_placeholders = {}
         if self.source == SOURCE_RECONFIGURE:
-            assert entry
+            if TYPE_CHECKING:
+                assert entry
             step_id = "reconfigure"
             description_placeholders["site_id"] = entry.data[CONF_SITE_ID]
 
