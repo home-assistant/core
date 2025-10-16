@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from hanna_cloud import AuthenticationError
+import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError, Timeout
 
 from homeassistant.components.hanna.const import DOMAIN
@@ -39,13 +40,36 @@ async def test_full_flow(
     }
 
 
-async def _test_error_scenario(
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (
+            AuthenticationError("Authentication failed"),
+            "invalid_auth",
+        ),
+        (
+            Timeout("Connection timeout"),
+            "cannot_connect",
+        ),
+        (
+            RequestsConnectionError("Connection failed"),
+            "cannot_connect",
+        ),
+    ],
+)
+async def test_error_scenarios(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_hanna_client: MagicMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
-    """Test a specific error scenario in the config flow."""
+    """Test various error scenarios in the config flow."""
+    # Set up the authentication error response for AuthenticationError
+    if isinstance(exception, AuthenticationError):
+        exception.response = MagicMock()
+        exception.response.status_code = 401
+
     mock_hanna_client.authenticate.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
@@ -62,42 +86,3 @@ async def _test_error_scenario(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
-
-
-async def test_invalid_auth(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hanna_client: MagicMock,
-) -> None:
-    """Test invalid authentication."""
-    # Create a RequestException with 401 status code to simulate authentication failure
-    auth_error = AuthenticationError("Authentication failed")
-    auth_error.response = MagicMock()
-    auth_error.response.status_code = 401
-
-    await _test_error_scenario(hass, mock_hanna_client, auth_error, "invalid_auth")
-
-
-async def test_cannot_connect_timeout(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hanna_client: MagicMock,
-) -> None:
-    """Test connection timeout error."""
-    await _test_error_scenario(
-        hass, mock_hanna_client, Timeout("Connection timeout"), "cannot_connect"
-    )
-
-
-async def test_cannot_connect_connection_error(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hanna_client: MagicMock,
-) -> None:
-    """Test connection error."""
-    await _test_error_scenario(
-        hass,
-        mock_hanna_client,
-        RequestsConnectionError("Connection failed"),
-        "cannot_connect",
-    )
