@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections import namedtuple
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any
+from typing import Any, NamedTuple
 
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 from aiohttp import ClientSession
 from asusrouter import AsusRouter, AsusRouterError
 from asusrouter.config import ARConfigKey
-from asusrouter.modules.client import AsusClient, ConnectionState
+from asusrouter.modules.client import AsusClient
+from asusrouter.modules.connection import ConnectionState
 from asusrouter.modules.data import AsusData
 from asusrouter.modules.homeassistant import convert_to_ha_data, convert_to_ha_sensors
 from asusrouter.tools.connection import get_cookie_jar
@@ -61,7 +61,14 @@ SENSORS_TYPE_RATES = "sensors_rates"
 SENSORS_TYPE_TEMPERATURES = "sensors_temperatures"
 SENSORS_TYPE_UPTIME = "sensors_uptime"
 
-WrtDevice = namedtuple("WrtDevice", ["ip", "name", "connected_to"])  # noqa: PYI024
+
+class WrtDevice(NamedTuple):
+    """WrtDevice structure."""
+
+    ip: str | None
+    name: str | None
+    conneted_to: str | None
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +87,7 @@ def handle_errors_and_zip[_AsusWrtBridgeT: AsusWrtBridge](
         """Run library methods and zip results or manage exceptions."""
 
         @functools.wraps(func)
-        async def _wrapper(self: _AsusWrtBridgeT) -> dict[str, Any]:
+        async def _wrapper(self: _AsusWrtBridgeT) -> dict[str, str]:
             try:
                 data = await func(self)
             except exceptions as exc:
