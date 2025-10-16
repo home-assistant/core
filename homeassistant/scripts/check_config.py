@@ -29,7 +29,7 @@ from homeassistant.helpers.check_config import async_check_ha_config_file
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==6.9.0",)
+REQUIREMENTS = ("colorlog==6.10.1",)
 
 _LOGGER = logging.getLogger(__name__)
 MOCKS: dict[str, tuple[str, Callable]] = {
