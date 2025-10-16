@@ -19,7 +19,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import JsonValueType
 
@@ -58,10 +58,16 @@ async def _async_query_service(
     try:
         validate_query(call.hass, query_str, uses_recorder_db, None)
     except ValueError as err:
-        raise HomeAssistantError(str(err)) from err
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="query_not_allowed",
+            translation_placeholders={"error": str(err)},
+        ) from err
     if sessmaker is None:
-        raise HomeAssistantError(
-            f"Failed to connect to database: {redact_credentials(db_url)}"
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="db_connection_failed",
+            translation_placeholders={"db_url": redact_credentials(db_url)},
         )
 
     def _execute_and_convert_query() -> list[JsonValueType]:
@@ -70,7 +76,7 @@ async def _async_query_service(
         try:
             result: Result = sess.execute(generate_lambda_stmt(query_str))
         except SQLAlchemyError as err:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "Error executing query %s: %s",
                 query_str,
                 redact_credentials(str(err)),
@@ -103,8 +109,10 @@ async def _async_query_service(
         else:
             result = await call.hass.async_add_executor_job(_execute_and_convert_query)
     except SQLAlchemyError as err:
-        raise HomeAssistantError(
-            f"Error executing query: {redact_credentials(str(err))}"
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="query_execution_error",
+            translation_placeholders={"error": redact_credentials(str(err))},
         ) from err
 
     return {"result": result}

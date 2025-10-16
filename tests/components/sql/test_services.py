@@ -14,7 +14,7 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.components.sql.services import SERVICE_QUERY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.components.recorder.common import async_wait_recording_done
@@ -192,7 +192,9 @@ async def test_query_service_invalid_db_url(hass: HomeAssistant) -> None:
             "homeassistant.components.sql.util._validate_and_get_session_maker_for_db_url",
             return_value=None,
         ),
-        pytest.raises(HomeAssistantError, match="Failed to connect to database"),
+        pytest.raises(
+            ServiceValidationError, match="Failed to connect to the database"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -215,8 +217,8 @@ async def test_query_service_performance_issue_validation(
     await hass.async_block_till_done()
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Query contains entity_id but does not reference states_meta",
+        ServiceValidationError,
+        match="The provided query is not allowed: Query contains entity_id but does not reference states_meta",
     ):
         await hass.services.async_call(
             DOMAIN,

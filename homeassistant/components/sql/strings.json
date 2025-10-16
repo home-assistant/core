@@ -51,6 +51,17 @@
       }
     }
   },
+  "exceptions": {
+    "db_connection_failed": {
+      "message": "Failed to connect to the database: {db_url}"
+    },
+    "query_execution_error": {
+      "message": "An error occurred when executing the query: {error}"
+    },
+    "query_not_allowed": {
+      "message": "The provided query is not allowed: {error}"
+    }
+  },
   "services": {
     "query": {
       "name": "Query",
