@@ -59,7 +59,7 @@ class AuthStore:
         self._users: dict[str, models.User] = None  # type: ignore[assignment]
         self._groups: dict[str, models.Group] = None  # type: ignore[assignment]
         # Refactor: Adding optional to pass in PermissionLookup
-        self._perm_lookup: Optional[PermissionLookup] = None  # type: ignore[assignment]
+        self._perm_lookup: PermissionLookup | None = None # type: ignore[assignment]
         self._store = Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
