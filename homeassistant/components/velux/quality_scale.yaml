@@ -15,7 +15,7 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions:
     status: todo
-    comment: needs rework, make KLF reboot requirement more prominent
+    comment: needs rework, make KLF200 interface reboot requirement more prominent
   docs-removal-instructions:
     status: todo
     comment: missing in docs, although simple
