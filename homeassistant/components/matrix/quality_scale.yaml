@@ -1,0 +1,44 @@
+rules:
+  # Bronze tier requirements
+  action-setup: done
+  appropriate-polling:
+    status: exempt
+    comment: Integration uses push notifications via Matrix client sync, not polling
+  brands:
+    status: exempt
+    comment: Matrix is a decentralized protocol, not a specific brand
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not create entities, only provides messaging service
+  entity-unique-id:
+    status: exempt
+    comment: Integration does not create entities, only provides messaging service
+  has-entity-name:
+    status: exempt
+    comment: Integration does not create entities, only provides messaging service
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: Integration does not create entities, only provides messaging service
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: exempt
+    comment: Integration does not create entities, only provides messaging service
+  reauthentication-flow: done
+  test-coverage: done

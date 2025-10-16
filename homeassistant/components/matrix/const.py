@@ -10,4 +10,5 @@ FORMAT_TEXT = "text"
 ATTR_FORMAT = "format"  # optional message format
 ATTR_IMAGES = "images"  # optional images
 
+CONF_HOMESERVER = "homeserver"
 CONF_ROOMS_REGEX = "^[!|#][^:]*:.*"
