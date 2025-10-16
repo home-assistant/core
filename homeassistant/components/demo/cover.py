@@ -139,6 +139,7 @@ class DemoCover(CoverEntity):
             self.async_write_ha_state()
             return
 
+        self._is_opening = False
         self._is_closing = True
         self._listen_cover()
         self._requested_closing = True
@@ -162,6 +163,7 @@ class DemoCover(CoverEntity):
             return
 
         self._is_opening = True
+        self._is_closing = False
         self._listen_cover()
         self._requested_closing = False
         self.async_write_ha_state()
@@ -181,10 +183,18 @@ class DemoCover(CoverEntity):
         if self._position == position:
             return
 
+        if position < (self._position or 0):
+            self._is_opening = False
+            self._is_closing = True
+        else:
+            self._is_opening = True
+            self._is_closing = False
+
         self._listen_cover()
         self._requested_closing = (
             self._position is not None and position < self._position
         )
+        self.async_write_ha_state()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover til to a specific position."""
