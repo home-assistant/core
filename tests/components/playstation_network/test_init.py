@@ -1,5 +1,6 @@
 """Tests for PlayStation Network."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -18,7 +19,8 @@ from homeassistant.components.playstation_network.coordinator import (
     PlaystationNetworkRuntimeData,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -252,10 +254,20 @@ async def test_trophy_title_coordinator_play_new_game(
 
     mock_psnawpapi.user.return_value.trophy_titles.return_value = _tmp
 
-    freezer.tick(timedelta(days=1, seconds=1))
+    wait_for_state = asyncio.Event()
+
+    @callback
+    def _event_listener(event: Event[EventStateChangedData]) -> None:
+        """Listen for event changes."""
+        if event.data["entity_id"] != "media_player.playstation_vita":
+            return
+        wait_for_state.set()
+
+    unsub = hass.bus.async_listen(EVENT_STATE_CHANGED, _event_listener)
+    freezer.tick(timedelta(days=1, seconds=10))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await wait_for_state.wait()
+    unsub()
 
     assert len(mock_psnawpapi.user.return_value.trophy_titles.mock_calls) == 2
 
