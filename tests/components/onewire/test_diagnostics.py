@@ -58,7 +58,7 @@ async def test_device_diagnostics(
     device_id: str,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test config entry diagnostics."""
+    """Test device diagnostics."""
     setup_owproxy_mock_devices(owproxy, [device_id])
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
