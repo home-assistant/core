@@ -54,7 +54,7 @@ async def test_discovery_flow_success(
     mock_discovery.discover_gateways.return_value = [gateway]
 
     init_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert init_result["type"] is FlowResultType.FORM
     assert init_result["step_id"] == "user"
