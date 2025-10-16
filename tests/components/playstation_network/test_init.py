@@ -266,6 +266,8 @@ async def test_trophy_title_coordinator_play_new_game(
     unsub = hass.bus.async_listen(EVENT_STATE_CHANGED, _event_listener)
     freezer.tick(timedelta(days=1, seconds=10))
     async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done(wait_background_tasks=True)
     await wait_for_state.wait()
     unsub()
 
