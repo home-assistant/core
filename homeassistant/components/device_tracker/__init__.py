@@ -96,9 +96,7 @@ __all__ = (
     "SourceType",
     "TrackerEntity",
     "TrackerEntityDescription",
-    "async_setup",
     "async_setup_entry",
     "async_unload_entry",
-    "is_on",
     "see",
 )
