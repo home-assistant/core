@@ -45,7 +45,7 @@
   "issues": {
     "deprecated_platform_yaml": {
       "title": "The {domain} YAML configuration is being removed",
-      "description": "A YAML-configured {domain} entry was found which matches an existing {domain} entry. This entry was successfully mirated to use the new config setup and can now be safely removed from your `configuration.yaml`"
+      "description": "A YAML-configured {domain} entry was found which matches an existing {domain} entry. This entry was successfully migrated to use the new config setup and can now be safely removed from your `configuration.yaml`"
     }
   }
 }
