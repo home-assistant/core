@@ -36,7 +36,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_CAPTION,
     ATTR_CHAT_ACTION,
     ATTR_CHAT_ID,
-    ATTR_DIR_PATH,
+    ATTR_DIRECTORY_PATH,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
@@ -1491,7 +1491,7 @@ async def test_download_file(
                 "download_file",
                 {
                     ATTR_FILE_ID: TEST_FILE_ID,
-                    ATTR_DIR_PATH: tempdirname,
+                    ATTR_DIRECTORY_PATH: tempdirname,
                 },
                 blocking=True,
             )

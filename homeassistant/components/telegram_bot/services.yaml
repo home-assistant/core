@@ -962,7 +962,7 @@ download_file:
       example: "ABCD1234Efgh5678Ijkl90mnopQRStuvwx"
       selector:
         text:
-    dir_path:
+    directory_path:
       required: false
       default: "/config/www/telegram_files"
       selector:

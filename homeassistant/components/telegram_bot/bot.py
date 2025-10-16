@@ -1033,7 +1033,7 @@ class TelegramNotificationService:
     async def download_file(
         self,
         file_id: str,
-        dir_path: str = "/config/www/telegram_files",
+        directory_path: str = "/config/www/telegram_files",
         file_name: str | None = None,
         context: Context | None = None,
     ) -> dict[str, JsonValueType]:
@@ -1052,14 +1052,14 @@ class TelegramNotificationService:
             file_name = (
                 os.path.basename(file.file_path) if file.file_path else "unknown_file"
             )
-        custom_path = os.path.join(dir_path, file_name)
-        if not os.path.exists(dir_path):
-            _LOGGER.debug("directory %s does not exist, creating it", dir_path)
+        custom_path = os.path.join(directory_path, file_name)
+        if not os.path.exists(directory_path):
+            _LOGGER.debug("directory %s does not exist, creating it", directory_path)
             try:
-                os.makedirs(dir_path)
+                os.makedirs(directory_path)
             except OSError as err:
                 raise HomeAssistantError(
-                    f"Failed to create directory {dir_path}: {err!s}",
+                    f"Failed to create directory {directory_path}: {err!s}",
                     translation_domain=DOMAIN,
                     translation_key="failed_to_create_directory",
                     translation_placeholders={"error": str(err)},

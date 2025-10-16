@@ -1025,7 +1025,7 @@
           "name": "File ID",
           "description": "ID of the file to get."
         },
-        "dir_path": {
+        "directory_path": {
           "name": "Directory path",
           "description": "Local directory path to save the file to. defaults to the 'telegram_files' directory within your Home Assistant configuration directory.",
           "example": "/config/www/telegram_files"
