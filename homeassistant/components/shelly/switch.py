@@ -27,6 +27,7 @@ from .const import (
     MODEL_LINKEDGO_ST1820_THERMOSTAT,
     MODEL_NEO_WATER_VALVE,
     MODEL_TOP_EV_CHARGER_EVE01,
+    ROLE_GENERIC,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
@@ -105,7 +106,7 @@ RPC_SWITCHES = {
         method_on="boolean_set",
         method_off="boolean_set",
         method_params_fn=lambda id, value: (id, value),
-        role="generic",
+        role=ROLE_GENERIC,
     ),
     "boolean_anti_freeze": RpcSwitchDescription(
         key="boolean",

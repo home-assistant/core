@@ -41,7 +41,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_SLEEP_PERIOD
+from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -1425,7 +1425,7 @@ RPC_SENSORS: Final = {
         removal_condition=lambda config, _, key: not is_view_for_platform(
             config, key, SENSOR_PLATFORM
         ),
-        role="generic",
+        role=ROLE_GENERIC,
     ),
     "number_generic": RpcSensorDescription(
         key="number",
@@ -1434,7 +1434,7 @@ RPC_SENSORS: Final = {
             config, key, SENSOR_PLATFORM
         ),
         unit=get_virtual_component_unit,
-        role="generic",
+        role=ROLE_GENERIC,
     ),
     "enum_generic": RpcSensorDescription(
         key="enum",
@@ -1444,7 +1444,7 @@ RPC_SENSORS: Final = {
         ),
         options_fn=lambda config: config["options"],
         device_class=SensorDeviceClass.ENUM,
-        role="generic",
+        role=ROLE_GENERIC,
     ),
     "valve_position": RpcSensorDescription(
         key="blutrv",
