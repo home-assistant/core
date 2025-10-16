@@ -53,26 +53,24 @@ async def test_discovery_flow_success(
     gateway = _mock_gateway()
     mock_discovery.discover_gateways.return_value = [gateway]
 
-    init_result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert init_result["type"] is FlowResultType.FORM
-    assert init_result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-    discovery_result = await hass.config_entries.flow.async_configure(
-        init_result["flow_id"], {}
-    )
-    assert discovery_result["type"] is FlowResultType.FORM
-    assert discovery_result["step_id"] == "select_gateway"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_gateway"
 
-    select_result = await hass.config_entries.flow.async_configure(
-        discovery_result["flow_id"],
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {"selected_gateway": gateway.gw_sn},
     )
 
-    assert select_result["type"] is FlowResultType.CREATE_ENTRY
-    assert select_result["title"] == gateway.name
-    assert select_result["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == gateway.name
+    assert result["data"] == {
         CONF_SN: gateway.gw_sn,
         CONF_HOST: gateway.gw_ip,
         CONF_PORT: gateway.port,
@@ -80,6 +78,7 @@ async def test_discovery_flow_success(
         CONF_USERNAME: gateway.username,
         CONF_PASSWORD: gateway.passwd,
     }
+    assert result["result"].unique_id == gateway.gw_sn
     assert mock_discovery.discover_gateways.await_count == 1
     mock_setup_entry.assert_called_once()
     assert gateway.connect.await_count == 1
