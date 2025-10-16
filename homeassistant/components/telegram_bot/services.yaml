@@ -950,3 +950,25 @@ set_message_reaction:
       required: false
       selector:
         boolean:
+
+download_file:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    file_id:
+      required: true
+      example: "ABCD1234Efgh5678Ijkl90mnopQRStuvwx"
+      selector:
+        text:
+    dir_path:
+      required: false
+      default: "/config/www/telegram_files"
+      selector:
+        text:
+    file_name:
+      required: false
+      example: "my_downloaded_file"
+      selector:
+        text:

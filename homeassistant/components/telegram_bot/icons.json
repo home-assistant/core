@@ -53,6 +53,9 @@
     },
     "set_message_reaction": {
       "service": "mdi:emoticon-happy"
+    },
+    "download_file": {
+      "service": "mdi:paperclip"
     }
   }
 }

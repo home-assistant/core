@@ -1012,6 +1012,29 @@
           "description": "Whether the reaction animation should be large."
         }
       }
+    },
+    "download_file": {
+      "name": "Download file",
+      "description": "Download the file to a local path.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to get the file."
+        },
+        "file_id": {
+          "name": "File ID",
+          "description": "ID of the file to get."
+        },
+        "dir_path": {
+          "name": "Directory path",
+          "description": "Local directory path to save the file to. defaults to the 'telegram_files' directory within your Home Assistant configuration directory.",
+          "example": "/config/www/telegram_files"
+        },
+        "file_name": {
+          "name": "File name",
+          "description": "Name to save the file as. If not provided, the original file name will be used."
+        }
+      }
     }
   },
   "exceptions": {

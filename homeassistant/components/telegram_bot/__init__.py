@@ -46,9 +46,12 @@ from .const import (
     ATTR_CAPTION,
     ATTR_CHAT_ACTION,
     ATTR_CHAT_ID,
+    ATTR_DIR_PATH,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
+    ATTR_FILE_ID,
+    ATTR_FILE_NAME,
     ATTR_IS_ANONYMOUS,
     ATTR_IS_BIG,
     ATTR_KEYBOARD,
@@ -98,6 +101,7 @@ from .const import (
     PLATFORM_WEBHOOKS,
     SERVICE_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE,
+    SERVICE_DOWNLOAD_FILE,
     SERVICE_EDIT_CAPTION,
     SERVICE_EDIT_MESSAGE,
     SERVICE_EDIT_MESSAGE_MEDIA,
@@ -331,6 +335,16 @@ SERVICE_SCHEMA_SET_MESSAGE_REACTION = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+SERVICE_SCHEMA_DOWNLOAD_FILE = vol.Schema(
+    {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Required(ATTR_FILE_ID): cv.string,
+        vol.Optional(ATTR_DIR_PATH): cv.string,
+        vol.Optional(ATTR_FILE_NAME): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_CHAT_ACTION: SERVICE_SCHEMA_SEND_CHAT_ACTION,
@@ -350,6 +364,7 @@ SERVICE_MAP = {
     SERVICE_DELETE_MESSAGE: SERVICE_SCHEMA_DELETE_MESSAGE,
     SERVICE_LEAVE_CHAT: SERVICE_SCHEMA_LEAVE_CHAT,
     SERVICE_SET_MESSAGE_REACTION: SERVICE_SCHEMA_SET_MESSAGE_REACTION,
+    SERVICE_DOWNLOAD_FILE: SERVICE_SCHEMA_DOWNLOAD_FILE,
 }
 
 
@@ -470,6 +485,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await notify_service.set_message_reaction(context=service.context, **kwargs)
         elif msgtype == SERVICE_EDIT_MESSAGE_MEDIA:
             await notify_service.edit_message_media(context=service.context, **kwargs)
+        elif msgtype == SERVICE_DOWNLOAD_FILE:
+            return await notify_service.download_file(context=service.context, **kwargs)
         else:
             await notify_service.edit_message(
                 msgtype, context=service.context, **kwargs
@@ -515,6 +532,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SERVICE_SEND_STICKER,
             SERVICE_SEND_LOCATION,
             SERVICE_SEND_POLL,
+            SERVICE_DOWNLOAD_FILE,
         ]:
             supports_response = SupportsResponse.OPTIONAL
 

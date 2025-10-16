@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Callable, Sequence
 import io
 import logging
+import os
 from ssl import SSLContext
 from types import MappingProxyType
 from typing import Any, cast
@@ -13,6 +14,7 @@ import httpx
 from telegram import (
     Bot,
     CallbackQuery,
+    File,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     InputMedia,
@@ -44,6 +46,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.util.json import JsonValueType
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
@@ -60,6 +63,7 @@ from .const import (
     ATTR_FILE_ID,
     ATTR_FILE_MIME_TYPE,
     ATTR_FILE_NAME,
+    ATTR_FILE_PATH,
     ATTR_FILE_SIZE,
     ATTR_FROM_FIRST,
     ATTR_FROM_LAST,
@@ -1025,6 +1029,44 @@ class TelegramNotificationService:
             read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
+
+    async def download_file(
+        self,
+        file_id: str,
+        dir_path: str = "/config/www/telegram_files",
+        file_name: str | None = None,
+        context: Context | None = None,
+    ) -> dict[str, JsonValueType]:
+        """Download a file from Telegram."""
+        file: File | None = await self._send_msg(
+            self.bot.get_file,
+            "Error getting file",
+            None,
+            file_id=file_id,
+            context=context,
+        )
+        if file is None:
+            _LOGGER.error("Failed to get file %s", file_id)
+            return {}
+        if not file_name:
+            file_name = (
+                os.path.basename(file.file_path) if file.file_path else "unknown_file"
+            )
+        custom_path = os.path.join(dir_path, file_name)
+        if not os.path.exists(dir_path):
+            _LOGGER.debug("directory %s does not exist, creating it", dir_path)
+            try:
+                os.makedirs(dir_path)
+            except OSError as err:
+                raise HomeAssistantError(
+                    f"Failed to create directory {dir_path}: {err!s}",
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_create_directory",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+        _LOGGER.debug("Download file %s to %s", file_id, custom_path)
+        await file.download_to_drive(custom_path=custom_path)
+        return {ATTR_FILE_PATH: custom_path}
 
 
 def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:

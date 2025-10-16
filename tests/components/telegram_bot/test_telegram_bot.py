@@ -3,11 +3,19 @@
 import base64
 from datetime import datetime
 import io
+import tempfile
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
-from telegram import Chat, InlineKeyboardButton, InlineKeyboardMarkup, Message, Update
+from telegram import (
+    Chat,
+    File,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+    Update,
+)
 from telegram.constants import ChatType, InputMediaType, ParseMode
 from telegram.error import (
     InvalidToken,
@@ -28,9 +36,11 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_CAPTION,
     ATTR_CHAT_ACTION,
     ATTR_CHAT_ID,
+    ATTR_DIR_PATH,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
+    ATTR_FILE_ID,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
     ATTR_MEDIA_TYPE,
@@ -1445,3 +1455,51 @@ async def test_set_message_reaction(
         is_big=True,
         read_timeout=None,
     )
+
+
+async def test_download_file(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test download file."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    TEST_FILE_ID = "some-file-id"
+    TEST_FILE_NAME = "file_name.jpg"
+    CUSTOM_PATH = f"/custom/path/{TEST_FILE_NAME}"
+    TELEGRAM_FILE = File(
+        file_id=TEST_FILE_ID,
+        file_unique_id="blabla",
+        file_path=f"file/path/{TEST_FILE_NAME}",
+    )
+
+    with tempfile.TemporaryDirectory() as tempdirname:
+        with (
+            patch(
+                "homeassistant.components.telegram_bot.bot.Bot.get_file",
+                AsyncMock(return_value=TELEGRAM_FILE),
+            ) as get_file_mock,
+            patch(
+                "telegram.File.download_to_drive", AsyncMock(return_value=CUSTOM_PATH)
+            ) as download_to_drive_mock,
+        ):
+            await hass.services.async_call(
+                DOMAIN,
+                "download_file",
+                {
+                    ATTR_FILE_ID: TEST_FILE_ID,
+                    ATTR_DIR_PATH: tempdirname,
+                },
+                blocking=True,
+            )
+
+        await hass.async_block_till_done()
+        get_file_mock.assert_called_once_with(
+            file_id=TEST_FILE_ID,
+        )
+        download_to_drive_mock.assert_called_once_with(
+            custom_path=f"{tempdirname}/{TEST_FILE_NAME}",  # the fact we have file name here means we got it from telegram File
+        )
