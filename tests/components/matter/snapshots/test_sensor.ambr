@@ -2323,7 +2323,7 @@
     'state': '3.558',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2338,7 +2338,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_current',
+    'entity_id': 'sensor.eve_energy_20ecn4101_current_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2353,7 +2353,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'Current (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2363,23 +2363,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Eve Energy 20ECN4101 Current',
+      'friendly_name': 'Eve Energy 20ECN4101 Current (top)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_current',
+    'entity_id': 'sensor.eve_energy_20ecn4101_current_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.159999996423721',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2394,7 +2394,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_energy',
+    'entity_id': 'sensor.eve_energy_20ecn4101_energy_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2409,7 +2409,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2419,23 +2419,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Eve Energy 20ECN4101 Energy',
+      'friendly_name': 'Eve Energy 20ECN4101 Energy (top)',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_energy',
+    'entity_id': 'sensor.eve_energy_20ecn4101_energy_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '18.7803344726562',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2450,7 +2450,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_power',
+    'entity_id': 'sensor.eve_energy_20ecn4101_power_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2465,7 +2465,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Power (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2475,23 +2475,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Eve Energy 20ECN4101 Power',
+      'friendly_name': 'Eve Energy 20ECN4101 Power (top)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_power',
+    'entity_id': 'sensor.eve_energy_20ecn4101_power_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13.3999996185303',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2506,7 +2506,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_voltage',
+    'entity_id': 'sensor.eve_energy_20ecn4101_voltage_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2521,7 +2521,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'Voltage (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2531,16 +2531,16 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Eve Energy 20ECN4101 Voltage',
+      'friendly_name': 'Eve Energy 20ECN4101 Voltage (top)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_voltage',
+    'entity_id': 'sensor.eve_energy_20ecn4101_voltage_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
