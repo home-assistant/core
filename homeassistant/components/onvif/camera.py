@@ -70,7 +70,7 @@ async def async_setup_entry(
             vol.Optional(ATTR_TILT): vol.In([DIR_UP, DIR_DOWN]),
             vol.Optional(ATTR_ZOOM): vol.In([ZOOM_OUT, ZOOM_IN]),
             vol.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
-            vol.Optional(ATTR_SPEED, default=0.5): cv.small_float,
+            vol.Optional(ATTR_SPEED): cv.small_float,
             vol.Optional(ATTR_MOVE_MODE, default=RELATIVE_MOVE): vol.In(
                 [
                     CONTINUOUS_MOVE,
@@ -210,10 +210,10 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
     async def async_perform_ptz(
         self,
         distance,
-        speed,
         move_mode,
         continuous_duration,
         preset,
+        speed=None,
         pan=None,
         tilt=None,
         zoom=None,
