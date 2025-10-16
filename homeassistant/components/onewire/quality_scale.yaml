@@ -73,9 +73,7 @@ rules:
     comment: >
       Manual removal, as it is not possible to distinguish
       between a flaky device and a device that has been removed
-  diagnostics:
-    status: todo
-    comment: config-entry diagnostics level available, might be nice to have device-level diagnostics
+  diagnostics: done
   exception-translations:
     status: todo
     comment: Under review
