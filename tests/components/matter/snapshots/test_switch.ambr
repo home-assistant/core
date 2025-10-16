@@ -194,7 +194,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock-entry]
+# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_with_unbolt-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -207,7 +207,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.mock_door_lock',
+    'entity_id': 'switch.mock_door_lock_with_unbolt',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -229,21 +229,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock-state]
+# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_with_unbolt-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
-      'friendly_name': 'Mock Door Lock',
+      'friendly_name': 'Mock Door Lock with unbolt',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_door_lock',
+    'entity_id': 'switch.mock_door_lock_with_unbolt',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_privacy_mode_button-entry]
+# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_with_unbolt_privacy_mode_button-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -256,7 +256,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.mock_door_lock_privacy_mode_button',
+    'entity_id': 'switch.mock_door_lock_with_unbolt_privacy_mode_button',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -278,13 +278,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_privacy_mode_button-state]
+# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_with_unbolt_privacy_mode_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Privacy mode button',
+      'friendly_name': 'Mock Door Lock with unbolt Privacy mode button',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_door_lock_privacy_mode_button',
+    'entity_id': 'switch.mock_door_lock_with_unbolt_privacy_mode_button',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
