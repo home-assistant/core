@@ -385,7 +385,10 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
         """Available."""
         available = super().available
 
-        return available and self.status.get("alarm", False)
+        if self.coordinator.device.initialized:
+            return available and self.status["alarm"]
+
+        return False
 
 
 RPC_BUTTONS = {
