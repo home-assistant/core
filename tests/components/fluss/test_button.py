@@ -31,7 +31,6 @@ async def test_async_setup_entry_multiple_devices(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify that the mock was used
     mock_api_client_multiple_devices.async_get_devices.assert_called_once()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -99,7 +98,6 @@ async def test_no_devices_setup(
     mock_config_entry.add_to_hass(hass)
 
     with patch("fluss_api.FlussApiClient", return_value=mock_api_client):
-        # Set up the config entry manually
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
