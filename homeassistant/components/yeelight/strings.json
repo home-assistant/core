@@ -3,7 +3,7 @@
     "flow_title": "{model} {id} ({host})",
     "step": {
       "user": {
-        "description": "If you leave the host empty, discovery will be used to find devices.",
+        "description": "If you leave the host empty, discovery will be used to find devices. For more information, see the [documentation]({docs_url}).",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },

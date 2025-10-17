@@ -35,6 +35,7 @@ from .const import (
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
+    DOCUMENTATION_URL,
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
@@ -204,6 +205,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
                 {vol.Optional(CONF_HOST, default=user_input.get(CONF_HOST, "")): str}
             ),
             errors=errors,
+            description_placeholders={"docs_url": DOCUMENTATION_URL},
         )
 
     async def async_step_pick_device(
