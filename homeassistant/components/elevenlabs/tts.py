@@ -202,6 +202,8 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         if language_code:
             base_stream_params["language_code"] = language_code
 
+        _LOGGER.debug("Starting TTS Stream with options: %s", base_stream_params)
+
         async def _add_sentences() -> None:
             nonlocal sentences_complete
 
@@ -275,18 +277,10 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
 
                 if previous_request_ids:
                     # Send previous request ids.
-                    _LOGGER.debug(
-                        "Using previous_request_ids for stitching: %s",
-                        previous_request_ids,
-                    )
                     kwargs["previous_request_ids"] = list(previous_request_ids)
                 # Do NOT send previous_text or next_text at all
                 elif last_text:
                     # previous_request_ids not supported, send previous_text instead.
-                    _LOGGER.debug(
-                        "Stitching not supported; using previous_text for continuity: %s",
-                        last_text,
-                    )
                     kwargs["previous_text"] = last_text
 
                 # Synthesize audio while text chunks are still being accumulated
@@ -296,16 +290,11 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                     async with self._client.text_to_speech.with_raw_response.stream(
                         **kwargs
                     ) as stream:
-                        _LOGGER.debug("Started TTS stream for text: %s", text)
                         async for chunk_bytes in stream.data:
                             yield chunk_bytes
 
-                        _LOGGER.debug("Completed TTS stream for text: %s", text)
                         if use_request_ids:
                             if (rid := stream.headers.get("request-id")) is not None:
-                                _LOGGER.debug(
-                                    "Storing request-id %s for stitching", rid
-                                )
                                 previous_request_ids.append(rid)
                             else:
                                 _LOGGER.debug(
@@ -322,8 +311,9 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                     raise HomeAssistantError(exc) from exc
 
                 # Capture and store server request-id for next calls (only when supported)
-                _LOGGER.debug("Completed TTS for text: %s", text)
+                _LOGGER.debug("Completed TTS stream for text: %s", text)
                 if not rid:
                     last_text = text
 
+        _LOGGER.debug("Completed TTS stream")
         return
