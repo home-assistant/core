@@ -578,6 +578,7 @@ class TelegramNotificationService:
             "Error sending message",
             params[ATTR_MESSAGE_TAG],
             text,
+            target=target,
             parse_mode=params[ATTR_PARSER],
             disable_web_page_preview=params[ATTR_DISABLE_WEB_PREV],
             disable_notification=params[ATTR_DISABLE_NOTIF],
