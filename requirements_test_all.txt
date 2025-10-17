@@ -1473,7 +1473,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.8.0
+plugwise==1.8.1
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
