@@ -2907,19 +2907,19 @@ async def test_included_entities(
 
     entity_registry.async_get_or_create(
         domain="hello",
-        platform="hello",
+        platform="test",
         unique_id="very_unique_oceans",
         suggested_object_id="oceans",
     )
     entity_registry.async_get_or_create(
         domain="hello",
-        platform="hello",
+        platform="test",
         unique_id="very_unique_continents",
         suggested_object_id="continents",
     )
     entity_registry.async_get_or_create(
         domain="hello",
-        platform="hello",
+        platform="test",
         unique_id="very_unique_moon",
         suggested_object_id="moon",
     )
@@ -2938,7 +2938,7 @@ async def test_included_entities(
     class MockHelloIncludedEntitiesClass(MockHelloBaseClass, entity.Entity):
         """Mock hello grouped entity class for a test integration."""
 
-    platform = MockEntityPlatform(hass, domain="hello")
+    platform = MockEntityPlatform(hass, domain="hello", platform_name="test")
     mock_entity = MockHelloIncludedEntitiesClass()
     mock_entity.hass = hass
     mock_entity.entity_id = "hello.universe"
@@ -2947,7 +2947,7 @@ async def test_included_entities(
 
     # Initiate mock grouped entity for hello domain
     mock_entity.async_set_included_entities(
-        "hello", ["very_unique_continents", "very_unique_oceans"]
+        ["very_unique_continents", "very_unique_oceans"]
     )
 
     mock_entity.async_schedule_update_ha_state(True)
@@ -2958,7 +2958,7 @@ async def test_included_entities(
 
     # Add an entity to the group of included entities
     mock_entity.async_set_included_entities(
-        "hello", ["very_unique_continents", "very_unique_moon", "very_unique_oceans"]
+        ["very_unique_continents", "very_unique_moon", "very_unique_oceans"]
     )
 
     mock_entity.async_schedule_update_ha_state(True)
@@ -2973,9 +2973,7 @@ async def test_included_entities(
     ]
 
     # Remove an entity from the group of included entities
-    mock_entity.async_set_included_entities(
-        "hello", ["very_unique_moon", "very_unique_oceans"]
-    )
+    mock_entity.async_set_included_entities(["very_unique_moon", "very_unique_oceans"])
 
     mock_entity.async_schedule_update_ha_state(True)
     await hass.async_block_till_done()

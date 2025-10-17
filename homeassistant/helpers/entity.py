@@ -1653,9 +1653,7 @@ class Entity(
         )
 
     @callback
-    def async_set_included_entities(
-        self, integration_domain: str, unique_ids: list[str]
-    ) -> None:
+    def async_set_included_entities(self, unique_ids: list[str]) -> None:
         """Set the list of included entities identified by their unique IDs.
 
         Integrations need to initialize this in entity.async_async_added_to_hass,
@@ -1672,7 +1670,7 @@ class Entity(
             self._attr_included_entities = []
             for included_id in self.included_unique_ids:
                 if entity_id := entity_registry.async_get_entity_id(
-                    self.platform.domain, integration_domain, included_id
+                    self.platform.domain, self.platform.platform_name, included_id
                 ):
                     self._attr_included_entities.append(entity_id)
 
