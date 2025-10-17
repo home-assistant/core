@@ -9,8 +9,11 @@ import uuid
 
 import pytest
 
-from homeassistant.components.rest import DEFAULT_METHOD, DEFAULT_TIMEOUT
+from homeassistant.components.rest.data import (  # pylint: disable=hass-component-root-import
+    DEFAULT_TIMEOUT,
+)
 from homeassistant.components.rest.schema import (  # pylint: disable=hass-component-root-import
+    DEFAULT_METHOD,
     DEFAULT_VERIFY_SSL,
 )
 from homeassistant.components.scrape.const import (

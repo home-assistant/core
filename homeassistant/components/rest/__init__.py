@@ -48,11 +48,8 @@ from .const import (
     CONF_PAYLOAD_TEMPLATE,
     CONF_SSL_CIPHER_LIST,
     COORDINATOR,
-    DEFAULT_METHOD,
     DEFAULT_SSL_CIPHER_LIST,
-    DEFAULT_TIMEOUT,
     DOMAIN,
-    METHODS,
     PLATFORM_IDX,
     REST,
     REST_DATA,
@@ -71,16 +68,6 @@ PLATFORMS = [
 ]
 
 COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
-
-__all__ = [
-    "CONF_PAYLOAD_TEMPLATE",
-    "DEFAULT_METHOD",
-    "DEFAULT_TIMEOUT",
-    "METHODS",
-    "RESOURCE_SCHEMA",
-    "RestData",
-    "create_rest_data_from_config",
-]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

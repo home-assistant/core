@@ -8,7 +8,10 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 
-from homeassistant.components.rest import CONF_PAYLOAD_TEMPLATE, RestData
+from homeassistant.components.rest import RestData
+from homeassistant.components.rest.const import (  # pylint: disable=hass-component-root-import
+    CONF_PAYLOAD_TEMPLATE,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_RESOURCE_TEMPLATE
 from homeassistant.core import HomeAssistant

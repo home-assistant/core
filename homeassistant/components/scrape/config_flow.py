@@ -8,11 +8,13 @@ import uuid
 
 import voluptuous as vol
 
-from homeassistant.components.rest import (
-    DEFAULT_METHOD,
+from homeassistant.components.rest import create_rest_data_from_config
+from homeassistant.components.rest.data import (  # pylint: disable=hass-component-root-import
     DEFAULT_TIMEOUT,
+)
+from homeassistant.components.rest.schema import (  # pylint: disable=hass-component-root-import
+    DEFAULT_METHOD,
     METHODS,
-    create_rest_data_from_config,
 )
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
