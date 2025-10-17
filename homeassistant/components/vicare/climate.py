@@ -8,11 +8,7 @@ from typing import Any
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
-from PyViCare.PyViCareFloorHeating import FloorHeating as PyViCareFloorHeating
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
-from PyViCare.PyViCareRadiatorActuator import (
-    RadiatorActuator as PyViCareRadiatorActuator,
-)
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareInvalidDataError,
@@ -85,34 +81,18 @@ CHANGABLE_HEATING_PROGRAMS = [
 
 def _build_entities(
     device_list: list[ViCareDevice],
-) -> list[ViCareTRV | ViCareFHT | ViCareClimate]:
+) -> list[ViCareClimate]:
     """Create ViCare climate entities for a device."""
-    entities: list[ViCareTRV | ViCareFHT | ViCareClimate] = []
-    for device in device_list:
-        # add TRV devices
-        if isinstance(device.api, PyViCareRadiatorActuator):
-            entities.append(
-                ViCareTRV(get_device_serial(device.api), device.config, device.api)
-            )
-        # add heating devices
-        elif isinstance(device.api, PyViCareFloorHeating):
-            entities.append(
-                ViCareFHT(get_device_serial(device.api), device.config, device.api)
-            )
-        # add heating devices
-        else:
-            entities.extend(
-                [
-                    ViCareClimate(
-                        get_device_serial(device.api),
-                        device.config,
-                        device.api,
-                        circuit,
-                    )
-                    for circuit in get_circuits(device.api)
-                ]
-            )
-    return entities
+    return [
+        ViCareClimate(
+            get_device_serial(device.api),
+            device.config,
+            device.api,
+            circuit,
+        )
+        for device in device_list
+        for circuit in get_circuits(device.api)
+    ]
 
 
 async def async_setup_entry(
@@ -135,84 +115,6 @@ async def async_setup_entry(
             config_entry.runtime_data.devices,
         )
     )
-
-
-class ViCareTRV(ViCareEntity, ClimateEntity):
-    """Representation of the ViCare TRV device."""
-
-    _attr_hvac_mode = HVACMode.AUTO
-    _attr_hvac_modes = []
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_translation_key = "trv"
-
-    def __init__(
-        self,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
-    ) -> None:
-        """Initialize the climate device."""
-        super().__init__(
-            self._attr_translation_key, device_serial, device_config, device
-        )
-
-    def update(self) -> None:
-        """Let HA know there has been an update from the ViCare API."""
-        try:
-            with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_current_temperature = self._api.getTemperature()
-
-            with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_target_temperature = self._api.getTargetTemperature()
-
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
-        except PyViCareRateLimitError as limit_exception:
-            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
-        except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
-        except PyViCareInvalidDataError as invalid_data_exception:
-            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
-
-
-class ViCareFHT(ViCareEntity, ClimateEntity):
-    """Representation of the ViCare FHT device."""
-
-    _attr_hvac_mode = None
-    _attr_hvac_modes = []
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_translation_key = "fht"
-
-    def __init__(
-        self,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
-    ) -> None:
-        """Initialize the climate device."""
-        super().__init__(
-            self._attr_translation_key, device_serial, device_config, device
-        )
-
-    def update(self) -> None:
-        """Let HA know there has been an update from the ViCare API."""
-        try:
-            with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_current_temperature = self._api.getSupplyTemperature()
-
-            with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_hvac_mode = VICARE_TO_HA_HVAC_HEATING.get(
-                    self._api.getActiveMode()
-                )
-
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
-        except PyViCareRateLimitError as limit_exception:
-            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
-        except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
-        except PyViCareInvalidDataError as invalid_data_exception:
-            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
 
 
 class ViCareClimate(ViCareEntity, ClimateEntity):
