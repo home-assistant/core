@@ -1622,6 +1622,118 @@
     'state': '37.0',
   })
 # ---
+# name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_smart_lock_u200_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-2-PowerSource-47-12',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Aqara Smart Lock U200 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_lock_u200_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_battery_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_smart_lock_u200_battery_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Battery voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_voltage',
+    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-2-PowerSourceBatVoltage-47-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_battery_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Aqara Smart Lock U200 Battery voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_lock_u200_battery_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.4',
+  })
+# ---
 # name: test_sensors[aqara_w100][sensor.climate_sensor_w100_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2745,7 +2857,7 @@
     'state': '3.558',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2760,7 +2872,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_current',
+    'entity_id': 'sensor.eve_energy_20ecn4101_current_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2775,7 +2887,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'Current (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2785,23 +2897,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Eve Energy 20ECN4101 Current',
+      'friendly_name': 'Eve Energy 20ECN4101 Current (top)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_current',
+    'entity_id': 'sensor.eve_energy_20ecn4101_current_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.159999996423721',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2816,7 +2928,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_energy',
+    'entity_id': 'sensor.eve_energy_20ecn4101_energy_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2831,7 +2943,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2841,23 +2953,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Eve Energy 20ECN4101 Energy',
+      'friendly_name': 'Eve Energy 20ECN4101 Energy (top)',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_energy',
+    'entity_id': 'sensor.eve_energy_20ecn4101_energy_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '18.7803344726562',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2872,7 +2984,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_power',
+    'entity_id': 'sensor.eve_energy_20ecn4101_power_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2887,7 +2999,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Power (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2897,23 +3009,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Eve Energy 20ECN4101 Power',
+      'friendly_name': 'Eve Energy 20ECN4101 Power (top)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_power',
+    'entity_id': 'sensor.eve_energy_20ecn4101_power_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13.3999996185303',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2928,7 +3040,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_voltage',
+    'entity_id': 'sensor.eve_energy_20ecn4101_voltage_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2943,7 +3055,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'Voltage (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2953,16 +3065,16 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Eve Energy 20ECN4101 Voltage',
+      'friendly_name': 'Eve Energy 20ECN4101 Voltage (top)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_voltage',
+    'entity_id': 'sensor.eve_energy_20ecn4101_voltage_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4243,7 +4355,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_fancy_button-entry]
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_fancy_button-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4258,7 +4370,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_generic_switch_fancy_button',
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_fancy_button',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4270,7 +4382,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fancy Button',
+    'original_name': 'Current switch position (Fancy Button)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4280,14 +4392,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_fancy_button-state]
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_fancy_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Generic Switch Fancy Button',
+      'friendly_name': 'Mock Generic Switch Current switch position (Fancy Button)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_generic_switch_fancy_button',
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_fancy_button',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4406,7 +4518,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_config-entry]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_enter_ok_select-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4421,7 +4533,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.white_series_onoff_switch_config',
+    'entity_id': 'sensor.white_series_onoff_switch_current_switch_position_enter_ok_select',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4433,7 +4545,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Config',
+    'original_name': 'Current switch position (Enter/OK/Select)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4443,21 +4555,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_config-state]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_enter_ok_select-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Config',
+      'friendly_name': 'White Series OnOff Switch Current switch position (Enter/OK/Select)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.white_series_onoff_switch_config',
+    'entity_id': 'sensor.white_series_onoff_switch_current_switch_position_enter_ok_select',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_down-entry]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_off_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4472,7 +4584,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.white_series_onoff_switch_down',
+    'entity_id': 'sensor.white_series_onoff_switch_current_switch_position_off_down',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4484,7 +4596,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Down',
+    'original_name': 'Current switch position (Off, Down)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4494,14 +4606,65 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_down-state]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_off_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Down',
+      'friendly_name': 'White Series OnOff Switch Current switch position (Off, Down)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.white_series_onoff_switch_down',
+    'entity_id': 'sensor.white_series_onoff_switch_current_switch_position_off_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_on_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.white_series_onoff_switch_current_switch_position_on_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (On, Up)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-3-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_on_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Current switch position (On, Up)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.white_series_onoff_switch_current_switch_position_on_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4733,57 +4896,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.83',
-  })
-# ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_fancy_button-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_generic_switch_current_switch_position_fancy_button',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Current switch position (Fancy Button)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-3-SwitchCurrentPosition-59-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_fancy_button-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Generic Switch Current switch position (Fancy Button)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_generic_switch_current_switch_position_fancy_button',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
   })
 # ---
 # name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_voltage-entry]
@@ -7699,7 +7811,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_active_current_solar_solar-entry]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_active_current_solar_solar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7714,7 +7826,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_active_current_solar_solar',
+    'entity_id': 'sensor.mock_solar_inverter_active_current_solar_solar',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7742,23 +7854,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_active_current_solar_solar-state]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_active_current_solar_solar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'SolarPower Active current (Solar Solar)',
+      'friendly_name': 'Mock solar inverter Active current (Solar Solar)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_active_current_solar_solar',
+    'entity_id': 'sensor.mock_solar_inverter_active_current_solar_solar',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-3.62',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_energy_exported_solar_solar-entry]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_energy_exported_solar_solar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7773,7 +7885,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_energy_exported_solar_solar',
+    'entity_id': 'sensor.mock_solar_inverter_energy_exported_solar_solar',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7801,23 +7913,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_energy_exported_solar_solar-state]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_energy_exported_solar_solar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'SolarPower Energy exported (Solar Solar)',
+      'friendly_name': 'Mock solar inverter Energy exported (Solar Solar)',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_energy_exported_solar_solar',
+    'entity_id': 'sensor.mock_solar_inverter_energy_exported_solar_solar',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '42.279',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_power_solar_solar-entry]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_power_solar_solar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7832,7 +7944,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_power_solar_solar',
+    'entity_id': 'sensor.mock_solar_inverter_power_solar_solar',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7860,23 +7972,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_power_solar_solar-state]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_power_solar_solar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'SolarPower Power (Solar Solar)',
+      'friendly_name': 'Mock solar inverter Power (Solar Solar)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_power_solar_solar',
+    'entity_id': 'sensor.mock_solar_inverter_power_solar_solar',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-850.0',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_voltage_solar_solar-entry]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_voltage_solar_solar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7891,7 +8003,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_voltage_solar_solar',
+    'entity_id': 'sensor.mock_solar_inverter_voltage_solar_solar',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7919,16 +8031,16 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_voltage_solar_solar-state]
+# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_voltage_solar_solar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'SolarPower Voltage (Solar Solar)',
+      'friendly_name': 'Mock solar inverter Voltage (Solar Solar)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_voltage_solar_solar',
+    'entity_id': 'sensor.mock_solar_inverter_voltage_solar_solar',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
