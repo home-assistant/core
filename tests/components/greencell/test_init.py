@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from typing import Any
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -79,9 +80,10 @@ async def test_async_setup_entry_success(
     """Test successful setup of Greencell entry with runtime data."""
     entry = DummyConfigEntry()
 
+    # Using AsyncMock for cleaner mocking
     monkeypatch.setattr(
         "homeassistant.components.greencell.mqtt.async_wait_for_mqtt_client",
-        lambda h: asyncio.sleep(0),
+        AsyncMock(return_value=True),
     )
 
     ev = asyncio.Event()
@@ -105,6 +107,25 @@ async def test_async_setup_entry_success(
     assert DOMAIN in hass.data
     assert entry.entry_id in hass.data[DOMAIN]
     assert called["yes"]
+
+
+@pytest.mark.asyncio
+async def test_async_setup_entry_mqtt_not_available(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test setup fails when MQTT is not available."""
+    entry = DummyConfigEntry()
+
+    async def mock_mqtt_wait(h):
+        return False
+
+    monkeypatch.setattr(
+        "homeassistant.components.greencell.mqtt.async_wait_for_mqtt_client",
+        mock_mqtt_wait,
+    )
+
+    with pytest.raises(ConfigEntryNotReady, match="MQTT integration is not available"):
+        await async_setup_entry(hass, entry)  # type: ignore[arg-type]
 
 
 @pytest.mark.asyncio

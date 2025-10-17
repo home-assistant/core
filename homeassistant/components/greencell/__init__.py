@@ -95,21 +95,24 @@ def wait_for_device_ready(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Greencell from a config entry with test-before-setup and runtime_data."""
 
-    await mqtt.async_wait_for_mqtt_client(hass)
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        raise ConfigEntryNotReady("MQTT integration is not available")
 
     serial = entry.data.get(CONF_SERIAL_NUMBER)
     if not serial:
         raise ConfigEntryNotReady("Missing serial_number in config entry")
 
     unsub_ready, ready_event = wait_for_device_ready(hass, serial, DISCOVERY_TIMEOUT)
+
     try:
         await asyncio.wait_for(ready_event.wait(), timeout=DISCOVERY_TIMEOUT)
     except TimeoutError as err:
-        unsub_ready()
         raise ConfigEntryNotReady(
             f"No initial data from device {serial} within {DISCOVERY_TIMEOUT}s"
         ) from err
-    unsub_ready()
+    finally:
+        # Ensure we always unsubscribe, even if an unexpected error occurs
+        unsub_ready()
 
     runtime = {
         GREENCELL_ACCESS_KEY: GreencellAccess(GreencellHaAccessLevel.EXECUTE),
@@ -118,6 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         GREENCELL_POWER_DATA_KEY: ElecDataSinglePhase(),
         GREENCELL_STATE_DATA_KEY: ElecDataSinglePhase(),
     }
+
     entry.runtime_data = runtime
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime
 

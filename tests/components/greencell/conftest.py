@@ -262,7 +262,7 @@ async def hass_with_runtime(
     class DummyMqttData:
         """Simulates MQTT data with a client and async_subscribe method."""
 
-        def __init__(self, hass: DummyHass) -> None:
+        def __init__(self, hass: HomeAssistant) -> None:
             """Initialize the dummy MQTT data."""
 
             def async_subscribe(
