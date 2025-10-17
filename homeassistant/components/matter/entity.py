@@ -44,7 +44,7 @@ VENDOR_LABELING_LIST: dict[int, dict] = {
     4488: {259: ["position"]},  # TP-Link Dual Outdoor Plug US
     4874: {105: ["orientation"]},  # Eve Energy dual Outlet US
     4961: {
-        1: ["label", "name", "button"],  # Inovelli VTM31
+        1: ["inovelliname", "label", "name", "button"],  # Inovelli VTM31
         2: ["label", "devicetype", "button"],  # Inovelli VTM35
         4: None,  # Inovelli VTM36
         16: ["label", "name", "button"],  # Inovelli VTM30
