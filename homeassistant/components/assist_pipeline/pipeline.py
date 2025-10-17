@@ -1,7 +1,7 @@
 """Classes for voice assistant pipelines."""
 
 from __future__ import annotations
-
+import math
 import array
 import asyncio
 from collections import defaultdict, deque
@@ -553,7 +553,7 @@ class PipelineRun:
     start_stage: PipelineStage
     end_stage: PipelineStage
     event_callback: PipelineEventCallback
-    language: str = None  # type: ignore[assignment]
+    language: str | None = None  # type: ignore[assignment]
     runner_data: Any | None = None
     intent_agent: conversation.AgentInfo | None = None
     tts_audio_output: str | dict[str, Any] | None = None
@@ -1573,7 +1573,8 @@ class PipelineRun:
         """Apply volume transformation only (no VAD/audio enhancements) with optional chunking."""
         timestamp_ms = 0
         async for chunk in audio_stream:
-            if self.audio_settings.volume_multiplier != 1.0:
+            # Refactor: Use math.isclose to safely compare floating point values
+            if not math.isclose(self.audio_settings.volume_multiplier, 1.0, rel_tol=1e-6):
                 chunk = _multiply_volume(chunk, self.audio_settings.volume_multiplier)
 
             for sub_chunk in chunk_samples(
@@ -1593,8 +1594,11 @@ class PipelineRun:
         assert self.audio_enhancer is not None
 
         timestamp_ms = 0
+        # Refactor: Use math.isclose to safely compare floating point values
+        volume_multiplier = self.audio_settings.volume_multiplier
+        apply_volume = not math.isclose(volume_multiplier, 1.0, rel_tol=1e-6)
         async for dirty_samples in audio_stream:
-            if self.audio_settings.volume_multiplier != 1.0:
+            if apply_volume:
                 # Static gain
                 dirty_samples = _multiply_volume(
                     dirty_samples, self.audio_settings.volume_multiplier
