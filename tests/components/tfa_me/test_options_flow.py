@@ -203,66 +203,6 @@ async def test_setup_entry_and_action_rain(
 
 
 @pytest.mark.asyncio
-async def test_setup_entry_and_action_update_data(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, tfa_me_mock_entry
-) -> None:
-    """Test a successful setup: async_update_data()."""
-
-    # Fake JSON reply from gateway
-    fake_json = {"gateway_id": "001", "sensors": []}
-
-    # Create dummy config entry and add it to hass
-    cfg_entry_x = create_default_mock_entry(hass)
-
-    with patch(
-        "homeassistant.components.tfa_me.coordinator.TFAmeDataCoordinator._async_update_data",
-        new=AsyncMock(return_value=fake_json),
-    ):
-        result = await hass.config_entries.async_setup(cfg_entry_x.entry_id)
-        await hass.async_block_till_done()
-
-    assert result is True
-    assert cfg_entry_x.state == ConfigEntryState.LOADED
-    # setup ready now call an action
-
-    # Create a TFA.me data coordinator
-    coordinator = TFAmeDataCoordinator(
-        hass=hass,
-        config_entry=tfa_me_mock_entry,
-        host="192.168.1.46",
-        interval=timedelta(30),
-        multiple_entities=False,
-    )
-    # Add dummy entities
-    coordinator.sensor_entity_list = ["sensor.rain1", "sensor.rain2"]
-
-    # Add coordinator to hass.data
-    hass.data.setdefault(DOMAIN, {})[cfg_entry_x.entry_id] = coordinator
-
-    # Register dummy services in case of OptionsFlow calls it
-    hass.services.async_register(
-        "homeassistant", "reload_config_entry", lambda call: None
-    )
-    hass.services.async_register("homeassistant", "update_entity", lambda call: None)
-
-    # Register dummy service in case of OptionsFlow calls it
-    hass.services.async_register(
-        "homeassistant", "reload_config_entry", lambda call: None
-    )
-
-    # Start OptionsFlow via HA API (not manually!)
-    result = await hass.config_entries.options.async_init(
-        cfg_entry_x.entry_id,
-        context={"source": "user"},
-        data={"select_option": "update_data"},
-    )
-
-    # Test result
-    assert result["type"] == "create_entry"
-    assert result["title"] == "update_data"
-
-
-@pytest.mark.asyncio
 async def test_options_flow_show_main_menu(
     hass: HomeAssistant, mock_entry, mock_coordinator
 ) -> None:

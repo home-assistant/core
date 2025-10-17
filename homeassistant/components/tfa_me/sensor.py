@@ -1,9 +1,10 @@
 """TFA.me station integration: sensor.py."""
 
-from collections import deque
 from datetime import datetime
 import logging
 from typing import Any
+
+from tfa_me_ha_local.history import SensorHistory
 
 from homeassistant.components.sensor import SensorEntity, StateType
 from homeassistant.core import HomeAssistant
@@ -90,7 +91,6 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
             self.multiple_entities = coordinator.multiple_entities
             self.entity_id = entity_id
             self.gateway_id = self.coordinator.data[self.entity_id]["gateway_id"]
-
             self.sensor_id = sensor_id
             self._attr_icon = ""
             self._attr_unique_id = entity_id  # just the entity ID
@@ -305,7 +305,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
         return self.get_icon(self.measurement_name, value)
 
     def get_icon(self, measurement_type, value_state):
-        """Return an icon for measurement type based on measurement value (see MDI list)."""
+        """Return an icon for measurement type based on measurement value (see also MDI list)."""
 
         if value_state is None:
             value = value_state  # use None
@@ -347,7 +347,6 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
         if measurement_type == "rssi":
             if value is None:
                 return ICON_MAPPING["rssi"]["weak"]
-
             if value < 100:
                 return ICON_MAPPING["rssi"]["weak"]
             if value < 150:
@@ -398,7 +397,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
             return ICON_MAPPING["rain"]["light"]
         if 0.5 <= value < 4:
             return ICON_MAPPING["rain"]["moderate"]
-        # if value >= 4:
+        # value >= 4:
         return ICON_MAPPING["rain"]["heavy"]
 
     def get_wind_direction_icon(self, value):
@@ -419,7 +418,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
         if 8 <= value <= 9:
             return "mdi:arrow-up"  # S (South)
         if 10 <= value <= 11:
-            return "mdi:arrow-top-right"  # SW (South-West)t
+            return "mdi:arrow-top-right"  # SW (South-West)
         if 12 <= value <= 13:
             return "mdi:arrow-right"  # W (West)
         if 14 <= value <= 15:
@@ -438,48 +437,3 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
     async def async_update(self) -> None:
         """Manual Updating."""
         await self.coordinator.async_request_refresh()
-
-
-class SensorHistory:
-    """Class to store a history, specially for rain sensor to calculate rain of last hour & last 24 hours)."""
-
-    def __init__(self, max_age_minutes=60) -> None:
-        """Initalaize history queue."""
-        self.max_age = max_age_minutes * 60
-        self.data: deque[tuple[float, int]] = deque()  # Stores (value, timestamp)
-
-    def add_measurement(self, value, ts):
-        """Add new value with time stamp."""
-        ts_last = 0
-        val_last = 0
-        length = len(self.data)
-        if length != 0:
-            entry_last = self.data[-1]
-            ts_last = entry_last[1]
-            val_last = entry_last[0]
-        if (ts_last != ts) & (val_last != value):
-            self.data.append((value, ts))
-            self.cleanup()
-
-    def cleanup(self):
-        """Remove entries older max_age seconds."""
-        utc_now = datetime.now()
-        utc_now_ts = int(utc_now.timestamp())
-        run = 1
-        while self.data and (run == 1):
-            ts1 = int(self.data[0][1])
-            ts2 = utc_now_ts - self.max_age
-            if ts1 < ts2:
-                self.data.popleft()
-            else:
-                run = 0
-
-    def get_data(self):
-        """Return list with values."""
-        return list(self.data)
-
-    def get_oldest_and_newest(self):
-        """Return oldest and newest measuerement tuple."""
-        if not self.data:
-            return None, None  # If list is empty
-        return self.data[0], self.data[-1]  # First(oldest) and last(newest) entry

@@ -82,6 +82,7 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
 
             # New TFA.me data structure
             tfa_me_data = TFAmeDataForHA(multiple_entities=self.multiple_entities)
+
             # Convert JSON to TFA.me data for HA
             parsed_data = tfa_me_data.json_to_entities(json_data=json_data)
             self.gateway_id = tfa_me_data.get_gateway_id()

@@ -123,14 +123,11 @@ class OptionsFlowHandler(OptionsFlow):
             if "select_option" in user_input:
                 if user_input["select_option"] == "action_rain":
                     return await self.async_step_action_rain(user_input)
-                if user_input["select_option"] == "update_data":
-                    return await self.async_update_data(user_input)
 
         # No option seletced -> build main option menu
         opt_dict = [
             SelectOptionDict(value="none", label="None"),
             SelectOptionDict(value="action_rain", label="Reset all rain sensors"),
-            SelectOptionDict(value="update_data", label="Reload sensor data"),
         ]
 
         options_schema = vol.Schema(
@@ -178,24 +175,4 @@ class OptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="action_rain",
             data_schema=action_schema_rain,
-        )
-
-    async def async_update_data(self, user_input=None) -> ConfigFlowResult:
-        """Entry point for option: Reload all sensor data."""
-        if user_input is not None:
-            if user_input["select_option"] == "update_data":
-                coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
-                await coordinator.async_refresh()  # get sensor data from station
-
-                # Update all entities on dashboard
-                for entity_id in coordinator.sensor_entity_list:
-                    ent_str = str(entity_id)
-                    await self.hass.services.async_call(
-                        "homeassistant",
-                        "update_entity",
-                        {"entity_id": ent_str},
-                    )
-
-        return self.async_create_entry(
-            title="update_data", data=self.config_entry.options
         )
