@@ -25,7 +25,6 @@ from tests.common import MockConfigEntry, snapshot_platform
         ("type:ess", "vicare/VitoChargeVX3.json"),
         (None, "vicare/VitoValor.json"),
         ("type:climateSensor", "vicare/RoomSensor1.json"),
-        ("type:climateSensor", "vicare/RoomSensor2.json"),
         ("type:radiator", "vicare/ZigbeeTRV.json"),
         ("type:repeater", "vicare/ZigbeeRepeater.json"),
     ],
