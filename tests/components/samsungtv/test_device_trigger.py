@@ -3,8 +3,8 @@
 import pytest
 
 from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DeviceAutomationType,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.samsungtv import device_trigger

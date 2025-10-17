@@ -33,7 +33,9 @@ from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disab
 )
 from homeassistant.components.cloud.const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
 from homeassistant.components.cloud.http_api import validate_language_voice
-from homeassistant.components.google_assistant.helpers import GoogleEntity
+from homeassistant.components.google_assistant.helpers import (  # pylint: disable=hass-component-root-import
+    GoogleEntity,
+)
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
 from homeassistant.core import HomeAssistant, State

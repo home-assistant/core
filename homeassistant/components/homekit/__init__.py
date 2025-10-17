@@ -27,7 +27,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.device_automation.trigger import (
+from homeassistant.components.device_automation.trigger import (  # pylint: disable=hass-component-root-import
     async_validate_trigger_config,
 )
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN, EventDeviceClass
