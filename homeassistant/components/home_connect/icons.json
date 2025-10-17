@@ -39,6 +39,12 @@
           "off": "mdi:remote-off"
         }
       },
+      "interior_illumination_active": {
+        "default": "mdi:lightbulb-on",
+        "state": {
+          "off": "mdi:lightbulb-off"
+        }
+      },
       "dust_box_inserted": {
         "default": "mdi:download"
       },

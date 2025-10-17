@@ -463,6 +463,11 @@
         "cooking_oven_enum_type_warming_level_high": "[%key:common::state::high%]"
       }
     },
+    "rinse_plus": {
+      "options": {
+        "laundry_care_washer_enum_type_rinse_plus_off": "[%key:common::state::off%]"
+      }
+    },
     "washer_temperature": {
       "options": {
         "laundry_care_washer_enum_type_temperature_cold": "Cold",
@@ -496,6 +501,11 @@
         "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:common::state::low%]",
         "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:common::state::medium%]",
         "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:common::state::high%]"
+      }
+    },
+    "stains": {
+      "options": {
+        "laundry_care_washer_enum_type_stains_off": "[%key:common::state::off%]"
       }
     },
     "vario_perfect": {
@@ -635,6 +645,10 @@
           "name": "Warming level",
           "description": "Defines the level of the warming drawer."
         },
+        "laundry_care_washer_option_rinse_plus": {
+          "name": "Extra rinse",
+          "description": "Defines if an additional rinse cycle is added to the program."
+        },
         "laundry_care_washer_option_temperature": {
           "name": "Temperature",
           "description": "Defines the temperature of the washing program."
@@ -643,9 +657,17 @@
           "name": "Spin speed",
           "description": "Defines the spin speed of a washer program."
         },
+        "laundry_care_washer_option_stains": {
+          "name": "Auto stain",
+          "description": "Defines the type of stains to be treated."
+        },
         "b_s_h_common_option_finish_in_relative": {
           "name": "Finish in relative",
           "description": "Defines when the program should end in seconds."
+        },
+        "laundry_care_common_option_silent_mode": {
+          "name": "Silent mode",
+          "description": "Defines if the silent mode is activated."
         },
         "laundry_care_washer_option_i_dos1_active": {
           "name": "i-Dos 1 Active",
@@ -654,6 +676,34 @@
         "laundry_care_washer_option_i_dos2_active": {
           "name": "i-Dos 2 Active",
           "description": "Defines if the detergent feed is activated / deactivated. (i-Dos content 2)"
+        },
+        "laundry_care_washer_option_intensive_plus": {
+          "name": "Intensive +",
+          "description": "Defines if the intensive washing is enabled for heavily soiled laundry."
+        },
+        "laundry_care_washer_option_less_ironing": {
+          "name": "Less ironing",
+          "description": "Defines if the laundry is treated gently to reduce creasing and make ironing easier."
+        },
+        "laundry_care_washer_option_mini_load": {
+          "name": "Mini load",
+          "description": "Defines if the mini load option is activated."
+        },
+        "laundry_care_washer_option_prewash": {
+          "name": "Prewash",
+          "description": "Defines if an additional prewash cycle is added to the program."
+        },
+        "laundry_care_washer_option_rinse_hold": {
+          "name": "Rinse hold",
+          "description": "Defines if the rinse hold option is activated."
+        },
+        "laundry_care_washer_option_soak": {
+          "name": "Soaking",
+          "description": "Defines if the soaking is activated."
+        },
+        "laundry_care_washer_option_water_plus": {
+          "name": "Water +",
+          "description": "Defines if the water plus option is activated."
         },
         "laundry_care_washer_option_vario_perfect": {
           "name": "Vario perfect",
@@ -724,6 +774,9 @@
       },
       "charging_connection": {
         "name": "Charging connection"
+      },
+      "interior_illumination_active": {
+        "name": "Interior illumination active"
       },
       "dust_box_inserted": {
         "name": "Dust box",
@@ -1362,6 +1415,12 @@
           "cooking_oven_enum_type_warming_level_high": "[%key:common::state::high%]"
         }
       },
+      "rinse_plus": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_rinse_plus::name%]",
+        "state": {
+          "laundry_care_washer_enum_type_rinse_plus_off": "[%key:common::state::off%]"
+        }
+      },
       "washer_temperature": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_temperature::name%]",
         "state": {
@@ -1397,6 +1456,12 @@
           "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:common::state::low%]",
           "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:common::state::medium%]",
           "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:common::state::high%]"
+        }
+      },
+      "auto_stain": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_stains::name%]",
+        "state": {
+          "laundry_care_washer_enum_type_stains_off": "[%key:common::state::off%]"
         }
       },
       "vario_perfect": {
@@ -1875,11 +1940,35 @@
       "fast_pre_heat": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_oven_option_fast_pre_heat::name%]"
       },
+      "silent_mode": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_common_option_silent_mode::name%]"
+      },
       "i_dos1_active": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos1_active::name%]"
       },
       "i_dos2_active": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos2_active::name%]"
+      },
+      "intensive_plus": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_intensive_plus::name%]"
+      },
+      "less_ironing": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_less_ironing::name%]"
+      },
+      "mini_load": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_mini_load::name%]"
+      },
+      "prewash": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_prewash::name%]"
+      },
+      "rinse_hold": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_rinse_hold::name%]"
+      },
+      "soaking": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_soak::name%]"
+      },
+      "water_plus": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_water_plus::name%]"
       }
     }
   }

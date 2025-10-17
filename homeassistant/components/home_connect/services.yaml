@@ -494,6 +494,15 @@ set_program_and_options:
     washer_options:
       collapsed: true
       fields:
+        laundry_care_washer_option_rinse_plus:
+          example: laundry_care_washer_enum_type_rinse_plus_off
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: rinse_plus
+              options:
+                - laundry_care_washer_enum_type_rinse_plus_off
         laundry_care_washer_option_temperature:
           example: laundry_care_washer_enum_type_temperature_g_c_40
           required: false
@@ -537,6 +546,15 @@ set_program_and_options:
                 - laundry_care_washer_enum_type_spin_speed_ul_low
                 - laundry_care_washer_enum_type_spin_speed_ul_medium
                 - laundry_care_washer_enum_type_spin_speed_ul_high
+        laundry_care_washer_option_stains:
+          example: laundry_care_washer_enum_type_stains_off
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: stains
+              options:
+                - laundry_care_washer_enum_type_stains_off
         b_s_h_common_option_finish_in_relative:
           example: 3600
           required: false
@@ -546,12 +564,52 @@ set_program_and_options:
               step: 1
               mode: box
               unit_of_measurement: s
+        laundry_care_common_option_silent_mode:
+          example: false
+          required: false
+          selector:
+            boolean:
         laundry_care_washer_option_i_dos1_active:
           example: false
           required: false
           selector:
             boolean:
         laundry_care_washer_option_i_dos2_active:
+          example: false
+          required: false
+          selector:
+            boolean:
+        laundry_care_washer_option_intensive_plus:
+          example: false
+          required: false
+          selector:
+            boolean:
+        laundry_care_washer_option_less_ironing:
+          example: false
+          required: false
+          selector:
+            boolean:
+        laundry_care_washer_option_mini_load:
+          example: false
+          required: false
+          selector:
+            boolean:
+        laundry_care_washer_option_prewash:
+          example: false
+          required: false
+          selector:
+            boolean:
+        laundry_care_washer_option_rinse_hold:
+          example: false
+          required: false
+          selector:
+            boolean:
+        laundry_care_washer_option_soak:
+          example: false
+          required: false
+          selector:
+            boolean:
+        laundry_care_washer_option_water_plus:
           example: false
           required: false
           selector:

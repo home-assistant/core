@@ -29,7 +29,9 @@ from .const import (
     HOT_WATER_TEMPERATURE_OPTIONS,
     INTENSIVE_LEVEL_OPTIONS,
     PROGRAMS_TRANSLATION_KEYS_MAP,
+    RINSE_PLUS_OPTIONS,
     SPIN_SPEED_OPTIONS,
+    STAINS_OPTIONS,
     SUCTION_POWER_OPTIONS,
     TEMPERATURE_OPTIONS,
     TRANSLATION_KEYS_PROGRAMS_MAP,
@@ -280,6 +282,16 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
         },
     ),
     HomeConnectSelectEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_RINSE_PLUS,
+        translation_key="rinse_plus",
+        options=list(RINSE_PLUS_OPTIONS),
+        translation_key_values=RINSE_PLUS_OPTIONS,
+        values_translation_key={
+            value: translation_key
+            for translation_key, value in RINSE_PLUS_OPTIONS.items()
+        },
+    ),
+    HomeConnectSelectEntityDescription(
         key=OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
         translation_key="washer_temperature",
         options=list(TEMPERATURE_OPTIONS),
@@ -297,6 +309,15 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
         values_translation_key={
             value: translation_key
             for translation_key, value in SPIN_SPEED_OPTIONS.items()
+        },
+    ),
+    HomeConnectSelectEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_STAINS,
+        translation_key="auto_stain",
+        options=list(STAINS_OPTIONS),
+        translation_key_values=STAINS_OPTIONS,
+        values_translation_key={
+            value: translation_key for translation_key, value in STAINS_OPTIONS.items()
         },
     ),
     HomeConnectSelectEntityDescription(
