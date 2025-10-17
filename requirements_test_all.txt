@@ -36,7 +36,7 @@ PSNAWP==3.0.0
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==11.3.0
+Pillow==12.0.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.16
@@ -301,7 +301,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.0.0
+aiomealie==1.0.1
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -648,7 +648,7 @@ caldav==1.6.0
 coinbase-advanced-py==1.2.2
 
 # homeassistant.scripts.check_config
-colorlog==6.9.0
+colorlog==6.10.1
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -1009,7 +1009,7 @@ ha-philipsjs==3.2.4
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.4.5
+habiticalib==0.4.6
 
 # homeassistant.components.bluetooth
 habluetooth==5.7.0
@@ -1473,7 +1473,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.8.0
+plugwise==1.8.1
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
@@ -2187,7 +2187,7 @@ pyuptimerobot==22.2.0
 pyvera==0.3.16
 
 # homeassistant.components.vesync
-pyvesync==3.1.0
+pyvesync==3.1.2
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
