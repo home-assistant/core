@@ -1562,7 +1562,9 @@ class PipelineRun:
 
         timestamp_ms = 0
         async for dirty_samples in audio_stream:
-            if self.audio_settings.volume_multiplier != 1.0:
+            if not math.isclose(
+                self.audio_settings.volume_multiplier, 1.0, rel_tol=1e-9
+            ):
                 # Static gain
                 dirty_samples = _multiply_volume(
                     dirty_samples, self.audio_settings.volume_multiplier
@@ -1777,34 +1779,7 @@ class PipelineInput:
 
     async def validate(self) -> None:
         """Validate pipeline input against start stage."""
-        if self.run.start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
-            if self.run.pipeline.stt_engine is None:
-                raise PipelineRunValidationError(
-                    "the pipeline does not support speech-to-text"
-                )
-            if self.stt_metadata is None:
-                raise PipelineRunValidationError(
-                    "stt_metadata is required for speech-to-text"
-                )
-            if self.stt_stream is None:
-                raise PipelineRunValidationError(
-                    "stt_stream is required for speech-to-text"
-                )
-        elif self.run.start_stage == PipelineStage.INTENT:
-            if self.intent_input is None:
-                raise PipelineRunValidationError(
-                    "intent_input is required for intent recognition"
-                )
-        elif self.run.start_stage == PipelineStage.TTS:
-            if self.tts_input is None:
-                raise PipelineRunValidationError(
-                    "tts_input is required for text-to-speech"
-                )
-        if self.run.end_stage == PipelineStage.TTS:
-            if self.run.pipeline.tts_engine is None:
-                raise PipelineRunValidationError(
-                    "the pipeline does not support text-to-speech"
-                )
+        self._basic_validation()
 
         start_stage_index = PIPELINE_STAGE_ORDER.index(self.run.start_stage)
         end_stage_index = PIPELINE_STAGE_ORDER.index(self.run.end_stage)
@@ -1843,6 +1818,52 @@ class PipelineInput:
         if prepare_tasks:
             await asyncio.gather(*prepare_tasks)
 
+    def _basic_validation(self) -> None:
+        if self.run.start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
+            self._validate_engine()
+            self._validate_metadata()
+            self._validate_stream()
+        elif self.run.start_stage == PipelineStage.INTENT:
+            self._validate_intent()
+        elif self.run.start_stage == PipelineStage.TTS:
+            self._validate_start_stage()
+        if self.run.end_stage == PipelineStage.TTS:
+            self._validate_tts_engine()
+
+    def _validate_tts_engine(self) -> None:
+        if self.run.pipeline.tts_engine is None:
+            raise PipelineRunValidationError(
+                "the pipeline does not support text-to-speech"
+            )
+
+    def _validate_start_stage(self) -> None:
+        if self.tts_input is None:
+            raise PipelineRunValidationError("tts_input is required for text-to-speech")
+
+    def _validate_intent(self) -> None:
+        if self.intent_input is None:
+            raise PipelineRunValidationError(
+                "intent_input is required for intent recognition"
+            )
+
+    def _validate_stream(self) -> None:
+        if self.stt_stream is None:
+            raise PipelineRunValidationError(
+                "stt_stream is required for speech-to-text"
+            )
+
+    def _validate_metadata(self) -> None:
+        if self.stt_metadata is None:
+            raise PipelineRunValidationError(
+                "stt_metadata is required for speech-to-text"
+            )
+
+    def _validate_engine(self) -> None:
+        if self.run.pipeline.stt_engine is None:
+            raise PipelineRunValidationError(
+                "the pipeline does not support speech-to-text"
+            )
+
 
 class PipelinePreferred(CollectionError):
     """Raised when attempting to delete the preferred pipelen."""
@@ -1871,7 +1892,7 @@ class PipelineStorageCollection(
         if not (data := await super()._async_load_data()):
             pipeline = await _async_create_default_pipeline(self.hass, self)
             self._preferred_item = pipeline.id
-            return data
+            return None
 
         self._preferred_item = data["preferred_item"]
 
