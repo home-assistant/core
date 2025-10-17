@@ -191,9 +191,11 @@ class ValveEntity(Entity):
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        if not self.reports_position:
-            return None
-        return {ATTR_CURRENT_POSITION: self.current_valve_position}
+        state_attr: dict[str, Any] = self.generate_entity_state_attributes()
+
+        if self.reports_position:
+            state_attr[ATTR_CURRENT_POSITION] = self.current_valve_position
+        return state_attr or None
 
     @property
     def supported_features(self) -> ValveEntityFeature:

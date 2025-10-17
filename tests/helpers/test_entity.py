@@ -6,7 +6,7 @@ import dataclasses
 from datetime import timedelta
 import logging
 import threading
-from typing import Any, override
+from typing import Any, final
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -2927,17 +2927,16 @@ async def test_included_entities(
     class MockHelloBaseClass(entity.Entity):
         """Domain base entity platform domain Hello."""
 
+        @final
         @property
-        @override
-        def state_attributes(self) -> dict[str, Any] | None:
+        def state_attributes(self) -> dict[str, Any]:
             """Return the state attributes."""
-            if included_entities := getattr(self, "included_entities", None):
-                return {ATTR_ENTITY_ID: included_entities}
-
-            return None
+            data: dict[str, Any] = self.generate_entity_state_attributes()
+            data["extra"] = "beer"
+            return data
 
     class MockHelloIncludedEntitiesClass(MockHelloBaseClass, entity.Entity):
-        """.Mock hello grouped entity class for a test integration."""
+        """Mock hello grouped entity class for a test integration."""
 
     platform = MockEntityPlatform(hass, domain="hello")
     mock_entity = MockHelloIncludedEntitiesClass()
@@ -2966,6 +2965,7 @@ async def test_included_entities(
     await hass.async_block_till_done()
 
     state = hass.states.get(mock_entity.entity_id)
+    assert state.attributes.get("extra") == "beer"
     assert state.attributes.get(ATTR_ENTITY_ID) == [
         "hello.continents",
         "hello.moon",

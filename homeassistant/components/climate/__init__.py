@@ -341,16 +341,16 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
+        data: dict[str, Any] = self.generate_entity_state_attributes()
+
         supported_features = self.supported_features
         temperature_unit = self.temperature_unit
         precision = self.precision
         hass = self.hass
 
-        data: dict[str, str | float | None] = {
-            ATTR_CURRENT_TEMPERATURE: show_temp(
-                hass, self.current_temperature, temperature_unit, precision
-            ),
-        }
+        data[ATTR_CURRENT_TEMPERATURE] = show_temp(
+            hass, self.current_temperature, temperature_unit, precision
+        )
 
         if ClimateEntityFeature.TARGET_TEMPERATURE in supported_features:
             data[ATTR_TEMPERATURE] = show_temp(

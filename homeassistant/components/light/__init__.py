@@ -1261,7 +1261,8 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
-        data: dict[str, Any] = {}
+        data: dict[str, Any] = self.generate_entity_state_attributes()
+
         supported_features = self.supported_features_compat
         supported_color_modes = self.supported_color_modes
         legacy_supported_color_modes = (

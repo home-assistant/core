@@ -25,7 +25,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN, LockState
@@ -244,9 +244,10 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, StateType]:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        state_attr = {}
+        state_attr: dict[str, Any] = self.generate_entity_state_attributes()
+
         for prop, attr in PROP_TO_ATTR.items():
             if (value := getattr(self, prop)) is not None:
                 state_attr[attr] = value

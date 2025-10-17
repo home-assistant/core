@@ -25,6 +25,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -785,9 +786,22 @@ class Entity(
         """Return the state attributes.
 
         Implemented by component base class, should not be extended by integrations.
+        An entity base class should use self.generate_entity_state_attributes()
+        to generate the initial state attributes.
         Convention for attribute names is lowercase snake_case.
         """
         return None
+
+    def generate_entity_state_attributes(self) -> dict[str, Any]:
+        """Generate base state attributes dict for entity base components.
+
+        Base entity classes can extend the state attributes. This helper
+        creates a new dict and sets the sharedcommon entity attributes
+        """
+        state_attrs: dict[str, Any] = {}
+        if included_entities := getattr(self, "included_entities", None):
+            state_attrs[ATTR_ENTITY_ID] = included_entities
+        return state_attrs
 
     @cached_property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:

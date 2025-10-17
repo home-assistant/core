@@ -184,13 +184,14 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return optional state attributes."""
-        if RemoteEntityFeature.ACTIVITY not in self.supported_features:
-            return None
+        data: dict[str, Any] = self.generate_entity_state_attributes()
 
-        return {
-            ATTR_ACTIVITY_LIST: self.activity_list,
-            ATTR_CURRENT_ACTIVITY: self.current_activity,
-        }
+        if RemoteEntityFeature.ACTIVITY not in self.supported_features:
+            return data or None
+
+        data[ATTR_ACTIVITY_LIST] = self.activity_list
+        data[ATTR_CURRENT_ACTIVITY] = self.current_activity
+        return data
 
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send commands to a device."""
