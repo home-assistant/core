@@ -74,8 +74,7 @@
           "cycle_sensing": "Cycle sensing",
           "cycle_soaking": "Cycle soaking",
           "cycle_spinning": "Cycle spinning",
-          "cycle_washing": "Cycle washing",
-          "door_open": "Door open"
+          "cycle_washing": "Cycle washing"
         }
       },
       "dryer_state": {
@@ -105,8 +104,7 @@
           "cycle_sensing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_sensing%]",
           "cycle_soaking": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_soaking%]",
           "cycle_spinning": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_spinning%]",
-          "cycle_washing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_washing%]",
-          "door_open": "[%key:component::whirlpool::entity::sensor::washer_state::state::door_open%]"
+          "cycle_washing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_washing%]"
         }
       },
       "whirlpool_tank": {
@@ -127,8 +125,7 @@
         "state": {
           "standby": "[%key:common::state::standby%]",
           "preheating": "Preheating",
-          "cooking": "Cooking",
-          "not_present": "Not present"
+          "cooking": "Cooking"
         }
       },
       "oven_state_upper": {
@@ -136,8 +133,7 @@
         "state": {
           "standby": "[%key:common::state::standby%]",
           "preheating": "[%key:component::whirlpool::entity::sensor::oven_state::state::preheating%]",
-          "cooking": "[%key:component::whirlpool::entity::sensor::oven_state::state::cooking%]",
-          "not_present": "[%key:component::whirlpool::entity::sensor::oven_state::state::not_present%]"
+          "cooking": "[%key:component::whirlpool::entity::sensor::oven_state::state::cooking%]"
         }
       },
       "oven_state_lower": {
@@ -145,8 +141,7 @@
         "state": {
           "standby": "[%key:common::state::standby%]",
           "preheating": "[%key:component::whirlpool::entity::sensor::oven_state::state::preheating%]",
-          "cooking": "[%key:component::whirlpool::entity::sensor::oven_state::state::cooking%]",
-          "not_present": "[%key:component::whirlpool::entity::sensor::oven_state::state::not_present%]"
+          "cooking": "[%key:component::whirlpool::entity::sensor::oven_state::state::cooking%]"
         }
       },
       "oven_cook_mode": {

@@ -100,7 +100,6 @@ OVEN_CAVITY_STATE = {
     OvenCavityState.Standby: "standby",
     OvenCavityState.Preheating: "preheating",
     OvenCavityState.Cooking: "cooking",
-    OvenCavityState.NotPresent: "not_present",
 }
 
 OVEN_COOK_MODE = {
@@ -297,15 +296,15 @@ async def async_setup_entry(
     oven_upper_cavity_sensors = [
         WhirlpoolOvenCavitySensor(oven, OvenCavity.Upper, description)
         for oven in appliances_manager.ovens
-        for description in OVEN_CAVITY_SENSORS
         if oven.get_oven_cavity_exists(OvenCavity.Upper)
+        for description in OVEN_CAVITY_SENSORS
     ]
 
     oven_lower_cavity_sensors = [
         WhirlpoolOvenCavitySensor(oven, OvenCavity.Lower, description)
         for oven in appliances_manager.ovens
-        for description in OVEN_CAVITY_SENSORS
         if oven.get_oven_cavity_exists(OvenCavity.Lower)
+        for description in OVEN_CAVITY_SENSORS
     ]
 
     async_add_entities(
@@ -451,7 +450,3 @@ class WhirlpoolOvenCavitySensor(WhirlpoolOvenEntity, SensorEntity):
     def native_value(self) -> StateType | str | int | float | None:
         """Return native value of sensor."""
         return self.entity_description.value_fn(self._appliance, self.cavity)
-
-    async def async_update(self) -> None:
-        """Update status of the oven."""
-        await self._appliance.fetch_data()

@@ -82,10 +82,9 @@ class WhirlpoolOvenEntity(WhirlpoolEntity):
         """Initialize the entity."""
         self.cavity = cavity
         cavity_suffix = ""
-        if (
-            sum(1 for cavity in OvenCavity if appliance.get_oven_cavity_exists(cavity))
-            > 1
-        ):
+        if appliance.get_oven_cavity_exists(
+            OvenCavity.Upper
+        ) and appliance.get_oven_cavity_exists(OvenCavity.Lower):
             if cavity == OvenCavity.Upper:
                 cavity_suffix = "_upper"
             elif cavity == OvenCavity.Lower:
