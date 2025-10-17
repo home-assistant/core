@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Final
 
 from pytautulli import PyTautulli, PyTautulliException, exceptions
 import voluptuous as vol
@@ -13,6 +13,8 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_NAME, DOMAIN
+
+SAMPLE_IP: Final = "http://192.168.0.10:8181"
 
 
 class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -47,7 +49,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(data_schema),
             errors=errors or {},
-            description_placeholders={"sample_ip": "http://192.168.0.10:8181"},
+            description_placeholders={"sample_ip": SAMPLE_IP},
         )
 
     async def async_step_reauth(
@@ -71,7 +73,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
             errors=errors,
-            description_placeholders={"sample_ip": "http://192.168.0.10:8181"},
+            description_placeholders={"sample_ip": SAMPLE_IP},
         )
 
     async def validate_input(self, user_input: dict[str, Any]) -> str | None:

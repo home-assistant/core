@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, Final
 
 from pynuki import NukiBridge
 from pynuki.bridge import InvalidCredentialsException
@@ -19,6 +19,7 @@ from .helpers import CannotConnect, InvalidAuth, parse_id
 
 _LOGGER = logging.getLogger(__name__)
 
+SAMPLE_IP: Final = "http://192.168.1.10:8123"
 USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
@@ -110,7 +111,7 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
                 description_placeholders={
-                    "sample_ip": "http://192.168.1.10:8123",
+                    "sample_ip": SAMPLE_IP,
                 },
             )
 
@@ -148,7 +149,7 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=REAUTH_SCHEMA,
             errors=errors,
             description_placeholders={
-                "sample_ip": "http://192.168.1.10:8123",
+                "sample_ip": SAMPLE_IP,
             },
         )
 
@@ -187,6 +188,6 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
             errors=errors,
             description_placeholders={
-                "sample_ip": "http://192.168.1.10:8123",
+                "sample_ip": SAMPLE_IP,
             },
         )
