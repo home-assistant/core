@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import selector
 
 from tests.common import MockConfigEntry
 
@@ -63,6 +64,15 @@ async def test_discovery_flow_success(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "select_gateway"
+    schema = result["data_schema"].schema
+    selector_field = schema["selected_gateway"]
+    assert isinstance(selector_field, selector.SelectSelector)
+    assert selector_field.config["options"] == [
+        selector.SelectOptionDict(
+            label=f"{gateway.name} ({gateway.gw_sn}, {gateway.gw_ip})",
+            value=gateway.gw_sn,
+        )
+    ]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

@@ -18,6 +18,11 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
 
 from .const import CONF_SN, DOMAIN
 
@@ -116,16 +121,21 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema({}),
             )
 
-        gateway_options = {
-            sn: f"{sn} ({gateway.gw_ip})"
+        gateway_options = [
+            SelectOptionDict(
+                value=sn,
+                label=f"{gateway.name} ({sn}, {gateway.gw_ip})",
+            )
             for sn, gateway in self._discovered_gateways.items()
-        }
+        ]
 
         return self.async_show_form(
             step_id="select_gateway",
             data_schema=vol.Schema(
                 {
-                    vol.Optional("selected_gateway"): vol.In(gateway_options),
+                    vol.Optional("selected_gateway"): SelectSelector(
+                        SelectSelectorConfig(options=gateway_options, sort=True)
+                    ),
                 }
             ),
             errors=errors,
