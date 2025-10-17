@@ -31,7 +31,6 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        await self.async_set_unique_id(DOMAIN)
 
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")

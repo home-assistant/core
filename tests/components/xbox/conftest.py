@@ -65,7 +65,6 @@ def mock_config_entry() -> MockConfigEntry:
                 "user_id": "AAAAAAAAAAAAAAAAAAAAA",
             },
         },
-        unique_id="xbox",
     )
 
 
