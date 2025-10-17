@@ -243,6 +243,19 @@ RPC_SWITCHES = {
         available=lambda status: (left := status["left"]) is not None
         and left.get("vial", {}).get("level", -1) != -1,
     ),
+    "cury_left_boost": RpcSwitchDescription(
+        key="cury",
+        sub_key="slots",
+        name="Left slot boost",
+        translation_key="cury_boost",
+        is_on=lambda status: status["slots"]["left"]["boost"] is not None,
+        method_on="cury_boost",
+        method_off="cury_stop_boost",
+        method_params_fn=lambda id, _: (id, "left"),
+        entity_registry_enabled_default=True,
+        available=lambda status: (left := status["left"]) is not None
+        and left.get("vial", {}).get("level", -1) != -1,
+    ),
     "cury_right": RpcSwitchDescription(
         key="cury",
         sub_key="slots",
@@ -256,6 +269,19 @@ RPC_SWITCHES = {
         available=lambda status: (right := status["right"]) is not None
         and right.get("vial", {}).get("level", -1) != -1,
     ),
+    "cury_right_boost": RpcSwitchDescription(
+        key="cury",
+        sub_key="slots",
+        name="Right slot boost",
+        translation_key="cury_boost",
+        is_on=lambda status: status["slots"]["right"]["boost"] is not None,
+        method_on="cury_boost",
+        method_off="cury_stop_boost",
+        method_params_fn=lambda id, _: (id, "right"),
+        entity_registry_enabled_default=True,
+        available=lambda status: (right := status["right"]) is not None
+        and right.get("vial", {}).get("level", -1) != -1,
+    ),
 }
 
 
@@ -264,20 +290,20 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up switches for device."""
+    """Set up switch entities."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        return async_setup_rpc_entry(hass, config_entry, async_add_entities)
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-    return async_setup_block_entry(hass, config_entry, async_add_entities)
+    return _async_setup_block_entry(hass, config_entry, async_add_entities)
 
 
 @callback
-def async_setup_block_entry(
+def _async_setup_block_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up entities for block device."""
+    """Set up entities for BLOCK device."""
     coordinator = config_entry.runtime_data.block
     assert coordinator
 
@@ -295,7 +321,7 @@ def async_setup_block_entry(
 
 
 @callback
-def async_setup_rpc_entry(
+def _async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
