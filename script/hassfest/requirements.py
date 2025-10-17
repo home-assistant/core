@@ -137,11 +137,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "emulated_kasa": {"sense-energy": {"async-timeout"}},
     "entur_public_transport": {"enturclient": {"async-timeout"}},
-    "epson": {
-        # https://github.com/pszafer/epson_projector/pull/22
-        # epson-projector > pyserial-asyncio
-        "epson-projector": {"pyserial-asyncio", "async-timeout"}
-    },
     "escea": {"pescea": {"async-timeout"}},
     "evil_genius_labs": {"pyevilgenius": {"async-timeout"}},
     "familyhub": {"python-family-hub-local": {"async-timeout"}},
@@ -229,11 +224,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pymochad > pbr > setuptools
         "pbr": {"setuptools"}
     },
-    "monoprice": {
-        # https://github.com/etsinko/pymonoprice/issues/9
-        # pymonoprice > pyserial-asyncio
-        "pymonoprice": {"pyserial-asyncio"}
-    },
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
@@ -263,7 +253,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "sense": {"sense-energy": {"async-timeout"}},
     "slimproto": {"aioslimproto": {"async-timeout"}},
     "songpal": {"async-upnp-client": {"async-timeout"}},
-    "squeezebox": {"pysqueezebox": {"async-timeout"}},
     "ssdp": {"async-upnp-client": {"async-timeout"}},
     "surepetcare": {"surepy": {"async-timeout"}},
     "travisci": {

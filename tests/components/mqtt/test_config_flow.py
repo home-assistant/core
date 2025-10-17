@@ -17,7 +17,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import AddonError
-from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
+from homeassistant.components.mqtt.config_flow import (
+    PWD_NOT_CHANGED,
+    TRANSLATION_DESCRIPTION_PLACEHOLDERS,
+)
 from homeassistant.components.mqtt.util import learn_more_url
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
 from homeassistant.const import (
@@ -57,6 +60,7 @@ from .common import (
     MOCK_SENSOR_SUBENTRY_DATA,
     MOCK_SENSOR_SUBENTRY_DATA_LAST_RESET_TEMPLATE,
     MOCK_SENSOR_SUBENTRY_DATA_STATE_CLASS,
+    MOCK_SIREN_SUBENTRY_DATA,
     MOCK_SWITCH_SUBENTRY_DATA,
 )
 
@@ -3653,6 +3657,41 @@ async def test_migrate_of_incompatible_config_entry(
             id="sensor_total",
         ),
         pytest.param(
+            MOCK_SIREN_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Siren"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "optimistic": True,
+                "available_tones": ["Happy hour", "Cooling alarm"],
+                "support_duration": True,
+                "support_volume_set": True,
+                "siren_advanced_settings": {
+                    "command_off_template": "{{ value }}",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Siren",
+            id="siren",
+        ),
+        pytest.param(
             MOCK_SWITCH_SUBENTRY_DATA,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Outlet"},
@@ -3757,12 +3796,16 @@ async def test_subentry_configflow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
-    assert result["description_placeholders"] == {
-        "mqtt_device": device_name,
-        "platform": component["platform"],
-        "entity": entity_name,
-        "url": learn_more_url(component["platform"]),
-    }
+    assert (
+        result["description_placeholders"]
+        == {
+            "mqtt_device": device_name,
+            "platform": component["platform"],
+            "entity": entity_name,
+            "url": learn_more_url(component["platform"]),
+        }
+        | TRANSLATION_DESCRIPTION_PLACEHOLDERS
+    )
 
     # Process entity details step
     assert result["step_id"] == "entity_platform_config"
@@ -3784,12 +3827,16 @@ async def test_subentry_configflow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
-    assert result["description_placeholders"] == {
-        "mqtt_device": device_name,
-        "platform": component["platform"],
-        "entity": entity_name,
-        "url": learn_more_url(component["platform"]),
-    }
+    assert (
+        result["description_placeholders"]
+        == {
+            "mqtt_device": device_name,
+            "platform": component["platform"],
+            "entity": entity_name,
+            "url": learn_more_url(component["platform"]),
+        }
+        | TRANSLATION_DESCRIPTION_PLACEHOLDERS
+    )
 
     # Process mqtt platform config flow
     # Test an invalid mqtt user input case
@@ -5096,12 +5143,16 @@ async def test_subentry_configflow_section_feature(
         user_input={"platform": "fan"},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["description_placeholders"] == {
-        "mqtt_device": "Bla",
-        "platform": "fan",
-        "entity": "Bla",
-        "url": learn_more_url("fan"),
-    }
+    assert (
+        result["description_placeholders"]
+        == {
+            "mqtt_device": "Bla",
+            "platform": "fan",
+            "entity": "Bla",
+            "url": learn_more_url("fan"),
+        }
+        | TRANSLATION_DESCRIPTION_PLACEHOLDERS
+    )
 
     # Process entity details step
     assert result["step_id"] == "entity_platform_config"

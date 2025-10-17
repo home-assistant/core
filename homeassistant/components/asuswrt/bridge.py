@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections import namedtuple
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any, cast
+from typing import Any, NamedTuple
 
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 from aiohttp import ClientSession
 from asusrouter import AsusRouter, AsusRouterError
 from asusrouter.config import ARConfigKey
 from asusrouter.modules.client import AsusClient
+from asusrouter.modules.connection import ConnectionState
 from asusrouter.modules.data import AsusData
 from asusrouter.modules.homeassistant import convert_to_ha_data, convert_to_ha_sensors
 from asusrouter.tools.connection import get_cookie_jar
@@ -61,7 +61,14 @@ SENSORS_TYPE_RATES = "sensors_rates"
 SENSORS_TYPE_TEMPERATURES = "sensors_temperatures"
 SENSORS_TYPE_UPTIME = "sensors_uptime"
 
-WrtDevice = namedtuple("WrtDevice", ["ip", "name", "connected_to"])  # noqa: PYI024
+
+class WrtDevice(NamedTuple):
+    """WrtDevice structure."""
+
+    ip: str | None
+    name: str | None
+    conneted_to: str | None
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +87,7 @@ def handle_errors_and_zip[_AsusWrtBridgeT: AsusWrtBridge](
         """Run library methods and zip results or manage exceptions."""
 
         @functools.wraps(func)
-        async def _wrapper(self: _AsusWrtBridgeT) -> dict[str, Any]:
+        async def _wrapper(self: _AsusWrtBridgeT) -> dict[str, str]:
             try:
                 data = await func(self)
             except exceptions as exc:
@@ -219,7 +226,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
     @property
     def is_connected(self) -> bool:
         """Get connected status."""
-        return cast(bool, self._api.is_connected)
+        return self._api.is_connected
 
     async def async_connect(self) -> None:
         """Connect to the device."""
@@ -235,8 +242,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
 
     async def async_disconnect(self) -> None:
         """Disconnect to the device."""
-        if self._api is not None and self._protocol == PROTOCOL_TELNET:
-            self._api.connection.disconnect()
+        await self._api.async_disconnect()
 
     async def async_get_connected_devices(self) -> dict[str, WrtDevice]:
         """Get list of connected devices."""
@@ -437,6 +443,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
             if dev.connection is not None
             and dev.description is not None
             and dev.connection.ip_address is not None
+            and dev.state is ConnectionState.CONNECTED
         }
 
     async def async_get_available_sensors(self) -> dict[str, dict[str, Any]]:

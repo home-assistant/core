@@ -59,7 +59,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.VACUUM, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterStateVacuumEntityDescription(
     StateVacuumEntityDescription, MatterEntityDescription
 ):
