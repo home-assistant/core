@@ -5,13 +5,11 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.models import Image
 from xbox.webapi.api.provider.smartglass.models import (
     PlaybackState,
     PowerState,
     SmartglassConsole,
-    SmartglassConsoleList,
     VolumeDirection,
 )
 
@@ -21,7 +19,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -29,7 +26,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .browse_media import build_item_response
 from .const import DOMAIN
-from .coordinator import ConsoleData, XboxUpdateCoordinator
+from .coordinator import ConsoleData, XboxConfigEntry, XboxUpdateCoordinator
 
 SUPPORT_XBOX = (
     MediaPlayerEntityFeature.TURN_ON
@@ -57,18 +54,18 @@ XBOX_STATE_MAP: dict[PlaybackState | PowerState, MediaPlayerState | None] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: XboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox media_player from a config entry."""
-    client: XboxLiveClient = hass.data[DOMAIN][entry.entry_id]["client"]
-    consoles: SmartglassConsoleList = hass.data[DOMAIN][entry.entry_id]["consoles"]
-    coordinator: XboxUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "coordinator"
-    ]
+
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        [XboxMediaPlayer(client, console, coordinator) for console in consoles.result]
+        [
+            XboxMediaPlayer(console, coordinator)
+            for console in coordinator.consoles.result
+        ]
     )
 
 
@@ -77,14 +74,13 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
 
     def __init__(
         self,
-        client: XboxLiveClient,
         console: SmartglassConsole,
         coordinator: XboxUpdateCoordinator,
     ) -> None:
         """Initialize the Xbox Media Player."""
         super().__init__(coordinator)
-        self.client: XboxLiveClient = client
-        self._console: SmartglassConsole = console
+        self.client = coordinator.client
+        self._console = console
 
     @property
     def name(self):

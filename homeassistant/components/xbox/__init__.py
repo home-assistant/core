@@ -8,14 +8,13 @@ from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.smartglass.models import SmartglassConsoleList
 from xbox.webapi.common.signed_session import SignedSession
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 
 from . import api
 from .const import DOMAIN
-from .coordinator import XboxUpdateCoordinator
+from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
     """Set up xbox from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -45,30 +44,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug(
         "Found %d consoles: %s",
         len(consoles.result),
-        consoles.dict(),
+        consoles.model_dump(),
     )
 
     coordinator = XboxUpdateCoordinator(hass, entry, client, consoles)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "client": XboxLiveClient(auth),
-        "consoles": consoles,
-        "coordinator": coordinator,
-    }
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        # Unsub from coordinator updates
-        hass.data[DOMAIN][entry.entry_id]["sensor_unsub"]()
-        hass.data[DOMAIN][entry.entry_id]["binary_sensor_unsub"]()
-        hass.data[DOMAIN].pop(entry.entry_id)
 
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
