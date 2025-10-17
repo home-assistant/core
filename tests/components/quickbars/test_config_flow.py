@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import importlib
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -19,13 +18,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
-_cf = importlib.import_module("homeassistant.components.quickbars.config_flow")
 DOMAIN = "quickbars"
-
-
-# ---------------------------------------------------------------------------
-# Helpers / fixtures
-# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -45,26 +38,6 @@ class _ZCStub:
 
     def __getitem__(self, key: str):
         return getattr(self, key)
-
-
-@pytest.fixture
-def patch_client_all():
-    """Patch QuickBarsClient with sensible defaults."""
-    with patch(
-        "homeassistant.components.quickbars.config_flow.QuickBarsClient", autospec=True
-    ) as cls:
-        inst = cls.return_value
-        inst.get_pair_code = AsyncMock(return_value={"sid": "sid1"})
-        inst.confirm_pair = AsyncMock(
-            return_value={
-                "id": "QB-1234",
-                "name": "QuickBars TV",
-                "port": 9123,
-                "has_token": False,
-            }
-        )
-        inst.set_credentials = AsyncMock(return_value={"ok": True})
-        yield inst
 
 
 def create_zc_stub(ip="192.0.2.20", port=9123, props=None):
@@ -87,14 +60,25 @@ def create_zc_stub(ip="192.0.2.20", port=9123, props=None):
     )
 
 
-# ---------------------------------------------------------------------------
-# CONFIG FLOW TESTS
-# ---------------------------------------------------------------------------
+@pytest.fixture(autouse=True)
+def _bypass_quickbars_setup():
+    """Don’t run the real integration setup during config flow tests."""
+    with (
+        patch("homeassistant.components.quickbars.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.quickbars.async_setup_entry", return_value=True
+        ),
+    ):
+        yield
 
 
-async def test_user_flow_success_paths(hass: HomeAssistant, patch_client_all) -> None:
-    """Test both user flow paths - with and without token step."""
-    # First test: Flow with token step
+async def test_user_flow_with_token_step(hass: HomeAssistant, patch_client_all) -> None:
+    """Test user flow that requires setting up a token."""
+    # Configure the mock to return has_token=False
+    patch_client_all.confirm_pair.return_value.update(
+        {"id": "QB-1234", "name": "QuickBars TV", "port": 9123, "has_token": False}
+    )
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -122,31 +106,40 @@ async def test_user_flow_success_paths(hass: HomeAssistant, patch_client_all) ->
     assert data[CONF_HOST] == "192.0.2.10"
     assert data[CONF_PORT] == 9123
 
-    # Remove the entry before testing the second path
-    await hass.config_entries.async_remove(result["result"].entry_id)
-    await hass.async_block_till_done()
 
-    # Second test: Flow with token already set
-    patch_client_all.confirm_pair.return_value.update({"has_token": True})
+async def test_user_flow_without_token_step(
+    hass: HomeAssistant, patch_client_all
+) -> None:
+    """Test user flow when token is already set."""
+    # Configure the mock to return has_token=True and a different unique_id
+    patch_client_all.confirm_pair.return_value.update(
+        {
+            "id": "QB-5678",  # Different ID to avoid conflicts
+            "name": "QuickBars TV",
+            "port": 9123,
+            "has_token": True,
+        }
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM and result["step_id"] == "user"
+
+    # Submit host/port
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.0.2.20",
-            CONF_PORT: 9123,
-        },  # Use different IP to avoid duplicate
+        result["flow_id"], {CONF_HOST: "192.0.2.20", CONF_PORT: 9123}
     )
+    assert result["type"] is FlowResultType.FORM and result["step_id"] == "pair"
+
+    # Submit pairing code - should create entry directly since has_token=True
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"code": "1234"}
     )
-    # Should skip token step and create entry
     assert result["type"] is FlowResultType.CREATE_ENTRY
     data = result["data"]
     assert data is not None
-    assert data[CONF_HOST] == "192.0.2.20"  # Check different IP
+    assert data[CONF_HOST] == "192.0.2.20"
 
 
 async def test_user_flow_error_invalid_credentials(hass: HomeAssistant) -> None:
@@ -215,9 +208,6 @@ async def test_user_flow_error_tv_unreachable_at_token(hass: HomeAssistant) -> N
         assert result["type"] is FlowResultType.FORM and result["step_id"] == "token"
         errors = result["errors"]
         assert errors is not None and errors["base"] == "tv_unreachable"
-
-
-# Split the error cases into separate tests to avoid flow interference
 
 
 async def test_user_flow_error_tv_unreachable(hass: HomeAssistant) -> None:
