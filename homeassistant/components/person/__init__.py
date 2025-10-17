@@ -515,7 +515,7 @@ class Person(
     @callback
     def _update_state(self) -> None:
         """Update the state."""
-        latest_non_gps_home = latest_not_home = latest_gps = latest = coordinates = None
+        latest_non_gps_home = latest_non_gps_zone = latest_not_home = latest_gps = latest = coordinates = None
         for entity_id in self._config[CONF_DEVICE_TRACKERS]:
             state = self.hass.states.get(entity_id)
 
@@ -526,6 +526,8 @@ class Person(
                 latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
                 latest_non_gps_home = _get_latest(latest_non_gps_home, state)
+            elif state.state not in (STATE_HOME, STATE_NOT_HOME):
+                 latest_non_gps_zone = _get_latest(latest_non_gps_zone, state)
             else:
                 latest_not_home = _get_latest(latest_not_home, state)
 
@@ -539,6 +541,9 @@ class Person(
                 coordinates = home_zone
             else:
                 coordinates = latest_non_gps_home
+        elif latest_non_gps_zone:
+             latest = latest_non_gps_zone
+             coordinates = latest_non_gps_zone
         elif latest_gps:
             latest = latest_gps
             coordinates = latest_gps
