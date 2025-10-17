@@ -9,6 +9,7 @@ from collections.abc import AsyncGenerator, AsyncIterable, Callable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
+import math
 from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
@@ -140,36 +141,22 @@ def _async_resolve_default_pipeline_settings(
     The default pipeline will use the homeassistant conversation agent and the
     default stt / tts engines if none are specified.
     """
-    conversation_language = "en"
-    pipeline_language = "en"
-    stt_engine = None
-    stt_language = None
-    tts_engine = None
     tts_language = None
     tts_voice = None
+    stt_language = None
     wake_word_entity = None
     wake_word_id = None
 
-    if conversation_engine_id is None:
-        conversation_engine_id = conversation.HOME_ASSISTANT_AGENT
-
-    # Find a matching language supported by the Home Assistant conversation agent
-    conversation_languages = language_util.matches(
-        hass.config.language,
-        conversation.async_get_conversation_languages(hass, conversation_engine_id),
-        country=hass.config.country,
+    conversation_engine_id, conversation_languages = _validate_coversation_engine_id(
+        hass, conversation_engine_id
     )
-    if conversation_languages:
-        pipeline_language = hass.config.language
-        conversation_language = conversation_languages[0]
+    conversation_language, pipeline_language = _validate_conversation_language(
+        hass, conversation_languages
+    )
 
-    if stt_engine_id is None:
-        stt_engine_id = stt.async_default_engine(hass)
+    stt_engine_id = _validate_stt_engine_id(hass, stt_engine_id)
 
-    if stt_engine_id is not None:
-        stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_id)
-        if stt_engine is None:
-            stt_engine_id = None
+    stt_engine_id, stt_engine = _validate_stt_engine(hass, stt_engine_id)
 
     if stt_engine:
         stt_languages = language_util.matches(
@@ -177,23 +164,13 @@ def _async_resolve_default_pipeline_settings(
             stt_engine.supported_languages,
             country=hass.config.country,
         )
-        if stt_languages:
-            stt_language = stt_languages[0]
-        else:
-            _LOGGER.debug(
-                "Speech-to-text engine '%s' does not support language '%s'",
-                stt_engine_id,
-                pipeline_language,
-            )
-            stt_engine_id = None
+        stt_engine_id, stt_language = _validate_stt_language(
+            pipeline_language, stt_languages, stt_engine_id
+        )
 
-    if tts_engine_id is None:
-        tts_engine_id = tts.async_default_engine(hass)
+    tts_engine_id = _validate_tts_engine_id(hass, tts_engine_id)
 
-    if tts_engine_id is not None:
-        tts_engine = tts.get_engine_instance(hass, tts_engine_id)
-        if tts_engine is None:
-            tts_engine_id = None
+    tts_engine_id, tts_engine = _validate_tts_engine(hass, tts_engine_id)
 
     if tts_engine:
         tts_languages = language_util.matches(
@@ -201,18 +178,9 @@ def _async_resolve_default_pipeline_settings(
             tts_engine.supported_languages,
             country=hass.config.country,
         )
-        if tts_languages:
-            tts_language = tts_languages[0]
-            tts_voices = tts_engine.async_get_supported_voices(tts_language)
-            if tts_voices:
-                tts_voice = tts_voices[0].voice_id
-        else:
-            _LOGGER.debug(
-                "Text-to-speech engine '%s' does not support language '%s'",
-                tts_engine_id,
-                pipeline_language,
-            )
-            tts_engine_id = None
+        tts_engine_id, tts_language, tts_voice = _validate_tts_voice(
+            tts_languages, tts_engine, tts_engine_id, pipeline_language
+        )
 
     return {
         "conversation_engine": conversation_engine_id,
@@ -227,6 +195,110 @@ def _async_resolve_default_pipeline_settings(
         "wake_word_entity": wake_word_entity,
         "wake_word_id": wake_word_id,
     }
+
+
+def _validate_tts_engine(
+    hass: HomeAssistant, tts_engine_id: str | None = None
+) -> tuple[None | str, tts.TextToSpeechEntity | tts.Provider | None]:
+    tts_engine = None
+    if tts_engine_id is not None:
+        tts_engine = tts.get_engine_instance(hass, tts_engine_id)
+        if tts_engine is None:
+            tts_engine_id = None
+    return tts_engine_id, tts_engine
+
+
+def _validate_tts_voice(
+    tts_languages: list[str],
+    tts_engine: tts.TextToSpeechEntity | tts.Provider,
+    tts_engine_id: str | None = None,
+    pipeline_language: str | None = None,
+) -> tuple[None | str, None | str, None | str]:
+    tts_voice = None
+    tts_language = None
+    if tts_languages:
+        tts_language = tts_languages[0]
+        tts_voices = tts_engine.async_get_supported_voices(tts_language)
+        if tts_voices:
+            tts_voice = tts_voices[0].voice_id
+    else:
+        _LOGGER.debug(
+            "Text-to-speech engine '%s' does not support language '%s'",
+            tts_engine_id,
+            pipeline_language,
+        )
+        tts_engine_id = None
+    return tts_engine_id, tts_language, tts_voice
+
+
+def _validate_tts_engine_id(
+    hass: HomeAssistant, tts_engine_id: str | None = None
+) -> None | str:
+    if tts_engine_id is None:
+        tts_engine_id = tts.async_default_engine(hass)
+    return tts_engine_id
+
+
+def _validate_stt_engine(
+    hass: HomeAssistant, stt_engine_id: str | None = None
+) -> tuple[None | str, stt.SpeechToTextEntity | stt.Provider | None]:
+    stt_engine = None
+    if stt_engine_id is not None:
+        stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_id)
+        if stt_engine is None:
+            stt_engine_id = None
+    return stt_engine_id, stt_engine
+
+
+def _validate_stt_engine_id(
+    hass: HomeAssistant, stt_engine_id: str | None = None
+) -> None | str:
+    if stt_engine_id is None:
+        stt_engine_id = stt.async_default_engine(hass)
+    return stt_engine_id
+
+
+def _validate_conversation_language(
+    hass: HomeAssistant, conversation_languages: list[str]
+) -> tuple[str, str]:
+    conversation_language = "en"
+    pipeline_language = "en"
+    if conversation_languages:
+        pipeline_language = hass.config.language
+        conversation_language = conversation_languages[0]
+    return conversation_language, pipeline_language
+
+
+def _validate_coversation_engine_id(
+    hass: HomeAssistant, conversation_engine_id: str | None = None
+) -> tuple[str, list[str]]:
+    if conversation_engine_id is None:
+        conversation_engine_id = conversation.HOME_ASSISTANT_AGENT
+
+    # Find a matching language supported by the Home Assistant conversation agent
+    conversation_languages = language_util.matches(
+        hass.config.language,
+        conversation.async_get_conversation_languages(hass, conversation_engine_id),
+        country=hass.config.country,
+    )
+
+    return conversation_engine_id, conversation_languages
+
+
+def _validate_stt_language(
+    pipeline_language: str, stt_languages: list[str], stt_engine_id: str | None = None
+) -> tuple[None | str, None | str]:
+    stt_language = None
+    if stt_languages:
+        stt_language = stt_languages[0]
+    else:
+        _LOGGER.debug(
+            "Speech-to-text engine '%s' does not support language '%s'",
+            stt_engine_id,
+            pipeline_language,
+        )
+        stt_engine_id = None
+    return stt_engine_id, stt_language
 
 
 async def _async_create_default_pipeline(
@@ -317,50 +389,51 @@ def async_get_pipelines(hass: HomeAssistant) -> list[Pipeline]:
     return list(pipeline_data.pipeline_store.data.values())
 
 
+@dataclass(slots=True)
+class PipelineUpdateConfig:  # noqa: D101
+    conversation_engine: str | UndefinedType = UNDEFINED
+    conversation_language: str | UndefinedType = UNDEFINED
+    language: str | UndefinedType = UNDEFINED
+    name: str | UndefinedType = UNDEFINED
+    stt_engine: str | None | UndefinedType = UNDEFINED
+    stt_language: str | None | UndefinedType = UNDEFINED
+    tts_engine: str | None | UndefinedType = UNDEFINED
+    tts_language: str | None | UndefinedType = UNDEFINED
+    tts_voice: str | None | UndefinedType = UNDEFINED
+    wake_word_entity: str | None | UndefinedType = UNDEFINED
+    wake_word_id: str | None | UndefinedType = UNDEFINED
+    prefer_local_intents: bool | UndefinedType = UNDEFINED
+
+    def to_updates(self) -> dict[str, Any]:
+        """Return only defined (non-UNDEFINED) values as a dict."""
+        return {
+            field: value
+            for field, value in vars(self).items()
+            if value is not UNDEFINED
+        }
+
+
 async def async_update_pipeline(
     hass: HomeAssistant,
     pipeline: Pipeline,
     *,
-    conversation_engine: str | UndefinedType = UNDEFINED,
-    conversation_language: str | UndefinedType = UNDEFINED,
-    language: str | UndefinedType = UNDEFINED,
-    name: str | UndefinedType = UNDEFINED,
-    stt_engine: str | None | UndefinedType = UNDEFINED,
-    stt_language: str | None | UndefinedType = UNDEFINED,
-    tts_engine: str | None | UndefinedType = UNDEFINED,
-    tts_language: str | None | UndefinedType = UNDEFINED,
-    tts_voice: str | None | UndefinedType = UNDEFINED,
-    wake_word_entity: str | None | UndefinedType = UNDEFINED,
-    wake_word_id: str | None | UndefinedType = UNDEFINED,
-    prefer_local_intents: bool | UndefinedType = UNDEFINED,
+    update_config: PipelineUpdateConfig | None = None,
+    **kwargs: Any,
 ) -> None:
     """Update a pipeline."""
     pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
 
     updates: dict[str, Any] = pipeline.to_json()
-    updates.pop("id")
+    updates.pop("id", None)
     # Refactor this once we bump to Python 3.12
     # and have https://peps.python.org/pep-0692/
-    updates.update(
-        {
-            key: val
-            for key, val in (
-                ("conversation_engine", conversation_engine),
-                ("conversation_language", conversation_language),
-                ("language", language),
-                ("name", name),
-                ("stt_engine", stt_engine),
-                ("stt_language", stt_language),
-                ("tts_engine", tts_engine),
-                ("tts_language", tts_language),
-                ("tts_voice", tts_voice),
-                ("wake_word_entity", wake_word_entity),
-                ("wake_word_id", wake_word_id),
-                ("prefer_local_intents", prefer_local_intents),
-            )
-            if val is not UNDEFINED
-        }
-    )
+    if update_config is not None:
+        config_dict = update_config.to_updates()
+    else:
+        # Backward compatibility for existing tests and calls
+        config_dict = {k: v for k, v in kwargs.items() if v is not UNDEFINED}
+
+    updates.update(config_dict)
 
     await pipeline_data.pipeline_store.async_update_item(pipeline.id, updates)
 
@@ -551,7 +624,7 @@ class PipelineRun:
     start_stage: PipelineStage
     end_stage: PipelineStage
     event_callback: PipelineEventCallback
-    language: str = None  # type: ignore[assignment]
+    language: str
     runner_data: Any | None = None
     intent_agent: conversation.AgentInfo | None = None
     tts_audio_output: str | dict[str, Any] | None = None
@@ -582,6 +655,9 @@ class PipelineRun:
 
     _device_id: str | None = None
     """Optional device id set during run start."""
+
+    _satellite_id: str | None = None
+    """Optional satellite id set during run start."""
 
     _conversation_data: PipelineConversationData | None = None
     """Data tied to the conversation ID."""
@@ -702,6 +778,7 @@ class PipelineRun:
 
         self.wake_word_entity_id = entity_id
         self.wake_word_entity = wake_word_entity
+        await asyncio.sleep(0)
 
     async def wake_word_detection(
         self,
@@ -793,19 +870,7 @@ class PipelineRun:
             last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(
                 result.wake_word_phrase
             )
-            if last_wake_up is not None:
-                sec_since_last_wake_up = time.monotonic() - last_wake_up
-                if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
-                    _LOGGER.debug(
-                        "Duplicate wake word detection occurred for %s",
-                        result.wake_word_phrase,
-                    )
-                    raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
-
-            # Record last wake up time to block duplicate detections
-            self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = (
-                time.monotonic()
-            )
+            self._extract_last_wake_up(result, last_wake_up)
 
             if result.queued_audio:
                 # Add audio that was pending at detection.
@@ -836,6 +901,26 @@ class PipelineRun:
         )
 
         return result
+
+    def _extract_last_wake_up(
+        self, result: wake_word.DetectionResult, last_wake_up: float
+    ) -> None:
+        if last_wake_up is not None:
+            sec_since_last_wake_up = time.monotonic() - last_wake_up
+            self._extracxt_sec_since_last_wake_up(result, sec_since_last_wake_up)
+
+            # Record last wake up time to block duplicate detections
+        self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = time.monotonic()
+
+    def _extracxt_sec_since_last_wake_up(
+        self, result: wake_word.DetectionResult, sec_since_last_wake_up: float
+    ) -> None:
+        if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
+            _LOGGER.debug(
+                "Duplicate wake word detection occurred for %s",
+                result.wake_word_phrase,
+            )
+            raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
 
     async def _wake_word_audio_stream(
         self,
@@ -897,6 +982,7 @@ class PipelineRun:
             )
 
         self.stt_provider = stt_provider
+        await asyncio.sleep(0)
 
     async def speech_to_text(
         self,
@@ -1052,6 +1138,7 @@ class PipelineRun:
                 )
 
         self.intent_agent = agent_info
+        await asyncio.sleep(0)
 
     async def recognize_intent(
         self,
@@ -1339,6 +1426,7 @@ class PipelineRun:
                     f" {err}"
                 ),
             ) from err
+        await asyncio.sleep(0)
 
     async def text_to_speech(self, tts_input: str) -> None:
         """Run text-to-speech portion of pipeline."""
@@ -1369,6 +1457,7 @@ class PipelineRun:
         self.process_event(
             PipelineEvent(PipelineEventType.TTS_END, {"tts_output": tts_output})
         )
+        await asyncio.sleep(0)
 
     def _capture_chunk(self, audio_bytes: bytes | None) -> None:
         """Forward audio chunk to various capturing mechanisms."""
@@ -1449,7 +1538,9 @@ class PipelineRun:
         """Apply volume transformation only (no VAD/audio enhancements) with optional chunking."""
         timestamp_ms = 0
         async for chunk in audio_stream:
-            if self.audio_settings.volume_multiplier != 1.0:
+            if not math.isclose(
+                self.audio_settings.volume_multiplier, 1.0, rel_tol=1e-9
+            ):
                 chunk = _multiply_volume(chunk, self.audio_settings.volume_multiplier)
 
             for sub_chunk in chunk_samples(
@@ -1939,6 +2030,7 @@ class PipelineStorageCollectionWebsocket(
             )
             return
         connection.send_result(msg["id"])
+        await asyncio.sleep(0)
 
 
 class PipelineRuns:
@@ -1970,6 +2062,7 @@ class PipelineRuns:
             # Create a temporary list in case the list is modified while we iterate
             for pipeline_run in pipeline_runs.values():
                 pipeline_run.abort_wake_word_detection = True
+                await asyncio.sleep(0)
 
 
 @dataclass(slots=True)
