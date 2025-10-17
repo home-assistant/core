@@ -29,7 +29,7 @@ class ViCareEntity(Entity):
         gateway_serial = device_config.getConfig().serial
         device_id = device_config.getId()
         model = device_config.getModel().replace("_", " ")
-        via_device_identifier: tuple[str, str]
+        via_device_identifier: tuple[str, str] = ("", "")
 
         identifier = (
             f"{gateway_serial}_{device_serial.replace('-', '_')}"
