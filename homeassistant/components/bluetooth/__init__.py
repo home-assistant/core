@@ -113,7 +113,6 @@ __all__ = [
     "BluetoothServiceInfo",
     "BluetoothServiceInfoBleak",
     "HaBluetoothConnector",
-    "HomeAssistantRemoteScanner",
     "async_address_present",
     "async_ble_device_from_address",
     "async_clear_address_from_match_history",
