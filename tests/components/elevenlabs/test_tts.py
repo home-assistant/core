@@ -582,7 +582,8 @@ async def test_stream_tts_with_request_ids(
         assert calls[-1].get("previous_request_ids", []) == (
             [] if len(calls) == 1 else list(prev_request_ids)
         )
-        prev_request_ids.append(request_id or "")
+        if request_id:
+            prev_request_ids.append(request_id or "")
         item, chunk, request_id = next_item, next_chunk, next_request_id
         if item is not None:
             for part in item:

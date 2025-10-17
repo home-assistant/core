@@ -46,7 +46,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-PARALLEL_UPDATES = 10
+PARALLEL_UPDATES = 6
 
 
 def to_voice_settings(options: Mapping[str, Any]) -> VoiceSettings:
@@ -228,7 +228,9 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                 sentences_complete = True
                 sentences_ready.set()
 
-        _add_sentences_task = asyncio.create_task(_add_sentences())
+        _add_sentences_task = self.hass.async_create_background_task(
+            _add_sentences(), name="elevenlabs_tts_add_sentences"
+        )
 
         # Process new sentences as they're available, but synthesize the first
         # one immediately. While that's playing, synthesize (up to) the next 3
@@ -238,8 +240,8 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         while True:
             await sentences_ready.wait()
 
+            # Don't wait again if no more sentences are coming
             if not sentences_complete:
-                # Don't wait again if no more sentences are coming
                 sentences_ready.clear()
 
             if not sentences:
@@ -310,4 +312,3 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                 _LOGGER.debug("Completed TTS stream for text: %s", text)
 
         _LOGGER.debug("Completed TTS stream")
-        return
