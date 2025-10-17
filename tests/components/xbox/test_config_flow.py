@@ -29,7 +29,11 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     assert result["reason"] == "single_instance_allowed"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures(
+    "current_request_with_host",
+    "xbox_live_client",
+    "authentication_manager",
+)
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -68,13 +72,19 @@ async def test_full_flow(
             "access_token": "mock-access-token",
             "type": "Bearer",
             "expires_in": 60,
+            "scope": "XboxLive.signin XboxLive.offline_access",
+            "service": "xbox",
+            "token_type": "bearer",
+            "user_id": "AAAAAAAAAAAAAAAAAAAAA",
         },
     )
 
     with patch(
         "homeassistant.components.xbox.async_setup_entry", return_value=True
     ) as mock_setup:
-        await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    assert result["result"].unique_id == "271958441785640"
+    assert result["result"].title == "GSR Ae"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1

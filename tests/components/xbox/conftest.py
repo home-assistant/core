@@ -68,13 +68,33 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+@pytest.fixture(name="authentication_manager")
+def mock_authentication_manager() -> Generator[AsyncMock]:
+    """Mock xbox-webapi AuthenticationManager."""
+
+    with (
+        patch(
+            "homeassistant.components.xbox.config_flow.AuthenticationManager",
+            autospec=True,
+        ) as mock_client,
+    ):
+        client = mock_client.return_value
+
+        yield client
+
+
 @pytest.fixture(name="signed_session")
 def mock_signed_session() -> Generator[AsyncMock]:
     """Mock xbox-webapi SignedSession."""
 
-    with patch(
-        "homeassistant.components.xbox.SignedSession", autospec=True
-    ) as mock_client:
+    with (
+        patch(
+            "homeassistant.components.xbox.SignedSession", autospec=True
+        ) as mock_client,
+        patch(
+            "homeassistant.components.xbox.config_flow.SignedSession", new=mock_client
+        ),
+    ):
         client = mock_client.return_value
 
         yield client
@@ -84,9 +104,14 @@ def mock_signed_session() -> Generator[AsyncMock]:
 def mock_xbox_live_client(signed_session) -> Generator[AsyncMock]:
     """Mock xbox-webapi XboxLiveClient."""
 
-    with patch(
-        "homeassistant.components.xbox.XboxLiveClient", autospec=True
-    ) as mock_client:
+    with (
+        patch(
+            "homeassistant.components.xbox.XboxLiveClient", autospec=True
+        ) as mock_client,
+        patch(
+            "homeassistant.components.xbox.config_flow.XboxLiveClient", new=mock_client
+        ),
+    ):
         client = mock_client.return_value
 
         client.smartglass = AsyncMock()
@@ -109,4 +134,7 @@ def mock_xbox_live_client(signed_session) -> Generator[AsyncMock]:
         client.people.get_friends_own.return_value = PeopleResponse(
             **load_json_object_fixture("people_friends_own.json", DOMAIN)
         )
+
+        client.xuid = "271958441785640"
+
         yield client

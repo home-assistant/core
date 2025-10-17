@@ -3,6 +3,11 @@
 import logging
 from typing import Any
 
+from xbox.webapi.api.client import XboxLiveClient
+from xbox.webapi.authentication.manager import AuthenticationManager
+from xbox.webapi.authentication.models import OAuth2TokenResponse
+from xbox.webapi.common.signed_session import SignedSession
+
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -36,3 +41,18 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="single_instance_allowed")
 
         return await super().async_step_user(user_input)
+
+    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
+        """Create an entry for the flow."""
+
+        async with SignedSession() as session:
+            auth = AuthenticationManager(session, "", "", "")
+            auth.oauth = OAuth2TokenResponse(**data["token"])
+            await auth.refresh_tokens()
+
+            client = XboxLiveClient(auth)
+
+            me = await client.people.get_friends_own_batch([client.xuid])
+            await self.async_set_unique_id(client.xuid)
+
+        return self.async_create_entry(title=me.people[0].gamertag, data=data)
