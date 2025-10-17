@@ -319,50 +319,62 @@ def async_get_pipelines(hass: HomeAssistant) -> list[Pipeline]:
     return list(pipeline_data.pipeline_store.data.values())
 
 
+@dataclass(slots=True)
+class UpdateOptions:
+    """Options to update an Assist pipeline.
+
+    Groups optional update parameters to simplify the public API.
+    Values left as UNDEFINED will not be written to storage.
+    """
+
+    conversation_engine: str | UndefinedType = UNDEFINED
+    conversation_language: str | UndefinedType = UNDEFINED
+    language: str | UndefinedType = UNDEFINED
+    name: str | UndefinedType = UNDEFINED
+    stt_engine: str | None | UndefinedType = UNDEFINED
+    stt_language: str | None | UndefinedType = UNDEFINED
+    tts_engine: str | None | UndefinedType = UNDEFINED
+    tts_language: str | None | UndefinedType = UNDEFINED
+    tts_voice: str | None | UndefinedType = UNDEFINED
+    wake_word_entity: str | None | UndefinedType = UNDEFINED
+    wake_word_id: str | None | UndefinedType = UNDEFINED
+    prefer_local_intents: bool | UndefinedType = UNDEFINED
+
+
 async def async_update_pipeline(
     hass: HomeAssistant,
     pipeline: Pipeline,
     *,
-    conversation_engine: str | UndefinedType = UNDEFINED,
-    conversation_language: str | UndefinedType = UNDEFINED,
-    language: str | UndefinedType = UNDEFINED,
-    name: str | UndefinedType = UNDEFINED,
-    stt_engine: str | None | UndefinedType = UNDEFINED,
-    stt_language: str | None | UndefinedType = UNDEFINED,
-    tts_engine: str | None | UndefinedType = UNDEFINED,
-    tts_language: str | None | UndefinedType = UNDEFINED,
-    tts_voice: str | None | UndefinedType = UNDEFINED,
-    wake_word_entity: str | None | UndefinedType = UNDEFINED,
-    wake_word_id: str | None | UndefinedType = UNDEFINED,
-    prefer_local_intents: bool | UndefinedType = UNDEFINED,
+    options: UpdateOptions | None = None,
+    **legacy_kwargs: Any,
 ) -> None:
-    """Update a pipeline."""
+    """Update a pipeline.
+
+    Backward compatible with legacy keyword arguments, which are still accepted
+    and will be merged with the provided `options` (legacy values take precedence).
+    """
     pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
 
+    # Base with current values
     updates: dict[str, Any] = pipeline.to_json()
     updates.pop("id")
-    # Refactor this once we bump to Python 3.12
-    # and have https://peps.python.org/pep-0692/
-    updates.update(
-        {
-            key: val
-            for key, val in (
-                ("conversation_engine", conversation_engine),
-                ("conversation_language", conversation_language),
-                ("language", language),
-                ("name", name),
-                ("stt_engine", stt_engine),
-                ("stt_language", stt_language),
-                ("tts_engine", tts_engine),
-                ("tts_language", tts_language),
-                ("tts_voice", tts_voice),
-                ("wake_word_entity", wake_word_entity),
-                ("wake_word_id", wake_word_id),
-                ("prefer_local_intents", prefer_local_intents),
-            )
-            if val is not UNDEFINED
-        }
-    )
+
+    # Collect updates from options
+    option_updates: dict[str, Any] = {}
+    if options is not None:
+        for key, val in asdict(options).items():
+            if val is not UNDEFINED:
+                option_updates[key] = val
+
+    # Overlay legacy kwargs for backward compatibility
+    # Only allow known keys
+    allowed_keys = set(asdict(UpdateOptions()).keys())
+    for key, val in legacy_kwargs.items():
+        if key in allowed_keys and val is not UNDEFINED:
+            option_updates[key] = val
+
+    # Apply collected updates
+    updates.update(option_updates)
 
     await pipeline_data.pipeline_store.async_update_item(pipeline.id, updates)
 
