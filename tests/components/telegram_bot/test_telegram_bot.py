@@ -1445,3 +1445,31 @@ async def test_set_message_reaction(
         is_big=True,
         read_timeout=None,
     )
+
+
+async def test_send_message_multi_target(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message for entries with multiple chat_ids."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # we have 2 whitelisted chat ids in the config subentries: 123456 and 654321
+    # 123456 is the default target since it is the first in the list
+    # This test checks that the message is sent to the right target
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_TARGET: 654321, ATTR_MESSAGE: "test_message"},
+        blocking=True,
+        return_response=True,
+    )
+
+    await hass.async_block_till_done()
+    assert response["chats"][0]["chat_id"] == 654321
+    assert response["chats"][0]["message_id"] == 12345
