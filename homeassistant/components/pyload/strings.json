@@ -9,7 +9,7 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "url": "Specify the full URL of your pyLoad web interface, including the protocol (HTTP or HTTPS), hostname or IP address, port (pyLoad uses 8000 by default), and any path prefix if applicable.\nExample: `https://example.com:8000/path`",
+          "url": "Specify the full URL of your pyLoad web interface, including the protocol (HTTP or HTTPS), hostname or IP address, port (pyLoad uses 8000 by default), and any path prefix if applicable.\nExample: `{example_url}`",
           "username": "The username used to access the pyLoad instance.",
           "password": "The password associated with the pyLoad account.",
           "verify_ssl": "If checked, the SSL certificate will be validated to ensure a secure connection."

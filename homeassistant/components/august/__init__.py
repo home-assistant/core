@@ -36,11 +36,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bo
         raise ConfigEntryAuthFailed("Migration to OAuth required")
 
     session = async_create_august_clientsession(hass)
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+    try:
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
-    )
+    except ValueError as err:
+        raise ConfigEntryNotReady("OAuth implementation not available") from err
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     august_gateway = AugustGateway(Path(hass.config.config_dir), session, oauth_session)
     try:

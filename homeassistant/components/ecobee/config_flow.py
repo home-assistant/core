@@ -61,5 +61,8 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="authorize",
             errors=errors,
-            description_placeholders={"pin": self._ecobee.pin},
+            description_placeholders={
+                "pin": self._ecobee.pin,
+                "auth_url": "https://www.ecobee.com/consumerportal/index.html",
+            },
         )

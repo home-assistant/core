@@ -164,7 +164,7 @@ aio-georss-gdacs==0.10
 aioacaia==0.1.17
 
 # homeassistant.components.airq
-aioairq==0.4.6
+aioairq==0.4.7
 
 # homeassistant.components.airzone_cloud
 aioairzone-cloud==0.7.2
@@ -173,7 +173,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.1
 
 # homeassistant.components.alexa_devices
-aioamazondevices==6.4.0
+aioamazondevices==6.4.4
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -189,7 +189,7 @@ aioaquacell==0.2.0
 aioaseko==1.0.0
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.4.0
+aioasuswrt==1.5.1
 
 # homeassistant.components.husqvarna_automower
 aioautomower==2.2.1
@@ -205,7 +205,7 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==1.1.1
+aiocomelit==1.1.2
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.2.1
@@ -1035,7 +1035,7 @@ hole==0.9.0
 holidays==0.82
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251001.2
+home-assistant-frontend==20251001.4
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.10.1
@@ -1405,7 +1405,7 @@ openhomedevice==2.2.0
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.15.6
+opower==0.15.7
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1914,7 +1914,7 @@ pypoint==3.0.0
 pyportainer==1.0.3
 
 # homeassistant.components.probe_plus
-pyprobeplus==1.0.1
+pyprobeplus==1.1.0
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
@@ -2017,7 +2017,7 @@ pyspcwebgw==0.7.0
 pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.12.1
+pysqueezebox==0.13.0
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.2.3
@@ -2169,7 +2169,7 @@ pyuptimerobot==22.2.0
 pyvera==0.3.16
 
 # homeassistant.components.vesync
-pyvesync==3.1.0
+pyvesync==3.1.2
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
