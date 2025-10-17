@@ -146,11 +146,11 @@
           "off": "mdi:lock-off"
         }
       },
-      "dead_front": {
-        "default": "mdi:lock-open-variant",
+      "speaker_mute": {
+        "default": "mdi:volume-high",
         "state": {
-          "on": "mdi:lock",
-          "off": "mdi:lock-open-variant"
+          "on": "mdi:volume-mute",
+          "off": "mdi:volume-high"
         }
       },
       "evse_charging_switch": {
