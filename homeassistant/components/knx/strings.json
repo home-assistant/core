@@ -358,7 +358,7 @@
             "entity_label": "Entity name",
             "entity_description": "Optional if a device is selected, otherwise required. If the entity is assigned to a device, the device name is used as prefix.",
             "entity_category_title": "Entity category",
-            "entity_category_description": "Classification of a non-primary entity. Leave empty for standard behaviour."
+            "entity_category_description": "Classification of a non-primary entity. Leave empty for standard behavior."
           },
           "knx": {
             "title": "KNX configuration",
