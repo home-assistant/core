@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from itertools import groupby
+from math import atan2, cos, degrees, radians, sin
 from typing import Any
 
 from homeassistant.core import State
@@ -30,6 +31,20 @@ def mean_int(*args: Any) -> int:
 def mean_tuple(*args: Any) -> tuple[float | Any, ...]:
     """Return the mean values along the columns of the supplied values."""
     return tuple(sum(x) / len(x) for x in zip(*args, strict=False))
+
+
+def mean_circle(*args: Any) -> tuple[float | Any, ...]:
+    """Return the mean position of supplied values on a circle."""
+    hues, saturations = zip(*args, strict=False)
+
+    sum_x = sum(cos(radians(h)) for h in hues)
+    sum_y = sum(sin(radians(h)) for h in hues)
+
+    mean_angle = degrees(atan2(sum_y, sum_x)) % 360
+
+    saturation = sum(saturations) / len(saturations)
+
+    return (mean_angle, saturation)
 
 
 def attribute_equal(states: list[State], key: str) -> bool:
