@@ -1034,12 +1034,14 @@ class TelegramNotificationService:
     async def download_file(
         self,
         file_id: str,
-        directory_path: str = f"/config/{DOMAIN}",
+        directory_path: str | None = None,
         file_name: str | None = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> dict[str, JsonValueType]:
         """Download a file from Telegram."""
+        if not directory_path:
+            directory_path = self.hass.config.path(DOMAIN)
         if not self.hass.config.is_allowed_path(directory_path):
             raise ServiceValidationError(
                 "File path has not been configured in allowlist_external_dirs.",
@@ -1061,7 +1063,11 @@ class TelegramNotificationService:
         if not os.path.exists(directory_path):
             _LOGGER.debug("directory %s does not exist, creating it", directory_path)
             try:
-                os.makedirs(directory_path)
+
+                def mkdir() -> None:
+                    os.makedirs(directory_path, exist_ok=True)
+
+                await self.hass.async_add_executor_job(mkdir)
             except OSError as err:
                 raise HomeAssistantError(
                     f"Failed to create directory {directory_path}: {err!s}",
