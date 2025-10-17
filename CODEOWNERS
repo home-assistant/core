@@ -619,6 +619,8 @@ build.json @home-assistant/supervisor
 /tests/components/greeneye_monitor/ @jkeljo
 /homeassistant/components/group/ @home-assistant/core
 /tests/components/group/ @home-assistant/core
+/homeassistant/components/growatt_server/ @johanzander
+/tests/components/growatt_server/ @johanzander
 /homeassistant/components/guardian/ @bachya
 /tests/components/guardian/ @bachya
 /homeassistant/components/habitica/ @tr4nt0r
