@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_burner-entry]
+# name: test_all_entities[binary_sensor.model0_burner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_burner-state]
+# name: test_all_entities[binary_sensor.model0_burner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
@@ -48,7 +48,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_circulation_pump-entry]
+# name: test_all_entities[binary_sensor.model0_circulation_pump-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -83,7 +83,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_circulation_pump-state]
+# name: test_all_entities[binary_sensor.model0_circulation_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
@@ -97,7 +97,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_circulation_pump_2-entry]
+# name: test_all_entities[binary_sensor.model0_circulation_pump_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -132,7 +132,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_circulation_pump_2-state]
+# name: test_all_entities[binary_sensor.model0_circulation_pump_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
@@ -146,7 +146,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_dhw_charging-entry]
+# name: test_all_entities[binary_sensor.model0_dhw_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -181,7 +181,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_dhw_charging-state]
+# name: test_all_entities[binary_sensor.model0_dhw_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
@@ -195,7 +195,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_dhw_circulation_pump-entry]
+# name: test_all_entities[binary_sensor.model0_dhw_circulation_pump-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -230,7 +230,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_dhw_circulation_pump-state]
+# name: test_all_entities[binary_sensor.model0_dhw_circulation_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
@@ -244,7 +244,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_dhw_pump-entry]
+# name: test_all_entities[binary_sensor.model0_dhw_pump-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -279,7 +279,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_dhw_pump-state]
+# name: test_all_entities[binary_sensor.model0_dhw_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
@@ -293,7 +293,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_frost_protection-entry]
+# name: test_all_entities[binary_sensor.model0_frost_protection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -328,7 +328,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_frost_protection-state]
+# name: test_all_entities[binary_sensor.model0_frost_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Frost protection',
@@ -341,7 +341,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_frost_protection_2-entry]
+# name: test_all_entities[binary_sensor.model0_frost_protection_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -376,7 +376,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_frost_protection_2-state]
+# name: test_all_entities[binary_sensor.model0_frost_protection_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Frost protection',
@@ -389,7 +389,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_one_time_charge-entry]
+# name: test_all_entities[binary_sensor.model0_one_time_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -424,7 +424,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][binary_sensor.model0_one_time_charge-state]
+# name: test_all_entities[binary_sensor.model0_one_time_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
@@ -438,7 +438,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[type:radiator-vicare/ZigbeeTRV.json][binary_sensor.model0_child_safety_lock-entry]
+# name: test_all_entities[binary_sensor.model1_child_safety_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -451,7 +451,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.model0_child_safety_lock',
+    'entity_id': 'binary_sensor.model1_child_safety_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -469,24 +469,24 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_safety_lock_mode',
-    'unique_id': 'gateway0_zigbee_################-child_safety_lock_mode',
+    'unique_id': 'gateway1_zigbee_################-child_safety_lock_mode',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:radiator-vicare/ZigbeeTRV.json][binary_sensor.model0_child_safety_lock-state]
+# name: test_all_entities[binary_sensor.model1_child_safety_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 Child safety lock',
+      'friendly_name': 'model1 Child safety lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.model0_child_safety_lock',
+    'entity_id': 'binary_sensor.model1_child_safety_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[type:radiator-vicare/ZigbeeTRV.json][binary_sensor.model0_identification_mode-entry]
+# name: test_all_entities[binary_sensor.model1_identification_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -499,7 +499,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.model0_identification_mode',
+    'entity_id': 'binary_sensor.model1_identification_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -517,24 +517,24 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'identification_mode',
-    'unique_id': 'gateway0_zigbee_################-identification_mode',
+    'unique_id': 'gateway1_zigbee_################-identification_mode',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:radiator-vicare/ZigbeeTRV.json][binary_sensor.model0_identification_mode-state]
+# name: test_all_entities[binary_sensor.model1_identification_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 Identification mode',
+      'friendly_name': 'model1 Identification mode',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.model0_identification_mode',
+    'entity_id': 'binary_sensor.model1_identification_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[type:radiator-vicare/ZigbeeTRV.json][binary_sensor.model0_mounting_mode-entry]
+# name: test_all_entities[binary_sensor.model1_mounting_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -547,7 +547,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.model0_mounting_mode',
+    'entity_id': 'binary_sensor.model1_mounting_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -565,24 +565,24 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mounting_mode',
-    'unique_id': 'gateway0_zigbee_################-mounting_mode',
+    'unique_id': 'gateway1_zigbee_################-mounting_mode',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:radiator-vicare/ZigbeeTRV.json][binary_sensor.model0_mounting_mode-state]
+# name: test_all_entities[binary_sensor.model1_mounting_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 Mounting mode',
+      'friendly_name': 'model1 Mounting mode',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.model0_mounting_mode',
+    'entity_id': 'binary_sensor.model1_mounting_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[type:radiator-vicare/ZigbeeTRV.json][binary_sensor.model0_valve-entry]
+# name: test_all_entities[binary_sensor.model1_valve-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -595,7 +595,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.model0_valve',
+    'entity_id': 'binary_sensor.model1_valve',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -613,25 +613,25 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'valve',
-    'unique_id': 'gateway0_zigbee_################-valve',
+    'unique_id': 'gateway1_zigbee_################-valve',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:radiator-vicare/ZigbeeTRV.json][binary_sensor.model0_valve-state]
+# name: test_all_entities[binary_sensor.model1_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'model0 Valve',
+      'friendly_name': 'model1 Valve',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.model0_valve',
+    'entity_id': 'binary_sensor.model1_valve',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[type:repeater-vicare/ZigbeeRepeater.json][binary_sensor.model0_identification_mode-entry]
+# name: test_all_entities[binary_sensor.model2_identification_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -644,7 +644,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.model0_identification_mode',
+    'entity_id': 'binary_sensor.model2_identification_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -662,17 +662,17 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'identification_mode',
-    'unique_id': 'gateway0_zigbee_################-identification_mode',
+    'unique_id': 'gateway2_zigbee_################-identification_mode',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[type:repeater-vicare/ZigbeeRepeater.json][binary_sensor.model0_identification_mode-state]
+# name: test_all_entities[binary_sensor.model2_identification_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 Identification mode',
+      'friendly_name': 'model2 Identification mode',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.model0_identification_mode',
+    'entity_id': 'binary_sensor.model2_identification_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
