@@ -65,7 +65,6 @@ __all__ = (
     "async_create_default_pipeline",
     "async_get_pipelines",
     "async_pipeline_from_audio_stream",
-    "async_setup",
     "async_update_pipeline",
 )
 
