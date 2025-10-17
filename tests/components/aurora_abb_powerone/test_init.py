@@ -8,6 +8,7 @@ from homeassistant.components.aurora_abb_powerone import (
     async_migrate_entry,
     async_setup_entry,
 )
+from homeassistant.components.aurora_abb_powerone.config_flow import AuroraABBConfigFlow
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
@@ -26,7 +27,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-CURRENT_VERSION = 2
+CURRENT_VERSION = AuroraABBConfigFlow.VERSION
 
 
 @pytest.mark.parametrize(

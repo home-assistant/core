@@ -31,7 +31,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_serial_ports": "No com ports found. The integration needs a valid RS485 device to communicate.",
-      "reconfigure_successful": "The integration has been successfully reconfigured."
+      "reconfigure_successful": "The integration has been successfully reconfigured.",
+      "unique_id_mismatch": "The serial number of the inverter does not match the previous one. Consider setting up this inverter as a new device."
     }
   },
   "entity": {
