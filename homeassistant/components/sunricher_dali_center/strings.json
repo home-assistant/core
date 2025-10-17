@@ -20,7 +20,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "discovery_failed": "Failed to discover DALI gateways on the network",
       "no_devices_found": "No DALI gateways found on the network",
-      "device_not_found": "Selected gateway not found",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
