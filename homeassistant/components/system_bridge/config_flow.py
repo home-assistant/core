@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any, Final
+from typing import Any
 
 from systembridgeconnector.exceptions import (
     AuthenticationException,
@@ -28,7 +28,6 @@ from .const import DATA_WAIT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SAMPLE_DOCUMENTATION_URL: Final = "http://robotjs.io/docs/syntax#keys"
 STEP_AUTHENTICATE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): cv.string})
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -136,7 +135,7 @@ class SystemBridgeConfigFlow(
                 step_id="user",
                 data_schema=STEP_USER_DATA_SCHEMA,
                 description_placeholders={
-                    "documentation_url": SAMPLE_DOCUMENTATION_URL
+                    "documentation_url": "http://robotjs.io/docs/syntax#keys"
                 },
             )
 
@@ -152,7 +151,9 @@ class SystemBridgeConfigFlow(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-            description_placeholders={"documentation_url": SAMPLE_DOCUMENTATION_URL},
+            description_placeholders={
+                "documentation_url": "http://robotjs.io/docs/syntax#keys"
+            },
         )
 
     async def async_step_authenticate(
@@ -184,7 +185,7 @@ class SystemBridgeConfigFlow(
             data_schema=STEP_AUTHENTICATE_DATA_SCHEMA,
             description_placeholders={
                 "name": self._name,
-                "documentation_url": SAMPLE_DOCUMENTATION_URL,
+                "documentation_url": "http://robotjs.io/docs/syntax#keys",
             },
             errors=errors,
         )

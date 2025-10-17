@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any, Final
+from typing import Any
 
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS
 from reolink_aio.baichuan import DEFAULT_BC_PORT
@@ -56,7 +56,6 @@ from .util import ReolinkConfigEntry, is_connected
 
 _LOGGER = logging.getLogger(__name__)
 
-SAMPLE_IP: Final = "http://192.168.1.10:8123"
 DEFAULT_PROTOCOL = "rtsp"
 DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
 API_STARTUP_TIME = 5
@@ -100,7 +99,7 @@ class ReolinkOptionsFlowHandler(OptionsFlowWithReload):
                 }
             ),
             description_placeholders={
-                "sample_ip": SAMPLE_IP,
+                "sample_ip": "http://192.168.1.10:8123",
             },
         )
 
@@ -232,7 +231,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._user_input is not None
         placeholders = {
             "host": self._user_input[CONF_HOST],
-            "sample_ip": SAMPLE_IP,
+            "sample_ip": "http://192.168.1.10:8123",
         }
         return self.async_show_form(
             step_id="privacy",
@@ -354,7 +353,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_BC_PORT, default=DEFAULT_BC_PORT): cv.port,
                 }
             )
-        placeholders["sample_ip"] = SAMPLE_IP
+        placeholders["sample_ip"] = "http://192.168.1.10:8123"
 
         return self.async_show_form(
             step_id="user",

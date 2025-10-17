@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, cast
+from typing import Any, cast
 
 import httpx
 import voluptuous as vol
@@ -35,7 +35,6 @@ from .coordinator import TokenManager, mcp_client
 
 _LOGGER = logging.getLogger(__name__)
 
-SAMPLE_DOCUMENTATION_URL: Final = "https://example.com/sse"
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): str,
@@ -186,7 +185,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-            description_placeholders={"documentation_url": SAMPLE_DOCUMENTATION_URL},
+            description_placeholders={"documentation_url": "https://example.com/sse"},
         )
 
     async def async_step_auth_discovery(
@@ -319,7 +318,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 description_placeholders={
-                    "documentation_url": SAMPLE_DOCUMENTATION_URL
+                    "documentation_url": "https://example.com/sse"
                 },
             )
         config_entry = self._get_reauth_entry()

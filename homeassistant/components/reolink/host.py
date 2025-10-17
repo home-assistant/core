@@ -7,7 +7,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 import logging
 from time import time
-from typing import Any, Final, Literal
+from typing import Any, Literal
 
 import aiohttp
 from aiohttp.web import Request
@@ -52,7 +52,6 @@ from .exceptions import (
 )
 from .util import ReolinkConfigEntry, get_store
 
-SAMPLE_IP: Final = "http://192.168.1.10:8123"
 DEFAULT_TIMEOUT = 30
 FIRST_TCP_PUSH_TIMEOUT = 10
 FIRST_ONVIF_TIMEOUT = 10
@@ -427,7 +426,7 @@ class ReolinkHost:
                     "name": self._api.nvr_name,
                     "base_url": self._base_url,
                     "network_link": "https://my.home-assistant.io/redirect/network/",
-                    "sample_ip": SAMPLE_IP,
+                    "sample_ip": "http://192.168.1.10:8123",
                 },
             )
 
@@ -442,7 +441,7 @@ class ReolinkHost:
                     translation_placeholders={
                         "base_url": self._base_url,
                         "network_link": "https://my.home-assistant.io/redirect/network/",
-                        "sample_ip": SAMPLE_IP,
+                        "sample_ip": "http://192.168.1.10:8123",
                     },
                 )
             else:

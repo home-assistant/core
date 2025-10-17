@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Final, NamedTuple
+from typing import Any, NamedTuple
 
 from simplipy import API
 from simplipy.errors import InvalidCredentialsError, SimplipyError
@@ -26,9 +26,6 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN, LOGGER
 
-SAMPLE_DOCUMENTATION_URL: Final = (
-    "http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code"
-)
 CONF_AUTH_CODE = "auth_code"
 
 STEP_USER_SCHEMA = vol.Schema(
@@ -89,7 +86,7 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_USER_SCHEMA,
                 description_placeholders={
                     CONF_URL: self._oauth_values.auth_url,
-                    "documentation_url": SAMPLE_DOCUMENTATION_URL,
+                    "documentation_url": "http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code",
                 },
             )
 
@@ -110,7 +107,7 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors={CONF_AUTH_CODE: "invalid_auth_code_length"},
                 description_placeholders={
                     CONF_URL: self._oauth_values.auth_url,
-                    "documentation_url": SAMPLE_DOCUMENTATION_URL,
+                    "documentation_url": "http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code",
                 },
             )
 
@@ -135,7 +132,7 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors=errors,
                 description_placeholders={
                     CONF_URL: self._oauth_values.auth_url,
-                    "documentation_url": SAMPLE_DOCUMENTATION_URL,
+                    "documentation_url": "http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code",
                 },
             )
 
@@ -184,5 +181,7 @@ class SimpliSafeOptionsFlowHandler(OptionsFlow):
                     ): str
                 }
             ),
-            description_placeholders={"documentation_url": SAMPLE_DOCUMENTATION_URL},
+            description_placeholders={
+                "documentation_url": "http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code"
+            },
         )
