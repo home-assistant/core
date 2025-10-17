@@ -1495,22 +1495,28 @@ async def test_send_message_multi_target(
     ),
     [
         (
-            "some-file-id",
+            "some-file-id-1",
             None,
             None,
-            "file_name.jpg",
+            "file_name1.jpg",
         ),  # user didn't provide file_name or directory path - use telegram file name
         (
-            "some-file-id",
-            "custom_name.jpg",
+            "some-file-id-2",
+            "custom_name2.jpg",
             None,
-            "file_name.jpg",
+            "file_name2.jpg",
         ),  # user provide file_name but not directory_path
         (
-            "some-file-id",
-            "custom_name.jpg",
-            "/tmp/tempfolder",  # noqa: S108
-            "file_name.jpg",
+            "some-file-id-3",
+            None,
+            "/tmp/tempfolder3",  # noqa: S108
+            "file_name3.jpg",
+        ),  # user provide directory_path but not file_name
+        (
+            "some-file-id-4",
+            "custom_name4.jpg",
+            "/tmp/tempfolder4",  # noqa: S108
+            "file_name4.jpg",
         ),  # user provide file_name and directory_path
     ],
 )
