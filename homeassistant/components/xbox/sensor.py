@@ -2,17 +2,63 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from enum import StrEnum
 from functools import partial
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
+from .coordinator import PresenceData, XboxConfigEntry, XboxUpdateCoordinator
 from .entity import XboxBaseEntity
 
-SENSOR_ATTRIBUTES = ["status", "gamer_score", "account_tier", "gold_tenure"]
+
+class XboxSensor(StrEnum):
+    """Xbox sensor."""
+
+    STATUS = "status"
+    GAMER_SCORE = "gamer_score"
+    ACCOUNT_TIER = "account_tier"
+    GOLD_TENURE = "gold_tenure"
+
+
+@dataclass(kw_only=True, frozen=True)
+class XboxSensorEntityDescription(SensorEntityDescription):
+    """Xbox sensor description."""
+
+    value_fn: Callable[[PresenceData], StateType]
+
+
+SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
+    XboxSensorEntityDescription(
+        key=XboxSensor.STATUS,
+        translation_key=XboxSensor.STATUS,
+        entity_registry_enabled_default=False,
+        value_fn=lambda x: x.status,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.GAMER_SCORE,
+        translation_key=XboxSensor.GAMER_SCORE,
+        entity_registry_enabled_default=False,
+        value_fn=lambda x: x.gamer_score,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.ACCOUNT_TIER,
+        translation_key=XboxSensor.ACCOUNT_TIER,
+        entity_registry_enabled_default=False,
+        value_fn=lambda x: x.account_tier,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.GOLD_TENURE,
+        translation_key=XboxSensor.GOLD_TENURE,
+        entity_registry_enabled_default=False,
+        value_fn=lambda x: x.gold_tenure,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -32,13 +78,12 @@ async def async_setup_entry(
 class XboxSensorEntity(XboxBaseEntity, SensorEntity):
     """Representation of a Xbox presence state."""
 
-    @property
-    def native_value(self):
-        """Return the state of the requested attribute."""
-        if not self.coordinator.last_update_success:
-            return None
+    entity_description: XboxSensorEntityDescription
 
-        return getattr(self.data, self.attribute, None)
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the requested attribute."""
+        return self.entity_description.value_fn(self.data) if self.data else None
 
 
 @callback
@@ -55,12 +100,12 @@ def async_update_friends(
     new_entities: list[XboxSensorEntity] = []
     for xuid in new_ids - current_ids:
         current[xuid] = [
-            XboxSensorEntity(coordinator, xuid, attribute)
-            for attribute in SENSOR_ATTRIBUTES
+            XboxSensorEntity(coordinator, xuid, description)
+            for description in SENSOR_DESCRIPTIONS
         ]
         new_entities = new_entities + current[xuid]
-
-    async_add_entities(new_entities)
+    if new_entities:
+        async_add_entities(new_entities)
 
     # Process deleted favorites, remove them from Home Assistant
     for xuid in current_ids - new_ids:

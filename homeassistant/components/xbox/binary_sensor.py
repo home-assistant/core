@@ -2,17 +2,65 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from enum import StrEnum
 from functools import partial
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
+from .coordinator import PresenceData, XboxConfigEntry, XboxUpdateCoordinator
 from .entity import XboxBaseEntity
 
-PRESENCE_ATTRIBUTES = ["online", "in_party", "in_game", "in_multiplayer"]
+
+class XboxBinarySensor(StrEnum):
+    """Xbox binary sensor."""
+
+    ONLINE = "online"
+    IN_PARTY = "in_party"
+    IN_GAME = "in_game"
+    IN_MULTIPLAYER = "in_multiplayer"
+
+
+@dataclass(kw_only=True, frozen=True)
+class XboxBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Xbox binary sensor description."""
+
+    is_on_fn: Callable[[PresenceData], bool | None]
+
+
+SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
+    XboxBinarySensorEntityDescription(
+        key=XboxBinarySensor.ONLINE,
+        translation_key=XboxBinarySensor.ONLINE,
+        is_on_fn=lambda x: x.online,
+        name=None,
+    ),
+    XboxBinarySensorEntityDescription(
+        key=XboxBinarySensor.IN_PARTY,
+        translation_key=XboxBinarySensor.IN_PARTY,
+        is_on_fn=lambda x: x.in_party,
+        entity_registry_enabled_default=False,
+    ),
+    XboxBinarySensorEntityDescription(
+        key=XboxBinarySensor.IN_GAME,
+        translation_key=XboxBinarySensor.IN_GAME,
+        is_on_fn=lambda x: x.in_game,
+        entity_registry_enabled_default=False,
+    ),
+    XboxBinarySensorEntityDescription(
+        key=XboxBinarySensor.IN_MULTIPLAYER,
+        translation_key=XboxBinarySensor.IN_MULTIPLAYER,
+        is_on_fn=lambda x: x.in_multiplayer,
+        entity_registry_enabled_default=False,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -33,13 +81,17 @@ async def async_setup_entry(
 class XboxBinarySensorEntity(XboxBaseEntity, BinarySensorEntity):
     """Representation of a Xbox presence state."""
 
-    @property
-    def is_on(self) -> bool:
-        """Return the status of the requested attribute."""
-        if not self.coordinator.last_update_success:
-            return False
+    entity_description: XboxBinarySensorEntityDescription
 
-        return getattr(self.data, self.attribute, False)
+    @property
+    def is_on(self) -> bool | None:
+        """Return the status of the requested attribute."""
+
+        return (
+            self.entity_description.is_on_fn(self.data)
+            if self.data is not None
+            else None
+        )
 
 
 @callback
@@ -56,12 +108,12 @@ def async_update_friends(
     new_entities: list[XboxBinarySensorEntity] = []
     for xuid in new_ids - current_ids:
         current[xuid] = [
-            XboxBinarySensorEntity(coordinator, xuid, attribute)
-            for attribute in PRESENCE_ATTRIBUTES
+            XboxBinarySensorEntity(coordinator, xuid, description)
+            for description in SENSOR_DESCRIPTIONS
         ]
         new_entities = new_entities + current[xuid]
-
-    async_add_entities(new_entities)
+    if new_entities:
+        async_add_entities(new_entities)
 
     # Process deleted favorites, remove them from Home Assistant
     for xuid in current_ids - new_ids:
