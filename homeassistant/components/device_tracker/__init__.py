@@ -39,15 +39,12 @@ from .const import (
 )
 from .legacy import (
     PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
     SERVICE_SEE,
     SERVICE_SEE_PAYLOAD_SCHEMA,
-    SOURCE_TYPES,
     AsyncSeeCallback,
     DeviceScanner,
     SeeCallback,
     async_setup_integration as async_setup_legacy_integration,
-    see,
 )
 
 
@@ -83,11 +80,9 @@ __all__ = (
     "DOMAIN",
     "ENTITY_ID_FORMAT",
     "PLATFORM_SCHEMA",
-    "PLATFORM_SCHEMA_BASE",
     "SCAN_INTERVAL",
     "SERVICE_SEE",
     "SERVICE_SEE_PAYLOAD_SCHEMA",
-    "SOURCE_TYPES",
     "AsyncSeeCallback",
     "DeviceScanner",
     "ScannerEntity",
@@ -98,5 +93,4 @@ __all__ = (
     "TrackerEntityDescription",
     "async_setup_entry",
     "async_unload_entry",
-    "see",
 )
