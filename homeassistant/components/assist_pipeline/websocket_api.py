@@ -402,34 +402,33 @@ def websocket_list_languages(
     conv_language_tags = conversation.async_get_conversation_languages(hass)
     stt_language_tags = stt.async_get_speech_to_text_languages(hass)
     tts_language_tags = tts.async_get_text_to_speech_languages(hass)
+
     pipeline_languages: set[str] | None = None
 
+        # Helper functions
+    def parse_language_tags(tags: list[str] | None) -> set[str]:
+        """Convert language tags to a set of base language codes."""
+        if not tags:
+            return set()
+        return {language_util.Dialect.parse(tag).language for tag in tags}
+
+    def intersect_or_assign(base: set[str] | None, new: set[str]) -> set[str]:
+        """Intersect sets if base exists, else assign."""
+        if not new:
+            return base or set()
+        return language_util.intersect(base, new) if base is not None else new
+
+    # Conversation
     if conv_language_tags and conv_language_tags != MATCH_ALL:
-        languages = set()
-        for language_tag in conv_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        pipeline_languages = languages
+        pipeline_languages = parse_language_tags(conv_language_tags)
 
-    if stt_language_tags:
-        languages = set()
-        for language_tag in stt_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        if pipeline_languages is not None:
-            pipeline_languages = language_util.intersect(pipeline_languages, languages)
-        else:
-            pipeline_languages = languages
+    # STT
+    stt_languages = parse_language_tags(stt_language_tags)
+    pipeline_languages = intersect_or_assign(pipeline_languages, stt_languages)
 
-    if tts_language_tags:
-        languages = set()
-        for language_tag in tts_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        if pipeline_languages is not None:
-            pipeline_languages = language_util.intersect(pipeline_languages, languages)
-        else:
-            pipeline_languages = languages
+    # TTS
+    tts_languages = parse_language_tags(tts_language_tags)
+    pipeline_languages = intersect_or_assign(pipeline_languages, tts_languages)
 
     connection.send_result(
         msg["id"],
