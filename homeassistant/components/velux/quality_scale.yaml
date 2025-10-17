@@ -13,12 +13,8 @@ rules:
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
-  docs-installation-instructions:
-    status: todo
-    comment: needs rework, make KLF200 interface reboot requirement more prominent
-  docs-removal-instructions:
-    status: todo
-    comment: missing in docs, although simple
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: todo
     comment: not checked yet
