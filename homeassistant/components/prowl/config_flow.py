@@ -55,6 +55,21 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from legacy YAML."""
+        api_key = config[CONF_API_KEY]
+        self._async_abort_entries_match({CONF_API_KEY: api_key})
+
+        errors = await self._validate_api_key(api_key)
+        if not errors:
+            return self.async_create_entry(
+                title=config[CONF_NAME],
+                data={
+                    CONF_API_KEY: api_key,
+                },
+            )
+        return self.async_abort(reason="invalid_api_key")
+
     async def _validate_api_key(self, api_key: str) -> dict[str, str]:
         """Validate the provided API key."""
         ret = {}

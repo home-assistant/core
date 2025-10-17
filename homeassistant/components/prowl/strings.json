@@ -17,5 +17,11 @@
     "abort": {
       "already_configured": "API key is already configured"
     }
+  },
+  "issues": {
+    "prowl_yaml_deprecated": {
+      "title": "Prowl YAML configuration deprecated",
+      "description": "Configuring Prowl using YAML has been deprecated. An automatic import of your existing configuration has been made.\nPlease remove the Prowl configuration from configuration.yaml and update any automations to use the new `notify.send_message` action exposed with this new entity."
+    }
   }
 }
