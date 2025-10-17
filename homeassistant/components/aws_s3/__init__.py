@@ -17,7 +17,6 @@ from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
-    CONF_PREFIX,
     CONF_SECRET_ACCESS_KEY,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
@@ -80,20 +79,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
     """Unload a config entry."""
     client = entry.runtime_data
     await client.__aexit__(None, None, None)
-    return True
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate config entry to a new version."""
-
-    if config_entry.version == 1:
-        entry_data = {**config_entry.data}
-
-        if config_entry.minor_version < 2:
-            entry_data[CONF_PREFIX] = ""
-
-        hass.config_entries.async_update_entry(
-            config_entry, data=entry_data, minor_version=2, version=1
-        )
-
     return True
