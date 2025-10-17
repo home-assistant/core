@@ -133,8 +133,6 @@ _IGNORE_ROOT_IMPORT = (
     "http",
     "recorder",
     "rest",
-    "script",
-    "stream",
 )
 
 
