@@ -8,10 +8,12 @@ from dataclasses import dataclass
 from pyportainer.models.docker import DockerContainer
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     StateType,
 )
+from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -104,6 +106,13 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         key="memory_total",
         translation_key="memory_total",
         value_fn=lambda data: data.docker_info.mem_total,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="cpu_total",
+        translation_key="cpu_total",
+        value_fn=lambda data: data.docker_info.ncpu,
     ),
 )
 

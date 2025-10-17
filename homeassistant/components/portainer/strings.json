@@ -85,6 +85,9 @@
       },
       "docker_version": {
         "name": "Docker Version"
+      },
+      "cpu_total": {
+        "name": "CPU"
       }
     },
     "switch": {
