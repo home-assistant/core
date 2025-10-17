@@ -96,6 +96,26 @@ async def test_config_migration_from1_2(hass: HomeAssistant) -> None:
         assert old_conf_entry.minor_version == 3
 
 
+async def test_config_migration_downgrade(hass: HomeAssistant) -> None:
+    """Test the migration to an old version."""
+
+    conf_entry: MockConfigEntry = MockConfigEntry(
+        domain=DOMAIN, title="NINA", data=ENTRY_DATA, version=2
+    )
+
+    with patch(
+        "pynina.baseApi.BaseAPI._makeRequest",
+        wraps=mocked_request_function,
+    ):
+        conf_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(conf_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert dict(conf_entry.data) == ENTRY_DATA
+        assert conf_entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
 async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
     """Test the configuration entry."""
     entry: MockConfigEntry = await init_integration(hass)
