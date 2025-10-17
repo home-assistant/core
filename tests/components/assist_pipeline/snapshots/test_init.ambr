@@ -76,6 +76,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -177,6 +178,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'test',
         'language': 'en-US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -278,6 +280,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'test',
         'language': 'en-US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -403,6 +406,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': "Sorry, I couldn't understand that",
