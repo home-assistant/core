@@ -53,9 +53,6 @@ __all__ = [
     "GenImageTaskResult",
     "async_generate_data",
     "async_generate_image",
-    "async_setup",
-    "async_setup_entry",
-    "async_unload_entry",
 ]
 
 _LOGGER = logging.getLogger(__name__)

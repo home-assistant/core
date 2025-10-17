@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components import calendar, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
-from homeassistant.components.script.config import ScriptConfig
+from homeassistant.components.script import ScriptConfig
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
