@@ -48,8 +48,11 @@ from .const import (
     CONF_PAYLOAD_TEMPLATE,
     CONF_SSL_CIPHER_LIST,
     COORDINATOR,
+    DEFAULT_METHOD,  # noqa: F401
     DEFAULT_SSL_CIPHER_LIST,
+    DEFAULT_TIMEOUT,  # noqa: F401
     DOMAIN,
+    METHODS,  # noqa: F401
     PLATFORM_IDX,
     REST,
     REST_DATA,

@@ -16,9 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.ssl import SSLCipherList
 
-from .const import XML_MIME_TYPES
-
-DEFAULT_TIMEOUT = 10
+from .const import DEFAULT_TIMEOUT, XML_MIME_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 

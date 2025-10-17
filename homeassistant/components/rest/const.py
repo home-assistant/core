@@ -4,6 +4,7 @@ from homeassistant.util.ssl import SSLCipherList
 
 DOMAIN = "rest"
 
+DEFAULT_TIMEOUT = 10
 DEFAULT_METHOD = "GET"
 DEFAULT_VERIFY_SSL = True
 DEFAULT_SSL_CIPHER_LIST = SSLCipherList.PYTHON_DEFAULT
