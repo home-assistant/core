@@ -35,6 +35,9 @@ def mean_tuple(*args: Any) -> tuple[float | Any, ...]:
 
 def mean_circle(*args: Any) -> tuple[float | Any, ...]:
     """Return the circular mean of hue values and arithmetic mean of saturation values from HS color tuples."""
+    if not args:
+        return ()
+
     hues, saturations = zip(*args, strict=False)
 
     sum_x = sum(cos(radians(h)) for h in hues)
