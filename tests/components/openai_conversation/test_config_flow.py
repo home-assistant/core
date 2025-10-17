@@ -692,6 +692,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
             },
             (
                 {
@@ -708,6 +709,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 },
             ),
             {
@@ -721,6 +723,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
             },
         ),
     ],
