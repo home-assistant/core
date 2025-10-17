@@ -60,6 +60,26 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
         """Handle Alexa Flash Briefing request."""
         _LOGGER.debug("Received Alexa flash briefing request for: %s", briefing_id)
 
+        # Validate request
+        auth_error = self._validate_authentication(request, briefing_id)
+        if auth_error:
+            return auth_error
+
+        # Check if briefing exists
+        briefing_config = self.flash_briefings.get(briefing_id)
+        if not isinstance(briefing_config, list):
+            err = "No configured Alexa flash briefing was found for: %s"
+            _LOGGER.error(err, briefing_id)
+            return b"", HTTPStatus.NOT_FOUND
+
+        # Build briefing response
+        briefing = self._build_briefing_response(briefing_config)
+        return self.json(briefing)
+
+    def _validate_authentication(
+        self, request: http.HomeAssistantRequest, briefing_id: str
+    ) -> tuple[bytes, HTTPStatus] | None:
+        """Validate request authentication."""
         if request.query.get(API_PASSWORD) is None:
             err = "No password provided for Alexa flash briefing: %s"
             _LOGGER.error(err, briefing_id)
@@ -73,53 +93,51 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
             _LOGGER.error(err, briefing_id)
             return b"", HTTPStatus.UNAUTHORIZED
 
-        if not isinstance(self.flash_briefings.get(briefing_id), list):
-            err = "No configured Alexa flash briefing was found for: %s"
-            _LOGGER.error(err, briefing_id)
-            return b"", HTTPStatus.NOT_FOUND
+        return None
 
+    def _build_briefing_response(self, briefing_config: list) -> list[dict[str, str]]:
+        """Build the briefing response from configuration."""
         briefing = []
-
-        for item in self.flash_briefings.get(briefing_id, []):
-            output = {}
-            if item.get(CONF_TITLE) is not None:
-                if isinstance(item.get(CONF_TITLE), template.Template):
-                    output[ATTR_TITLE_TEXT] = item[CONF_TITLE].async_render(
-                        parse_result=False
-                    )
-                else:
-                    output[ATTR_TITLE_TEXT] = item.get(CONF_TITLE)
-
-            if item.get(CONF_TEXT) is not None:
-                if isinstance(item.get(CONF_TEXT), template.Template):
-                    output[ATTR_MAIN_TEXT] = item[CONF_TEXT].async_render(
-                        parse_result=False
-                    )
-                else:
-                    output[ATTR_MAIN_TEXT] = item.get(CONF_TEXT)
-
-            if (uid := item.get(CONF_UID)) is None:
-                uid = str(uuid.uuid4())
-            output[ATTR_UID] = uid
-
-            if item.get(CONF_AUDIO) is not None:
-                if isinstance(item.get(CONF_AUDIO), template.Template):
-                    output[ATTR_STREAM_URL] = item[CONF_AUDIO].async_render(
-                        parse_result=False
-                    )
-                else:
-                    output[ATTR_STREAM_URL] = item.get(CONF_AUDIO)
-
-            if item.get(CONF_DISPLAY_URL) is not None:
-                if isinstance(item.get(CONF_DISPLAY_URL), template.Template):
-                    output[ATTR_REDIRECTION_URL] = item[CONF_DISPLAY_URL].async_render(
-                        parse_result=False
-                    )
-                else:
-                    output[ATTR_REDIRECTION_URL] = item.get(CONF_DISPLAY_URL)
-
-            output[ATTR_UPDATE_DATE] = dt_util.utcnow().strftime(DATE_FORMAT)
-
+        for item in briefing_config:
+            output = self._process_briefing_item(item)
             briefing.append(output)
+        return briefing
 
-        return self.json(briefing)
+    def _process_briefing_item(self, item: dict) -> dict[str, str]:
+        """Process a single briefing item."""
+        output = {}
+
+        # Process title
+        if item.get(CONF_TITLE) is not None:
+            output[ATTR_TITLE_TEXT] = self._render_template_or_value(item[CONF_TITLE])
+
+        # Process text
+        if item.get(CONF_TEXT) is not None:
+            output[ATTR_MAIN_TEXT] = self._render_template_or_value(item[CONF_TEXT])
+
+        # Process UID
+        uid = item.get(CONF_UID)
+        if uid is None:
+            uid = str(uuid.uuid4())
+        output[ATTR_UID] = uid
+
+        # Process audio
+        if item.get(CONF_AUDIO) is not None:
+            output[ATTR_STREAM_URL] = self._render_template_or_value(item[CONF_AUDIO])
+
+        # Process display URL
+        if item.get(CONF_DISPLAY_URL) is not None:
+            output[ATTR_REDIRECTION_URL] = self._render_template_or_value(
+                item[CONF_DISPLAY_URL]
+            )
+
+        # Add update date
+        output[ATTR_UPDATE_DATE] = dt_util.utcnow().strftime(DATE_FORMAT)
+
+        return output
+
+    def _render_template_or_value(self, value: str | template.Template) -> str:
+        """Render template or return value as string."""
+        if isinstance(value, template.Template):
+            return str(value.async_render(parse_result=False))
+        return value

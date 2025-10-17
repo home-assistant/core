@@ -28,6 +28,9 @@ ATTR_MAIN_TEXT = "mainText"
 ATTR_REDIRECTION_URL = "redirectionURL"
 
 SYN_RESOLUTION_MATCH = "ER_SUCCESS_MATCH"
+ALEXA_THERMOSTAT_CONTROLLER = "Alexa.ThermostatController"
+ALEXA_SECURITY_PANEL_CONTROLLER = "Alexa.SecurityPanelController"
+ATTR_TYPE = "@type"
 
 # Alexa requires timestamps to be formatted according to ISO 8601, YYYY-MM-DDThh:mm:ssZ
 # https://developer.amazon.com/es-ES/docs/alexa/device-apis/alexa-scenecontroller.html#activate-response-event
