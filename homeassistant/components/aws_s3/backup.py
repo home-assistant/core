@@ -95,7 +95,7 @@ class S3BackupAgent(BackupAgent):
         super().__init__()
         self._client = entry.runtime_data
         self._bucket: str = entry.data[CONF_BUCKET]
-        self._prefix: str = entry.data[CONF_PREFIX]
+        self._prefix: str = entry.data.get(CONF_PREFIX, "")
         self.name = entry.title
         self.unique_id = entry.entry_id
         self._backup_cache: dict[str, AgentBackup] = {}
