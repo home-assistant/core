@@ -1149,24 +1149,8 @@ class PipelineRun:
         conversation_extra_system_prompt: str | None,
     ) -> str:
         """Run intent recognition portion of pipeline. Returns text to speak."""
-        if self.intent_agent is None or self._conversation_data is None:
-            raise RuntimeError("Recognize intent was not prepared")
-
-        if self.pipeline.conversation_language == MATCH_ALL:
-            # LLMs support all languages ('*') so use languages from the
-            # pipeline for intent fallback.
-            #
-            # We prioritize the STT and TTS languages because they may be more
-            # specific, such as "zh-CN" instead of just "zh". This is necessary
-            # for languages whose intents are split out by region when
-            # preferring local intent matching.
-            input_language = (
-                self.pipeline.stt_language
-                or self.pipeline.tts_language
-                or self.pipeline.language
-            )
-        else:
-            input_language = self.pipeline.conversation_language
+        assert self.intent_agent is not None
+        input_language = self._run_intent()
 
         self.process_event(
             PipelineEvent(
@@ -1238,12 +1222,7 @@ class PipelineRun:
                     agent_id = conversation.HOME_ASSISTANT_AGENT
                     processed_locally = True
 
-            if self.tts_stream and self.tts_stream.supports_streaming_input:
-                tts_input_stream: asyncio.Queue[str | None] | None = asyncio.Queue()
-            else:
-                tts_input_stream = None
-            chat_log_role = None
-            delta_character_count = 0
+            tts_input_stream, chat_log_role, delta_character_count = self._set_stream()
 
             @callback
             def chat_log_delta_listener(
@@ -1386,11 +1365,42 @@ class PipelineRun:
                 },
             )
         )
-
+        assert self._conversation_data is not None
         if conversation_result.continue_conversation:
             self._conversation_data.continue_conversation_agent = agent_id
 
         return speech
+
+    def _set_stream(self) -> tuple[asyncio.Queue[str | None] | None, str | None, int]:
+        if self.tts_stream and self.tts_stream.supports_streaming_input:
+            tts_input_stream: asyncio.Queue[str | None] | None = asyncio.Queue()
+        else:
+            tts_input_stream = None
+        chat_log_role = None
+        delta_character_count = 0
+        return tts_input_stream, chat_log_role, delta_character_count
+
+    def _run_intent(self) -> str:
+        input_language = None
+        if self.intent_agent is None or self._conversation_data is None:
+            raise RuntimeError("Recognize intent was not prepared")
+
+        if self.pipeline.conversation_language == MATCH_ALL:
+            # LLMs support all languages ('*') so use languages from the
+            # pipeline for intent fallback.
+            #
+            # We prioritize the STT and TTS languages because they may be more
+            # specific, such as "zh-CN" instead of just "zh". This is necessary
+            # for languages whose intents are split out by region when
+            # preferring local intent matching.
+            input_language = (
+                self.pipeline.stt_language
+                or self.pipeline.tts_language
+                or self.pipeline.language
+            )
+        else:
+            input_language = self.pipeline.conversation_language
+        return input_language
 
     async def prepare_text_to_speech(self) -> None:
         """Prepare text-to-speech."""
