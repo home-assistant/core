@@ -113,9 +113,6 @@ async def setup_integration(
     return mock_config_entry
 
 
-# ---------- Config flow client patches ----------
-
-
 @pytest.fixture
 def patch_client_all():
     """Patch QuickBarsClient methods used by the flow.

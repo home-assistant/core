@@ -52,7 +52,7 @@ class QuickBarsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._entity_id: str | None = None
         self._qb_index: int | None = None
 
-    # ---------- Manual path ----------
+    # Manual Path
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

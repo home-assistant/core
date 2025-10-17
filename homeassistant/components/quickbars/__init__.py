@@ -251,7 +251,6 @@ async def async_remove_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> None:
     """Called after an entry is removed (after unload)."""
-    # Gentle reminder for the TV app
     persistent_notification.async_create(
         hass,
         (
