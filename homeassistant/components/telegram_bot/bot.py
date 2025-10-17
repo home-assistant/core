@@ -1034,7 +1034,7 @@ class TelegramNotificationService:
     async def download_file(
         self,
         file_id: str,
-        directory_path: str = "/config/telegram_bot",
+        directory_path: str = f"/config/{DOMAIN}",
         file_name: str | None = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
