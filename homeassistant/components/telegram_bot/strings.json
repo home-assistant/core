@@ -1027,7 +1027,7 @@
         },
         "directory_path": {
           "name": "Directory path",
-          "description": "Local directory path to save the file to. defaults to the 'telegram_files' directory within your Home Assistant configuration directory.",
+          "description": "Local directory path to save the file to. defaults to the 'telegram_bot' directory within your Home Assistant configuration directory.",
           "example": "/config/telegram_bot"
         },
         "file_name": {
