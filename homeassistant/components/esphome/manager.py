@@ -589,7 +589,7 @@ class ESPHomeManager:
         # the zwave_js config flow automatically even if the zwave_home_id
         # is 0 (not yet provisioned) as we know for sure the controller
         # is connected to the ESPHome device and do not have to guess
-        # if its a broken connection or Z-Wave controller or a not
+        # if it's a broken connection or Z-Wave controller or a not
         # yet provisioned controller.
         zwave_home_id: int = UNPACK_UINT32_BE(request.data[0:4])[0]
         assert self.entry_data.device_info is not None
