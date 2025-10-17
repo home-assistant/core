@@ -19,6 +19,8 @@ from .const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     BLE_SCANNER_MIN_FIRMWARE,
     CONF_BLE_SCANNER_MODE,
+    DEPRECATED_FIRMWARE_ISSUE_ID,
+    DEPRECATED_FIRMWARES,
     DOMAIN,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
     BLEScannerMode,
@@ -59,6 +61,47 @@ def async_manage_ble_scanner_firmware_unsupported_issue(
                     "device_name": device.name,
                     "ip_address": device.ip_address,
                     "firmware": firmware,
+                },
+                data={"entry_id": entry.entry_id},
+            )
+            return
+
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+@callback
+def async_manage_deprecated_firmware_issue(
+    hass: HomeAssistant,
+    entry: ShellyConfigEntry,
+) -> None:
+    """Manage deprecated firmware issue."""
+    issue_id = DEPRECATED_FIRMWARE_ISSUE_ID.format(unique=entry.unique_id)
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.rpc is not None
+
+    device = entry.runtime_data.rpc.device
+    model = entry.data["model"]
+
+    if model in DEPRECATED_FIRMWARES:
+        min_firmware = DEPRECATED_FIRMWARES[model]["min_firmware"]
+        ha_version = DEPRECATED_FIRMWARES[model]["ha_version"]
+
+        firmware = AwesomeVersion(device.shelly["ver"])
+        if firmware < min_firmware:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                is_fixable=True,
+                is_persistent=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_firmware",
+                translation_placeholders={
+                    "device_name": device.name,
+                    "ip_address": device.ip_address,
+                    "firmware": firmware,
+                    "ha_version": ha_version,
                 },
                 data={"entry_id": entry.entry_id},
             )
@@ -142,8 +185,8 @@ class ShellyRpcRepairsFlow(RepairsFlow):
         raise NotImplementedError
 
 
-class BleScannerFirmwareUpdateFlow(ShellyRpcRepairsFlow):
-    """Handler for BLE Scanner Firmware Update flow."""
+class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
+    """Handler for Firmware Update flow."""
 
     async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
@@ -201,8 +244,11 @@ async def async_create_fix_flow(
 
     device = entry.runtime_data.rpc.device
 
-    if "ble_scanner_firmware_unsupported" in issue_id:
-        return BleScannerFirmwareUpdateFlow(device)
+    if (
+        "ble_scanner_firmware_unsupported" in issue_id
+        or "deprecated_firmware" in issue_id
+    ):
+        return FirmwareUpdateFlow(device)
 
     if "outbound_websocket_incorrectly_enabled" in issue_id:
         return DisableOutboundWebSocketFlow(device)

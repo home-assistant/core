@@ -14,12 +14,14 @@ from homeassistant.components.openai_conversation.config_flow import (
 from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REASONING_EFFORT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    CONF_VERBOSITY,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
@@ -232,6 +234,62 @@ async def test_subentry_unsupported_model(
     assert subentry_flow["errors"] == {"chat_model": "model_not_supported"}
 
 
+async def test_subentry_websearch_unsupported_reasoning_effort(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test the subentry form giving error about unsupported minimal reasoning effort."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+    # Configure initial step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "advanced"
+
+    # Configure advanced step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: "gpt-5",
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "model"
+
+    # Configure model step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_REASONING_EFFORT: "minimal",
+            CONF_WEB_SEARCH: True,
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["errors"] == {"web_search": "web_search_minimal_reasoning"}
+
+    # Reconfigure model step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_REASONING_EFFORT: "low",
+            CONF_WEB_SEARCH: True,
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.ABORT
+    assert subentry_flow["reason"] == "reconfigure_successful"
+
+
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
@@ -302,7 +360,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
             (
                 {
                     CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like a pirate",
+                    CONF_PROMPT: "Speak like a pro",
                 },
                 {
                     CONF_TEMPERATURE: 1.0,
@@ -317,7 +375,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
             ),
             {
                 CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT: "Speak like a pro",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "o1-pro",
                 CONF_TOP_P: RECOMMENDED_TOP_P,
@@ -414,35 +472,51 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
         (  # Case 2: reasoning model
             {
                 CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pro",
+                CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "o1-pro",
+                CONF_CHAT_MODEL: "gpt-5",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
-                CONF_REASONING_EFFORT: "high",
+                CONF_REASONING_EFFORT: "low",
+                CONF_VERBOSITY: "high",
+                CONF_CODE_INTERPRETER: False,
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+                CONF_WEB_SEARCH_USER_LOCATION: False,
             },
             (
                 {
                     CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like a pro",
+                    CONF_PROMPT: "Speak like a pirate",
                 },
                 {
                     CONF_TEMPERATURE: 0.8,
-                    CONF_CHAT_MODEL: "o1-pro",
+                    CONF_CHAT_MODEL: "gpt-5",
                     CONF_TOP_P: 0.9,
                     CONF_MAX_TOKENS: 1000,
                 },
-                {CONF_REASONING_EFFORT: "high", CONF_CODE_INTERPRETER: False},
+                {
+                    CONF_REASONING_EFFORT: "minimal",
+                    CONF_CODE_INTERPRETER: False,
+                    CONF_VERBOSITY: "high",
+                    CONF_WEB_SEARCH: False,
+                    CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+                    CONF_WEB_SEARCH_USER_LOCATION: False,
+                },
             ),
             {
                 CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pro",
+                CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "o1-pro",
+                CONF_CHAT_MODEL: "gpt-5",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
-                CONF_REASONING_EFFORT: "high",
+                CONF_REASONING_EFFORT: "minimal",
                 CONF_CODE_INTERPRETER: False,
+                CONF_VERBOSITY: "high",
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+                CONF_WEB_SEARCH_USER_LOCATION: False,
             },
         ),
         # Test that old options are removed after reconfiguration
@@ -482,11 +556,13 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_LLM_HASS_API: ["assist"],
                 CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-4o",
+                CONF_CHAT_MODEL: "gpt-5",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "high",
                 CONF_CODE_INTERPRETER: True,
+                CONF_VERBOSITY: "low",
+                CONF_WEB_SEARCH: False,
             },
             (
                 {
@@ -550,11 +626,12 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_LLM_HASS_API: ["assist"],
                 CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "o3-mini",
+                CONF_CHAT_MODEL: "gpt-5",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "low",
                 CONF_CODE_INTERPRETER: True,
+                CONF_VERBOSITY: "medium",
             },
             (
                 {
@@ -585,6 +662,52 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
                 CONF_CODE_INTERPRETER: False,
+            },
+        ),
+        (  # Case 5: code interpreter supported to not supported model
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_LLM_HASS_API: ["assist"],
+                CONF_TEMPERATURE: 0.8,
+                CONF_CHAT_MODEL: "gpt-5",
+                CONF_TOP_P: 0.9,
+                CONF_MAX_TOKENS: 1000,
+                CONF_REASONING_EFFORT: "low",
+                CONF_CODE_INTERPRETER: True,
+                CONF_VERBOSITY: "medium",
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+            },
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pirate",
+                },
+                {
+                    CONF_TEMPERATURE: 0.8,
+                    CONF_CHAT_MODEL: "gpt-5-pro",
+                    CONF_TOP_P: 0.9,
+                    CONF_MAX_TOKENS: 1000,
+                },
+                {
+                    CONF_WEB_SEARCH: True,
+                    CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
+                    CONF_WEB_SEARCH_USER_LOCATION: False,
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.8,
+                CONF_CHAT_MODEL: "gpt-5-pro",
+                CONF_TOP_P: 0.9,
+                CONF_MAX_TOKENS: 1000,
+                CONF_VERBOSITY: "medium",
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
+                CONF_WEB_SEARCH_USER_LOCATION: False,
             },
         ),
     ],
@@ -851,6 +974,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "gpt-4o",
+        CONF_IMAGE_MODEL: "gpt-image-1",
         CONF_MAX_TOKENS: 200,
         CONF_TEMPERATURE: 0.5,
         CONF_TOP_P: 0.9,

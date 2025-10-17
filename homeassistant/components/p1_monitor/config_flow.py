@@ -40,7 +40,7 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
                     port=user_input[CONF_PORT],
                     session=session,
                 ) as client:
-                    await client.smartmeter()
+                    await client.settings()
             except P1MonitorError:
                 errors["base"] = "cannot_connect"
             else:

@@ -78,6 +78,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'active_time': 0,
+      'child_lock': False,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 131s',
       'mode': 'sleep',
       'percentage': None,
@@ -87,7 +89,6 @@
         'auto',
         'sleep',
       ]),
-      'screen_status': 'on',
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -175,7 +176,9 @@
 # name: test_fan_state[Air Purifier 200s][fan.air_purifier_200s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': None,
       'child_lock': False,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 200s',
       'mode': 'manual',
       'night_light': 'off',
@@ -185,7 +188,6 @@
       'preset_modes': list([
         'sleep',
       ]),
-      'screen_status': True,
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -274,7 +276,9 @@
 # name: test_fan_state[Air Purifier 400s][fan.air_purifier_400s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': None,
       'child_lock': False,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 400s',
       'mode': 'manual',
       'night_light': 'off',
@@ -285,7 +289,6 @@
         'auto',
         'sleep',
       ]),
-      'screen_status': True,
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -374,7 +377,9 @@
 # name: test_fan_state[Air Purifier 600s][fan.air_purifier_600s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': None,
       'child_lock': False,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 600s',
       'mode': 'manual',
       'night_light': 'off',
@@ -385,7 +390,6 @@
         'auto',
         'sleep',
       ]),
-      'screen_status': True,
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -651,7 +655,7 @@
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
-      'supported_features': <FanEntityFeature: 57>,
+      'supported_features': <FanEntityFeature: 59>,
       'translation_key': 'vesync',
       'unique_id': 'smarttowerfan',
       'unit_of_measurement': None,
@@ -661,12 +665,13 @@
 # name: test_fan_state[SmartTowerFan][fan.smarttowerfan]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'child_lock': False,
+      'active_time': None,
+      'display_status': 'off',
       'friendly_name': 'SmartTowerFan',
       'mode': 'normal',
-      'night_light': 'off',
+      'oscillating': True,
       'percentage': None,
-      'percentage_step': 7.6923076923076925,
+      'percentage_step': 8.333333333333334,
       'preset_mode': 'normal',
       'preset_modes': list([
         'advancedSleep',
@@ -674,8 +679,7 @@
         'normal',
         'turbo',
       ]),
-      'screen_status': False,
-      'supported_features': <FanEntityFeature: 57>,
+      'supported_features': <FanEntityFeature: 59>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.smarttowerfan',

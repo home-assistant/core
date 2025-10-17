@@ -42,6 +42,11 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.SWITCH, async_add_entities)
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterSwitchEntityDescription(SwitchEntityDescription, MatterEntityDescription):
+    """Describe Matter Switch entities."""
+
+
 class MatterSwitch(MatterEntity, SwitchEntity):
     """Representation of a Matter switch."""
 
@@ -115,7 +120,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
         )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterGenericCommandSwitchEntityDescription(
     SwitchEntityDescription, MatterEntityDescription
 ):
@@ -127,7 +132,7 @@ class MatterGenericCommandSwitchEntityDescription(
     command_timeout: int | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterNumericSwitchEntityDescription(
     SwitchEntityDescription, MatterEntityDescription
 ):
@@ -168,7 +173,7 @@ class MatterNumericSwitch(MatterSwitch):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=SwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterPlug",
             device_class=SwitchDeviceClass.OUTLET,
             name=None,
@@ -179,7 +184,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=SwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterPowerToggle",
             device_class=SwitchDeviceClass.SWITCH,
             translation_key="power",
@@ -195,12 +200,11 @@ DISCOVERY_SCHEMAS = [
             device_types.PumpController,
             device_types.RoboticVacuumCleaner,
             device_types.RoomAirConditioner,
-            device_types.Speaker,
         ),
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=SwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterSwitch",
             device_class=SwitchDeviceClass.OUTLET,
             name=None,
@@ -237,6 +241,24 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
         entity_description=MatterNumericSwitchEntityDescription(
+            key="MatterMuteToggle",
+            translation_key="speaker_mute",
+            device_to_ha={
+                True: False,  # True means volume is on, so HA should show mute as off
+                False: True,  # False means volume is off (muted), so HA should show mute as on
+            }.get,
+            ha_to_device={
+                False: True,  # HA showing mute as off means volume is on, so send True
+                True: False,  # HA showing mute as on means volume is off (muted), so send False
+            }.get,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(clusters.OnOff.Attributes.OnOff,),
+        device_type=(device_types.Speaker,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
             key="EveTrvChildLock",
             entity_category=EntityCategory.CONFIG,
             translation_key="child_lock",
@@ -254,6 +276,18 @@ DISCOVERY_SCHEMAS = [
             clusters.ThermostatUserInterfaceConfiguration.Attributes.KeypadLockout,
         ),
         vendor_id=(4874,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="DoorLockEnablePrivacyModeButton",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="privacy_mode_button",
+            device_to_ha=bool,
+            ha_to_device=int,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(clusters.DoorLock.Attributes.EnablePrivacyModeButton,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,

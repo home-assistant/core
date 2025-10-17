@@ -50,6 +50,7 @@
           "data": {
             "code_interpreter": "Enable code interpreter tool",
             "reasoning_effort": "Reasoning effort",
+            "image_model": "Image generation model",
             "web_search": "Enable web search",
             "search_context_size": "Search context size",
             "user_location": "Include home location"
@@ -57,6 +58,7 @@
           "data_description": {
             "code_interpreter": "This tool, also known as the python tool to the model, allows it to run code to answer questions",
             "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt",
+            "image_model": "The model to use when generating images",
             "web_search": "Allow the model to search the web for the latest information before generating a response",
             "search_context_size": "High level guidance for the amount of context window space to use for the search",
             "user_location": "Refine search results based on geography"
@@ -68,7 +70,8 @@
         "entry_not_loaded": "Cannot add things while the configuration is disabled."
       },
       "error": {
-        "model_not_supported": "This model is not supported, please select a different model"
+        "model_not_supported": "This model is not supported, please select a different model",
+        "web_search_minimal_reasoning": "Web search is currently not supported with minimal reasoning effort"
       }
     },
     "ai_task_data": {
@@ -96,13 +99,17 @@
         "model": {
           "title": "[%key:component::openai_conversation::config_subentries::conversation::step::model::title%]",
           "data": {
+            "code_interpreter": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::code_interpreter%]",
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::reasoning_effort%]",
+            "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::image_model%]",
             "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::web_search%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::search_context_size%]",
             "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::user_location%]"
           },
           "data_description": {
+            "code_interpreter": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::code_interpreter%]",
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::reasoning_effort%]",
+            "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::image_model%]",
             "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::web_search%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::search_context_size%]",
             "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::user_location%]"
@@ -114,19 +121,28 @@
         "entry_not_loaded": "[%key:component::openai_conversation::config_subentries::conversation::abort::entry_not_loaded%]"
       },
       "error": {
-        "model_not_supported": "[%key:component::openai_conversation::config_subentries::conversation::error::model_not_supported%]"
+        "model_not_supported": "[%key:component::openai_conversation::config_subentries::conversation::error::model_not_supported%]",
+        "web_search_minimal_reasoning": "[%key:component::openai_conversation::config_subentries::conversation::error::web_search_minimal_reasoning%]"
       }
     }
   },
   "selector": {
     "reasoning_effort": {
       "options": {
+        "minimal": "Minimal",
         "low": "[%key:common::state::low%]",
         "medium": "[%key:common::state::medium%]",
         "high": "[%key:common::state::high%]"
       }
     },
     "search_context_size": {
+      "options": {
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "high": "[%key:common::state::high%]"
+      }
+    },
+    "verbosity": {
       "options": {
         "low": "[%key:common::state::low%]",
         "medium": "[%key:common::state::medium%]",
@@ -179,6 +195,12 @@
           "description": "List of files to upload"
         }
       }
+    }
+  },
+  "issues": {
+    "organization_verification_required": {
+      "title": "Organization verification required",
+      "description": "Your organization must be verified to use this model. Please go to {platform_settings} and select Verify Organization. If you just verified, it can take up to 15 minutes for access to propagate."
     }
   },
   "exceptions": {

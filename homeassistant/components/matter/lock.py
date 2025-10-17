@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from typing import Any
 
 from chip.clusters import Objects as clusters
+from matter_server.common.models import EventType, MatterNodeEvent
 
 from homeassistant.components.lock import (
     LockEntity,
@@ -18,9 +20,25 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+
+DOOR_LOCK_OPERATION_SOURCE = {
+    # mapping from operation source id's to textual representation
+    0: "Unspecified",
+    1: "Manual",  # [Optional]
+    2: "Proprietary Remote",  # [Optional]
+    3: "Keypad",  # [Optional]
+    4: "Auto",  # [Optional]
+    5: "Button",  # [Optional]
+    6: "Schedule",  # [HDSCH]
+    7: "Remote",  # [M]
+    8: "RFID",  # [RID]
+    9: "Biometric",  # [USR]
+    10: "Aliro",  # [Aliro]
+}
+
 
 DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
 
@@ -35,12 +53,63 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.LOCK, async_add_entities)
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterLockEntityDescription(LockEntityDescription, MatterEntityDescription):
+    """Describe Matter Lock entities."""
+
+
 class MatterLock(MatterEntity, LockEntity):
     """Representation of a Matter lock."""
 
     _feature_map: int | None = None
     _optimistic_timer: asyncio.TimerHandle | None = None
     _platform_translation_key = "lock"
+    _attr_changed_by = "Unknown"
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to events."""
+        await super().async_added_to_hass()
+        # subscribe to NodeEvent events
+        self._unsubscribes.append(
+            self.matter_client.subscribe_events(
+                callback=self._on_matter_node_event,
+                event_filter=EventType.NODE_EVENT,
+                node_filter=self._endpoint.node.node_id,
+            )
+        )
+
+    @callback
+    def _on_matter_node_event(
+        self,
+        event: EventType,
+        node_event: MatterNodeEvent,
+    ) -> None:
+        """Call on NodeEvent."""
+        if (node_event.endpoint_id != self._endpoint.endpoint_id) or (
+            node_event.cluster_id != clusters.DoorLock.id
+        ):
+            return
+
+        LOGGER.debug(
+            "Received node_event: event type %s, event id %s for %s with data %s",
+            event,
+            node_event.event_id,
+            self.entity_id,
+            node_event.data,
+        )
+
+        # handle the DoorLock events
+        node_event_data: dict[str, int] = node_event.data or {}
+        match node_event.event_id:
+            case (
+                clusters.DoorLock.Events.LockOperation.event_id
+            ):  # Lock cluster event 2
+                # update the changed_by attribute to indicate lock operation source
+                operation_source: int = node_event_data.get("operationSource", -1)
+                self._attr_changed_by = DOOR_LOCK_OPERATION_SOURCE.get(
+                    operation_source, "Unknown"
+                )
+                self.async_write_ha_state()
 
     @property
     def code_format(self) -> str | None:
@@ -191,7 +260,7 @@ class MatterLock(MatterEntity, LockEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LOCK,
-        entity_description=LockEntityDescription(
+        entity_description=MatterLockEntityDescription(
             key="MatterLock",
             name=None,
         ),

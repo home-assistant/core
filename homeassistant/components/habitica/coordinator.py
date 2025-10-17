@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from io import BytesIO
 import logging
 from typing import Any
+from uuid import UUID
 
 from aiohttp import ClientError
 from habiticalib import (
     Avatar,
     ContentData,
+    GroupData,
     Habitica,
     HabiticaException,
     NotAuthorizedError,
@@ -46,13 +49,22 @@ class HabiticaData:
     tasks: list[TaskData]
 
 
+@dataclass
+class HabiticaPartyData:
+    """Habitica party data."""
+
+    party: GroupData
+    members: dict[UUID, UserData]
+
+
 type HabiticaConfigEntry = ConfigEntry[HabiticaDataUpdateCoordinator]
 
 
-class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
-    """Habitica Data Update Coordinator."""
+class HabiticaBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+    """Habitica coordinator base class."""
 
     config_entry: HabiticaConfigEntry
+    _update_interval: timedelta
 
     def __init__(
         self, hass: HomeAssistant, config_entry: HabiticaConfigEntry, habitica: Habitica
@@ -63,7 +75,7 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=60),
+            update_interval=self._update_interval,
             request_refresh_debouncer=Debouncer(
                 hass,
                 _LOGGER,
@@ -71,8 +83,40 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
                 immediate=False,
             ),
         )
+
         self.habitica = habitica
-        self.content: ContentData
+
+    @abstractmethod
+    async def _update_data(self) -> _DataT:
+        """Fetch data."""
+
+    async def _async_update_data(self) -> _DataT:
+        """Fetch the latest party data."""
+
+        try:
+            return await self._update_data()
+        except TooManyRequestsError:
+            _LOGGER.debug("Rate limit exceeded, will try again later")
+            return self.data
+        except HabiticaException as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e.error.message)},
+            ) from e
+        except ClientError as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e)},
+            ) from e
+
+
+class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
+    """Habitica Data Update Coordinator."""
+
+    _update_interval = timedelta(seconds=30)
+    content: ContentData
 
     async def _async_setup(self) -> None:
         """Set up Habitica integration."""
@@ -106,30 +150,16 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
                 translation_placeholders={"reason": str(e)},
             ) from e
 
-    async def _async_update_data(self) -> HabiticaData:
-        try:
-            user = (await self.habitica.get_user()).data
-            tasks = (await self.habitica.get_tasks()).data
-            completed_todos = (
-                await self.habitica.get_tasks(TaskFilter.COMPLETED_TODOS)
-            ).data
-        except TooManyRequestsError:
-            _LOGGER.debug("Rate limit exceeded, will try again later")
-            return self.data
-        except HabiticaException as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="service_call_exception",
-                translation_placeholders={"reason": str(e.error.message)},
-            ) from e
-        except ClientError as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="service_call_exception",
-                translation_placeholders={"reason": str(e)},
-            ) from e
-        else:
-            return HabiticaData(user=user, tasks=tasks + completed_todos)
+    async def _update_data(self) -> HabiticaData:
+        """Fetch the latest data."""
+
+        user = (await self.habitica.get_user()).data
+        tasks = (await self.habitica.get_tasks()).data
+        completed_todos = (
+            await self.habitica.get_tasks(TaskFilter.COMPLETED_TODOS)
+        ).data
+
+        return HabiticaData(user=user, tasks=tasks + completed_todos)
 
     async def execute(self, func: Callable[[Habitica], Any]) -> None:
         """Execute an API call."""
@@ -169,3 +199,21 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
         await self.habitica.generate_avatar(fp=png, avatar=avatar, fmt="PNG")
 
         return png.getvalue()
+
+
+class HabiticaPartyCoordinator(HabiticaBaseCoordinator[HabiticaPartyData]):
+    """Habitica Party Coordinator."""
+
+    _update_interval = timedelta(minutes=15)
+
+    async def _update_data(self) -> HabiticaPartyData:
+        """Fetch the latest party data."""
+
+        return HabiticaPartyData(
+            party=(await self.habitica.get_group()).data,
+            members={
+                member.id: member
+                for member in (await self.habitica.get_group_members()).data
+                if member.id
+            },
+        )

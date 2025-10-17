@@ -146,6 +146,20 @@ async def light_switch_options_schema(
     )
 
 
+LIGHT_CONFIG_SCHEMA = basic_group_config_schema("light").extend(
+    {
+        vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
+    }
+)
+
+
+SWITCH_CONFIG_SCHEMA = basic_group_config_schema("switch").extend(
+    {
+        vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
+    }
+)
+
+
 GROUP_TYPES = [
     "binary_sensor",
     "button",
@@ -210,7 +224,7 @@ CONFIG_FLOW = {
         validate_user_input=set_group_type("fan"),
     ),
     "light": SchemaFlowFormStep(
-        basic_group_config_schema("light"),
+        LIGHT_CONFIG_SCHEMA,
         preview="group",
         validate_user_input=set_group_type("light"),
     ),
@@ -235,7 +249,7 @@ CONFIG_FLOW = {
         validate_user_input=set_group_type("sensor"),
     ),
     "switch": SchemaFlowFormStep(
-        basic_group_config_schema("switch"),
+        SWITCH_CONFIG_SCHEMA,
         preview="group",
         validate_user_input=set_group_type("switch"),
     ),
@@ -315,6 +329,7 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:

@@ -6,7 +6,66 @@ from tuya_sharing import CustomerDevice
 
 from homeassistant.exceptions import ServiceValidationError
 
-from .const import DOMAIN, DPCode
+from .const import DOMAIN, DPCode, DPType
+
+_DPTYPE_MAPPING: dict[str, DPType] = {
+    "bitmap": DPType.BITMAP,
+    "bool": DPType.BOOLEAN,
+    "enum": DPType.ENUM,
+    "json": DPType.JSON,
+    "raw": DPType.RAW,
+    "string": DPType.STRING,
+    "value": DPType.INTEGER,
+}
+
+
+def get_dpcode(
+    device: CustomerDevice, dpcodes: str | DPCode | tuple[DPCode, ...] | None
+) -> DPCode | None:
+    """Get the first matching DPCode from the device or return None."""
+    if dpcodes is None:
+        return None
+
+    if isinstance(dpcodes, DPCode):
+        dpcodes = (dpcodes,)
+    elif isinstance(dpcodes, str):
+        dpcodes = (DPCode(dpcodes),)
+
+    for dpcode in dpcodes:
+        if (
+            dpcode in device.function
+            or dpcode in device.status
+            or dpcode in device.status_range
+        ):
+            return dpcode
+
+    return None
+
+
+def get_dptype(
+    device: CustomerDevice, dpcode: DPCode | None, *, prefer_function: bool = False
+) -> DPType | None:
+    """Find a matching DPType type information for this device DPCode."""
+    if dpcode is None:
+        return None
+
+    lookup_tuple = (
+        (device.function, device.status_range)
+        if prefer_function
+        else (device.status_range, device.function)
+    )
+
+    for device_specs in lookup_tuple:
+        if current_definition := device_specs.get(dpcode):
+            current_type = current_definition.type
+            try:
+                return DPType(current_type)
+            except ValueError:
+                # Sometimes, we get ill-formed DPTypes from the cloud,
+                # this fixes them and maps them to the correct DPType.
+                return _DPTYPE_MAPPING.get(current_type)
+
+    return None
 
 
 def remap_value(
