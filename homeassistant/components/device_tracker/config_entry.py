@@ -283,6 +283,7 @@ class TrackerEntity(
         """Return the device state attributes."""
         attr: dict[str, Any] = {}
         attr.update(super().state_attributes)
+
         if self.latitude is not None and self.longitude is not None:
             attr[ATTR_LATITUDE] = self.latitude
             attr[ATTR_LONGITUDE] = self.longitude
@@ -434,6 +435,7 @@ class ScannerEntity(
     def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attr: dict[str, Any] = self.generate_entity_state_attributes()
+        attr.update(super().state_attributes)
 
         if ip_address := self.ip_address:
             attr[ATTR_IP] = ip_address
