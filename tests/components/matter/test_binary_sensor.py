@@ -104,7 +104,7 @@ async def test_battery_sensor(
     matter_node: MatterNode,
 ) -> None:
     """Test battery sensor."""
-    entity_id = "binary_sensor.mock_door_lock_battery_1"
+    entity_id = "binary_sensor.mock_door_lock_battery"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "off"

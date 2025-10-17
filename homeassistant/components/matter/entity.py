@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from enum import StrEnum
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, Concatenate, cast
@@ -42,6 +41,7 @@ LOGGER = logging.getLogger(__name__)
 # The keys are vendor IDs, the values are dictionaries with product IDs as keys
 # and lists of label names to use as values. If the value is None, no labels are used
 VENDOR_LABELING_LIST: dict[int, dict] = {
+    4488: {259: ["position"]},  # TP-Link Dual Outdoor Plug US
     4874: {105: ["orientation"]},  # Eve Energy dual Outlet US
     4961: {
         1: ["label", "name", "button"],  # Inovelli VTM31
@@ -51,9 +51,6 @@ VENDOR_LABELING_LIST: dict[int, dict] = {
     },
     65521: {32768: ["label"]},  # Home Assistant Mock device used in testing
 }
-
-# Default labeling list if vendor ID is not found or product ID not found for vendor
-DEFAULT_LABELING_LIST: list | None = None
 
 
 def catch_matter_error[_R, **P](
@@ -73,36 +70,16 @@ def catch_matter_error[_R, **P](
     return wrapper
 
 
-# Enumeration defining where to place entity labels or tags in the entity name.
-class LabelPlacement(StrEnum):
-    """Enum for label placement options."""
-
-    APPEND = "append"
-    IGNORE = "ignore"
-    RENAME = "rename"
-
-
 @dataclass(frozen=True, kw_only=True)
 class MatterEntityLabeling:
     """Data structure for labeling Information."""
-
-    # A label can be used to modify an entity's name by appending the text
-    # or replacing the name. This class holds the information needed to do that.
-    # Can be "RENAME", "APPEND", "IGNORE". APPEND is the default.
-
-    label_placement: LabelPlacement = LabelPlacement.APPEND
-
-    # When labels are matched, use the concatenator string to join them.
-    # Examples: ", " or "-" or " " (space).
-    # if set to None or empty string, then only the first match is used.
-    label_concatenator: str | None = None
 
     def find_matching_labels(self, entity: MatterEntity) -> list[str]:
         """Find all labels for a Matter entity."""
 
         device_info = entity._endpoint.device_info  # noqa: SLF001
         labeling_list = VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
-            device_info.productID, DEFAULT_LABELING_LIST
+            device_info.productID
         )
 
         # get the labels from the UserLabel and FixedLabel clusters
@@ -126,15 +103,8 @@ class MatterEntityLabeling:
     def get_name_modifier(self, entity: MatterEntity) -> str | None:
         """Get the name modifier for the entity."""
 
-        found_labels = self.find_matching_labels(entity)
-
-        if found_labels:
-            return (
-                self.label_concatenator.join(found_labels)
-                if self.label_concatenator
-                else found_labels[0]
-            )
-
+        if found_labels := self.find_matching_labels(entity):
+            return found_labels[0]
         return None
 
 
@@ -185,19 +155,12 @@ class MatterEntity(Entity):
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
         self._attr_available = self._endpoint.node.available
-
         # mark endpoint postfix if the device has the primary attribute on multiple endpoints
-        # this will get overwritten if an explicit name is set below and label_placement is "AFTER"
-        if (
-            not self._endpoint.node.is_bridge_device
-            and self._entity_info.entity_description.label_placement
-            != LabelPlacement.IGNORE
-            and any(
-                ep
-                for ep in self._endpoint.node.endpoints.values()
-                if ep != self._endpoint
-                and ep.has_cluster(entity_info.primary_attribute.cluster_id)
-            )
+        if not self._endpoint.node.is_bridge_device and any(
+            ep
+            for ep in self._endpoint.node.endpoints.values()
+            if ep != self._endpoint
+            and ep.has_attribute(None, entity_info.primary_attribute)
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
             if self._platform_translation_key and not self.translation_key:
@@ -210,17 +173,7 @@ class MatterEntity(Entity):
         # If label_placement is "ignore" or no labels are found, then
         # the entity name is not modified.
         name_modifier = self._entity_info.entity_description.get_name_modifier(self)
-        if (
-            name_modifier
-            and self._entity_info.entity_description.label_placement
-            == LabelPlacement.RENAME
-        ):
-            self._attr_name = name_modifier
-        elif (
-            name_modifier
-            and self._entity_info.entity_description.label_placement
-            == LabelPlacement.APPEND
-        ):
+        if name_modifier:
             self._name_postfix = name_modifier
 
         # make sure to update the attributes once
