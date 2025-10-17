@@ -139,12 +139,12 @@
     "step": {
       "device_selection": {
         "data": {
-          "clear_device_options": "Reset all device customisations",
-          "device_selection": "Customise specific devices"
+          "clear_device_options": "Reset all device customizations",
+          "device_selection": "Customize specific devices"
         },
         "data_description": {
           "clear_device_options": "Use this to reset all device specific options to default values.",
-          "device_selection": "Customise behaviour of individual devices."
+          "device_selection": "Customize behavior of individual devices."
         },
         "description": "Select what configuration steps to process",
         "title": "1-Wire device options"
