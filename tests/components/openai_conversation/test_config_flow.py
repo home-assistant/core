@@ -26,6 +26,7 @@ from homeassistant.components.openai_conversation.const import (
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
     CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_INLINE_CITATIONS,
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
@@ -404,6 +405,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                     CONF_CODE_INTERPRETER: False,
                 },
             ),
@@ -417,6 +419,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 CONF_CODE_INTERPRETER: False,
             },
         ),
@@ -436,6 +439,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_REGION: "California",
                 CONF_WEB_SEARCH_COUNTRY: "US",
                 CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 CONF_CODE_INTERPRETER: True,
             },
             (
@@ -453,6 +457,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                     CONF_CODE_INTERPRETER: True,
                 },
             ),
@@ -466,6 +471,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 CONF_CODE_INTERPRETER: True,
             },
         ),
@@ -483,6 +489,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
             },
             (
                 {
@@ -502,6 +509,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 },
             ),
             {
@@ -517,6 +525,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
             },
         ),
         # Test that old options are removed after reconfiguration
@@ -536,6 +545,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_REGION: "California",
                 CONF_WEB_SEARCH_COUNTRY: "US",
                 CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
             },
             (
                 {
@@ -591,6 +601,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_REGION: "California",
                 CONF_WEB_SEARCH_COUNTRY: "US",
                 CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 CONF_CODE_INTERPRETER: True,
             },
             (
@@ -648,6 +659,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                     CONF_CODE_INTERPRETER: False,
                 },
             ),
@@ -661,6 +673,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 CONF_CODE_INTERPRETER: False,
             },
         ),
@@ -858,6 +871,7 @@ async def test_subentry_web_search_user_location(
         CONF_WEB_SEARCH_REGION: "California",
         CONF_WEB_SEARCH_COUNTRY: "US",
         CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+        CONF_WEB_SEARCH_INLINE_CITATIONS: True,
         CONF_CODE_INTERPRETER: False,
     }
 

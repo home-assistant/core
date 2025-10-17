@@ -29,6 +29,7 @@ from openai.types.responses import (
     ResponseInputImageParam,
     ResponseInputMessageContentListParam,
     ResponseInputParam,
+    ResponseInputTextParam,
     ResponseOutputItemAddedEvent,
     ResponseOutputItemDoneEvent,
     ResponseOutputMessage,
@@ -77,6 +78,7 @@ from .const import (
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
     CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_INLINE_CITATIONS,
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
@@ -90,6 +92,7 @@ from .const import (
     RECOMMENDED_TOP_P,
     RECOMMENDED_VERBOSITY,
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
+    RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
 )
 
 if TYPE_CHECKING:
@@ -504,6 +507,22 @@ class OpenAIBaseLLMEntity(Entity):
                     country=options.get(CONF_WEB_SEARCH_COUNTRY, ""),
                     timezone=options.get(CONF_WEB_SEARCH_TIMEZONE, ""),
                 )
+            if not options.get(
+                CONF_WEB_SEARCH_INLINE_CITATIONS,
+                RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
+            ):
+                system_message = cast(EasyInputMessageParam, messages[0])
+                extra_prompt = (
+                    "When providing information from web search, "
+                    "do not include source citations."
+                )
+                content = system_message["content"]
+                if isinstance(content, str):
+                    system_message["content"] = f"{content}\n{extra_prompt}"
+                elif isinstance(content, list):
+                    content.append(
+                        ResponseInputTextParam(type="input_text", text=extra_prompt)
+                    )
             tools.append(web_search)
 
         if options.get(CONF_CODE_INTERPRETER):
