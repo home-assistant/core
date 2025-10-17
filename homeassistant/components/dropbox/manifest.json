@@ -1,0 +1,11 @@
+{
+  "domain": "dropbox",
+  "name": "Dropbox",
+  "after_dependencies": ["backup"],
+  "codeowners": ["@bdr99"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/dropbox",
+  "iot_class": "cloud_polling",
+  "requirements": ["python-dropbox-api==0.1.1"]
+}

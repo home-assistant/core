@@ -1452,6 +1452,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "dropbox": {
+      "name": "Dropbox",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "droplet": {
       "name": "Droplet",
       "integration_type": "hub",

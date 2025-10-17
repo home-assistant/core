@@ -151,6 +151,7 @@ FLOWS = {
         "downloader",
         "dremel_3d_printer",
         "drop_connect",
+        "dropbox",
         "droplet",
         "dsmr",
         "dsmr_reader",
