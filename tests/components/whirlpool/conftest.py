@@ -169,8 +169,8 @@ def mock_dryer_api():
 @pytest.fixture
 def mock_oven_single_cavity_api():
     """Get a mock of a single cavity oven."""
-    mock_oven = Mock(spec=oven.Oven, said="said_oven")
-    mock_oven.name = "Oven"
+    mock_oven = Mock(spec=oven.Oven, said="said_oven_single")
+    mock_oven.name = "Single Cavity Oven"
     mock_oven.appliance_info = Mock(
         data_model="oven", category="oven", model_number="12345"
     )
@@ -188,8 +188,8 @@ def mock_oven_single_cavity_api():
 @pytest.fixture
 def mock_oven_dual_cavity_api():
     """Get a mock of a dual cavity oven."""
-    mock_oven = Mock(spec=oven.Oven, said="said_oven")
-    mock_oven.name = "Oven"
+    mock_oven = Mock(spec=oven.Oven, said="said_oven_dual")
+    mock_oven.name = "Dual Cavity Oven"
     mock_oven.appliance_info = Mock(
         data_model="oven", category="oven", model_number="12345"
     )

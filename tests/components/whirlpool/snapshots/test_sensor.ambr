@@ -145,7 +145,7 @@
     'state': 'running_maincycle',
   })
 # ---
-# name: test_all_entities[sensor.oven_cook_mode-entry]
+# name: test_all_entities[sensor.dual_cavity_oven_lower_oven_cook_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -169,133 +169,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.oven_cook_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Cook mode',
-    'platform': 'whirlpool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'oven_cook_mode',
-    'unique_id': 'said_oven-oven_cook_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.oven_cook_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Oven Cook mode',
-      'options': list([
-        'standby',
-        'bake',
-        'convection_bake',
-        'broil',
-        'convection_broil',
-        'convection_roast',
-        'keep_warm',
-        'air_fry',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.oven_cook_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'bake',
-  })
-# ---
-# name: test_all_entities[sensor.oven_current_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.oven_current_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Current temperature',
-    'platform': 'whirlpool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'oven_current_temperature',
-    'unique_id': 'said_oven-oven_current_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_all_entities[sensor.oven_current_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Oven Current temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.oven_current_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '180',
-  })
-# ---
-# name: test_all_entities[sensor.oven_lower_oven_cook_mode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'standby',
-        'bake',
-        'convection_bake',
-        'broil',
-        'convection_broil',
-        'convection_roast',
-        'keep_warm',
-        'air_fry',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.oven_lower_oven_cook_mode',
+    'entity_id': 'sensor.dual_cavity_oven_lower_oven_cook_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -313,15 +187,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_cook_mode_lower',
-    'unique_id': 'said_oven-oven_cook_mode_lower',
+    'unique_id': 'said_oven_dual-oven_cook_mode_lower',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.oven_lower_oven_cook_mode-state]
+# name: test_all_entities[sensor.dual_cavity_oven_lower_oven_cook_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Oven Lower oven cook mode',
+      'friendly_name': 'Dual cavity oven Lower oven cook mode',
       'options': list([
         'standby',
         'bake',
@@ -334,14 +208,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.oven_lower_oven_cook_mode',
+    'entity_id': 'sensor.dual_cavity_oven_lower_oven_cook_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'bake',
   })
 # ---
-# name: test_all_entities[sensor.oven_lower_oven_current_temperature-entry]
+# name: test_all_entities[sensor.dual_cavity_oven_lower_oven_current_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -356,7 +230,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.oven_lower_oven_current_temperature',
+    'entity_id': 'sensor.dual_cavity_oven_lower_oven_current_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -377,27 +251,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_current_temperature_lower',
-    'unique_id': 'said_oven-oven_current_temperature_lower',
+    'unique_id': 'said_oven_dual-oven_current_temperature_lower',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.oven_lower_oven_current_temperature-state]
+# name: test_all_entities[sensor.dual_cavity_oven_lower_oven_current_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Oven Lower oven current temperature',
+      'friendly_name': 'Dual cavity oven Lower oven current temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.oven_lower_oven_current_temperature',
+    'entity_id': 'sensor.dual_cavity_oven_lower_oven_current_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '180',
   })
 # ---
-# name: test_all_entities[sensor.oven_lower_oven_state-entry]
+# name: test_all_entities[sensor.dual_cavity_oven_lower_oven_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -407,7 +281,6 @@
         'standby',
         'preheating',
         'cooking',
-        'not_present',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -417,7 +290,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.oven_lower_oven_state',
+    'entity_id': 'sensor.dual_cavity_oven_lower_oven_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -435,31 +308,30 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_state_lower',
-    'unique_id': 'said_oven-oven_state_lower',
+    'unique_id': 'said_oven_dual-oven_state_lower',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.oven_lower_oven_state-state]
+# name: test_all_entities[sensor.dual_cavity_oven_lower_oven_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Oven Lower oven state',
+      'friendly_name': 'Dual cavity oven Lower oven state',
       'options': list([
         'standby',
         'preheating',
         'cooking',
-        'not_present',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.oven_lower_oven_state',
+    'entity_id': 'sensor.dual_cavity_oven_lower_oven_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'standby',
   })
 # ---
-# name: test_all_entities[sensor.oven_lower_oven_target_temperature-entry]
+# name: test_all_entities[sensor.dual_cavity_oven_lower_oven_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -474,7 +346,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.oven_lower_oven_target_temperature',
+    'entity_id': 'sensor.dual_cavity_oven_lower_oven_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -495,145 +367,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_target_temperature_lower',
-    'unique_id': 'said_oven-oven_target_temperature_lower',
+    'unique_id': 'said_oven_dual-oven_target_temperature_lower',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.oven_lower_oven_target_temperature-state]
+# name: test_all_entities[sensor.dual_cavity_oven_lower_oven_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Oven Lower oven target temperature',
+      'friendly_name': 'Dual cavity oven Lower oven target temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.oven_lower_oven_target_temperature',
+    'entity_id': 'sensor.dual_cavity_oven_lower_oven_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '200',
   })
 # ---
-# name: test_all_entities[sensor.oven_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'standby',
-        'preheating',
-        'cooking',
-        'not_present',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.oven_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'whirlpool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'oven_state',
-    'unique_id': 'said_oven-oven_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.oven_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Oven None',
-      'options': list([
-        'standby',
-        'preheating',
-        'cooking',
-        'not_present',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.oven_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'standby',
-  })
-# ---
-# name: test_all_entities[sensor.oven_target_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.oven_target_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Target temperature',
-    'platform': 'whirlpool',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'oven_target_temperature',
-    'unique_id': 'said_oven-oven_target_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_all_entities[sensor.oven_target_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Oven Target temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.oven_target_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '200',
-  })
-# ---
-# name: test_all_entities[sensor.oven_upper_oven_cook_mode-entry]
+# name: test_all_entities[sensor.dual_cavity_oven_upper_oven_cook_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -657,7 +411,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.oven_upper_oven_cook_mode',
+    'entity_id': 'sensor.dual_cavity_oven_upper_oven_cook_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -675,15 +429,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_cook_mode_upper',
-    'unique_id': 'said_oven-oven_cook_mode_upper',
+    'unique_id': 'said_oven_dual-oven_cook_mode_upper',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.oven_upper_oven_cook_mode-state]
+# name: test_all_entities[sensor.dual_cavity_oven_upper_oven_cook_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Oven Upper oven cook mode',
+      'friendly_name': 'Dual cavity oven Upper oven cook mode',
       'options': list([
         'standby',
         'bake',
@@ -696,14 +450,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.oven_upper_oven_cook_mode',
+    'entity_id': 'sensor.dual_cavity_oven_upper_oven_cook_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'bake',
   })
 # ---
-# name: test_all_entities[sensor.oven_upper_oven_current_temperature-entry]
+# name: test_all_entities[sensor.dual_cavity_oven_upper_oven_current_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -718,7 +472,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.oven_upper_oven_current_temperature',
+    'entity_id': 'sensor.dual_cavity_oven_upper_oven_current_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -739,27 +493,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_current_temperature_upper',
-    'unique_id': 'said_oven-oven_current_temperature_upper',
+    'unique_id': 'said_oven_dual-oven_current_temperature_upper',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.oven_upper_oven_current_temperature-state]
+# name: test_all_entities[sensor.dual_cavity_oven_upper_oven_current_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Oven Upper oven current temperature',
+      'friendly_name': 'Dual cavity oven Upper oven current temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.oven_upper_oven_current_temperature',
+    'entity_id': 'sensor.dual_cavity_oven_upper_oven_current_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '180',
   })
 # ---
-# name: test_all_entities[sensor.oven_upper_oven_state-entry]
+# name: test_all_entities[sensor.dual_cavity_oven_upper_oven_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -769,7 +523,6 @@
         'standby',
         'preheating',
         'cooking',
-        'not_present',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -779,7 +532,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.oven_upper_oven_state',
+    'entity_id': 'sensor.dual_cavity_oven_upper_oven_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -797,31 +550,30 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_state_upper',
-    'unique_id': 'said_oven-oven_state_upper',
+    'unique_id': 'said_oven_dual-oven_state_upper',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.oven_upper_oven_state-state]
+# name: test_all_entities[sensor.dual_cavity_oven_upper_oven_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Oven Upper oven state',
+      'friendly_name': 'Dual cavity oven Upper oven state',
       'options': list([
         'standby',
         'preheating',
         'cooking',
-        'not_present',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.oven_upper_oven_state',
+    'entity_id': 'sensor.dual_cavity_oven_upper_oven_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'standby',
   })
 # ---
-# name: test_all_entities[sensor.oven_upper_oven_target_temperature-entry]
+# name: test_all_entities[sensor.dual_cavity_oven_upper_oven_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -836,7 +588,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.oven_upper_oven_target_temperature',
+    'entity_id': 'sensor.dual_cavity_oven_upper_oven_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -857,20 +609,262 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oven_target_temperature_upper',
-    'unique_id': 'said_oven-oven_target_temperature_upper',
+    'unique_id': 'said_oven_dual-oven_target_temperature_upper',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.oven_upper_oven_target_temperature-state]
+# name: test_all_entities[sensor.dual_cavity_oven_upper_oven_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Oven Upper oven target temperature',
+      'friendly_name': 'Dual cavity oven Upper oven target temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.oven_upper_oven_target_temperature',
+    'entity_id': 'sensor.dual_cavity_oven_upper_oven_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '200',
+  })
+# ---
+# name: test_all_entities[sensor.single_cavity_oven_cook_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'standby',
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.single_cavity_oven_cook_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Cook mode',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_cook_mode',
+    'unique_id': 'said_oven_single-oven_cook_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.single_cavity_oven_cook_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Single cavity oven Cook mode',
+      'options': list([
+        'standby',
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.single_cavity_oven_cook_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'bake',
+  })
+# ---
+# name: test_all_entities[sensor.single_cavity_oven_current_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.single_cavity_oven_current_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Current temperature',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_current_temperature',
+    'unique_id': 'said_oven_single-oven_current_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.single_cavity_oven_current_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Single cavity oven Current temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.single_cavity_oven_current_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '180',
+  })
+# ---
+# name: test_all_entities[sensor.single_cavity_oven_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'standby',
+        'preheating',
+        'cooking',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.single_cavity_oven_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'State',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_state',
+    'unique_id': 'said_oven_single-oven_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.single_cavity_oven_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Single cavity oven State',
+      'options': list([
+        'standby',
+        'preheating',
+        'cooking',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.single_cavity_oven_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standby',
+  })
+# ---
+# name: test_all_entities[sensor.single_cavity_oven_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.single_cavity_oven_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Target temperature',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_target_temperature',
+    'unique_id': 'said_oven_single-oven_target_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.single_cavity_oven_target_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Single cavity oven Target temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.single_cavity_oven_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

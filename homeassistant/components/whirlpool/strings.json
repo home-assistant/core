@@ -122,6 +122,7 @@
         "name": "End time"
       },
       "oven_state": {
+        "name": "State",
         "state": {
           "standby": "[%key:common::state::standby%]",
           "preheating": "Preheating",
