@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -15,6 +16,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
+
+TEST_DIMMER_ENTITY_ID = "light.dimmer_0000_02"
+TEST_DIMMER_DEVICE_ID = "01010000026A242121110E"
+TEST_CCT_DEVICE_ID = "01020000036A242121110E"
+TEST_HS_DEVICE_ID = "01030000046A242121110E"
+TEST_RGBW_DEVICE_ID = "01040000056A242121110E"
 
 
 def _dispatch_status(
@@ -79,12 +86,10 @@ async def test_turn_on_light(
     mock_devices: list[MagicMock],
 ) -> None:
     """Test turning on a light."""
-    entity_id = "light.dimmer_0000_02"
-
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: TEST_DIMMER_ENTITY_ID},
         blocking=True,
     )
 
@@ -97,12 +102,10 @@ async def test_turn_off_light(
     mock_devices: list[MagicMock],
 ) -> None:
     """Test turning off a light."""
-    entity_id = "light.dimmer_0000_02"
-
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: TEST_DIMMER_ENTITY_ID},
         blocking=True,
     )
 
@@ -115,12 +118,10 @@ async def test_turn_on_with_brightness(
     mock_devices: list[MagicMock],
 ) -> None:
     """Test turning on light with brightness."""
-    entity_id = "light.dimmer_0000_02"
-
     await hass.services.async_call(
-        "light",
-        "turn_on",
-        {"entity_id": entity_id, "brightness": 128},
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_DIMMER_ENTITY_ID, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
 
@@ -139,53 +140,38 @@ async def test_dispatcher_connection(
     mock_dali_gateway: MagicMock,
 ) -> None:
     """Test that dispatcher signals are properly connected."""
-    entity_entry = er.async_get(hass).async_get("light.dimmer_0000_02")
+    entity_entry = er.async_get(hass).async_get(TEST_DIMMER_ENTITY_ID)
     assert entity_entry is not None
 
-    state = hass.states.get("light.dimmer_0000_02")
+    state = hass.states.get(TEST_DIMMER_ENTITY_ID)
     assert state is not None
 
     status_update: dict[str, Any] = {"is_on": True, "brightness": 128}
 
-    _dispatch_status(mock_dali_gateway, "01010000026A242121110E", status_update)
+    _dispatch_status(mock_dali_gateway, TEST_DIMMER_DEVICE_ID, status_update)
     await hass.async_block_till_done()
 
-    state_after = hass.states.get("light.dimmer_0000_02")
+    state_after = hass.states.get(TEST_DIMMER_ENTITY_ID)
     assert state_after is not None
 
 
-async def test_color_temp_status_update(
+@pytest.mark.parametrize(
+    ("device_id", "status_update"),
+    [
+        (TEST_CCT_DEVICE_ID, {"color_temp_kelvin": 3000}),
+        (TEST_HS_DEVICE_ID, {"hs_color": (120.0, 50.0)}),
+        (TEST_RGBW_DEVICE_ID, {"rgbw_color": (255, 128, 64, 32)}),
+        (TEST_RGBW_DEVICE_ID, {"white_level": 200}),
+    ],
+    ids=["cct_color_temp", "hs_color", "rgbw_color", "rgbw_white_level"],
+)
+async def test_status_updates(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_dali_gateway: MagicMock,
+    device_id: str,
+    status_update: dict[str, Any],
 ) -> None:
-    """Test status update with color temperature for CCT device."""
-    status_update = {"color_temp_kelvin": 3000}
-    _dispatch_status(mock_dali_gateway, "01020000036A242121110E", status_update)
-    await hass.async_block_till_done()
-
-
-async def test_hs_color_status_update(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_dali_gateway: MagicMock,
-) -> None:
-    """Test status update with HS color for HS device."""
-    status_update = {"hs_color": (120.0, 50.0)}
-    _dispatch_status(mock_dali_gateway, "01030000046A242121110E", status_update)
-    await hass.async_block_till_done()
-
-
-async def test_rgbw_status_update(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_dali_gateway: MagicMock,
-) -> None:
-    """Test status update with RGBW color and white level."""
-    status_update1 = {"rgbw_color": (255, 128, 64, 32)}
-    _dispatch_status(mock_dali_gateway, "01040000056A242121110E", status_update1)
-    await hass.async_block_till_done()
-
-    status_update2 = {"white_level": 200}
-    _dispatch_status(mock_dali_gateway, "01040000056A242121110E", status_update2)
+    """Test various status updates for different device types."""
+    _dispatch_status(mock_dali_gateway, device_id, status_update)
     await hass.async_block_till_done()

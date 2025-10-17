@@ -7,12 +7,12 @@
       },
       "select_gateway": {
         "title": "Select DALI gateway",
-        "description": "Select the DALI gateway you want to configure.",
+        "description": "Select the gateway to configure.",
         "data": {
           "selected_gateway": "Gateway"
         },
         "data_description": {
-          "selected_gateway": "Choose the DALI gateway to add to Home Assistant"
+          "selected_gateway": "Each option shows the gateway name, serial number, and IP address."
         }
       }
     },
