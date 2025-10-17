@@ -20,6 +20,12 @@ VACUUM_FAN_SPEED_MAX = "max"
 AFTER_COMMAND_REFRESH = 5
 COVER_ENTITY_AFTER_COMMAND_REFRESH = 10
 
+HUMIDITY_LEVELS = {
+    34: 101,  # Low humidity mode
+    67: 102,  # Medium humidity mode
+    100: 103,  # High humidity mode
+}
+
 
 class AirPurifierMode(Enum):
     """Air Purifier Modes."""
@@ -32,4 +38,22 @@ class AirPurifierMode(Enum):
     @classmethod
     def get_modes(cls) -> list[str]:
         """Return a list of available air purifier modes as lowercase strings."""
+        return [mode.name.lower() for mode in cls]
+
+
+class Humidifier2Mode(Enum):
+    """Enumerates the available modes for a SwitchBot humidifier2."""
+
+    HIGH = 1
+    MEDIUM = 2
+    LOW = 3
+    QUIET = 4
+    TARGET_HUMIDITY = 5
+    SLEEP = 6
+    AUTO = 7
+    DRYING_FILTER = 8
+
+    @classmethod
+    def get_modes(cls) -> list[str]:
+        """Return a list of available humidifier2 modes as lowercase strings."""
         return [mode.name.lower() for mode in cls]

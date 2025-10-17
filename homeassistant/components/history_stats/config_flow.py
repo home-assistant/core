@@ -26,9 +26,10 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    StateSelector,
+    StateSelectorConfig,
     TemplateSelector,
     TextSelector,
-    TextSelectorConfig,
 )
 from homeassistant.helpers.template import Template
 
@@ -68,7 +69,6 @@ DATA_SCHEMA_SETUP = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
         vol.Required(CONF_ENTITY_ID): EntitySelector(),
-        vol.Required(CONF_STATE): TextSelector(TextSelectorConfig(multiple=True)),
         vol.Required(CONF_TYPE, default=CONF_TYPE_TIME): SelectSelector(
             SelectSelectorConfig(
                 options=CONF_TYPE_KEYS,
@@ -78,47 +78,80 @@ DATA_SCHEMA_SETUP = vol.Schema(
         ),
     }
 )
-DATA_SCHEMA_OPTIONS = vol.Schema(
-    {
-        vol.Optional(CONF_ENTITY_ID): EntitySelector(
-            EntitySelectorConfig(read_only=True)
-        ),
-        vol.Optional(CONF_STATE): TextSelector(
-            TextSelectorConfig(multiple=True, read_only=True)
-        ),
-        vol.Optional(CONF_TYPE): SelectSelector(
-            SelectSelectorConfig(
-                options=CONF_TYPE_KEYS,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_TYPE,
-                read_only=True,
-            )
-        ),
-        vol.Optional(CONF_START): TemplateSelector(),
-        vol.Optional(CONF_END): TemplateSelector(),
-        vol.Optional(CONF_DURATION): DurationSelector(
-            DurationSelectorConfig(enable_day=True, allow_negative=False)
-        ),
-        vol.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
-            DurationSelectorConfig(enable_day=True, allow_negative=False)
-        ),
-    }
-)
+
+
+async def get_state_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Return schema for state step."""
+    entity_id = handler.options[CONF_ENTITY_ID]
+
+    return vol.Schema(
+        {
+            vol.Optional(CONF_ENTITY_ID): EntitySelector(
+                EntitySelectorConfig(read_only=True)
+            ),
+            vol.Required(CONF_STATE): StateSelector(
+                StateSelectorConfig(
+                    multiple=True,
+                    entity_id=entity_id,
+                )
+            ),
+        }
+    )
+
+
+async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Return schema for options step."""
+    entity_id = handler.options[CONF_ENTITY_ID]
+    return _get_options_schema_with_entity_id(entity_id)
+
+
+def _get_options_schema_with_entity_id(entity_id: str) -> vol.Schema:
+    return vol.Schema(
+        {
+            vol.Optional(CONF_ENTITY_ID): EntitySelector(
+                EntitySelectorConfig(read_only=True)
+            ),
+            vol.Optional(CONF_STATE): StateSelector(
+                StateSelectorConfig(
+                    multiple=True,
+                    entity_id=entity_id,
+                    read_only=True,
+                )
+            ),
+            vol.Optional(CONF_TYPE): SelectSelector(
+                SelectSelectorConfig(
+                    options=CONF_TYPE_KEYS,
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key=CONF_TYPE,
+                    read_only=True,
+                )
+            ),
+            vol.Optional(CONF_START): TemplateSelector(),
+            vol.Optional(CONF_END): TemplateSelector(),
+            vol.Optional(CONF_DURATION): DurationSelector(
+                DurationSelectorConfig(enable_day=True, allow_negative=False),
+            vol.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
+                DurationSelectorConfig(enable_day=True, allow_negative=False)
+            ),
+        }
+    )
+
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         schema=DATA_SCHEMA_SETUP,
-        next_step="options",
+        next_step="state",
     ),
+    "state": SchemaFlowFormStep(schema=get_state_schema, next_step="options"),
     "options": SchemaFlowFormStep(
-        schema=DATA_SCHEMA_OPTIONS,
+        schema=get_options_schema,
         validate_user_input=validate_options,
         preview="history_stats",
     ),
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
-        DATA_SCHEMA_OPTIONS,
+        schema=get_options_schema,
         validate_user_input=validate_options,
         preview="history_stats",
     ),
@@ -132,6 +165,7 @@ class HistoryStatsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
@@ -202,7 +236,9 @@ async def ws_start_preview(
 
     validated_data: Any = None
     try:
-        validated_data = DATA_SCHEMA_OPTIONS(msg["user_input"])
+        validated_data = (_get_options_schema_with_entity_id(entity_id))(
+            msg["user_input"]
+        )
     except vol.Invalid as ex:
         connection.send_error(msg["id"], "invalid_schema", str(ex))
         return

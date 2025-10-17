@@ -118,15 +118,12 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "gas": {
+    "climate": {
+      "thermostat": {
         "state_attributes": {
-          "detected": {
+          "preset_mode": {
             "state": {
-              "none": "None",
-              "mild": "Mild",
-              "heavy": "Heavy",
-              "test": "Test"
+              "frost_protection": "Frost protection"
             }
           }
         }
@@ -155,6 +152,21 @@
       }
     },
     "sensor": {
+      "charger_state": {
+        "state": {
+          "charger_charging": "[%key:common::state::charging%]",
+          "charger_end": "Charge completed",
+          "charger_fault": "Error while charging",
+          "charger_free": "[%key:component::binary_sensor::entity_component::plug::state::off%]",
+          "charger_free_fault": "Can not release plug",
+          "charger_insert": "[%key:component::binary_sensor::entity_component::plug::state::on%]",
+          "charger_pause": "Charging paused by charger",
+          "charger_wait": "Charging paused by vehicle"
+        }
+      },
+      "detected_objects": {
+        "unit_of_measurement": "objects"
+      },
       "gas_detected": {
         "state": {
           "none": "None",
@@ -178,16 +190,6 @@
           "warmup": "Warm-up",
           "normal": "[%key:common::state::normal%]",
           "fault": "[%key:common::state::fault%]"
-        },
-        "state_attributes": {
-          "self_test": {
-            "state": {
-              "not_completed": "[%key:component::shelly::entity::sensor::self_test::state::not_completed%]",
-              "completed": "[%key:component::shelly::entity::sensor::self_test::state::completed%]",
-              "running": "[%key:component::shelly::entity::sensor::self_test::state::running%]",
-              "pending": "[%key:component::shelly::entity::sensor::self_test::state::pending%]"
-            }
-          }
         }
       },
       "self_test": {
@@ -216,6 +218,13 @@
           "failure": "Failure",
           "opened": "Opened",
           "opening": "[%key:common::state::opening%]"
+        }
+      },
+      "illuminance_level": {
+        "state": {
+          "dark": "Dark",
+          "twilight": "Twilight",
+          "bright": "Bright"
         }
       }
     }
@@ -300,6 +309,21 @@
         },
         "abort": {
           "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+        }
+      }
+    },
+    "deprecated_firmware": {
+      "title": "{device_name} is running outdated firmware",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "{device_name} is running outdated firmware",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware}. This firmware version will not be supported by Shelly integration starting from Home Assistant {ha_version}.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version."
+          }
+        },
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "update_not_available": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::fix_flow::abort::update_not_available%]"
         }
       }
     }

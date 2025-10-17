@@ -6,8 +6,8 @@ import pytest
 import voluptuous_serialize
 
 from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DeviceAutomationType,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.knx import DOMAIN, device_trigger

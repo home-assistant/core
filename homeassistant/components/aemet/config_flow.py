@@ -71,7 +71,14 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={
+                "api_key_url": "https://opendata.aemet.es/centrodedescargas/altaUsuario"
+            },
+        )
 
     @staticmethod
     @callback

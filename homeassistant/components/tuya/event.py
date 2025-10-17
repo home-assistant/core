@@ -14,17 +14,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default status set of each category (that don't have a set instruction)
 # end up being events.
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-EVENTS: dict[str, tuple[EventEntityDescription, ...]] = {
-    # Wireless Switch
-    # https://developer.tuya.com/en/docs/iot/s?id=Kbeoa9fkv6brp
-    "wxkg": (
+EVENTS: dict[DeviceCategory, tuple[EventEntityDescription, ...]] = {
+    DeviceCategory.WXKG: (
         EventEntityDescription(
             key=DPCode.SWITCH_MODE1,
             device_class=EventDeviceClass.BUTTON,
@@ -89,25 +86,23 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya events dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya binary sensor."""
         entities: list[TuyaEventEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := EVENTS.get(device.category):
                 for description in descriptions:
                     dpcode = description.key
                     if dpcode in device.status:
-                        entities.append(
-                            TuyaEventEntity(device, hass_data.manager, description)
-                        )
+                        entities.append(TuyaEventEntity(device, manager, description))
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -134,7 +129,9 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
             self._attr_event_types: list[str] = dpcode.range
 
     async def _handle_state_update(
-        self, updated_status_properties: list[str] | None
+        self,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict | None = None,
     ) -> None:
         if (
             updated_status_properties is None

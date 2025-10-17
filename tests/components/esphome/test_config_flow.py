@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 import json
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioesphomeapi import (
     APIClient,
@@ -13,6 +13,7 @@ from aioesphomeapi import (
     InvalidEncryptionKeyAPIError,
     RequiresEncryptionAPIError,
     ResolveAPIError,
+    wifi_mac_to_bluetooth_mac,
 )
 import aiohttp
 import pytest
@@ -34,7 +35,9 @@ from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -1184,6 +1187,42 @@ async def test_reauth_attempt_to_change_mac_aborts(
     }
 
 
+@pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
+async def test_reauth_password_changed(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reauth when password has changed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053, CONF_PASSWORD: "old_password"},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.connect.side_effect = InvalidAuthAPIError("Invalid password")
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authenticate"
+    assert result["description_placeholders"] == {
+        "name": "Mock Title",
+    }
+
+    mock_client.connect.side_effect = None
+    mock_client.connect.return_value = None
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=True, name="test", mac_address="11:22:33:44:55:aa"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_PASSWORD: "new_password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_PASSWORD] == "new_password"
+
+
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
 async def test_reauth_fixed_via_dashboard(
     hass: HomeAssistant,
@@ -1239,7 +1278,7 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
 ) -> None:
     """Test reauth fixed automatically via dashboard with password removed."""
     mock_client.device_info.side_effect = (
-        InvalidAuthAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test"),
         DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:aa"),
     )
 
@@ -1456,6 +1495,45 @@ async def test_reauth_encryption_key_removed(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_NOISE_PSK] == ""
+
+
+async def test_reauth_different_device_at_same_address(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reauth aborts when a different device is found at the same IP address."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_NOISE_PSK: VALID_NOISE_PSK,
+            CONF_DEVICE_NAME: "old_device",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    # Mock a different device at the same IP (different MAC address)
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False,
+        name="new_device",
+        legacy_bluetooth_proxy_version=0,
+        # Different MAC address than the entry
+        mac_address="AA:BB:CC:DD:EE:FF",
+        esphome_version="1.0.0",
+    )
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_unique_id_changed"
+    assert result["description_placeholders"] == {
+        "name": "old_device",
+        "host": "127.0.0.1",
+        "expected_mac": "11:22:33:44:55:aa",
+        "unexpected_mac": "aa:bb:cc:dd:ee:ff",
+        "unexpected_device_name": "new_device",
+    }
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
@@ -2131,7 +2209,6 @@ async def test_user_flow_name_conflict_overwrite(
         result["flow_id"], user_input={"next_step_id": "name_conflict_overwrite"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -2495,16 +2572,15 @@ async def test_reconfig_name_conflict_overwrite(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "name_conflict_overwrite"}
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
-    assert result["data"] == {
-        CONF_HOST: "127.0.0.2",
-        CONF_PORT: 6053,
-        CONF_PASSWORD: "",
-        CONF_NOISE_PSK: "",
-        CONF_DEVICE_NAME: "test",
-    }
-    assert result["context"]["unique_id"] == "11:22:33:44:55:bb"
+    assert (
+        hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, "11:22:33:44:55:bb"
+        )
+        is not None
+    )
     assert (
         hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, "11:22:33:44:55:aa"
@@ -2529,7 +2605,7 @@ async def test_discovery_dhcp_no_probe_same_host_port_none(
     service_info = DhcpServiceInfo(
         ip="192.168.43.183",
         hostname="test8266",
-        macaddress="11:22:33:44:55:aa",  # Same MAC as configured
+        macaddress="1122334455aa",  # Same MAC as configured
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -2544,3 +2620,277 @@ async def test_discovery_dhcp_no_probe_same_host_port_none(
 
     # Host should remain unchanged
     assert entry.data[CONF_HOST] == "192.168.43.183"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_user_flow_starts_zwave_discovery(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test that the user flow starts Z-Wave JS discovery when device has Z-Wave capabilities."""
+    # Mock device with Z-Wave capabilities
+    mock_client.device_info = AsyncMock(
+        return_value=DeviceInfo(
+            uses_password=False,
+            name="test-zwave-device",
+            mac_address="11:22:33:44:55:BB",
+            zwave_proxy_feature_flags=1,
+            zwave_home_id=1234567890,
+        )
+    )
+    mock_client.connected_address = "mock-connected-address"
+
+    # Track flow.async_init calls and async_get calls
+    original_async_init = hass.config_entries.flow.async_init
+    original_async_get = hass.config_entries.flow.async_get
+    flow_init_calls = []
+    zwave_flow_id = "mock-zwave-flow-id"
+
+    async def track_async_init(*args, **kwargs):
+        flow_init_calls.append((args, kwargs))
+        # For the Z-Wave flow, return a mock result with the flow_id
+        if args and args[0] == "zwave_js":
+            return {"flow_id": zwave_flow_id, "type": FlowResultType.FORM}
+        # Otherwise call the original
+        return await original_async_init(*args, **kwargs)
+
+    def mock_async_get(flow_id: str):
+        # Return a mock flow for the Z-Wave flow_id
+        if flow_id == zwave_flow_id:
+            return MagicMock()
+        return original_async_get(flow_id)
+
+    with (
+        patch.object(
+            hass.config_entries.flow, "async_init", side_effect=track_async_init
+        ),
+        patch.object(hass.config_entries.flow, "async_get", side_effect=mock_async_get),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_HOST: "192.168.1.100", CONF_PORT: 6053},
+        )
+
+    # Verify the entry was created
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-zwave-device"
+    assert result["data"] == {
+        CONF_HOST: "192.168.1.100",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: "",
+        CONF_DEVICE_NAME: "test-zwave-device",
+    }
+
+    # First call is ESPHome flow, second should be Z-Wave flow
+    assert len(flow_init_calls) == 2
+    zwave_call_args, zwave_call_kwargs = flow_init_calls[1]
+    assert zwave_call_args[0] == "zwave_js"
+    assert zwave_call_kwargs["context"] == {
+        "source": config_entries.SOURCE_ESPHOME,
+        "discovery_key": discovery_flow.DiscoveryKey(
+            domain="esphome", key="11:22:33:44:55:BB", version=1
+        ),
+    }
+    assert zwave_call_kwargs["data"] == ESPHomeServiceInfo(
+        name="test-zwave-device",
+        zwave_home_id=1234567890,
+        ip_address="mock-connected-address",
+        port=6053,
+        noise_psk=None,
+    )
+
+    # Verify next_flow was set
+    assert result["next_flow"] == (config_entries.FlowType.CONFIG_FLOW, zwave_flow_id)
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_user_flow_no_zwave_discovery_without_capabilities(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test that the user flow does not start Z-Wave JS discovery when device has no Z-Wave capabilities."""
+    # Mock device without Z-Wave capabilities
+    mock_client.device_info = AsyncMock(
+        return_value=DeviceInfo(
+            uses_password=False,
+            name="test-regular-device",
+            mac_address="11:22:33:44:55:CC",
+        )
+    )
+
+    # Track flow.async_init calls
+    original_async_init = hass.config_entries.flow.async_init
+    flow_init_calls = []
+
+    async def track_async_init(*args, **kwargs):
+        flow_init_calls.append((args, kwargs))
+        return await original_async_init(*args, **kwargs)
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", side_effect=track_async_init
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_HOST: "192.168.1.101", CONF_PORT: 6053},
+        )
+
+    # Verify the entry was created
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-regular-device"
+
+    # Verify Z-Wave discovery flow was NOT started (only ESPHome flow)
+    assert len(flow_init_calls) == 1
+
+    # Verify next_flow was not set
+    assert "next_flow" not in result
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_user_flow_zwave_discovery_aborts(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test that the user flow handles Z-Wave discovery abort gracefully."""
+    # Mock device with Z-Wave capabilities
+    mock_client.device_info = AsyncMock(
+        return_value=DeviceInfo(
+            uses_password=False,
+            name="test-zwave-device",
+            mac_address="11:22:33:44:55:DD",
+            zwave_proxy_feature_flags=1,
+            zwave_home_id=9876543210,
+        )
+    )
+    mock_client.connected_address = "192.168.1.102"
+
+    # Track flow.async_init calls
+    original_async_init = hass.config_entries.flow.async_init
+    flow_init_calls = []
+
+    async def track_async_init(*args, **kwargs):
+        flow_init_calls.append((args, kwargs))
+        # For the Z-Wave flow, return an ABORT result
+        if args and args[0] == "zwave_js":
+            return {
+                "type": FlowResultType.ABORT,
+                "reason": "already_configured",
+            }
+        # Otherwise call the original
+        return await original_async_init(*args, **kwargs)
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", side_effect=track_async_init
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_HOST: "192.168.1.102", CONF_PORT: 6053},
+        )
+
+    # Verify the ESPHome entry was still created despite Z-Wave flow aborting
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-zwave-device"
+    assert result["data"] == {
+        CONF_HOST: "192.168.1.102",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: "",
+        CONF_DEVICE_NAME: "test-zwave-device",
+    }
+
+    # Verify Z-Wave discovery flow was attempted
+    assert len(flow_init_calls) == 2
+    zwave_call_args, zwave_call_kwargs = flow_init_calls[1]
+    assert zwave_call_args[0] == "zwave_js"
+    assert zwave_call_kwargs["context"]["source"] == config_entries.SOURCE_ESPHOME
+    assert zwave_call_kwargs["context"]["discovery_key"] == discovery_flow.DiscoveryKey(
+        domain=DOMAIN,
+        key="11:22:33:44:55:DD",
+        version=1,
+    )
+    assert zwave_call_kwargs["data"] == ESPHomeServiceInfo(
+        name="test-zwave-device",
+        zwave_home_id=9876543210,
+        ip_address="192.168.1.102",
+        port=6053,
+        noise_psk=None,
+    )
+
+    # Verify next_flow was NOT set since Z-Wave flow aborted
+    assert "next_flow" not in result
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_zeroconf_notifies_improv_ble(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+) -> None:
+    """Test that zeroconf discovery notifies improv_ble integration."""
+    service_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={
+            "mac": "aabbccddeeff",
+        },
+        type="mock_type",
+    )
+
+    # Patch improv_ble to ensure it's available and track calls
+    with patch(
+        "homeassistant.components.improv_ble.async_register_next_flow"
+    ) as mock_register:
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=service_info,
+        )
+
+    assert flow["type"] is FlowResultType.FORM
+    assert flow["step_id"] == "discovery_confirm"
+
+    # Verify improv_ble.async_register_next_flow was called with correct parameters
+    assert len(mock_register.mock_calls) == 1
+    call_args = mock_register.mock_calls[0].args
+    assert call_args[0] is hass  # HomeAssistant instance
+    # WiFi MAC aabbccddeeff + 1 = Bluetooth MAC aabbccddee00
+    # (wifi_mac_to_bluetooth_mac from aioesphomeapi)
+    expected_ble_mac = wifi_mac_to_bluetooth_mac("aa:bb:cc:dd:ee:ff")
+    assert call_args[1] == expected_ble_mac  # BLE MAC address
+    assert call_args[2] == flow["flow_id"]  # Flow ID
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_zeroconf_when_improv_ble_not_available(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+) -> None:
+    """Test that zeroconf discovery works when improv_ble is not available."""
+    service_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.43.183"),
+        ip_addresses=[ip_address("192.168.43.183")],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={
+            "mac": "aabbccddeeff",
+        },
+        type="mock_type",
+    )
+
+    # Mock async_import_module to return None (simulating improv_ble not available)
+    with patch(
+        "homeassistant.components.esphome.config_flow.async_import_module",
+        return_value=None,
+    ):
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=service_info,
+        )
+
+    # Flow should still work even without improv_ble
+    assert flow["type"] is FlowResultType.FORM
+    assert flow["step_id"] == "discovery_confirm"
