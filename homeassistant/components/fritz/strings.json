@@ -223,7 +223,7 @@
       "message": "Failed to perform action \"{service}\". Config entry for target not found"
     },
     "service_dial_failed": {
-      "message": "Failed to dial, check if the dial-help service of the FRITZ!Box is activated"
+      "message": "Failed to dial, check if the click to dial service of the FRITZ!Box is activated"
     },
     "service_parameter_unknown": {
       "message": "Action or parameter unknown"

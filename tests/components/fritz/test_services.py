@@ -317,7 +317,7 @@ async def test_service_dial_failed(
         )
         assert mock_async_trigger_dial.called
         assert (
-            "HomeAssistantError: Failed to dial, check if the dial-help service of the FRITZ!Box is activated"
+            "HomeAssistantError: Failed to dial, check if the click to dial service of the FRITZ!Box is activated"
             in caplog.text
         )
 
