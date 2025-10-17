@@ -1561,10 +1561,10 @@ async def test_download_file(
 
         if hass_directory_path:
             expected_directory_path = hass_directory_path
+            schema_request[ATTR_DIRECTORY_PATH] = expected_directory_path
         else:
             # use config dir as default directory path for test
             expected_directory_path = hass.config.path(DOMAIN)
-        schema_request[ATTR_DIRECTORY_PATH] = expected_directory_path
 
         if os.path.exists(expected_directory_path):
             hass.config.allowlist_external_dirs.add(expected_directory_path)
