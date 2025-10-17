@@ -342,4 +342,4 @@ class S3BackupAgent(BackupAgent):
         return self._backup_cache
 
     def _add_prefix(self, key: str) -> str:
-        return f"{self._prefix}{key}" if self._prefix else key
+        return f"{self._prefix}{key}"
