@@ -124,6 +124,7 @@ async def integration_fixture(
         "smoke_detector",
         "solar_inverter",
         "speaker",
+        "switchbot_k11_plus",
         "switch_unit",
         "tado_smart_radiator_thermostat_x",
         "temperature_sensor",
