@@ -34,7 +34,6 @@ def mock_config_entry(hass) -> MockConfigEntry:
     return config_entry
 
 
-@pytest.mark.asyncio
 async def test_async_setup_entry_authentication_error(
     hass: HomeAssistant, mock_config_entry
 ) -> None:
