@@ -70,6 +70,7 @@ from .const import (
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
     SERVICE_RECORD,
+    SERVICE_STOP_RECORD,
     CameraState,
     StreamType,
 )
@@ -143,6 +144,8 @@ CAMERA_SERVICE_RECORD: VolDictType = {
     vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
     vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
 }
+
+CAMERA_SERVICE_STOP_RECORD: VolDictType = {}
 
 
 class CameraEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -398,6 +401,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_RECORD, CAMERA_SERVICE_RECORD, async_handle_record_service
+    )
+
+    component.async_register_entity_service(
+        SERVICE_STOP_RECORD,
+        CAMERA_SERVICE_STOP_RECORD,
+        async_handle_stop_record_service,
     )
 
     @callback
@@ -1108,3 +1117,11 @@ async def async_handle_record_service(
         duration=service_call.data[CONF_DURATION],
         lookback=service_call.data[CONF_LOOKBACK],
     )
+
+
+async def async_handle_stop_record_service(
+    camera: Camera, service_call: ServiceCall
+) -> None:
+    """Handle stop stream recording service calls: stops recording if any is on going else does nothing."""
+    if camera.stream is not None and camera.stream.is_recording():
+        await camera.stream.async_stop_record()

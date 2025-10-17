@@ -668,6 +668,36 @@ async def test_record_service(
 
 
 @pytest.mark.usefixtures("mock_camera")
+async def test_stop_record_service(hass: HomeAssistant) -> None:
+    """Test stop_record service."""
+
+    async def call_stop_record_service() -> None:
+        await hass.services.async_call(
+            camera.DOMAIN,
+            camera.SERVICE_STOP_RECORD,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+            },
+            blocking=True,
+        )
+
+    camera_obj = get_camera_from_entity_id(hass, "camera.demo_camera")
+
+    with patch.object(camera_obj, "stream", autospec=True) as stream_mock:
+        # Call service with recording stream
+        stream_mock.is_recording.return_value = True
+        stream_mock.async_stop_record = AsyncMock()
+        await call_stop_record_service()
+        stream_mock.async_stop_record.assert_awaited_once_with()
+
+        # Call service without recording stream
+        stream_mock.is_recording.return_value = False
+        stream_mock.async_stop_record.reset_mock()
+        await call_stop_record_service()
+        stream_mock.async_stop_record.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_camera")
 async def test_camera_proxy_stream(hass_client: ClientSessionGenerator) -> None:
     """Test record service."""
 

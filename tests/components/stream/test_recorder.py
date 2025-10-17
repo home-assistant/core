@@ -80,6 +80,27 @@ async def test_record_stream(hass: HomeAssistant, filename, h264_video) -> None:
     assert os.path.exists(filename)
 
 
+async def test_stop_record(hass: HomeAssistant, filename, h264_video) -> None:
+    """Test stop_record stream."""
+
+    stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
+    stream.add_provider(RECORDER_PROVIDER)
+    assert stream.is_recording()
+    await stream.async_stop_record()
+    assert not stream.is_recording()
+
+
+async def test_stop_record_not_recording(
+    hass: HomeAssistant, filename, h264_video
+) -> None:
+    """Test stop_record not recording stream."""
+
+    stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
+    assert not stream.is_recording()
+    with pytest.raises(HomeAssistantError):
+        await stream.async_stop_record()
+
+
 async def test_record_lookback(hass: HomeAssistant, filename, h264_video) -> None:
     """Exercise record with lookback."""
 

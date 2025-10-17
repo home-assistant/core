@@ -72,3 +72,8 @@ record:
           min: 0
           max: 300
           unit_of_measurement: seconds
+
+stop_record:
+  target:
+    entity:
+      domain: camera

@@ -23,6 +23,9 @@
     "snapshot": {
       "service": "mdi:camera"
     },
+    "stop_record": {
+      "service": "mdi:stop"
+    },
     "turn_off": {
       "service": "mdi:video-off"
     },

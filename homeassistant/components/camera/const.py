@@ -22,6 +22,7 @@ PREF_PRELOAD_STREAM: Final = "preload_stream"
 PREF_ORIENTATION: Final = "orientation"
 
 SERVICE_RECORD: Final = "record"
+SERVICE_STOP_RECORD: Final = "stop_record"
 
 CONF_LOOKBACK: Final = "lookback"
 CONF_DURATION: Final = "duration"

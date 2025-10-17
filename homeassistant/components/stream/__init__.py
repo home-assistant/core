@@ -589,6 +589,18 @@ class Stream:
 
         await recorder.async_record()
 
+    def is_recording(self) -> bool:
+        """Return True if the stream is currently recording."""
+        return RECORDER_PROVIDER in self._outputs
+
+    async def async_stop_record(self) -> None:
+        """Stop stream recording."""
+        # Remove recorder
+        if (recorder := self._outputs.get(RECORDER_PROVIDER)) is None:
+            raise HomeAssistantError("Stream not recording!")
+
+        await self.remove_provider(recorder)
+
     async def async_get_image(
         self,
         width: int | None = None,
