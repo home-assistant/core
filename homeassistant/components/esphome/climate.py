@@ -142,8 +142,8 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
         static_info = self._static_info
-        self._feature_flags = static_info.supported_feature_flags_compat(
-            self._api_version
+        self._feature_flags = ClimateFeature(
+            static_info.supported_feature_flags_compat(self._api_version)
         )
         self._attr_precision = self._get_precision()
         self._attr_hvac_modes = [
