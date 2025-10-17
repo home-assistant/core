@@ -540,11 +540,6 @@ async def test_multiple_media_players(
     )
     await hass.async_block_till_done()
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    # assert len(calls) == 1
-    # assert calls[0].data == {
-    #    "entity_id": bathroom_smart_speaker.entity_id,
-    #    "volume_level": 0.5,
-    # }
 
     # Next track in the kitchen (only media player that is playing on ground floor)
     hass.states.async_set(
@@ -927,6 +922,7 @@ async def test_search_and_play_media_player_intent_with_media_class(
             },
         )
 
+
 class _VolumeTestMediaPlayer(MediaPlayerEntity):
     _attr_supported_features = MediaPlayerEntityFeature.VOLUME_SET
     _attr_volume_step = 0.1
@@ -940,6 +936,7 @@ class _VolumeTestMediaPlayer(MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume):
         self._attr_volume_level = volume
+
 
 @pytest.mark.parametrize(
     ("direction", "volume_change", "volume_change_int"),
@@ -956,7 +953,9 @@ async def test_volume_relative_media_player_intent(
 
     default_volume = 0.5
 
-    idle_entity = _VolumeTestMediaPlayer(hass, f"{DOMAIN}.idle_media_player",default_volume)
+    idle_entity = _VolumeTestMediaPlayer(
+        hass, f"{DOMAIN}.idle_media_player", default_volume
+    )
     await component.async_add_entities([idle_entity])
 
     hass.states.async_set(
@@ -986,7 +985,9 @@ async def test_volume_relative_media_player_intent(
     assert math.isclose(idle_entity.volume_level, idle_expected_volume)
 
     # Multiple media players (playing one should be targeted)
-    playing_entity = _VolumeTestMediaPlayer(hass, f"{DOMAIN}.playing_media_player", default_volume)
+    playing_entity = _VolumeTestMediaPlayer(
+        hass, f"{DOMAIN}.playing_media_player", default_volume
+    )
     await component.async_add_entities([playing_entity])
 
     hass.states.async_set(
@@ -1097,7 +1098,9 @@ async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
 
     default_volume = 0.1
 
-    idle_entity = _VolumeTestMediaPlayer(hass, f"{DOMAIN}.idle_media_player", default_volume)
+    idle_entity = _VolumeTestMediaPlayer(
+        hass, f"{DOMAIN}.idle_media_player", default_volume
+    )
     await component.async_add_entities([idle_entity])
 
     hass.states.async_set(
@@ -1126,7 +1129,9 @@ async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
     assert math.isclose(idle_entity.volume_level, idle_expected_volume)
 
     # Multiple media players (playing one should be targeted)
-    playing_entity = _VolumeTestMediaPlayer(hass, f"{DOMAIN}.playing_media_player", default_volume)
+    playing_entity = _VolumeTestMediaPlayer(
+        hass, f"{DOMAIN}.playing_media_player", default_volume
+    )
     await component.async_add_entities([playing_entity])
 
     hass.states.async_set(
