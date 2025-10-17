@@ -57,21 +57,21 @@ async def test_discovery_flow_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "select_gateway"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "select_gateway"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"selected_gateway": gateway.gw_sn},
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == gateway.name
-    assert result["data"] == {
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == gateway.name
+    assert result.get("data") == {
         CONF_SN: gateway.gw_sn,
         CONF_HOST: gateway.gw_ip,
         CONF_PORT: gateway.port,
@@ -79,7 +79,9 @@ async def test_discovery_flow_success(
         CONF_USERNAME: gateway.username,
         CONF_PASSWORD: gateway.passwd,
     }
-    assert result["result"].unique_id == gateway.gw_sn
+    result_entry = result.get("result")
+    assert result_entry is not None
+    assert result_entry.unique_id == gateway.gw_sn
     assert mock_discovery.discover_gateways.await_count == 1
     mock_setup_entry.assert_called_once()
     assert gateway.connect.await_count == 1
@@ -98,16 +100,18 @@ async def test_discovery_no_gateways_found(
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "select_gateway"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "select_gateway"
     assert mock_discovery.discover_gateways.await_count == 1
-    assert result["errors"]["base"] == "no_devices_found"
+    errors = result.get("errors")
+    assert errors is not None
+    assert errors["base"] == "no_devices_found"
 
     mock_discovery.discover_gateways.return_value = [_mock_gateway()]
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "select_gateway"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "select_gateway"
     assert mock_discovery.discover_gateways.await_count == 2
 
 
@@ -123,17 +127,19 @@ async def test_discovery_gateway_error(
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "select_gateway"
-    assert result["errors"]["base"] == "discovery_failed"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "select_gateway"
+    errors = result.get("errors")
+    assert errors is not None
+    assert errors["base"] == "discovery_failed"
     assert mock_discovery.discover_gateways.await_count == 1
 
     mock_discovery.discover_gateways.side_effect = None
     mock_discovery.discover_gateways.return_value = [_mock_gateway()]
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "select_gateway"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "select_gateway"
     assert mock_discovery.discover_gateways.await_count == 2
 
 
@@ -160,16 +166,18 @@ async def test_discovery_device_not_found(
         {"selected_gateway": gateway.gw_sn},
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "select_gateway"
-    assert result["errors"]["base"] == "device_not_found"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "select_gateway"
+    errors = result.get("errors")
+    assert errors is not None
+    assert errors["base"] == "device_not_found"
     assert mock_discovery.discover_gateways.await_count == 2
 
     mock_discovery.discover_gateways.return_value = [gateway]
     result = await hass.config_entries.flow.async_configure(flow_id, {})
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "select_gateway"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "select_gateway"
 
 
 async def test_discovery_connection_failure(
@@ -186,17 +194,19 @@ async def test_discovery_connection_failure(
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "select_gateway"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "select_gateway"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"selected_gateway": gateway.gw_sn},
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "select_gateway"
-    assert result["errors"]["base"] == "cannot_connect"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "select_gateway"
+    errors = result.get("errors")
+    assert errors is not None
+    assert errors["base"] == "cannot_connect"
     assert gateway.connect.await_count == 1
     assert gateway.disconnect.await_count == 0
 
@@ -207,7 +217,7 @@ async def test_discovery_connection_failure(
         {"selected_gateway": gateway.gw_sn},
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_discovery_duplicate_filtered(
@@ -227,16 +237,18 @@ async def test_discovery_duplicate_filtered(
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "select_gateway"
-    assert result["errors"]["base"] == "no_devices_found"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "select_gateway"
+    errors = result.get("errors")
+    assert errors is not None
+    assert errors["base"] == "no_devices_found"
     assert mock_discovery.discover_gateways.await_count == 1
 
     await hass.config_entries.async_remove(mock_config_entry.entry_id)
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "select_gateway"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "select_gateway"
 
 
 async def test_discovery_unique_id_already_configured(
@@ -248,12 +260,10 @@ async def test_discovery_unique_id_already_configured(
     gateway = _mock_gateway()
     mock_discovery.discover_gateways.return_value = [gateway]
 
-    init_result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    discovery_result = await hass.config_entries.flow.async_configure(
-        init_result["flow_id"], {}
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     duplicate_entry = MockConfigEntry(
         domain=mock_config_entry.domain,
@@ -262,11 +272,11 @@ async def test_discovery_unique_id_already_configured(
     )
     duplicate_entry.add_to_hass(hass)
 
-    select_result = await hass.config_entries.flow.async_configure(
-        discovery_result["flow_id"],
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {"selected_gateway": gateway.gw_sn},
     )
 
-    assert select_result["type"] is FlowResultType.ABORT
-    assert select_result["reason"] == "already_configured"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
     assert mock_discovery.discover_gateways.await_count == 1
