@@ -166,10 +166,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
             and self.device.status.get(self._master_state.dpcode) == State.ALARM
             and (encoded_msg := self.device.status.get(self._alarm_msg_dpcode))
         ):
-            try:
-                return b64decode(encoded_msg).decode("utf-16be")
-            except (ValueError, UnicodeDecodeError):
-                return None
+            return b64decode(encoded_msg).decode("utf-16be")
         return None
 
     def alarm_disarm(self, code: str | None = None) -> None:
