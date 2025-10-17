@@ -49,6 +49,42 @@
     "sensor": {
       "image": {
         "name": "Image"
+      },
+      "operating_system": {
+        "name": "Operating System"
+      },
+      "operating_system_version": {
+        "name": "Operating System Version"
+      },
+      "api_version": {
+        "name": "API Version"
+      },
+      "kernel_version": {
+        "name": "Kernel Version"
+      },
+      "architecture": {
+        "name": "Architecture"
+      },
+      "containers_running": {
+        "name": "Containers Running"
+      },
+      "containers_stopped": {
+        "name": "Containers Stopped"
+      },
+      "containers_paused": {
+        "name": "Containers Paused"
+      },
+      "images_count": {
+        "name": "Image Count"
+      },
+      "containers_count": {
+        "name": "Container Count"
+      },
+      "memory_total": {
+        "name": "Total Memory"
+      },
+      "docker_version": {
+        "name": "Docker Version"
       }
     },
     "switch": {
