@@ -87,7 +87,9 @@
               "wind_free_sleep": "WindFree sleep",
               "quiet": "Quiet",
               "long_wind": "Long wind",
-              "smart": "Smart"
+              "smart": "Smart saver",
+              "motion_direct": "Motion direct",
+              "motion_indirect": "Motion indirect"
             }
           },
           "fan_mode": {

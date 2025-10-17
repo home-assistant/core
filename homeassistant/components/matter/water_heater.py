@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, cast
 
 from chip.clusters import Objects as clusters
@@ -37,7 +38,7 @@ from .const import (
     ATTR_TEMPORARY_SETPOINT,
     SERVICE_WATER_HEATER_BOOST,
 )
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -74,6 +75,13 @@ async def async_setup_entry(
         func="async_set_boost",
         supports_response=SupportsResponse.NONE,
     )
+
+
+@dataclass(frozen=True, kw_only=True)
+class MatterWaterHeaterEntityDescription(
+    WaterHeaterEntityDescription, MatterEntityDescription
+):
+    """Describe Matter Water Heater entities."""
 
 
 class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
@@ -223,7 +231,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.WATER_HEATER,
-        entity_description=WaterHeaterEntityDescription(
+        entity_description=MatterWaterHeaterEntityDescription(
             key="MatterWaterHeater",
             name=None,
         ),

@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 from logging import Logger, getLogger
 import re
-from typing import Final
+from typing import Final, TypedDict
 
 from aioshelly.const import (
     MODEL_BULB,
@@ -26,6 +26,7 @@ from aioshelly.const import (
     MODEL_VINTAGE_V2,
     MODEL_WALL_DISPLAY,
     MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_XL,
 )
 
 from homeassistant.components.number import NumberMode
@@ -231,7 +232,6 @@ class BLEScannerMode(StrEnum):
 
 
 BLE_SCANNER_MIN_FIRMWARE = "1.5.1"
-WALL_DISPLAY_MIN_FIRMWARE = "2.3.0"
 
 MAX_PUSH_UPDATE_FAILURES = 5
 PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
@@ -244,9 +244,28 @@ BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID = "ble_scanner_firmware_unsupported_{u
 OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
     "outbound_websocket_incorrectly_enabled_{unique}"
 )
-WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID = (
-    "wall_display_firmware_unsupported_{unique}"
-)
+DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
+
+
+class DeprecatedFirmwareInfo(TypedDict):
+    """TypedDict for Deprecated Firmware Info."""
+
+    min_firmware: str
+    ha_version: str
+
+
+# Provide firmware deprecation data:
+# key: device model
+# value: dict with:
+#   min_firmware: minimum supported firmware version
+#   ha_version: Home Assistant version when older firmware will be deprecated
+# Example:
+# DEPRECATED_FIRMWARES: dict[str, DeprecatedFirmwareInfo] = {
+#   MODEL_WALL_DISPLAY: DeprecatedFirmwareInfo(
+#     {"min_firmware": "2.3.0", "ha_version": "2025.10.0"}
+#   ),
+# }
+DEPRECATED_FIRMWARES: dict[str, DeprecatedFirmwareInfo] = {}
 
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
 
@@ -261,6 +280,7 @@ GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"
 DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_WALL_DISPLAY,
     MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_XL,
     MODEL_MOTION,
     MODEL_MOTION_2,
     MODEL_VALVE,
@@ -268,15 +288,7 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 
 CONF_GEN = "gen"
 
-VIRTUAL_COMPONENTS = (
-    "boolean",
-    "button",
-    "enum",
-    "input",
-    "number",
-    "presencezone",
-    "text",
-)
+VIRTUAL_COMPONENTS = ("boolean", "button", "enum", "number", "text")
 VIRTUAL_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
     "button": {"types": ["button"], "modes": ["button"]},
@@ -312,3 +324,7 @@ All_LIGHT_TYPES = ("cct", "light", "rgb", "rgbw")
 # Shelly-X specific models
 MODEL_NEO_WATER_VALVE = "NeoWaterValve"
 MODEL_FRANKEVER_WATER_VALVE = "WaterValve"
+MODEL_LINKEDGO_ST802_THERMOSTAT = "ST-802"
+MODEL_LINKEDGO_ST1820_THERMOSTAT = "ST1820"
+MODEL_TOP_EV_CHARGER_EVE01 = "EVE01"
+MODEL_FRANKEVER_IRRIGATION_CONTROLLER = "Irrigation"
