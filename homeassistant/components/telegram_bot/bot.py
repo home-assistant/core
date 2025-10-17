@@ -1033,11 +1033,17 @@ class TelegramNotificationService:
     async def download_file(
         self,
         file_id: str,
-        directory_path: str = "/config/www/telegram_files",
+        directory_path: str = "/config/telegram_bot",
         file_name: str | None = None,
         context: Context | None = None,
     ) -> dict[str, JsonValueType]:
         """Download a file from Telegram."""
+        if not self.hass.config.is_allowed_path(directory_path):
+            raise ServiceValidationError(
+                "File path has not been configured in allowlist_external_dirs.",
+                translation_domain=DOMAIN,
+                translation_key="allowlist_external_dirs_error",
+            )
         file: File = await self._send_msg(
             self.bot.get_file,
             "Error getting file",

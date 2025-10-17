@@ -964,7 +964,7 @@ download_file:
         text:
     directory_path:
       required: false
-      default: "/config/www/telegram_files"
+      default: "/config/telegram_bot"
       selector:
         text:
     file_name:
