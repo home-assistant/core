@@ -483,9 +483,7 @@ class MqttAttributesMixin(Entity):
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
         if CONF_GROUP in self._attributes_config:
-            self.async_set_included_entities(
-                DOMAIN, self._attributes_config[CONF_GROUP]
-            )
+            self.async_set_included_entities(self._attributes_config[CONF_GROUP])
 
         self._attributes_prepare_subscribe_topics()
         self._attributes_subscribe_topics()
