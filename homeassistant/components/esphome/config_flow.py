@@ -542,10 +542,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if Z-Wave capabilities are present and start discovery flow
         next_flow_id: str | None = None
-        # If the zwave_home_id is not set, we don't know if its a fresh
+        # If the zwave_home_id is not set, we don't know if it's a fresh
         # adapter, or the cable is just unplugged. So only start
         # the zwave_js config flow automatically if there is a
-        # zwave_home_id present. If its a fresh adapter, the manager
+        # zwave_home_id present. If it's a fresh adapter, the manager
         # will handle starting the flow once it gets the home id changed
         # request from the ESPHome device.
         if (
