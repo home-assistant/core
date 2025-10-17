@@ -46,6 +46,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 10
 
 
 def to_voice_settings(options: Mapping[str, Any]) -> VoiceSettings:
@@ -275,12 +276,13 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                     "text": text,
                 }
 
+                # Prefer previous_request_ids; when unavailable, fall back to previous_text.
                 if previous_request_ids:
                     # Send previous request ids.
                     kwargs["previous_request_ids"] = list(previous_request_ids)
                 # Do NOT send previous_text or next_text at all
                 elif last_text:
-                    # previous_request_ids not supported, send previous_text instead.
+                    # Send previous_text.
                     kwargs["previous_text"] = last_text
 
                 # Synthesize audio while text chunks are still being accumulated

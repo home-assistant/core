@@ -52,8 +52,6 @@ class _AsyncByteStream:
     def __init__(self, chunks: list[bytes], request_id: str | None = None) -> None:
         self._chunks = chunks
         self._i = 0
-        # Emulate: response._response.headers.get("request-id")
-        self._response = _FakeResponse({"request-id": request_id} if request_id else {})
 
     def __aiter__(self) -> AsyncIterator[bytes]:
         return self
@@ -526,7 +524,6 @@ async def test_tts_service_speak_without_options(
 @pytest.mark.parametrize(
     ("message", "chunks", "request_ids"),
     [
-        # sentence 1: "One.", sentence 2: "Two!"
         (
             [
                 ["One. ", "Two! ", "Three"],
@@ -546,7 +543,7 @@ async def test_stream_tts_with_request_ids(
     capture_stream_calls,
     stream_sentence_helpers,
     model_id: str,
-    message: list[str],
+    message: list[list[str]],
     chunks: list[bytes],
     request_ids: list[str],
 ) -> None:
@@ -559,7 +556,7 @@ async def test_stream_tts_with_request_ids(
 
     # Use a queue to control when each part is yielded
     queue = asyncio.Queue()
-    prev_request_ids: deque[str] = deque(maxlen=3)  # keep last 5 request IDs
+    prev_request_ids: deque[str] = deque(maxlen=3)  # keep last 3 request IDs
     sentence_iter = iter(zip(message, chunks, request_ids, strict=False))
     get_next_part, message_gen = stream_sentence_helpers(sentence_iter, queue)
     options = {tts.ATTR_VOICE: "voice1", "model": model_id}
@@ -601,13 +598,9 @@ async def test_stream_tts_with_request_ids(
     assert len(calls) == len(message)
 
 
-# --------- TEST B: Model WITHOUT request-id stitching (eleven_v3) ---------
-
-
 @pytest.mark.parametrize(
     ("message", "chunks", "request_ids"),
     [
-        # sentence 1: "One.", sentence 2: "Two!"
         (
             [
                 ["This is the first sentence. ", "This is "],
@@ -625,8 +618,8 @@ async def test_stream_tts_without_request_ids_eleven_v3(
     capture_stream_calls,
     stream_sentence_helpers,
     monkeypatch: pytest.MonkeyPatch,
-    message: list[str],
-    chunks: list[str],
+    message: list[list[str]],
+    chunks: list[bytes],
     request_ids: list[str],
 ) -> None:
     """Test streaming TTS without request-id stitching (eleven_v3)."""
