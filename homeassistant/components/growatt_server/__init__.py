@@ -44,9 +44,7 @@ def get_device_list_classic(
     # Log in to api and fetch first plant if no plant id is defined.
     try:
         login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-        # DEBUG: Log the actual response structure
     except Exception as ex:
-        _LOGGER.error("DEBUG - Login response: %s", login_response)
         raise ConfigEntryError(
             f"Error communicating with Growatt API during login: {ex}"
         ) from ex
@@ -290,7 +288,7 @@ async def _async_register_services(
                 end_time,
                 enabled,
             )
-        except Exception as err:
+        except (growattServer.GrowattV1ApiError, HomeAssistantError) as err:
             _LOGGER.error(
                 "Error updating time segment %d: %s",
                 segment_id,
@@ -307,7 +305,7 @@ async def _async_register_services(
 
         try:
             time_segments = await coordinator.read_time_segments()
-        except Exception as err:
+        except (growattServer.GrowattV1ApiError, HomeAssistantError) as err:
             _LOGGER.error("Error reading time segments: %s", err)
             raise HomeAssistantError(f"Error reading time segments: {err}") from err
         else:

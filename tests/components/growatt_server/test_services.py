@@ -393,3 +393,72 @@ async def test_multiple_devices_with_valid_device_id_works(
 
     assert response is not None
     assert "time_segments" in response
+
+
+async def test_update_time_segment_invalid_time_format(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_growatt_v1_api,
+) -> None:
+    """Test handling invalid time format in update_time_segment."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.growatt_server.get_device_list"
+    ) as mock_get_devices:
+        mock_get_devices.return_value = (
+            [{"deviceSn": "MIN123456", "deviceType": "min"}],
+            "12345",
+        )
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Test with invalid time format - schema validates before handler sees it
+    with pytest.raises(vol.MultipleInvalid, match="Invalid time specified"):
+        await hass.services.async_call(
+            DOMAIN,
+            "update_time_segment",
+            {
+                "segment_id": 1,
+                "start_time": "invalid",
+                "end_time": "11:00",
+                "batt_mode": "load-first",
+                "enabled": True,
+            },
+            blocking=True,
+        )
+
+
+async def test_read_time_segments_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_growatt_v1_api,
+) -> None:
+    """Test handling API error when reading time segments."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.growatt_server.get_device_list"
+    ) as mock_get_devices:
+        mock_get_devices.return_value = (
+            [{"deviceSn": "MIN123456", "deviceType": "min"}],
+            "12345",
+        )
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Mock API error by making coordinator.read_time_segments raise an exception
+    with (
+        patch(
+            "homeassistant.components.growatt_server.coordinator.GrowattCoordinator.read_time_segments",
+            side_effect=HomeAssistantError("API connection failed"),
+        ),
+        pytest.raises(HomeAssistantError, match="Error reading time segments"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "read_time_segments",
+            {},
+            blocking=True,
+            return_response=True,
+        )
