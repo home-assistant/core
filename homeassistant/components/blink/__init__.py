@@ -73,7 +73,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> boo
     session = async_get_clientsession(hass)
     blink = Blink(session=session)
     auth_data = deepcopy(dict(entry.data))
-    blink.auth = Auth(auth_data, no_prompt=True, session=session)
+    blink.auth = Auth(
+        auth_data,
+        no_prompt=True,
+        session=session,
+        callback=lambda: _async_update_entry_data(hass, entry, blink),
+    )
     blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     coordinator = BlinkUpdateCoordinator(hass, entry, blink)
 
@@ -92,6 +97,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> boo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+@callback
+def _async_update_entry_data(
+    hass: HomeAssistant, entry: BlinkConfigEntry, blink: Blink
+) -> None:
+    """Update the config entry data after token refresh."""
+    hass.config_entries.async_update_entry(entry, data=blink.auth.login_attributes)
 
 
 @callback
