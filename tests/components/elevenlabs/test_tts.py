@@ -611,7 +611,7 @@ async def test_stream_tts_with_request_ids(
         ),
     ],
 )
-async def test_stream_tts_without_request_ids_eleven_v3(
+async def test_stream_tts_without_previous_info(
     setup: AsyncMock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -627,7 +627,7 @@ async def test_stream_tts_without_request_ids_eleven_v3(
     tts_entity = hass.data[tts.DOMAIN].get_entity("tts.elevenlabs_text_to_speech")
     patch_stream(tts_entity)
     monkeypatch.setattr(
-        "homeassistant.components.elevenlabs.tts.MODELS_REQUEST_ID_NOT_SUPPORTED",
+        "homeassistant.components.elevenlabs.tts.MODELS_PREVIOUS_INFO_NOT_SUPPORTED",
         ("model1",),
         raising=False,
     )
@@ -650,13 +650,10 @@ async def test_stream_tts_without_request_ids_eleven_v3(
 
     set_next_return(chunks=[chunk], request_id=request_id)
     next_item, next_chunk, next_request_id = await get_next_part()
-    previous_sentence = None
     # Consume bytes; after first chunk, switch next return to emulate second call
     async for b in resp.data_gen:
         assert b == chunk  # each sentence yields its first chunk immediately
         assert "previous_request_ids" not in calls[-1]  # no previous_request_ids
-        assert calls[-1].get("previous_text") == previous_sentence
-        previous_sentence = calls[-1]["text"]
 
         item, chunk, request_id = next_item, next_chunk, next_request_id
         if item is not None:

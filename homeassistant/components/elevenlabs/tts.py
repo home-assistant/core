@@ -42,7 +42,7 @@ from .const import (
     DEFAULT_USE_SPEAKER_BOOST,
     DOMAIN,
     MAX_REQUEST_IDS,
-    MODELS_REQUEST_ID_NOT_SUPPORTED,
+    MODELS_PREVIOUS_INFO_NOT_SUPPORTED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -190,9 +190,8 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         voice_id = request.options.get(ATTR_VOICE, self._default_voice_id)
         model = request.options.get(ATTR_MODEL, self._model.model_id)
 
-        use_request_ids = model not in MODELS_REQUEST_ID_NOT_SUPPORTED
+        use_request_ids = model not in MODELS_PREVIOUS_INFO_NOT_SUPPORTED
         previous_request_ids: deque[str] = deque(maxlen=MAX_REQUEST_IDS)
-        last_text: str | None = None  # only used for eleven_v3
 
         base_stream_params = {
             "voice_id": voice_id,
@@ -276,18 +275,13 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                     "text": text,
                 }
 
-                # Prefer previous_request_ids; when unavailable, fall back to previous_text.
+                # Provide previous_request_ids if supported.
                 if previous_request_ids:
                     # Send previous request ids.
                     kwargs["previous_request_ids"] = list(previous_request_ids)
-                # Do NOT send previous_text or next_text at all
-                elif last_text:
-                    # Send previous_text.
-                    kwargs["previous_text"] = last_text
 
                 # Synthesize audio while text chunks are still being accumulated
                 _LOGGER.debug("Synthesizing TTS for text: %s", text)
-                rid = None
                 try:
                     async with self._client.text_to_speech.with_raw_response.stream(
                         **kwargs
@@ -314,8 +308,6 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
 
                 # Capture and store server request-id for next calls (only when supported)
                 _LOGGER.debug("Completed TTS stream for text: %s", text)
-                if not rid:
-                    last_text = text
 
         _LOGGER.debug("Completed TTS stream")
         return
