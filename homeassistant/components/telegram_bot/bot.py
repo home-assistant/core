@@ -1036,6 +1036,7 @@ class TelegramNotificationService:
         directory_path: str = "/config/telegram_bot",
         file_name: str | None = None,
         context: Context | None = None,
+        **kwargs: dict[str, Any],
     ) -> dict[str, JsonValueType]:
         """Download a file from Telegram."""
         if not self.hass.config.is_allowed_path(directory_path):
