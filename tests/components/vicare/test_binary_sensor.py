@@ -34,17 +34,25 @@ async def test_binary_sensors(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("fixture_type", "fixture_data"),
+    [
+        ("type:boiler", "vicare/Vitodens300W.json"),
+        ("type:radiator", "vicare/ZigbeeTRV.json"),
+        ("type:repeater", "vicare/ZigbeeRepeater.json"),
+    ],
+)
 async def test_all_entities(
     hass: HomeAssistant,
+    fixture_type: str,
+    fixture_data: str,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
     fixtures: list[Fixture] = [
-        Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
-        Fixture({"type:radiator"}, "vicare/ZigbeeTRV.json"),
-        Fixture({"type:repeater"}, "vicare/ZigbeeRepeater.json"),
+        Fixture({fixture_type}, fixture_data),
     ]
     with (
         patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
