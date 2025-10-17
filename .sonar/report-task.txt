@@ -2,5 +2,5 @@ projectKey=t-core
 serverUrl=http://localhost:9000
 serverVersion=25.10.0.114319
 dashboardUrl=http://localhost:9000/dashboard?id=t-core
-ceTaskId=2e985cbe-5a6e-45f1-9262-9ab0bdf58b78
-ceTaskUrl=http://localhost:9000/api/ce/task?id=2e985cbe-5a6e-45f1-9262-9ab0bdf58b78
+ceTaskId=51eaf864-02ab-4249-be6f-2cc0d0d3c2c0
+ceTaskUrl=http://localhost:9000/api/ce/task?id=51eaf864-02ab-4249-be6f-2cc0d0d3c2c0
