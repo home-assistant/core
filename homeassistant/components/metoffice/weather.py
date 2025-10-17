@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, cast
 
-from datapoint.Forecast import Forecast as ForecastData
+from datapoint.Forecast import Forecast
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -22,7 +22,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_BEARING,
     DOMAIN as WEATHER_DOMAIN,
     CoordinatorWeatherEntity,
-    Forecast,
+    Forecast as WeatherForecast,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -85,20 +85,20 @@ async def async_setup_entry(
     )
 
 
-def _build_hourly_forecast_data(timestep: dict[str, Any]) -> Forecast:
-    data = Forecast(datetime=timestep["time"].isoformat())
+def _build_hourly_forecast_data(timestep: dict[str, Any]) -> WeatherForecast:
+    data = WeatherForecast(datetime=timestep["time"].isoformat())
     _populate_forecast_data(data, timestep, HOURLY_FORECAST_ATTRIBUTE_MAP)
     return data
 
 
-def _build_daily_forecast_data(timestep: dict[str, Any]) -> Forecast:
-    data = Forecast(datetime=timestep["time"].isoformat())
+def _build_daily_forecast_data(timestep: dict[str, Any]) -> WeatherForecast:
+    data = WeatherForecast(datetime=timestep["time"].isoformat())
     _populate_forecast_data(data, timestep, DAILY_FORECAST_ATTRIBUTE_MAP)
     return data
 
 
-def _build_twice_daily_forecast_data(timestep: dict[str, Any]) -> Forecast:
-    data = Forecast(datetime=timestep["time"].isoformat())
+def _build_twice_daily_forecast_data(timestep: dict[str, Any]) -> WeatherForecast:
+    data = WeatherForecast(datetime=timestep["time"].isoformat())
 
     # day and night forecasts have slightly different format
     if "daySignificantWeatherCode" in timestep:
@@ -111,7 +111,7 @@ def _build_twice_daily_forecast_data(timestep: dict[str, Any]) -> Forecast:
 
 
 def _populate_forecast_data(
-    forecast: Forecast, timestep: dict[str, Any], mapping: dict[str, str]
+    forecast: WeatherForecast, timestep: dict[str, Any], mapping: dict[str, str]
 ) -> None:
     def get_mapped_attribute(attr: str) -> Any:
         if attr not in mapping:
@@ -153,9 +153,9 @@ def _populate_forecast_data(
 
 class MetOfficeWeather(
     CoordinatorWeatherEntity[
-        TimestampDataUpdateCoordinator[ForecastData],
-        TimestampDataUpdateCoordinator[ForecastData],
-        TimestampDataUpdateCoordinator[ForecastData],
+        TimestampDataUpdateCoordinator[Forecast],
+        TimestampDataUpdateCoordinator[Forecast],
+        TimestampDataUpdateCoordinator[Forecast],
     ]
 ):
     """Implementation of a Met Office weather condition."""
@@ -177,9 +177,9 @@ class MetOfficeWeather(
 
     def __init__(
         self,
-        coordinator_daily: TimestampDataUpdateCoordinator[ForecastData],
-        coordinator_hourly: TimestampDataUpdateCoordinator[ForecastData],
-        coordinator_twice_daily: TimestampDataUpdateCoordinator[ForecastData],
+        coordinator_daily: TimestampDataUpdateCoordinator[Forecast],
+        coordinator_hourly: TimestampDataUpdateCoordinator[Forecast],
+        coordinator_twice_daily: TimestampDataUpdateCoordinator[Forecast],
         hass_data: dict[str, Any],
     ) -> None:
         """Initialise the platform with a data instance."""
@@ -263,10 +263,10 @@ class MetOfficeWeather(
         return float(value) if value is not None else None
 
     @callback
-    def _async_forecast_daily(self) -> list[Forecast] | None:
+    def _async_forecast_daily(self) -> list[WeatherForecast] | None:
         """Return the daily forecast in native units."""
         coordinator = cast(
-            TimestampDataUpdateCoordinator[ForecastData],
+            TimestampDataUpdateCoordinator[Forecast],
             self.forecast_coordinators["daily"],
         )
         timesteps = coordinator.data.timesteps
@@ -277,10 +277,10 @@ class MetOfficeWeather(
         ]
 
     @callback
-    def _async_forecast_hourly(self) -> list[Forecast] | None:
+    def _async_forecast_hourly(self) -> list[WeatherForecast] | None:
         """Return the hourly forecast in native units."""
         coordinator = cast(
-            TimestampDataUpdateCoordinator[ForecastData],
+            TimestampDataUpdateCoordinator[Forecast],
             self.forecast_coordinators["hourly"],
         )
 
@@ -292,10 +292,10 @@ class MetOfficeWeather(
         ]
 
     @callback
-    def _async_forecast_twice_daily(self) -> list[Forecast] | None:
+    def _async_forecast_twice_daily(self) -> list[WeatherForecast] | None:
         """Return the twice daily forecast in native units."""
         coordinator = cast(
-            TimestampDataUpdateCoordinator[ForecastData],
+            TimestampDataUpdateCoordinator[Forecast],
             self.forecast_coordinators["twice_daily"],
         )
         timesteps = coordinator.data.timesteps
