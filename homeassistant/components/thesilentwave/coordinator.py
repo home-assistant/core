@@ -28,13 +28,9 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize the coordinator."""
         websession = async_get_clientsession(hass)
         self.entry = entry
-        self._device_name = entry.data["name"]
+        self._device_name = entry.title
         self._host = entry.data["host"]
         self.client = SilentWaveClient(self._host, session=websession)
-
-        # Store the name directly to be accessed by entities.
-        self._device_name = self._device_name
-        self._host = self._host
 
         # Track connection state to avoid log spam.
         self.has_connection = True
