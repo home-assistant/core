@@ -9,15 +9,28 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import DOMAIN, MODEL_FRANKEVER_WATER_VALVE
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, register_device, register_entity
+from . import (
+    MOCK_MAC,
+    init_integration,
+    patch_platforms,
+    register_device,
+    register_entity,
+)
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.BUTTON]):
+        yield
 
 
 async def test_block_button(
@@ -26,7 +39,7 @@ async def test_block_button(
     """Test block device reboot button."""
     await init_integration(hass, 1)
 
-    entity_id = "button.test_name_reboot"
+    entity_id = "button.test_name_restart"
 
     # reboot button
     assert (state := hass.states.get(entity_id))
@@ -53,7 +66,7 @@ async def test_rpc_button(
     """Test rpc device OTA button."""
     await init_integration(hass, 2)
 
-    entity_id = "button.test_name_reboot"
+    entity_id = "button.test_name_restart"
 
     # reboot button
     assert (state := hass.states.get(entity_id))
@@ -76,11 +89,11 @@ async def test_rpc_button(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for button.test_name_reboot of Test name",
+            "Device communication error occurred while calling action for button.test_name_restart of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for button.test_name_reboot of Test name",
+            "RPC call error occurred while calling action for button.test_name_restart of Test name",
         ),
     ],
 )
@@ -99,7 +112,7 @@ async def test_rpc_button_exc(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_name_reboot"},
+            {ATTR_ENTITY_ID: "button.test_name_restart"},
             blocking=True,
         )
 
@@ -115,7 +128,7 @@ async def test_rpc_button_reauth_error(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_name_reboot"},
+        {ATTR_ENTITY_ID: "button.test_name_restart"},
         blocking=True,
     )
 
@@ -156,7 +169,7 @@ async def test_migrate_unique_id(
     entry = await init_integration(hass, gen, skip_setup=True)
 
     entity = entity_registry.async_get_or_create(
-        suggested_object_id="test_name_reboot",
+        suggested_object_id="test_name_restart",
         disabled_by=None,
         domain=BUTTON_DOMAIN,
         platform=DOMAIN,
@@ -168,12 +181,12 @@ async def test_migrate_unique_id(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get("button.test_name_reboot")
+    entity_entry = entity_registry.async_get("button.test_name_restart")
     assert entity_entry
     assert entity_entry.unique_id == new_unique_id
 
     assert (
-        bool("Migrating unique_id for button.test_name_reboot" in caplog.text)
+        bool("Migrating unique_id for button.test_name_restart" in caplog.text)
         == migration
     )
 
@@ -206,7 +219,7 @@ async def test_rpc_blu_trv_button(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert mock_blu_trv.trigger_blu_trv_calibration.call_count == 1
+    mock_blu_trv.trigger_blu_trv_calibration.assert_called_once_with(200)
 
 
 @pytest.mark.parametrize(
@@ -410,3 +423,56 @@ async def test_migrate_unique_id_blu_trv(
     assert entity_entry.unique_id == "F8447725F0DD-blutrv:200-calibrate"
 
     assert "Migrating unique_id for button.trv_name_calibrate" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("old_id", "new_id", "role"),
+    [
+        ("button", "button_generic", None),
+        ("button", "button_open", "open"),
+        ("button", "button_close", "close"),
+    ],
+)
+async def test_migrate_unique_id_virtual_components_roles(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    old_id: str,
+    new_id: str,
+    role: str | None,
+) -> None:
+    """Test migration of unique_id for virtual components to include role."""
+    entry = await init_integration(
+        hass, 3, model=MODEL_FRANKEVER_WATER_VALVE, skip_setup=True
+    )
+    old_unique_id = f"{MOCK_MAC}-{old_id}:200"
+    new_unique_id = f"{old_unique_id}-{new_id}"
+    config = deepcopy(mock_rpc_device.config)
+    if role:
+        config[f"{old_id}:200"] = {
+            "role": role,
+        }
+    else:
+        config[f"{old_id}:200"] = {}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    entity = entity_registry.async_get_or_create(
+        suggested_object_id="test_name_test_button",
+        disabled_by=None,
+        domain=BUTTON_DOMAIN,
+        platform=DOMAIN,
+        unique_id=old_unique_id,
+        config_entry=entry,
+    )
+    assert entity.unique_id == old_unique_id
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get("button.test_name_test_button")
+    assert entity_entry
+    assert entity_entry.unique_id == new_unique_id
+
+    assert "Migrating unique_id for button.test_name_test_button" in caplog.text

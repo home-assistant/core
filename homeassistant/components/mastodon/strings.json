@@ -9,7 +9,7 @@
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
         "data_description": {
-          "base_url": "The URL of your Mastodon instance e.g. https://mastodon.social.",
+          "base_url": "The URL of your Mastodon instance e.g. {example_url}.",
           "client_id": "The client key for the application created within your Mastodon account.",
           "client_secret": "The client secret for the application created within your Mastodon account.",
           "access_token": "The access token for the application created within your Mastodon account."

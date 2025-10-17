@@ -146,7 +146,7 @@
         },
         "state": {
           "title": "Add a Bayesian sensor",
-          "description": "Add an observation which evaluates to `True` when the value of the sensor exactly matches *'To state'*. When `False`, it will update the prior with probabilities that are the inverse of those set below. This behaviour can be overridden by adding observations for the same entity's other states.",
+          "description": "Add an observation which evaluates to `True` when the value of the sensor exactly matches *'To state'*. When `False`, it will update the prior with probabilities that are the inverse of those set below. This behavior can be overridden by adding observations for the same entity's other states.",
 
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
