@@ -2248,7 +2248,7 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_led_bar-entry]
+# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2268,7 +2268,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.inovelli_power_on_behavior_on_startup_led_bar',
+    'entity_id': 'select.inovelli_power_on_behavior_on_startup_6',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2280,7 +2280,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior on startup (LED Bar)',
+    'original_name': 'Power-on behavior on startup (6)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2290,10 +2290,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_led_bar-state]
+# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Power-on behavior on startup (LED Bar)',
+      'friendly_name': 'Inovelli Power-on behavior on startup (6)',
       'options': list([
         'on',
         'off',
@@ -2302,7 +2302,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.inovelli_power_on_behavior_on_startup_led_bar',
+    'entity_id': 'select.inovelli_power_on_behavior_on_startup_6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

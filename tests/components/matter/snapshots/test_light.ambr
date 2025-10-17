@@ -470,7 +470,7 @@
     'state': 'off',
   })
 # ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_led_bar-entry]
+# name: test_lights[multi_endpoint_light][light.inovelli_light_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -493,7 +493,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.inovelli_light_led_bar',
+    'entity_id': 'light.inovelli_light_6',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -505,7 +505,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Light (LED Bar)',
+    'original_name': 'Light (6)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -515,14 +515,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_led_bar-state]
+# name: test_lights[multi_endpoint_light][light.inovelli_light_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
       'color_temp': None,
       'color_temp_kelvin': None,
-      'friendly_name': 'Inovelli Light (LED Bar)',
+      'friendly_name': 'Inovelli Light (6)',
       'hs_color': None,
       'max_color_temp_kelvin': 6535,
       'max_mireds': 500,
@@ -538,7 +538,7 @@
       'xy_color': None,
     }),
     'context': <ANY>,
-    'entity_id': 'light.inovelli_light_led_bar',
+    'entity_id': 'light.inovelli_light_6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
