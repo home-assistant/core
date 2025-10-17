@@ -1,0 +1,197 @@
+{
+  "people": [
+    {
+      "xuid": "2533274838782903",
+      "isFavorite": true,
+      "isFollowingCaller": true,
+      "isFollowedByCaller": true,
+      "isIdentityShared": true,
+      "addedDateTimeUtc": "2016-06-29T20:59:22.5050886Z",
+      "displayName": "Ikken Hissatsuu",
+      "realName": "",
+      "displayPicRaw": "https://images-eds-ssl.xboxlive.com/image?url=7OTVnZUMVj4OV2zUUGecWvn3U00nQQLfK7_kwpANogj9vJpb.t4ZQMMLIWOuBZBBZs5MjD7okwh5Zwnit1SAtO3OAsFXxJc1ALIbaVoRo7gsiun9FdcaTpzkM60nqzT8ip1659eQpB1SLyupscP.ec_wAGvXwkhCcTKCNHQMrxg-&format=png",
+      "showUserAsAvatar": "1",
+      "gamertag": "Ikken Hissatsuu",
+      "gamerScore": "27210",
+      "modernGamertag": "Ikken Hissatsuu",
+      "modernGamertagSuffix": "",
+      "uniqueModernGamertag": "Ikken Hissatsuu",
+      "xboxOneRep": "GoodPlayer",
+      "presenceState": "Offline",
+      "presenceText": "Offline",
+      "presenceDevices": null,
+      "isBroadcasting": false,
+      "isCloaked": null,
+      "isQuarantined": false,
+      "isXbox360Gamerpic": false,
+      "lastSeenDateTimeUtc": null,
+      "suggestion": {
+        "Type": null,
+        "Priority": 0,
+        "Reasons": null,
+        "TitleId": null
+      },
+      "recommendation": null,
+      "search": null,
+      "titleHistory": null,
+      "multiplayerSummary": {
+        "InMultiplayerSession": 0,
+        "InParty": 0
+      },
+      "recentPlayer": {
+        "titles": [],
+        "text": null
+      },
+      "follower": {
+        "text": null,
+        "followedDateTime": "0001-01-01T00:00:00"
+      },
+      "preferredColor": {
+        "primaryColor": "744DA9",
+        "secondaryColor": "24153B",
+        "tertiaryColor": "4c208a"
+      },
+      "presenceDetails": [],
+      "titlePresence": {
+        "IsCurrentlyPlaying": false,
+        "PresenceText": null,
+        "TitleName": null,
+        "TitleId": null
+      },
+      "titleSummaries": null,
+      "presenceTitleIds": [],
+      "detail": {
+        "accountTier": "Gold",
+        "bio": "Bio",
+        "isVerified": false,
+        "location": "Rock Hill",
+        "tenure": "8",
+        "watermarks": [],
+        "blocked": false,
+        "mute": false,
+        "followerCount": 81,
+        "followingCount": 73,
+        "hasGamePass": false
+      },
+      "communityManagerTitles": null,
+      "socialManager": {
+        "titleIds": [],
+        "pages": []
+      },
+      "broadcast": [],
+      "tournamentSummary": null,
+      "avatar": {
+        "updateTimeOffset": "0001-01-01T00:00:00+00:00",
+        "spritesheetMetadata": null
+      },
+      "linkedAccounts": [],
+      "colorTheme": "gamerpicblur",
+      "preferredFlag": "",
+      "preferredPlatforms": []
+    },
+    {
+      "xuid": "2533274913657542",
+      "isFavorite": true,
+      "isFollowingCaller": true,
+      "isFollowedByCaller": true,
+      "isIdentityShared": false,
+      "addedDateTimeUtc": "2012-12-14T03:41:43.177Z",
+      "displayName": "erics273",
+      "realName": "",
+      "displayPicRaw": "http://images-eds.xboxlive.com/image?url=rwljod2fPqLqGP3DBV9F_yK9iuxAt3_MH6tcOnQXTc8LY1LO8JeulzCEFHaqqItKdg9oJ84qjO.VNwvUWuq_iR5iTyx1gQsqHSvWLbqIrRI-&background=0xababab&mode=Padding&format=png",
+      "showUserAsAvatar": "2",
+      "gamertag": "erics273",
+      "gamerScore": "3802",
+      "modernGamertag": "erics273",
+      "modernGamertagSuffix": "",
+      "uniqueModernGamertag": "erics273",
+      "xboxOneRep": "GoodPlayer",
+      "presenceState": "Offline",
+      "presenceText": "Last seen 17h ago: Home",
+      "presenceDevices": null,
+      "isBroadcasting": false,
+      "isCloaked": null,
+      "isQuarantined": false,
+      "isXbox360Gamerpic": true,
+      "lastSeenDateTimeUtc": "2020-10-08T04:19:58.3208237Z",
+      "suggestion": {
+        "Type": null,
+        "Priority": 0,
+        "Reasons": null,
+        "TitleId": null
+      },
+      "recommendation": null,
+      "search": null,
+      "titleHistory": null,
+      "multiplayerSummary": {
+        "InMultiplayerSession": 0,
+        "InParty": 0
+      },
+      "recentPlayer": {
+        "titles": [],
+        "text": null
+      },
+      "follower": {
+        "text": null,
+        "followedDateTime": "0001-01-01T00:00:00"
+      },
+      "preferredColor": {
+        "primaryColor": "107c10",
+        "secondaryColor": "102b14",
+        "tertiaryColor": "155715"
+      },
+      "presenceDetails": [
+        {
+          "IsBroadcasting": false,
+          "Device": "XboxOne",
+          "PresenceText": "Last seen 17h ago: Home",
+          "State": "LastSeen",
+          "TitleId": "750323071",
+          "TitleType": null,
+          "IsPrimary": true,
+          "IsGame": false,
+          "RichPresenceText": null
+        }
+      ],
+      "titlePresence": {
+        "IsCurrentlyPlaying": false,
+        "PresenceText": null,
+        "TitleName": null,
+        "TitleId": null
+      },
+      "titleSummaries": null,
+      "presenceTitleIds": ["750323071"],
+      "detail": {
+        "accountTier": "Silver",
+        "bio": "",
+        "isVerified": false,
+        "location": "home",
+        "tenure": "0",
+        "watermarks": [],
+        "blocked": false,
+        "mute": false,
+        "followerCount": 18,
+        "followingCount": 12,
+        "hasGamePass": false
+      },
+      "communityManagerTitles": null,
+      "socialManager": {
+        "titleIds": [],
+        "pages": []
+      },
+      "broadcast": [],
+      "tournamentSummary": null,
+      "avatar": {
+        "updateTimeOffset": "0001-01-01T00:00:00+00:00",
+        "spritesheetMetadata": null
+      },
+      "linkedAccounts": [],
+      "colorTheme": "gamerpicblur",
+      "preferredFlag": "",
+      "preferredPlatforms": []
+    }
+  ],
+  "recommendationSummary": null,
+  "friendFinderState": null,
+  "accountLinkDetails": null
+}
