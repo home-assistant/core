@@ -208,12 +208,7 @@ async def websocket_run(
             volume_multiplier=msg_input.get("volume_multiplier", 1.0),
             is_vad_enabled=not msg_input.get("no_vad", False),
         )
-    elif start_stage == PipelineStage.INTENT:
-        # Input to conversation agent
-        input_args["intent_input"] = msg["input"]["text"]
-    elif start_stage == PipelineStage.TTS:
-        # Input to text-to-speech system
-        input_args["tts_input"] = msg["input"]["text"]
+    _set_input_args(msg, start_stage, input_args)
 
     input_args["run"] = PipelineRun(
         hass,
@@ -266,6 +261,16 @@ async def websocket_run(
             if unregister_handler is not None:
                 # Unregister binary handler
                 unregister_handler()
+
+
+def _set_input_args(
+    msg: dict[str, Any], start_stage: PipelineStage, input_args: Any
+) -> None:
+    """Set input args for pipeline input based on start stage."""
+    if start_stage == PipelineStage.INTENT:
+        input_args["intent_input"] = msg["input"]["text"]
+    elif start_stage == PipelineStage.TTS:
+        input_args["tts_input"] = msg["input"]["text"]
 
 
 def _start_page(
