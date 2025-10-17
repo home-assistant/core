@@ -319,7 +319,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.0.0
+aiomealie==1.0.1
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -2629,7 +2629,7 @@ pyvera==0.3.16
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==3.1.0
+pyvesync==3.1.2
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
