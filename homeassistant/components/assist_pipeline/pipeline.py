@@ -1369,59 +1369,90 @@ class PipelineRun:
         device_id: str | None,
     ) -> bool:
         """Return true if all targeted entities were in the same area as the device."""
-        if (
-            intent_response.response_type != intent.IntentResponseType.ACTION_DONE
-            or not intent_response.matched_states
-        ):
+
+        if not self._is_valid_intent_response(intent_response):
             return False
 
         entity_registry = er.async_get(self.hass)
         device_registry = dr.async_get(self.hass)
 
-        area_id: str | None = None
-
-        if (
-            satellite_id is not None
-            and (target_entity_entry := entity_registry.async_get(satellite_id))
-            is not None
-        ):
-            area_id = target_entity_entry.area_id
-            device_id = target_entity_entry.device_id
-
+        area_id = self._resolve_area_id(entity_registry, device_registry, satellite_id, device_id)
         if area_id is None:
-            if device_id is None:
-                return False
-
-            device_entry = device_registry.async_get(device_id)
-            if device_entry is None:
-                return False
-
-            area_id = device_entry.area_id
-            if area_id is None:
-                return False
+            return False
 
         for state in intent_response.matched_states:
-            target_entity_entry = entity_registry.async_get(state.entity_id)
-            if target_entity_entry is None:
-                return False
-
-            target_area_id = target_entity_entry.area_id
-            if target_area_id is None:
-                if target_entity_entry.device_id is None:
-                    return False
-
-                target_device_entry = device_registry.async_get(
-                    target_entity_entry.device_id
-                )
-                if target_device_entry is None:
-                    return False
-
-                target_area_id = target_device_entry.area_id
-
-            if target_area_id != area_id:
+            if not self._is_entity_in_area(entity_registry, device_registry, state.entity_id, area_id):
                 return False
 
         return True
+
+    def _is_valid_intent_response(self, intent_response: intent.IntentResponse) -> bool:
+        """Return False if the intent response type or states are invalid."""
+        return (
+            intent_response.response_type == intent.IntentResponseType.ACTION_DONE
+            and bool(intent_response.matched_states)
+        )
+
+    def _resolve_area_id(
+        self,
+        entity_registry,
+        device_registry,
+        satellite_id: str | None,
+        device_id: str | None,
+    ) -> str | None:
+        """Resolve area_id based on satellite or device information."""
+        area_id: str | None = None
+
+        # Try to resolve from satellite entity
+        if satellite_id is not None:
+            target_entity_entry = entity_registry.async_get(satellite_id)
+            if target_entity_entry is not None:
+                area_id = target_entity_entry.area_id
+                device_id = target_entity_entry.device_id
+
+        # Fallback to device-based lookup
+        if area_id is None:
+            area_id = self._resolve_area_from_device(device_registry, device_id)
+
+        return area_id
+
+    def _resolve_area_from_device(self, device_registry, device_id: str | None) -> str | None:
+        """Resolve area from a given device ID."""
+        if device_id is None:
+            return None
+
+        device_entry = device_registry.async_get(device_id)
+        if device_entry is None:
+            return None
+
+        return device_entry.area_id
+
+    def _is_entity_in_area(
+        self, entity_registry, device_registry, entity_id: str, area_id: str
+    ) -> bool:
+        """Return True if entity (or its device) belongs to given area."""
+        target_entity_entry = entity_registry.async_get(entity_id)
+        if target_entity_entry is None:
+            return False
+
+        target_area_id = target_entity_entry.area_id
+        if target_area_id is None:
+            target_area_id = self._get_area_from_device_entry(device_registry, target_entity_entry)
+            if target_area_id is None:
+                return False
+
+        return target_area_id == area_id
+
+    def _get_area_from_device_entry(self, device_registry, entity_entry) -> str | None:
+        """Get area_id for an entity via its associated device."""
+        if entity_entry.device_id is None:
+            return None
+
+        target_device_entry = device_registry.async_get(entity_entry.device_id)
+        if target_device_entry is None:
+            return None
+
+        return target_device_entry.area_id
 
     async def prepare_text_to_speech(self) -> None:
         """Prepare text-to-speech."""
