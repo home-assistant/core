@@ -3,6 +3,7 @@
 import base64
 from datetime import datetime
 import io
+import os
 import tempfile
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
@@ -1532,6 +1533,13 @@ async def test_download_file(
                 # use temp dir as default directory path for test
                 expected_directory_path = tempdirname
             schema_request[ATTR_DIRECTORY_PATH] = expected_directory_path
+
+            if os.path.exists(expected_directory_path):
+                hass.config.allowlist_external_dirs.add(expected_directory_path)
+            else:
+                hass.config.allowlist_external_dirs.add(
+                    os.path.dirname(expected_directory_path)
+                )
 
             await hass.services.async_call(
                 DOMAIN,
