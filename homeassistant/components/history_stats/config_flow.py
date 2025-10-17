@@ -130,6 +130,7 @@ def _get_options_schema_with_entity_id(entity_id: str) -> vol.Schema:
             vol.Optional(CONF_END): TemplateSelector(),
             vol.Optional(CONF_DURATION): DurationSelector(
                 DurationSelectorConfig(enable_day=True, allow_negative=False),
+            ),
             vol.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
                 DurationSelectorConfig(enable_day=True, allow_negative=False)
             ),
