@@ -18,6 +18,7 @@ from homeassistant.components.assist_pipeline.const import (
     CONF_DEBUG_RECORDING_DIR,
     DOMAIN,
 )
+from homeassistant.components.assist_pipeline.pipeline import PipelineContext
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -150,8 +151,10 @@ async def test_pipeline_from_audio_stream_legacy(
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
             stt_stream=audio_data(),
-            pipeline_id=pipeline_id,
             audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+            pipeline_context=PipelineContext(
+                pipeline_id=pipeline_id,
+            ),
         )
 
     assert process_events(events) == snapshot
@@ -218,8 +221,10 @@ async def test_pipeline_from_audio_stream_entity(
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
             stt_stream=audio_data(),
-            pipeline_id=pipeline_id,
             audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+            pipeline_context=PipelineContext(
+                pipeline_id=pipeline_id,
+            ),
         )
 
     assert process_events(events) == snapshot
@@ -284,8 +289,10 @@ async def test_pipeline_from_audio_stream_no_stt(
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
             stt_stream=audio_data(),
-            pipeline_id=pipeline_id,
             audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+            pipeline_context=PipelineContext(
+                pipeline_id=pipeline_id,
+            ),
         )
 
     assert not events
@@ -324,7 +331,9 @@ async def test_pipeline_from_audio_stream_unknown_pipeline(
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
             stt_stream=audio_data(),
-            pipeline_id="blah",
+            pipeline_context=PipelineContext(
+                pipeline_id="blah",
+            ),
         )
 
     assert not events
@@ -384,11 +393,13 @@ async def test_pipeline_from_audio_stream_wake_word(
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
             stt_stream=audio_data(),
-            start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
             wake_word_settings=assist_pipeline.WakeWordSettings(
                 audio_seconds_to_buffer=1.5
             ),
             audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+            pipeline_context=PipelineContext(
+                start_stage=assist_pipeline.PipelineStage.WAKE_WORD
+            ),
         )
 
     assert process_events(events) == snapshot
@@ -449,10 +460,12 @@ async def test_pipeline_save_audio(
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
             stt_stream=audio_data(),
-            pipeline_id=pipeline.id,
-            start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
-            end_stage=assist_pipeline.PipelineStage.STT,
             audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+            pipeline_context=PipelineContext(
+                pipeline_id=pipeline.id,
+                start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+                end_stage=assist_pipeline.PipelineStage.STT,
+            ),
         )
 
         pipeline_dirs = list(temp_dir.iterdir())
@@ -537,9 +550,11 @@ async def test_pipeline_saved_audio_with_device_id(
                     channel=stt.AudioChannels.CHANNEL_MONO,
                 ),
                 stt_stream=audio_data(),
-                start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
-                end_stage=assist_pipeline.PipelineStage.STT,
                 device_id=device_id,
+                pipeline_context=PipelineContext(
+                    start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+                    end_stage=assist_pipeline.PipelineStage.STT,
+                ),
             )
 
 
@@ -587,8 +602,10 @@ async def test_pipeline_saved_audio_write_error(
                     channel=stt.AudioChannels.CHANNEL_MONO,
                 ),
                 stt_stream=audio_data(),
-                start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
-                end_stage=assist_pipeline.PipelineStage.STT,
+                pipeline_context=PipelineContext(
+                    start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+                    end_stage=assist_pipeline.PipelineStage.STT,
+                ),
             )
 
 
@@ -650,8 +667,10 @@ async def test_pipeline_saved_audio_empty_queue(
                     channel=stt.AudioChannels.CHANNEL_MONO,
                 ),
                 stt_stream=audio_data(),
-                start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
-                end_stage=assist_pipeline.PipelineStage.STT,
+                pipeline_context=PipelineContext(
+                    start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+                    end_stage=assist_pipeline.PipelineStage.STT,
+                ),
             )
 
 

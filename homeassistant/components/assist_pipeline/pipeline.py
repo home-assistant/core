@@ -1578,6 +1578,17 @@ class PipelineRun:
                 timestamp_ms += MS_PER_CHUNK
 
 
+@dataclass
+class PipelineContext:
+    """Running context for a pipeline."""
+
+    pipeline_id: str | None = None
+    conversation_id: str | None = None
+    conversation_extra_system_prompt: str | None = None
+    start_stage: PipelineStage = PipelineStage.STT
+    end_stage: PipelineStage = PipelineStage.TTS
+
+
 def _multiply_volume(chunk: bytes, volume_multiplier: float) -> bytes:
     """Multiplies 16-bit PCM samples by a constant."""
 
