@@ -93,19 +93,17 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                valid_token = await _send_blink_2fa_pin(
+                await _send_blink_2fa_pin(
                     self.hass, self.blink, user_input.get(CONF_PIN)
                 )
+                return self._async_finish_flow()
             except BlinkSetupError:
                 errors["base"] = "cannot_connect"
+            except TokenRefreshFailed:
+                errors["base"] = "invalid_access_token"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-
-            else:
-                if valid_token:
-                    return self._async_finish_flow()
-                errors["base"] = "invalid_access_token"
 
         return self.async_show_form(
             step_id="2fa",

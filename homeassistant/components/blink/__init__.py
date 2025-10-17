@@ -21,11 +21,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 from .coordinator import BlinkConfigEntry, BlinkUpdateCoordinator
-from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,14 +64,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> b
     if entry.version == 2:
         await _reauth_flow_wrapper(hass, entry, data)
         return False
-    return True
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Blink."""
-
-    async_setup_services(hass)
-
     return True
 
 
