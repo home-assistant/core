@@ -4,7 +4,6 @@ import base64
 from datetime import datetime
 import io
 import os
-import tempfile
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
@@ -1531,58 +1530,57 @@ async def test_download_file(
 
     TELEGRAM_FILE = File(
         file_id=file_id,
-        file_unique_id="blabla",
+        file_unique_id="file_unique_id",
         file_path=f"file/path/{telegram_file_name}",
     )
 
-    with tempfile.TemporaryDirectory() as tempdirname:
-        with (
-            patch(
-                "homeassistant.components.telegram_bot.bot.Bot.get_file",
-                AsyncMock(return_value=TELEGRAM_FILE),
-            ) as get_file_mock,
-            patch(
-                "telegram.File.download_to_drive",
-                AsyncMock(return_value=f"/custom/path/{telegram_file_name}"),
-            ) as download_to_drive_mock,
-        ):
-            schema_request = {
-                ATTR_FILE_ID: file_id,
-            }
-            if hass_file_name:
-                expected_file_name = hass_file_name
-                schema_request[ATTR_FILE_NAME] = hass_file_name
-            else:
-                expected_file_name = telegram_file_name
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+            AsyncMock(return_value=TELEGRAM_FILE),
+        ) as get_file_mock,
+        patch(
+            "telegram.File.download_to_drive",
+            AsyncMock(return_value=f"/custom/path/{telegram_file_name}"),
+        ) as download_to_drive_mock,
+    ):
+        schema_request = {
+            ATTR_FILE_ID: file_id,
+        }
+        if hass_file_name:
+            expected_file_name = hass_file_name
+            schema_request[ATTR_FILE_NAME] = hass_file_name
+        else:
+            expected_file_name = telegram_file_name
 
-            if hass_directory_path:
-                expected_directory_path = hass_directory_path
-            else:
-                # use temp dir as default directory path for test
-                expected_directory_path = tempdirname
-            schema_request[ATTR_DIRECTORY_PATH] = expected_directory_path
+        if hass_directory_path:
+            expected_directory_path = hass_directory_path
+        else:
+            # use config dir as default directory path for test
+            expected_directory_path = hass.config.path(DOMAIN)
+        schema_request[ATTR_DIRECTORY_PATH] = expected_directory_path
 
-            if os.path.exists(expected_directory_path):
-                hass.config.allowlist_external_dirs.add(expected_directory_path)
-            else:
-                hass.config.allowlist_external_dirs.add(
-                    os.path.dirname(expected_directory_path)
-                )
-
-            await hass.services.async_call(
-                DOMAIN,
-                "download_file",
-                schema_request,
-                blocking=True,
+        if os.path.exists(expected_directory_path):
+            hass.config.allowlist_external_dirs.add(expected_directory_path)
+        else:
+            hass.config.allowlist_external_dirs.add(
+                os.path.dirname(expected_directory_path)
             )
 
-        await hass.async_block_till_done()
-        get_file_mock.assert_called_once_with(
-            file_id=file_id,
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            schema_request,
+            blocking=True,
         )
-        download_to_drive_mock.assert_called_once_with(
-            custom_path=f"{expected_directory_path}/{expected_file_name}",
-        )
+
+    await hass.async_block_till_done()
+    get_file_mock.assert_called_once_with(
+        file_id=file_id,
+    )
+    download_to_drive_mock.assert_called_once_with(
+        custom_path=f"{expected_directory_path}/{expected_file_name}",
+    )
 
 
 async def test_download_file_when_bot_failed_to_get_file(
