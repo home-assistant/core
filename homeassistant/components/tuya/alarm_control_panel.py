@@ -150,7 +150,9 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
             and self.device.status.get(self._master_state.dpcode) == State.ALARM
         ):
             # Only report as triggered if NOT a battery warning
-            if (changed_by := self.changed_by) is None or "Sensor Low Battery" not in changed_by:
+            if (
+                changed_by := self.changed_by
+            ) is None or "Sensor Low Battery" not in changed_by:
                 return AlarmControlPanelState.TRIGGERED
 
         if not (status := self.device.status.get(self.entity_description.key)):
