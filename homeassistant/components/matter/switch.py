@@ -19,6 +19,7 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
@@ -60,7 +61,7 @@ class MatterSwitch(MatterEntity, SwitchEntity):
                 clusters.OnOff.Commands.On(),
             )
         except MatterError as err:
-            raise MatterError(f"Failed to set value: {err}") from err
+            raise HomeAssistantError(f"Failed to set value: {err}") from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
@@ -69,7 +70,7 @@ class MatterSwitch(MatterEntity, SwitchEntity):
                 clusters.OnOff.Commands.Off(),
             )
         except MatterError as err:
-            raise MatterError(f"Failed to set value: {err}") from err
+            raise HomeAssistantError(f"Failed to set value: {err}") from err
 
     @callback
     def _update_from_device(self) -> None:
@@ -96,7 +97,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
                     self.entity_description.command_timeout,
                 )
             except MatterError as err:
-                raise MatterError(f"Failed to set value: {err}") from err
+                raise HomeAssistantError(f"Failed to set value: {err}") from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
@@ -107,7 +108,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
                     self.entity_description.command_timeout,
                 )
             except MatterError as err:
-                raise MatterError(f"Failed to set value: {err}") from err
+                raise HomeAssistantError(f"Failed to set value: {err}") from err
 
     @callback
     def _update_from_device(self) -> None:
@@ -133,7 +134,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
                 **kwargs,
             )
         except MatterError as err:
-            raise MatterError(f"Failed to set value: {err}") from err
+            raise HomeAssistantError(f"Failed to set value: {err}") from err
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -169,7 +170,7 @@ class MatterNumericSwitch(MatterSwitch):
                 value=send_value,
             )
         except MatterError as err:
-            raise MatterError(f"Failed to set value: {err}") from err
+            raise HomeAssistantError(f"Failed to set value: {err}") from err
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
