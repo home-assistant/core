@@ -162,9 +162,9 @@ async def test_multi_endpoint_name(hass: HomeAssistant) -> None:
     entity_state = hass.states.get("light.inovelli_light_1")
     assert entity_state
     assert entity_state.name == "Inovelli Light (1)"
-    entity_state = hass.states.get("light.inovelli_light_led_bar")
+    entity_state = hass.states.get("light.inovelli_light_6")
     assert entity_state
-    assert entity_state.name == "Inovelli Light (LED Bar)"
+    assert entity_state.name == "Inovelli Light (6)"
 
 
 async def test_get_clean_name() -> None:
