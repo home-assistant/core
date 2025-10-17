@@ -4,6 +4,7 @@
   "codeowners": ["@guillempages", "@mib1185", "@jpbede"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tankerkoenig",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aiotankerkoenig"],
   "quality_scale": "platinum",
