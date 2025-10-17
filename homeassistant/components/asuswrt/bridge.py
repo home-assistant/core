@@ -82,7 +82,9 @@ type _FuncType[_T] = Callable[
         | dict[str, float]
     ],
 ]
-type _ReturnFuncType[_T] = Callable[[_T], Coroutine[Any, Any, dict[str, Any]]]
+type _ReturnFuncType[_T] = Callable[
+    ..., Coroutine[_T, None, dict[str, float | str | None] | dict[str, float]]
+]
 
 
 def handle_errors_and_zip[_AsusWrtBridgeT: AsusWrtBridge](
@@ -201,7 +203,9 @@ class AsusWrtBridge(ABC):
         """Get list of connected devices."""
 
     @abstractmethod
-    async def async_get_available_sensors(self) -> dict[str, dict[str, Any]]:
+    async def async_get_available_sensors(
+        self,
+    ) -> dict[str, dict[str, list[str] | _ReturnFuncType[AsusWrtBridge]]]:
         """Return a dictionary of available sensors for this bridge."""
 
 
@@ -298,7 +302,9 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         if model and "model" in model:
             self._model = model["model"]
 
-    async def async_get_available_sensors(self) -> dict[str, dict[str, Any]]:
+    async def async_get_available_sensors(
+        self,
+    ) -> dict[str, dict[str, list[str] | _ReturnFuncType[AsusWrtBridge]]]:
         """Return a dictionary of available sensors for this bridge."""
         sensors_temperatures = await self._get_available_temperature_sensors()
         return {
@@ -459,7 +465,9 @@ class AsusWrtHttpBridge(AsusWrtBridge):
             and dev.state is ConnectionState.CONNECTED
         }
 
-    async def async_get_available_sensors(self) -> dict[str, dict[str, Any]]:
+    async def async_get_available_sensors(
+        self,
+    ) -> dict[str, dict[str, list[str] | _ReturnFuncType[AsusWrtBridge]]]:
         """Return a dictionary of available sensors for this bridge."""
         return {
             SENSORS_TYPE_BYTES: {
