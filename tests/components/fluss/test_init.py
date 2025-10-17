@@ -1,43 +1,24 @@
-"""Test Script for Fluss+ Initialisation."""
+"""Test script for Fluss+ integration initialization."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from fluss_api import (
-    FlussApiClient,
     FlussApiClientAuthenticationError,
     FlussApiClientCommunicationError,
     FlussApiClientError,
 )
 import pytest
 
-from homeassistant.components.fluss import PLATFORMS, async_setup_entry
-from homeassistant.components.fluss.button import FlussDataUpdateCoordinator
-from homeassistant.components.fluss.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_API_KEY
+from homeassistant.components.fluss import async_setup_entry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from tests.common import MockConfigEntry
 
-
-@pytest.fixture
-def mock_config_entry(hass) -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Fluss Integration",
-        data={CONF_API_KEY: "test_api_key"},
-        unique_id="test_api_key",
-    )
-    config_entry.add_to_hass(hass)
-    return config_entry
-
-
+@pytest.mark.asyncio
 async def test_async_setup_entry_authentication_error(
     hass: HomeAssistant, mock_config_entry
 ) -> None:
-    """Test authentication failure raises ConfigEntryAuthFailed."""
+    """Test that an authentication error during setup raises ConfigEntryAuthFailed."""
     with (
         patch(
             "homeassistant.components.fluss.coordinator.FlussApiClient.async_get_devices",
@@ -49,29 +30,22 @@ async def test_async_setup_entry_authentication_error(
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry_communication_error(
-    hass: HomeAssistant, mock_config_entry
+@pytest.mark.parametrize(
+    "error_type",
+    [
+        FlussApiClientCommunicationError("Network error"),
+        FlussApiClientError("General error"),
+    ],
+    ids=["communication_error", "general_error"],
+)
+async def test_async_setup_entry_error(
+    hass: HomeAssistant, mock_config_entry, error_type
 ) -> None:
-    """Test communication error raises ConfigEntryNotReady."""
+    """Test that non-authentication errors during setup raise ConfigEntryNotReady."""
     with (
         patch(
             "fluss_api.FlussApiClient",
-            side_effect=FlussApiClientCommunicationError,
-        ),
-        pytest.raises(ConfigEntryNotReady),
-    ):
-        await async_setup_entry(hass, mock_config_entry)
-
-
-@pytest.mark.asyncio
-async def test_async_setup_entry_general_error(
-    hass: HomeAssistant, mock_config_entry
-) -> None:
-    """Test general error raises ConfigEntryNotReady."""
-    with (
-        patch(
-            "fluss_api.FlussApiClient",
-            side_effect=FlussApiClientCommunicationError,
+            side_effect=error_type,
         ),
         pytest.raises(ConfigEntryNotReady),
     ):
