@@ -77,6 +77,16 @@ class MatterLock(MatterEntity, LockEntity):
             )
         )
 
+    def _reset_lock_properties(self, set_to: bool | None) -> None:
+        # Set lock properties to a common starting value
+        # Must follow by a self.async_write_ha_state() to have effect
+        self._attr_is_locked = set_to
+        self._attr_is_locking = set_to
+        self._attr_is_unlocking = set_to
+        self._attr_is_open = set_to
+        self._attr_is_opening = set_to
+        self._attr_is_jammed = set_to
+
     @callback
     def _on_matter_node_event(
         self,
@@ -105,20 +115,65 @@ class MatterLock(MatterEntity, LockEntity):
             ):  # Lock cluster event 0
                 if node_event_data.get("alarmCode") == 0:  # lock is jammed
                     # set in an uncertain state if jammed
-                    self._attr_is_locked = None
-                    self._attr_is_open = None
-                    self._attr_is_opening = None
-                    self._attr_is_locking = None
+                    self._reset_lock_properties(set_to=None)
                     self._attr_is_jammed = True
                     self.async_write_ha_state()
             case (
                 clusters.DoorLock.Events.LockOperation.event_id
             ):  # Lock cluster event 2
                 # update the changed_by attribute to indicate lock operation source
+                operation_type = node_event_data.get("lockOperationType")
+                match operation_type:
+                    case clusters.DoorLock.Enums.LockOperationTypeEnum.kLock:
+                        # Mandatory Event
+                        pass
+                    case clusters.DoorLock.Enums.LockOperationTypeEnum.kUnlock:
+                        # Mandatory Event. Generated after Unbolt succeeds.
+                        pass
+                    case clusters.DoorLock.Enums.LockOperationTypeEnum.kNonAccessUserEvent:
+                        # Optional Event
+                        pass
+                    case clusters.DoorLock.Enums.LockOperationTypeEnum.kForcedUserEvent:
+                        # Optional Event
+                        pass
+                    case clusters.DoorLock.Enums.LockOperationTypeEnum.kUnlatch:
+                        # Mandatory Event.
+                        pass
+
                 operation_source: int = node_event_data.get("operationSource", -1)
                 self._attr_changed_by = DOOR_LOCK_OPERATION_SOURCE.get(
                     operation_source, "Unknown"
                 )
+                self.async_write_ha_state()
+            case (
+                clusters.DoorLock.Events.LockOperationError.event_id
+            ):  # Lock cluster LockOperationError event 3
+                # Notify users of other types of errors
+                operation_source = node_event_data.get("operationSource", -1)
+                operation_error: int = node_event_data.get("operationError", -1)
+                match operation_error:
+                    case clusters.DoorLock.Enums.OperationErrorEnum.kUnspecified:
+                        # if unclear what is wrong, set lock to None state so user manually checks
+                        # this will clear on a correct operation report
+                        self._reset_lock_properties(set_to=None)
+                    case clusters.DoorLock.Enums.OperationErrorEnum.kInvalidCredential:
+                        # perhaps display a persistent notification?
+                        # reset optimistic state if it was in use!
+                        pass
+                    case clusters.DoorLock.Enums.OperationErrorEnum.kDisabledCredential:
+                        # perhaps display a persistent notification?
+                        # reset optimistic state if it was in use!
+                        pass
+                    case clusters.DoorLock.Enums.OperationErrorEnum.kRestricted:
+                        # perhaps display a persistent notification?
+                        # reset optimistic state if it was in use!
+                        pass
+                    case (
+                        clusters.DoorLock.Enums.OperationErrorEnum.kInsufficientBattery
+                    ):
+                        # if lock fails due to insufficient battery, then state is uncertain
+                        self._reset_lock_properties(set_to=None)
+
                 self.async_write_ha_state()
 
     @property
@@ -212,36 +267,18 @@ class MatterLock(MatterEntity, LockEntity):
         # Instead, rely on the other states to determine the lock state or the events to determine jammed.
         if lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
             # State 1 - Locked: Lock state is fully locked.
+            self._reset_lock_properties(set_to=False)
             self._attr_is_locked = True
-            self._attr_is_locking = False
-            self._attr_is_unlocking = False
-            self._attr_is_open = False
-            self._attr_is_opening = False
-            self._attr_is_jammed = False
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlocked:  # state 2
-            # State 2 - Unlocked: Lock state is fully unlocked.
-            self._attr_is_locked = False
-            self._attr_is_locking = False
-            self._attr_is_unlocking = False
-            self._attr_is_open = False
-            self._attr_is_opening = False
-            self._attr_is_jammed = False
+            # State 2 - Unlocked: Lock state is fully unlocked is indicated by all attributes set to false.
+            self._reset_lock_properties(set_to=False)
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
             # State 3 - Unlatched: Lock state is fully unlocked and the latch is pulled.
-            self._attr_is_locked = False
-            self._attr_is_locking = False
-            self._attr_is_unlocking = False
+            self._reset_lock_properties(set_to=False)
             self._attr_is_open = True
-            self._attr_is_opening = False
-            self._attr_is_jammed = False
         else:
             # NOTE: A null state can happen during device startup. Treat as unknown.
-            self._attr_is_locked = None
-            self._attr_is_locking = None
-            self._attr_is_unlocking = None
-            self._attr_is_open = None
-            self._attr_is_opening = None
-            self._attr_is_jammed = None
+            self._reset_lock_properties(set_to=None)
             self._attr_changed_by = "Unknown"
 
     @callback
