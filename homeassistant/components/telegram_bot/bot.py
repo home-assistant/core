@@ -1062,19 +1062,11 @@ class TelegramNotificationService:
         custom_path = os.path.join(directory_path, file_name)
         if not os.path.exists(directory_path):
             _LOGGER.debug("directory %s does not exist, creating it", directory_path)
-            try:
 
-                def mkdir() -> None:
-                    os.makedirs(directory_path, exist_ok=True)
+            def mkdir() -> None:
+                os.makedirs(directory_path)
 
-                await self.hass.async_add_executor_job(mkdir)
-            except OSError as err:
-                raise HomeAssistantError(
-                    f"Failed to create directory {directory_path}: {err!s}",
-                    translation_domain=DOMAIN,
-                    translation_key="failed_to_create_directory",
-                    translation_placeholders={"error": str(err)},
-                ) from err
+            await self.hass.async_add_executor_job(mkdir)
         _LOGGER.debug("Download file %s to %s", file_id, custom_path)
         await file.download_to_drive(custom_path=custom_path)
         return {ATTR_FILE_PATH: custom_path}
