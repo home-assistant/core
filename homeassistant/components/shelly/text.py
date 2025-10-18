@@ -15,6 +15,7 @@ from homeassistant.components.text import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ROLE_GENERIC
 from .coordinator import ShellyConfigEntry
 from .entity import (
     RpcEntityDescription,
@@ -44,7 +45,7 @@ RPC_TEXT_ENTITIES: Final = {
         removal_condition=lambda config, _status, key: not is_view_for_platform(
             config, key, TEXT_PLATFORM
         ),
-        role="generic",
+        role=ROLE_GENERIC,
     ),
 }
 
