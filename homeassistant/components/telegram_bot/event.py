@@ -6,6 +6,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .bot import TelegramBotConfigEntry
 from .const import (
+    EVENT_TELEGRAM_ATTACHMENT,
     EVENT_TELEGRAM_CALLBACK,
     EVENT_TELEGRAM_COMMAND,
     EVENT_TELEGRAM_SENT,
@@ -27,6 +28,7 @@ class TelegramBotEventEntity(TelegramBotEntity, EventEntity):
     """An event entity."""
 
     _attr_event_types = [
+        EVENT_TELEGRAM_ATTACHMENT,
         EVENT_TELEGRAM_CALLBACK,
         EVENT_TELEGRAM_COMMAND,
         EVENT_TELEGRAM_TEXT,
