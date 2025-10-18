@@ -62,7 +62,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    disvalvey_info: DiscoveryInfoType | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Valve Group platform."""
     async_add_entities(
@@ -94,7 +94,7 @@ async def async_setup_entry(
 def async_create_preview_valve(
     hass: HomeAssistant, name: str, validated_config: dict[str, Any]
 ) -> ValveGroup:
-    """Create a preview sensor."""
+    """Create a preview valve."""
     return ValveGroup(
         None,
         name,
