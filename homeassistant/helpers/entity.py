@@ -597,7 +597,7 @@ class Entity(
         ) and name_translation_key in self.platform_data.platform_translations:
             return False
         if hasattr(self, "entity_description"):
-            return not self.entity_description.name in (UNDEFINED, None)
+            return self.entity_description.name not in (UNDEFINED, None)
         return not self.name
 
     @cached_property
