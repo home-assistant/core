@@ -20,6 +20,7 @@
         'ptmp': False,
         'ptp': True,
         'role': 'access_point',
+        'sku': 'Loco5AC',
         'station': False,
       }),
       'firewall': dict({
@@ -632,6 +633,10 @@
       }),
     }),
     'entry_data': dict({
+      'advanced_settings': dict({
+        'ssl': True,
+        'verify_ssl': False,
+      }),
       'host': '**REDACTED**',
       'password': '**REDACTED**',
       'username': 'ubnt',

@@ -31,6 +31,7 @@ PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.FAN,
+    Platform.HUMIDIFIER,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.SENSOR,
@@ -57,6 +58,7 @@ class SwitchbotDevices:
     locks: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     fans: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     lights: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
+    humidifiers: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
 
 
 @dataclass
@@ -141,6 +143,7 @@ async def make_device_data(
         "Relay Switch 1PM",
         "Plug Mini (US)",
         "Plug Mini (JP)",
+        "Plug Mini (EU)",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -155,6 +158,7 @@ async def make_device_data(
         "Robot Vacuum Cleaner K10+ Pro Combo",
         "Robot Vacuum Cleaner S10",
         "S20",
+        "Robot Vacuum Cleaner K11 Plus",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True
@@ -184,6 +188,15 @@ async def make_device_data(
                 devices_data.buttons.append((device, coordinator))
             else:
                 devices_data.switches.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type in [
+        "Relay Switch 2PM",
+    ]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.sensors.append((device, coordinator))
+        devices_data.switches.append((device, coordinator))
+
     if isinstance(device, Device) and device.device_type.startswith("Air Purifier"):
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -254,6 +267,25 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.lights.append((device, coordinator))
+
+    if isinstance(device, Device) and device.device_type == "Humidifier2":
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.humidifiers.append((device, coordinator))
+
+    if isinstance(device, Device) and device.device_type == "Humidifier":
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.humidifiers.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type == "Climate Panel":
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.binary_sensors.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

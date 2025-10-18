@@ -10,6 +10,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import media_source, websocket_api
+from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import const
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
@@ -45,28 +46,28 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # Test path not exists
-    with pytest.raises(media_source.BrowseError) as excinfo:
+    with pytest.raises(BrowseError) as excinfo:
         await media_source.async_browse_media(
             hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/test/not/exist"
         )
     assert str(excinfo.value) == "Path does not exist."
 
     # Test browse file
-    with pytest.raises(media_source.BrowseError) as excinfo:
+    with pytest.raises(BrowseError) as excinfo:
         await media_source.async_browse_media(
             hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/test.mp3"
         )
     assert str(excinfo.value) == "Path is not a directory."
 
     # Test invalid base
-    with pytest.raises(media_source.BrowseError) as excinfo:
+    with pytest.raises(BrowseError) as excinfo:
         await media_source.async_browse_media(
             hass, f"{const.URI_SCHEME}{const.DOMAIN}/invalid/base"
         )
     assert str(excinfo.value) == "Unknown source directory."
 
     # Test directory traversal
-    with pytest.raises(media_source.BrowseError) as excinfo:
+    with pytest.raises(BrowseError) as excinfo:
         await media_source.async_browse_media(
             hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/../configuration.yaml"
         )
@@ -164,19 +165,21 @@ async def test_upload_view(
     client = await hass_client()
 
     # Test normal upload
-    res = await client.post(
-        "/api/media_source/local_source/upload",
-        data={
-            "media_content_id": "media-source://media_source/test_dir",
-            "file": get_file("logo.png"),
-        },
-    )
+    with patch.object(Path, "mkdir", autospec=True, return_value=None) as mock_mkdir:
+        res = await client.post(
+            "/api/media_source/local_source/upload",
+            data={
+                "media_content_id": "media-source://media_source/test_dir",
+                "file": get_file("logo.png"),
+            },
+        )
 
     assert res.status == 200
     data = await res.json()
     assert data["media_content_id"] == "media-source://media_source/test_dir/logo.png"
     uploaded_path = Path(temp_dir) / "logo.png"
     assert uploaded_path.is_file()
+    mock_mkdir.assert_called_once()
 
     resolved = await media_source.async_resolve_media(
         hass, data["media_content_id"], target_media_player=None
@@ -187,8 +190,6 @@ async def test_upload_view(
 
     # Test with bad media source ID
     for bad_id in (
-        # Subdir doesn't exist
-        "media-source://media_source/test_dir/some-other-dir",
         # Main dir doesn't exist
         "media-source://media_source/test_dir2",
         # Location is invalid

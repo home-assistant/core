@@ -324,7 +324,19 @@
       "options": {
         "consumer_products_cleaning_robot_enum_type_cleaning_modes_silent": "Silent",
         "consumer_products_cleaning_robot_enum_type_cleaning_modes_standard": "Standard",
-        "consumer_products_cleaning_robot_enum_type_cleaning_modes_power": "Power"
+        "consumer_products_cleaning_robot_enum_type_cleaning_modes_power": "Power",
+        "consumer_products_cleaning_robot_enum_type_cleaning_mode_intelligent_mode": "Intelligent mode",
+        "consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_only": "Vacuum only",
+        "consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_only": "Mop only",
+        "consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_and_mop": "Vacuum and mop",
+        "consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_after_vacuum": "Mop after vacuum"
+      }
+    },
+    "suction_power": {
+      "options": {
+        "consumer_products_cleaning_robot_enum_type_suction_power_silent": "Silent",
+        "consumer_products_cleaning_robot_enum_type_suction_power_standard": "Standard",
+        "consumer_products_cleaning_robot_enum_type_suction_power_max": "Max"
       }
     },
     "bean_amount": {
@@ -518,6 +530,10 @@
         "consumer_products_cleaning_robot_option_cleaning_mode": {
           "name": "Cleaning mode",
           "description": "Defines the favored cleaning mode."
+        },
+        "consumer_products_cleaning_robot_option_suction_power": {
+          "name": "Suction power",
+          "description": "Defines the suction power."
         },
         "consumer_products_coffee_maker_option_bean_amount": {
           "name": "Bean amount",
@@ -1196,7 +1212,20 @@
         "state": {
           "consumer_products_cleaning_robot_enum_type_cleaning_modes_silent": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_modes_silent%]",
           "consumer_products_cleaning_robot_enum_type_cleaning_modes_standard": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_modes_standard%]",
-          "consumer_products_cleaning_robot_enum_type_cleaning_modes_power": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_modes_power%]"
+          "consumer_products_cleaning_robot_enum_type_cleaning_modes_power": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_modes_power%]",
+          "consumer_products_cleaning_robot_enum_type_cleaning_mode_intelligent_mode": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_mode_intelligent_mode%]",
+          "consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_only": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_only%]",
+          "consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_only": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_only%]",
+          "consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_and_mop": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_and_mop%]",
+          "consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_after_vacuum": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_after_vacuum%]"
+        }
+      },
+      "suction_power": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_cleaning_robot_option_suction_power::name%]",
+        "state": {
+          "consumer_products_cleaning_robot_enum_type_suction_power_silent": "[%key:component::home_connect::selector::suction_power::options::consumer_products_cleaning_robot_enum_type_suction_power_silent%]",
+          "consumer_products_cleaning_robot_enum_type_suction_power_standard": "[%key:component::home_connect::selector::suction_power::options::consumer_products_cleaning_robot_enum_type_suction_power_standard%]",
+          "consumer_products_cleaning_robot_enum_type_suction_power_max": "[%key:component::home_connect::selector::suction_power::options::consumer_products_cleaning_robot_enum_type_suction_power_max%]"
         }
       },
       "bean_amount": {
@@ -1851,11 +1880,6 @@
       },
       "i_dos2_active": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos2_active::name%]"
-      }
-    },
-    "time": {
-      "alarm_clock": {
-        "name": "Alarm clock"
       }
     }
   }
