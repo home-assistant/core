@@ -153,25 +153,24 @@ class MatterLock(MatterEntity, LockEntity):
                 operation_error: int = node_event_data.get("operationError", -1)
                 match operation_error:
                     case clusters.DoorLock.Enums.OperationErrorEnum.kUnspecified:
-                        # if unclear what is wrong, set lock to None state so user manually checks
-                        # this will clear on a correct operation report
+                        # On kUnspecified error, set lock to None state so user manually checks
+                        # Lock will also go to a valid state on a correct operationreport
                         self._reset_lock_properties(set_to=None)
-                    case clusters.DoorLock.Enums.OperationErrorEnum.kInvalidCredential:
-                        # perhaps display a persistent notification?
-                        # reset optimistic state if it was in use!
-                        pass
-                    case clusters.DoorLock.Enums.OperationErrorEnum.kDisabledCredential:
-                        # perhaps display a persistent notification?
-                        # reset optimistic state if it was in use!
-                        pass
-                    case clusters.DoorLock.Enums.OperationErrorEnum.kRestricted:
-                        # perhaps display a persistent notification?
-                        # reset optimistic state if it was in use!
-                        pass
+                    case (
+                        clusters.DoorLock.Enums.OperationErrorEnum.kInvalidCredential
+                        | clusters.DoorLock.Enums.OperationErrorEnum.kDisabledCredential
+                        | clusters.DoorLock.Enums.OperationErrorEnum.kRestricted
+                    ):
+                        # An open or close with an associated PIN can fail if credentials are incorrect
+                        # Reset optimistic state if one was set!
+                        self._attr_is_locking = False
+                        self._attr_is_unlocking = False
+                        self._attr_is_opening = False
                     case (
                         clusters.DoorLock.Enums.OperationErrorEnum.kInsufficientBattery
                     ):
-                        # if lock fails due to insufficient battery, then state is uncertain
+                        # A lock can accept a command, but then fail on insufficient battery
+                        # In this case, the state is uncertain
                         self._reset_lock_properties(set_to=None)
 
                 self.async_write_ha_state()
@@ -199,7 +198,10 @@ class MatterLock(MatterEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock with pin if needed."""
         if not self._attr_is_locked:
-            # optimistically signal locking to state machine
+            # Optimistically signal unlocking to state machine
+            # Ideally, this would be set only on a successful self.send_device_command(),
+            # but Python Matter Server does not currently return the success / fail response.
+            # revisit after matter.js server enhancements.
             self._attr_is_locking = True
             self.async_write_ha_state()
             # the lock should acknowledge the command with an attribute update
@@ -214,7 +216,10 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock with pin if needed."""
-        # optimistically signal unlocking to state machine
+        # Optimistically signal unlocking to state machine
+        # Ideally, this would be set only on a successful self.send_device_command(),
+        # but Python Matter Server does not currently return the success / fail response.
+        # revisit after matter.js server enhancements.
         self._attr_is_unlocking = True
         self.async_write_ha_state()
         # the lock should acknowledge the command with an attribute update
@@ -237,8 +242,12 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        # optimistically signal opening to state machine
+        # Optimistically signal unlocking to state machine
+        # Ideally, this would be set only on a successful self.send_device_command(),
+        # but Python Matter Server does not currently return the success / fail response.
+        # revisit after matter.js server enhancements.
         self._attr_is_opening = True
+        self._attr_is_unlocking = True
         self.async_write_ha_state()
         # the lock should acknowledge the command with an attribute update
         # but if it fails, then change from optimistic state with the lockOperationError event.
