@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.openrgb.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -40,6 +40,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_NAME: "Test Computer",
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 6742,
+            CONF_MAC: "aa:bb:cc:dd:ee:ff",
         },
         entry_id="01J0EXAMPLE0CONFIGENTRY00",
     )
@@ -106,6 +107,16 @@ def mock_openrgb_client(mock_openrgb_device: MagicMock) -> Generator[MagicMock]:
         client.client_class_mock = client_mock
 
         yield client
+
+
+@pytest.fixture
+def mock_get_mac_address() -> Generator[MagicMock]:
+    """Mock get_mac_address function."""
+    with patch(
+        "homeassistant.components.openrgb.config_flow.get_mac_address"
+    ) as mock_get_mac:
+        mock_get_mac.return_value = "aa:bb:cc:dd:ee:ff"
+        yield mock_get_mac
 
 
 @pytest.fixture

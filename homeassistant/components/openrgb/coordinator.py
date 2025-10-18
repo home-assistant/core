@@ -9,7 +9,7 @@ from openrgb import OpenRGBClient
 from openrgb.orgb import Device
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -44,6 +44,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         )
         self.host = config_entry.data[CONF_HOST]
         self.port = config_entry.data[CONF_PORT]
+        self.mac = config_entry.data[CONF_MAC]
         self.entry_id = config_entry.entry_id
         self.server_address = f"{self.host}:{self.port}"
         self.client_lock = asyncio.Lock()

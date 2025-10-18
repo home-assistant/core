@@ -19,10 +19,15 @@ def _setup_server_device_registry(
     """Set up device registry for the OpenRGB SDK server."""
     device_registry = dr.async_get(hass)
 
+    connections = set()
+    if coordinator.mac:
+        connections.add((dr.CONNECTION_NETWORK_MAC, coordinator.mac))
+
     # Create the parent OpenRGB SDK server device
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
+        connections=connections,
         name=entry.data[CONF_NAME],
         model="OpenRGB SDK Server",
         manufacturer="OpenRGB",

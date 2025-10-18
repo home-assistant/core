@@ -459,6 +459,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "openrgb",
+        "registered_devices": True,
+    },
+    {
         "domain": "overkiz",
         "hostname": "gateway*",
         "macaddress": "F8811A*",

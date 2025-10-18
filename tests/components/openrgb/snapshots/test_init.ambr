@@ -6,6 +6,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
     }),
     'disabled_by': None,
     'entry_type': <DeviceEntryType.SERVICE: 'service'>,

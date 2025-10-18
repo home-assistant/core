@@ -6,15 +6,18 @@ from openrgb.utils import OpenRGBDisconnected, SDKVersionError
 import pytest
 
 from homeassistant.components.openrgb.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
+@pytest.mark.usefixtures(
+    "mock_setup_entry", "mock_openrgb_client", "mock_get_mac_address"
+)
 async def test_full_user_flow(hass: HomeAssistant) -> None:
     """Test the full user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
@@ -41,6 +44,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         CONF_NAME: "Test Computer",
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6742,
+        CONF_MAC: "aa:bb:cc:dd:ee:ff",
     }
 
 
@@ -55,7 +59,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         (RuntimeError("Test error"), "unknown"),
     ],
 )
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_get_mac_address")
 async def test_user_flow_errors(
     hass: HomeAssistant, exception: Exception, error_key: str, mock_openrgb_client
 ) -> None:
@@ -90,10 +94,13 @@ async def test_user_flow_errors(
         CONF_NAME: "Test Server",
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6742,
+        CONF_MAC: "aa:bb:cc:dd:ee:ff",
     }
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
+@pytest.mark.usefixtures(
+    "mock_setup_entry", "mock_openrgb_client", "mock_get_mac_address"
+)
 async def test_user_flow_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -153,7 +160,26 @@ async def test_user_flow_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
+@pytest.mark.usefixtures("mock_openrgb_client", "mock_get_mac_address")
+async def test_dhcp_flow_not_configured(hass: HomeAssistant) -> None:
+    """Test DHCP flow when device is not configured."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.100",
+            macaddress="aabbccddeeff",
+            hostname="openrgb",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+@pytest.mark.usefixtures(
+    "mock_setup_entry", "mock_openrgb_client", "mock_get_mac_address"
+)
 async def test_reconfigure_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -190,7 +216,7 @@ async def test_reconfigure_flow(
         (RuntimeError("Test error"), "unknown"),
     ],
 )
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_get_mac_address")
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
