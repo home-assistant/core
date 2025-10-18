@@ -308,8 +308,8 @@ async def _async_register_services(
         except (growattServer.GrowattV1ApiError, HomeAssistantError) as err:
             _LOGGER.error("Error reading time segments: %s", err)
             raise HomeAssistantError(f"Error reading time segments: {err}") from err
-        else:
-            return {"time_segments": time_segments}
+
+        return {"time_segments": time_segments}
 
     # Create device selector schema helper
     device_selector_fields = {}
