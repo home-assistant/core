@@ -108,11 +108,7 @@ class XboxBinarySensorEntity(XboxBaseEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return the status of the requested attribute."""
 
-        return (
-            self.entity_description.is_on_fn(self.data)
-            if self.data is not None
-            else None
-        )
+        return self.entity_description.is_on_fn(self.data)
 
     @property
     def entity_picture(self) -> str | None:

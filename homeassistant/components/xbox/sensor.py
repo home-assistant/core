@@ -83,7 +83,7 @@ class XboxSensorEntity(XboxBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the requested attribute."""
-        return self.entity_description.value_fn(self.data) if self.data else None
+        return self.entity_description.value_fn(self.data)
 
 
 @callback
