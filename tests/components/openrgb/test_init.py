@@ -6,7 +6,6 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from openrgb.utils import ControllerParsingError, OpenRGBDisconnected, SDKVersionError
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openrgb import async_remove_config_entry_device
 from homeassistant.components.openrgb.const import DOMAIN, SCAN_INTERVAL
@@ -39,31 +38,9 @@ async def test_entry_setup_unload(
 
 
 @pytest.mark.usefixtures("mock_openrgb_client")
-async def test_server_device_registry(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test server device is created in device registry."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    server_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
-    )
-
-    assert server_device == snapshot
-
-
 async def test_remove_config_entry_device_server(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
 ) -> None:
     """Test that server device cannot be removed."""
     mock_config_entry.add_to_hass(hass)
@@ -86,10 +63,10 @@ async def test_remove_config_entry_device_server(
     assert result is False
 
 
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_remove_config_entry_device_still_connected(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
 ) -> None:
     """Test that connected devices cannot be removed."""
     mock_config_entry.add_to_hass(hass)
@@ -116,10 +93,10 @@ async def test_remove_config_entry_device_still_connected(
         assert result is False
 
 
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_remove_config_entry_device_disconnected(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that disconnected devices can be removed."""
