@@ -75,7 +75,7 @@
         },
         "data_description": {
           "app_name": "Name of the application as you would like it to be displayed in Home Assistant.",
-          "app_id": "E.g. {example_play_store_id} for {example_play_store_url}",
+          "app_id": "E.g. {example_app_id} for {example_app_play_store_url}",
           "app_icon": "Image URL. From the Play Store app page, right click on the icon and select 'Copy image address' and then paste it here. Alternatively, download the image, upload it under /config/www/ and use the URL /local/filename",
           "app_delete": "Check this box to delete the application from the list."
         }
