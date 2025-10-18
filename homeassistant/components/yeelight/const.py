@@ -5,6 +5,8 @@ from datetime import timedelta
 from homeassistant.const import Platform
 
 DOCUMENTATION_URL = "https://www.home-assistant.io/integrations/yeelight"
+FLOW_TRANSITIONS_URL = "https://yeelight.readthedocs.io/en/stable/flow.html"
+
 
 DOMAIN = "yeelight"
 

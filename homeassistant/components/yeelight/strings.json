@@ -143,7 +143,7 @@
     },
     "start_flow": {
       "name": "Start flow",
-      "description": "Starts a custom flow, using transitions from https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects.",
+      "description": "Starts a custom flow, using transitions from [{flow_transitions_url}]({flow_transitions_url}).",
       "fields": {
         "count": {
           "name": "Count",
