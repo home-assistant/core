@@ -491,13 +491,30 @@ class RuntimeEntryData:
 
         assert self.client.connected_address
 
+        # If the device does not have a zwave_home_id, it means
+        # either the Z-Wave controller has never been connected
+        # to the ESPHome device, or the Z-Wave controller has
+        # never been provisioned with a home ID (brand new).
+        # Since we cannot tell the difference, and it could
+        # just be the cable is unplugged we only
+        # automatically start the flow if we have a home ID.
+        if not device_info.zwave_home_id:
+            return
+
+        self.async_create_zwave_js_flow(hass, device_info, device_info.zwave_home_id)
+
+    def async_create_zwave_js_flow(
+        self, hass: HomeAssistant, device_info: DeviceInfo, zwave_home_id: int
+    ) -> None:
+        """Create a zwave_js config flow for a Z-Wave JS Proxy device."""
+        assert self.client.connected_address is not None
         discovery_flow.async_create_flow(
             hass,
             "zwave_js",
             {"source": config_entries.SOURCE_ESPHOME},
             ESPHomeServiceInfo(
                 name=device_info.name,
-                zwave_home_id=device_info.zwave_home_id or None,
+                zwave_home_id=zwave_home_id,
                 ip_address=self.client.connected_address,
                 port=self.client.port,
                 noise_psk=self.client.noise_psk,

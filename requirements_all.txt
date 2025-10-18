@@ -10,7 +10,7 @@ AEMET-OpenData==0.6.4
 AIOSomecomfort==0.0.33
 
 # homeassistant.components.adax
-Adax-local==0.1.5
+Adax-local==0.2.0
 
 # homeassistant.components.doorbird
 DoorBirdPy==3.0.8
@@ -36,7 +36,7 @@ PSNAWP==3.0.0
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==11.3.0
+Pillow==12.0.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.16
@@ -319,7 +319,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.0.0
+aiomealie==1.0.1
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -575,7 +575,7 @@ aurorapy==0.2.7
 autarco==3.2.0
 
 # homeassistant.components.husqvarna_automower_ble
-automower-ble==0.2.7
+automower-ble==0.2.8
 
 # homeassistant.components.generic
 # homeassistant.components.stream
@@ -739,7 +739,7 @@ clx-sdk-xms==1.0.0
 coinbase-advanced-py==1.2.2
 
 # homeassistant.scripts.check_config
-colorlog==6.9.0
+colorlog==6.10.1
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -1148,7 +1148,7 @@ ha-philipsjs==3.2.4
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.4.5
+habiticalib==0.4.6
 
 # homeassistant.components.bluetooth
 habluetooth==5.7.0
@@ -1328,7 +1328,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.10.9.185845
+knx-frontend==2025.10.17.202411
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1732,7 +1732,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.8.0
+plugwise==1.8.1
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -2302,10 +2302,10 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.3
+pyportainer==1.0.4
 
 # homeassistant.components.probe_plus
-pyprobeplus==1.1.0
+pyprobeplus==1.1.1
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
@@ -2629,7 +2629,7 @@ pyvera==0.3.16
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==3.1.0
+pyvesync==3.1.2
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -3060,7 +3060,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.22.0
+uiprotect==7.23.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3162,7 +3162,7 @@ webmin-xmlrpc==0.0.2
 weheat==2025.6.10
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.21.3
+whirlpool-sixth-sense==1.0.2
 
 # homeassistant.components.whois
 whois==0.9.27
