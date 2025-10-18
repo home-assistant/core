@@ -132,8 +132,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix: &matrix-build
-        abi: ["cp313"]
+        abi: ["cp313", "cp314"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
+        exclude:
+          - abi: "cp314"
+            arch: "armv7"
+          - abi: "cp314"
+            arch: "armhf"
+          - abi: "cp314"
+            arch: "i386"
     steps:
       - *checkout
 
@@ -163,7 +170,7 @@ jobs:
 
       # home-assistant/wheels doesn't support sha pinning
       - name: Build wheels
-        uses: &home-assistant-wheels home-assistant/wheels@2025.09.1
+        uses: &home-assistant-wheels home-assistant/wheels@2025.10.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
