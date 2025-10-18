@@ -3,7 +3,7 @@
     "step": {
       "auth_app": {
         "title": "Application credentials",
-        "description": "Application ID and secret code from [StarLine developer account](https://my.starline.ru/developer)",
+        "description": "Application ID and secret code from [StarLine developer account]({developer_account_url})",
         "data": {
           "app_id": "App ID",
           "app_secret": "Secret"
