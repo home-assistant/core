@@ -122,24 +122,6 @@ class MatterLock(MatterEntity, LockEntity):
                 clusters.DoorLock.Events.LockOperation.event_id
             ):  # Lock cluster event 2
                 # update the changed_by attribute to indicate lock operation source
-                operation_type = node_event_data.get("lockOperationType")
-                match operation_type:
-                    case clusters.DoorLock.Enums.LockOperationTypeEnum.kLock:
-                        # Mandatory Event
-                        pass
-                    case clusters.DoorLock.Enums.LockOperationTypeEnum.kUnlock:
-                        # Mandatory Event. Generated after Unbolt succeeds.
-                        pass
-                    case clusters.DoorLock.Enums.LockOperationTypeEnum.kNonAccessUserEvent:
-                        # Optional Event
-                        pass
-                    case clusters.DoorLock.Enums.LockOperationTypeEnum.kForcedUserEvent:
-                        # Optional Event
-                        pass
-                    case clusters.DoorLock.Enums.LockOperationTypeEnum.kUnlatch:
-                        # Mandatory Event.
-                        pass
-
                 operation_source: int = node_event_data.get("operationSource", -1)
                 self._attr_changed_by = DOOR_LOCK_OPERATION_SOURCE.get(
                     operation_source, "Unknown"
