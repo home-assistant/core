@@ -591,12 +591,6 @@
       "message": "Unable to send message, {name} not found. ({reason})"
     }
   },
-  "issues": {
-    "deprecated_entity": {
-      "title": "The Habitica {name} entity is deprecated",
-      "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
-    }
-  },
   "services": {
     "cast_skill": {
       "name": "Cast a skill",
