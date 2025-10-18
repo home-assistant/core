@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_locks[aqara_u200][lock.aqara_smart_lock_u200-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'lock',
+    'entity_category': None,
+    'entity_id': 'lock.aqara_smart_lock_u200',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-MatterLock-257-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_locks[aqara_u200][lock.aqara_smart_lock_u200-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'changed_by': 'Unknown',
+      'friendly_name': 'Aqara Smart Lock U200',
+      'supported_features': <LockEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'lock.aqara_smart_lock_u200',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'locked',
+  })
+# ---
 # name: test_locks[door_lock][lock.mock_door_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -49,7 +99,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_locks[door_lock_with_unbolt][lock.mock_door_lock-entry]
+# name: test_locks[door_lock_with_unbolt][lock.mock_door_lock_with_unbolt-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -62,7 +112,7 @@
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
-    'entity_id': 'lock.mock_door_lock',
+    'entity_id': 'lock.mock_door_lock_with_unbolt',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -84,15 +134,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_locks[door_lock_with_unbolt][lock.mock_door_lock-state]
+# name: test_locks[door_lock_with_unbolt][lock.mock_door_lock_with_unbolt-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': 'Unknown',
-      'friendly_name': 'Mock Door Lock',
+      'friendly_name': 'Mock Door Lock with unbolt',
       'supported_features': <LockEntityFeature: 1>,
     }),
     'context': <ANY>,
-    'entity_id': 'lock.mock_door_lock',
+    'entity_id': 'lock.mock_door_lock_with_unbolt',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

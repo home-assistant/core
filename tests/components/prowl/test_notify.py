@@ -1,7 +1,7 @@
 """Test the Prowl notifications."""
 
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import AsyncMock
 
 import prowlpy
 import pytest
@@ -29,7 +29,7 @@ EXPECTED_SEND_PARAMETERS = {
 @pytest.mark.usefixtures("configure_prowl_through_yaml")
 async def test_send_notification_service(
     hass: HomeAssistant,
-    mock_prowlpy: Mock,
+    mock_prowlpy: AsyncMock,
 ) -> None:
     """Set up Prowl, call notify service, and check API call."""
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
@@ -40,12 +40,12 @@ async def test_send_notification_service(
         blocking=True,
     )
 
-    mock_prowlpy.send.assert_called_once_with(**EXPECTED_SEND_PARAMETERS)
+    mock_prowlpy.post.assert_called_once_with(**EXPECTED_SEND_PARAMETERS)
 
 
 async def test_send_notification_entity_service(
     hass: HomeAssistant,
-    mock_prowlpy: Mock,
+    mock_prowlpy: AsyncMock,
     mock_prowlpy_config_entry: MockConfigEntry,
 ) -> None:
     """Set up Prowl via config entry, call notify service, and check API call."""
@@ -65,7 +65,7 @@ async def test_send_notification_entity_service(
         blocking=True,
     )
 
-    mock_prowlpy.send.assert_called_once_with(**EXPECTED_SEND_PARAMETERS)
+    mock_prowlpy.post.assert_called_once_with(**EXPECTED_SEND_PARAMETERS)
 
 
 @pytest.mark.parametrize(
@@ -102,7 +102,7 @@ async def test_send_notification_entity_service(
 )
 async def test_fail_send_notification_entity_service(
     hass: HomeAssistant,
-    mock_prowlpy: Mock,
+    mock_prowlpy: AsyncMock,
     mock_prowlpy_config_entry: MockConfigEntry,
     prowlpy_side_effect: Exception,
     raised_exception: type[Exception],
@@ -113,7 +113,7 @@ async def test_fail_send_notification_entity_service(
     await hass.config_entries.async_setup(mock_prowlpy_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_prowlpy.send.side_effect = prowlpy_side_effect
+    mock_prowlpy.post.side_effect = prowlpy_side_effect
 
     assert hass.services.has_service(notify.DOMAIN, notify.SERVICE_SEND_MESSAGE)
     with pytest.raises(raised_exception, match=exception_message):
@@ -128,7 +128,7 @@ async def test_fail_send_notification_entity_service(
             blocking=True,
         )
 
-    mock_prowlpy.send.assert_called_once_with(**EXPECTED_SEND_PARAMETERS)
+    mock_prowlpy.post.assert_called_once_with(**EXPECTED_SEND_PARAMETERS)
 
 
 @pytest.mark.parametrize(
@@ -166,13 +166,13 @@ async def test_fail_send_notification_entity_service(
 @pytest.mark.usefixtures("configure_prowl_through_yaml")
 async def test_fail_send_notification(
     hass: HomeAssistant,
-    mock_prowlpy: Mock,
+    mock_prowlpy: AsyncMock,
     prowlpy_side_effect: Exception,
     raised_exception: type[Exception],
     exception_message: str | None,
 ) -> None:
     """Sending a message via Prowl with a failure."""
-    mock_prowlpy.send.side_effect = prowlpy_side_effect
+    mock_prowlpy.post.side_effect = prowlpy_side_effect
 
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
     with pytest.raises(raised_exception, match=exception_message):
@@ -183,7 +183,7 @@ async def test_fail_send_notification(
             blocking=True,
         )
 
-    mock_prowlpy.send.assert_called_once_with(**EXPECTED_SEND_PARAMETERS)
+    mock_prowlpy.post.assert_called_once_with(**EXPECTED_SEND_PARAMETERS)
 
 
 @pytest.mark.parametrize(
@@ -204,12 +204,12 @@ async def test_fail_send_notification(
 @pytest.mark.usefixtures("configure_prowl_through_yaml")
 async def test_other_exception_send_notification(
     hass: HomeAssistant,
-    mock_prowlpy: Mock,
+    mock_prowlpy: AsyncMock,
     service_data: dict[str, Any],
     expected_send_parameters: dict[str, Any],
 ) -> None:
     """Sending a message via Prowl with a general unhandled exception."""
-    mock_prowlpy.send.side_effect = SyntaxError
+    mock_prowlpy.post.side_effect = SyntaxError
 
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
     with pytest.raises(SyntaxError):
@@ -220,4 +220,4 @@ async def test_other_exception_send_notification(
             blocking=True,
         )
 
-    mock_prowlpy.send.assert_called_once_with(**expected_send_parameters)
+    mock_prowlpy.post.assert_called_once_with(**expected_send_parameters)
