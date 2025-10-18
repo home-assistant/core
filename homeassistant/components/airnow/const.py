@@ -43,6 +43,3 @@ US_TZ_OFFSETS = {
     "AST": -4 * SECONDS_PER_HOUR,
     "ADT": -3 * SECONDS_PER_HOUR,
 }
-
-# Documentation URL for API key generation
-API_KEY_URL = "https://docs.airnowapi.org/account/request/"
