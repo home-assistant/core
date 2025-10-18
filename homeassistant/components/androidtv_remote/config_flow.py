@@ -41,6 +41,9 @@ APPS_NEW_ID = "add_new"
 CONF_APP_DELETE = "app_delete"
 CONF_APP_ID = "app_id"
 
+PLAY_STORE_OID = "com.plexapp.android"
+PLAY_STORE_URL = f"https://play.google.com/store/apps/details?id={PLAY_STORE_OID}"
+
 STEP_PAIR_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("pin"): str,
@@ -355,5 +358,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
             data_schema=data_schema,
             description_placeholders={
                 "app_id": f"`{app_id}`" if app_id != APPS_NEW_ID else "",
+                "play_store_oid": PLAY_STORE_OID,
+                "play_store_url": PLAY_STORE_URL,
             },
         )
