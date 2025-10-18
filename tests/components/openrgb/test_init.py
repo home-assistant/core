@@ -150,6 +150,42 @@ async def test_remove_config_entry_device_disconnected(
     assert result is True
 
 
+@pytest.mark.usefixtures("mock_openrgb_client")
+async def test_remove_config_entry_device_with_multiple_identifiers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device removal with multiple domain identifiers."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry_id = mock_config_entry.entry_id
+
+    # Create a device with identifiers from multiple domains
+    device_with_multiple_identifiers = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={
+            ("other_domain", "some_other_id"),  # This should be skipped
+            (
+                DOMAIN,
+                f"{entry_id}||DEVICE||Vendor||Name||SERIAL123||Location",
+            ),  # This is a disconnected OpenRGB device
+        },
+        name="Multi-Domain Device",
+        via_device=(DOMAIN, entry_id),
+    )
+
+    # Try to remove device - should succeed because the OpenRGB identifier is disconnected
+    result = await async_remove_config_entry_device(
+        hass, mock_config_entry, device_with_multiple_identifiers
+    )
+
+    assert result is True
+
+
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
