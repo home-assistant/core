@@ -1064,7 +1064,7 @@ class TelegramNotificationService:
             _LOGGER.debug("directory %s does not exist, creating it", directory_path)
 
             def mkdir() -> None:
-                os.makedirs(directory_path)
+                os.makedirs(directory_path, exist_ok=True)
 
             await self.hass.async_add_executor_job(mkdir)
         _LOGGER.debug("Download file %s to %s", file_id, custom_path)
