@@ -3,6 +3,7 @@
 from homeassistant.const import APPLICATION_NAME, __version__
 
 CONF_API_USER = "api_user"
+CONF_PARTY_MEMBER = "party_member"
 
 DEFAULT_URL = "https://habitica.com"
 ASSETS_URL = "https://habitica-assets.s3.amazonaws.com/mobileApp/images/"
