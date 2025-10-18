@@ -2,32 +2,12 @@
 
 from __future__ import annotations
 
-from homeassistant.const import CONF_NAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
 from .coordinator import OpenRGBConfigEntry, OpenRGBCoordinator
 
 PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SELECT]
-
-
-def _setup_server_device_registry(
-    hass: HomeAssistant, entry: OpenRGBConfigEntry, coordinator: OpenRGBCoordinator
-):
-    """Set up device registry for the OpenRGB SDK server."""
-    device_registry = dr.async_get(hass)
-
-    # Create the parent OpenRGB SDK server device
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id)},
-        name=entry.data[CONF_NAME],
-        model="OpenRGB SDK Server",
-        manufacturer="OpenRGB",
-        sw_version=coordinator.get_client_protocol_version(),
-        entry_type=dr.DeviceEntryType.SERVICE,
-    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> bool:
@@ -35,8 +15,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> b
     coordinator = OpenRGBCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
-
-    _setup_server_device_registry(hass, entry, coordinator)
 
     entry.runtime_data = coordinator
 
