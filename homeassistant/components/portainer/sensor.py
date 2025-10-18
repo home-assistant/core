@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pyportainer.models.docker import DockerContainer
 
 from homeassistant.components.sensor import (
+    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -51,56 +52,67 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         key="api_version",
         translation_key="api_version",
         value_fn=lambda data: data.docker_version.api_version,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerEndpointSensorEntityDescription(
         key="kernel_version",
         translation_key="kernel_version",
         value_fn=lambda data: data.docker_version.kernel_version,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerEndpointSensorEntityDescription(
         key="operating_system",
         translation_key="operating_system",
         value_fn=lambda data: data.docker_info.os_type,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerEndpointSensorEntityDescription(
         key="operating_system_version",
         translation_key="operating_system_version",
         value_fn=lambda data: data.docker_info.os_version,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerEndpointSensorEntityDescription(
         key="docker_version",
         translation_key="docker_version",
         value_fn=lambda data: data.docker_info.server_version,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerEndpointSensorEntityDescription(
         key="architecture",
         translation_key="architecture",
         value_fn=lambda data: data.docker_info.architecture,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerEndpointSensorEntityDescription(
         key="containers_count",
         translation_key="containers_count",
         value_fn=lambda data: data.docker_info.containers,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerEndpointSensorEntityDescription(
         key="containers_running",
         translation_key="containers_running",
         value_fn=lambda data: data.docker_info.containers_running,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerEndpointSensorEntityDescription(
         key="containers_stopped",
         translation_key="containers_stopped",
         value_fn=lambda data: data.docker_info.containers_stopped,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerEndpointSensorEntityDescription(
         key="containers_paused",
         translation_key="containers_paused",
         value_fn=lambda data: data.docker_info.containers_paused,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerEndpointSensorEntityDescription(
         key="images_count",
         translation_key="images_count",
         value_fn=lambda data: data.docker_info.images,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerEndpointSensorEntityDescription(
         key="memory_total",

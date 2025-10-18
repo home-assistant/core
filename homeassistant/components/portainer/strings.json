@@ -51,43 +51,43 @@
         "name": "Image"
       },
       "operating_system": {
-        "name": "Operating System"
+        "name": "Operating system"
       },
       "operating_system_version": {
-        "name": "Operating System Version"
+        "name": "Operating system version"
       },
       "api_version": {
-        "name": "API Version"
+        "name": "API version"
       },
       "kernel_version": {
-        "name": "Kernel Version"
+        "name": "Kernel version"
       },
       "architecture": {
         "name": "Architecture"
       },
       "containers_running": {
-        "name": "Containers Running"
+        "name": "Containers running"
       },
       "containers_stopped": {
-        "name": "Containers Stopped"
+        "name": "Containers stopped"
       },
       "containers_paused": {
-        "name": "Containers Paused"
+        "name": "Containers paused"
       },
       "images_count": {
-        "name": "Image Count"
+        "name": "Image count"
       },
       "containers_count": {
-        "name": "Container Count"
+        "name": "Container count"
       },
       "memory_total": {
-        "name": "Total Memory"
+        "name": "Total memory"
       },
       "docker_version": {
-        "name": "Docker Version"
+        "name": "Docker version"
       },
       "cpu_total": {
-        "name": "CPU"
+        "name": "Total CPU"
       }
     },
     "switch": {

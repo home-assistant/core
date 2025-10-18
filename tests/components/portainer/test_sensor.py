@@ -28,5 +28,8 @@ async def test_all_entities(
     ):
         await setup_integration(hass, mock_config_entry)
         await snapshot_platform(
-            hass, entity_registry, snapshot, mock_config_entry.entry_id
+            hass,
+            entity_registry,
+            snapshot,
+            mock_config_entry.entry_id,
         )
