@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import growattServer
 import pytest
 import voluptuous as vol
 
@@ -200,11 +201,14 @@ async def test_update_time_segment_api_error(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # Mock API error response
-    mock_growatt_v1_api.min_write_time_segment.return_value = {
-        "error_code": 1,
-        "error_msg": "API Error",
-    }
+    # Mock API error - the library raises an exception instead of returning error dict
+    mock_growatt_v1_api.min_write_time_segment.side_effect = (
+        growattServer.GrowattV1ApiError(
+            "Error during writing time segment 1",
+            error_code=1,
+            error_msg="API Error",
+        )
+    )
 
     with pytest.raises(HomeAssistantError, match="Error updating time segment"):
         await hass.services.async_call(
