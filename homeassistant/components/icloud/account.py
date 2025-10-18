@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import operator
-from typing import Any
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -13,7 +14,7 @@ from pyicloud.exceptions import (
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
 )
-from pyicloud.services.findmyiphone import AppleDevice
+from pyicloud.services.findmyiphone import AppleDevice, FindMyiPhoneServiceManager
 
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import ConfigEntry
@@ -56,7 +57,7 @@ from .const import (
     DOMAIN,
 )
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: logging.Logger = logging.getLogger(__name__)
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
 
@@ -69,22 +70,22 @@ class IcloudAccount:
         hass: HomeAssistant,
         username: str,
         password: str,
-        icloud_dir: Store,
+        icloud_dir: Store[Any],
         with_family: bool,
         max_interval: int,
         gps_accuracy_threshold: int,
         config_entry: IcloudConfigEntry,
     ) -> None:
         """Initialize an iCloud account."""
-        self.hass = hass
-        self._username = username
-        self._password = password
-        self._with_family = with_family
-        self._fetch_interval: float = max_interval
-        self._max_interval = max_interval
-        self._gps_accuracy_threshold = gps_accuracy_threshold
+        self.hass: HomeAssistant = hass
+        self._username: str = username
+        self._password: str = password
+        self._with_family: bool = with_family
+        self._fetch_interval: float = float(max_interval)
+        self._max_interval: int = max_interval
+        self._gps_accuracy_threshold: int = gps_accuracy_threshold
 
-        self._icloud_dir = icloud_dir
+        self._icloud_dir: Store[Any] = icloud_dir
 
         self.api: PyiCloudService | None = None
         self._owner_fullname: str | None = None
@@ -124,15 +125,31 @@ class IcloudAccount:
             self._require_reauth()
             return
 
+    async def async_get_devices(self) -> None:
+        """Get iCloud devices."""
+        if self.api is None:
+            return
+        self.hass.async_add_executor_job(self._get_devices)
+
+    def _get_devices(self) -> None:
+        """Get iCloud devices."""
+        if self.api is None:
+            _LOGGER.debug("No iCloud API available")
+            return
+        _LOGGER.debug("Getting devices")
         try:
+            api_devices: FindMyiPhoneServiceManager = self.api.devices
             # Gets device owners infos
-            user_info = self.api.devices.user_info
+            user_info: MappingProxyType[str, Any] | None = api_devices.user_info
         except (
             PyiCloudServiceNotActivatedException,
             PyiCloudNoDevicesException,
         ) as err:
             _LOGGER.error("No iCloud device found")
             raise ConfigEntryNotReady from err
+
+        if TYPE_CHECKING:
+            assert user_info is not None
 
         self._owner_fullname = f"{user_info['firstName']} {user_info['lastName']}"
 
@@ -156,7 +173,7 @@ class IcloudAccount:
             self._require_reauth()
             return
 
-        api_devices = {}
+        api_devices: FindMyiPhoneServiceManager | None
         try:
             api_devices = self.api.devices
         except Exception as err:  # noqa: BLE001
@@ -169,9 +186,9 @@ class IcloudAccount:
         # Gets devices infos
         new_device = False
         for device in api_devices:
-            status = device.status(DEVICE_STATUS_SET)
-            device_id = status[DEVICE_ID]
-            device_name = status[DEVICE_NAME]
+            status: dict[str, Any] = device.status(DEVICE_STATUS_SET)
+            device_id: str = status[DEVICE_ID]
+            device_name: str = status[DEVICE_NAME]
 
             if (
                 status[DEVICE_BATTERY_STATUS] == "Unknown"
@@ -211,13 +228,13 @@ class IcloudAccount:
 
         self._schedule_next_fetch()
 
-    def _require_reauth(self):
+    def _require_reauth(self) -> None:
         """Require the user to log in again."""
         self.hass.add_job(self._config_entry.async_start_reauth, self.hass)
 
     def _determine_interval(self) -> int:
         """Calculate new interval between two API fetch (in minutes)."""
-        intervals = {"default": self._max_interval}
+        intervals: dict[str, int] = {"default": self._max_interval}
         for device in self._devices.values():
             # Max interval if no location
             if device.location is None:
@@ -358,25 +375,27 @@ class IcloudAccount:
 class IcloudDevice:
     """Representation of a iCloud device."""
 
-    _attr_attribution = "Data provided by Apple iCloud"
+    _attr_attribution: str = "Data provided by Apple iCloud"
 
-    def __init__(self, account: IcloudAccount, device: AppleDevice, status) -> None:
+    def __init__(
+        self, account: IcloudAccount, device: AppleDevice, status: dict[str, Any]
+    ) -> None:
         """Initialize the iCloud device."""
-        self._account = account
+        self._account: IcloudAccount = account
 
-        self._device = device
-        self._status = status
+        self._device: AppleDevice = device
+        self._status: dict[str, Any] = status
 
-        self._name = self._status[DEVICE_NAME]
-        self._device_id = self._status[DEVICE_ID]
-        self._device_class = self._status[DEVICE_CLASS]
-        self._device_model = self._status[DEVICE_DISPLAY_NAME]
+        self._name: str = self._status[DEVICE_NAME]
+        self._device_id: str = self._status[DEVICE_ID]
+        self._device_class: str = self._status[DEVICE_CLASS]
+        self._device_model: str = self._status[DEVICE_DISPLAY_NAME]
 
         self._battery_level: int | None = None
         self._battery_status = None
         self._location = None
 
-        self._attrs = {
+        self._attrs: dict[str, Any] = {
             ATTR_ACCOUNT_FETCH_INTERVAL: self._account.fetch_interval,
             ATTR_DEVICE_NAME: self._device_model,
             ATTR_DEVICE_STATUS: None,
@@ -394,7 +413,9 @@ class IcloudDevice:
 
         self._status[ATTR_ACCOUNT_FETCH_INTERVAL] = self._account.fetch_interval
 
-        device_status = DEVICE_STATUS_CODES.get(self._status[DEVICE_STATUS], "error")
+        device_status: str = DEVICE_STATUS_CODES.get(
+            self._status[DEVICE_STATUS], "error"
+        )
         self._attrs[ATTR_DEVICE_STATUS] = device_status
 
         self._battery_status = self._status[DEVICE_BATTERY_STATUS]
@@ -440,7 +461,7 @@ class IcloudDevice:
         self._account.api.authenticate()
         if self._status[DEVICE_LOST_MODE_CAPABLE]:
             _LOGGER.debug("Make device lost for %s", self.name)
-            self.device.lost_device(number, message, None)
+            self.device.lost_device(number, message)
         else:
             _LOGGER.error("Cannot make device lost for %s", self.name)
 

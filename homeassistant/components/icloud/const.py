@@ -1,6 +1,7 @@
 """iCloud component constants."""
 
 from homeassistant.const import Platform
+from homeassistant.generated.entity_platforms import EntityPlatforms
 
 DOMAIN = "icloud"
 
@@ -10,15 +11,28 @@ CONF_WITH_FAMILY = "with_family"
 CONF_MAX_INTERVAL = "max_interval"
 CONF_GPS_ACCURACY_THRESHOLD = "gps_accuracy_threshold"
 
-DEFAULT_WITH_FAMILY = False
+CONF_ALBUM_ID = "album_id"
+CONF_ALBUM_NAME = "album_name"
+CONF_ALBUM_TYPE = "album_type"
+CONF_RANDOM_ORDER = "album_random_order"
+CONF_PICTURE_INTERVAL = "album_picture_interval"
+
+DEFAULT_WITH_FAMILY: bool = False
 DEFAULT_MAX_INTERVAL = 30  # min
 DEFAULT_GPS_ACCURACY_THRESHOLD = 500  # meters
+
+DEFAULT_RANDOM_ORDER: bool = False
+DEFAULT_PICTURE_INTERVAL: float = 30.0  # seconds
 
 # to store the cookie
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 2
 
-PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
+PLATFORMS: list[EntityPlatforms] = [
+    Platform.CAMERA,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+]
 
 # pyicloud.AppleDevice status
 DEVICE_BATTERY_LEVEL = "batteryLevel"
