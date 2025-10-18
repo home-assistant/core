@@ -1,5 +1,6 @@
 """The BSB-Lan integration."""
 
+import asyncio
 import dataclasses
 
 from bsblan import (
@@ -30,7 +31,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_PASSKEY, DOMAIN
-from .coordinator import BSBLanUpdateCoordinator
+from .coordinator import BSBLanFastCoordinator, BSBLanSlowCoordinator
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
 
@@ -41,7 +42,8 @@ type BSBLanConfigEntry = ConfigEntry[BSBLanData]
 class BSBLanData:
     """BSBLan data stored in the Home Assistant data object."""
 
-    coordinator: BSBLanUpdateCoordinator
+    fast_coordinator: BSBLanFastCoordinator
+    slow_coordinator: BSBLanSlowCoordinator
     client: BSBLAN
     device: Device
     info: Info
@@ -64,9 +66,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
     session = async_get_clientsession(hass)
     bsblan = BSBLAN(config, session)
 
-    # Create and perform first refresh of the coordinator
-    coordinator = BSBLanUpdateCoordinator(hass, entry, bsblan)
-    await coordinator.async_config_entry_first_refresh()
+    # Create coordinators
+    fast_coordinator = BSBLanFastCoordinator(hass, entry, bsblan)
+    slow_coordinator = BSBLanSlowCoordinator(hass, entry, bsblan)
+
+    # Perform first refresh of both coordinators
+    await asyncio.gather(
+        fast_coordinator.async_config_entry_first_refresh(),
+        slow_coordinator.async_config_entry_first_refresh(),
+    )
 
     try:
         # Fetch all required data sequentially
@@ -92,7 +100,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
 
     entry.runtime_data = BSBLanData(
         client=bsblan,
-        coordinator=coordinator,
+        fast_coordinator=fast_coordinator,
+        slow_coordinator=slow_coordinator,
         device=device,
         info=info,
         static=static,
