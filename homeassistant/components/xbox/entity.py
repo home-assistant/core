@@ -30,14 +30,7 @@ class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (
-                    DOMAIN,
-                    "xbox_live"
-                    if self.data.xuid == self.coordinator.client.xuid
-                    else self.data.xuid,
-                )
-            },
+            identifiers={(DOMAIN, xuid)},
             manufacturer="Microsoft",
             model="Xbox Network",
             name=self.data.gamertag,
