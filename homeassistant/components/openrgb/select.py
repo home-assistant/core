@@ -32,6 +32,7 @@ class OpenRGBProfileSelect(CoordinatorEntity[OpenRGBCoordinator], SelectEntity):
 
     _attr_translation_key = "profile"
     _attr_has_entity_name = True
+    # https://gitlab.com/CalcProgrammer1/OpenRGB/-/issues/5178
     _attr_current_option: str | None = None
 
     def __init__(
