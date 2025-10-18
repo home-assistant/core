@@ -64,7 +64,8 @@ async def test_config_entry_auth_failed_triggers_reauth(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Mock BSBLANAuthError during next update
-    mock_bsblan.initialize.side_effect = BSBLANAuthError("Authentication failed")
+    # The coordinator calls state(), sensor(), and hot_water_state() during updates
+    mock_bsblan.state.side_effect = BSBLANAuthError("Authentication failed")
 
     # Advance time by the coordinator's update interval to trigger update
     freezer.tick(delta=20)  # Advance beyond the 12 second scan interval + random offset
@@ -142,3 +143,39 @@ async def test_coordinator_dhw_config_update_error(
     # Verify the error handling paths were executed
     assert mock_bsblan.hot_water_config.called
     assert mock_bsblan.hot_water_schedule.called
+
+
+async def test_coordinator_slow_first_fetch_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test slow coordinator when first fetch fails."""
+    # Make slow coordinator fail on first fetch
+    mock_bsblan.hot_water_config.side_effect = BSBLANConnectionError("Config failed")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Integration should still load even if slow coordinator fails
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Verify slow coordinator was called and handled the error gracefully
+    assert mock_bsblan.hot_water_config.called
+
+
+async def test_config_entry_timeout_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test TimeoutError during setup raises ConfigEntryNotReady."""
+    mock_bsblan.initialize.side_effect = TimeoutError("Connection timeout")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Should be in retry state due to timeout
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
