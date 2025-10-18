@@ -10,7 +10,7 @@ AEMET-OpenData==0.6.4
 AIOSomecomfort==0.0.33
 
 # homeassistant.components.adax
-Adax-local==0.1.5
+Adax-local==0.2.0
 
 # homeassistant.components.doorbird
 DoorBirdPy==3.0.8
@@ -1153,7 +1153,7 @@ kegtron-ble==1.0.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.10.9.185845
+knx-frontend==2025.10.17.202411
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1929,10 +1929,10 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.3
+pyportainer==1.0.4
 
 # homeassistant.components.probe_plus
-pyprobeplus==1.1.0
+pyprobeplus==1.1.1
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5

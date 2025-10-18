@@ -386,9 +386,9 @@
         "binary_sensor": {
           "description": "Read-only entity for binary datapoints. Window or door states etc.",
           "knx": {
-            "section_binary_sensor": {
-              "title": "Binary sensor",
-              "description": "DPT 1 group addresses representing binary states."
+            "ga_sensor": {
+              "label": "State",
+              "description": "Group address representing a binary state."
             },
             "invert": {
               "label": "Invert",
@@ -415,50 +415,47 @@
         "cover": {
           "description": "The KNX cover platform is used as an interface to shutter actuators.",
           "knx": {
-            "section_binary_control": {
-              "title": "Open/Close control",
-              "description": "DPT 1 group addresses triggering full movement."
-            },
             "ga_up_down": {
-              "label": "Open/Close"
+              "label": "Open/Close control",
+              "description": "Group addresses triggering a full movement."
             },
             "invert_updown": {
-              "label": "Invert",
+              "label": "Invert open/close",
               "description": "Default is UP (0) to open a cover and DOWN (1) to close a cover. Enable this to invert the open/close commands from/to your KNX actuator."
             },
-            "section_stop_control": {
-              "title": "Stop",
-              "description": "DPT 1 group addresses for stopping movement."
-            },
             "ga_stop": {
-              "label": "Stop"
+              "label": "Stop",
+              "description": "Group addresses for stopping movement."
             },
             "ga_step": {
-              "label": "Stepwise move"
+              "label": "Stepwise move",
+              "description": "Group addresses for stepwise movement. Used to stop the cover when no dedicated stop address is available."
             },
             "section_position_control": {
               "title": "Position",
-              "description": "DPT 5 group addresses for cover position."
+              "description": "Control cover position."
             },
             "ga_position_set": {
-              "label": "Set position"
+              "label": "Set position",
+              "description": "Group addresses for setting a new absolute position."
             },
             "ga_position_state": {
-              "label": "Current position"
+              "label": "Current position",
+              "description": "Group addresses reporting the current position."
             },
             "invert_position": {
-              "label": "Invert",
-              "description": "Invert payload before processing. Enable if KNX reports 0% as fully closed."
+              "label": "Invert position",
+              "description": "Invert telegram payload before processing. Enable if KNX reports 0% as fully closed."
             },
             "section_tilt_control": {
               "title": "Tilt",
-              "description": "DPT 5 group addresses for slat tilt angle."
+              "description": "Control slat tilt angle."
             },
             "ga_angle": {
               "label": "Tilt angle"
             },
             "invert_angle": {
-              "label": "[%key:component::knx::config_panel::entities::create::cover::knx::invert_position::label%]",
+              "label": "Invert angle",
               "description": "[%key:component::knx::config_panel::entities::create::cover::knx::invert_position::description%]"
             },
             "section_travel_time": {
@@ -466,38 +463,32 @@
               "description": "Used to calculate intermediate positions of the cover while traveling."
             },
             "travelling_time_up": {
-              "label": "Travel time for opening",
-              "description": "Time the cover needs to fully open in seconds."
+              "label": "Time for opening",
+              "description": "Time in seconds the cover needs to fully open."
             },
             "travelling_time_down": {
-              "label": "Travel time for closing",
-              "description": "Time the cover needs to fully close in seconds."
+              "label": "Time for closing",
+              "description": "Time in seconds the cover needs to fully close."
             }
           }
         },
         "light": {
           "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
           "knx": {
-            "section_switch": {
-              "title": "Switch",
+            "ga_switch": {
+              "label": "Switch",
               "description": "Turn the light on/off."
             },
-            "ga_switch": {
-              "label": "Switch"
-            },
-            "section_brightness": {
-              "title": "Brightness",
-              "description": "Control the brightness of the light."
-            },
             "ga_brightness": {
-              "label": "Brightness"
+              "label": "Brightness",
+              "description": "Control the absolute brightness of the light."
             },
             "section_color_temp": {
               "title": "Color temperature",
               "description": "Control the color temperature of the light."
             },
             "ga_color_temp": {
-              "label": "Color temperature",
+              "label": "Color temperature addresses",
               "options": {
                 "5_001": "Percent",
                 "7_600": "Kelvin",
@@ -520,60 +511,52 @@
                 },
                 "individual_addresses": {
                   "label": "Individual addresses",
-                  "description": "RGB(W) using individual state and brightness group addresses."
+                  "description": "RGB(W) using individual group addresses for each color channel's state and brightness."
                 },
                 "hsv_addresses": {
                   "label": "HSV",
-                  "description": "Hue, saturation and brightness using individual group addresses."
+                  "description": "Hue, saturation and brightness controlled by individual group addresses."
                 }
               },
               "ga_color": {
-                "label": "Color",
+                "label": "Color addresses",
                 "options": {
                   "232_600": "RGB",
                   "242_600": "XYY",
                   "251_600": "RGBW"
                 }
               },
-              "section_red": {
-                "title": "Red",
-                "description": "Controls the light's red color component. Brightness group address is required."
-              },
               "ga_red_switch": {
-                "label": "Red switch"
+                "label": "Red switch",
+                "description": "Group address to switch the color channel on/off."
               },
               "ga_red_brightness": {
-                "label": "Red brightness"
-              },
-              "section_green": {
-                "title": "Green",
-                "description": "Controls the light's green color component. Brightness group address is required."
+                "label": "Red brightness",
+                "description": "Group address to control the brightness of the color channel. Required."
               },
               "ga_green_switch": {
-                "label": "Green switch"
+                "label": "Green switch",
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_switch::description%]"
               },
               "ga_green_brightness": {
-                "label": "Green brightness"
-              },
-              "section_blue": {
-                "title": "Blue",
-                "description": "Controls the light's blue color component. Brightness group address is required."
+                "label": "Green brightness",
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_brightness::description%]"
               },
               "ga_blue_switch": {
-                "label": "Blue switch"
+                "label": "Blue switch",
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_switch::description%]"
               },
               "ga_blue_brightness": {
-                "label": "Blue brightness"
-              },
-              "section_white": {
-                "title": "White",
-                "description": "Controls the light's white color component. Brightness group address is required."
+                "label": "Blue brightness",
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_brightness::description%]"
               },
               "ga_white_switch": {
-                "label": "White switch"
+                "label": "White switch",
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_switch::description%]"
               },
               "ga_white_brightness": {
-                "label": "White brightness"
+                "label": "White brightness",
+                "description": "Group address to control the brightness of the color channel."
               },
               "ga_hue": {
                 "label": "Hue",
@@ -589,10 +572,6 @@
         "switch": {
           "description": "The KNX switch platform is used as an interface to switching actuators.",
           "knx": {
-            "section_switch": {
-              "title": "Switching",
-              "description": "DPT 1 group addresses controlling the switch function."
-            },
             "ga_switch": {
               "label": "Switch",
               "description": "Group address to switch the device on/off."
