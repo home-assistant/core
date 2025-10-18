@@ -54,7 +54,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> 
 async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: OpenRGBConfigEntry, device_entry: DeviceEntry
 ) -> bool:
-    """Remove the config entry if the device is no longer connected."""
+    """Allows removal of device if it is no longer connected."""
     coordinator = entry.runtime_data
 
     for domain, identifier in device_entry.identifiers:
@@ -69,7 +69,5 @@ async def async_remove_config_entry_device(
         if identifier in coordinator.data:
             return False
 
-        return True
-
-    # Not our device
+    # Device is not connected or is not an OpenRGB device, allow removal
     return True
