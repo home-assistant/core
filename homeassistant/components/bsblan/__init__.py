@@ -96,12 +96,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
         ) from err
 
     # Create coordinators with the already-initialized client
-    # The coordinators will call initialize() too, but it's cached so it's a no-op
     fast_coordinator = BSBLanFastCoordinator(hass, entry, bsblan)
     slow_coordinator = BSBLanSlowCoordinator(hass, entry, bsblan)
 
     # Perform first refresh of both coordinators
-    # These will fetch data but skip initialization since it's already done
     await fast_coordinator.async_config_entry_first_refresh()
 
     await slow_coordinator.async_config_entry_first_refresh()
