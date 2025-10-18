@@ -98,6 +98,7 @@ async def integration_fixture(
         "flow_sensor",
         "generic_switch",
         "generic_switch_multi",
+        "haijai_switch",
         "humidity_sensor",
         "inovelli_vtm30",
         "laundry_dryer",
