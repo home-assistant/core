@@ -104,7 +104,10 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         super().__init__(coordinator, key, attribute, description)
 
         if self.option_map:
-            self._attr_options = list(self.option_map.values())
+            if description.role == "generic":
+                self._attr_options = list(self.option_map.values())
+            else:
+                self._attr_options = list(self.option_map)
 
     @property
     def native_value(self) -> StateType:
@@ -117,7 +120,10 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         if not isinstance(attribute_value, str):
             return None
 
-        return self.option_map[attribute_value]
+        if self.entity_description.role == "generic":
+            return self.option_map[attribute_value]
+
+        return attribute_value
 
 
 class RpcEnergyConsumedSensor(RpcSensor):
@@ -1531,21 +1537,11 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         role="water_temperature",
     ),
-    "number_work_state": RpcSensorDescription(
-        key="number",
+    "enum_work_state": RpcSensorDescription(
+        key="enum",
         sub_key="value",
         translation_key="charger_state",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "charger_charging",
-            "charger_end",
-            "charger_fault",
-            "charger_free",
-            "charger_free_fault",
-            "charger_insert",
-            "charger_pause",
-            "charger_wait",
-        ],
         role="work_state",
     ),
     "number_energy_charge": RpcSensorDescription(
