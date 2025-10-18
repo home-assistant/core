@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "To generate API key go to https://docs.airnowapi.org/account/request/",
+        "description": "To generate API key go to {api_key_url}",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
