@@ -9,19 +9,20 @@ from homeassistant.components.wallbox.const import (
     CHARGER_CHARGING_POWER_KEY,
     CHARGER_CHARGING_SPEED_KEY,
     CHARGER_DATA_KEY,
+    CHARGER_JWT_REFRESH_TOKEN,
+    CHARGER_JWT_TOKEN,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CONF_STATION,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import http_403_error, http_404_error, setup_integration
-from .const import (
-    WALLBOX_AUTHORISATION_RESPONSE,
-    WALLBOX_AUTHORISATION_RESPONSE_UNAUTHORISED,
-)
+from .const import WALLBOX_AUTHORISATION_RESPONSE_UNAUTHORISED
 
 from tests.common import MockConfigEntry
 
@@ -62,9 +63,9 @@ async def test_form_cannot_authenticate(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "station": "12345",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_STATION: "12345",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
 
@@ -90,9 +91,9 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "station": "12345",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_STATION: "12345",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
 
@@ -100,27 +101,33 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_validate_input(hass: HomeAssistant) -> None:
+async def test_form_validate_input(
+    hass: HomeAssistant, entry: MockConfigEntry, mock_wallbox
+) -> None:
     """Test we can validate input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with patch(
-        "homeassistant.components.wallbox.Wallbox.authenticate",
-        return_value=WALLBOX_AUTHORISATION_RESPONSE,
+    with (
+        patch(
+            "homeassistant.components.wallbox.config_flow.Wallbox",
+            return_value=mock_wallbox,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "station": "12345",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_STATION: "12345",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
 
     assert result2["title"] == "Wallbox Portal"
-    assert result2["data"]["station"] == "12345"
-    assert result2["data"]["username"] == "test-username"
+    assert result2["data"][CONF_STATION] == "12345"
+    assert result2["data"][CONF_USERNAME] == "test-username"
+    assert result2["data"][CHARGER_JWT_TOKEN] == "test_token"
+    assert result2["data"][CHARGER_JWT_REFRESH_TOKEN] == "test_refresh_token"
 
 
 async def test_form_reauth(
@@ -143,9 +150,9 @@ async def test_form_reauth(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "station": "12345",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_STATION: "12345",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
 
@@ -176,9 +183,9 @@ async def test_form_reauth_invalid(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "station": "12345678",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_STATION: "12345678",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
 

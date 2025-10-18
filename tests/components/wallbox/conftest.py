@@ -95,6 +95,14 @@ def mock_wallbox():
         )
         wallbox.setIcpMaxCurrent = Mock(return_value={CHARGER_MAX_ICP_CURRENT_KEY: 25})
         wallbox.getChargerStatus = Mock(return_value=WALLBOX_STATUS_RESPONSE)
+        wallbox.jwtToken = "test_token"
+        wallbox.jwtRefreshToken = "test_refresh_token"
+        wallbox.jwtTokenTtl = (
+            datetime.timestamp(datetime.now() + timedelta(hours=1)) * 1000
+        )
+        wallbox.jwtRefreshTokenTtl = (
+            datetime.timestamp(datetime.now() + timedelta(hours=1)) * 1000
+        )
         mock.return_value = wallbox
         yield wallbox
 
