@@ -55,7 +55,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
-from .util import find_state_attributes, mean_tuple, reduce_attribute
+from .util import find_state_attributes, mean_circle, mean_tuple, reduce_attribute
 
 DEFAULT_NAME = "Light Group"
 CONF_ALL = "all"
@@ -229,7 +229,7 @@ class LightGroup(GroupEntity, LightEntity):
         self._attr_brightness = reduce_attribute(on_states, ATTR_BRIGHTNESS)
 
         self._attr_hs_color = reduce_attribute(
-            on_states, ATTR_HS_COLOR, reduce=mean_tuple
+            on_states, ATTR_HS_COLOR, reduce=mean_circle
         )
         self._attr_rgb_color = reduce_attribute(
             on_states, ATTR_RGB_COLOR, reduce=mean_tuple
