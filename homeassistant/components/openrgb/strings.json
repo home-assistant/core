@@ -65,6 +65,11 @@
           }
         }
       }
+    },
+    "select": {
+      "profile": {
+        "name": "Profile"
+      }
     }
   },
   "exceptions": {
@@ -79,6 +84,9 @@
     },
     "effect_no_color_support": {
       "message": "Effect `{effect}` does not support color control on {device_name}"
+    },
+    "profile_not_found": {
+      "message": "Profile `{profile}` not found"
     }
   }
 }

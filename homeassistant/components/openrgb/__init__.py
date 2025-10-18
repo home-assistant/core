@@ -9,7 +9,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
 from .coordinator import OpenRGBConfigEntry, OpenRGBCoordinator
 
-PLATFORMS: list[Platform] = [Platform.LIGHT]
+PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SELECT]
 
 
 def _setup_server_device_registry(
