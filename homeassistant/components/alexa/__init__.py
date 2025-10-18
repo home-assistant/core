@@ -95,20 +95,33 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate the Alexa component."""
+    # Refactor: added success variable to track setup status (so that it is not just one return value)
     if DOMAIN not in config:
         return True
 
     config = config[DOMAIN]
+    success = True
 
-    intent.async_setup(hass)
+    try:
+        intent.async_setup(hass)
+    except Exception:
+        success = False
 
-    if flash_briefings_config := config.get(CONF_FLASH_BRIEFINGS):
-        flash_briefings.async_setup(hass, flash_briefings_config)
+    flash_briefings_config = config.get(CONF_FLASH_BRIEFINGS)
+    if flash_briefings_config:
+        try:
+            flash_briefings.async_setup(hass, flash_briefings_config)
+        except Exception:
+            success = False
 
     # smart_home being absent is not the same as smart_home being None
     if CONF_SMART_HOME in config:
-        smart_home_config: dict[str, Any] | None = config[CONF_SMART_HOME]
-        smart_home_config = smart_home_config or SMART_HOME_SCHEMA({})
-        await smart_home.async_setup(hass, smart_home_config)
+        smart_home_config: dict[str, Any] | None = config[CONF_SMART_HOME] or SMART_HOME_SCHEMA({})
+        try:
+            smart_home_result = await smart_home.async_setup(hass, smart_home_config)
+            if not smart_home_result:
+                success = False
+        except Exception:
+            success = False
 
-    return True
+    return success
