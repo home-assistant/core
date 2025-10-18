@@ -96,8 +96,6 @@ set_color_flow_scene:
       example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'
       selector:
         object:
-  description_placeholders:
-    flow_doc_link: "https://yeelight.readthedocs.io/en/stable/flow.html"
 
 set_auto_delay_off_scene:
   target:
@@ -143,8 +141,6 @@ start_flow:
       example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'
       selector:
         object:
-  description_placeholders:
-    flow_object_link: "https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects"
 
 set_music_mode:
   target:
