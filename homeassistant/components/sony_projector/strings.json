@@ -1,0 +1,78 @@
+{
+  "config": {
+    "flow_title": "Sony Projector",
+    "step": {
+      "user": {
+        "title": "Set up Sony Projector",
+        "description": "Choose how you would like to add your projector.",
+        "menu_options": {
+          "manual": "Enter projector details",
+          "scan": "Scan for projectors"
+        }
+      },
+      "manual": {
+        "title": "Connect to projector",
+        "data": {
+          "host": "Host",
+          "name": "Name"
+        },
+        "data_description": {
+          "host": "Enter the IP address or hostname of your projector.",
+          "name": "Give your projector a friendly name."
+        }
+      },
+      "scan": {
+        "title": "Select a projector",
+        "description": "Select a projector that was discovered on your network ({count} found).",
+        "data": {
+          "host": "Projector"
+        },
+        "data_description": {
+          "host": "Select the projector you want to add."
+        }
+      },
+      "confirm": {
+        "title": "Add Sony Projector",
+        "description": "Do you want to add {name} at {host}?"
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the projector.",
+      "no_devices_found": "No projectors were found. Try again."
+    },
+    "progress": {
+      "listen_for_projectors": "Listening ({timeout}s) for Sony Projector"
+    },
+    "abort": {
+      "wrong_device": "The projector does not match the configuration being updated.",
+      "already_configured": "This projector is already configured.",
+      "reauth_successful": "Reauthentication successful."
+    }
+  },
+  "entity": {
+    "button": {
+      "picture_mute": {
+        "name": "Toggle picture mute"
+      }
+    },
+    "select": {
+      "aspect_ratio": {
+        "name": "Aspect ratio"
+      },
+      "picture_mode": {
+        "name": "Picture mode"
+      }
+    },
+    "sensor": {
+      "lamp_hours": {
+        "name": "Lamp hours"
+      },
+      "model": {
+        "name": "Model"
+      },
+      "serial": {
+        "name": "Serial number"
+      }
+    }
+  }
+}

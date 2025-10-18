@@ -1,111 +1,53 @@
-"""Support for Sony projectors via SDCP network control."""
+"""Backward compatible switch platform for Sony Projector."""
 
 from __future__ import annotations
 
 import logging
-from typing import Any
 
-import pysdcp
-import voluptuous as vol
-
-from homeassistant.components.switch import (
-    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
-    SwitchEntity,
-)
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import DEFAULT_NAME, DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Sony Projector"
 
-PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Connect to Sony projector using network."""
+    """Trigger migration of YAML switch entries to config entries."""
 
-    host = config[CONF_HOST]
-    name = config[CONF_NAME]
-    sdcp_connection = pysdcp.Projector(host)
+    _LOGGER.warning(
+        "The 'switch' platform for sony_projector is deprecated. The configuration will "
+        "be imported into the UI"
+    )
 
-    # Sanity check the connection
-    try:
-        sdcp_connection.get_power()
-    except ConnectionError:
-        _LOGGER.error("Failed to connect to projector '%s'", host)
-        return
-    _LOGGER.debug("Validated projector '%s' OK", host)
-    add_entities([SonyProjector(sdcp_connection, name)], True)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_HOST: config.get(CONF_HOST),
+                CONF_NAME: config.get(CONF_NAME, DEFAULT_NAME),
+            },
+        )
+    )
+
+    async_add_entities([])
 
 
-class SonyProjector(SwitchEntity):
-    """Represents a Sony Projector as a switch."""
-
-    def __init__(self, sdcp_connection, name):
-        """Init of the Sony projector."""
-        self._sdcp = sdcp_connection
-        self._name = name
-        self._state = None
-        self._available = False
-        self._attributes = {}
+class DeprecatedSonyProjectorSwitch(SwitchEntity):
+    """Placeholder entity kept for backward compatibility."""
 
     @property
-    def available(self) -> bool:
-        """Return if projector is available."""
-        return self._available
+    def should_poll(self) -> bool:
+        """Switch entities were removed; this entity never polls."""
 
-    @property
-    def name(self):
-        """Return name of the projector."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return if the projector is turned on."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return state attributes."""
-        return self._attributes
-
-    def update(self) -> None:
-        """Get the latest state from the projector."""
-        try:
-            self._state = self._sdcp.get_power()
-            self._available = True
-        except ConnectionRefusedError:
-            _LOGGER.error("Projector connection refused")
-            self._available = False
-
-    def turn_on(self, **kwargs: Any) -> None:
-        """Turn the projector on."""
-        _LOGGER.debug("Powering on projector '%s'", self.name)
-        if self._sdcp.set_power(True):
-            _LOGGER.debug("Powered on successfully")
-            self._state = STATE_ON
-        else:
-            _LOGGER.error("Power on command was not successful")
-
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the projector off."""
-        _LOGGER.debug("Powering off projector '%s'", self.name)
-        if self._sdcp.set_power(False):
-            _LOGGER.debug("Powered off successfully")
-            self._state = STATE_OFF
-        else:
-            _LOGGER.error("Power off command was not successful")
+        return False

@@ -1967,6 +1967,9 @@ pysabnzbd==1.1.1
 # homeassistant.components.schlage
 pyschlage==2025.9.0
 
+# homeassistant.components.sony_projector
+pysdcp-extended==0.2.0
+
 # homeassistant.components.sensibo
 pysensibo==1.2.1
 

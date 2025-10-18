@@ -1494,6 +1494,8 @@ build.json @home-assistant/supervisor
 /tests/components/songpal/ @rytilahti @shenxn
 /homeassistant/components/sonos/ @jjlawren @peterager
 /tests/components/sonos/ @jjlawren @peterager
+/homeassistant/components/sony_projector/ @johnmschoonover
+/tests/components/sony_projector/ @johnmschoonover
 /homeassistant/components/soundtouch/ @kroimon
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff
