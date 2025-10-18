@@ -62,6 +62,9 @@
     },
     "set_guest_wifi_password": {
       "service": "mdi:form-textbox-password"
+    },
+    "dial": {
+      "service": "mdi:phone-dial"
     }
   }
 }
