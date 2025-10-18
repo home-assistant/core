@@ -1,4 +1,4 @@
-"""Diagnostics for the Portainer integration."""
+"""Diagnostics for the Firefly III integration."""
 
 from __future__ import annotations
 
