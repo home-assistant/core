@@ -136,17 +136,22 @@ class WellKnownOAuthInfoView(HomeAssistantView):
             url_prefix = get_url(hass, require_current_request=True)
         except NoURLAvailableError:
             url_prefix = ""
-        return self.json(
-            {
-                "authorization_endpoint": f"{url_prefix}/auth/authorize",
-                "token_endpoint": f"{url_prefix}/auth/token",
-                "revocation_endpoint": f"{url_prefix}/auth/revoke",
-                "response_types_supported": ["code"],
-                "service_documentation": (
-                    "https://developers.home-assistant.io/docs/auth_api"
-                ),
-            }
-        )
+
+        metadata = {
+            "authorization_endpoint": f"{url_prefix}/auth/authorize",
+            "token_endpoint": f"{url_prefix}/auth/token",
+            "revocation_endpoint": f"{url_prefix}/auth/revoke",
+            "response_types_supported": ["code"],
+            "service_documentation": (
+                "https://developers.home-assistant.io/docs/auth_api"
+            ),
+        }
+
+        # Add issuer only when we have a valid base URL (RFC 8414 compliance)
+        if url_prefix:
+            metadata["issuer"] = url_prefix
+
+        return self.json(metadata)
 
 
 class AuthProvidersView(HomeAssistantView):

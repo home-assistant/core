@@ -24,6 +24,7 @@ from homeassistant.util import dt as dt_util
 
 from .browse_media import _find_media_image
 from .const import DOMAIN
+from .coordinator import XboxConfigEntry
 
 MIME_TYPE_MAP = {
     "gameclips": "video/mp4",
@@ -38,8 +39,8 @@ MEDIA_CLASS_MAP = {
 
 async def async_get_media_source(hass: HomeAssistant):
     """Set up Xbox media source."""
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    client = hass.data[DOMAIN][entry.entry_id]["client"]
+    entry: XboxConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
+    client = entry.runtime_data.client
     return XboxSource(hass, client)
 
 

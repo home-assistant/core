@@ -362,6 +362,9 @@
       "tlx_wattage_input_4": {
         "name": "Input 4 wattage"
       },
+      "tlx_solar_generation_today": {
+        "name": "Solar energy today"
+      },
       "tlx_solar_generation_total": {
         "name": "Lifetime total solar energy"
       },
@@ -443,6 +446,45 @@
       "tlx_statement_of_charge": {
         "name": "State of charge (SoC)"
       },
+      "tlx_pac_to_local_load": {
+        "name": "Local load power"
+      },
+      "tlx_pac_to_user_total": {
+        "name": "Import power"
+      },
+      "tlx_pac_to_grid_total": {
+        "name": "Export power"
+      },
+      "tlx_system_production_today": {
+        "name": "System production today"
+      },
+      "tlx_system_production_total": {
+        "name": "Lifetime system production"
+      },
+      "tlx_self_consumption_today": {
+        "name": "Self consumption today"
+      },
+      "tlx_self_consumption_total": {
+        "name": "Lifetime self consumption"
+      },
+      "tlx_import_from_grid_today": {
+        "name": "Import from grid today"
+      },
+      "tlx_import_from_grid_total": {
+        "name": "Lifetime import from grid"
+      },
+      "tlx_batteries_charged_from_grid_today": {
+        "name": "Batteries charged from grid today"
+      },
+      "tlx_batteries_charged_from_grid_total": {
+        "name": "Lifetime batteries charged from grid"
+      },
+      "tlx_p_system": {
+        "name": "System power"
+      },
+      "tlx_p_self": {
+        "name": "Self power"
+      },
       "total_money_today": {
         "name": "Total money today"
       },
@@ -460,6 +502,11 @@
       },
       "total_maximum_output": {
         "name": "Maximum power"
+      }
+    },
+    "switch": {
+      "ac_charge": {
+        "name": "Charge from grid"
       }
     }
   }
