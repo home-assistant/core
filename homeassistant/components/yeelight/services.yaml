@@ -16,6 +16,7 @@ set_mode:
             - "normal"
             - "rgb"
           translation_key: mode
+
 set_color_scene:
   target:
     entity:
@@ -32,6 +33,7 @@ set_color_scene:
           min: 0
           max: 100
           unit_of_measurement: "%"
+
 set_hsv_scene:
   target:
     entity:
@@ -48,6 +50,7 @@ set_hsv_scene:
           min: 0
           max: 100
           unit_of_measurement: "%"
+
 set_color_temp_scene:
   target:
     entity:
@@ -67,6 +70,7 @@ set_color_temp_scene:
           min: 0
           max: 100
           unit_of_measurement: "%"
+
 set_color_flow_scene:
   target:
     entity:
@@ -89,11 +93,12 @@ set_color_flow_scene:
             - "stay"
           translation_key: action
     transitions:
-      example:
-        '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition":
-        [1900, 1000, 10] }]'
+      example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'
       selector:
         object:
+  description_placeholders:
+    flow_doc_link: "https://yeelight.readthedocs.io/en/stable/flow.html"
+
 set_auto_delay_off_scene:
   target:
     entity:
@@ -112,6 +117,7 @@ set_auto_delay_off_scene:
           min: 0
           max: 100
           unit_of_measurement: "%"
+
 start_flow:
   target:
     entity:
@@ -134,11 +140,12 @@ start_flow:
             - "stay"
           translation_key: action
     transitions:
-      example:
-        '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition":
-        [1900, 1000, 10] }]'
+      example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'
       selector:
         object:
+  description_placeholders:
+    flow_object_link: "https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects"
+
 set_music_mode:
   target:
     entity:
