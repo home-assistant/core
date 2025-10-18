@@ -172,4 +172,5 @@ class TomorrowioConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=_get_config_schema(self.hass, self.source, user_input),
             errors=errors,
+            description_placeholders={"signup_url": "https://app.tomorrow.io/signup"},
         )

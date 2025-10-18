@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "To get an API key, sign up at [Tomorrow.io](https://app.tomorrow.io/signup).",
+        "description": "To get an API key, sign up at [Tomorrow.io]({signup_url}).",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
