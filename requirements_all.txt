@@ -10,7 +10,7 @@ AEMET-OpenData==0.6.4
 AIOSomecomfort==0.0.33
 
 # homeassistant.components.adax
-Adax-local==0.1.5
+Adax-local==0.2.0
 
 # homeassistant.components.doorbird
 DoorBirdPy==3.0.8
