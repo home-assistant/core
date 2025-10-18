@@ -39,9 +39,9 @@ ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
     VehicleDataEndpoint.CLIMATE_STATE,
     VehicleDataEndpoint.DRIVE_STATE,
-    VehicleDataEndpoint.LOCATION_DATA,
     VehicleDataEndpoint.VEHICLE_STATE,
     VehicleDataEndpoint.VEHICLE_CONFIG,
+    VehicleDataEndpoint.LOCATION_DATA,
 ]
 
 
@@ -65,6 +65,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     updated_once: bool
     pre2021: bool
     last_active: datetime
+    endpoints: list[VehicleDataEndpoint]
 
     def __init__(
         self,
@@ -72,6 +73,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         config_entry: TeslaFleetConfigEntry,
         api: VehicleFleet,
         product: dict,
+        location: bool,
     ) -> None:
         """Initialize TeslaFleet Vehicle Update Coordinator."""
         super().__init__(
@@ -85,6 +87,11 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data = flatten(product)
         self.updated_once = False
         self.last_active = datetime.now()
+        self.endpoints = (
+            ENDPOINTS
+            if location
+            else [ep for ep in ENDPOINTS if ep != VehicleDataEndpoint.LOCATION_DATA]
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using TeslaFleet API."""
@@ -97,7 +104,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if self.data["state"] != TeslaFleetState.ONLINE:
                 return self.data
 
-            response = await self.api.vehicle_data(endpoints=ENDPOINTS)
+            response = await self.api.vehicle_data(endpoints=self.endpoints)
             data = response["response"]
 
         except VehicleOffline:
