@@ -2003,7 +2003,8 @@ class PipelineStorageCollection(
         if not (data := await super()._async_load_data()):
             pipeline = await _async_create_default_pipeline(self.hass, self)
             self._preferred_item = pipeline.id
-            return data
+            # Refactor: instead of returning data here (which would be None in this case), we create a default pipeline and return a dictionary containing it.
+            return {"preferred_item": pipeline.id, "pipeline": pipeline}
 
         self._preferred_item = data["preferred_item"]
 
