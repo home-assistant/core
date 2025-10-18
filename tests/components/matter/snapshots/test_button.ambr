@@ -1024,7 +1024,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[inovelli_vtm30][button.white_series_onoff_switch_load_control-entry]
+# name: test_buttons[inovelli_vtm30][button.white_series_onoff_switch_identify_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),

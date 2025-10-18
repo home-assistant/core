@@ -570,7 +570,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_config-entry]
+# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_button_config-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
