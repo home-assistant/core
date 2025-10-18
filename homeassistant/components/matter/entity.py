@@ -40,7 +40,7 @@ LOGGER = logging.getLogger(__name__)
 # This dictionary defines which labels to use for specific vendor/product combinations.
 # The keys are vendor IDs, the values are dictionaries with product IDs as keys
 # and lists of label names to use as values. If the value is None, no labels are used
-VENDOR_LABELING_LIST: dict[int, dict] = {
+VENDOR_LABELING_LIST: dict[int, dict[int, list[str] | None]] = {
     4488: {259: ["position"]},  # TP-Link Dual Outdoor Plug US
     4874: {105: ["orientation"]},  # Eve Energy dual Outlet US
     4961: {
@@ -167,11 +167,7 @@ class MatterEntity(Entity):
                 self._attr_translation_key = self._platform_translation_key
 
         # Matter labels can be used to modify the entity name
-        # by appending the text or replacing the name.
-        # This is controlled by the entity_description.label_placement setting.
-        # The text is derived from the labels defined on the device.
-        # If label_placement is "ignore" or no labels are found, then
-        # the entity name is not modified.
+        # by appending the text.
         name_modifier = self._entity_info.entity_description.get_name_modifier(self)
         if name_modifier:
             self._name_postfix = name_modifier
