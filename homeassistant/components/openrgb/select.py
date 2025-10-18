@@ -6,8 +6,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -47,7 +46,7 @@ class OpenRGBProfileSelect(CoordinatorEntity[OpenRGBCoordinator], SelectEntity):
             model="OpenRGB SDK Server",
             manufacturer="OpenRGB",
             sw_version=coordinator.get_client_protocol_version(),
-            entry_type=dr.DeviceEntryType.SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
         )
         self._update_attrs()
 
