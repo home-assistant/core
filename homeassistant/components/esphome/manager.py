@@ -6,6 +6,7 @@ import base64
 from functools import partial
 import logging
 import secrets
+import struct
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from aioesphomeapi import (
@@ -22,6 +23,8 @@ from aioesphomeapi import (
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArgType,
+    ZWaveProxyRequest,
+    ZWaveProxyRequestType,
     parse_log_message,
 )
 from awesomeversion import AwesomeVersion
@@ -84,6 +87,8 @@ from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
 DEVICE_CONFLICT_ISSUE_FORMAT = "device_conflict-{}"
+UNPACK_UINT32_BE = struct.Struct(">I").unpack_from
+
 
 if TYPE_CHECKING:
     from aioesphomeapi.api_pb2 import SubscribeLogsResponse  # type: ignore[attr-defined]  # noqa: I001
@@ -557,6 +562,11 @@ class ESPHomeManager:
             )
             entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
 
+        if device_info.zwave_proxy_feature_flags:
+            entry_data.disconnect_callbacks.add(
+                cli.subscribe_zwave_proxy_request(self._async_zwave_proxy_request)
+            )
+
         cli.subscribe_home_assistant_states_and_services(
             on_state=entry_data.async_update_state,
             on_service_call=self.async_on_service_call,
@@ -567,6 +577,25 @@ class ESPHomeManager:
         entry_data.async_save_to_store()
         _async_check_firmware_version(hass, device_info, api_version)
         _async_check_using_api_password(hass, device_info, bool(self.password))
+
+    def _async_zwave_proxy_request(self, request: ZWaveProxyRequest) -> None:
+        """Handle a request to create a zwave_js config flow."""
+        if request.type != ZWaveProxyRequestType.HOME_ID_CHANGE:
+            return
+        # ESPHome will send a home id change on every connection
+        # if the Z-Wave controller is connected to the ESPHome device
+        # so we know for sure that the Z-Wave controller is connected
+        # when we get the message. This makes it safe to start
+        # the zwave_js config flow automatically even if the zwave_home_id
+        # is 0 (not yet provisioned) as we know for sure the controller
+        # is connected to the ESPHome device and do not have to guess
+        # if it's a broken connection or Z-Wave controller or a not
+        # yet provisioned controller.
+        zwave_home_id: int = UNPACK_UINT32_BE(request.data[0:4])[0]
+        assert self.entry_data.device_info is not None
+        self.entry_data.async_create_zwave_js_flow(
+            self.hass, self.entry_data.device_info, zwave_home_id
+        )
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
         """Run disconnect callbacks on API disconnect."""
