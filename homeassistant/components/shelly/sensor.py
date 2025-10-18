@@ -1442,7 +1442,6 @@ RPC_SENSORS: Final = {
         removal_condition=lambda config, _, key: not is_view_for_platform(
             config, key, SENSOR_PLATFORM
         ),
-        options_fn=lambda config: config["options"],
         device_class=SensorDeviceClass.ENUM,
         role=ROLE_GENERIC,
     ),
