@@ -258,7 +258,6 @@ async def test_form_invalid_auth_cloud(
 @pytest.mark.parametrize(
     ("side_effect", "description_placeholder", "server"),
     [
-        (UnknownUserException, "Somfy Protect", TEST_SERVER),
         (UnknownUserException, "CozyTouch", TEST_SERVER_COZYTOUCH),
         (UnknownUserException, "Unknown", TEST_SERVER2),
     ],
@@ -281,14 +280,52 @@ async def test_form_invalid_hardware_cloud(
         {"hub": server},
     )
 
-    if server == TEST_SERVER:
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "local_or_cloud"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud"
 
+    with patch("pyoverkiz.client.OverkizClient.login", side_effect=side_effect):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"api_type": "cloud"},
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
         )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unsupported_hardware"}
+    assert result["description_placeholders"] == {
+        "unsupported_device": description_placeholder
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "description_placeholder", "server"),
+    [
+        (UnknownUserException, "Somfy Protect", TEST_SERVER),
+    ],
+)
+async def test_form_invalid_hardware_cloud_local(
+    hass: HomeAssistant,
+    side_effect: Exception,
+    description_placeholder: str,
+    server: str,
+) -> None:
+    """Test we handle unsupported hardware (cloud and local)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"hub": server},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_type": "cloud"},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
