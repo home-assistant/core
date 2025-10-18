@@ -30,11 +30,12 @@ async def async_setup_entry(
                 config_entry,
                 f"{coord.duid_slug}_map_{map_info.name}",
                 coord,
-                map_info.flag,
+                map_info.map_flag,
                 map_info.name,
             )
             for coord in config_entry.runtime_data.v1
-            for map_info in coord.maps.values()
+            if coord.properties_api.home.home_cache is not None
+            for map_info in coord.properties_api.home.home_cache.values()
         ),
     )
 
@@ -86,4 +87,6 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
 
     async def async_image(self) -> bytes | None:
         """Get the cached image."""
-        return self.coordinator.maps[self.map_flag].image
+        if (map_info := self.coordinator.maps.get(self.map_flag)) is None:
+            raise ValueError("Map flag not found in coordinator maps")
+        return map_info.image

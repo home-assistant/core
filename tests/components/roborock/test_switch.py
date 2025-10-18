@@ -1,6 +1,7 @@
 """Test Roborock Switch platform."""
 
-from unittest.mock import Mock
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 import roborock
@@ -9,6 +10,8 @@ from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+
+from .conftest import FakeDevice
 
 from tests.common import MockConfigEntry
 
@@ -20,21 +23,26 @@ def platforms() -> list[Platform]:
 
 
 @pytest.mark.parametrize(
-    ("entity_id"),
+    ("entity_id", "trait_fn"),
     [
-        ("switch.roborock_s7_maxv_dock_child_lock"),
-        ("switch.roborock_s7_maxv_dock_status_indicator_light"),
-        ("switch.roborock_s7_maxv_do_not_disturb"),
+        ("switch.roborock_s7_maxv_dock_child_lock", lambda trait: trait.child_lock),
+        (
+            "switch.roborock_s7_maxv_dock_status_indicator_light",
+            lambda trait: trait.flow_led_status,
+        ),
+        ("switch.roborock_s7_maxv_do_not_disturb", lambda trait: trait.dnd),
     ],
 )
 async def test_update_success(
     hass: HomeAssistant,
-    mock_send_message: Mock,
-    bypass_api_fixture,
     setup_entry: MockConfigEntry,
     entity_id: str,
+    fake_vacuum: FakeDevice,
+    trait_fn: Callable[[Any], Any],
 ) -> None:
     """Test turning switch entities on and off."""
+    trait = trait_fn(fake_vacuum.v1_properties)
+
     # Ensure that the entity exist, as these test can pass even if there is no entity.
     assert hass.states.get(entity_id) is not None
     await hass.services.async_call(
@@ -44,8 +52,10 @@ async def test_update_success(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    assert mock_send_message.assert_called_once
-    mock_send_message.reset_mock()
+    assert len(trait.enable.mock_calls) == 1
+    assert len(trait.disable.mock_calls) == 0
+    trait.enable.reset_mock()
+
     await hass.services.async_call(
         "switch",
         SERVICE_TURN_OFF,
@@ -53,14 +63,23 @@ async def test_update_success(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    assert mock_send_message.assert_called_once
+    assert len(trait.enable.mock_calls) == 0
+    assert len(trait.disable.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "service"),
+    ("entity_id", "service", "expected_call_fn"),
     [
-        ("switch.roborock_s7_maxv_dock_status_indicator_light", SERVICE_TURN_ON),
-        ("switch.roborock_s7_maxv_dock_status_indicator_light", SERVICE_TURN_OFF),
+        (
+            "switch.roborock_s7_maxv_dock_status_indicator_light",
+            SERVICE_TURN_ON,
+            lambda trait: trait.flow_led_status.enable,
+        ),
+        (
+            "switch.roborock_s7_maxv_dock_status_indicator_light",
+            SERVICE_TURN_OFF,
+            lambda trait: trait.flow_led_status.disable,
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -68,13 +87,17 @@ async def test_update_success(
 )
 async def test_update_failed(
     hass: HomeAssistant,
-    mock_send_message: Mock,
-    bypass_api_fixture,
     setup_entry: MockConfigEntry,
     entity_id: str,
     service: str,
+    fake_vacuum: FakeDevice,
+    expected_call_fn: Callable[[Any], Any],
 ) -> None:
     """Test a failure while updating a switch."""
+
+    expected_call = expected_call_fn(fake_vacuum.v1_properties)
+    expected_call.side_effect = roborock.exceptions.RoborockTimeout
+
     # Ensure that the entity exist, as these test can pass even if there is no entity.
     assert hass.states.get(entity_id) is not None
     with (
@@ -87,4 +110,5 @@ async def test_update_failed(
             blocking=True,
             target={"entity_id": entity_id},
         )
-    assert mock_send_message.assert_called_once
+
+    assert len(expected_call.mock_calls) == 1

@@ -3,16 +3,28 @@
 import asyncio
 from collections.abc import Generator
 from copy import deepcopy
+import logging
 import pathlib
 import tempfile
 from typing import Any
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
-from roborock import RoborockCategory, RoomMapping
-from roborock.data import DyadError, RoborockDyadStateCode, ZeoError, ZeoState
+from roborock import RoborockCategory
+from roborock.data import (
+    CombinedMapInfo,
+    DyadError,
+    HomeDataDevice,
+    HomeDataProduct,
+    NamedRoomMapping,
+    NetworkInfo,
+    RoborockDyadStateCode,
+    ZeoError,
+    ZeoState,
+)
+from roborock.devices.device import RoborockDevice
+from roborock.devices.traits.v1.volume import SoundVolume
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
-from roborock.version_a01_apis import RoborockMqttClientA01
 
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
@@ -24,48 +36,51 @@ from homeassistant.core import HomeAssistant
 
 from .mock_data import (
     BASE_URL,
+    CLEAN_RECORD,
+    CLEAN_SUMMARY,
+    CONSUMABLE,
+    DND_TIMER,
     HOME_DATA,
     MAP_DATA,
     MULTI_MAP_LIST,
-    NETWORK_INFO,
-    PROP,
+    NETWORK_INFO_BY_DEVICE,
     ROBOROCK_RRUID,
+    ROOM_MAPPING,
     SCENES,
+    STATUS,
     USER_DATA,
     USER_EMAIL,
 )
 
 from tests.common import MockConfigEntry
 
+_LOGGER = logging.getLogger(__name__)
 
-class A01Mock(RoborockMqttClientA01):
-    """A class to mock the A01 client."""
 
-    def __init__(self, user_data, device_info, category) -> None:
-        """Initialize the A01Mock."""
-        super().__init__(user_data, device_info, category)
-        if category == RoborockCategory.WET_DRY_VAC:
-            self.protocol_responses = {
-                RoborockDyadDataProtocol.STATUS: RoborockDyadStateCode.drying.name,
-                RoborockDyadDataProtocol.POWER: 100,
-                RoborockDyadDataProtocol.MESH_LEFT: 111,
-                RoborockDyadDataProtocol.BRUSH_LEFT: 222,
-                RoborockDyadDataProtocol.ERROR: DyadError.none.name,
-                RoborockDyadDataProtocol.TOTAL_RUN_TIME: 213,
-            }
-        elif category == RoborockCategory.WASHING_MACHINE:
-            self.protocol_responses: list[RoborockZeoProtocol] = {
-                RoborockZeoProtocol.STATE: ZeoState.drying.name,
-                RoborockZeoProtocol.COUNTDOWN: 0,
-                RoborockZeoProtocol.WASHING_LEFT: 253,
-                RoborockZeoProtocol.ERROR: ZeoError.none.name,
-            }
+def create_dyad_trait() -> Mock:
+    """Create dyad trait for A01 devices."""
+    dyad_trait = AsyncMock()
+    dyad_trait.query_values.return_value = {
+        RoborockDyadDataProtocol.STATUS: RoborockDyadStateCode.drying.name,
+        RoborockDyadDataProtocol.POWER: 100,
+        RoborockDyadDataProtocol.MESH_LEFT: 111,
+        RoborockDyadDataProtocol.BRUSH_LEFT: 222,
+        RoborockDyadDataProtocol.ERROR: DyadError.none.name,
+        RoborockDyadDataProtocol.TOTAL_RUN_TIME: 213,
+    }
+    return dyad_trait
 
-    async def update_values(
-        self, dyad_data_protocols: list[RoborockDyadDataProtocol | RoborockZeoProtocol]
-    ):
-        """Update values with a predetermined response that can be overridden."""
-        return {prot: self.protocol_responses[prot] for prot in dyad_data_protocols}
+
+def create_zeo_trait() -> Mock:
+    """Create zeo trait for A01 devices."""
+    zeo_trait = AsyncMock()
+    zeo_trait.query_values.return_value = {
+        RoborockZeoProtocol.STATE: ZeoState.drying.name,
+        RoborockZeoProtocol.COUNTDOWN: 0,
+        RoborockZeoProtocol.WASHING_LEFT: 253,
+        RoborockZeoProtocol.ERROR: ZeoError.none.name,
+    }
+    return zeo_trait
 
 
 @pytest.fixture(name="bypass_api_client_fixture")
@@ -76,15 +91,12 @@ def bypass_api_client_fixture() -> None:
 
     with (
         patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
+            "roborock.devices.device_manager.RoborockApiClient.get_home_data_v3",
             return_value=HOME_DATA,
         ),
         patch(
             "homeassistant.components.roborock.RoborockApiClient.get_scenes",
             return_value=SCENES,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.load_multi_map"
         ),
         patch(
             "homeassistant.components.roborock.config_flow.RoborockApiClient.base_url",
@@ -95,82 +107,148 @@ def bypass_api_client_fixture() -> None:
         yield
 
 
-@pytest.fixture(name="bypass_api_fixture")
-def bypass_api_fixture(bypass_api_client_fixture: Any, mock_send_message: Mock) -> None:
-    """Skip calls to the API."""
-    with (
-        patch("homeassistant.components.roborock.RoborockMqttClientV1.async_connect"),
-        patch("homeassistant.components.roborock.RoborockMqttClientV1._send_command"),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1._send_command"
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.async_connect"
-        ),
-        patch(
-            "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
-            return_value=NETWORK_INFO,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
-            return_value=PROP,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_multi_maps_list",
-            return_value=MULTI_MAP_LIST,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_multi_maps_list",
-            return_value=MULTI_MAP_LIST,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
-            return_value=MAP_DATA,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._send_message"
-        ),
-        patch("homeassistant.components.roborock.RoborockMqttClientV1._wait_response"),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._wait_response"
-        ),
-        patch(
-            "roborock.version_1_apis.AttributeCache.async_value",
-        ),
-        patch(
-            "roborock.version_1_apis.AttributeCache.value",
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.MAP_SLEEP",
-            0,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_room_mapping",
-            return_value=[
-                RoomMapping(16, "2362048"),
-                RoomMapping(17, "2362044"),
-                RoomMapping(18, "2362041"),
+class FakeDevice(RoborockDevice):
+    """A fake device that returns a list of devices."""
+
+    def __init__(
+        self,
+        device_info: HomeDataDevice,
+        product: HomeDataProduct,
+    ) -> None:
+        """Initialize the FakeDevice."""
+        super().__init__(device_info, product, Mock(), Mock())
+
+    async def close(self) -> None:
+        """Close the device."""
+
+
+class FakeDeviceManager:
+    """A fake device manager that returns a list of devices."""
+
+    def __init__(self, devices: list[RoborockDevice]) -> None:
+        """Initialize the fake device manager."""
+        self._devices = devices
+
+    async def get_devices(self) -> list[RoborockDevice]:
+        """Return the list of devices."""
+        return self._devices
+
+
+def create_v1_properties(network_info: NetworkInfo) -> Mock:
+    """Create v1 properties for each fake device."""
+    v1_properties = Mock()
+    v1_properties.status: Any = deepcopy(STATUS)
+    v1_properties.status.refresh = AsyncMock()
+    v1_properties.dnd: Any = deepcopy(DND_TIMER)
+    v1_properties.dnd.is_on = True
+    v1_properties.dnd.refresh = AsyncMock()
+    v1_properties.dnd.enable = AsyncMock()
+    v1_properties.dnd.disable = AsyncMock()
+    v1_properties.dnd.set_dnd_timer = AsyncMock()
+    v1_properties.clean_summary: Any = deepcopy(CLEAN_SUMMARY)
+    v1_properties.clean_summary.last_clean_record = deepcopy(CLEAN_RECORD)
+    v1_properties.clean_summary.refresh = AsyncMock()
+    v1_properties.consumables = deepcopy(CONSUMABLE)
+    v1_properties.consumables.refresh = AsyncMock()
+    v1_properties.consumables.reset_consumable = AsyncMock()
+    v1_properties.sound_volume = SoundVolume(volume=50)
+    v1_properties.sound_volume.set_volume = AsyncMock()
+    v1_properties.sound_volume.refresh = AsyncMock()
+    v1_properties.command = AsyncMock()
+    v1_properties.command.send = AsyncMock()
+    v1_properties.maps = AsyncMock()
+    v1_properties.maps.current_map = MULTI_MAP_LIST.map_info[1].map_flag
+    v1_properties.maps.refresh = AsyncMock()
+    v1_properties.maps.set_current_map = AsyncMock()
+    v1_properties.map_content = AsyncMock()
+    v1_properties.map_content.image_content = b"\x89PNG-001"
+    v1_properties.map_content.map_data = deepcopy(MAP_DATA)
+    v1_properties.map_content.refresh = AsyncMock()
+    v1_properties.child_lock = AsyncMock()
+    v1_properties.child_lock.is_on = True
+    v1_properties.child_lock.enable = AsyncMock()
+    v1_properties.child_lock.disable = AsyncMock()
+    v1_properties.child_lock.refresh = AsyncMock()
+    v1_properties.led_status = AsyncMock()
+    v1_properties.led_status.is_on = True
+    v1_properties.led_status.enable = AsyncMock()
+    v1_properties.led_status.disable = AsyncMock()
+    v1_properties.led_status.refresh = AsyncMock()
+    v1_properties.flow_led_status = AsyncMock()
+    v1_properties.flow_led_status.is_on = True
+    v1_properties.flow_led_status.enable = AsyncMock()
+    v1_properties.flow_led_status.disable = AsyncMock()
+    v1_properties.flow_led_status.refresh = AsyncMock()
+    v1_properties.valley_electricity_timer = AsyncMock()
+    v1_properties.valley_electricity_timer.is_on = True
+    v1_properties.valley_electricity_timer.enable = AsyncMock()
+    v1_properties.valley_electricity_timer.disable = AsyncMock()
+    v1_properties.valley_electricity_timer.refresh = AsyncMock()
+    v1_properties.dust_collection_mode = AsyncMock()
+    v1_properties.dust_collection_mode.refresh = AsyncMock()
+    v1_properties.wash_towel_mode = AsyncMock()
+    v1_properties.wash_towel_mode.refresh = AsyncMock()
+    v1_properties.smart_wash_params = AsyncMock()
+    v1_properties.smart_wash_params.refresh = AsyncMock()
+    v1_properties.home = AsyncMock()
+    home_cache = {
+        map_data.map_flag: CombinedMapInfo(
+            name=map_data.name,
+            map_flag=map_data.map_flag,
+            rooms=[
+                NamedRoomMapping(
+                    segment_id=ROOM_MAPPING[room.id],
+                    iot_id=room.id,
+                    name=room.name,
+                )
+                for room in HOME_DATA.rooms
             ],
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_room_mapping",
-            return_value=[
-                RoomMapping(16, "2362048"),
-                RoomMapping(17, "2362044"),
-                RoomMapping(18, "2362041"),
-            ],
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
-            return_value=b"123",
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockClientA01",
-            A01Mock,
-        ),
-        patch("homeassistant.components.roborock.RoborockMqttClientA01", A01Mock),
-    ):
-        yield
+        )
+        for map_data in MULTI_MAP_LIST.map_info
+    }
+    v1_properties.home.home_cache = home_cache
+    v1_properties.home.current_map_data = home_cache[STATUS.current_map]
+    v1_properties.home.refresh = AsyncMock()
+    v1_properties.network_info = deepcopy(network_info)
+    v1_properties.network_info.refresh = AsyncMock()
+    # Mock diagnostics for a subset of properties
+    v1_properties.as_dict.return_value = {
+        "status": STATUS.as_dict(),
+        "dnd": DND_TIMER.as_dict(),
+    }
+    return v1_properties
+
+
+@pytest.fixture(name="fake_devices", autouse=True)
+def fake_devices_fixture() -> list[FakeDevice]:
+    """Fixture to mock the device manager."""
+    devices = []
+    for device_data, device_product_data in HOME_DATA.device_products.values():
+        fake_device = FakeDevice(
+            device_info=deepcopy(device_data),
+            product=deepcopy(device_product_data),
+        )
+        if device_data.pv == "1.0":
+            fake_device.v1_properties = create_v1_properties(
+                NETWORK_INFO_BY_DEVICE[device_data.duid]
+            )
+        elif device_data.pv == "A01":
+            if device_product_data.category == RoborockCategory.WET_DRY_VAC:
+                fake_device.dyad = create_dyad_trait()
+            elif device_product_data.category == RoborockCategory.WASHING_MACHINE:
+                fake_device.zeo = create_zeo_trait()
+            else:
+                raise ValueError("Unknown A01 category in test HOME_DATA")
+        else:
+            raise ValueError("Unknown pv in test HOME_DATA")
+        devices.append(fake_device)
+    return devices
+
+
+@pytest.fixture(name="fake_vacuum")
+def fake_vacuum_fixture(fake_devices: list[FakeDevice]) -> FakeDevice:
+    """Get the fake vacuum device."""
+    return fake_devices[0]
 
 
 @pytest.fixture(name="send_message_side_effect")
@@ -179,18 +257,45 @@ def send_message_side_effect_fixture() -> Any:
     return None
 
 
-@pytest.fixture(name="mock_send_message")
-def mock_send_message_fixture(send_message_side_effect: Any) -> Mock:
-    """Fixture to mock the send_message method."""
+@pytest.fixture(name="vacuum_command", autouse=True)
+def fake_vacuum_command_fixture(
+    fake_vacuum: FakeDevice, send_message_side_effect: Any
+) -> Mock:
+    """Get the fake vacuum device command trait for asserting that commands happened."""
+    assert fake_vacuum.v1_properties is not None
+    command_trait = fake_vacuum.v1_properties.command
+    if send_message_side_effect is not None:
+        command_trait.send.side_effect = send_message_side_effect
+    return command_trait
+
+
+@pytest.fixture(name="fake_create_device_manager", autouse=True)
+def fake_create_device_manager_fixture(
+    fake_devices: list[FakeDevice],
+) -> Generator[Mock]:
+    """Fixture to create a fake device manager."""
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._send_command",
-        side_effect=send_message_side_effect,
-    ) as mock_send_message:
-        yield mock_send_message
+        "homeassistant.components.roborock.create_device_manager",
+    ) as mock_create_device_manager:
+        mock_create_device_manager.return_value = FakeDeviceManager(fake_devices)
+        yield mock_create_device_manager
+
+
+@pytest.fixture(name="bypass_device_manager", autouse=True)
+def bypass_device_manager_fixture() -> None:
+    """Bypass the device manager network connection."""
+    with (
+        patch("roborock.devices.device_manager.create_lazy_mqtt_session"),
+        patch(
+            "roborock.devices.device_manager.create_v1_channel"
+        ) as mock_create_v1_channel,
+    ):
+        mock_create_v1_channel.return_value = AsyncMock()
+        yield
 
 
 @pytest.fixture
-def bypass_api_fixture_v1_only(bypass_api_fixture) -> None:
+def bypass_api_fixture_v1_only() -> None:
     """Bypass api for tests that require only having v1 devices."""
     home_data_copy = deepcopy(HOME_DATA)
     home_data_copy.received_devices = []
@@ -247,7 +352,6 @@ async def mock_patforms_fixture(
 @pytest.fixture
 async def setup_entry(
     hass: HomeAssistant,
-    bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
 ) -> Generator[MockConfigEntry]:
     """Set up the Roborock platform."""
