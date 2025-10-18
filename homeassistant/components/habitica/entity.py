@@ -64,7 +64,7 @@ class HabiticaBase(CoordinatorEntity[HabiticaDataUpdateCoordinator]):
                     via_device=(
                         (
                             DOMAIN,
-                            f"{coordinator.config_entry.unique_id}_{self.user.party.id!s}",
+                            f"{coordinator.config_entry.unique_id}_{self.user.party.id}",
                         )
                     )
                 )
