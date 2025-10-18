@@ -21,6 +21,9 @@ DEFAULT_STT_MODEL = "scribe_v1"
 DEFAULT_STYLE = 0
 DEFAULT_USE_SPEAKER_BOOST = True
 
+MAX_REQUEST_IDS = 3
+MODELS_PREVIOUS_INFO_NOT_SUPPORTED = ("eleven_v3",)
+
 STT_LANGUAGES = [
     "af-ZA",  # Afrikaans
     "am-ET",  # Amharic
