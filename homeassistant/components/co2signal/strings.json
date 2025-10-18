@@ -6,7 +6,7 @@
           "location": "[%key:common::config_flow::data::location%]",
           "api_key": "[%key:common::config_flow::data::access_token%]"
         },
-        "description": "Visit https://electricitymaps.com/free-tier to request a token."
+        "description": "Visit the [Electricity Maps page]({register_link}) to request a token."
       },
       "coordinates": {
         "data": {

@@ -47,6 +47,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "actron_air": {
+      "name": "Actron Air",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "adax": {
       "name": "Adax",
       "integration_type": "hub",
@@ -1934,7 +1940,7 @@
     },
     "feedreader": {
       "name": "Feedreader",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2595,7 +2601,7 @@
     },
     "habitica": {
       "name": "Habitica",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3002,7 +3008,7 @@
     },
     "immich": {
       "name": "Immich",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3132,7 +3138,7 @@
     },
     "iron_os": {
       "name": "IronOS",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4407,7 +4413,7 @@
     },
     "nextcloud": {
       "name": "Nextcloud",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4540,7 +4546,7 @@
     },
     "ntfy": {
       "name": "ntfy",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -4747,6 +4753,12 @@
     },
     "openhome": {
       "name": "Linn / OpenHome",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "openrgb": {
+      "name": "OpenRGB",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5786,7 +5798,7 @@
     },
     "satel_integra": {
       "name": "Satel Integra",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push",
       "single_config_entry": true
@@ -6566,7 +6578,7 @@
           "name": "Synology Chat"
         },
         "synology_dsm": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Synology DSM"
@@ -6630,7 +6642,7 @@
     },
     "tankerkoenig": {
       "name": "Tankerkoenig",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7107,7 +7119,7 @@
       "name": "Ubiquiti",
       "integrations": {
         "airos": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Ubiquiti airOS"
@@ -7203,7 +7215,7 @@
     },
     "uptime_kuma": {
       "name": "Uptime Kuma",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
