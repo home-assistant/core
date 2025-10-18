@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 from collections.abc import AsyncGenerator, Callable
 import json
+import uuid
 from mimetypes import guess_file_type
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
@@ -141,32 +142,94 @@ def _convert_content_to_chat_message(
     return None
 
 
-def _decode_tool_arguments(arguments: str) -> Any:
-    """Decode tool call arguments."""
+def _decode_tool_arguments(arguments: Any) -> Any:
+    """Decode tool call arguments safely."""
+    if arguments is None:
+        LOGGER.warning("Tool arguments is None, defaulting to {}")
+        return {}
+    if isinstance(arguments, (bytes, bytearray)):
+        try:
+            return arguments.decode("utf-8", "ignore")
+        except Exception:
+            LOGGER.warning("Failed to decode bytes arguments")
+            return {}
+    if isinstance(arguments, dict):
+        return arguments
+    if isinstance(arguments, str):
+        s = arguments.strip()
+        if not s:
+            LOGGER.warning("Empty string arguments")
+            return {}
+        try:
+            return json.loads(s)
+        except json.JSONDecodeError:
+            try:
+                inner = json.loads(s)
+                if isinstance(inner, str):
+                    return json.loads(inner)
+                return inner
+            except Exception:
+                raise HomeAssistantError(f"Unparsable tool arguments: {s}")
     try:
-        return json.loads(arguments)
-    except json.JSONDecodeError as err:
-        raise HomeAssistantError(f"Unexpected tool argument response: {err}") from err
+        return json.loads(str(arguments))
+    except Exception:
+        LOGGER.warning("Unexpected tool argument type: %s", type(arguments))
+        return {}
 
 
 async def _transform_response(
     message: ChatCompletionMessage,
-) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
-    """Transform the OpenRouter message to a ChatLog format."""
+) -> AsyncGenerator[conversation.AssistantContentDeltaDict, None]:
+    """Transform provider message to conversation deltas, including tool calls."""
     data: conversation.AssistantContentDeltaDict = {
         "role": message.role,
         "content": message.content,
     }
-    if message.tool_calls:
-        data["tool_calls"] = [
-            llm.ToolInput(
-                id=tool_call.id,
-                tool_name=tool_call.function.name,
-                tool_args=_decode_tool_arguments(tool_call.function.arguments),
-            )
-            for tool_call in message.tool_calls
-            if tool_call.type == "function"
-        ]
+
+    if getattr(message, "tool_calls", None):
+        calls: list[llm.ToolInput] = []
+        for tc in message.tool_calls:
+            if getattr(tc, "type", None) != "function" or not getattr(tc, "function", None):
+                LOGGER.warning("Skipping malformed tool_call: %s", tc)
+                continue
+            raw = getattr(tc.function, "arguments", None) or getattr(tc.function, "parameters", None)
+            args = _decode_tool_arguments(raw)
+            calls.append(llm.ToolInput(id=tc.id, tool_name=tc.function.name, tool_args=args))
+        if calls:
+            data["tool_calls"] = calls
+        yield data
+        return
+
+    # Fallback: parse JSON in content for tool_calls
+    try:
+        txt = message.content
+        if isinstance(txt, str):
+            s = txt.strip()
+            if s.startswith("{") and "tool_calls" in s:
+                obj = json.loads(s)
+                tc_list = obj.get("tool_calls")
+                if isinstance(tc_list, list):
+                    calls: list[llm.ToolInput] = []
+                    for tc in tc_list:
+                        if not isinstance(tc, dict) or tc.get("type") != "function" or "function" not in tc:
+                            continue
+                        fn = tc["function"]
+                        name = fn.get("name")
+                        raw = fn.get("arguments") or fn.get("parameters")
+                        args = _decode_tool_arguments(raw)
+                        calls.append(
+                            llm.ToolInput(
+                                id=tc.get("id") or str(uuid.uuid4()),
+                                tool_name=name,
+                                tool_args=args,
+                            )
+                        )
+                    if calls:
+                        data["tool_calls"] = calls
+                        data["content"] = None
+    except Exception as ex:
+        LOGGER.debug("Fallback JSON parse failed: %s", ex)
+
     yield data
 
 
@@ -249,8 +312,64 @@ class OpenRouterEntity(Entity):
                 for tool in chat_log.llm_api.tools
             ]
 
-        if tools:
-            model_args["tools"] = tools
+        def _add_query_property(params: dict[str, Any]) -> dict[str, Any]:
+            if not isinstance(params, dict):
+                params = {"type": "object", "properties": {}, "additionalProperties": True}
+            props = params.get("properties")
+            if not isinstance(props, dict):
+                props = {}
+                params["properties"] = props
+            if "query" not in props:
+                props["query"] = {"type": "string", "description": "Free-form query string optional"}
+            params.setdefault("additionalProperties", True)
+            params.setdefault("type", "object")
+            return params
+
+        def _to_fn_dict(t: dict | Any) -> dict | None:
+            if isinstance(t, dict):
+                fn = t.get("function")
+                if isinstance(fn, dict):
+                    fn["parameters"] = _add_query_property(fn.get("parameters") or {})
+                    return {"type": "function", "function": fn}
+                return None
+            try:
+                fn = getattr(t, "function", None)
+                name = getattr(fn, "name", None) if fn else None
+                params = getattr(fn, "parameters", None) if fn else None
+                if hasattr(params, "model_dump"):
+                    params = params.model_dump()
+                if hasattr(fn, "model_dump"):
+                    fn_dict = fn.model_dump()
+                else:
+                    fn_dict = {"name": name, "parameters": params}
+                fn_dict["parameters"] = _add_query_property(fn_dict.get("parameters") or {})
+                return {"type": "function", "function": fn_dict}
+            except Exception:
+                return None
+
+        def _normalize_tools(tlist: list[dict]) -> list[dict]:
+            out: list[dict] = []
+            for t in tlist:
+                d = _to_fn_dict(t)
+                if d and d.get("type") == "function" and d["function"].get("name"):
+                    out.append(d)
+            return out
+
+        def _ensure_tool(name: str | None) -> None:
+            if not name:
+                return
+            for t in tools:
+                fn = t.get("function")
+                if fn and fn.get("name") == name:
+                    return
+            tools.append({
+                "type": "function",
+                "function": {
+                    "name": name,
+                    "description": "Dynamic tool from history",
+                    "parameters": _add_query_property({}),
+                },
+            })
 
         model_args["messages"] = [
             m
@@ -258,27 +377,20 @@ class OpenRouterEntity(Entity):
             if (m := _convert_content_to_chat_message(content))
         ]
 
-        last_content = chat_log.content[-1]
+        # Discover tools from history messages
+        for content in chat_log.content:
+            if isinstance(content, conversation.AssistantContent) and content.tool_calls:
+                for tc in content.tool_calls:
+                    _ensure_tool(tc.tool_name)
+            if isinstance(content, conversation.ToolResultContent):
+                _ensure_tool(content.tool_name)
 
-        # Handle attachments by adding them to the last user message
-        if last_content.role == "user" and last_content.attachments:
-            last_message: ChatCompletionMessageParam = model_args["messages"][-1]
-            assert last_message["role"] == "user" and isinstance(
-                last_message["content"], str
-            )
-            # Encode files with base64 and append them to the text prompt
-            files = await async_prepare_files_for_prompt(
-                self.hass,
-                [(a.path, a.mime_type) for a in last_content.attachments],
-            )
-            last_message["content"] = [
-                {"type": "text", "text": last_message["content"]},
-                *files,
-            ]
+        norm = _normalize_tools(tools)
+        if norm:
+            model_args["tools"] = norm
+            model_args["tool_choice"] = "auto"
 
         if structure:
-            if TYPE_CHECKING:
-                assert structure_name is not None
             model_args["response_format"] = ResponseFormatJSONSchema(
                 type="json_schema",
                 json_schema=_format_structured_output(
@@ -297,14 +409,47 @@ class OpenRouterEntity(Entity):
 
             result_message = result.choices[0].message
 
-            model_args["messages"].extend(
-                [
-                    msg
-                    async for content in chat_log.async_add_delta_content_stream(
-                        self.entity_id, _transform_response(result_message)
-                    )
-                    if (msg := _convert_content_to_chat_message(content))
-                ]
-            )
+            new_msgs: list[ChatCompletionMessageParam] = [
+                msg
+                async for content in chat_log.async_add_delta_content_stream(
+                    self.entity_id, _transform_response(result_message)
+                )
+                if (msg := _convert_content_to_chat_message(content))
+            ]
+
+            model_args.setdefault("messages", []).extend(new_msgs)
+
+            # Convert any tool messages into assistant content
+            assistant_items: list[conversation.AssistantContent] = []
+            for m in new_msgs:
+                if isinstance(m, dict) and m.get("role") == "tool":
+                    # parse the tool result
+                    try:
+                        payload = json.loads(m.get("content") or "{}")
+                        speech = None
+                        sp = payload.get("speech")
+                        if isinstance(sp, dict):
+                            plain = sp.get("plain")
+                            if isinstance(plain, dict) and "speech" in plain:
+                                speech = plain["speech"]
+                        if speech is None:
+                            speech = json.dumps(payload, ensure_ascii=False)
+                    except Exception:
+                        speech = m.get("content")
+                    assistant_items.append(conversation.AssistantContent(agent_id=chat_log.conversation_id, content=speech, tool_calls=[]))
+
+            for ac in assistant_items:
+                chat_log.async_add_assistant_content_without_tools(ac)
+
+            # Discover new tools in this round
+            for m in new_msgs:
+                if isinstance(m, dict) and m.get("role") == "tool":
+                    _ensure_tool(m.get("name"))
+
+            norm = _normalize_tools(tools)
+            if norm:
+                model_args["tools"] = norm
+                model_args["tool_choice"] = "auto"
+
             if not chat_log.unresponded_tool_results:
                 break
