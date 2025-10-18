@@ -28,6 +28,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type XboxConfigEntry = ConfigEntry[XboxUpdateCoordinator]
+
 
 @dataclass
 class ConsoleData:

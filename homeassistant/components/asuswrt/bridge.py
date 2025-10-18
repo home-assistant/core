@@ -12,7 +12,8 @@ from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 from aiohttp import ClientSession
 from asusrouter import AsusRouter, AsusRouterError
 from asusrouter.config import ARConfigKey
-from asusrouter.modules.client import AsusClient, ConnectionState
+from asusrouter.modules.client import AsusClient
+from asusrouter.modules.connection import ConnectionState
 from asusrouter.modules.data import AsusData
 from asusrouter.modules.homeassistant import convert_to_ha_data, convert_to_ha_sensors
 from asusrouter.tools.connection import get_cookie_jar
@@ -71,7 +72,16 @@ class WrtDevice(NamedTuple):
 
 _LOGGER = logging.getLogger(__name__)
 
-type _FuncType[_T] = Callable[[_T], Awaitable[list[Any] | tuple[Any] | dict[str, Any]]]
+type _FuncType[_T] = Callable[
+    [_T],
+    Awaitable[
+        list[str]
+        | tuple[float | None, float | None]
+        | list[float]
+        | dict[str, float | str | None]
+        | dict[str, float]
+    ],
+]
 type _ReturnFuncType[_T] = Callable[[_T], Coroutine[Any, Any, dict[str, Any]]]
 
 
@@ -86,7 +96,9 @@ def handle_errors_and_zip[_AsusWrtBridgeT: AsusWrtBridge](
         """Run library methods and zip results or manage exceptions."""
 
         @functools.wraps(func)
-        async def _wrapper(self: _AsusWrtBridgeT) -> dict[str, Any]:
+        async def _wrapper(
+            self: _AsusWrtBridgeT,
+        ) -> dict[str, float | str | None] | dict[str, float]:
             try:
                 data = await func(self)
             except exceptions as exc:
@@ -113,7 +125,9 @@ class AsusWrtBridge(ABC):
 
     @staticmethod
     def get_bridge(
-        hass: HomeAssistant, conf: dict[str, Any], options: dict[str, Any] | None = None
+        hass: HomeAssistant,
+        conf: dict[str, str | int],
+        options: dict[str, str | bool | int] | None = None,
     ) -> AsusWrtBridge:
         """Get Bridge instance."""
         if conf[CONF_PROTOCOL] in (PROTOCOL_HTTPS, PROTOCOL_HTTP):
@@ -312,22 +326,22 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         return [SENSORS_TEMPERATURES_LEGACY[i] for i in range(3) if availability[i]]
 
     @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_BYTES)
-    async def _get_bytes(self) -> Any:
+    async def _get_bytes(self) -> tuple[float | None, float | None]:
         """Fetch byte information from the router."""
         return await self._api.async_get_bytes_total()
 
     @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_RATES)
-    async def _get_rates(self) -> Any:
+    async def _get_rates(self) -> tuple[float, float]:
         """Fetch rates information from the router."""
         return await self._api.async_get_current_transfer_rates()
 
     @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_LOAD_AVG)
-    async def _get_load_avg(self) -> Any:
+    async def _get_load_avg(self) -> list[float]:
         """Fetch load average information from the router."""
         return await self._api.async_get_loadavg()
 
     @handle_errors_and_zip((OSError, ValueError), None)
-    async def _get_temperatures(self) -> Any:
+    async def _get_temperatures(self) -> dict[str, float]:
         """Fetch temperatures information from the router."""
         return await self._api.async_get_temperature()
 

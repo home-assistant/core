@@ -92,4 +92,5 @@ def mock_config_entry() -> MockConfigEntry:
         title="Firefly III test",
         data=MOCK_TEST_CONFIG,
         entry_id="firefly_iii_test_entry_123",
+        unique_id="firefly_iii_test_unique_id_123",
     )
