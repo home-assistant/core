@@ -2601,7 +2601,7 @@
     },
     "habitica": {
       "name": "Habitica",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4546,7 +4546,7 @@
     },
     "ntfy": {
       "name": "ntfy",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -7215,7 +7215,7 @@
     },
     "uptime_kuma": {
       "name": "Uptime Kuma",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
