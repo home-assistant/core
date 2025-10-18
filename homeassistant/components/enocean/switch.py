@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
+from .const import ENOCEAN_DONGLE
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 from .importer import (
@@ -92,6 +93,7 @@ async def async_setup_entry(
                     EnOceanSwitch(
                         dev_id=device_id,
                         dev_name=device["name"],
+                        gateway_id=entry.runtime_data[ENOCEAN_DONGLE].chip_id,
                         channel=0,
                         dev_type=device_type,
                         name="Switch",
@@ -102,6 +104,7 @@ async def async_setup_entry(
                     EnOceanSwitch(
                         dev_id=device_id,
                         dev_name=device["name"],
+                        gateway_id=entry.runtime_data[ENOCEAN_DONGLE].chip_id,
                         channel=channel,
                         dev_type=device_type,
                         name="Switch " + str(channel + 1),
@@ -117,6 +120,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     def __init__(
         self,
         dev_id: EnOceanID,
+        gateway_id: EnOceanID,
         dev_name,
         channel,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
@@ -124,7 +128,11 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     ) -> None:
         """Initialize the EnOcean switch device."""
         super().__init__(
-            enocean_device_id=dev_id, device_name=dev_name, name=name, dev_type=dev_type
+            enocean_device_id=dev_id,
+            enocean_gateway_id=gateway_id,
+            device_name=dev_name,
+            name=name,
+            dev_type=dev_type,
         )
         self._light = None
         self.channel = channel

@@ -4,6 +4,7 @@ from abc import abstractmethod
 
 from enocean.protocol.packet import Packet
 
+from homeassistant.config_entries import _LOGGER
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
@@ -24,6 +25,7 @@ class EnOceanEntity(Entity):
     def __init__(
         self,
         enocean_device_id: EnOceanID,
+        enocean_gateway_id: EnOceanID,
         device_name: str,
         name: str | None = None,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
@@ -35,14 +37,16 @@ class EnOceanEntity(Entity):
         self.dev_type = dev_type
         self._attr_name = name
         self._attr_has_entity_name = name is not None
-        self._gateway_id: EnOceanID = EnOceanID(0)
+        self._gateway_id = enocean_gateway_id
         self._attr_should_poll = False
-        # _LOGGER.warning("unique_id: %s", f"{enocean_device_id.to_string()}-{self.device_class}-{name}")
+        # _LOGGER.warning("unique_id: %s", f"{enocean_device_id.to_string()}-{self.platform}-{name}")
         # self._attr_unique_id = f"{enocean_device_id.to_string()}-{self._attr_device_class}-{name}"
 
     async def async_added_to_hass(self) -> None:
         """Get gateway ID and register callback."""
         self._gateway_id = self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].chip_id
+
+        _LOGGER.warning("Unique_id: %s", self.unique_id)
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -64,10 +68,18 @@ class EnOceanEntity(Entity):
         packet = Packet(packet_type, data=data, optional=optional)
         dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)
 
-    # @property
-    # def unique_id(self) -> str:
-    #     """Return a unique ID for this entity."""
-    #     return f"{self.enocean_device_id.to_string()}-{self.device_class}-{self.name}"
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID for this entity."""
+        uid = f"{self.enocean_device_id.to_string()}.{self.platform.domain}"
+        if self.device_class:
+            uid += f".{self.device_class}"
+        else:
+            uid += ".generic"
+
+        if self.name:
+            uid += f".{self.name}"
+        return uid
 
     @property
     def enocean_device_id(self) -> EnOceanID:
@@ -89,10 +101,10 @@ class EnOceanEntity(Entity):
             "model": self.dev_type.model,
         }
 
-        if self._enocean_device_id.to_number() == 0:
+        if self._enocean_device_id.to_number() == self._gateway_id.to_number():
             info.update(
                 {
-                    "identifiers": {(DOMAIN, EnOceanID(0).to_string())},
+                    "identifiers": {(DOMAIN, self._enocean_device_id.to_string())},
                     "serial_number": self.hass.data[DATA_ENOCEAN][
                         ENOCEAN_DONGLE
                     ].chip_id.to_string(),

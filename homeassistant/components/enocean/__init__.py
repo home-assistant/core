@@ -20,7 +20,10 @@ async def async_setup_entry(
     enocean_data = hass.data.setdefault(DATA_ENOCEAN, {})
     usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
     await usb_dongle.async_setup()
+
+    # PLAN IS TO move the following instead into the config_entry's runtime_data
     enocean_data[ENOCEAN_DONGLE] = usb_dongle
+    config_entry.runtime_data = {ENOCEAN_DONGLE: usb_dongle}
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
     async_cleanup_device_registry(hass=hass, entry=config_entry)

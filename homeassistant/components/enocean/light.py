@@ -24,6 +24,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
+from .const import ENOCEAN_DONGLE
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 from .importer import (
@@ -85,6 +86,7 @@ async def async_setup_entry(
                         dev_name=device["name"],
                         dev_id=device_id,
                         dev_type=device_type,
+                        gateway_id=entry.runtime_data[ENOCEAN_DONGLE].chip_id,
                     )
                 ]
             )
@@ -100,20 +102,24 @@ class EnOceanLight(EnOceanEntity, LightEntity):
 
     def __init__(
         self,
-        sender_id,
+        sender_id: EnOceanID,
         dev_id: EnOceanID,
+        gateway_id: EnOceanID,
         dev_name,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
     ) -> None:
         """Initialize the EnOcean light source."""
         super().__init__(
-            enocean_device_id=dev_id, device_name=dev_name, name=name, dev_type=dev_type
+            enocean_device_id=dev_id,
+            enocean_gateway_id=gateway_id,
+            device_name=dev_name,
+            name=name,
+            dev_type=dev_type,
         )
         self._attr_is_on = False
         self._attr_brightness = None
         self._sender_id = sender_id
-        self._attr_unique_id = f"{dev_id.to_string()}-{Platform.LIGHT.value}-0"
         self._attr_should_poll = False
 
     @property
@@ -141,7 +147,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         if bval == 0:
             bval = 1
         command = [0xA5, 0x02, bval, 0x01, 0x09]
-        command.extend(self._sender_id)
+        command.extend(self._sender_id.to_bytelist())
         command.extend([0x00])
         self.send_command(command, [], 0x01)
         self._attr_is_on = True
@@ -149,7 +155,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light source off."""
         command = [0xA5, 0x02, 0x00, 0x01, 0x09]
-        command.extend(self._sender_id)
+        command.extend(self._sender_id.to_bytelist())
         command.extend([0x00])
         self.send_command(command, [], 0x01)
         self._attr_is_on = False

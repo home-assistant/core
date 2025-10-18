@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -22,17 +19,12 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_CLOSED,
     STATE_OPEN,
-    Platform,
     UnitOfPower,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_flow import (
     CONF_ENOCEAN_DEVICE_ID,
@@ -40,13 +32,9 @@ from .config_flow import (
     CONF_ENOCEAN_DEVICE_TYPE_ID,
     CONF_ENOCEAN_DEVICES,
 )
-from .const import LOGGER
+from .const import ENOCEAN_DONGLE, LOGGER
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
-from .importer import (
-    EnOceanPlatformConfig,
-    register_platform_config_for_migration_to_config_entry,
-)
 from .supported_device_type import (
     EnOceanSupportedDeviceType,
     get_supported_enocean_device_types,
@@ -65,45 +53,32 @@ SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
 
 
-@dataclass(frozen=True, kw_only=True)
-class EnOceanSensorEntityDescription(SensorEntityDescription):
-    """Describes EnOcean sensor entity."""
-
-    unique_id: Callable[[list[int]], str | None]
-
-
-SENSOR_DESC_TEMPERATURE = EnOceanSensorEntityDescription(
+SENSOR_DESC_TEMPERATURE = SensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
     name="Temperature",
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
-    unique_id=lambda dev_id_string: f"{dev_id_string}-{SENSOR_TYPE_TEMPERATURE}",
 )
 
-SENSOR_DESC_HUMIDITY = EnOceanSensorEntityDescription(
+SENSOR_DESC_HUMIDITY = SensorEntityDescription(
     key=SENSOR_TYPE_HUMIDITY,
     name="Humidity",
     native_unit_of_measurement=PERCENTAGE,
     device_class=SensorDeviceClass.HUMIDITY,
     state_class=SensorStateClass.MEASUREMENT,
-    unique_id=lambda dev_id_string: f"{dev_id_string}-{SENSOR_TYPE_HUMIDITY}",
 )
 
-SENSOR_DESC_POWER = EnOceanSensorEntityDescription(
+SENSOR_DESC_POWER = SensorEntityDescription(
     key=SENSOR_TYPE_POWER,
     name="Power",
     native_unit_of_measurement=UnitOfPower.WATT,
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,
-    unique_id=lambda dev_id_string: f"{dev_id_string}-{SENSOR_TYPE_POWER}",
 )
 
-SENSOR_DESC_WINDOWHANDLE = EnOceanSensorEntityDescription(
-    key=SENSOR_TYPE_WINDOWHANDLE,
-    name="WindowHandle",
-    icon="mdi:window-open-variant",
-    unique_id=lambda dev_id_string: f"{dev_id_string}-{SENSOR_TYPE_WINDOWHANDLE}",
+SENSOR_DESC_WINDOWHANDLE = SensorEntityDescription(
+    key=SENSOR_TYPE_WINDOWHANDLE, name="WindowHandle", icon="mdi:window-open-variant"
 )
 
 
@@ -118,52 +93,6 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_RANGE_TO, default=0): cv.positive_int,
     }
 )
-
-
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up an EnOcean sensor device."""
-    register_platform_config_for_migration_to_config_entry(
-        EnOceanPlatformConfig(platform=Platform.SENSOR, config=config)
-    )
-
-    # dev_id = config[CONF_ID]
-    # dev_name = config[CONF_NAME]
-    # sensor_type = config[CONF_DEVICE_CLASS]
-
-    # entities: list[EnOceanSensor] = []
-    # if sensor_type == SENSOR_TYPE_TEMPERATURE:
-    #     temp_min = config[CONF_MIN_TEMP]
-    #     temp_max = config[CONF_MAX_TEMP]
-    #     range_from = config[CONF_RANGE_FROM]
-    #     range_to = config[CONF_RANGE_TO]
-    #     entities = [
-    #         EnOceanTemperatureSensor(
-    #             dev_id,
-    #             dev_name,
-    #             SENSOR_DESC_TEMPERATURE,
-    #             scale_min=temp_min,
-    #             scale_max=temp_max,
-    #             range_from=range_from,
-    #             range_to=range_to,
-    #         )
-    #     ]
-
-    # elif sensor_type == SENSOR_TYPE_HUMIDITY:
-    #     entities = [EnOceanHumiditySensor(dev_id, dev_name, SENSOR_DESC_HUMIDITY)]
-
-    # elif sensor_type == SENSOR_TYPE_POWER:
-    #     entities = [EnOceanPowerSensor(dev_id, dev_name, SENSOR_DESC_POWER)]
-
-    # elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
-    #     entities = [EnOceanWindowHandle(dev_id, dev_name, SENSOR_DESC_WINDOWHANDLE)]
-
-    # if entities:
-    #     add_entities(entities)
 
 
 async def async_setup_entry(
@@ -191,6 +120,7 @@ async def async_setup_entry(
                     EnOceanTemperatureSensor(
                         dev_id=device_id,
                         dev_name=device_name,
+                        gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
                         description=SENSOR_DESC_TEMPERATURE,
                         scale_min=min_temp,
                         scale_max=max_temp,
@@ -225,6 +155,7 @@ async def async_setup_entry(
                     EnOceanTemperatureSensor(
                         dev_id=device_id,
                         dev_name=device_name,
+                        gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
                         description=SENSOR_DESC_TEMPERATURE,
                         scale_min=min_temp,
                         scale_max=max_temp,
@@ -236,6 +167,7 @@ async def async_setup_entry(
                     EnOceanHumiditySensor(
                         dev_id=device_id,
                         dev_name=device_name,
+                        gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
                         description=SENSOR_DESC_HUMIDITY,
                         dev_type=device_type,
                         name="Humidity",
@@ -260,6 +192,9 @@ async def async_setup_entry(
                         EnOceanTemperatureSensor(
                             dev_id=device_id,
                             dev_name=device_name,
+                            gateway_id=config_entry.runtime_data[
+                                ENOCEAN_DONGLE
+                            ].chip_id,
                             description=SENSOR_DESC_TEMPERATURE,
                             scale_min=0,
                             scale_max=40,
@@ -276,6 +211,9 @@ async def async_setup_entry(
                         EnOceanTemperatureSensor(
                             dev_id=device_id,
                             dev_name=device_name,
+                            gateway_id=config_entry.runtime_data[
+                                ENOCEAN_DONGLE
+                            ].chip_id,
                             description=SENSOR_DESC_TEMPERATURE,
                             scale_min=0,
                             scale_max=40,
@@ -287,6 +225,9 @@ async def async_setup_entry(
                         EnOceanHumiditySensor(
                             dev_id=device_id,
                             dev_name=device_name,
+                            gateway_id=config_entry.runtime_data[
+                                ENOCEAN_DONGLE
+                            ].chip_id,
                             description=SENSOR_DESC_HUMIDITY,
                             dev_type=device_type,
                             name="Humidity",
@@ -307,6 +248,7 @@ async def async_setup_entry(
                     EnOceanPowerSensor(
                         dev_id=device_id,
                         dev_name=device_name,
+                        gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
                         description=SENSOR_DESC_POWER,
                         dev_type=device_type,
                         name="Power usage",
@@ -322,6 +264,7 @@ async def async_setup_entry(
                     EnOceanTemperatureSensor(
                         dev_id=device_id,
                         dev_name=device_name,
+                        gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
                         description=SENSOR_DESC_TEMPERATURE,
                         scale_min=0,
                         scale_max=40,
@@ -341,6 +284,7 @@ async def async_setup_entry(
                     EnOceanWindowHandle(
                         dev_id=device_id,
                         dev_name=device_name,
+                        gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
                         description=SENSOR_DESC_WINDOWHANDLE,
                         dev_type=device_type,
                     )
@@ -354,18 +298,22 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
 
     def __init__(
         self,
-        dev_id,
-        dev_name,
-        description: EnOceanSensorEntityDescription,
+        dev_id: EnOceanID,
+        dev_name: str,
+        description: SensorEntityDescription,
+        gateway_id: EnOceanID,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
-        name=None,
+        name: str | None = None,
     ) -> None:
         """Initialize the EnOcean sensor device."""
         super().__init__(
-            enocean_device_id=dev_id, device_name=dev_name, name=name, dev_type=dev_type
+            enocean_device_id=dev_id,
+            device_name=dev_name,
+            name=name,
+            dev_type=dev_type,
+            enocean_gateway_id=gateway_id,
         )
         self.entity_description = description
-        self._attr_unique_id = description.unique_id(dev_id.to_string())
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
@@ -422,8 +370,9 @@ class EnOceanTemperatureSensor(EnOceanSensor):
     def __init__(
         self,
         dev_id: EnOceanID,
+        gateway_id: EnOceanID,
         dev_name: str,
-        description: EnOceanSensorEntityDescription,
+        description: SensorEntityDescription,
         *,
         scale_min,
         scale_max,
@@ -439,6 +388,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
             name=name,
             description=description,
             dev_type=dev_type,
+            gateway_id=gateway_id,
         )
         self._scale_min = scale_min
         self._scale_max = scale_max

@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
-from .const import ENOCEAN_BINARY_SENSOR_EEPS
+from .const import ENOCEAN_BINARY_SENSOR_EEPS, ENOCEAN_DONGLE
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 from .supported_device_type import (
@@ -29,11 +29,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
 
-    # enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
+    enocean_dongle = config_entry.runtime_data[ENOCEAN_DONGLE]
+
     async_add_entities(
         [
             EnOceanBinarySensor(
-                device_id=EnOceanID(0),
+                device_id=enocean_dongle.chip_id,
+                enocean_gateway_id=enocean_dongle.chip_id,
                 device_name="EnOcean Gateway",
                 name="Teach-In Active",
                 dev_type=EnOceanSupportedDeviceType(
@@ -57,6 +59,7 @@ async def async_setup_entry(
                 [
                     EnOceanBinarySensor(
                         device_id=device_id,
+                        enocean_gateway_id=enocean_dongle.chip_id,
                         device_name=device["name"],
                         channel=channel,
                         dev_type=device_type,
@@ -78,6 +81,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
     def __init__(
         self,
         device_id,
+        enocean_gateway_id: EnOceanID,
         device_name,
         device_class=Platform.BINARY_SENSOR,
         channel=None,
@@ -87,15 +91,13 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         """Initialize the EnOcean binary sensor."""
         super().__init__(
             enocean_device_id=device_id,
+            enocean_gateway_id=enocean_gateway_id,
             device_name=device_name,
             dev_type=dev_type,
             name=name,
         )
         self._attr_device_class = device_class
 
-        self._attr_unique_id = (
-            device_id.to_string() + "-" + device_class + "-" + str(channel)
-        )
         self._attr_on = False
 
         self._attr_should_poll = False

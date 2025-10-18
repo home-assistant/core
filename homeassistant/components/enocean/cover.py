@@ -33,10 +33,13 @@ from .config_flow import (
     CONF_ENOCEAN_DEVICES,
     CONF_ENOCEAN_SENDER_ID,
 )
-from .const import SIGNAL_SEND_MESSAGE
+from .const import ENOCEAN_DONGLE, SIGNAL_SEND_MESSAGE
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
-from .supported_device_type import get_supported_enocean_device_types
+from .supported_device_type import (
+    EnOceanSupportedDeviceType,
+    get_supported_enocean_device_types,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +85,8 @@ async def async_setup_entry(
             [
                 EnOceanCover(
                     sender_id=sender_id,
-                    device_id=device_id,
+                    enocean_device_id=device_id,
+                    gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
                     device_name=device[CONF_ENOCEAN_DEVICE_NAME],
                     dev_type=device_type,
                     name=None,
@@ -102,10 +106,19 @@ class EnOceanCoverCommand(Enum):
 class EnOceanCover(EnOceanEntity, CoverEntity):
     """Representation of an EnOcean Cover (EEP D2-05-00)."""
 
-    def __init__(self, sender_id, device_id, device_name, dev_type, name) -> None:
+    def __init__(
+        self,
+        sender_id: EnOceanID,
+        enocean_device_id: EnOceanID,
+        gateway_id: EnOceanID,
+        device_name: str,
+        dev_type: EnOceanSupportedDeviceType,
+        name: str | None,
+    ) -> None:
         """Initialize the EnOcean Cover."""
         super().__init__(
-            enocean_device_id=device_id,
+            enocean_device_id=enocean_device_id,
+            enocean_gateway_id=gateway_id,
             device_name=device_name,
             dev_type=dev_type,
             name=name,
@@ -116,8 +129,6 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._is_opening = False
         self._is_closing = False
         self._sender_id = sender_id
-        # self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
-        self._attr_unique_id = f"{device_id.to_string()}"
         self._state_changed_by_command = False
         self._stop_suspected = False
         self._watchdog_enabled = False
