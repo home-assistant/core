@@ -1723,7 +1723,7 @@ async def test_rpc_shelly_ev_sensors(
     }
     config["number:201"] = {
         "name": "Session energy",
-        "meta": {"ui": {"unit": "Wh", "view": "label"}},
+        "meta": {"ui": {"unit": "kWh", "view": "label"}},
         "role": "energy_charge",
     }
     config["number:202"] = {
@@ -1735,7 +1735,7 @@ async def test_rpc_shelly_ev_sensors(
 
     status = deepcopy(mock_rpc_device.status)
     status["number:200"] = {"value": "charger_charging"}
-    status["number:201"] = {"value": 5000}
+    status["number:201"] = {"value": 5.0}
     status["number:202"] = {"value": 60}
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
