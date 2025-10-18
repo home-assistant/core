@@ -58,7 +58,7 @@ class AuthStore:
         self._loaded = False
         self._users: dict[str, models.User] = None  # type: ignore[assignment]
         self._groups: dict[str, models.Group] = None  # type: ignore[assignment]
-        self._perm_lookup: PermissionLookup = None  # type: ignore[assignment]
+        self._perm_lookup: PermissionLookup | None = None  # type: ignore[assignment]
         self._store = Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
@@ -80,6 +80,11 @@ class AuthStore:
         """Retrieve a user by id."""
         return self._users.get(user_id)
 
+    def _ensure_loaded(self) -> None:
+        """Ensure the auth store is loaded."""
+        if not self._loaded or self._perm_lookup is None:
+            raise RuntimeError("Auth storage is not loaded")
+
     async def async_create_user(
         self,
         name: str | None,
@@ -96,7 +101,7 @@ class AuthStore:
             if (group := self._groups.get(group_id)) is None:
                 raise ValueError(f"Invalid group specified {group_id}")
             groups.append(group)
-
+        self._ensure_loaded()
         kwargs: dict[str, Any] = {
             "name": name,
             # Until we get group management, we just put everyone in the
