@@ -126,7 +126,7 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors=errors,
                 description_placeholders={
                     CONF_URL: self._oauth_values.auth_url,
-                    "documentation_url": "http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code",
+                    "documentation_url": "https://home-assistant.io/integrations/simplisafe#getting-an-authorization-code",
                 },
             )
 
