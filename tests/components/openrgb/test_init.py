@@ -8,7 +8,7 @@ from openrgb.utils import ControllerParsingError, OpenRGBDisconnected, SDKVersio
 import pytest
 
 from homeassistant.components.openrgb import async_remove_config_entry_device
-from homeassistant.components.openrgb.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.openrgb.const import DOMAIN, SCAN_INTERVAL, UID_SEPARATOR
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -112,7 +112,16 @@ async def test_remove_config_entry_device_disconnected(
         identifiers={
             (
                 DOMAIN,
-                f"{entry_id}||KEYBOARD||Old Vendor||Old Device||OLD123||Old Location",
+                UID_SEPARATOR.join(
+                    [
+                        entry_id,
+                        "KEYBOARD",
+                        "Old Vendor",
+                        "Old Device",
+                        "OLD123",
+                        "Old Location",
+                    ]
+                ),
             )
         },
         name="Old Disconnected Device",
@@ -148,7 +157,16 @@ async def test_remove_config_entry_device_with_multiple_identifiers(
             ("other_domain", "some_other_id"),  # This should be skipped
             (
                 DOMAIN,
-                f"{entry_id}||DEVICE||Vendor||Name||SERIAL123||Location",
+                UID_SEPARATOR.join(
+                    [
+                        entry_id,
+                        "DEVICE",
+                        "Vendor",
+                        "Name",
+                        "SERIAL123",
+                        "Location",
+                    ]
+                ),
             ),  # This is a disconnected OpenRGB device
         },
         name="Multi-Domain Device",

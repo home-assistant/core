@@ -33,7 +33,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'profile',
-    'unique_id': '01J0EXAMPLE0CONFIGENTRY00_profile',
+    'unique_id': '01J0EXAMPLE0CONFIGENTRY00||profile',
     'unit_of_measurement': None,
   })
 # ---
