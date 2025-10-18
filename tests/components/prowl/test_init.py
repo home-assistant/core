@@ -9,8 +9,9 @@ from homeassistant.components import notify
 from homeassistant.components.prowl.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from .conftest import ENTITY_ID, TEST_API_KEY
+from .conftest import ENTITY_ID, TEST_API_KEY, TEST_NAME, TEST_SERVICE
 
 from tests.common import MockConfigEntry
 
@@ -44,11 +45,11 @@ async def test_load_reload_unload_config_entry(
     [
         (TimeoutError, ConfigEntryState.SETUP_RETRY),
         (
-            prowlpy.APIError(f"Invalid API key: {TEST_API_KEY}"),
+            prowlpy.InvalidAPIKeyError(f"Invalid API key: {TEST_API_KEY}"),
             ConfigEntryState.SETUP_ERROR,
         ),
         (
-            prowlpy.APIError("Not accepted: exceeded rate limit"),
+            prowlpy.RateLimitExceededError("Not accepted: exceeded rate limit"),
             ConfigEntryState.SETUP_RETRY,
         ),
         (prowlpy.APIError("Internal server error"), ConfigEntryState.SETUP_ERROR),
@@ -72,6 +73,44 @@ async def test_config_entry_failures(
     assert mock_prowlpy.verify_key.call_count > 0
 
 
+@pytest.mark.parametrize(
+    ("prowlpy_side_effect"),
+    [
+        (TimeoutError),
+        (prowlpy.InvalidAPIKeyError(f"Invalid API key: {TEST_API_KEY}")),
+        (prowlpy.RateLimitExceededError("Not accepted: exceeded rate limit")),
+        (prowlpy.APIError("Internal server error")),
+    ],
+)
+async def test_yaml_entry_failures(
+    hass: HomeAssistant,
+    mock_prowlpy: AsyncMock,
+    prowlpy_side_effect,
+) -> None:
+    """Test the Prowl configuration entry dealing with bad API key."""
+    mock_prowlpy.verify_key.side_effect = prowlpy_side_effect
+
+    await async_setup_component(
+        hass,
+        notify.DOMAIN,
+        {
+            notify.DOMAIN: [
+                {
+                    "name": TEST_NAME,
+                    "platform": DOMAIN,
+                    "api_key": TEST_API_KEY,
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(notify.DOMAIN, TEST_SERVICE), (
+        "YAML config did not create service"
+    )
+    assert mock_prowlpy.verify_key.call_count > 0
+
+
 @pytest.mark.usefixtures("configure_prowl_through_yaml")
 async def test_both_yaml_and_config_entry(
     hass: HomeAssistant,
@@ -85,7 +124,7 @@ async def test_both_yaml_and_config_entry(
     assert mock_prowlpy_config_entry.state is ConfigEntryState.LOADED
 
     # Ensure we have the YAML entity service
-    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
+    assert hass.services.has_service(notify.DOMAIN, TEST_SERVICE)
 
     # Ensure we have the config entry entity service
     assert hass.states.get(ENTITY_ID) is not None

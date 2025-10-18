@@ -22,6 +22,10 @@
     "prowl_yaml_deprecated": {
       "title": "Prowl YAML configuration deprecated",
       "description": "Configuring Prowl using YAML has been deprecated. An automatic import of your existing configuration has been made.\nPlease remove the Prowl configuration from configuration.yaml and update any automations to use the new `notify.send_message` action exposed with this new entity."
+    },
+    "prowl_yaml_migration_fail": {
+      "title": "Unable to migrate Prowl YAML configuration",
+      "description": "Configuring Prowl using YAML has been deprecated. An attempt to automatically migrate the existing configuration failed.\nPlease add the entry manually through the UI, remove the old YAML and update any automations to use the new `notify.send_message` action exposed with this new entity."
     }
   }
 }

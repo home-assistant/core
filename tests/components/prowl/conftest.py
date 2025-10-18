@@ -36,7 +36,7 @@ async def configure_prowl_through_yaml(
         {
             NOTIFY_DOMAIN: [
                 {
-                    "name": DOMAIN,
+                    "name": TEST_NAME,
                     "platform": DOMAIN,
                     "api_key": TEST_API_KEY,
                 },

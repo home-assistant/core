@@ -15,7 +15,5 @@ async def async_verify_key(hass: HomeAssistant, api_key: str) -> bool:
         async with asyncio.timeout(10):
             await prowl.verify_key()
             return True
-    except prowlpy.APIError as ex:
-        if str(ex).startswith("Invalid API key"):
-            return False
-        raise
+    except prowlpy.InvalidAPIKeyError:
+        return False

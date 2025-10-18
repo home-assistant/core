@@ -6,7 +6,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from .const import DOMAIN, YAML_DEPRECATED_IN
 
 
-def async_create_prowl_yaml_issue(hass: HomeAssistant) -> None:
+async def async_create_prowl_yaml_issue(hass: HomeAssistant) -> None:
     """Create an issue for the Prowl integration."""
     async_create_issue(
         hass,
@@ -17,4 +17,17 @@ def async_create_prowl_yaml_issue(hass: HomeAssistant) -> None:
         issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
         translation_key="prowl_yaml_deprecated",
+    )
+
+
+async def async_create_prowl_yaml_migration_fail_issue(hass: HomeAssistant) -> None:
+    """Create an issue for failed Prowl YAML migration."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "migrate_fail_prowl",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="prowl_yaml_migration_fail",
     )

@@ -7,11 +7,10 @@ import prowlpy
 import pytest
 
 from homeassistant.components import notify
-from homeassistant.components.prowl.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import ENTITY_ID, TEST_API_KEY
+from .conftest import ENTITY_ID, TEST_API_KEY, TEST_SERVICE
 
 from tests.common import MockConfigEntry
 
@@ -32,10 +31,10 @@ async def test_send_notification_service(
     mock_prowlpy: AsyncMock,
 ) -> None:
     """Set up Prowl, call notify service, and check API call."""
-    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
+    assert hass.services.has_service(notify.DOMAIN, TEST_SERVICE)
     await hass.services.async_call(
         notify.DOMAIN,
-        DOMAIN,
+        TEST_SERVICE,
         SERVICE_DATA,
         blocking=True,
     )
@@ -82,12 +81,12 @@ async def test_send_notification_entity_service(
             "Timeout accessing Prowl API",
         ),
         (
-            prowlpy.APIError(f"Invalid API key: {TEST_API_KEY}"),
+            prowlpy.InvalidAPIKeyError(f"Invalid API key: {TEST_API_KEY}"),
             HomeAssistantError,
             "Invalid API key for Prowl service",
         ),
         (
-            prowlpy.APIError(
+            prowlpy.RateLimitExceededError(
                 "Not accepted: Your IP address has exceeded the API limit"
             ),
             HomeAssistantError,
@@ -145,12 +144,12 @@ async def test_fail_send_notification_entity_service(
             "Timeout accessing Prowl API",
         ),
         (
-            prowlpy.APIError(f"Invalid API key: {TEST_API_KEY}"),
+            prowlpy.InvalidAPIKeyError(f"Invalid API key: {TEST_API_KEY}"),
             HomeAssistantError,
             "Invalid API key for Prowl service",
         ),
         (
-            prowlpy.APIError(
+            prowlpy.RateLimitExceededError(
                 "Not accepted: Your IP address has exceeded the API limit"
             ),
             HomeAssistantError,
@@ -174,11 +173,11 @@ async def test_fail_send_notification(
     """Sending a message via Prowl with a failure."""
     mock_prowlpy.post.side_effect = prowlpy_side_effect
 
-    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
+    assert hass.services.has_service(notify.DOMAIN, TEST_SERVICE)
     with pytest.raises(raised_exception, match=exception_message):
         await hass.services.async_call(
             notify.DOMAIN,
-            DOMAIN,
+            TEST_SERVICE,
             SERVICE_DATA,
             blocking=True,
         )
@@ -211,11 +210,11 @@ async def test_other_exception_send_notification(
     """Sending a message via Prowl with a general unhandled exception."""
     mock_prowlpy.post.side_effect = SyntaxError
 
-    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
+    assert hass.services.has_service(notify.DOMAIN, TEST_SERVICE)
     with pytest.raises(SyntaxError):
         await hass.services.async_call(
             notify.DOMAIN,
-            DOMAIN,
+            TEST_SERVICE,
             SERVICE_DATA,
             blocking=True,
         )

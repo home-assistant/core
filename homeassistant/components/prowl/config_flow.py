@@ -13,6 +13,7 @@ from homeassistant.const import CONF_API_KEY, CONF_NAME
 
 from .const import DOMAIN
 from .helpers import async_verify_key
+from .issues import async_create_prowl_yaml_migration_fail_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +69,7 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_API_KEY: api_key,
                 },
             )
+        await async_create_prowl_yaml_migration_fail_issue(self.hass)
         return self.async_abort(reason="invalid_api_key")
 
     async def _validate_api_key(self, api_key: str) -> dict[str, str]:
