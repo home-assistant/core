@@ -8,6 +8,7 @@ from openrgb.utils import ControllerParsingError, OpenRGBDisconnected, SDKVersio
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.openrgb import async_remove_config_entry_device
 from homeassistant.components.openrgb.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
@@ -57,6 +58,132 @@ async def test_server_device_registry(
     )
 
     assert server_device == snapshot
+
+
+async def test_remove_config_entry_device_server(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+) -> None:
+    """Test that server device cannot be removed."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_registry = dr.async_get(hass)
+    server_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    )
+
+    assert server_device is not None
+
+    # Try to remove server device - should be blocked
+    result = await async_remove_config_entry_device(
+        hass, mock_config_entry, server_device
+    )
+
+    assert result is False
+
+
+async def test_remove_config_entry_device_still_connected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+) -> None:
+    """Test that connected devices cannot be removed."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_registry = dr.async_get(hass)
+
+    # Get a device that's in coordinator.data (still connected)
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    rgb_device = next(
+        (d for d in devices if d.identifiers != {(DOMAIN, mock_config_entry.entry_id)}),
+        None,
+    )
+
+    if rgb_device:
+        # Try to remove device that's still connected - should be blocked
+        result = await async_remove_config_entry_device(
+            hass, mock_config_entry, rgb_device
+        )
+        assert result is False
+
+
+async def test_remove_config_entry_device_disconnected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that disconnected devices can be removed."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Create a device that's not in coordinator.data (disconnected)
+    entry_id = mock_config_entry.entry_id
+    disconnected_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={
+            (
+                DOMAIN,
+                f"{entry_id}||KEYBOARD||Old Vendor||Old Device||OLD123||Old Location",
+            )
+        },
+        name="Old Disconnected Device",
+        via_device=(DOMAIN, entry_id),
+    )
+
+    # Try to remove disconnected device - should succeed
+    result = await async_remove_config_entry_device(
+        hass, mock_config_entry, disconnected_device
+    )
+
+    assert result is True
+
+
+@pytest.mark.usefixtures("mock_openrgb_client")
+async def test_remove_config_entry_device_with_multiple_identifiers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device removal with multiple domain identifiers."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry_id = mock_config_entry.entry_id
+
+    # Create a device with identifiers from multiple domains
+    device_with_multiple_identifiers = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={
+            ("other_domain", "some_other_id"),  # This should be skipped
+            (
+                DOMAIN,
+                f"{entry_id}||DEVICE||Vendor||Name||SERIAL123||Location",
+            ),  # This is a disconnected OpenRGB device
+        },
+        name="Multi-Domain Device",
+        via_device=(DOMAIN, entry_id),
+    )
+
+    # Try to remove device - should succeed because the OpenRGB identifier is disconnected
+    result = await async_remove_config_entry_device(
+        hass, mock_config_entry, device_with_multiple_identifiers
+    )
+
+    assert result is True
 
 
 @pytest.mark.parametrize(
