@@ -9,7 +9,7 @@
           "encrypt_token": "Use an encrypted token for authentication."
         },
         "data_description": {
-          "host": "The hostname or IP address of your Nuki bridge. For example: 192.168.1.25."
+          "host": "The hostname or IP address of your Nuki bridge. For example: {sample_ip}."
         }
       },
       "reauth_confirm": {
@@ -34,7 +34,7 @@
   "issues": {
     "https_webhook": {
       "title": "Nuki webhook URL uses HTTPS (SSL)",
-      "description": "The Nuki bridge can not push events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be {sample_ip} where `192.168.1.10` is the IP of the Home Assistant device"
+      "description": "The Nuki bridge can not push events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device"
     }
   },
   "entity": {
