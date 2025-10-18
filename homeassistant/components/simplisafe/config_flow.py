@@ -124,7 +124,10 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=STEP_USER_SCHEMA,
                 errors=errors,
-                description_placeholders={CONF_URL: self._oauth_values.auth_url},
+                description_placeholders={
+                    CONF_URL: self._oauth_values.auth_url,
+                    "documentation_url": "http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code",
+                },
             )
 
         simplisafe_user_id = str(simplisafe.user_id)
