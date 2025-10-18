@@ -1575,7 +1575,7 @@ async def test_rpc_device_virtual_number_sensor_with_device_class(
     entity_registry: EntityRegistry,
 ) -> None:
     """Test a virtual number sensor with device class for RPC device."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_current_humidity"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_humidity"
     config = deepcopy(mock_rpc_device.config)
     config["number:203"] = {
         "name": "Current humidity",
@@ -1587,6 +1587,7 @@ async def test_rpc_device_virtual_number_sensor_with_device_class(
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
     status = deepcopy(mock_rpc_device.status)
+    status.pop("humidity:0")
     status["number:203"] = {"value": 34}
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
