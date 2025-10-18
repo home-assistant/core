@@ -95,25 +95,13 @@ CHARGER_ERROR_OPTIONS = [
     "inverter_peak_current",
     "inverter_output_voltage_a",
     "inverter_output_voltage_b",
-    "inverter_self_test_a",
-    "inverter_self_test_b",
-    "inverter_self_test_c",
+    "inverter_self_test",
     "inverter_ac",
     "communication",
     "synchronisation",
     "bms",
-    "network_a",
-    "network_b",
-    "network_c",
-    "network_d",
-    "pv_input_shutdown_80",
-    "pv_input_shutdown_81",
-    "pv_input_shutdown_82",
-    "pv_input_shutdown_83",
-    "pv_input_shutdown_84",
-    "pv_input_shutdown_85",
-    "pv_input_shutdown_86",
-    "pv_input_shutdown_87",
+    "network",
+    "pv_input_shutdown",
     "cpu_temperature",
     "calibration_lost",
     "firmware",
@@ -122,10 +110,7 @@ CHARGER_ERROR_OPTIONS = [
     "internal_dc_voltage_a",
     "internal_dc_voltage_b",
     "self_test",
-    "internal_supply_a",
-    "internal_supply_b",
-    "internal_supply_c",
-    "internal_supply_d",
+    "internal_supply",
 ]
 
 DEVICE_STATE_OPTIONS = [
@@ -433,4 +418,40 @@ class VictronBLESensorEntity(PassiveBluetoothProcessorEntity, SensorEntity):
     @property
     def native_value(self) -> float | int | str | None:
         """Return the state of the sensor."""
-        return self.processor.entity_data.get(self.entity_key)
+        value = self.processor.entity_data.get(self.entity_key)
+
+        # Remap error codes with identical strings to single values
+        if self.entity_key in (Keys.CHARGER_ERROR, Keys.ERROR_CODE):
+            if value in (
+                "internal_supply_a",
+                "internal_supply_b",
+                "internal_supply_c",
+                "internal_supply_d",
+            ):
+                return "internal_supply"
+            if value in (
+                "inverter_self_test_a",
+                "inverter_self_test_b",
+                "inverter_self_test_c",
+            ):
+                return "inverter_self_test"
+            if value in (
+                "network_a",
+                "network_b",
+                "network_c",
+                "network_d",
+            ):
+                return "network"
+            if value in (
+                "pv_input_shutdown_80",
+                "pv_input_shutdown_81",
+                "pv_input_shutdown_82",
+                "pv_input_shutdown_83",
+                "pv_input_shutdown_84",
+                "pv_input_shutdown_85",
+                "pv_input_shutdown_86",
+                "pv_input_shutdown_87",
+            ):
+                return "pv_input_shutdown"
+
+        return value
