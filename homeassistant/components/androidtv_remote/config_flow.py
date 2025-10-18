@@ -360,7 +360,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
             data_schema=data_schema,
             description_placeholders={
                 "app_id": f"`{app_id}`" if app_id != APPS_NEW_ID else "",
-                "example_store_id": _EXAMPLE_PLAY_STORE_ID,
-                "example_store_url": _EXAMPLE_PLAY_STORE_URL,
+                "example_play_store_id": _EXAMPLE_PLAY_STORE_ID,
+                "example_play_store_url": _EXAMPLE_PLAY_STORE_URL,
             },
         )
