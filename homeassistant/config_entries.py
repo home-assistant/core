@@ -1810,7 +1810,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
     def __setitem__(self, entry_id: str, entry: ConfigEntry) -> None:
         """Add an item."""
         data = self.data
-        self.check_unique_id(entry)
+        if not self.check_unique_id(entry):
+            # If unique id not valid, don't save entry.
+            return
         if entry_id in data:
             # This is likely a bug in a test that is adding the same entry twice.
             # In the future, once we have fixed the tests, this will raise HomeAssistantError.
@@ -1819,23 +1821,30 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         data[entry_id] = entry
         self._index_entry(entry)
 
-    def check_unique_id(self, entry: ConfigEntry) -> None:
-        """Check config entry unique id.
+    def check_unique_id(self, entry: ConfigEntry) -> bool:
+        """Check if config entry unique id is valid and log if not.
 
-        For a string unique id (this is the correct case): return
-        For a hashable non string unique id: log warning
-        For a non-hashable unique id: raise error
+        Args:
+            entry: Config entry.
+
+        Returns:
+            True if the unique id is a string.
         """
         if (unique_id := entry.unique_id) is None:
-            return
-        if isinstance(unique_id, str):
-            # Unique id should be a string
-            return
-        raise HomeAssistantError(f"The entry unique id {unique_id} is not a string.")
+            return True
+        if not isinstance(unique_id, str):
+            _LOGGER.error(  # type: ignore[unreachable]
+                "The entry %s unique id %s is not a string", entry.title, unique_id
+            )
+            return False
+        return True
 
     def _index_entry(self, entry: ConfigEntry) -> None:
         """Index an entry."""
-        self.check_unique_id(entry)
+        if not self.check_unique_id(entry):
+            raise HomeAssistantError(
+                f"Cannot update unique id to {entry.unique_id} as it's not a string value."
+            )
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
             self._domain_unique_id_index.setdefault(entry.domain, {}).setdefault(
@@ -1868,7 +1877,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         """
         entry_id = entry.entry_id
         self._unindex_entry(entry_id)
-        self.check_unique_id(entry)
+        if not self.check_unique_id(entry):
+            raise HomeAssistantError(
+                f"Cannot update unique id to {new_unique_id} as it's not a string value."
+            )
         object.__setattr__(entry, "unique_id", new_unique_id)
         self._index_entry(entry)
         entry.clear_state_cache()

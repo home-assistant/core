@@ -7192,11 +7192,8 @@ async def test_non_string_unique_id_fails(
     )
 
     unique_id_string = re.escape(str(unique_id))
-    with pytest.raises(
-        HomeAssistantError,
-        match=f"The entry unique id {unique_id_string} is not a string.",
-    ):
-        entries[entry.entry_id] = entry
+    entries[entry.entry_id] = entry
+    assert f"The entry title unique id {unique_id} is not a string" in caplog.text
 
     assert entry.entry_id not in entries
 
@@ -7233,7 +7230,7 @@ async def test_non_string_unique_id_fails_on_update(
     unique_id_string = re.escape(str(unique_id))
     with pytest.raises(
         HomeAssistantError,
-        match=f"The entry unique id {unique_id_string} is not a string.",
+        match=f"Cannot update unique id to {unique_id_string} as it's not a string value.",
     ):
         entries.update_unique_id(entry, unique_id)
 
@@ -7270,6 +7267,35 @@ async def test_string_unique_id_no_warning(
     del entries[entry.entry_id]
     assert not entries
     assert entries.get_entry_by_domain_and_unique_id("test", "123") is None
+
+
+async def test_loading_incorrect_unique_silently_ignored(
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test entry with incorrect unique id silently is ignored."""
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "entries": [
+                {
+                    "version": 5,
+                    "domain": "my_domain",
+                    "entry_id": "mock-id",
+                    "data": {"my": "data"},
+                    "source": "user",
+                    "title": "Mock title",
+                    "unique_id": 123,
+                    "system_options": {"disable_new_entities": True},
+                }
+            ]
+        },
+    }
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    entries = manager.async_entries()
+    assert len(entries) == 0
+    assert "The entry unique id 123 is not a string" not in caplog.text
 
 
 async def test_no_unique_id_no_warning(
