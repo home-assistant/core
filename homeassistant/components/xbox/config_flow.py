@@ -55,6 +55,6 @@ class OAuth2FlowHandler(
             client = XboxLiveClient(auth)
 
             me = await client.people.get_friends_own_batch([client.xuid])
-            await self.async_set_unique_id(client.xuid)
 
+        await self.async_set_unique_id(client.xuid)
         return self.async_create_entry(title=me.people[0].gamertag, data=data)
