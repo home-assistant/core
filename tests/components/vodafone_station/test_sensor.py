@@ -2,8 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aiovodafone import CannotAuthenticate
-from aiovodafone.exceptions import AlreadyLogged, CannotConnect
+from aiovodafone.exceptions import AlreadyLogged, CannotAuthenticate, CannotConnect
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion

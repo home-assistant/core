@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aiovodafone import (
+from aiovodafone.exceptions import (
     AlreadyLogged,
     CannotAuthenticate,
     CannotConnect,
