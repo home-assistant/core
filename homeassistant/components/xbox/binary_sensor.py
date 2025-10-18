@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from functools import partial
 
+from yarl import URL
+
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -33,6 +35,24 @@ class XboxBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Xbox binary sensor description."""
 
     is_on_fn: Callable[[PresenceData], bool | None]
+    entity_picture_fn: Callable[[PresenceData], str | None] | None = None
+
+
+def profile_pic(data: PresenceData) -> str | None:
+    """Return the gamer pic."""
+
+    # Xbox sometimes returns a domain that uses a wrong certificate which
+    # creates issues with loading the image.
+    # The correct domain is images-eds-ssl which can just be replaced
+    # to point to the correct image, with the correct domain and certificate.
+    # We need to also remove the 'mode=Padding' query because with it,
+    # it results in an error 400.
+    url = URL(data.display_pic)
+    if url.host == "images-eds.xboxlive.com":
+        url = url.with_host("images-eds-ssl.xboxlive.com").with_scheme("https")
+    query = dict(url.query)
+    query.pop("mode", None)
+    return str(url.with_query(query))
 
 
 SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
@@ -41,6 +61,7 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
         translation_key=XboxBinarySensor.ONLINE,
         is_on_fn=lambda x: x.online,
         name=None,
+        entity_picture_fn=profile_pic,
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_PARTY,
@@ -91,6 +112,16 @@ class XboxBinarySensorEntity(XboxBaseEntity, BinarySensorEntity):
             self.entity_description.is_on_fn(self.data)
             if self.data is not None
             else None
+        )
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the gamer pic."""
+
+        return (
+            fn(self.data)
+            if (fn := self.entity_description.entity_picture_fn) is not None
+            else super().entity_picture
         )
 
 

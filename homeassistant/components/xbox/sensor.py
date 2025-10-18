@@ -1,4 +1,4 @@
-"""Xbox friends binary sensors."""
+"""Sensor platform for the Xbox integration."""
 
 from __future__ import annotations
 
