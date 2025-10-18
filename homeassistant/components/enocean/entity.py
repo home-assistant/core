@@ -37,6 +37,8 @@ class EnOceanEntity(Entity):
         self._attr_has_entity_name = name is not None
         self._gateway_id: EnOceanID = EnOceanID(0)
         self._attr_should_poll = False
+        # _LOGGER.warning("unique_id: %s", f"{enocean_device_id.to_string()}-{self.device_class}-{name}")
+        # self._attr_unique_id = f"{enocean_device_id.to_string()}-{self._attr_device_class}-{name}"
 
     async def async_added_to_hass(self) -> None:
         """Get gateway ID and register callback."""
@@ -62,6 +64,11 @@ class EnOceanEntity(Entity):
         packet = Packet(packet_type, data=data, optional=optional)
         dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)
 
+    # @property
+    # def unique_id(self) -> str:
+    #     """Return a unique ID for this entity."""
+    #     return f"{self.enocean_device_id.to_string()}-{self.device_class}-{self.name}"
+
     @property
     def enocean_device_id(self) -> EnOceanID:
         """Return the EnOcean id as EnOceanID."""
@@ -77,17 +84,15 @@ class EnOceanEntity(Entity):
         """Get device info."""
 
         info = {
-            "identifiers": {(DOMAIN, self._enocean_device_id.to_string())},
             "name": self._device_name,
             "manufacturer": self.dev_type.manufacturer,
             "model": self.dev_type.model,
-            "sw_version": self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].sw_version,
-            "hw_version": self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].chip_version,
         }
 
         if self._enocean_device_id.to_number() == 0:
             info.update(
                 {
+                    "identifiers": {(DOMAIN, EnOceanID(0).to_string())},
                     "serial_number": self.hass.data[DATA_ENOCEAN][
                         ENOCEAN_DONGLE
                     ].chip_id.to_string(),
@@ -101,6 +106,7 @@ class EnOceanEntity(Entity):
             )
             return info
 
+        info.update({"identifiers": {(DOMAIN, self._enocean_device_id.to_string())}})
         info.update({"serial_number": self._enocean_device_id.to_string()})
         info.update({"via_device": (DOMAIN, self.gateway_id.to_string())})
         info.update({"model_id": "EEP " + self.dev_type.eep})

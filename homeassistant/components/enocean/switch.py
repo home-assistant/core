@@ -128,7 +128,9 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         )
         self._light = None
         self.channel = channel
-        self._attr_unique_id = f"{dev_id.to_string()}-{Platform.SWITCH.value}-{channel}"
+        self._attr_unique_id = (
+            dev_id.to_string() + f"-{Platform.SWITCH.value}-{channel}"
+        )
 
     @property
     def is_on(self) -> bool | None:

@@ -365,7 +365,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
             enocean_device_id=dev_id, device_name=dev_name, name=name, dev_type=dev_type
         )
         self.entity_description = description
-        self._attr_unique_id = description.unique_id(dev_id.to_string)
+        self._attr_unique_id = description.unique_id(dev_id.to_string())
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""

@@ -91,9 +91,11 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
             dev_type=dev_type,
             name=name,
         )
-        self._device_class = device_class
+        self._attr_device_class = device_class
 
-        self._attr_unique_id = f"{device_id.to_string()}-{device_class}-{channel}"
+        self._attr_unique_id = (
+            device_id.to_string() + "-" + device_class + "-" + str(channel)
+        )
         self._attr_on = False
 
         self._attr_should_poll = False
@@ -103,7 +105,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return self._device_class
+        return self._attr_device_class
 
     @property
     def is_on(self):
