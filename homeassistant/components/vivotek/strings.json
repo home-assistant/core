@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set required parameters to connect to your camera. For more information, please refer to the [integration documentation]({doc_url})",
+        "data": {
+          "authentication": "[%key:component::generic::config::step::user::data::authentication%]",
+          "framerate": "[%key:component::generic::config::step::user::data::framerate%]",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "security_level": "Security level",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "stream_path": "Stream path",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
+      "reconfigure": {
+        "description": "Reconfigure",
+        "data": {
+          "authentication": "[%key:component::generic::config::step::user::data::authentication%]",
+          "framerate": "[%key:component::generic::config::step::user::data::framerate%]",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "security_level": "Security level",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "stream_path": "Stream path",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  }
+}
