@@ -40,14 +40,13 @@ VS_FAN_MODE_PET = "pet"
 VS_FAN_MODE_MANUAL = "manual"
 VS_FAN_MODE_NORMAL = "normal"
 
-# not a full list as manual is used as speed not present
+# not a full list as manual and normal is used as speed not present
 VS_FAN_MODE_PRESET_LIST_HA = [
     VS_FAN_MODE_AUTO,
     VS_FAN_MODE_SLEEP,
     VS_FAN_MODE_ADVANCED_SLEEP,
     VS_FAN_MODE_TURBO,
     VS_FAN_MODE_PET,
-    VS_FAN_MODE_NORMAL,
 ]
 NIGHT_LIGHT_LEVEL_BRIGHT = "bright"
 NIGHT_LIGHT_LEVEL_DIM = "dim"
