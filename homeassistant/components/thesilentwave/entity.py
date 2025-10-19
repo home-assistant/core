@@ -18,7 +18,7 @@ class TheSilentWaveEntity(CoordinatorEntity):
         self._attr_unique_id = f"{DOMAIN}_{entry_id}"
         # Name property will be handled by the specific entity class.
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, entry_id)},
             name=self.coordinator.device_name,
             manufacturer="TheSilentWave",
         )
