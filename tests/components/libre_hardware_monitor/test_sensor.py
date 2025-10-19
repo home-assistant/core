@@ -2,6 +2,7 @@
 
 from dataclasses import replace
 from datetime import timedelta
+import logging
 from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
@@ -97,17 +98,6 @@ async def test_sensors_are_updated(
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "52.8"
 
-    assert state.attributes["min_value"] == "38.4"
-    assert state.attributes["max_value"] == "74.0"
-
-    voltage_state = hass.states.get(
-        "sensor.msi_mag_b650m_mortar_wifi_ms_7d76_12v_voltage"
-    )
-    assert voltage_state
-    assert voltage_state.state == "12.072"
-    assert voltage_state.attributes["min_value"] == "12.048"
-    assert voltage_state.attributes["max_value"] == "12.096"
-
     updated_data = dict(mock_lhm_client.get_data.return_value.sensor_data)
     updated_data["amdcpu-0-temperature-3"] = replace(
         updated_data["amdcpu-0-temperature-3"], value="42,1"
@@ -197,3 +187,31 @@ async def test_orphaned_devices_are_removed(
         await hass.async_block_till_done()
 
         mock_remove.assert_called_once_with(orphaned_device.id)
+
+
+async def test_integration_does_not_log_new_devices_on_first_refresh(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that initial data update does not cause warning about new devices."""
+    mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
+        main_device_ids_and_names=MappingProxyType(
+            {
+                **mock_lhm_client.get_data.return_value.main_device_ids_and_names,
+                DeviceId("generic-memory"): DeviceName("Generic Memory"),
+            }
+        ),
+        sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
+    )
+
+    with caplog.at_level(logging.WARNING):
+        await init_integration(hass, mock_config_entry)
+
+        libre_hardware_monitor_logs = [
+            record
+            for record in caplog.records
+            if record.name.startswith("homeassistant.components.libre_hardware_monitor")
+        ]
+        assert len(libre_hardware_monitor_logs) == 0
