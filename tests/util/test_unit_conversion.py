@@ -62,6 +62,7 @@ from homeassistant.util.unit_conversion import (
     ReactivePowerConverter,
     SpeedConverter,
     TemperatureConverter,
+    TemperatureDeltaConverter,
     UnitlessRatioConverter,
     VolumeConverter,
     VolumeFlowRateConverter,
@@ -96,6 +97,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         ReactivePowerConverter,
         SpeedConverter,
         TemperatureConverter,
+        TemperatureDeltaConverter,
         UnitlessRatioConverter,
         EnergyDistanceConverter,
         VolumeConverter,
@@ -174,6 +176,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         1.609343,
     ),
     TemperatureConverter: (
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
+        0.555556,
+    ),
+    TemperatureDeltaConverter: (
         UnitOfTemperature.CELSIUS,
         UnitOfTemperature.FAHRENHEIT,
         0.555556,
@@ -847,6 +854,34 @@ _CONVERTED_VALUE: dict[
         (100, UnitOfTemperature.KELVIN, -173.15, UnitOfTemperature.CELSIUS),
         (100, UnitOfTemperature.KELVIN, -279.6699, UnitOfTemperature.FAHRENHEIT),
     ],
+    TemperatureDeltaConverter: [
+        (
+            100,
+            UnitOfTemperature.CELSIUS,
+            180,
+            UnitOfTemperature.FAHRENHEIT,
+        ),
+        (100, UnitOfTemperature.CELSIUS, 100, UnitOfTemperature.KELVIN),
+        (
+            100,
+            UnitOfTemperature.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperature.CELSIUS,
+        ),
+        (
+            100,
+            UnitOfTemperature.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperature.KELVIN,
+        ),
+        (100, UnitOfTemperature.KELVIN, 100, UnitOfTemperature.CELSIUS),
+        (
+            100,
+            UnitOfTemperature.KELVIN,
+            180,
+            UnitOfTemperature.FAHRENHEIT,
+        ),
+    ],
     UnitlessRatioConverter: [
         (5, None, 500, PERCENTAGE),
         (5, None, 5000000000, CONCENTRATION_PARTS_PER_BILLION),
@@ -1211,6 +1246,18 @@ def test_unit_conversion_factory_allow_none_with_none() -> None:
         )(None)
         is None
     )
+    assert (
+        TemperatureDeltaConverter.converter_factory_allow_none(
+            UnitOfTemperature.CELSIUS, UnitOfTemperature.CELSIUS
+        )(1)
+        == 1
+    )
+    assert (
+        TemperatureDeltaConverter.converter_factory_allow_none(
+            UnitOfTemperature.CELSIUS, UnitOfTemperature.CELSIUS
+        )(None)
+        is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -1260,3 +1307,42 @@ def test_temperature_convert_with_interval(
     """Test conversion to other units."""
     expected = pytest.approx(expected)
     assert TemperatureConverter.convert_interval(value, from_unit, to_unit) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "from_unit", "expected", "to_unit"),
+    [
+        (
+            100,
+            UnitOfTemperature.CELSIUS,
+            180,
+            UnitOfTemperature.FAHRENHEIT,
+        ),
+        (100, UnitOfTemperature.CELSIUS, 100, UnitOfTemperature.KELVIN),
+        (
+            100,
+            UnitOfTemperature.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperature.CELSIUS,
+        ),
+        (
+            100,
+            UnitOfTemperature.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperature.KELVIN,
+        ),
+        (100, UnitOfTemperature.KELVIN, 100, UnitOfTemperature.CELSIUS),
+        (
+            100,
+            UnitOfTemperature.KELVIN,
+            180,
+            UnitOfTemperature.FAHRENHEIT,
+        ),
+    ],
+)
+def test_temperature_delta_convert(
+    value: float, from_unit: str, expected: float, to_unit: str
+) -> None:
+    """Test conversion to other units."""
+    expected = pytest.approx(expected)
+    assert TemperatureDeltaConverter.convert(value, from_unit, to_unit) == expected

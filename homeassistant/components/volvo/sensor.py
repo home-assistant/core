@@ -332,6 +332,25 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=1,
     ),
+    # diagnostics endpoint
+    VolvoSensorDescription(
+        key="service_warning",
+        api_field="serviceWarning",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "distance_driven_almost_time_for_service",
+            "distance_driven_overdue_for_service",
+            "distance_driven_time_for_service",
+            "engine_hours_almost_time_for_service",
+            "engine_hours_overdue_for_service",
+            "engine_hours_time_for_service",
+            "no_warning",
+            "regular_maintenance_almost_time_for_service",
+            "regular_maintenance_overdue_for_service",
+            "regular_maintenance_time_for_service",
+            "unknown_warning",
+        ],
+    ),
     # energy state endpoint
     VolvoSensorDescription(
         key="target_battery_charge_level",

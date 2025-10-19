@@ -9,19 +9,14 @@ import mimetypes
 import pathlib
 import random
 import string
+import sys
 
 import requests
-import slixmpp
-from slixmpp.exceptions import IqError, IqTimeout, XMPPError
-from slixmpp.plugins.xep_0363.http_upload import (
-    FileTooBig,
-    FileUploadError,
-    UploadServiceNotFound,
-)
-from slixmpp.xmlstream.xmlstream import NotConnectedError
 import voluptuous as vol
 
 from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
@@ -35,12 +30,22 @@ from homeassistant.const import (
     CONF_SENDER,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+if sys.version_info < (3, 14):
+    import slixmpp
+    from slixmpp.exceptions import IqError, IqTimeout, XMPPError
+    from slixmpp.plugins.xep_0363.http_upload import (
+        FileTooBig,
+        FileUploadError,
+        UploadServiceNotFound,
+    )
+    from slixmpp.xmlstream.xmlstream import NotConnectedError
+
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DATA = "data"
 ATTR_PATH = "path"
 ATTR_PATH_TEMPLATE = "path_template"
 ATTR_TIMEOUT = "timeout"
@@ -74,6 +79,10 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> XmppNotificationService:
     """Get the Jabber (XMPP) notification service."""
+    if sys.version_info >= (3, 14):
+        raise HomeAssistantError(
+            "Jabber (XMPP) is not supported on Python 3.14. Please use Python 3.13."
+        )
     return XmppNotificationService(
         config.get(CONF_SENDER),
         config.get(CONF_RESOURCE),
@@ -104,13 +113,14 @@ class XmppNotificationService(BaseNotificationService):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         text = f"{title}: {message}" if title else message
+        targets = kwargs.get(ATTR_TARGET, self._recipients)
         data = kwargs.get(ATTR_DATA)
         timeout = data.get(ATTR_TIMEOUT, XEP_0363_TIMEOUT) if data else None
 
         await async_send_message(
             f"{self._sender}/{self._resource}",
             self._password,
-            self._recipients,
+            targets,
             self._tls,
             self._verify,
             self._room,
