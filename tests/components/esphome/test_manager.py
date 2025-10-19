@@ -369,11 +369,13 @@ async def test_esphome_device_service_call_with_response(
 
     # Verify response was sent back to ESPHome
     mock_client.send_homeassistant_action_response.assert_called_once()
-    call_args = mock_client.send_homeassistant_action_response.call_args
-    assert call_args[0][0] == 123  # call_id
-    assert call_args[0][1] is True  # success
-    assert call_args[0][2] == ""  # error_message
-    assert call_args[0][3] == b'{"response":{"result":"success","value":42}}'
+    call_id, success, error_message, response_data = (
+        mock_client.send_homeassistant_action_response.call_args[0]
+    )
+    assert call_id == 123
+    assert success is True
+    assert error_message == ""
+    assert response_data == b'{"response":{"result":"success","value":42}}'
 
 
 async def test_esphome_device_service_call_with_response_template(
@@ -418,11 +420,13 @@ async def test_esphome_device_service_call_with_response_template(
 
     # Verify response was sent back with template applied
     mock_client.send_homeassistant_action_response.assert_called_once()
-    call_args = mock_client.send_homeassistant_action_response.call_args
-    assert call_args[0][0] == 456  # call_id
-    assert call_args[0][1] is True  # success
-    assert call_args[0][2] == ""  # error_message
-    assert call_args[0][3] == b'{"response":23.5}'
+    call_id, success, error_message, response_data = (
+        mock_client.send_homeassistant_action_response.call_args[0]
+    )
+    assert call_id == 456
+    assert success is True
+    assert error_message == ""
+    assert response_data == b'{"response":23.5}'
 
 
 async def test_esphome_device_service_call_with_response_template_error(
@@ -468,11 +472,13 @@ async def test_esphome_device_service_call_with_response_template_error(
 
     # Verify error response was sent back
     mock_client.send_homeassistant_action_response.assert_called_once()
-    call_args = mock_client.send_homeassistant_action_response.call_args
-    assert call_args[0][0] == 789  # call_id
-    assert call_args[0][1] is False  # success
-    assert "Error rendering response template" in call_args[0][2]  # error_message
-    assert call_args[0][3] == b""  # response_data
+    call_id, success, error_message, response_data = (
+        mock_client.send_homeassistant_action_response.call_args[0]
+    )
+    assert call_id == 789
+    assert success is False
+    assert "Error rendering response template" in error_message
+    assert response_data == b""
 
 
 async def test_esphome_device_service_call_with_notification(
@@ -514,11 +520,13 @@ async def test_esphome_device_service_call_with_notification(
 
     # Verify success notification was sent back
     mock_client.send_homeassistant_action_response.assert_called_once()
-    call_args = mock_client.send_homeassistant_action_response.call_args
-    assert call_args[0][0] == 999  # call_id
-    assert call_args[0][1] is True  # success
-    assert call_args[0][2] == ""  # error_message
-    assert call_args[0][3] == b""  # response_data
+    call_id, success, error_message, response_data = (
+        mock_client.send_homeassistant_action_response.call_args[0]
+    )
+    assert call_id == 999
+    assert success is True
+    assert error_message == ""
+    assert response_data == b""
 
 
 async def test_esphome_device_service_call_with_service_not_found(
@@ -554,11 +562,13 @@ async def test_esphome_device_service_call_with_service_not_found(
 
     # Verify error notification was sent back
     mock_client.send_homeassistant_action_response.assert_called_once()
-    call_args = mock_client.send_homeassistant_action_response.call_args
-    assert call_args[0][0] == 111  # call_id
-    assert call_args[0][1] is False  # success
-    assert "not found" in call_args[0][2].lower()  # error_message
-    assert call_args[0][3] == b""  # response_data
+    call_id, success, error_message, response_data = (
+        mock_client.send_homeassistant_action_response.call_args[0]
+    )
+    assert call_id == 111
+    assert success is False
+    assert "not found" in error_message.lower()
+    assert response_data == b""
 
 
 async def test_esphome_device_service_call_with_validation_error(
@@ -600,11 +610,13 @@ async def test_esphome_device_service_call_with_validation_error(
 
     # Verify error notification was sent back
     mock_client.send_homeassistant_action_response.assert_called_once()
-    call_args = mock_client.send_homeassistant_action_response.call_args
-    assert call_args[0][0] == 222  # call_id
-    assert call_args[0][1] is False  # success
-    assert "Invalid input provided" in call_args[0][2]  # error_message
-    assert call_args[0][3] == b""  # response_data
+    call_id, success, error_message, response_data = (
+        mock_client.send_homeassistant_action_response.call_args[0]
+    )
+    assert call_id == 222
+    assert success is False
+    assert "Invalid input provided" in error_message
+    assert response_data == b""
 
 
 async def test_esphome_device_service_call_fire_and_forget(

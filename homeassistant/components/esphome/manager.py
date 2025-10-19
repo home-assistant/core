@@ -277,26 +277,28 @@ class ESPHomeManager:
             call_id = service.call_id
             if call_id and service.wants_response:
                 # Service call with response expected
-                hass.async_create_task(
+                self.entry.async_create_task(
+                    hass,
                     self._handle_service_call_with_response(
                         domain,
                         service_name,
                         service_data,
                         call_id,
                         service.response_template,
-                    )
+                    ),
                 )
             elif call_id:
                 # Service call without response but needs success/failure notification
-                hass.async_create_task(
+                self.entry.async_create_task(
+                    hass,
                     self._handle_service_call_with_notification(
                         domain, service_name, service_data, call_id
-                    )
+                    ),
                 )
             else:
                 # Fire and forget service call
-                hass.async_create_task(
-                    hass.services.async_call(domain, service_name, service_data)
+                self.entry.async_create_task(
+                    hass, hass.services.async_call(domain, service_name, service_data)
                 )
         else:
             device_info = self.entry_data.device_info
