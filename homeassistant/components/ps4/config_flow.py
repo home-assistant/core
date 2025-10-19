@@ -221,4 +221,3 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="link", data_schema=vol.Schema(link_schema), errors=errors
         )
-        
