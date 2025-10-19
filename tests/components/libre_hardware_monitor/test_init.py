@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.libre_hardware_monitor.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration
 from .conftest import VALID_CONFIG
@@ -74,3 +74,43 @@ async def test_unique_id_migration(
     )
 
     assert entity_registry.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
+
+
+async def test_legacy_device_ids_are_updated(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that non-unique legacy device IDs are updated."""
+    mock_config_entry.add_to_hass(hass)
+
+    legacy_device_ids = ["amdcpu-0", "gpu-nvidia-0", "lpc-nct6687d-0"]
+
+    created_devices = []
+    for device_id in legacy_device_ids:
+        device = device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={(DOMAIN, device_id)},  # Old format without entry_id prefix
+            name=f"Test Device {device_id}",
+        )
+        created_devices.append(device)
+
+    device_entries_before = dr.async_entries_for_config_entry(
+        registry=device_registry, config_entry_id=mock_config_entry.entry_id
+    )
+    assert {
+        next(iter(device.identifiers))[1] for device in device_entries_before
+    } == set(legacy_device_ids)
+
+    await init_integration(hass, mock_config_entry)
+
+    device_entries_after = dr.async_entries_for_config_entry(
+        registry=device_registry, config_entry_id=mock_config_entry.entry_id
+    )
+    expected_device_ids = [
+        f"{mock_config_entry.entry_id}_{device_id}" for device_id in legacy_device_ids
+    ]
+    assert {
+        next(iter(device.identifiers))[1] for device in device_entries_after
+    } == set(expected_device_ids)
