@@ -41,6 +41,7 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             name=self._device_name,
             update_interval=UPDATE_INTERVAL,
+            config_entry=entry,
         )
 
     @property
