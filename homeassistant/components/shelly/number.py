@@ -32,6 +32,7 @@ from .const import (
     MODEL_LINKEDGO_ST802_THERMOSTAT,
     MODEL_LINKEDGO_ST1820_THERMOSTAT,
     MODEL_TOP_EV_CHARGER_EVE01,
+    ROLE_GENERIC,
     VIRTUAL_NUMBER_MODE_MAP,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
@@ -223,7 +224,7 @@ RPC_NUMBERS: Final = {
         step_fn=lambda config: config["meta"]["ui"].get("step"),
         unit=get_virtual_component_unit,
         method="number_set",
-        role="generic",
+        role=ROLE_GENERIC,
     ),
     "number_current_limit": RpcNumberDescription(
         key="number",
