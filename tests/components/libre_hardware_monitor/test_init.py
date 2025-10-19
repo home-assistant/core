@@ -79,7 +79,7 @@ async def test_unique_id_migration(
     assert entity_entry is not None, "Entity should exist after migration"
 
     # Verify that the unique ID has been updated
-    new_unique_id = f"lhm_{config_entry_v1.entry_id}_{actual_sensor_id}"
+    new_unique_id = f"{config_entry_v1.entry_id}_{actual_sensor_id}"
     assert entity_entry.unique_id == new_unique_id, (
         f"Unique ID not migrated: {entity_entry.unique_id}"
     )

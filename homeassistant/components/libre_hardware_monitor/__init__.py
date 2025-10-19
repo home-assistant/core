@@ -43,7 +43,7 @@ async def async_migrate_entry(
         ):
             for sensor_data in coordinator.data.sensor_data.values():
                 old_unique_id = f"lhm-{sensor_data.sensor_id}"
-                new_unique_id = f"lhm_{config_entry.entry_id}_{sensor_data.sensor_id}"
+                new_unique_id = f"{config_entry.entry_id}_{sensor_data.sensor_id}"
 
                 _LOGGER.debug(
                     "Checking for entity with old unique_id: %s",
