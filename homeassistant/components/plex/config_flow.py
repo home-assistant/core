@@ -67,7 +67,7 @@ HEADER_FRONTEND_BASE = "HA-Frontend-Base"
 
 _LOGGER = logging.getLogger(__package__)
 
-_API_URL = "https://plex.tv"
+
 
 
 @callback
@@ -126,7 +126,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._async_step_plex_website_auth()
         if self.show_advanced_options:
             return await self.async_step_user_advanced(errors=errors)
-        return self.async_show_form(step_id="user",description_placeholders={"api_url": _API_URL},errors=errors)
+        return self.async_show_form(step_id="user", errors=errors, description_placeholders={"plex_server_url": "[plex.tv](https://plex.tv)" },)
 
     async def async_step_user_advanced(
         self,
