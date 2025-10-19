@@ -86,6 +86,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         scheduled: bool = False,
         raise_on_entry_error: bool = False,
     ) -> None:
+        # we don't expect the computer to be online 24/7 so we don't want to log a connection loss as an error
         await super()._async_refresh(
             False, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
@@ -101,6 +102,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             return
 
         if self.data is None:
+            # initial update during integration startup
             self._previous_devices = detected_devices  # type: ignore[unreachable]
             return
 
