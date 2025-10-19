@@ -3,6 +3,45 @@
     "sensor": {
       "image": {
         "default": "mdi:docker"
+      },
+      "operating_system": {
+        "default": "mdi:chip"
+      },
+      "operating_system_version": {
+        "default": "mdi:alpha-v-box"
+      },
+      "api_version": {
+        "default": "mdi:api"
+      },
+      "kernel_version": {
+        "default": "mdi:memory"
+      },
+      "architecture": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "containers_running": {
+        "default": "mdi:play-circle-outline"
+      },
+      "containers_stopped": {
+        "default": "mdi:stop-circle-outline"
+      },
+      "containers_paused": {
+        "default": "mdi:pause-circle"
+      },
+      "images_count": {
+        "default": "mdi:image-multiple"
+      },
+      "containers_count": {
+        "default": "mdi:database"
+      },
+      "memory_total": {
+        "default": "mdi:memory"
+      },
+      "docker_version": {
+        "default": "mdi:docker"
+      },
+      "cpu_total": {
+        "default": "mdi:cpu-64-bit"
       }
     },
     "switch": {
