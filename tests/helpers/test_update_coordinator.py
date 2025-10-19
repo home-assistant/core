@@ -1056,7 +1056,7 @@ async def test_listener_unsubscribe_releases_coordinator(hass: HomeAssistant) ->
 
 
 @pytest.mark.parametrize(
-    "err_msg",
+    ("exc", "expected_exception", "message"),
     [
         *KNOWN_ERRORS,
         (Exception(), Exception, "Unknown exception"),
@@ -1073,7 +1073,9 @@ async def test_listener_unsubscribe_releases_coordinator(hass: HomeAssistant) ->
 )
 async def test_update_failed_retry_after(
     hass: HomeAssistant,
-    err_msg: tuple[Exception, type[Exception], str],
+    exc: tuple[Exception, type[Exception], str],
+    expected_exception: type[Exception],
+    message: str,
     method: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -1089,14 +1091,14 @@ async def test_update_failed_retry_after(
         config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
     )
     crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
-    setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
+    setattr(crd, method, AsyncMock(side_effect=exc))
 
     with pytest.raises(ConfigEntryNotReady):
         await crd.async_config_entry_first_refresh()
 
     assert crd.last_update_success is False
-    assert isinstance(crd.last_exception, err_msg[1])
-    assert err_msg[2] not in caplog.text
+    assert isinstance(crd.last_exception, expected_exception)
+    assert message not in caplog.text
 
     # Only to check the retry_after wasn't hit
     assert crd._retry_after is None
