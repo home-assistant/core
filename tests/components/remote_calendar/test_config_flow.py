@@ -83,7 +83,7 @@ async def test_form_import_webcal(hass: HomeAssistant, ics_content: str) -> None
     ],
 )
 @respx.mock
-async def test_form_invaild_url(
+async def test_form_invalid_url(
     hass: HomeAssistant,
     side_effect: Exception,
     ics_content: str,
