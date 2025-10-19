@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from httpx import ConnectTimeout, HTTPStatusError, RequestError
+from httpx import HTTPStatusError, RequestError, TimeoutException
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.const import SYSTEM_PFN_ID_MAP
 from xbox.webapi.api.provider.catalog.models import AlternateIdType, Product
@@ -115,7 +115,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
 
         try:
             self.consoles = await self.client.smartglass.get_console_list()
-        except ConnectTimeout as e:
+        except TimeoutException as e:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="timeout_exception",
