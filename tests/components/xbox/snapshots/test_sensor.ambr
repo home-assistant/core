@@ -13,7 +13,7 @@
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.erics273_account_tier',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -24,12 +24,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'erics273 Account Tier',
+    'original_name': 'Account tier',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <XboxSensor.ACCOUNT_TIER: 'account_tier'>,
     'unique_id': '2533274913657542_account_tier',
     'unit_of_measurement': None,
   })
@@ -37,8 +37,7 @@
 # name: test_sensors[sensor.erics273_account_tier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=rwljod2fPqLqGP3DBV9F_yK9iuxAt3_MH6tcOnQXTc8LY1LO8JeulzCEFHaqqItKdg9oJ84qjO.VNwvUWuq_iR5iTyx1gQsqHSvWLbqIrRI-&background=0xababab&format=png',
-      'friendly_name': 'erics273 Account Tier',
+      'friendly_name': 'erics273 Account tier',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.erics273_account_tier',
@@ -48,7 +47,7 @@
     'state': 'Silver',
   })
 # ---
-# name: test_sensors[sensor.erics273_gamer_score-entry]
+# name: test_sensors[sensor.erics273_gamerscore-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,8 +60,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.erics273_gamer_score',
-    'has_entity_name': False,
+    'entity_id': 'sensor.erics273_gamerscore',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -73,24 +72,24 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'erics273 Gamer Score',
+    'original_name': 'Gamerscore',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <XboxSensor.GAMER_SCORE: 'gamer_score'>,
     'unique_id': '2533274913657542_gamer_score',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'points',
   })
 # ---
-# name: test_sensors[sensor.erics273_gamer_score-state]
+# name: test_sensors[sensor.erics273_gamerscore-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=rwljod2fPqLqGP3DBV9F_yK9iuxAt3_MH6tcOnQXTc8LY1LO8JeulzCEFHaqqItKdg9oJ84qjO.VNwvUWuq_iR5iTyx1gQsqHSvWLbqIrRI-&background=0xababab&format=png',
-      'friendly_name': 'erics273 Gamer Score',
+      'friendly_name': 'erics273 Gamerscore',
+      'unit_of_measurement': 'points',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.erics273_gamer_score',
+    'entity_id': 'sensor.erics273_gamerscore',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -111,7 +110,7 @@
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.erics273_gold_tenure',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -122,12 +121,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'erics273 Gold Tenure',
+    'original_name': 'Gold tenure',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <XboxSensor.GOLD_TENURE: 'gold_tenure'>,
     'unique_id': '2533274913657542_gold_tenure',
     'unit_of_measurement': None,
   })
@@ -135,8 +134,7 @@
 # name: test_sensors[sensor.erics273_gold_tenure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=rwljod2fPqLqGP3DBV9F_yK9iuxAt3_MH6tcOnQXTc8LY1LO8JeulzCEFHaqqItKdg9oJ84qjO.VNwvUWuq_iR5iTyx1gQsqHSvWLbqIrRI-&background=0xababab&format=png',
-      'friendly_name': 'erics273 Gold Tenure',
+      'friendly_name': 'erics273 Gold tenure',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.erics273_gold_tenure',
@@ -160,7 +158,7 @@
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.erics273_status',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -171,12 +169,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'erics273 Status',
+    'original_name': 'Status',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <XboxSensor.STATUS: 'status'>,
     'unique_id': '2533274913657542_status',
     'unit_of_measurement': None,
   })
@@ -184,7 +182,6 @@
 # name: test_sensors[sensor.erics273_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=rwljod2fPqLqGP3DBV9F_yK9iuxAt3_MH6tcOnQXTc8LY1LO8JeulzCEFHaqqItKdg9oJ84qjO.VNwvUWuq_iR5iTyx1gQsqHSvWLbqIrRI-&background=0xababab&format=png',
       'friendly_name': 'erics273 Status',
     }),
     'context': <ANY>,
@@ -209,7 +206,7 @@
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.gsr_ae_account_tier',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -220,12 +217,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'GSR Ae Account Tier',
+    'original_name': 'Account tier',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <XboxSensor.ACCOUNT_TIER: 'account_tier'>,
     'unique_id': '271958441785640_account_tier',
     'unit_of_measurement': None,
   })
@@ -233,8 +230,7 @@
 # name: test_sensors[sensor.gsr_ae_account_tier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=wHwbXKif8cus8csoZ03RW_ES.ojiJijNBGRVUbTnZKsoCCCkjlsEJrrMqDkYqs3M0aLOK2kxE9mbLm9M2.R0stAQYoDsGCDJxqDzG9WF3oa4rOCjEK7DbZXdBmBWnMrfErA3M_Q4y_mUTEQLqSAEeYFGlGeCXYsccnQMvEecxRg-&format=png',
-      'friendly_name': 'GSR Ae Account Tier',
+      'friendly_name': 'GSR Ae Account tier',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gsr_ae_account_tier',
@@ -244,7 +240,7 @@
     'state': 'Gold',
   })
 # ---
-# name: test_sensors[sensor.gsr_ae_gamer_score-entry]
+# name: test_sensors[sensor.gsr_ae_gamerscore-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -257,8 +253,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.gsr_ae_gamer_score',
-    'has_entity_name': False,
+    'entity_id': 'sensor.gsr_ae_gamerscore',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -269,24 +265,24 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'GSR Ae Gamer Score',
+    'original_name': 'Gamerscore',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <XboxSensor.GAMER_SCORE: 'gamer_score'>,
     'unique_id': '271958441785640_gamer_score',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'points',
   })
 # ---
-# name: test_sensors[sensor.gsr_ae_gamer_score-state]
+# name: test_sensors[sensor.gsr_ae_gamerscore-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=wHwbXKif8cus8csoZ03RW_ES.ojiJijNBGRVUbTnZKsoCCCkjlsEJrrMqDkYqs3M0aLOK2kxE9mbLm9M2.R0stAQYoDsGCDJxqDzG9WF3oa4rOCjEK7DbZXdBmBWnMrfErA3M_Q4y_mUTEQLqSAEeYFGlGeCXYsccnQMvEecxRg-&format=png',
-      'friendly_name': 'GSR Ae Gamer Score',
+      'friendly_name': 'GSR Ae Gamerscore',
+      'unit_of_measurement': 'points',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gsr_ae_gamer_score',
+    'entity_id': 'sensor.gsr_ae_gamerscore',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -307,7 +303,7 @@
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.gsr_ae_gold_tenure',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -318,12 +314,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'GSR Ae Gold Tenure',
+    'original_name': 'Gold tenure',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <XboxSensor.GOLD_TENURE: 'gold_tenure'>,
     'unique_id': '271958441785640_gold_tenure',
     'unit_of_measurement': None,
   })
@@ -331,8 +327,7 @@
 # name: test_sensors[sensor.gsr_ae_gold_tenure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=wHwbXKif8cus8csoZ03RW_ES.ojiJijNBGRVUbTnZKsoCCCkjlsEJrrMqDkYqs3M0aLOK2kxE9mbLm9M2.R0stAQYoDsGCDJxqDzG9WF3oa4rOCjEK7DbZXdBmBWnMrfErA3M_Q4y_mUTEQLqSAEeYFGlGeCXYsccnQMvEecxRg-&format=png',
-      'friendly_name': 'GSR Ae Gold Tenure',
+      'friendly_name': 'GSR Ae Gold tenure',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gsr_ae_gold_tenure',
@@ -356,7 +351,7 @@
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.gsr_ae_status',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -367,12 +362,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'GSR Ae Status',
+    'original_name': 'Status',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <XboxSensor.STATUS: 'status'>,
     'unique_id': '271958441785640_status',
     'unit_of_measurement': None,
   })
@@ -380,7 +375,6 @@
 # name: test_sensors[sensor.gsr_ae_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=wHwbXKif8cus8csoZ03RW_ES.ojiJijNBGRVUbTnZKsoCCCkjlsEJrrMqDkYqs3M0aLOK2kxE9mbLm9M2.R0stAQYoDsGCDJxqDzG9WF3oa4rOCjEK7DbZXdBmBWnMrfErA3M_Q4y_mUTEQLqSAEeYFGlGeCXYsccnQMvEecxRg-&format=png',
       'friendly_name': 'GSR Ae Status',
     }),
     'context': <ANY>,
@@ -405,7 +399,7 @@
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.ikken_hissatsuu_account_tier',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -416,12 +410,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Ikken Hissatsuu Account Tier',
+    'original_name': 'Account tier',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <XboxSensor.ACCOUNT_TIER: 'account_tier'>,
     'unique_id': '2533274838782903_account_tier',
     'unit_of_measurement': None,
   })
@@ -429,8 +423,7 @@
 # name: test_sensors[sensor.ikken_hissatsuu_account_tier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=7OTVnZUMVj4OV2zUUGecWvn3U00nQQLfK7_kwpANogj9vJpb.t4ZQMMLIWOuBZBBZs5MjD7okwh5Zwnit1SAtO3OAsFXxJc1ALIbaVoRo7gsiun9FdcaTpzkM60nqzT8ip1659eQpB1SLyupscP.ec_wAGvXwkhCcTKCNHQMrxg-&format=png',
-      'friendly_name': 'Ikken Hissatsuu Account Tier',
+      'friendly_name': 'Ikken Hissatsuu Account tier',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ikken_hissatsuu_account_tier',
@@ -440,7 +433,7 @@
     'state': 'Gold',
   })
 # ---
-# name: test_sensors[sensor.ikken_hissatsuu_gamer_score-entry]
+# name: test_sensors[sensor.ikken_hissatsuu_gamerscore-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -453,8 +446,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ikken_hissatsuu_gamer_score',
-    'has_entity_name': False,
+    'entity_id': 'sensor.ikken_hissatsuu_gamerscore',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -465,24 +458,24 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Ikken Hissatsuu Gamer Score',
+    'original_name': 'Gamerscore',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <XboxSensor.GAMER_SCORE: 'gamer_score'>,
     'unique_id': '2533274838782903_gamer_score',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'points',
   })
 # ---
-# name: test_sensors[sensor.ikken_hissatsuu_gamer_score-state]
+# name: test_sensors[sensor.ikken_hissatsuu_gamerscore-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=7OTVnZUMVj4OV2zUUGecWvn3U00nQQLfK7_kwpANogj9vJpb.t4ZQMMLIWOuBZBBZs5MjD7okwh5Zwnit1SAtO3OAsFXxJc1ALIbaVoRo7gsiun9FdcaTpzkM60nqzT8ip1659eQpB1SLyupscP.ec_wAGvXwkhCcTKCNHQMrxg-&format=png',
-      'friendly_name': 'Ikken Hissatsuu Gamer Score',
+      'friendly_name': 'Ikken Hissatsuu Gamerscore',
+      'unit_of_measurement': 'points',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ikken_hissatsuu_gamer_score',
+    'entity_id': 'sensor.ikken_hissatsuu_gamerscore',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -503,7 +496,7 @@
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.ikken_hissatsuu_gold_tenure',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -514,12 +507,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Ikken Hissatsuu Gold Tenure',
+    'original_name': 'Gold tenure',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <XboxSensor.GOLD_TENURE: 'gold_tenure'>,
     'unique_id': '2533274838782903_gold_tenure',
     'unit_of_measurement': None,
   })
@@ -527,8 +520,7 @@
 # name: test_sensors[sensor.ikken_hissatsuu_gold_tenure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=7OTVnZUMVj4OV2zUUGecWvn3U00nQQLfK7_kwpANogj9vJpb.t4ZQMMLIWOuBZBBZs5MjD7okwh5Zwnit1SAtO3OAsFXxJc1ALIbaVoRo7gsiun9FdcaTpzkM60nqzT8ip1659eQpB1SLyupscP.ec_wAGvXwkhCcTKCNHQMrxg-&format=png',
-      'friendly_name': 'Ikken Hissatsuu Gold Tenure',
+      'friendly_name': 'Ikken Hissatsuu Gold tenure',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ikken_hissatsuu_gold_tenure',
@@ -552,7 +544,7 @@
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.ikken_hissatsuu_status',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -563,12 +555,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Ikken Hissatsuu Status',
+    'original_name': 'Status',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <XboxSensor.STATUS: 'status'>,
     'unique_id': '2533274838782903_status',
     'unit_of_measurement': None,
   })
@@ -576,7 +568,6 @@
 # name: test_sensors[sensor.ikken_hissatsuu_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=7OTVnZUMVj4OV2zUUGecWvn3U00nQQLfK7_kwpANogj9vJpb.t4ZQMMLIWOuBZBBZs5MjD7okwh5Zwnit1SAtO3OAsFXxJc1ALIbaVoRo7gsiun9FdcaTpzkM60nqzT8ip1659eQpB1SLyupscP.ec_wAGvXwkhCcTKCNHQMrxg-&format=png',
       'friendly_name': 'Ikken Hissatsuu Status',
     }),
     'context': <ANY>,
