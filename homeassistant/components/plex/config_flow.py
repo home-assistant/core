@@ -124,7 +124,11 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._async_step_plex_website_auth()
         if self.show_advanced_options:
             return await self.async_step_user_advanced(errors=errors)
-        return self.async_show_form(step_id="user", errors=errors)
+        return self.async_show_form(
+            step_id="user",
+            errors=errors,
+            description_placeholders={"plex_server_url": "[plex.tv](https://plex.tv)"},
+        )
 
     async def async_step_user_advanced(
         self,
