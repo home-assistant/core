@@ -142,5 +142,5 @@ pytest_buckets.txt
 # AI tooling
 .claude
 
-# SonarQube
-.sonar/
+#Sonarqube log files
+**/.sonar/

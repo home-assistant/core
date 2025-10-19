@@ -6,7 +6,7 @@ from collections.abc import AsyncGenerator, Callable
 import contextlib
 import logging
 import math
-from typing import Any, Final
+from typing import Any, Final, Literal
 
 import audioop  # pylint: disable=deprecated-module
 import voluptuous as vol
@@ -159,13 +159,7 @@ async def websocket_run(
         incoming_sample_rate = msg_input["sample_rate"]
         wake_word_phrase: str | None = None
 
-        if start_stage == PipelineStage.WAKE_WORD:
-            wake_word_settings = WakeWordSettings(
-                timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT),
-                audio_seconds_to_buffer=msg_input.get("audio_seconds_to_buffer", 0),
-            )
-        elif start_stage == PipelineStage.STT:
-            wake_word_phrase = msg["input"].get("wake_word_phrase")
+        wake_word_settings, wake_word_phrase = _start_page(msg, start_stage, msg_input)
 
         async def stt_stream() -> AsyncGenerator[bytes]:
             state = None
@@ -214,12 +208,7 @@ async def websocket_run(
             volume_multiplier=msg_input.get("volume_multiplier", 1.0),
             is_vad_enabled=not msg_input.get("no_vad", False),
         )
-    elif start_stage == PipelineStage.INTENT:
-        # Input to conversation agent
-        input_args["intent_input"] = msg["input"]["text"]
-    elif start_stage == PipelineStage.TTS:
-        # Input to text-to-speech system
-        input_args["tts_input"] = msg["input"]["text"]
+    _set_input_args(msg, start_stage, input_args)
 
     input_args["run"] = PipelineRun(
         hass,
@@ -272,6 +261,31 @@ async def websocket_run(
             if unregister_handler is not None:
                 # Unregister binary handler
                 unregister_handler()
+
+
+def _set_input_args(
+    msg: dict[str, Any], start_stage: PipelineStage, input_args: Any
+) -> None:
+    """Set input args for pipeline input based on start stage."""
+    if start_stage == PipelineStage.INTENT:
+        input_args["intent_input"] = msg["input"]["text"]
+    elif start_stage == PipelineStage.TTS:
+        input_args["tts_input"] = msg["input"]["text"]
+
+
+def _start_page(
+    msg: dict[str, Any], start_stage: PipelineStage, msg_input: Any
+) -> tuple[WakeWordSettings | None, str | None]:
+    wake_word_settings: WakeWordSettings | None = None
+    wake_word_phrase: str | None = None
+    if start_stage == PipelineStage.WAKE_WORD:
+        wake_word_settings = WakeWordSettings(
+            timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT),
+            audio_seconds_to_buffer=msg_input.get("audio_seconds_to_buffer", 0),
+        )
+    elif start_stage == PipelineStage.STT:
+        wake_word_phrase = msg["input"].get("wake_word_phrase")
+    return wake_word_settings, wake_word_phrase
 
 
 @callback
@@ -404,32 +418,15 @@ def websocket_list_languages(
     tts_language_tags = tts.async_get_text_to_speech_languages(hass)
     pipeline_languages: set[str] | None = None
 
-    if conv_language_tags and conv_language_tags != MATCH_ALL:
-        languages = set()
-        for language_tag in conv_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        pipeline_languages = languages
+    pipeline_languages = _extract_conv_language_tags(conv_language_tags)
 
-    if stt_language_tags:
-        languages = set()
-        for language_tag in stt_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        if pipeline_languages is not None:
-            pipeline_languages = language_util.intersect(pipeline_languages, languages)
-        else:
-            pipeline_languages = languages
+    pipeline_languages = _extract_stt_language_tags(
+        stt_language_tags, pipeline_languages
+    )
 
-    if tts_language_tags:
-        languages = set()
-        for language_tag in tts_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        if pipeline_languages is not None:
-            pipeline_languages = language_util.intersect(pipeline_languages, languages)
-        else:
-            pipeline_languages = languages
+    pipeline_languages = _extract_tts_language_tags(
+        tts_language_tags, pipeline_languages
+    )
 
     connection.send_result(
         msg["id"],
@@ -441,6 +438,101 @@ def websocket_list_languages(
     )
 
 
+def _extract_tts_language_tags(
+    tts_language_tags: set[str], pipeline_languages: set[str] | None
+) -> set[str] | None:
+    if tts_language_tags:
+        languages: set[str] = set()
+        pipeline_languages = _language_tag(
+            tts_language_tags, languages, pipeline_languages
+        )
+    return pipeline_languages
+
+
+def _language_tag(
+    tts_language_tags: set[str],
+    languages: set[str],
+    pipeline_languages: set[str] | None,
+) -> set[str] | None:
+    for language_tag in tts_language_tags:
+        dialect = language_util.Dialect.parse(language_tag)
+        languages.add(dialect.language)
+    return _pipeline_languages(languages, pipeline_languages)
+
+
+def _pipeline_languages(
+    languages: set[str], pipeline_languages: set[str] | None = None
+) -> set[str] | None:
+    if pipeline_languages is not None:
+        pipeline_languages = language_util.intersect(pipeline_languages, languages)
+    else:
+        pipeline_languages = languages
+    return pipeline_languages
+
+
+def _extract_stt_language_tags(
+    stt_language_tags: set[str], pipeline_languages: set[str] | None = None
+) -> set[str] | None:
+    if stt_language_tags:
+        languages: set[str] = set()
+        pipeline_languages = _extract_language_tag_from_dialect(
+            stt_language_tags, languages, pipeline_languages
+        )
+    return pipeline_languages
+
+
+def _extract_language_tag_from_dialect(
+    stt_language_tags: set[str],
+    languages: set[str],
+    pipeline_languages: set[str] | None = None,
+) -> set[str] | None:
+    for language_tag in stt_language_tags:
+        dialect = language_util.Dialect.parse(language_tag)
+        languages.add(dialect.language)
+    return _extract_pipeline_languages(pipeline_languages, languages)
+
+
+def _extract_pipeline_languages(
+    pipeline_languages: set[str] | None, languages: set[str]
+) -> set[str]:
+    if pipeline_languages is not None:
+        pipeline_languages = language_util.intersect(pipeline_languages, languages)
+    else:
+        pipeline_languages = languages
+    return pipeline_languages
+
+
+def _extract_conv_language_tags(
+    conv_language_tags: set[str] | Literal["*"],
+) -> set[str] | None:
+    if conv_language_tags and conv_language_tags != MATCH_ALL:
+        languages: set[str] = set()
+        _extract_language_tag(conv_language_tags, languages)
+        pipeline_languages = languages
+    return pipeline_languages
+
+
+def _extract_language_tag(
+    conv_language_tags: set[str], languages: set[str]
+) -> set[str] | None:
+    for language_tag in conv_language_tags:
+        dialect = language_util.Dialect.parse(language_tag)
+        languages.add(dialect.language)
+    return languages
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "assist_pipeline/device/capture",
+        vol.Required("device_id"): str,
+        vol.Required("timeout"): vol.All(
+            # 0 < timeout <= MAX_CAPTURE_TIMEOUT
+            vol.Coerce(float),
+            vol.Range(min=0, min_included=False, max=MAX_CAPTURE_TIMEOUT),
+        ),
+    }
+)
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {

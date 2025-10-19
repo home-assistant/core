@@ -28,6 +28,7 @@ from .error import PipelineNotFound
 from .pipeline import (
     AudioSettings,
     Pipeline,
+    PipelineContext,
     PipelineEvent,
     PipelineEventCallback,
     PipelineEventType,
@@ -97,20 +98,26 @@ async def async_pipeline_from_audio_stream(
     stt_metadata: stt.SpeechMetadata,
     stt_stream: AsyncIterable[bytes],
     wake_word_phrase: str | None = None,
-    pipeline_id: str | None = None,
-    conversation_id: str | None = None,
     tts_audio_output: str | dict[str, Any] | None = None,
     wake_word_settings: WakeWordSettings | None = None,
     audio_settings: AudioSettings | None = None,
     device_id: str | None = None,
-    start_stage: PipelineStage = PipelineStage.STT,
-    end_stage: PipelineStage = PipelineStage.TTS,
-    conversation_extra_system_prompt: str | None = None,
+    pipeline_context: PipelineContext | None = None,
 ) -> None:
     """Create an audio pipeline from an audio stream.
 
     Raises PipelineNotFound if no pipeline is found.
     """
+    conversation_id = pipeline_context.conversation_id if pipeline_context else None
+    pipeline_id = pipeline_context.pipeline_id if pipeline_context else None
+    start_stage = (
+        pipeline_context.start_stage if pipeline_context else PipelineStage.STT
+    )
+    end_stage = pipeline_context.end_stage if pipeline_context else PipelineStage.TTS
+    conversation_extra_system_prompt = (
+        pipeline_context.conversation_extra_system_prompt if pipeline_context else None
+    )
+
     with chat_session.async_get_chat_session(hass, conversation_id) as session:
         pipeline_input = PipelineInput(
             session=session,
