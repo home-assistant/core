@@ -21,6 +21,8 @@ from aioesphomeapi import (
     UserService,
     UserServiceArg,
     UserServiceArgType,
+    ZWaveProxyRequest,
+    ZWaveProxyRequestType,
 )
 import pytest
 import voluptuous as vol
@@ -2703,3 +2705,98 @@ async def test_manager_handle_dynamic_encryption_key_connection_error(
 
     # Verify key was NOT stored due to connection error
     assert mac_address not in hass_storage[ENCRYPTION_KEY_STORAGE_KEY]["data"]["keys"]
+
+
+async def test_zwave_proxy_request_home_id_change(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test Z-Wave proxy request handler with HOME_ID_CHANGE request."""
+
+    device_info = {
+        "name": "test-zwave-proxy",
+        "mac_address": "11:22:33:44:55:AA",
+        "zwave_proxy_feature_flags": 1,
+    }
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+    await hass.async_block_till_done()
+
+    # Get the manager's _async_zwave_proxy_request callback
+    # It's registered via subscribe_zwave_proxy_request
+    zwave_proxy_callback = None
+    for call_item in mock_client.subscribe_zwave_proxy_request.call_args_list:
+        if call_item[0]:
+            zwave_proxy_callback = call_item[0][0]
+            break
+
+    assert zwave_proxy_callback is not None
+
+    # Create a mock request with a different type (not HOME_ID_CHANGE)
+    # Assuming there are other types, we'll use a placeholder value
+    request = ZWaveProxyRequest(
+        type=0,  # Not HOME_ID_CHANGE
+        data=b"\x00\x00\x00\x01",
+    )
+
+    # Track flow creation
+    with patch(
+        "homeassistant.helpers.discovery_flow.async_create_flow"
+    ) as mock_create_flow:
+        # Call the callback
+        zwave_proxy_callback(request)
+        await hass.async_block_till_done()
+
+        # Verify no flow was created for non-HOME_ID_CHANGE requests
+        mock_create_flow.assert_not_called()
+
+    # Create a mock request with HOME_ID_CHANGE type and zwave_home_id as bytes
+    zwave_home_id = 1234567890
+    request = ZWaveProxyRequest(
+        type=ZWaveProxyRequestType.HOME_ID_CHANGE,
+        data=zwave_home_id.to_bytes(4, byteorder="big")
+        + b"\x00\x00",  # Extra bytes should be ignored
+    )
+
+    # Track flow creation
+    with patch(
+        "homeassistant.helpers.discovery_flow.async_create_flow"
+    ) as mock_create_flow:
+        # Call the callback
+        zwave_proxy_callback(request)
+        await hass.async_block_till_done()
+
+        # Verify async_create_zwave_js_flow was called with correct arguments
+        mock_create_flow.assert_called_once()
+        call_args = mock_create_flow.call_args
+        assert call_args[0][0] == hass
+        assert call_args[0][1] == "zwave_js"
+
+
+async def test_no_zwave_proxy_subscribe_without_feature_flags(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test Z-Wave proxy request subscription is not registered without feature flags."""
+    device_info = {
+        "name": "test-device",
+        "mac_address": "11:22:33:44:55:AA",
+        "zwave_proxy_feature_flags": 0,  # No Z-Wave proxy features
+    }
+
+    # Mock the subscribe_zwave_proxy_request method
+    mock_client.subscribe_zwave_proxy_request = Mock(return_value=lambda: None)
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+    await hass.async_block_till_done()
+
+    # Verify subscribe_zwave_proxy_request was NOT called
+    mock_client.subscribe_zwave_proxy_request.assert_not_called()

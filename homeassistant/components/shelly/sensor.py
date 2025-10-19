@@ -41,7 +41,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_SLEEP_PERIOD
+from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -1425,7 +1425,7 @@ RPC_SENSORS: Final = {
         removal_condition=lambda config, _, key: not is_view_for_platform(
             config, key, SENSOR_PLATFORM
         ),
-        role="generic",
+        role=ROLE_GENERIC,
     ),
     "number_generic": RpcSensorDescription(
         key="number",
@@ -1434,7 +1434,7 @@ RPC_SENSORS: Final = {
             config, key, SENSOR_PLATFORM
         ),
         unit=get_virtual_component_unit,
-        role="generic",
+        role=ROLE_GENERIC,
     ),
     "enum_generic": RpcSensorDescription(
         key="enum",
@@ -1444,7 +1444,7 @@ RPC_SENSORS: Final = {
         ),
         options_fn=lambda config: config["options"],
         device_class=SensorDeviceClass.ENUM,
-        role="generic",
+        role=ROLE_GENERIC,
     ),
     "valve_position": RpcSensorDescription(
         key="blutrv",
@@ -1489,6 +1489,7 @@ RPC_SENSORS: Final = {
     "number_current_humidity": RpcSensorDescription(
         key="number",
         sub_key="value",
+        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
@@ -1498,6 +1499,7 @@ RPC_SENSORS: Final = {
     "number_current_temperature": RpcSensorDescription(
         key="number",
         sub_key="value",
+        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -1507,6 +1509,7 @@ RPC_SENSORS: Final = {
     "number_flow_rate": RpcSensorDescription(
         key="number",
         sub_key="value",
+        name="Water flow rate",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1549,8 +1552,7 @@ RPC_SENSORS: Final = {
     "number_energy_charge": RpcSensorDescription(
         key="number",
         sub_key="value",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
@@ -1594,8 +1596,7 @@ RPC_SENSORS: Final = {
         key="object",
         sub_key="value",
         value=lambda status, _: float(status["counter"]["total"]),
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -1606,8 +1607,7 @@ RPC_SENSORS: Final = {
         sub_key="value",
         name="Energy",
         value=lambda status, _: float(status["total_act_energy"]),
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -1618,8 +1618,7 @@ RPC_SENSORS: Final = {
         sub_key="value",
         name="Power",
         value=lambda status, _: float(status["total_power"]),
-        native_unit_of_measurement=UnitOfPower.WATT,
-        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
