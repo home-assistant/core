@@ -10,10 +10,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN
 from .helpers import async_verify_key
-from .issues import async_create_prowl_yaml_migration_fail_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,15 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_API_KEY: api_key,
                 },
             )
-        await async_create_prowl_yaml_migration_fail_issue(self.hass)
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "migrate_fail_prowl",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="prowl_yaml_migration_fail",
+        )
         return self.async_abort(reason="invalid_api_key")
 
     async def _validate_api_key(self, api_key: str) -> dict[str, str]:

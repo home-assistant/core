@@ -26,10 +26,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, YAML_DEPRECATED_IN
-from .issues import async_create_prowl_yaml_issue
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,17 @@ async def async_get_service(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
     )
-    await async_create_prowl_yaml_issue(hass)
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2026.04.01",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="prowl_yaml_deprecated",
+    )
+
     return ProwlNotificationService(hass, config[CONF_API_KEY], get_async_client(hass))
 
 
@@ -78,7 +88,7 @@ class ProwlNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
-        migrate_notify_issue(self._hass, DOMAIN, DOMAIN, YAML_DEPRECATED_IN, DOMAIN)
+        migrate_notify_issue(self._hass, DOMAIN, DOMAIN, "2026.04.01", DOMAIN)
 
         data = kwargs.get(ATTR_DATA, {})
         if data is None:
