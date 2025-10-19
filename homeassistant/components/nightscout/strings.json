@@ -9,7 +9,7 @@
         },
         "data_description": {
           "url": "The address of your Nightscout instance. For example: {example_url}.",
-          "api_key": "Optional, only use if your instance is protected (auth_default_roles != readable)."
+          "api_key": "Optional; only use it if your instance is protected (auth_default_roles != readable)."
         }
       }
     },
