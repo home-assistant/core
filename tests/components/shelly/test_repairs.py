@@ -1,6 +1,6 @@
 """Test repairs handling for Shelly."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from aioshelly.const import MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
@@ -9,10 +9,11 @@ import pytest
 from homeassistant.components.shelly.const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     CONF_BLE_SCANNER_MODE,
+    DEPRECATED_FIRMWARE_ISSUE_ID,
     DOMAIN,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
-    WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     BLEScannerMode,
+    DeprecatedFirmwareInfo,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -215,17 +216,25 @@ async def test_outbound_websocket_incorrectly_enabled_issue_exc(
     assert len(issue_registry.issues) == 1
 
 
-async def test_wall_display_unsupported_firmware_issue(
+async def test_deprecated_firmware_issue(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_rpc_device: Mock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test repair issues handling for Wall Display with unsupported firmware."""
-    issue_id = WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
+    """Test repair issues handling deprecated firmware."""
+    issue_id = DEPRECATED_FIRMWARE_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
-    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+    with patch(
+        "homeassistant.components.shelly.repairs.DEPRECATED_FIRMWARES",
+        {
+            MODEL_WALL_DISPLAY: DeprecatedFirmwareInfo(
+                {"min_firmware": "2.3.0", "ha_version": "2025.10.0"}
+            )
+        },
+    ):
+        await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     # The default fw version in tests is 1.0.0, the repair issue should be created.
     assert issue_registry.async_get_issue(DOMAIN, issue_id)

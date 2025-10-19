@@ -153,7 +153,7 @@
           },
           "data_description": {
             "availability_topic": "Topic to receive the availability payload on",
-            "availability_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-templates-with-the-mqtt-integration) to render the availability payload received on the availability topic",
+            "availability_template": "A [template]({value_templating_url}) to render the availability payload received on the availability topic",
             "payload_available": "The payload that indicates the device is available (defaults to 'online')",
             "payload_not_available": "The payload that indicates the device is not available (defaults to 'offline')"
           }
@@ -165,13 +165,15 @@
             "name": "[%key:common::config_flow::data::name%]",
             "configuration_url": "Configuration URL",
             "model": "Model",
-            "model_id": "Model ID"
+            "model_id": "Model ID",
+            "manufacturer": "Manufacturer"
           },
           "data_description": {
             "name": "The name of the manually added MQTT device.",
             "configuration_url": "A link to the webpage that can manage the configuration of this device. Can be either a 'http://', 'https://' or an internal 'homeassistant://' URL.",
             "model": "E.g. 'Cleanmaster Pro'.",
-            "model_id": "E.g. '123NK2PRO'."
+            "model_id": "E.g. '123NK2PRO'.",
+            "manufacturer": "E.g. Cleanmaster Ltd."
           },
           "sections": {
             "advanced_settings": {
@@ -219,7 +221,7 @@
           },
           "data_description": {
             "platform": "The type of the entity to configure.",
-            "name": "The name of the entity. Leave empty to set it to `None` to [mark it as main feature of the MQTT device](https://www.home-assistant.io/integrations/mqtt/#naming-of-mqtt-entities).",
+            "name": "The name of the entity. Leave empty to set it to `None` to [mark it as main feature of the MQTT device]({naming_entities_url}).",
             "entity_picture": "An URL to a picture to be assigned."
           }
         },
@@ -286,7 +288,7 @@
             "climate_feature_target_temperature": "The climate supports setting the target temperature.",
             "climate_feature_target_humidity": "The climate supports setting the target humidity.",
             "device_class": "The device class of the {platform} entity. [Learn more.]({url}#device_class)",
-            "entity_category": "Allows marking an entity as device configuration or diagnostics. An entity with a category will not be exposed to cloud, Alexa, or Google Assistant components, nor included in indirect action calls to devices or areas. Sensor entities cannot be assigned a device configuration class. [Learn more.](https://developers.home-assistant.io/docs/core/entity/#registry-properties)",
+            "entity_category": "Allows marking an entity as device configuration or diagnostics. An entity with a category will not be exposed to cloud, Alexa, or Google Assistant components, nor included in indirect action calls to devices or areas. Sensor entities cannot be assigned a device configuration class. [Learn more.]({registry_properties_url})",
             "fan_feature_speed": "The fan supports multiple speeds.",
             "fan_feature_preset_modes": "The fan supports preset modes.",
             "fan_feature_oscillation": "The fan supports oscillation.",
@@ -294,11 +296,11 @@
             "image_processing_mode": "Select how the image data is received.",
             "options": "Options for allowed sensor state values. The sensor’s Device class must be set to Enumeration. The 'Options' setting cannot be used together with State class or Unit of measurement.",
             "schema": "The schema to use. [Learn more.]({url}#comparison-of-light-mqtt-schemas)",
-            "state_class": "The [State class](https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes) of the sensor. [Learn more.]({url}#state_class)",
+            "state_class": "The [State class]({available_state_classes_url}) of the sensor. [Learn more.]({url}#state_class)",
             "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more.]({url}#suggested_display_precision)",
             "supported_features": "The features that the entity supports.",
             "temperature_unit": "This determines the native unit of measurement the MQTT climate device works with.",
-            "unit_of_measurement": "Defines the unit of measurement of the sensor, if any."
+            "unit_of_measurement": "Defines the unit of measurement, if any."
           },
           "sections": {
             "advanced_settings": {
@@ -316,6 +318,7 @@
           "title": "Configure MQTT device \"{mqtt_device}\"",
           "description": "Please configure MQTT specific details for {platform} entity \"{entity}\":",
           "data": {
+            "available_tones": "Available Tones",
             "blue_template": "Blue template",
             "brightness_template": "Brightness template",
             "code": "Alarm code",
@@ -334,6 +337,9 @@
             "image_encoding": "Image encoding",
             "image_topic": "Image topic",
             "last_reset_value_template": "Last reset value template",
+            "max": "Maximum",
+            "min": "Minimum",
+            "mode": "Mode",
             "modes": "Supported operation modes",
             "mode_command_topic": "Operation mode command topic",
             "mode_command_template": "Operation mode command template",
@@ -341,9 +347,11 @@
             "mode_state_template": "Operation mode value template",
             "on_command_type": "ON command type",
             "optimistic": "Optimistic",
+            "options": "Set options",
             "payload_off": "Payload \"off\"",
             "payload_on": "Payload \"on\"",
             "payload_press": "Payload \"press\"",
+            "payload_reset": "Payload \"reset\"",
             "qos": "QoS",
             "red_template": "Red template",
             "retain": "Retain",
@@ -352,51 +360,63 @@
             "state_template": "State template",
             "state_topic": "State topic",
             "state_value_template": "State value template",
+            "step": "Step",
+            "support_duration": "Duration support",
+            "support_volume_set": "Set volume support",
             "supported_color_modes": "Supported color modes",
             "url_template": "URL template",
             "url_topic": "URL topic",
             "value_template": "Value template"
           },
           "data_description": {
-            "blue_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract blue color from the state payload value. Expected result of the template is an integer from 0-255 range.",
-            "brightness_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract brightness from the state payload value. Expected result of the template is an integer from 0-255 range.",
+            "available_tones": "The siren supports tones. The `tone` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#available_tones)",
+            "blue_template": "[Template]({value_templating_url}) to extract blue color from the state payload value. Expected result of the template is an integer from 0-255 range.",
+            "brightness_template": "[Template]({value_templating_url}) to extract brightness from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "code": "Specifies a code to enable or disable the alarm in the frontend. Note that this blocks sending MQTT message commands to the remote device if the code validation fails. [Learn more.]({url}#code)",
             "code_format": "A regular expression to validate a supplied code when it is set during the action to open, lock or unlock the MQTT lock. [Learn more.]({url}#code_format)",
             "code_arm_required": "If set, the code is required to arm the alarm. If not set, the code is not validated.",
             "code_disarm_required": "If set, the code is required to disarm the alarm. If not set, the code is not validated.",
             "code_trigger_required": "If set, the code is required to manually trigger the alarm. If not set, the code is not validated.",
-            "color_temp_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract color temperature in Kelvin from the state payload value. Expected result of the template is an integer.",
-            "command_off_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"off\" state changes. Available variables are: `state` and `transition`.",
-            "command_on_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"on\" state changes. Available variables: `state`, `brightness`, `color_temp`, `red`, `green`, `blue`, `hue`, `sat`, `flash`, `transition` and `effect`. Values `red`, `green`, `blue` and `brightness` are provided as integers from range 0-255. Value of `hue` is provided as float from range 0-360. Value of `sat` is provided as float from range 0-100. Value of `color_temp` is provided as integer representing Kelvin units.",
-            "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic. [Learn more.]({url}#command_template)",
+            "color_temp_template": "[Template]({value_templating_url}) to extract color temperature in Kelvin from the state payload value. Expected result of the template is an integer.",
+            "command_off_template": "The [template]({command_templating_url}) for \"off\" state changes. Available variables are: `state` and `transition`.",
+            "command_on_template": "The [template]({command_templating_url}) for \"on\" state changes. Available variables: `state`, `brightness`, `color_temp`, `red`, `green`, `blue`, `hue`, `sat`, `flash`, `transition` and `effect`. Values `red`, `green`, `blue` and `brightness` are provided as integers from range 0-255. Value of `hue` is provided as float from range 0-360. Value of `sat` is provided as float from range 0-100. Value of `color_temp` is provided as integer representing Kelvin units.",
+            "command_template": "A [template]({command_templating_url}) to render the payload to be published at the command topic. [Learn more.]({url}#command_template)",
             "command_topic": "The publishing topic that will be used to control the {platform} entity. [Learn more.]({url}#command_topic)",
             "content_type": "The content type or the image data that is received at the image topic.",
             "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
-            "green_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract green color from the state payload value. Expected result of the template is an integer from 0-255 range.",
+            "green_template": "[Template]({value_templating_url}) to extract green color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "image_encoding": "Select the encoding of the received image data",
             "image_topic": "The MQTT topic subscribed to receive messages containing the image data. [Learn more.]({url}#image_topic)",
-            "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
+            "last_reset_value_template": "Defines a [template]({value_templating_url}) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
+            "max": "Maximum value. [Learn more.]({url}#max)",
+            "min": "Minimum value. [Learn more.]({url}#min)",
+            "mode": "Control how the number should be displayed in the UI. [Learn more.]({url}#mode)",
             "modes": "A list of supported operation modes. [Learn more.]({url}#modes)",
             "mode_command_topic": "The MQTT topic to publish commands to change the climate operation mode. [Learn more.]({url}#mode_command_topic)",
-            "mode_command_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to define the operation mode to be sent to the operation mode command topic. [Learn more.]({url}#mode_command_template)",
+            "mode_command_template": "[Template]({command_templating_url}) to define the operation mode to be sent to the operation mode command topic. [Learn more.]({url}#mode_command_template)",
             "mode_state_topic": "The MQTT topic subscribed to receive operation mode state messages. [Learn more.]({url}#mode_state_topic)",
-            "mode_state_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the operation mode state. [Learn more.]({url}#mode_state_template)",
+            "mode_state_template": "Defines a [template]({value_templating_url}) to extract the operation mode state. [Learn more.]({url}#mode_state_template)",
             "on_command_type": "Defines when the payload \"on\" is sent. Using \"Last\" (the default) will send any style (brightness, color, etc) topics first and then a payload \"on\" to the command topic. Using \"First\" will send the payload \"on\" and then any style topics. Using \"Brightness\" will only send brightness commands instead of the payload \"on\" to turn the light on.",
             "optimistic": "Flag that defines if the {platform} entity works in optimistic mode. [Learn more.]({url}#optimistic)",
+            "options": "List of options that can be selected.",
             "payload_off": "The payload that represents the \"off\" state.",
             "payload_on": "The payload that represents the \"on\" state.",
             "payload_press": "The payload to send when the button is triggered.",
+            "payload_reset": "The payload received at the state topic that resets the entity to an unknown state.",
             "qos": "The QoS value a {platform} entity should use.",
-            "red_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract red color from the state payload value. Expected result of the template is an integer from 0-255 range.",
+            "red_template": "[Template]({value_templating_url}) to extract red color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker.",
             "state_off": "The incoming payload that represents the \"off\" state. Use only when the value that represents \"off\" state in the state topic is different from value that should be sent to the command topic to turn the device off.",
             "state_on": "The incoming payload that represents the \"on\" state. Use only when the value that represents \"on\" state in the state topic is different from value that should be sent to the command topic to turn the device on.",
-            "state_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract state from the state payload value.",
+            "state_template": "[Template]({value_templating_url}) to extract state from the state payload value.",
             "state_topic": "The MQTT topic subscribed to receive {platform} state values. [Learn more.]({url}#state_topic)",
+            "step": "Step value. Smallest value 0.001.",
+            "support_duration": "The siren supports setting a duration in second. The `duration` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#support_duration)",
+            "support_volume_set": "The siren supports setting a volume. The `volume_level` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#support_volume_set)",
             "supported_color_modes": "A list of color modes supported by the light. Possible color modes are On/Off, Brightness, Color temperature, HS, XY, RGB, RGBW, RGBWW, White. Note that if On/Off or Brightness are used, that must be the only value in the list. [Learn more.]({url}#supported_color_modes)",
-            "url_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract an URL from the received URL topic payload value. [Learn more.]({url}#url_template)",
+            "url_template": "[Template]({value_templating_url}) to extract an URL from the received URL topic payload value. [Learn more.]({url}#url_template)",
             "url_topic": "The MQTT topic subscribed to receive messages containing the image URL. [Learn more.]({url}#url_topic)",
-            "value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the {platform} entity value. [Learn more.]({url}#value_template)"
+            "value_template": "Defines a [template]({value_templating_url}) to extract the {platform} entity value. [Learn more.]({url}#value_template)"
           },
           "sections": {
             "advanced_settings": {
@@ -450,7 +470,7 @@
                 "action_topic": "Action topic"
               },
               "data_description": {
-                "action_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the action topic with.",
+                "action_template": "A [template]({value_templating_url}) to render the value received on the action topic with.",
                 "action_topic": "The MQTT topic to subscribe for changes of the current action. If this is set, the climate graph uses the value received as data source. A \"None\" payload resets the current action state. An empty payload is ignored. Valid action values are: \"off\", \"heating\", \"cooling\", \"drying\", \"idle\" and \"fan\".  [Learn more.]({url}#action_topic)"
               }
             },
@@ -466,9 +486,9 @@
               "data_description": {
                 "fan_modes": "List of fan modes this climate is capable of running at. Common fan modes that offer translations are `off`, `on`, `auto`, `low`, `medium`, `high`, `middle`, `focus` and `diffuse`.",
                 "fan_mode_command_topic": "The MQTT topic to publish commands to change the climate fan mode. [Learn more.]({url}#fan_mode_command_topic)",
-                "fan_mode_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the fan mode command topic.",
+                "fan_mode_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the fan mode command topic.",
                 "fan_mode_state_topic": "The MQTT topic subscribed to receive the climate fan mode. [Learn more.]({url}#fan_mode_state_topic)",
-                "fan_mode_state_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the climate fan mode value."
+                "fan_mode_state_template": "Defines a [template]({value_templating_url}) to extract the climate fan mode value."
               }
             },
             "climate_power_settings": {
@@ -482,7 +502,7 @@
               "data_description": {
                 "payload_off": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data_description::payload_off%]",
                 "payload_on": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data_description::payload_on%]",
-                "power_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the power command topic. The `value` parameter is the payload set for payload \"on\" or payload \"off\".",
+                "power_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the power command topic. The `value` parameter is the payload set for payload \"on\" or payload \"off\".",
                 "power_command_topic": "The MQTT topic to publish commands to change the climate power state. Sends the payload configured with payload \"on\" or payload \"off\". [Learn more.]({url}#power_command_topic)"
               }
             },
@@ -515,9 +535,9 @@
               "data_description": {
                 "swing_horizontal_modes": "List of horizontal swing modes this climate is capable of running at. Common horizontal swing modes that offer translations are `off` and `on`.",
                 "swing_horizontal_mode_command_topic": "The MQTT topic to publish commands to change the climate horizontal swing mode. [Learn more.]({url}#swing_horizontal_mode_command_topic)",
-                "swing_horizontal_mode_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the horizontal swing mode command topic.",
+                "swing_horizontal_mode_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the horizontal swing mode command topic.",
                 "swing_horizontal_mode_state_topic": "The MQTT topic subscribed to receive the climate horizontal swing mode. [Learn more.]({url}#swing_horizontal_mode_state_topic)",
-                "swing_horizontal_mode_state_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the climate horizontal swing mode value."
+                "swing_horizontal_mode_state_template": "Defines a [template]({value_templating_url}) to extract the climate horizontal swing mode value."
               }
             },
             "climate_swing_mode_settings": {
@@ -532,9 +552,9 @@
               "data_description": {
                 "swing_modes": "List of swing modes this climate is capable of running at. Common swing modes that offer translations are `off`, `on`, `vertical`, `horizontal` and `both`.",
                 "swing_mode_command_topic": "The MQTT topic to publish commands to change the climate swing mode. [Learn more.]({url}#swing_mode_command_topic)",
-                "swing_mode_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the swing mode command topic.",
+                "swing_mode_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the swing mode command topic.",
                 "swing_mode_state_topic": "The MQTT topic subscribed to receive the climate swing mode. [Learn more.]({url}#swing_mode_state_topic)",
-                "swing_mode_state_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the climate swing mode value."
+                "swing_mode_state_template": "Defines a [template]({value_templating_url}) to extract the climate swing mode value."
               }
             },
             "cover_payload_settings": {
@@ -575,9 +595,9 @@
               "data_description": {
                 "position_closed": "Number which represents \"closed\" position.",
                 "position_open": "Number which represents \"open\" position.",
-                "position_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the payload for the position topic. Within the template the following variables are also available: `entity_id`, `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#position_template)",
+                "position_template": "Defines a [template]({value_templating_url}) to extract the payload for the position topic. Within the template the following variables are also available: `entity_id`, `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#position_template)",
                 "position_topic": "The MQTT topic subscribed to receive cover position state messages. [Learn more.]({url}#position_topic)",
-                "set_position_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to define the position to be sent to the set position topic. Within the template the following variables are available: `value` (the scaled target position), `entity_id`, `position` (the target position percentage), `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#set_position_template)",
+                "set_position_template": "[Template]({command_templating_url}) to define the position to be sent to the set position topic. Within the template the following variables are available: `value` (the scaled target position), `entity_id`, `position` (the target position percentage), `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#set_position_template)",
                 "set_position_topic": "The MQTT topic to publish position commands to. You need to use the set position topic as well if you want to use the position topic. Use template if position topic wants different values than within range \"position closed\" - \"position_open\". If template is not defined and position \"closed\" != 100 and position \"open\" != 0 then proper position value is calculated from percentage position. [Learn more.]({url}#set_position_topic)"
               }
             },
@@ -596,12 +616,12 @@
               },
               "data_description": {
                 "tilt_closed_value": "The value that will be sent to the \"tilt command topic\" when the cover tilt is closed.",
-                "tilt_command_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to define the position to be sent to the tilt command topic. Within the template the following variables are available: `entity_id`, `tilt_position` (the target tilt position percentage), `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#tilt_command_template)",
+                "tilt_command_template": "[Template]({command_templating_url}) to define the position to be sent to the tilt command topic. Within the template the following variables are available: `entity_id`, `tilt_position` (the target tilt position percentage), `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#tilt_command_template)",
                 "tilt_command_topic": "The MQTT topic to publish commands to control the cover tilt. [Learn more.]({url}#tilt_command_topic)",
                 "tilt_max": "The maximum tilt value.",
                 "tilt_min": "The minimum tilt value.",
                 "tilt_opened_value": "The value that will be sent to the \"tilt command topic\" when the cover tilt is opened.",
-                "tilt_status_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the payload for the tilt status topic. Within the template the following variables are available: `entity_id`, `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#tilt_status_template)",
+                "tilt_status_template": "Defines a [template]({value_templating_url}) to extract the payload for the tilt status topic. Within the template the following variables are available: `entity_id`, `position_open`, `position_closed`, `tilt_min` and `tilt_max`. [Learn more.]({url}#tilt_status_template)",
                 "tilt_status_topic": "The MQTT topic subscribed to receive tilt status update values. [Learn more.]({url}#tilt_status_topic)",
                 "tilt_optimistic": "Flag that defines if tilt works in optimistic mode. If tilt status topic is not defined, tilt works in optimistic mode by default. [Learn more.]({url}#tilt_optimistic)"
               }
@@ -613,7 +633,7 @@
                 "current_humidity_topic": "Current humidity topic"
               },
               "data_description": {
-                "current_humidity_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the current humidity value. [Learn more.]({url}#current_humidity_template)",
+                "current_humidity_template": "Defines a [template]({value_templating_url}) to extract the current humidity value. [Learn more.]({url}#current_humidity_template)",
                 "current_humidity_topic": "The MQTT topic subscribed to receive current humidity update values. [Learn more.]({url}#current_humidity_topic)"
               }
             },
@@ -624,7 +644,7 @@
                 "current_temperature_topic": "Current temperature topic"
               },
               "data_description": {
-                "current_temperature_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the current temperature value. [Learn more.]({url}#current_temperature_template)",
+                "current_temperature_template": "Defines a [template]({value_templating_url}) to extract the current temperature value. [Learn more.]({url}#current_temperature_template)",
                 "current_temperature_topic": "The MQTT topic subscribed to receive current temperature update values. [Learn more.]({url}#current_temperature_topic)"
               }
             },
@@ -640,11 +660,11 @@
               },
               "data_description": {
                 "brightness": "Flag that defines if light supports brightness when the RGB, RGBW, or RGBWW color mode is supported.",
-                "brightness_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the brightness command topic.",
+                "brightness_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the brightness command topic.",
                 "brightness_command_topic": "The publishing topic that will be used to control the brightness. [Learn more.]({url}#brightness_command_topic)",
                 "brightness_scale": "Defines the maximum brightness value (i.e., 100%) of the maximum brightness.",
                 "brightness_state_topic": "The MQTT topic subscribed to receive brightness state values. [Learn more.]({url}#brightness_state_topic)",
-                "brightness_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the brightness value."
+                "brightness_value_template": "Defines a [template]({value_templating_url}) to extract the brightness value."
               }
             },
             "lock_payload_settings": {
@@ -682,9 +702,9 @@
               },
               "data_description": {
                 "direction_command_topic": "The MQTT topic to publish commands to change the fan direction. The payload will be either `forward` or `reverse` and can be customized using the direction command template. [Learn more.]({url}#direction_command_topic)",
-                "direction_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the direction command topic. The template variable `value` will be either `forward` or `reverse`.",
+                "direction_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the direction command topic. The template variable `value` will be either `forward` or `reverse`.",
                 "direction_state_topic": "The MQTT topic subscribed to receive fan direction state. Accepted state payloads are `forward` or `reverse`. [Learn more.]({url}#direction_state_topic)",
-                "direction_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract fan direction state value. The template should return either `forward` or `reverse`. When the template returns an empty string, the direction will be ignored."
+                "direction_value_template": "Defines a [template]({value_templating_url}) to extract fan direction state value. The template should return either `forward` or `reverse`. When the template returns an empty string, the direction will be ignored."
               }
             },
             "fan_oscillation_settings": {
@@ -699,9 +719,9 @@
               },
               "data_description": {
                 "oscillation_command_topic": "The MQTT topic to publish commands to change the fan oscillation state. [Learn more.]({url}#oscillation_command_topic)",
-                "oscillation_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the oscillation command topic.",
+                "oscillation_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the oscillation command topic.",
                 "oscillation_state_topic": "The MQTT topic subscribed to receive fan oscillation state. [Learn more.]({url}#oscillation_state_topic)",
-                "oscillation_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract fan oscillation state value.",
+                "oscillation_value_template": "Defines a [template]({value_templating_url}) to extract fan oscillation state value.",
                 "payload_oscillation_off": "The payload that represents the oscillation \"off\" state.",
                 "payload_oscillation_on": "The payload that represents the oscillation \"on\" state."
               }
@@ -720,9 +740,9 @@
                 "payload_reset_preset_mode": "A special payload that resets the fan preset mode state attribute to unknown when received at the preset mode state topic.",
                 "preset_modes": "List of preset modes this fan is capable of running at. Common examples include auto, smart, whoosh, eco and breeze.",
                 "preset_mode_command_topic": "The MQTT topic to publish commands to change the fan preset mode. [Learn more.]({url}#preset_mode_command_topic)",
-                "preset_mode_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the preset mode command topic.",
+                "preset_mode_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the preset mode command topic.",
                 "preset_mode_state_topic": "The MQTT topic subscribed to receive fan preset mode. [Learn more.]({url}#preset_mode_state_topic)",
-                "preset_mode_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract fan preset mode value."
+                "preset_mode_value_template": "Defines a [template]({value_templating_url}) to extract fan preset mode value."
               }
             },
             "fan_speed_settings": {
@@ -739,9 +759,9 @@
               "data_description": {
                 "payload_reset_percentage": "A special payload that resets the fan speed percentage state attribute to unknown when received at the percentage state topic.",
                 "percentage_command_topic": "The MQTT topic to publish commands to change the fan speed state based on a percentage. [Learn more.]({url}#percentage_command_topic)",
-                "percentage_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the percentage command topic.",
+                "percentage_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the percentage command topic.",
                 "percentage_state_topic": "The MQTT topic subscribed to receive fan speed based on percentage. [Learn more.]({url}#percentage_state_topic)",
-                "percentage_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the speed percentage value.",
+                "percentage_value_template": "Defines a [template]({value_templating_url}) to extract the speed percentage value.",
                 "speed_range_min": "The minimum of numeric output range (off not included, so speed_range_min - 1 represents 0 %). The percentage step is 100 / the number of speeds within the \"speed range\".",
                 "speed_range_max": "The maximum of numeric output range (representing 100 %). The percentage step is 100 / number of speeds within the \"speed range\"."
               }
@@ -754,7 +774,7 @@
               },
               "data_description": {
                 "color_mode_state_topic": "The MQTT topic subscribed to receive color mode updates. If this is not configured, the color mode will be automatically set according to the last received valid color or color temperature.",
-                "color_mode_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the color mode value."
+                "color_mode_value_template": "Defines a [template]({value_templating_url}) to extract the color mode value."
               }
             },
             "light_color_temp_settings": {
@@ -766,10 +786,10 @@
                 "color_temp_value_template": "Color temperature value template"
               },
               "data_description": {
-                "color_temp_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the color temperature command topic.",
+                "color_temp_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the color temperature command topic.",
                 "color_temp_command_topic": "The publishing topic that will be used to control the color temperature. [Learn more.]({url}#color_temp_command_topic)",
                 "color_temp_state_topic": "The MQTT topic subscribed to receive color temperature state updates. [Learn more.]({url}#color_temp_state_topic)",
-                "color_temp_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the color temperature value."
+                "color_temp_value_template": "Defines a [template]({value_templating_url}) to extract the color temperature value."
               }
             },
             "light_effect_settings": {
@@ -785,7 +805,7 @@
               },
               "data_description": {
                 "effect": "Flag that defines if the light supports effects.",
-                "effect_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the effect command topic.",
+                "effect_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the effect command topic.",
                 "effect_command_topic": "The publishing topic that will be used to control the light's effect state. [Learn more.]({url}#effect_command_topic)",
                 "effect_list": "The list of effects the light supports.",
                 "effect_state_topic": "The MQTT topic subscribed to receive effect state updates. [Learn more.]({url}#effect_state_topic)"
@@ -800,10 +820,10 @@
                 "hs_value_template": "HS value template"
               },
               "data_description": {
-                "hs_command_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose message which will be sent to HS command topic. Available variables: `hue` and `sat`.",
+                "hs_command_template": "Defines a [template]({command_templating_url}) to compose message which will be sent to HS command topic. Available variables: `hue` and `sat`.",
                 "hs_command_topic": "The MQTT topic to publish commands to change the light’s color state in HS format (Hue Saturation). Range for Hue: 0° .. 360°, Range of Saturation: 0..100. Note: Brightness is sent separately in the brightness command topic. [Learn more.]({url}#hs_command_topic)",
                 "hs_state_topic": "The MQTT topic subscribed to receive color state updates in HS format. The expected payload is the hue and saturation values separated by commas, for example, `359.5,100.0`. Note: Brightness is received separately in the brightness state topic. [Learn more.]({url}#hs_state_topic)",
-                "hs_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the HS value."
+                "hs_value_template": "Defines a [template]({value_templating_url}) to extract the HS value."
               }
             },
             "light_rgb_settings": {
@@ -815,10 +835,10 @@
                 "rgb_value_template": "RGB value template"
               },
               "data_description": {
-                "rgb_command_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose message which will be sent to RGB command topic. Available variables: `red`, `green` and `blue`.",
+                "rgb_command_template": "Defines a [template]({command_templating_url}) to compose message which will be sent to RGB command topic. Available variables: `red`, `green` and `blue`.",
                 "rgb_command_topic": "The MQTT topic to publish commands to change the light’s RGB state. [Learn more.]({url}#rgb_command_topic)",
                 "rgb_state_topic": "The MQTT topic subscribed to receive RGB state updates. The expected payload is the RGB values separated by commas, for example, `255,0,127`. [Learn more.]({url}#rgb_state_topic)",
-                "rgb_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the RGB value."
+                "rgb_value_template": "Defines a [template]({value_templating_url}) to extract the RGB value."
               }
             },
             "light_rgbw_settings": {
@@ -830,10 +850,10 @@
                 "rgbw_value_template": "RGBW value template"
               },
               "data_description": {
-                "rgbw_command_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose message which will be sent to RGBW command topic. Available variables: `red`, `green`, `blue` and `white`.",
+                "rgbw_command_template": "Defines a [template]({command_templating_url}) to compose message which will be sent to RGBW command topic. Available variables: `red`, `green`, `blue` and `white`.",
                 "rgbw_command_topic": "The MQTT topic to publish commands to change the light’s RGBW state. [Learn more.]({url}#rgbw_command_topic)",
                 "rgbw_state_topic": "The MQTT topic subscribed to receive RGBW state updates. The expected payload is the RGBW values separated by commas, for example, `255,0,127,64`. [Learn more.]({url}#rgbw_state_topic)",
-                "rgbw_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the RGBW value."
+                "rgbw_value_template": "Defines a [template]({value_templating_url}) to extract the RGBW value."
               }
             },
             "light_rgbww_settings": {
@@ -845,10 +865,10 @@
                 "rgbww_value_template": "RGBWW value template"
               },
               "data_description": {
-                "rgbww_command_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose message which will be sent to RGBWW command topic. Available variables: `red`, `green`, `blue`, `cold_white` and `warm_white`.",
+                "rgbww_command_template": "Defines a [template]({command_templating_url}) to compose message which will be sent to RGBWW command topic. Available variables: `red`, `green`, `blue`, `cold_white` and `warm_white`.",
                 "rgbww_command_topic": "The MQTT topic to publish commands to change the light’s RGBWW state. [Learn more.]({url}#rgbww_command_topic)",
                 "rgbww_state_topic": "The MQTT topic subscribed to receive RGBWW state updates. The expected payload is the RGBWW values separated by commas, for example, `255,0,127,64,32`. [Learn more.]({url}#rgbww_state_topic)",
-                "rgbww_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the RGBWW value."
+                "rgbww_value_template": "Defines a [template]({value_templating_url}) to extract the RGBWW value."
               }
             },
             "light_white_settings": {
@@ -871,10 +891,10 @@
                 "xy_value_template": "XY value template"
               },
               "data_description": {
-                "xy_command_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose message which will be sent to XY command topic. Available variables: `x` and `y`.",
+                "xy_command_template": "Defines a [template]({command_templating_url}) to compose message which will be sent to XY command topic. Available variables: `x` and `y`.",
                 "xy_command_topic": "The MQTT topic to publish commands to change the light’s XY state. [Learn more.]({url}#xy_command_topic)",
                 "xy_state_topic": "The MQTT topic subscribed to receive XY state updates. The expected payload is the X and Y color values separated by commas, for example, `0.675,0.322`. [Learn more.]({url}#xy_state_topic)",
-                "xy_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the XY value."
+                "xy_value_template": "Defines a [template]({value_templating_url}) to extract the XY value."
               }
             },
             "target_humidity_settings": {
@@ -890,10 +910,19 @@
               "data_description": {
                 "max_humidity": "The maximum target humidity that can be set.",
                 "min_humidity": "The minimum target humidity that can be set.",
-                "target_humidity_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the target humidity command topic.",
+                "target_humidity_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the target humidity command topic.",
                 "target_humidity_command_topic": "The MQTT topic to publish commands to change the climate target humidity. [Learn more.]({url}#humidity_command_topic)",
-                "target_humidity_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the target humidity state topic with.",
+                "target_humidity_state_template": "A [template]({value_templating_url}) to render the value received on the target humidity state topic with.",
                 "target_humidity_state_topic": "The MQTT topic to subscribe for changes of the target humidity. [Learn more.]({url}#humidity_state_topic)"
+              }
+            },
+            "siren_advanced_settings": {
+              "name": "Advanced siren settings",
+              "data": {
+                "command_off_template": "Command \"off\" template"
+              },
+              "data_description": {
+                "command_off_template": "The [template]({command_templating_url}) for \"off\" state changes. By default the \"[Command template]({url}#command_template)\" will be used.  [Learn more.]({url}#command_off_template)"
               }
             },
             "target_temperature_settings": {
@@ -923,17 +952,17 @@
                 "min_temp": "The minimum target temperature that can be set.",
                 "precision": "The precision in degrees the thermostat is working at.",
                 "temp_step": "The target temperature step in degrees Celsius or Fahrenheit.",
-                "temperature_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the temperature command topic.",
+                "temperature_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the temperature command topic.",
                 "temperature_command_topic": "The MQTT topic to publish commands to change the climate target temperature. [Learn more.]({url}#temperature_command_topic)",
-                "temperature_high_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the upper temperature command topic.",
+                "temperature_high_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the upper temperature command topic.",
                 "temperature_high_command_topic": "The MQTT topic to publish commands to change the climate upper target temperature. [Learn more.]({url}#temperature_high_command_topic)",
-                "temperature_low_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the lower temperature command topic.",
+                "temperature_low_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the lower temperature command topic.",
                 "temperature_low_command_topic": "The MQTT topic to publish commands to change the climate lower target temperature. [Learn more.]({url}#temperature_low_command_topic)",
-                "temperature_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the temperature state topic with.",
+                "temperature_state_template": "A [template]({value_templating_url}) to render the value received on the temperature state topic with.",
                 "temperature_state_topic": "The MQTT topic to subscribe for changes of the target temperature. [Learn more.]({url}#temperature_state_topic)",
-                "temperature_high_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the upper temperature state topic with.",
+                "temperature_high_state_template": "A [template]({value_templating_url}) to render the value received on the upper temperature state topic with.",
                 "temperature_high_state_topic": "The MQTT topic to subscribe for changes of the upper target temperature. [Learn more.]({url}#temperature_high_state_topic)",
-                "temperature_low_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the lower temperature state topic with.",
+                "temperature_low_state_template": "A [template]({value_templating_url}) to render the value received on the lower temperature state topic with.",
                 "temperature_low_state_topic": "The MQTT topic to subscribe for changes of the lower target temperature. [Learn more.]({url}#temperature_low_state_topic)"
               }
             }
@@ -995,6 +1024,7 @@
         "invalid_uom_for_state_class": "The unit of measurement \"{unit_of_measurement}\" is not supported by the selected state class, please either remove the state class, select a state class which supports \"{unit_of_measurement}\", or pick a supported unit of measurement from the list",
         "invalid_url": "Invalid URL",
         "last_reset_not_with_state_class_total": "The last reset value template option should be used with state class 'Total' only",
+        "max_below_min": "Max value should be greater or equal to min value",
         "max_below_min_humidity": "Max humidity value should be greater than min humidity value",
         "max_below_min_kelvin": "Max Kelvin value should be greater than min Kelvin value",
         "max_below_min_temperature": "Max temperature value should be greater than min temperature value",
@@ -1235,6 +1265,7 @@
         "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
         "ph": "[%key:component::sensor::entity_component::ph::name%]",
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
         "power": "[%key:component::sensor::entity_component::power::name%]",
@@ -1242,6 +1273,7 @@
         "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
         "precipitation_intensity": "[%key:component::sensor::entity_component::precipitation_intensity::name%]",
         "pressure": "[%key:component::sensor::entity_component::pressure::name%]",
+        "reactive_energy": "[%key:component::sensor::entity_component::reactive_energy::name%]",
         "reactive_power": "[%key:component::sensor::entity_component::reactive_power::name%]",
         "signal_strength": "[%key:component::sensor::entity_component::signal_strength::name%]",
         "sound_pressure": "[%key:component::sensor::entity_component::sound_pressure::name%]",
@@ -1292,6 +1324,13 @@
         "template": "Template"
       }
     },
+    "number_mode": {
+      "options": {
+        "auto": "[%key:component::number::entity_component::_::state_attributes::mode::state::auto%]",
+        "box": "[%key:component::number::entity_component::_::state_attributes::mode::state::box%]",
+        "slider": "[%key:component::number::entity_component::_::state_attributes::mode::state::slider%]"
+      }
+    },
     "on_command_type": {
       "options": {
         "brightness": "Brightness",
@@ -1311,7 +1350,10 @@
         "light": "[%key:component::light::title%]",
         "lock": "[%key:component::lock::title%]",
         "notify": "[%key:component::notify::title%]",
+        "number": "[%key:component::number::title%]",
+        "select": "[%key:component::select::title%]",
         "sensor": "[%key:component::sensor::title%]",
+        "siren": "[%key:component::siren::title%]",
         "switch": "[%key:component::switch::title%]"
       }
     },
