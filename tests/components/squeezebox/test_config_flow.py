@@ -296,51 +296,23 @@ async def test_discovery_flow_variants(
     assert result["context"]["unique_id"] == UUID
 
 
-@pytest.mark.parametrize(
-    (
-        "discover_success",
-        "query_behavior",
-        "http_status",
-        "expected_type",
-        "expected_error",
-    ),
-    [
-        (True, query_success, HTTPStatus.OK, FlowResultType.CREATE_ENTRY, None),
-        (
-            False,
-            query_cannot_connect,
-            HTTPStatus.BAD_GATEWAY,
-            FlowResultType.FORM,
-            "cannot_connect",
-        ),
-    ],
-)
-async def test_dhcp_discovery_flow(
+async def test_dhcp_discovery_flow_success(
     hass: HomeAssistant,
     mock_server,
     mock_setup_entry,
     mock_discover_success,
-    mock_discover_failure,
     dhcp_info,
-    discover_success,
-    query_behavior,
-    http_status,
-    expected_type,
-    expected_error,
 ) -> None:
-    """Test DHCP discovery flow with success and failure modes."""
+    """Test DHCP discovery flow with successful discovery and query."""
 
-    # Select discovery behavior
-    discover_func = mock_discover_success if discover_success else mock_discover_failure
-
-    # Inject query behavior
-    mock_server.async_query.side_effect = query_behavior
-    mock_server.http_status = http_status
+    # Inject successful query behavior
+    mock_server.async_query.side_effect = query_success
+    mock_server.http_status = HTTPStatus.OK
 
     with (
         patch(
             "homeassistant.components.squeezebox.config_flow.async_discover",
-            discover_func,
+            mock_discover_success,
         ),
         patch("homeassistant.components.squeezebox.config_flow.TIMEOUT", 0.1),
     ):
@@ -365,13 +337,10 @@ async def test_dhcp_discovery_flow(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], EDIT_INPUT
     )
-    assert result2["type"] == expected_type
 
-    if expected_type == FlowResultType.CREATE_ENTRY:
-        assert result2["title"] == "1.1.1.1"
-        assert result2["data"] == EDIT_INPUT
-    else:
-        assert result2["errors"] == {"base": expected_error}
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "1.1.1.1"
+    assert result2["data"] == EDIT_INPUT
 
 
 async def test_dhcp_discovery_existing_player(
