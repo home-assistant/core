@@ -27,9 +27,12 @@ from homeassistant.const import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_UP,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Event, HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +56,21 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Pandora media player platform."""
+    create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
+        breaks_in_ha_version="2025.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_system_packages_yaml_integration",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Pandora",
+        },
+    )
+
     if not _pianobar_exists():
         return
     pandora = PandoraMediaPlayer("Pandora")
@@ -97,9 +115,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
     async def _start_pianobar(self) -> bool:
         pianobar = pexpect.spawn("pianobar", encoding="utf-8")
         pianobar.delaybeforesend = None
-        # mypy thinks delayafterread must be a float but that is not what pexpect says
-        # https://github.com/pexpect/pexpect/blob/4.9/pexpect/expect.py#L170
-        pianobar.delayafterread = None  # type: ignore[assignment]
+        pianobar.delayafterread = None
         pianobar.delayafterclose = 0
         pianobar.delayafterterminate = 0
         _LOGGER.debug("Started pianobar subprocess")

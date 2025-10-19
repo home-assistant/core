@@ -1,0 +1,371 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "brake_fluid_level_warning": {
+        "default": "mdi:car-brake-fluid-level",
+        "state": {
+          "on": "mdi:car-brake-alert"
+        }
+      },
+      "brake_light_center_warning": {
+        "default": "mdi:car-light-dimmed",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "brake_light_left_warning": {
+        "default": "mdi:car-light-dimmed",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "brake_light_right_warning": {
+        "default": "mdi:car-light-dimmed",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "coolant_level_warning": {
+        "default": "mdi:car-coolant-level"
+      },
+      "daytime_running_light_left_warning": {
+        "default": "mdi:car-light-dimmed",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "daytime_running_light_right_warning": {
+        "default": "mdi:car-light-dimmed",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "door_front_left": {
+        "default": "mdi:car-door-lock",
+        "state": {
+          "on": "mdi:car-door-lock-open"
+        }
+      },
+      "door_front_right": {
+        "default": "mdi:car-door-lock",
+        "state": {
+          "on": "mdi:car-door-lock-open"
+        }
+      },
+      "door_rear_left": {
+        "default": "mdi:car-door-lock",
+        "state": {
+          "on": "mdi:car-door-lock-open"
+        }
+      },
+      "door_rear_right": {
+        "default": "mdi:car-door-lock",
+        "state": {
+          "on": "mdi:car-door-lock-open"
+        }
+      },
+      "engine_status": {
+        "default": "mdi:engine-off",
+        "state": {
+          "on": "mdi:engine"
+        }
+      },
+      "fog_light_front_warning": {
+        "default": "mdi:car-light-fog",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "fog_light_rear_warning": {
+        "default": "mdi:car-light-fog",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "hazard_lights_warning": {
+        "default": "mdi:hazard-lights",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "high_beam_left_warning": {
+        "default": "mdi:car-light-high",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "high_beam_right_warning": {
+        "default": "mdi:car-light-high",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "hood": {
+        "default": "mdi:car-door-lock",
+        "state": {
+          "on": "mdi:car-door-lock-open"
+        }
+      },
+      "low_beam_left_warning": {
+        "default": "mdi:car-light-dimmed",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "low_beam_right_warning": {
+        "default": "mdi:car-light-dimmed",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "oil_level_warning": {
+        "default": "mdi:oil-level"
+      },
+      "position_light_front_left_warning": {
+        "default": "mdi:car-parking-lights",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "position_light_front_right_warning": {
+        "default": "mdi:car-parking-lights",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "position_light_rear_left_warning": {
+        "default": "mdi:car-parking-lights",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "position_light_rear_right_warning": {
+        "default": "mdi:car-parking-lights",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "registration_plate_light_warning": {
+        "default": "mdi:lightbulb-outline",
+        "state": {
+          "on": "mdi:lightbulb-off-outline"
+        }
+      },
+      "reverse_lights_warning": {
+        "default": "mdi:car-light-dimmed",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "side_mark_lights_warning": {
+        "default": "mdi:wall-sconce-round",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "sunroof": {
+        "default": "mdi:car-door-lock",
+        "state": {
+          "on": "mdi:car-door-lock-open"
+        }
+      },
+      "tailgate": {
+        "default": "mdi:car-door-lock",
+        "state": {
+          "on": "mdi:car-door-lock-open"
+        }
+      },
+      "tank_lid": {
+        "default": "mdi:car-door-lock",
+        "state": {
+          "on": "mdi:car-door-lock-open"
+        }
+      },
+      "turn_indication_front_left_warning": {
+        "default": "mdi:arrow-left-top",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "turn_indication_front_right_warning": {
+        "default": "mdi:arrow-right-top",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "turn_indication_rear_left_warning": {
+        "default": "mdi:arrow-left-top",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "turn_indication_rear_right_warning": {
+        "default": "mdi:arrow-right-top",
+        "state": {
+          "on": "mdi:car-light-alert"
+        }
+      },
+      "tire_front_left": {
+        "default": "mdi:tire",
+        "state": {
+          "on": "mdi:car-tire-alert"
+        }
+      },
+      "tire_front_right": {
+        "default": "mdi:tire",
+        "state": {
+          "on": "mdi:car-tire-alert"
+        }
+      },
+      "tire_rear_left": {
+        "default": "mdi:tire",
+        "state": {
+          "on": "mdi:car-tire-alert"
+        }
+      },
+      "tire_rear_right": {
+        "default": "mdi:tire",
+        "state": {
+          "on": "mdi:car-tire-alert"
+        }
+      },
+      "washer_fluid_level_warning": {
+        "default": "mdi:wiper-wash",
+        "state": {
+          "on": "mdi:wiper-wash-alert"
+        }
+      },
+      "window_front_left": {
+        "default": "mdi:car-door-lock",
+        "state": {
+          "on": "mdi:car-door-lock-open"
+        }
+      },
+      "window_front_right": {
+        "default": "mdi:car-door-lock",
+        "state": {
+          "on": "mdi:car-door-lock-open"
+        }
+      },
+      "window_rear_left": {
+        "default": "mdi:car-door-lock",
+        "state": {
+          "on": "mdi:car-door-lock-open"
+        }
+      },
+      "window_rear_right": {
+        "default": "mdi:car-door-lock",
+        "state": {
+          "on": "mdi:car-door-lock-open"
+        }
+      }
+    },
+    "button": {
+      "climatization_start": {
+        "default": "mdi:air-conditioner"
+      },
+      "climatization_stop": {
+        "default": "mdi:air-conditioner"
+      },
+      "flash": {
+        "default": "mdi:alarm-light-outline"
+      },
+      "honk": {
+        "default": "mdi:trumpet"
+      },
+      "honk_flash": {
+        "default": "mdi:alarm-light"
+      }
+    },
+    "sensor": {
+      "availability": {
+        "default": "mdi:car-connected"
+      },
+      "average_energy_consumption": {
+        "default": "mdi:car-electric"
+      },
+      "average_energy_consumption_automatic": {
+        "default": "mdi:car-electric"
+      },
+      "average_energy_consumption_charge": {
+        "default": "mdi:car-electric"
+      },
+      "average_fuel_consumption": {
+        "default": "mdi:gas-station"
+      },
+      "average_fuel_consumption_automatic": {
+        "default": "mdi:gas-station"
+      },
+      "charger_connection_status": {
+        "default": "mdi:power-plug-off",
+        "state": {
+          "connected": "mdi:power-plug",
+          "fault": "mdi:flash-alert"
+        }
+      },
+      "charging_power": {
+        "default": "mdi:gauge-empty",
+        "range": {
+          "1": "mdi:gauge-low",
+          "4200": "mdi:gauge",
+          "7400": "mdi:gauge-full"
+        }
+      },
+      "charging_power_status": {
+        "default": "mdi:power-plug-outline"
+      },
+      "charging_status": {
+        "default": "mdi:ev-station"
+      },
+      "charging_type": {
+        "default": "mdi:power-plug-off-outline",
+        "state": {
+          "ac": "mdi:current-ac",
+          "dc": "mdi:current-dc"
+        }
+      },
+      "direction": {
+        "default": "mdi:compass-outline"
+      },
+      "distance_to_empty_battery": {
+        "default": "mdi:battery-outline"
+      },
+      "distance_to_empty_tank": {
+        "default": "mdi:gauge-empty"
+      },
+      "distance_to_service": {
+        "default": "mdi:wrench-check"
+      },
+      "engine_time_to_service": {
+        "default": "mdi:wrench-cog"
+      },
+      "estimated_charging_time": {
+        "default": "mdi:battery-clock"
+      },
+      "fuel_amount": {
+        "default": "mdi:fuel"
+      },
+      "odometer": {
+        "default": "mdi:counter"
+      },
+      "service_warning": {
+        "default": "mdi:wrench-clock",
+        "state": {
+          "no_warning": "mdi:car-wrench"
+        }
+      },
+      "target_battery_charge_level": {
+        "default": "mdi:battery-medium"
+      },
+      "time_to_service": {
+        "default": "mdi:wrench-clock"
+      },
+      "trip_meter_automatic": {
+        "default": "mdi:map-marker-distance"
+      },
+      "trip_meter_manual": {
+        "default": "mdi:map-marker-distance"
+      }
+    }
+  }
+}

@@ -33,6 +33,7 @@
     'original_name': 'Lamp',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lamp',
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_hood_samsungce.lamp_brightnessLevel_brightnessLevel',
@@ -54,7 +55,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[da_ks_oven_01061][select.oven_lamp-entry]
@@ -90,6 +91,7 @@
     'original_name': 'Lamp',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lamp',
     'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_samsungce.lamp_brightnessLevel_brightnessLevel',
@@ -110,7 +112,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'high',
   })
 # ---
 # name: test_all_entities[da_ks_range_0101x][select.vulcan_lamp-entry]
@@ -146,6 +148,7 @@
     'original_name': 'Lamp',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lamp',
     'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_samsungce.lamp_brightnessLevel_brightnessLevel',
@@ -167,6 +170,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'extra_high',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_lamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.robot_vacuum_lamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lamp',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lamp',
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_samsungce.lamp_brightnessLevel_brightnessLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_lamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robot vacuum Lamp',
+      'options': list([
+        'on',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.robot_vacuum_lamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[da_wm_dw_000001][select.dishwasher-entry]
@@ -203,6 +263,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_machineState_machineState',
@@ -261,6 +322,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_dryerOperatingState_machineState_machineState',
@@ -319,6 +381,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_machineState_machineState',
@@ -377,6 +440,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState_machineState_machineState',
@@ -395,6 +459,65 @@
     }),
     'context': <ANY>,
     'entity_id': 'select.seca_roupa',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'stop',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][select.trockner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'stop',
+        'run',
+        'pause',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.trockner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operating_state',
+    'unique_id': '3d39866c-7716-5259-44f0-fd7025efd85f_main_dryerOperatingState_machineState_machineState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][select.trockner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Trockner',
+      'options': list([
+        'stop',
+        'run',
+        'pause',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.trockner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -435,6 +558,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_machineState_machineState',
@@ -496,6 +620,7 @@
     'original_name': 'Soil level',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'soil_level',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_custom.washerSoilLevel_washerSoilLevel_washerSoilLevel',
@@ -560,6 +685,7 @@
     'original_name': 'Spin level',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'spin_level',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_custom.washerSpinLevel_washerSpinLevel_washerSpinLevel',
@@ -621,6 +747,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState_machineState_machineState',
@@ -683,6 +810,7 @@
     'original_name': 'Spin level',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'spin_level',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_custom.washerSpinLevel_washerSpinLevel_washerSpinLevel',
@@ -745,6 +873,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_washerOperatingState_machineState_machineState',
@@ -804,6 +933,7 @@
     'original_name': 'Detergent dispense amount',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'detergent_amount',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.autoDispenseDetergent_amount_amount',
@@ -864,6 +994,7 @@
     'original_name': 'Flexible compartment dispense amount',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flexible_detergent_amount',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.flexibleAutoDispenseDetergent_amount_amount',
@@ -927,6 +1058,7 @@
     'original_name': 'Spin level',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'spin_level',
     'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_custom.washerSpinLevel_washerSpinLevel_washerSpinLevel',
@@ -989,6 +1121,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
     'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_washerOperatingState_machineState_machineState',

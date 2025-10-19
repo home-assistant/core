@@ -6,5 +6,5 @@
   "iot_class": "local_push",
   "loggers": ["nessclient"],
   "quality_scale": "legacy",
-  "requirements": ["nessclient==1.1.2"]
+  "requirements": ["nessclient==1.3.1"]
 }

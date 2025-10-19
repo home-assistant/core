@@ -43,11 +43,13 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_pin": "The provided PIN is invalid. It must be a 4-10 digit number.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_pin": "[%key:component::comelit::config::abort::invalid_pin%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
@@ -73,6 +75,18 @@
       },
       "dehumidifier": {
         "name": "Dehumidifier"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "automatic": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
       }
     }
   },

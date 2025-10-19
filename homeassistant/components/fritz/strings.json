@@ -28,7 +28,7 @@
         }
       },
       "reauth_confirm": {
-        "title": "Updating FRITZ!Box Tools - credentials",
+        "title": "FRITZ!Box Tools - Update credentials",
         "description": "Update FRITZ!Box Tools credentials for: {host}.\n\nFRITZ!Box Tools is unable to log in to your FRITZ!Box.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
@@ -40,7 +40,7 @@
         }
       },
       "reconfigure": {
-        "title": "Updating FRITZ!Box Tools - configuration",
+        "title": "FRITZ!Box Tools - Update configuration",
         "description": "Update FRITZ!Box Tools configuration for: {host}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -174,6 +174,9 @@
       },
       "max_kb_s_sent": {
         "name": "Max connection upload throughput"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
       }
     }
   },
@@ -183,8 +186,8 @@
       "description": "Sets a new password for the guest Wi-Fi. The password must be between 8 and 63 characters long. If no additional parameter is set, the password will be auto-generated with a length of 12 characters.",
       "fields": {
         "device_id": {
-          "name": "Fritz!Box Device",
-          "description": "Select the Fritz!Box to configure."
+          "name": "FRITZ!Box device",
+          "description": "Select the FRITZ!Box to configure."
         },
         "password": {
           "name": "[%key:common::config_flow::data::password%]",
@@ -192,7 +195,25 @@
         },
         "length": {
           "name": "Password length",
-          "description": "Length of the new password. The password will be auto-generated, if no password is set."
+          "description": "Length of the new password. It will be auto-generated if no password is set."
+        }
+      }
+    },
+    "dial": {
+      "name": "Dial a phone number",
+      "description": "Makes the FRITZ!Box dial a phone number.",
+      "fields": {
+        "device_id": {
+          "name": "FRITZ!Box device",
+          "description": "Select the FRITZ!Box to dial from."
+        },
+        "number": {
+          "name": "Phone number",
+          "description": "The phone number to dial."
+        },
+        "max_ring_seconds": {
+          "name": "Maximum ring duration",
+          "description": "The maximum number of seconds to ring after dialing."
         }
       }
     }
@@ -200,6 +221,9 @@
   "exceptions": {
     "config_entry_not_found": {
       "message": "Failed to perform action \"{service}\". Config entry for target not found"
+    },
+    "service_dial_failed": {
+      "message": "Failed to dial, check if the click to dial service of the FRITZ!Box is activated"
     },
     "service_parameter_unknown": {
       "message": "Action or parameter unknown"
@@ -214,7 +238,7 @@
       "message": "Unable to establish a connection"
     },
     "update_failed": {
-      "message": "Error while uptaing the data: {error}"
+      "message": "Error while updating the data: {error}"
     }
   }
 }

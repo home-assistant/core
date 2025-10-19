@@ -29,7 +29,7 @@ from homeassistant.helpers.check_config import async_check_ha_config_file
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==6.9.0",)
+REQUIREMENTS = ("colorlog==6.10.1",)
 
 _LOGGER = logging.getLogger(__name__)
 MOCKS: dict[str, tuple[str, Callable]] = {
@@ -47,8 +47,7 @@ WARNING_STR = "General Warnings"
 
 def color(the_color, *args, reset=None):
     """Color helper."""
-    # pylint: disable-next=import-outside-toplevel
-    from colorlog.escape_codes import escape_codes, parse_colors
+    from colorlog.escape_codes import escape_codes, parse_colors  # noqa: PLC0415
 
     try:
         if not args:

@@ -131,6 +131,8 @@
     }),
     '446ac08dd04d4eff8ac57489757b7314': dict({
       'active_preset': 'no_frost',
+      'available_schedules': list([
+      ]),
       'climate_mode': 'heat',
       'control_state': 'idle',
       'dev_class': 'climate',
@@ -143,6 +145,7 @@
         'vacation',
         'no_frost',
       ]),
+      'select_schedule': None,
       'sensors': dict({
         'temperature': 15.6,
       }),
@@ -579,6 +582,19 @@
       'vendor': 'Plugwise',
       'zigbee_mac_address': 'ABCD012345670A11',
     }),
+    'e8ef2a01ed3b4139a53bf749204fe6b4': dict({
+      'dev_class': 'switching',
+      'members': list([
+        '02cf28bfec924855854c544690a609ef',
+        '4a810418d5394b3f82727340b91ba740',
+      ]),
+      'model': 'Switchgroup',
+      'name': 'Test',
+      'switches': dict({
+        'relay': True,
+      }),
+      'vendor': 'Plugwise',
+    }),
     'f1fee6043d3642a9b0a65297455f008e': dict({
       'available': True,
       'binary_sensors': dict({
@@ -622,7 +638,6 @@
           'warning': "Node Plug (with MAC address 000D6F000D13CB01, in room 'n.a.') has been unreachable since 23:03 2020-01-18. Please check the connection and restart the device.",
         }),
       }),
-      'select_regulation_mode': 'heating',
       'sensors': dict({
         'outdoor_temperature': 7.81,
       }),

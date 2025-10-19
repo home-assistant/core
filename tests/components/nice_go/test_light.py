@@ -20,7 +20,11 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 
 async def test_data(
@@ -84,9 +88,13 @@ async def test_update_light_state(
     assert hass.states.get("light.test_garage_2_light").state == STATE_OFF
     assert hass.states.get("light.test_garage_3_light") is None
 
-    device_update = load_json_object_fixture("device_state_update.json", DOMAIN)
+    device_update = await async_load_json_object_fixture(
+        hass, "device_state_update.json", DOMAIN
+    )
     await mock_config_entry.runtime_data.on_data(device_update)
-    device_update_1 = load_json_object_fixture("device_state_update_1.json", DOMAIN)
+    device_update_1 = await async_load_json_object_fixture(
+        hass, "device_state_update_1.json", DOMAIN
+    )
     await mock_config_entry.runtime_data.on_data(device_update_1)
 
     assert hass.states.get("light.test_garage_1_light").state == STATE_OFF

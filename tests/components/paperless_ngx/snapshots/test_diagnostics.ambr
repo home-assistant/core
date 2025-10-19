@@ -2,28 +2,86 @@
 # name: test_config_entry_diagnostics
   dict({
     'data': dict({
-      'character_count': 99999,
-      'correspondent_count': 99,
-      'current_asn': 99,
-      'document_file_type_counts': list([
-        dict({
-          'mime_type': 'application/pdf',
-          'mime_type_count': 998,
+      'statistics': dict({
+        'character_count': 99999,
+        'correspondent_count': 99,
+        'current_asn': 99,
+        'document_file_type_counts': list([
+          dict({
+            'mime_type': 'application/pdf',
+            'mime_type_count': 998,
+          }),
+          dict({
+            'mime_type': 'image/png',
+            'mime_type_count': 1,
+          }),
+        ]),
+        'document_type_count': 99,
+        'documents_inbox': 9,
+        'documents_total': 999,
+        'inbox_tag': 9,
+        'inbox_tags': list([
+          9,
+        ]),
+        'storage_path_count': 9,
+        'tag_count': 99,
+      }),
+      'status': dict({
+        'database': dict({
+          'error': None,
+          'migration_status': dict({
+            'latest_migration': 'paperless_mail.0029_mailrule_pdf_layout',
+            'unapplied_migrations': list([
+            ]),
+          }),
+          'status': dict({
+            '__type': "<enum 'StatusType'>",
+            'repr': "<StatusType.OK: 'OK'>",
+          }),
+          'type': 'sqlite',
+          'url': '/config/data/db.sqlite3',
         }),
-        dict({
-          'mime_type': 'image/png',
-          'mime_type_count': 1,
+        'install_type': 'docker',
+        'pngx_version': '2.15.3',
+        'server_os': 'Linux-6.6.74-haos-raspi-aarch64-with-glibc2.36',
+        'storage': dict({
+          'available': 25376927744,
+          'total': 62101651456,
         }),
-      ]),
-      'document_type_count': 99,
-      'documents_inbox': 9,
-      'documents_total': 999,
-      'inbox_tag': 9,
-      'inbox_tags': list([
-        9,
-      ]),
-      'storage_path_count': 9,
-      'tag_count': 99,
+        'tasks': dict({
+          'celery_error': None,
+          'celery_status': dict({
+            '__type': "<enum 'StatusType'>",
+            'repr': "<StatusType.OK: 'OK'>",
+          }),
+          'celery_url': 'celery@ca5234a0-paperless-ngx',
+          'classifier_error': None,
+          'classifier_last_trained': '2025-05-25T15:05:15.824671+00:00',
+          'classifier_status': dict({
+            '__type': "<enum 'StatusType'>",
+            'repr': "<StatusType.OK: 'OK'>",
+          }),
+          'index_error': None,
+          'index_last_modified': '2025-05-25T00:00:27.053090+02:00',
+          'index_status': dict({
+            '__type': "<enum 'StatusType'>",
+            'repr': "<StatusType.OK: 'OK'>",
+          }),
+          'redis_error': None,
+          'redis_status': dict({
+            '__type': "<enum 'StatusType'>",
+            'repr': "<StatusType.OK: 'OK'>",
+          }),
+          'redis_url': 'redis://localhost:6379',
+          'sanity_check_error': None,
+          'sanity_check_last_run': '2025-05-24T22:30:21.005536+00:00',
+          'sanity_check_status': dict({
+            '__type': "<enum 'StatusType'>",
+            'repr': "<StatusType.OK: 'OK'>",
+          }),
+        }),
+      }),
     }),
+    'pngx_version': '2.3.0',
   })
 # ---

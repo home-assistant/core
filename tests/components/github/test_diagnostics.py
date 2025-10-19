@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from .common import setup_github_integration
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -30,13 +30,13 @@ async def test_entry_diagnostics(
         mock_config_entry,
         options={CONF_REPOSITORIES: ["home-assistant/core"]},
     )
-    response_json = json.loads(load_fixture("graphql.json", DOMAIN))
+    response_json = json.loads(await async_load_fixture(hass, "graphql.json", DOMAIN))
     response_json["data"]["repository"]["full_name"] = "home-assistant/core"
 
     aioclient_mock.post(
         "https://api.github.com/graphql",
         json=response_json,
-        headers=json.loads(load_fixture("base_headers.json", DOMAIN)),
+        headers=json.loads(await async_load_fixture(hass, "base_headers.json", DOMAIN)),
     )
     aioclient_mock.get(
         "https://api.github.com/rate_limit",

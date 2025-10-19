@@ -128,6 +128,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Luna": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Mini": {
         "always_discover": True,
         "domain": "lifx",
@@ -338,6 +342,11 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_altruist._tcp.local.": [
+        {
+            "domain": "altruist",
+        },
+    ],
     "_amzn-alexa._tcp.local.": [
         {
             "domain": "roomba",
@@ -455,6 +464,11 @@ ZEROCONF = {
             "domain": "daikin",
         },
     ],
+    "_droplet._tcp.local.": [
+        {
+            "domain": "droplet",
+        },
+    ],
     "_dvl-deviceapi._tcp.local.": [
         {
             "domain": "devolo_home_control",
@@ -525,6 +539,11 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_heos-audio._tcp.local.": [
+        {
+            "domain": "heos",
+        },
+    ],
     "_homeconnect._tcp.local.": [
         {
             "domain": "home_connect",
@@ -553,6 +572,10 @@ ZEROCONF = {
         {
             "domain": "bosch_shc",
             "name": "bosch shc*",
+        },
+        {
+            "domain": "bsblan",
+            "name": "bsb-lan*",
         },
         {
             "domain": "eheimdigital",
@@ -762,6 +785,16 @@ ZEROCONF = {
             "domain": "onewire",
         },
     ],
+    "_philipstv_rpc._tcp.local.": [
+        {
+            "domain": "philips_js",
+        },
+    ],
+    "_philipstv_s_rpc._tcp.local.": [
+        {
+            "domain": "philips_js",
+        },
+    ],
     "_plexmediasvr._tcp.local.": [
         {
             "domain": "plex",
@@ -861,12 +894,11 @@ ZEROCONF = {
             "domain": "soundtouch",
         },
     ],
-    "_spotify-connect._tcp.local.": [
-        {
-            "domain": "spotify",
-        },
-    ],
     "_ssh._tcp.local.": [
+        {
+            "domain": "homee",
+            "name": "homee-*",
+        },
         {
             "domain": "smappee",
             "name": "smappee1*",
@@ -909,6 +941,11 @@ ZEROCONF = {
         {
             "domain": "zha",
             "name": "uzg-01*",
+        },
+    ],
+    "_vege._tcp.local.": [
+        {
+            "domain": "vegehub",
         },
     ],
     "_viziocast._tcp.local.": [

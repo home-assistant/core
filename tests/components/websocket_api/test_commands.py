@@ -2,32 +2,48 @@
 
 import asyncio
 from copy import deepcopy
+import io
 import logging
+import math
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components.device_automation import toggle_entity
+from homeassistant.components.group import DOMAIN as DOMAIN_GROUP
+from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
+from homeassistant.components.websocket_api.commands import (
+    ALL_CONDITION_DESCRIPTIONS_JSON_CACHE,
+    ALL_SERVICE_DESCRIPTIONS_JSON_CACHE,
+    ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE,
+)
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    label_registry as lr,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.loader import async_get_integration
+from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
+from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
 from tests.common import (
     MockConfigEntry,
@@ -95,6 +111,29 @@ def _apply_entities_changes(state_dict: dict, change_dict: dict) -> None:
     for key, items in change_dict.get("-", {}).items():
         for item in items:
             del state_dict[STATE_KEY_LONG_NAMES[key]][item]
+
+
+def _assert_extract_from_target_command_result(
+    msg: dict[str, Any],
+    entities: set[str] | None = None,
+    devices: set[str] | None = None,
+    areas: set[str] | None = None,
+    missing_devices: set[str] | None = None,
+    missing_areas: set[str] | None = None,
+    missing_labels: set[str] | None = None,
+    missing_floors: set[str] | None = None,
+) -> None:
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    result = msg["result"]
+    assert set(result["referenced_entities"]) == (entities or set())
+    assert set(result["referenced_devices"]) == (devices or set())
+    assert set(result["referenced_areas"]) == (areas or set())
+    assert set(result["missing_devices"]) == (missing_devices or set())
+    assert set(result["missing_areas"]) == (missing_areas or set())
+    assert set(result["missing_floors"]) == (missing_floors or set())
+    assert set(result["missing_labels"]) == (missing_labels or set())
 
 
 async def test_fire_event(
@@ -514,9 +553,12 @@ async def test_call_service_schema_validation_error(
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_call_service_error(
-    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    websocket_client: MockHAClientWebSocket,
 ) -> None:
     """Test call service command with error."""
+    caplog.set_level(logging.ERROR)
 
     @callback
     def ha_error_call(_):
@@ -561,6 +603,7 @@ async def test_call_service_error(
     assert msg["error"]["translation_placeholders"] == {"option": "bla"}
     assert msg["error"]["translation_key"] == "custom_error"
     assert msg["error"]["translation_domain"] == "test"
+    assert "Traceback" not in caplog.text
 
     await websocket_client.send_json_auto_id(
         {
@@ -578,6 +621,7 @@ async def test_call_service_error(
     assert msg["error"]["translation_placeholders"] == {"option": "bla"}
     assert msg["error"]["translation_key"] == "custom_error"
     assert msg["error"]["translation_domain"] == "test"
+    assert "Traceback" not in caplog.text
 
     await websocket_client.send_json_auto_id(
         {
@@ -592,6 +636,7 @@ async def test_call_service_error(
     assert msg["success"] is False
     assert msg["error"]["code"] == "unknown_error"
     assert msg["error"]["message"] == "value_error"
+    assert "Traceback" in caplog.text
 
 
 async def test_subscribe_unsubscribe_events(
@@ -658,17 +703,276 @@ async def test_get_states(
 
 
 async def test_get_services(
-    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_services command."""
-    for id_ in (5, 6):
-        await websocket_client.send_json({"id": id_, "type": "get_services"})
+    assert ALL_SERVICE_DESCRIPTIONS_JSON_CACHE not in hass.data
+    await websocket_client.send_json_auto_id({"type": "get_services"})
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 1, "result": {}, "success": True, "type": "result"}
 
+    # Check cache is reused
+    old_cache = hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE]
+    await websocket_client.send_json_auto_id({"type": "get_services"})
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 2, "result": {}, "success": True, "type": "result"}
+    assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
+
+    # Set up an integration that has services and check cache is updated
+    assert await async_setup_component(hass, DOMAIN_GROUP, {DOMAIN_GROUP: {}})
+    await websocket_client.send_json_auto_id({"type": "get_services"})
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "id": 3,
+        "result": {DOMAIN_GROUP: ANY},
+        "success": True,
+        "type": "result",
+    }
+    group_services = msg["result"][DOMAIN_GROUP]
+    assert group_services == snapshot
+    assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is not old_cache
+
+    # Check cache is reused
+    old_cache = hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE]
+    await websocket_client.send_json_auto_id({"type": "get_services"})
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "id": 4,
+        "result": {DOMAIN_GROUP: group_services},
+        "success": True,
+        "type": "result",
+    }
+    assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
+
+    # Set up an integration with legacy translations in services.yaml
+    def _load_services_file(integration: Integration) -> JSON_TYPE:
+        return {
+            "set_default_level": {
+                "description": "Translated description",
+                "fields": {
+                    "level": {
+                        "description": "Field description",
+                        "example": "Field example",
+                        "name": "Field name",
+                        "selector": {
+                            "select": {
+                                "options": [
+                                    "debug",
+                                    "info",
+                                    "warning",
+                                    "error",
+                                    "fatal",
+                                    "critical",
+                                ],
+                                "translation_key": "level",
+                            }
+                        },
+                    }
+                },
+                "name": "Translated name",
+            },
+            "set_level": None,
+        }
+
+    await async_setup_component(hass, DOMAIN_LOGGER, {DOMAIN_LOGGER: {}})
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.helpers.service._load_services_file",
+            side_effect=_load_services_file,
+        ),
+        patch(
+            "homeassistant.helpers.service.translation.async_get_translations",
+            return_value={},
+        ),
+    ):
+        await websocket_client.send_json_auto_id({"type": "get_services"})
         msg = await websocket_client.receive_json()
-        assert msg["id"] == id_
-        assert msg["type"] == const.TYPE_RESULT
-        assert msg["success"]
-        assert msg["result"].keys() == hass.services.async_services().keys()
+
+    assert msg == {
+        "id": 5,
+        "result": {
+            DOMAIN_LOGGER: ANY,
+            DOMAIN_GROUP: group_services,
+        },
+        "success": True,
+        "type": "result",
+    }
+    logger_services = msg["result"][DOMAIN_LOGGER]
+    assert logger_services == snapshot
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_conditions", return_value=True)
+async def test_subscribe_conditions(
+    mock_has_conditions: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test condition_platforms/subscribe command."""
+    sun_condition_descriptions = """
+        _: {}
+        """
+    device_automation_condition_descriptions = """
+        _device: {}
+        """
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("device_automation/conditions.yaml"):
+            condition_descriptions = device_automation_condition_descriptions
+        elif fname.endswith("sun/conditions.yaml"):
+            condition_descriptions = sun_condition_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(condition_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    assert await async_setup_component(hass, "sun", {})
+    assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
+
+    assert ALL_CONDITION_DESCRIPTIONS_JSON_CACHE not in hass.data
+
+    await websocket_client.send_json_auto_id({"type": "condition_platforms/subscribe"})
+
+    # Test start subscription with initial event
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 1, "result": None, "success": True, "type": "result"}
+    msg = await websocket_client.receive_json()
+    assert msg == {"event": {"sun": {"fields": {}}}, "id": 1, "type": "event"}
+
+    old_cache = hass.data[ALL_CONDITION_DESCRIPTIONS_JSON_CACHE]
+
+    # Test we receive an event when a new platform is loaded, if it has descriptions
+    assert await async_setup_component(hass, "calendar", {})
+    assert await async_setup_component(hass, "device_automation", {})
+    await hass.async_block_till_done()
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "event": {"device": {"fields": {}}},
+        "id": 1,
+        "type": "event",
+    }
+
+    # Initiate a second subscription to check the cache is updated because of the new
+    # condition
+    await websocket_client.send_json_auto_id({"type": "condition_platforms/subscribe"})
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 2, "result": None, "success": True, "type": "result"}
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "event": {"device": {"fields": {}}, "sun": {"fields": {}}},
+        "id": 2,
+        "type": "event",
+    }
+
+    assert hass.data[ALL_CONDITION_DESCRIPTIONS_JSON_CACHE] is not old_cache
+
+    # Initiate a third subscription to check the cache is not updated because no new
+    # condition was added
+    old_cache = hass.data[ALL_CONDITION_DESCRIPTIONS_JSON_CACHE]
+    await websocket_client.send_json_auto_id({"type": "condition_platforms/subscribe"})
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 3, "result": None, "success": True, "type": "result"}
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "event": {"device": {"fields": {}}, "sun": {"fields": {}}},
+        "id": 3,
+        "type": "event",
+    }
+
+    assert hass.data[ALL_CONDITION_DESCRIPTIONS_JSON_CACHE] is old_cache
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_triggers", return_value=True)
+async def test_subscribe_triggers(
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test trigger_platforms/subscribe command."""
+    sun_trigger_descriptions = """
+        _: {}
+        """
+    tag_trigger_descriptions = """
+        _: {}
+        """
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("sun/triggers.yaml"):
+            trigger_descriptions = sun_trigger_descriptions
+        elif fname.endswith("tag/triggers.yaml"):
+            trigger_descriptions = tag_trigger_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(trigger_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    assert await async_setup_component(hass, "sun", {})
+    assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
+
+    assert ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE not in hass.data
+
+    await websocket_client.send_json_auto_id({"type": "trigger_platforms/subscribe"})
+
+    # Test start subscription with initial event
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 1, "result": None, "success": True, "type": "result"}
+    msg = await websocket_client.receive_json()
+    assert msg == {"event": {"sun": {"fields": {}}}, "id": 1, "type": "event"}
+
+    old_cache = hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE]
+
+    # Test we receive an event when a new platform is loaded, if it has descriptions
+    assert await async_setup_component(hass, "calendar", {})
+    assert await async_setup_component(hass, "tag", {})
+    await hass.async_block_till_done()
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "event": {"tag": {"fields": {}}},
+        "id": 1,
+        "type": "event",
+    }
+
+    # Initiate a second subscription to check the cache is updated because of the new
+    # trigger
+    await websocket_client.send_json_auto_id({"type": "trigger_platforms/subscribe"})
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 2, "result": None, "success": True, "type": "result"}
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "event": {"sun": {"fields": {}}, "tag": {"fields": {}}},
+        "id": 2,
+        "type": "event",
+    }
+
+    assert hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE] is not old_cache
+
+    # Initiate a third subscription to check the cache is not updated because no new
+    # trigger was added
+    old_cache = hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE]
+    await websocket_client.send_json_auto_id({"type": "trigger_platforms/subscribe"})
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 3, "result": None, "success": True, "type": "result"}
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "event": {"sun": {"fields": {}}, "tag": {"fields": {}}},
+        "id": 3,
+        "type": "event",
+    }
+
+    assert hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE] is old_cache
 
 
 async def test_get_config(
@@ -786,7 +1090,7 @@ async def test_get_states_not_allows_nan(
 ) -> None:
     """Test get_states command converts NaN to None."""
     hass.states.async_set("greeting.hello", "world")
-    hass.states.async_set("greeting.bad", "data", {"hello": float("NaN")})
+    hass.states.async_set("greeting.bad", "data", {"hello": math.nan})
     hass.states.async_set("greeting.bye", "universe")
 
     await websocket_client.send_json_auto_id({"type": "get_states"})
@@ -1158,28 +1462,50 @@ async def test_subscribe_unsubscribe_entities(
     }
 
 
+@pytest.mark.parametrize("unserializable_states", [[], ["light.cannot_serialize"]])
 async def test_subscribe_unsubscribe_entities_specific_entities(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
+    unserializable_states: list[str],
 ) -> None:
     """Test subscribe/unsubscribe entities with a list of entity ids."""
 
+    class CannotSerializeMe:
+        """Cannot serialize this."""
+
+        def __init__(self) -> None:
+            """Init cannot serialize this."""
+
+    for entity_id in unserializable_states:
+        hass.states.async_set(
+            entity_id,
+            "off",
+            {"color": "red", "cannot_serialize": CannotSerializeMe()},
+        )
+
     hass.states.async_set("light.permitted", "off", {"color": "red"})
-    hass.states.async_set("light.not_intrested", "off", {"color": "blue"})
+    hass.states.async_set("light.not_interested", "off", {"color": "blue"})
     original_state = hass.states.get("light.permitted")
     assert isinstance(original_state, State)
     hass_admin_user.groups = []
     hass_admin_user.mock_policy(
         {
             "entities": {
-                "entity_ids": {"light.permitted": True, "light.not_intrested": True}
+                "entity_ids": {
+                    "light.permitted": True,
+                    "light.not_interested": True,
+                    "light.cannot_serialize": True,
+                }
             }
         }
     )
 
     await websocket_client.send_json_auto_id(
-        {"type": "subscribe_entities", "entity_ids": ["light.permitted"]}
+        {
+            "type": "subscribe_entities",
+            "entity_ids": ["light.permitted", "light.cannot_serialize"],
+        }
     )
 
     msg = await websocket_client.receive_json()
@@ -1201,7 +1527,7 @@ async def test_subscribe_unsubscribe_entities_specific_entities(
             }
         }
     }
-    hass.states.async_set("light.not_intrested", "on", {"effect": "help"})
+    hass.states.async_set("light.not_interested", "on", {"effect": "help"})
     hass.states.async_set("light.not_permitted", "on")
     hass.states.async_set("light.permitted", "on", {"color": "blue"})
 
@@ -1222,12 +1548,28 @@ async def test_subscribe_unsubscribe_entities_specific_entities(
     }
 
 
+@pytest.mark.parametrize("unserializable_states", [[], ["light.cannot_serialize"]])
 async def test_subscribe_unsubscribe_entities_with_filter(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
+    unserializable_states: list[str],
 ) -> None:
     """Test subscribe/unsubscribe entities with an entity filter."""
+
+    class CannotSerializeMe:
+        """Cannot serialize this."""
+
+        def __init__(self) -> None:
+            """Init cannot serialize this."""
+
+    for entity_id in unserializable_states:
+        hass.states.async_set(
+            entity_id,
+            "off",
+            {"color": "red", "cannot_serialize": CannotSerializeMe()},
+        )
+
     hass.states.async_set("switch.not_included", "off")
     hass.states.async_set("light.include", "off")
     await websocket_client.send_json_auto_id(
@@ -2032,14 +2374,21 @@ async def test_manifest_list(
     ]
 
 
+@pytest.mark.parametrize(
+    "integrations",
+    [
+        ["hue", "websocket_api"],
+        ["hue", "non_existing", "websocket_api"],
+    ],
+)
 async def test_manifest_list_specific_integrations(
-    hass: HomeAssistant, websocket_client
+    hass: HomeAssistant, websocket_client, integrations: list[str]
 ) -> None:
     """Test loading manifests for specific integrations."""
     websocket_api = await async_get_integration(hass, "websocket_api")
 
     await websocket_client.send_json_auto_id(
-        {"type": "manifest/list", "integrations": ["hue", "websocket_api"]}
+        {"type": "manifest/list", "integrations": integrations}
     )
     hue = await async_get_integration(hass, "hue")
 
@@ -2528,10 +2877,7 @@ async def test_validate_config_works(
                 "entity_id": "hello.world",
                 "state": "paulus",
             },
-            (
-                "Invalid condition \"non_existing\" specified {'condition': "
-                "'non_existing', 'entity_id': 'hello.world', 'state': 'paulus'}"
-            ),
+            'Invalid condition "non_existing" specified',
         ),
         # Raises HomeAssistantError
         (
@@ -2905,3 +3251,236 @@ async def test_wait_integration_startup(
 
     # The component has been loaded
     assert "test" in hass.config.components
+
+
+async def test_extract_from_target(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test extract_from_target command with mixed target types including entities, devices, areas, and labels."""
+
+    async def call_command(target: dict[str, str]) -> Any:
+        await websocket_client.send_json_auto_id(
+            {"type": "extract_from_target", "target": target}
+        )
+        return await websocket_client.receive_json()
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    device1 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device1")},
+    )
+
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device2")},
+    )
+
+    area_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device3")},
+    )
+
+    label2_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device4")},
+    )
+
+    kitchen_area = area_registry.async_create("Kitchen")
+    living_room_area = area_registry.async_create("Living Room")
+    label_area = area_registry.async_create("Bathroom")
+    label1 = label_registry.async_create("Test Label 1")
+    label2 = label_registry.async_create("Test Label 2")
+
+    # Associate devices with areas and labels
+    device_registry.async_update_device(area_device.id, area_id=kitchen_area.id)
+    device_registry.async_update_device(label2_device.id, labels={label2.label_id})
+    area_registry.async_update(label_area.id, labels={label1.label_id})
+
+    # Setup entities with targets
+    device1_entity1 = entity_registry.async_get_or_create(
+        "light", "test", "unique1", device_id=device1.id
+    )
+    device1_entity2 = entity_registry.async_get_or_create(
+        "switch", "test", "unique2", device_id=device1.id
+    )
+    device2_entity = entity_registry.async_get_or_create(
+        "sensor", "test", "unique3", device_id=device2.id
+    )
+    area_device_entity = entity_registry.async_get_or_create(
+        "light", "test", "unique4", device_id=area_device.id
+    )
+    area_entity = entity_registry.async_get_or_create("switch", "test", "unique5")
+    label_device_entity = entity_registry.async_get_or_create(
+        "light", "test", "unique6", device_id=label2_device.id
+    )
+    label_entity = entity_registry.async_get_or_create("switch", "test", "unique7")
+
+    # Associate entities with areas and labels
+    entity_registry.async_update_entity(
+        area_entity.entity_id, area_id=living_room_area.id
+    )
+    entity_registry.async_update_entity(
+        label_entity.entity_id, labels={label1.label_id}
+    )
+
+    msg = await call_command({"entity_id": ["light.unknown_entity"]})
+    _assert_extract_from_target_command_result(msg, entities={"light.unknown_entity"})
+
+    msg = await call_command({"device_id": [device1.id, device2.id]})
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={
+            device1_entity1.entity_id,
+            device1_entity2.entity_id,
+            device2_entity.entity_id,
+        },
+        devices={device1.id, device2.id},
+    )
+
+    msg = await call_command({"area_id": [kitchen_area.id, living_room_area.id]})
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={area_device_entity.entity_id, area_entity.entity_id},
+        areas={kitchen_area.id, living_room_area.id},
+        devices={area_device.id},
+    )
+
+    msg = await call_command({"label_id": [label1.label_id, label2.label_id]})
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={label_device_entity.entity_id, label_entity.entity_id},
+        devices={label2_device.id},
+        areas={label_area.id},
+    )
+
+    # Test multiple mixed targets
+    msg = await call_command(
+        {
+            "entity_id": ["light.direct"],
+            "device_id": [device1.id],
+            "area_id": [kitchen_area.id],
+            "label_id": [label1.label_id],
+        },
+    )
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={
+            "light.direct",
+            device1_entity1.entity_id,
+            device1_entity2.entity_id,
+            area_device_entity.entity_id,
+            label_entity.entity_id,
+        },
+        devices={device1.id, area_device.id},
+        areas={kitchen_area.id, label_area.id},
+    )
+
+
+async def test_extract_from_target_expand_group(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """Test extract_from_target command with expand_group parameter."""
+    await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "test_group": {
+                    "name": "Test Group",
+                    "entities": ["light.kitchen", "light.living_room"],
+                }
+            }
+        },
+    )
+
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.living_room", "off")
+
+    # Test without expand_group (default False)
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "extract_from_target",
+            "target": {"entity_id": ["group.test_group"]},
+        }
+    )
+    msg = await websocket_client.receive_json()
+    _assert_extract_from_target_command_result(msg, entities={"group.test_group"})
+
+    # Test with expand_group=True
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "extract_from_target",
+            "target": {"entity_id": ["group.test_group"]},
+            "expand_group": True,
+        }
+    )
+    msg = await websocket_client.receive_json()
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={"light.kitchen", "light.living_room"},
+    )
+
+
+async def test_extract_from_target_missing_entities(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """Test extract_from_target command with missing device IDs, area IDs, etc."""
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "extract_from_target",
+            "target": {
+                "device_id": ["non_existent_device"],
+                "area_id": ["non_existent_area"],
+                "label_id": ["non_existent_label"],
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    # Non-existent devices/areas are still referenced but reported as missing
+    _assert_extract_from_target_command_result(
+        msg,
+        devices={"non_existent_device"},
+        areas={"non_existent_area"},
+        missing_areas={"non_existent_area"},
+        missing_devices={"non_existent_device"},
+        missing_labels={"non_existent_label"},
+    )
+
+
+async def test_extract_from_target_empty_target(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """Test extract_from_target command with empty target."""
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "extract_from_target",
+            "target": {},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    _assert_extract_from_target_command_result(msg)
+
+
+async def test_extract_from_target_validation_error(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """Test extract_from_target command with invalid target data."""
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "extract_from_target",
+            "target": "invalid",  # Should be a dict, not string
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert "error" in msg

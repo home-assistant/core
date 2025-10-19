@@ -1,10 +1,10 @@
 {
   "domain": "growatt_server",
   "name": "Growatt",
-  "codeowners": [],
+  "codeowners": ["@johanzander"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/growatt_server",
   "iot_class": "cloud_polling",
   "loggers": ["growattServer"],
-  "requirements": ["growattServer==1.6.0"]
+  "requirements": ["growattServer==1.7.1"]
 }

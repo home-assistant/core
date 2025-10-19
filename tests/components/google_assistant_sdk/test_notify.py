@@ -2,6 +2,7 @@
 
 from unittest.mock import call, patch
 
+from grpc import RpcError
 import pytest
 
 from homeassistant.components import notify
@@ -9,6 +10,7 @@ from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.components.google_assistant_sdk.const import SUPPORTED_LANGUAGE_CODES
 from homeassistant.components.google_assistant_sdk.notify import broadcast_commands
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import ComponentSetup, ExpectedCredentials
 
@@ -45,13 +47,37 @@ async def test_broadcast_no_targets(
             notify.DOMAIN,
             DOMAIN,
             {notify.ATTR_MESSAGE: message},
+            blocking=True,
         )
-        await hass.async_block_till_done()
     mock_text_assistant.assert_called_once_with(
         ExpectedCredentials(), language_code, audio_out=False
     )
     # pylint:disable-next=unnecessary-dunder-call
     mock_text_assistant.assert_has_calls([call().__enter__().assist(expected_command)])
+
+
+async def test_broadcast_grpc_error(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test broadcast handling when RpcError is raised."""
+    await setup_integration()
+
+    with (
+        patch(
+            "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+            side_effect=RpcError(),
+        ) as mock_assist_call,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            notify.DOMAIN,
+            DOMAIN,
+            {notify.ATTR_MESSAGE: "Dinner is served"},
+            blocking=True,
+        )
+
+    mock_assist_call.assert_called_once_with("broadcast Dinner is served")
 
 
 @pytest.mark.parametrize(
@@ -103,8 +129,8 @@ async def test_broadcast_one_target(
             notify.DOMAIN,
             DOMAIN,
             {notify.ATTR_MESSAGE: message, notify.ATTR_TARGET: [target]},
+            blocking=True,
         )
-        await hass.async_block_till_done()
     mock_assist_call.assert_called_once_with(expected_command)
 
 
@@ -127,8 +153,8 @@ async def test_broadcast_two_targets(
             notify.DOMAIN,
             DOMAIN,
             {notify.ATTR_MESSAGE: message, notify.ATTR_TARGET: [target1, target2]},
+            blocking=True,
         )
-        await hass.async_block_till_done()
     mock_assist_call.assert_has_calls(
         [call(expected_command1), call(expected_command2)]
     )
@@ -148,8 +174,8 @@ async def test_broadcast_empty_message(
             notify.DOMAIN,
             DOMAIN,
             {notify.ATTR_MESSAGE: ""},
+            blocking=True,
         )
-        await hass.async_block_till_done()
     mock_assist_call.assert_not_called()
 
 

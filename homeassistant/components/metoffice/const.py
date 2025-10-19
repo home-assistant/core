@@ -41,6 +41,7 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=15)
 METOFFICE_COORDINATES = "metoffice_coordinates"
 METOFFICE_HOURLY_COORDINATOR = "metoffice_hourly_coordinator"
 METOFFICE_DAILY_COORDINATOR = "metoffice_daily_coordinator"
+METOFFICE_TWICE_DAILY_COORDINATOR = "metoffice_twice_daily_coordinator"
 METOFFICE_MONITORED_CONDITIONS = "metoffice_monitored_conditions"
 METOFFICE_NAME = "metoffice_name"
 
@@ -91,4 +92,29 @@ DAILY_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
     ATTR_FORECAST_WIND_BEARING: "midday10MWindDirection",
     ATTR_FORECAST_NATIVE_WIND_SPEED: "midday10MWindSpeed",
     ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: "midday10MWindGust",
+}
+
+DAY_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
+    ATTR_FORECAST_CONDITION: "daySignificantWeatherCode",
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP: "dayMaxFeelsLikeTemp",
+    ATTR_FORECAST_NATIVE_PRESSURE: "middayMslp",
+    ATTR_FORECAST_NATIVE_TEMP: "dayUpperBoundMaxTemp",
+    ATTR_FORECAST_NATIVE_TEMP_LOW: "dayLowerBoundMaxTemp",
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY: "dayProbabilityOfPrecipitation",
+    ATTR_FORECAST_UV_INDEX: "maxUvIndex",
+    ATTR_FORECAST_WIND_BEARING: "midday10MWindDirection",
+    ATTR_FORECAST_NATIVE_WIND_SPEED: "midday10MWindSpeed",
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: "midday10MWindGust",
+}
+
+NIGHT_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
+    ATTR_FORECAST_CONDITION: "nightSignificantWeatherCode",
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP: "nightMinFeelsLikeTemp",
+    ATTR_FORECAST_NATIVE_PRESSURE: "midnightMslp",
+    ATTR_FORECAST_NATIVE_TEMP: "nightUpperBoundMinTemp",
+    ATTR_FORECAST_NATIVE_TEMP_LOW: "nightLowerBoundMinTemp",
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY: "nightProbabilityOfPrecipitation",
+    ATTR_FORECAST_WIND_BEARING: "midnight10MWindDirection",
+    ATTR_FORECAST_NATIVE_WIND_SPEED: "midnight10MWindSpeed",
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: "midnight10MWindGust",
 }

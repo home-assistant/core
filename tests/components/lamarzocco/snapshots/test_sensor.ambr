@@ -27,6 +27,7 @@
     'original_name': 'Brewing start time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'brewing_start_time',
     'unique_id': 'GS012345_brewing_start_time',
@@ -44,7 +45,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-05-07T18:04:20+00:00',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.gs012345_coffee_boiler_ready_time-entry]
@@ -75,6 +76,7 @@
     'original_name': 'Coffee boiler ready time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'coffee_boiler_ready_time',
     'unique_id': 'GS012345_coffee_boiler_ready_time',
@@ -92,7 +94,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.gs012345_last_cleaning_time-entry]
@@ -123,6 +125,7 @@
     'original_name': 'Last cleaning time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_cleaning_time',
     'unique_id': 'GS012345_last_cleaning_time',
@@ -171,6 +174,7 @@
     'original_name': 'Steam boiler ready time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'steam_boiler_ready_time',
     'unique_id': 'GS012345_steam_boiler_ready_time',
@@ -221,6 +225,7 @@
     'original_name': 'Total coffees made',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_coffees_made',
     'unique_id': 'GS012345_drink_stats_coffee',
@@ -272,6 +277,7 @@
     'original_name': 'Total flushes done',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_flushes_done',
     'unique_id': 'GS012345_drink_stats_flushing',

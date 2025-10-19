@@ -678,6 +678,7 @@ async def test_video(
     mock_response.content.iter_chunked = Mock(return_value=content)
 
     ufp.api.request = AsyncMock(return_value=mock_response)
+    ufp.api._raise_for_status = AsyncMock()
     await init_entry(hass, ufp, [camera])
 
     event_start = fixed_now - timedelta(seconds=30)
@@ -722,6 +723,7 @@ async def test_video_entity_id(
     mock_response.content.iter_chunked = Mock(return_value=content)
 
     ufp.api.request = AsyncMock(return_value=mock_response)
+    ufp.api._raise_for_status = AsyncMock()
     await init_entry(hass, ufp, [camera])
 
     event_start = fixed_now - timedelta(seconds=30)
@@ -937,6 +939,7 @@ async def test_event_video(
     mock_response.content.iter_chunked = Mock(return_value=content)
 
     ufp.api.request = AsyncMock(return_value=mock_response)
+    ufp.api._raise_for_status = AsyncMock()
     await init_entry(hass, ufp, [camera])
     event_start = fixed_now - timedelta(seconds=30)
     event = Event(

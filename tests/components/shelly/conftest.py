@@ -127,7 +127,11 @@ MOCK_BLOCKS = [
         ),
     ),
     Mock(
-        sensor_ids={"mode": "color", "effect": 0},
+        sensor_ids={
+            "output": mock_light_set_state()["ison"],
+            "mode": "color",
+            "effect": 0,
+        },
         channel="0",
         output=mock_light_set_state()["ison"],
         colorTemp=mock_light_set_state()["temp"],
@@ -189,7 +193,7 @@ MOCK_BLOCKS = [
 ]
 
 MOCK_CONFIG = {
-    "input:0": {"id": 0, "name": "Test name input 0", "type": "button"},
+    "input:0": {"id": 0, "name": "Test input 0", "type": "button"},
     "input:1": {
         "id": 1,
         "type": "analog",
@@ -204,7 +208,7 @@ MOCK_CONFIG = {
         "xcounts": {"expr": None, "unit": None},
         "xfreq": {"expr": None, "unit": None},
     },
-    "flood:0": {"id": 0, "name": "Test name"},
+    "flood:0": {"id": 0, "name": "Kitchen"},
     "light:0": {"name": "test light_0"},
     "light:1": {"name": "test light_1"},
     "light:2": {"name": "test light_2"},
@@ -260,6 +264,33 @@ MOCK_BLU_TRV_REMOTE_CONFIG = {
                 "meta": {},
             },
         },
+        {
+            "key": "blutrv:201",
+            "status": {
+                "id": 201,
+                "target_C": 17.1,
+                "current_C": 17.1,
+                "pos": 0,
+                "rssi": -60,
+                "battery": 100,
+                "packet_id": 58,
+                "last_updated_ts": 1734967725,
+                "paired": True,
+                "rpc": True,
+                "rsv": 61,
+            },
+            "config": {
+                "id": 201,
+                "addr": "f8:44:77:25:f0:de",
+                "name": "TRV-201",
+                "key": None,
+                "trv": "bthomedevice:201",
+                "temp_sensors": [],
+                "dw_sensors": [],
+                "override_delay": 30,
+                "meta": {},
+            },
+        },
     ],
     "blutrv:200": {
         "id": 0,
@@ -272,11 +303,34 @@ MOCK_BLU_TRV_REMOTE_CONFIG = {
         "name": "TRV-Name",
         "local_name": "SBTR-001AEU",
     },
+    "blutrv:201": {
+        "id": 1,
+        "enable": True,
+        "min_valve_position": 0,
+        "default_boost_duration": 1800,
+        "default_override_duration": 2147483647,
+        "default_override_target_C": 8,
+        "addr": "f8:44:77:25:f0:de",
+        "name": "TRV-201",
+        "local_name": "SBTR-001AEU",
+    },
 }
 
 
 MOCK_BLU_TRV_REMOTE_STATUS = {
     "blutrv:200": {
+        "id": 0,
+        "pos": 0,
+        "steps": 0,
+        "current_C": 15.2,
+        "target_C": 17.1,
+        "schedule_rev": 0,
+        "rssi": -60,
+        "battery": 100,
+        "errors": [],
+        "fw_ver": "v1.2.10",
+    },
+    "blutrv:201": {
         "id": 0,
         "pos": 0,
         "steps": 0,
@@ -499,6 +553,7 @@ def _mock_rpc_device(version: str | None = None):
         ),
         xmod_info={},
         zigbee_enabled=False,
+        zigbee_firmware=False,
         ip_address="10.10.10.10",
     )
     type(device).name = PropertyMock(return_value="Test name")
@@ -562,6 +617,13 @@ async def mock_rpc_device():
                 {}, RpcUpdateType.INITIALIZED
             )
 
+        current_pos = iter(range(50, -1, -10))  # from 50 to 0 in steps of 10
+
+        async def update_cover_status(cover_id: int):
+            device.status[f"cover:{cover_id}"]["current_pos"] = next(
+                current_pos, device.status[f"cover:{cover_id}"]["current_pos"]
+            )
+
         device = _mock_rpc_device()
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
@@ -569,6 +631,9 @@ async def mock_rpc_device():
         rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
         rpc_device_mock.return_value.mock_online = Mock(side_effect=online)
         rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
+        rpc_device_mock.return_value.update_cover_status = AsyncMock(
+            side_effect=update_cover_status
+        )
 
         yield rpc_device_mock.return_value
 
@@ -711,3 +776,16 @@ def mock_setup() -> Generator[AsyncMock]:
         "homeassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture
+def disable_async_remove_shelly_rpc_entities() -> Generator[None]:
+    """Patch out async_remove_shelly_rpc_entities.
+
+    This is used by virtual components tests that should not create entities,
+    without it async_remove_shelly_rpc_entities will clean up the entities.
+    """
+    with patch(
+        "homeassistant.components.shelly.utils.async_remove_shelly_rpc_entities"
+    ):
+        yield

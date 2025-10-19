@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS
+from homeassistant.components.sensor import ATTR_STATE_CLASS, async_rounded_state
 from homeassistant.components.tilt_ble.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
@@ -35,7 +35,10 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert temp_sensor is not None
 
     temp_sensor_attribtes = temp_sensor.attributes
-    assert temp_sensor.state == "21"
+    assert (
+        async_rounded_state(hass, "sensor.tilt_green_temperature", temp_sensor)
+        == "21.1"
+    )
     assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Tilt Green Temperature"
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"

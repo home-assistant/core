@@ -46,7 +46,7 @@ async def _set_doorbell_message(obj: Camera, message: str) -> None:
 CAMERA: tuple[ProtectTextEntityDescription, ...] = (
     ProtectTextEntityDescription(
         key="doorbell",
-        name="Doorbell",
+        translation_key="doorbell",
         entity_category=EntityCategory.CONFIG,
         ufp_value_fn=_get_doorbell_current,
         ufp_set_method_fn=_set_doorbell_message,
