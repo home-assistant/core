@@ -10,7 +10,6 @@ from chip.clusters.Types import Nullable
 from matter_server.client.models import device_types
 from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
-import voluptuous as vol
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -27,20 +26,14 @@ from homeassistant.const import (
     Platform,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_DURATION,
-    ATTR_EMERGENCY_BOOST,
-    ATTR_TEMPORARY_SETPOINT,
-    SERVICE_WATER_HEATER_BOOST,
-)
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+from .services import async_setup_services
 
 TEMPERATURE_SCALING_FACTOR = 100
 
@@ -61,20 +54,7 @@ async def async_setup_entry(
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.WATER_HEATER, async_add_entities)
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_WATER_HEATER_BOOST,
-        schema={
-            # duration >=1
-            vol.Required(ATTR_DURATION): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Optional(ATTR_EMERGENCY_BOOST): cv.boolean,
-            vol.Optional(ATTR_TEMPORARY_SETPOINT): vol.All(
-                vol.Coerce(int), vol.Range(min=30, max=65)
-            ),
-        },
-        func="async_set_boost",
-        supports_response=SupportsResponse.NONE,
-    )
+    async_setup_services(hass)
 
 
 @dataclass(frozen=True, kw_only=True)
