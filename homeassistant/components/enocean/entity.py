@@ -2,9 +2,11 @@
 
 from abc import abstractmethod
 
+from enocean.protocol.constants import PACKET
 from enocean.protocol.packet import Packet
 
 from homeassistant.config_entries import _LOGGER
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
@@ -46,7 +48,11 @@ class EnOceanEntity(Entity):
         """Get gateway ID and register callback."""
         self._gateway_id = self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].chip_id
 
-        _LOGGER.warning("Unique_id: %s", self.unique_id)
+        _LOGGER.warning(
+            "Unique_id: %s, Friendly_name: %s",
+            self.unique_id,
+            self._friendly_name_internal(),
+        )
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -54,16 +60,18 @@ class EnOceanEntity(Entity):
             )
         )
 
-    def _message_received_callback(self, packet):
+    def _message_received_callback(self, packet: Packet) -> None:
         """Handle incoming packets."""
         if packet.sender_int == self._enocean_device_id.to_number():
             self.value_changed(packet)
 
     @abstractmethod
-    def value_changed(self, packet):
+    def value_changed(self, packet: Packet) -> None:
         """Update the internal state of the device when a packet arrives."""
 
-    def send_command(self, data, optional, packet_type):
+    def send_command(
+        self, data: None | list, optional: None | list, packet_type: PACKET
+    ) -> None:
         """Send a command via the EnOcean dongle."""
         packet = Packet(packet_type, data=data, optional=optional)
         dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)
@@ -92,22 +100,22 @@ class EnOceanEntity(Entity):
         return self._gateway_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Get device info."""
 
-        info = {
-            "name": self._device_name,
-            "manufacturer": self.dev_type.manufacturer,
-            "model": self.dev_type.model,
-        }
+        info = DeviceInfo(
+            {
+                "identifiers": {(DOMAIN, self._enocean_device_id.to_string())},
+                "name": self._device_name,
+                "manufacturer": self.dev_type.manufacturer,
+                "model": self.dev_type.model,
+                "serial_number": self._enocean_device_id.to_string(),
+            }
+        )
 
         if self._enocean_device_id.to_number() == self._gateway_id.to_number():
             info.update(
                 {
-                    "identifiers": {(DOMAIN, self._enocean_device_id.to_string())},
-                    "serial_number": self.hass.data[DATA_ENOCEAN][
-                        ENOCEAN_DONGLE
-                    ].chip_id.to_string(),
                     "sw_version": self.hass.data[DATA_ENOCEAN][
                         ENOCEAN_DONGLE
                     ].sw_version,
@@ -118,8 +126,6 @@ class EnOceanEntity(Entity):
             )
             return info
 
-        info.update({"identifiers": {(DOMAIN, self._enocean_device_id.to_string())}})
-        info.update({"serial_number": self._enocean_device_id.to_string()})
         info.update({"via_device": (DOMAIN, self.gateway_id.to_string())})
         info.update({"model_id": "EEP " + self.dev_type.eep})
         return info
