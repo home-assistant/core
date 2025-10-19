@@ -230,15 +230,3 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=self.config_entry.entry_id
                 )
-
-
-def in_game(person: Person) -> bool:
-    """True if person is in a game."""
-
-    active_app = next(
-        (presence for presence in person.presence_details if presence.is_primary),
-        None,
-    )
-    return (
-        active_app is not None and active_app.is_game and active_app.state == "Active"
-    )
