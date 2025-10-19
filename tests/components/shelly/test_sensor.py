@@ -1736,7 +1736,7 @@ async def test_rpc_shelly_ev_sensors(
 
     status = deepcopy(mock_rpc_device.status)
     status["enum:200"] = {"value": "charger_charging"}
-    status["number:201"] = {"value": 5000}
+    status["number:201"] = {"value": 5.0}
     status["number:202"] = {"value": 60}
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
