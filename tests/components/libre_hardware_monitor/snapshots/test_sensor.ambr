@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_amdcpu-0-temperature-2',
+    'unique_id': 'test_entry_id_amdcpu-0-temperature-2',
     'unit_of_measurement': '°C',
   })
 # ---
@@ -86,7 +86,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_amdcpu-0-load-0',
+    'unique_id': 'test_entry_id_amdcpu-0-load-0',
     'unit_of_measurement': '%',
   })
 # ---
@@ -140,7 +140,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_amdcpu-0-power-0',
+    'unique_id': 'test_entry_id_amdcpu-0-power-0',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -194,7 +194,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_amdcpu-0-temperature-3',
+    'unique_id': 'test_entry_id_amdcpu-0-temperature-3',
     'unit_of_measurement': '°C',
   })
 # ---
@@ -248,7 +248,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_amdcpu-0-voltage-3',
+    'unique_id': 'test_entry_id_amdcpu-0-voltage-3',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -302,7 +302,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_amdcpu-0-voltage-2',
+    'unique_id': 'test_entry_id_amdcpu-0-voltage-2',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -356,7 +356,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_lpc-nct6687d-0-voltage-0',
+    'unique_id': 'test_entry_id_lpc-nct6687d-0-voltage-0',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -410,7 +410,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_lpc-nct6687d-0-voltage-1',
+    'unique_id': 'test_entry_id_lpc-nct6687d-0-voltage-1',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -464,7 +464,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_lpc-nct6687d-0-fan-0',
+    'unique_id': 'test_entry_id_lpc-nct6687d-0-fan-0',
     'unit_of_measurement': 'RPM',
   })
 # ---
@@ -518,7 +518,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_lpc-nct6687d-0-temperature-0',
+    'unique_id': 'test_entry_id_lpc-nct6687d-0-temperature-0',
     'unit_of_measurement': '°C',
   })
 # ---
@@ -572,7 +572,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_lpc-nct6687d-0-fan-1',
+    'unique_id': 'test_entry_id_lpc-nct6687d-0-fan-1',
     'unit_of_measurement': 'RPM',
   })
 # ---
@@ -626,7 +626,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_lpc-nct6687d-0-fan-2',
+    'unique_id': 'test_entry_id_lpc-nct6687d-0-fan-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -679,7 +679,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_lpc-nct6687d-0-temperature-1',
+    'unique_id': 'test_entry_id_lpc-nct6687d-0-temperature-1',
     'unit_of_measurement': '°C',
   })
 # ---
@@ -733,7 +733,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_lpc-nct6687d-0-voltage-2',
+    'unique_id': 'test_entry_id_lpc-nct6687d-0-voltage-2',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -787,7 +787,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_gpu-nvidia-0-clock-0',
+    'unique_id': 'test_entry_id_gpu-nvidia-0-clock-0',
     'unit_of_measurement': 'MHz',
   })
 # ---
@@ -841,7 +841,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_gpu-nvidia-0-load-0',
+    'unique_id': 'test_entry_id_gpu-nvidia-0-load-0',
     'unit_of_measurement': '%',
   })
 # ---
@@ -895,7 +895,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_gpu-nvidia-0-temperature-0',
+    'unique_id': 'test_entry_id_gpu-nvidia-0-temperature-0',
     'unit_of_measurement': '°C',
   })
 # ---
@@ -949,7 +949,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_gpu-nvidia-0-fan-1',
+    'unique_id': 'test_entry_id_gpu-nvidia-0-fan-1',
     'unit_of_measurement': 'RPM',
   })
 # ---
@@ -1003,7 +1003,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_gpu-nvidia-0-fan-2',
+    'unique_id': 'test_entry_id_gpu-nvidia-0-fan-2',
     'unit_of_measurement': 'RPM',
   })
 # ---
@@ -1057,7 +1057,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_gpu-nvidia-0-temperature-2',
+    'unique_id': 'test_entry_id_gpu-nvidia-0-temperature-2',
     'unit_of_measurement': '°C',
   })
 # ---
@@ -1111,7 +1111,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_gpu-nvidia-0-clock-4',
+    'unique_id': 'test_entry_id_gpu-nvidia-0-clock-4',
     'unit_of_measurement': 'MHz',
   })
 # ---
@@ -1165,7 +1165,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_gpu-nvidia-0-load-1',
+    'unique_id': 'test_entry_id_gpu-nvidia-0-load-1',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1219,7 +1219,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_gpu-nvidia-0-power-0',
+    'unique_id': 'test_entry_id_gpu-nvidia-0-power-0',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -1273,7 +1273,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_gpu-nvidia-0-throughput-1',
+    'unique_id': 'test_entry_id_gpu-nvidia-0-throughput-1',
     'unit_of_measurement': 'MB/s',
   })
 # ---
@@ -1327,7 +1327,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lhm_test_entry_id_gpu-nvidia-0-load-2',
+    'unique_id': 'test_entry_id_gpu-nvidia-0-load-2',
     'unit_of_measurement': '%',
   })
 # ---

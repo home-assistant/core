@@ -57,7 +57,7 @@ class LibreHardwareMonitorSensor(
             STATE_MAX_VALUE: self._format_number_value(sensor_data.max),
         }
         self._attr_native_unit_of_measurement = sensor_data.unit
-        self._attr_unique_id: str = f"lhm_{entry_id}_{sensor_data.sensor_id}"
+        self._attr_unique_id: str = f"{entry_id}_{sensor_data.sensor_id}"
 
         self._sensor_id: str = sensor_data.sensor_id
 
