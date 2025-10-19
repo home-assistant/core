@@ -67,6 +67,8 @@ HEADER_FRONTEND_BASE = "HA-Frontend-Base"
 
 _LOGGER = logging.getLogger(__package__)
 
+_API_URL = "https://plex.tv"
+
 
 @callback
 def configured_servers(hass: HomeAssistant) -> set[str]:
@@ -124,7 +126,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._async_step_plex_website_auth()
         if self.show_advanced_options:
             return await self.async_step_user_advanced(errors=errors)
-        return self.async_show_form(step_id="user", errors=errors)
+        return self.async_show_form(step_id="user",description_placeholders={"api_url": _API_URL},errors=errors)
 
     async def async_step_user_advanced(
         self,
