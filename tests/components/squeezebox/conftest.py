@@ -1,10 +1,8 @@
 """Setup the squeezebox tests."""
 
 from collections.abc import Generator
-from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pysqueezebox import Server
 import pytest
 
 from homeassistant.components.media_player import MediaType
@@ -32,13 +30,7 @@ from homeassistant.components.squeezebox.const import (
     STATUS_UPDATE_NEWPLUGINS,
     STATUS_UPDATE_NEWVERSION,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -110,17 +102,6 @@ FAKE_QUERY_RESPONSE = {
 
 
 @pytest.fixture
-def mock_discover_failure():
-    """Simulate failed discovery without raising unhandled exceptions."""
-
-    async def _failed_discover(callback):
-        # Simulate no servers found, no callback triggered
-        return []
-
-    return _failed_discover
-
-
-@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
@@ -131,89 +112,27 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_config_entry():
-    """Fixture to create a mock config entry with UUID."""
-
-    def _create():
-        return MockConfigEntry(
-            domain=DOMAIN,
-            unique_id=UUID,
-            data={CONF_HOST: HOST, CONF_PORT: PORT, CONF_HTTPS: False},
-        )
-
-    return _create
+    """Fixture that returns a mock config entry with UUID."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=UUID,
+        data={CONF_HOST: HOST, CONF_PORT: PORT, CONF_HTTPS: False},
+    )
 
 
 @pytest.fixture
-def patch_async_query_exception():
-    """Fixture to simulate an exception during Server.async_query."""
-    with patch(
-        "homeassistant.components.squeezebox.config_flow.Server.async_query",
-        side_effect=Exception,
-    ):
-        yield
+def mock_server():
+    """Fixture to mock pysqueezebox.Server per test run."""
+    # Patch without autospec, so we can add arbitrary attributes
+    with patch("homeassistant.components.squeezebox.config_flow.Server") as server_cls:
+        server_mock = server_cls.return_value
 
+        # async methods
+        server_mock.async_query = AsyncMock()
+        server_mock.connect = AsyncMock()
+        server_mock.disconnect = AsyncMock()
 
-@pytest.fixture
-def mock_async_query():
-    """Fixture to patch Server.async_query with configurable behavior."""
-
-    with patch("pysqueezebox.Server.async_query", autospec=True) as mock:
-
-        def _configure(mode: str):
-            if mode == "uuid":
-                mock.side_effect = None
-                mock.return_value = {"uuid": UUID}
-
-            elif mode == "false":
-
-                async def _cannot_connect(self, *args, **kwargs):
-                    self.http_status = HTTPStatus.BAD_GATEWAY
-                    return False
-
-                mock.side_effect = _cannot_connect
-                mock.return_value = None
-
-            elif mode == "unauthorized":
-
-                async def _unauthorized(self, *args, **kwargs):
-                    self.http_status = HTTPStatus.UNAUTHORIZED
-                    return False
-
-                mock.side_effect = _unauthorized
-                mock.return_value = None
-
-            elif mode == "exception":
-                mock.side_effect = Exception("Unexpected error")
-                mock.return_value = None
-
-            else:
-                raise ValueError(f"Unknown mock_async_query mode: {mode}")
-
-            return mock
-
-        yield _configure
-
-
-@pytest.fixture
-def config_flow_input():
-    """Return schema-compliant input for each config flow step."""
-
-    def _get_input(step_id: str) -> dict:
-        if step_id == "user":
-            return {
-                CONF_HOST: "1.1.1.1",
-            }
-        if step_id == "edit":
-            return {
-                CONF_HOST: "1.1.1.1",
-                CONF_PORT: 9000,
-                CONF_USERNAME: "",
-                CONF_PASSWORD: "",
-                CONF_HTTPS: False,
-            }
-        raise ValueError(f"Unsupported step_id: {step_id}")
-
-    return _get_input
+        yield server_mock
 
 
 @pytest.fixture
@@ -232,36 +151,35 @@ def mock_discover_success():
     return _mock_discover
 
 
-async def mock_discover(_discovery_callback):
-    """Mock discovering a Logitech Media Server."""
-    _discovery_callback(Server(None, HOST, PORT, uuid=UUID))
+@pytest.fixture
+def mock_discover_failure():
+    """Simulate failed discovery without raising unhandled exceptions."""
+
+    async def _failed_discover(callback):
+        # Simulate no servers found, no callback triggered
+        return []
+
+    return _failed_discover
+
+
+@pytest.fixture
+def patch_discover():
+    """Patch the async_discover function to prevent actual network calls."""
+
+    async def _mock_discover(callback):
+        return []
+
+    with patch(
+        "homeassistant.components.squeezebox.config_flow.async_discover",
+        side_effect=_mock_discover,
+    ):
+        yield
 
 
 @pytest.fixture
 def dhcp_info():
     """Fixture for DHCP discovery data."""
     return DhcpServiceInfo(ip=HOST, macaddress="aabbccddeeff", hostname="any")
-
-
-@pytest.fixture
-def patch_async_query_unauthorized():
-    """Fixture to simulate unauthorized response from Server.async_query."""
-
-    async def _unauthorized(self, *args):
-        self.http_status = HTTPStatus.UNAUTHORIZED
-        return False
-
-    return _unauthorized
-
-
-@pytest.fixture
-def mock_async_query_unauthorized(patch_async_query_unauthorized):
-    """Auto-patch Server.async_query to simulate unauthorized response."""
-    with patch(
-        "pysqueezebox.Server.async_query",
-        new=patch_async_query_unauthorized,
-    ):
-        yield
 
 
 @pytest.fixture
