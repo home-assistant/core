@@ -85,9 +85,10 @@ async def async_setup_entry(
     """Set up the component from a config entry."""
     config = entry.data
     creds = f"{config[CONF_USERNAME]}:{config[CONF_PASSWORD]}"
+    port = config.get(CONF_PORT, (443 if config[CONF_SSL] else 80))
     cam = VivotekCamera(
         host=config[CONF_IP_ADDRESS],
-        port=(443 if config[CONF_SSL] else 80),
+        port=port,
         verify_ssl=config[CONF_VERIFY_SSL],
         usr=config[CONF_USERNAME],
         pwd=config[CONF_PASSWORD],
@@ -144,7 +145,7 @@ async def async_test_config(
         usr=data[CONF_USERNAME],
         pwd=data[CONF_PASSWORD],
         digest_auth=(data[CONF_AUTHENTICATION] == HTTP_DIGEST_AUTHENTICATION),
-        sec_lvl=data[CONF_SECURITY_LEVEL],
+        sec_lvl=data[CONF_SECURITY_LEVEL],  # type: ignore[literal-required]
     )
     mac = await hass.async_add_executor_job(cam.get_mac)
     assert len(mac) > 0
