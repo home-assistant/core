@@ -670,7 +670,7 @@
       'friendly_name': 'SmartTowerFan',
       'mode': 'normal',
       'oscillating': True,
-      'percentage': None,
+      'percentage': 0,
       'percentage_step': 8.333333333333334,
       'preset_mode': 'normal',
       'preset_modes': list([
