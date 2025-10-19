@@ -349,7 +349,7 @@ class OpenRouterEntity(Entity):
 
         def _normalize_tools(tlist: list[dict]) -> list[dict]:
             out: list[dict] = []
-            for t in tlist:
+            for t in tlist or []:
                 d = _to_fn_dict(t)
                 if d and d.get("type") == "function" and d["function"].get("name"):
                     out.append(d)
