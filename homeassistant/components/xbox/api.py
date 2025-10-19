@@ -33,6 +33,6 @@ class AsyncConfigEntryAuth(AuthenticationManager):
         tokens = {**self._oauth_session.token}
         issued = tokens["expires_at"] - tokens["expires_in"]
         del tokens["expires_at"]
-        token_response = OAuth2TokenResponse.parse_obj(tokens)
+        token_response = OAuth2TokenResponse.model_validate(tokens)
         token_response.issued = utc_from_timestamp(issued)
         return token_response
