@@ -21,6 +21,7 @@ from xbox.webapi.api.provider.smartglass.models import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -86,6 +87,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
         self.data = XboxData({}, {})
         self.client: XboxLiveClient = client
         self.consoles: SmartglassConsoleList = consoles
+        self.current_friends: set[str] = set()
 
     async def _async_update_data(self) -> XboxData:
         """Fetch the latest console status."""
@@ -100,7 +102,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             _LOGGER.debug(
                 "%s status: %s",
                 console.name,
-                status.dict(),
+                status.model_dump(),
             )
 
             # Setup focus app
@@ -147,7 +149,32 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
 
             presence_data[friend.xuid] = _build_presence_data(friend)
 
+        if (
+            self.current_friends
+            - (new_friends := {x.xuid for x in presence_data.values()})
+            or not self.current_friends
+        ):
+            self.remove_stale_devices(presence_data)
+        self.current_friends = new_friends
+
         return XboxData(new_console_data, presence_data)
+
+    def remove_stale_devices(self, presence_data: dict[str, PresenceData]) -> None:
+        """Remove stale devices from registry."""
+
+        device_reg = dr.async_get(self.hass)
+        identifiers = {(DOMAIN, person.xuid) for person in presence_data.values()} | {
+            (DOMAIN, console.id) for console in self.consoles.result
+        }
+
+        for device in dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        ):
+            if not set(device.identifiers) & identifiers:
+                _LOGGER.debug("Removing stale device %s", device.name)
+                device_reg.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )
 
 
 def _build_presence_data(person: Person) -> PresenceData:
