@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 
@@ -64,8 +64,8 @@ class PresenceData:
 class XboxData:
     """Xbox dataclass for update coordinator."""
 
-    consoles: dict[str, ConsoleData]
-    presence: dict[str, PresenceData]
+    consoles: dict[str, ConsoleData] = field(default_factory=dict)
+    presence: dict[str, PresenceData] = field(default_factory=dict)
 
 
 class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
@@ -88,7 +88,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )
-        self.data = XboxData({}, {})
+        self.data = XboxData()
         self.current_friends: set[str] = set()
 
     async def _async_setup(self) -> None:
