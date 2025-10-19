@@ -103,7 +103,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             _LOGGER.debug(
                 "%s status: %s",
                 console.name,
-                status.dict(),
+                status.model_dump(),
             )
 
             # Setup focus app
