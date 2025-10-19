@@ -68,19 +68,18 @@ class OpenRGBProfileSelect(CoordinatorEntity[OpenRGBCoordinator], SelectEntity):
         profiles = self.coordinator.client.profiles
         self._attr_options = [profile.name for profile in profiles]
 
-        # Compute current state hash
-        current_hash = self._compute_state_hash()
-
         # If a profile was just applied, set it as current
         if self._pending_profile is not None:
             self._attr_current_option = self._pending_profile
             self._pending_profile = None
-        # Otherwise if state changed, we can no longer assume current profile
-        elif current_hash != self._state_hash:
-            self._attr_current_option = None
-
-        # Update stored hash
-        self._state_hash = current_hash
+            self._state_hash = self._compute_state_hash()
+        # Only check for state changes if we have a current option to potentially clear
+        elif self._attr_current_option is not None:
+            current_hash = self._compute_state_hash()
+            # If state changed, we can no longer assume current profile
+            if current_hash != self._state_hash:
+                self._attr_current_option = None
+                self._state_hash = None
 
     @callback
     def _handle_coordinator_update(self) -> None:
