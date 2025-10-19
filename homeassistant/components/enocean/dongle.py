@@ -45,19 +45,16 @@ class EnOceanDongle:
     async def async_setup(self) -> None:
         """Finish the setup of the bridge and supported platforms."""
         self._communicator.start()
-        if not self._chip_id:
-            self._chip_id = EnOceanID(to_hex_string(self._communicator.chip_id))
-
-        if not self._base_id:
-            self._base_id = EnOceanID(to_hex_string(self._communicator.base_id))
+        self._chip_id = EnOceanID(to_hex_string(self._communicator.chip_id))
+        self._base_id = EnOceanID(to_hex_string(self._communicator.base_id))
 
         self._chip_version = self._communicator.version_info.chip_version
 
         self._sw_version = (
             self._communicator.version_info.app_version.versionString()
-            + " (app), "
+            + " (App), "
             + self._communicator.version_info.api_version.versionString()
-            + " (api)"
+            + " (API)"
         )
 
         # callback needs to be set after initialization
