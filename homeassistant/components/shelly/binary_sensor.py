@@ -15,12 +15,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import STATE_ON, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_SLEEP_PERIOD, MODEL_FRANKEVER_WATER_VALVE
+from .const import CONF_SLEEP_PERIOD, MODEL_FRANKEVER_WATER_VALVE, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -81,7 +81,7 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
         """Initialize sensor."""
         super().__init__(coordinator, key, attribute, description)
 
-        if description.role != "generic":
+        if description.role != ROLE_GENERIC:
             if hasattr(self, "_attr_name"):
                 delattr(self, "_attr_name")
 
@@ -295,7 +295,7 @@ RPC_SENSORS: Final = {
         removal_condition=lambda config, _status, key: not is_view_for_platform(
             config, key, BINARY_SENSOR_PLATFORM
         ),
-        role="generic",
+        role=ROLE_GENERIC,
     ),
     "boolean_has_power": RpcBinarySensorDescription(
         key="boolean",
@@ -358,33 +358,20 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up sensors for device."""
+    """Set up binary sensor entities."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        if config_entry.data[CONF_SLEEP_PERIOD]:
-            async_setup_entry_rpc(
-                hass,
-                config_entry,
-                async_add_entities,
-                RPC_SENSORS,
-                RpcSleepingBinarySensor,
-            )
-        else:
-            coordinator = config_entry.runtime_data.rpc
-            assert coordinator
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-            async_setup_entry_rpc(
-                hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
-            )
+    return _async_setup_block_entry(hass, config_entry, async_add_entities)
 
-            async_remove_orphaned_entities(
-                hass,
-                config_entry.entry_id,
-                coordinator.mac,
-                BINARY_SENSOR_PLATFORM,
-                coordinator.device.status,
-            )
-        return
 
+@callback
+def _async_setup_block_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for BLOCK device."""
     if config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_attribute_entities(
             hass,
@@ -407,6 +394,38 @@ async def async_setup_entry(
             async_add_entities,
             REST_SENSORS,
             RestBinarySensor,
+        )
+
+
+@callback
+def _async_setup_rpc_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for RPC device."""
+    if config_entry.data[CONF_SLEEP_PERIOD]:
+        async_setup_entry_rpc(
+            hass,
+            config_entry,
+            async_add_entities,
+            RPC_SENSORS,
+            RpcSleepingBinarySensor,
+        )
+    else:
+        coordinator = config_entry.runtime_data.rpc
+        assert coordinator
+
+        async_setup_entry_rpc(
+            hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
+        )
+
+        async_remove_orphaned_entities(
+            hass,
+            config_entry.entry_id,
+            coordinator.mac,
+            BINARY_SENSOR_PLATFORM,
+            coordinator.device.status,
         )
 
 
@@ -547,7 +566,7 @@ class RpcSleepingBinarySensor(
         super().__init__(coordinator, key, attribute, description, entry)
 
         if coordinator.device.initialized:
-            if description.role != "generic":
+            if description.role != ROLE_GENERIC:
                 if hasattr(self, "_attr_name"):
                     delattr(self, "_attr_name")
             if not description.role:

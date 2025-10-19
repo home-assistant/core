@@ -1,0 +1,14 @@
+{
+  "status": {
+    "errorCode": "OK",
+    "errorMessage": null
+  },
+  "powerState": "ConnectedStandby",
+  "playbackState": "Stopped",
+  "loginState": null,
+  "focusAppAumid": "4DF9E0F8.Netflix_mcm4njqhnhss8!App",
+  "isTvConfigured": true,
+  "digitalAssistantRemoteControlEnabled": true,
+  "consoleStreamingEnabled": false,
+  "remoteManagementEnabled": true
+}

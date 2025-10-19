@@ -383,13 +383,13 @@
         }
       }
     },
-    "wall_display_firmware_unsupported": {
+    "deprecated_firmware": {
       "title": "{device_name} is running outdated firmware",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "{device_name} is running outdated firmware",
-            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware}. This firmware version will not be supported by Shelly integration starting from Home Assistant 2025.11.0.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version."
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware}. This firmware version will not be supported by Shelly integration starting from Home Assistant {ha_version}.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version."
           }
         },
         "abort": {

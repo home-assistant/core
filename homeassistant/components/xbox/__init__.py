@@ -8,14 +8,13 @@ from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.smartglass.models import SmartglassConsoleList
 from xbox.webapi.common.signed_session import SignedSession
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 
 from . import api
 from .const import DOMAIN
-from .coordinator import XboxUpdateCoordinator
+from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
     """Set up xbox from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -45,30 +44,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug(
         "Found %d consoles: %s",
         len(consoles.result),
-        consoles.dict(),
+        consoles.model_dump(),
     )
 
     coordinator = XboxUpdateCoordinator(hass, entry, client, consoles)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "client": XboxLiveClient(auth),
-        "consoles": consoles,
-        "coordinator": coordinator,
-    }
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    await async_migrate_unique_id(hass, entry)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        # Unsub from coordinator updates
-        hass.data[DOMAIN][entry.entry_id]["sensor_unsub"]()
-        hass.data[DOMAIN][entry.entry_id]["binary_sensor_unsub"]()
-        hass.data[DOMAIN].pop(entry.entry_id)
 
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_unique_id(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
+    """Migrate config entry.
+
+    Migration requires runtime data
+    """
+
+    if entry.version == 1 and entry.minor_version < 2:
+        # Migrate unique_id from `xbox` to account xuid and
+        # change generic entry name to user's gamertag
+        return hass.config_entries.async_update_entry(
+            entry,
+            unique_id=entry.runtime_data.client.xuid,
+            title=(
+                entry.runtime_data.data.presence[
+                    entry.runtime_data.client.xuid
+                ].gamertag
+                if entry.title == "Home Assistant Cloud"
+                else entry.title
+            ),
+            minor_version=2,
+        )
+
+    return True
