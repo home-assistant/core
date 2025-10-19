@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -27,6 +26,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+type XboxConfigEntry = ConfigEntry[XboxUpdateCoordinator]
 
 
 @dataclass
@@ -152,10 +153,14 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
 def _build_presence_data(person: Person) -> PresenceData:
     """Build presence data from a person."""
     active_app: PresenceDetail | None = None
-    with suppress(StopIteration):
-        active_app = next(
-            presence for presence in person.presence_details if presence.is_primary
-        )
+
+    active_app = next(
+        (presence for presence in person.presence_details if presence.is_primary),
+        None,
+    )
+    in_game = (
+        active_app is not None and active_app.is_game and active_app.state == "Active"
+    )
 
     return PresenceData(
         xuid=person.xuid,
@@ -164,7 +169,7 @@ def _build_presence_data(person: Person) -> PresenceData:
         online=person.presence_state == "Online",
         status=person.presence_text,
         in_party=person.multiplayer_summary.in_party > 0,
-        in_game=active_app is not None and active_app.is_game,
+        in_game=in_game,
         in_multiplayer=person.multiplayer_summary.in_multiplayer_session,
         gamer_score=person.gamer_score,
         gold_tenure=person.detail.tenure,
