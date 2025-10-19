@@ -132,7 +132,7 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
                 ): cv.string,
                 vol.Required(
                     CONF_PORT, default=data.get(CONF_PORT, CONF_DEFAULTS[CONF_PORT])
-                ): cv.string,
+                ): cv.port,
                 vol.Required(
                     CONF_USERNAME, default=data.get(CONF_USERNAME, "")
                 ): cv.string,
