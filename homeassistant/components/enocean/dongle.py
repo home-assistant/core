@@ -1,11 +1,12 @@
 """Representation of an EnOcean dongle."""
 
+from collections.abc import Callable
 import glob
 import logging
 from os.path import basename, normpath
 
 from enocean.communicators import SerialCommunicator
-from enocean.protocol.packet import RadioPacket
+from enocean.protocol.packet import Packet, RadioPacket
 from enocean.utils import to_hex_string
 import serial
 
@@ -26,7 +27,7 @@ class EnOceanDongle:
     creating devices if needed, and dispatching messages to platforms.
     """
 
-    def __init__(self, hass: HomeAssistant, serial_path) -> None:
+    def __init__(self, hass: HomeAssistant, serial_path: str) -> None:
         """Initialize the EnOcean dongle."""
 
         # callback needs to be set after initialization
@@ -35,13 +36,13 @@ class EnOceanDongle:
         self.serial_path = serial_path
         self.identifier = basename(normpath(serial_path))
         self.hass = hass
-        self.dispatcher_disconnect_handle = None
-        self._base_id: EnOceanID | None = None
-        self._chip_id: EnOceanID | None = None
-        self._chip_version = "n/a"
-        self._sw_version = "n/a"
+        self.dispatcher_disconnect_handle: Callable[[], None] | None = None
+        self._base_id: EnOceanID = EnOceanID(0)
+        self._chip_id: EnOceanID = EnOceanID(0)
+        self._chip_version: int = 0
+        self._sw_version: str = "n/a"
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Finish the setup of the bridge and supported platforms."""
         self._communicator.start()
         if not self._chip_id:
@@ -67,7 +68,7 @@ class EnOceanDongle:
             self.hass, SIGNAL_SEND_MESSAGE, self._send_message_callback
         )
 
-    def unload(self):
+    def unload(self) -> None:
         """Disconnect callbacks established at init time."""
         if self.dispatcher_disconnect_handle:
             self.dispatcher_disconnect_handle()
@@ -78,20 +79,20 @@ class EnOceanDongle:
                 self._communicator.stop()
 
     @property
-    def base_id(self) -> EnOceanID | None:
+    def base_id(self) -> EnOceanID:
         """Get the dongle's base id."""
         return self._base_id
 
     @property
-    def chip_id(self) -> EnOceanID | None:
+    def chip_id(self) -> EnOceanID:
         """Get the dongle's chip id."""
         return self._chip_id
 
-    def valid_sender_ids(self) -> list[selector.SelectOptionDict] | None:
+    def valid_sender_ids(self) -> list[selector.SelectOptionDict]:
         """Return a list of valid sender ids."""
 
         if not self._base_id or not self._chip_id:
-            return None
+            return []
 
         valid_senders = [
             selector.SelectOptionDict(
@@ -121,20 +122,20 @@ class EnOceanDongle:
         return valid_senders
 
     @property
-    def chip_version(self):
+    def chip_version(self) -> int:
         """Get the dongle's chip version."""
         return self._chip_version
 
     @property
-    def sw_version(self):
-        """Get the dongle's base id."""
+    def sw_version(self) -> str:
+        """Get the dongle's software version."""
         return self._sw_version
 
-    def _send_message_callback(self, command):
+    def _send_message_callback(self, command: Packet) -> None:
         """Send a command through the EnOcean dongle."""
         self._communicator.send(command)
 
-    def callback(self, packet):
+    def callback(self, packet: Packet) -> None:
         """Handle EnOcean device's callback.
 
         This is the callback function called by python-enocean whenever there
@@ -145,7 +146,7 @@ class EnOceanDongle:
             dispatcher_send(self.hass, SIGNAL_RECEIVE_MESSAGE, packet)
 
 
-def detect():
+def detect() -> list[str]:
     """Return a list of candidate paths for USB EnOcean dongles.
 
     This method is currently a bit simplistic, it may need to be
@@ -159,7 +160,7 @@ def detect():
     return found_paths
 
 
-def validate_path(path: str):
+def validate_path(path: str) -> bool:
     """Return True if the provided path points to a valid serial port, False otherwise."""
     try:
         # Creating the serial communicator will raise an exception

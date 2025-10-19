@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from enocean.protocol.packet import Packet
 import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -20,8 +20,8 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .config_entry import EnOceanConfigEntry
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
-from .const import ENOCEAN_DONGLE
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 from .importer import (
@@ -59,7 +59,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: EnOceanConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
@@ -93,7 +93,7 @@ async def async_setup_entry(
                     EnOceanSwitch(
                         dev_id=device_id,
                         dev_name=device["name"],
-                        gateway_id=entry.runtime_data[ENOCEAN_DONGLE].chip_id,
+                        gateway_id=entry.runtime_data.gateway.chip_id,
                         channel=0,
                         dev_type=device_type,
                         name="Switch",
@@ -104,7 +104,7 @@ async def async_setup_entry(
                     EnOceanSwitch(
                         dev_id=device_id,
                         dev_name=device["name"],
-                        gateway_id=entry.runtime_data[ENOCEAN_DONGLE].chip_id,
+                        gateway_id=entry.runtime_data.gateway.chip_id,
                         channel=channel,
                         dev_type=device_type,
                         name="Switch " + str(channel + 1),
@@ -121,10 +121,10 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         self,
         dev_id: EnOceanID,
         gateway_id: EnOceanID,
-        dev_name,
-        channel,
+        dev_name: str,
+        channel: int,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
-        name=None,
+        name: str | None = None,
     ) -> None:
         """Initialize the EnOcean switch device."""
         super().__init__(
@@ -136,9 +136,6 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         )
         self._light = None
         self.channel = channel
-        self._attr_unique_id = (
-            dev_id.to_string() + f"-{Platform.SWITCH.value}-{channel}"
-        )
 
     @property
     def is_on(self) -> bool | None:
@@ -169,7 +166,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         )
         self._attr_is_on = False
 
-    def value_changed(self, packet):
+    def value_changed(self, packet: Packet) -> None:
         """Update the internal state of the switch."""
         if packet.data[0] == 0xA5:
             # power meter telegram, turn on if > 10 watts

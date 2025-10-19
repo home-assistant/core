@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import _LOGGER, ConfigEntry
-from homeassistant.const import Platform
+from enocean.protocol.packet import Packet
+
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
+from homeassistant.config_entries import _LOGGER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .config_entry import EnOceanConfigEntry
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
-from .const import ENOCEAN_BINARY_SENSOR_EEPS, ENOCEAN_DONGLE
+from .const import ENOCEAN_BINARY_SENSOR_EEPS
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 from .supported_device_type import (
@@ -24,18 +29,16 @@ EVENT_BUTTON_PRESSED = "button_pressed"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EnOceanConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
 
-    enocean_dongle = config_entry.runtime_data[ENOCEAN_DONGLE]
-
     async_add_entities(
         [
             EnOceanBinarySensor(
-                device_id=enocean_dongle.chip_id,
-                enocean_gateway_id=enocean_dongle.chip_id,
+                device_id=config_entry.runtime_data.gateway.chip_id,
+                enocean_gateway_id=config_entry.runtime_data.gateway.chip_id,
                 device_name="EnOcean Gateway",
                 name="Teach-In Active",
                 dev_type=EnOceanSupportedDeviceType(
@@ -59,7 +62,7 @@ async def async_setup_entry(
                 [
                     EnOceanBinarySensor(
                         device_id=device_id,
-                        enocean_gateway_id=enocean_dongle.chip_id,
+                        enocean_gateway_id=config_entry.runtime_data.gateway.chip_id,
                         device_name=device["name"],
                         channel=channel,
                         dev_type=device_type,
@@ -80,13 +83,13 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        device_id,
+        device_id: EnOceanID,
         enocean_gateway_id: EnOceanID,
-        device_name,
-        device_class=Platform.BINARY_SENSOR,
-        channel=None,
+        device_name: str,
+        device_class: BinarySensorDeviceClass | None = None,
+        channel: str | None = None,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
-        name=None,
+        name: str | None = None,
     ) -> None:
         """Initialize the EnOcean binary sensor."""
         super().__init__(
@@ -105,16 +108,16 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         self._channel = channel
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this sensor."""
         return self._attr_device_class
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._attr_on
 
-    def value_changed(self, packet):
+    def value_changed(self, packet: Packet) -> None:
         """Fire an event with the data that have changed.
 
         This method is called when there is an incoming packet associated

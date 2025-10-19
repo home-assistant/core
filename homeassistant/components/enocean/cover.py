@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 from enocean.protocol.constants import RORG
-from enocean.protocol.packet import RadioPacket
+from enocean.protocol.packet import Packet, RadioPacket
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -19,13 +19,13 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .config_entry import EnOceanConfigEntry
 from .config_flow import (
     CONF_ENOCEAN_DEVICE_ID,
     CONF_ENOCEAN_DEVICE_NAME,
@@ -33,7 +33,7 @@ from .config_flow import (
     CONF_ENOCEAN_DEVICES,
     CONF_ENOCEAN_SENDER_ID,
 )
-from .const import ENOCEAN_DONGLE, SIGNAL_SEND_MESSAGE
+from .const import SIGNAL_SEND_MESSAGE
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 from .supported_device_type import (
@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EnOceanConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
@@ -86,7 +86,7 @@ async def async_setup_entry(
                 EnOceanCover(
                     sender_id=sender_id,
                     enocean_device_id=device_id,
-                    gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
+                    gateway_id=config_entry.runtime_data.gateway.chip_id,
                     device_name=device[CONF_ENOCEAN_DEVICE_NAME],
                     dev_type=device_type,
                     name=None,
@@ -124,16 +124,16 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             name=name,
         )
         self._attr_device_class = CoverDeviceClass.BLIND
-        self._position = None
-        self._is_closed = None
+        self._position: int | None = None
+        self._attr_is_closed: bool | None = None
         self._is_opening = False
         self._is_closing = False
-        self._sender_id = sender_id
+        self._sender_id: EnOceanID = sender_id
         self._state_changed_by_command = False
         self._stop_suspected = False
         self._watchdog_enabled = False
-        self._watchdog_seconds_remaining = 0
-        self._watchdog_queries_remaining = 5
+        self._watchdog_seconds_remaining: float = 0
+        self._watchdog_queries_remaining: int = 5
         self._attr_supported_features = (
             CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
@@ -159,7 +159,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
-        return self._is_closed
+        return self._attr_is_closed
 
     async def async_added_to_hass(self) -> None:
         """Query status after Home Assistant (re)start."""
@@ -209,7 +209,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._is_closing = False
         self.send_telegram(EnOceanCoverCommand.STOP)
 
-    def value_changed(self, packet):
+    def value_changed(self, packet: Packet) -> None:
         """Fire an event with the data that have changed.
 
         This method is called when there is an incoming packet associated
@@ -253,13 +253,13 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
         self._position = new_position
         if self._position == 0:
-            self._is_closed = True
+            self._attr_is_closed = True
         else:
-            self._is_closed = False
+            self._attr_is_closed = False
 
         self.schedule_update_ha_state()
 
-    def send_telegram(self, command: EnOceanCoverCommand, position: int = 0):
+    def send_telegram(self, command: EnOceanCoverCommand, position: int = 0) -> None:
         """Send an EnOcean telegram with the respective command."""
         _LOGGER.warning(self.enocean_device_id.to_bytelist())
         packet = RadioPacket.create(
@@ -273,7 +273,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         )
         dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)
 
-    def start_or_feed_watchdog(self):
+    def start_or_feed_watchdog(self) -> None:
         """Start or feed the 'movement stop' watchdog."""
         self._watchdog_seconds_remaining = WATCHDOG_TIMEOUT
         self._watchdog_queries_remaining = WATCHDOG_MAX_QUERIES
@@ -284,11 +284,11 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._watchdog_enabled = True
         self.hass.create_task(self.watchdog())
 
-    def stop_watchdog(self):
+    def stop_watchdog(self) -> None:
         """Stop the 'movement stop' watchdog."""
         self._watchdog_enabled = False
 
-    async def watchdog(self):
+    async def watchdog(self) -> None:
         """Watchdog to check if the cover movement stopped.
 
         After watchdog time expired, the watchdog queries the current status.
@@ -310,7 +310,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
                         "'Movement stop' watchdog max query limit reached. Disabling watchdog and setting state to 'unknown'"
                     )
                     self._position = None
-                    self._is_closed = None
+                    self._attr_is_closed = None
                     self._is_opening = False
                     self._is_closing = False
                     return

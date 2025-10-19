@@ -5,7 +5,7 @@ from abc import abstractmethod
 from enocean.protocol.constants import PACKET
 from enocean.protocol.packet import Packet
 
-from homeassistant.config_entries import _LOGGER, ConfigEntry
+from homeassistant.config_entries import _LOGGER
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -19,8 +19,6 @@ from .const import (
 )
 from .enocean_id import EnOceanID
 from .supported_device_type import EnOceanSupportedDeviceType
-
-type EnOceanConfigEntry = ConfigEntry[dict]
 
 
 class EnOceanEntity(Entity):

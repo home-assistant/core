@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
+from .config_entry import EnOceanConfigEntry, EnOceanConfigRuntimeData
 from .config_flow import CONF_ENOCEAN_DEVICES
 from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, LOGGER, PLATFORMS
 from .dongle import EnOceanDongle
@@ -14,7 +14,7 @@ from .dongle import EnOceanDongle
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EnOceanConfigEntry,
 ) -> bool:
     """Set up an EnOcean dongle for the given entry."""
     enocean_data = hass.data.setdefault(DATA_ENOCEAN, {})
@@ -23,7 +23,7 @@ async def async_setup_entry(
 
     # PLAN IS TO move the following instead into the config_entry's runtime_data
     enocean_data[ENOCEAN_DONGLE] = usb_dongle
-    config_entry.runtime_data = {ENOCEAN_DONGLE: usb_dongle}
+    config_entry.runtime_data = EnOceanConfigRuntimeData(gateway=usb_dongle)
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
     async_cleanup_device_registry(hass=hass, entry=config_entry)
@@ -36,7 +36,7 @@ async def async_setup_entry(
 @callback
 def async_cleanup_device_registry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: EnOceanConfigEntry,
 ) -> None:
     """Remove entries from device registry if device is removed."""
     device_registry = dr.async_get(hass)
@@ -65,12 +65,12 @@ def async_cleanup_device_registry(
                 break
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_reload_entry(hass: HomeAssistant, entry: EnOceanConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EnOceanConfigEntry) -> bool:
     """Unload EnOcean config entry."""
     enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
     enocean_dongle.unload()

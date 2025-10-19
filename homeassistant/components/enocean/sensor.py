@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enocean.protocol.packet import Packet
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -11,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ID,
@@ -26,13 +26,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .config_entry import EnOceanConfigEntry
 from .config_flow import (
     CONF_ENOCEAN_DEVICE_ID,
     CONF_ENOCEAN_DEVICE_NAME,
     CONF_ENOCEAN_DEVICE_TYPE_ID,
     CONF_ENOCEAN_DEVICES,
 )
-from .const import ENOCEAN_DONGLE, LOGGER
+from .const import LOGGER
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 from .supported_device_type import (
@@ -97,7 +98,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EnOceanConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
@@ -120,7 +121,7 @@ async def async_setup_entry(
                     EnOceanTemperatureSensor(
                         dev_id=device_id,
                         dev_name=device_name,
-                        gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
+                        gateway_id=config_entry.runtime_data.gateway.chip_id,
                         description=SENSOR_DESC_TEMPERATURE,
                         scale_min=min_temp,
                         scale_max=max_temp,
@@ -155,7 +156,7 @@ async def async_setup_entry(
                     EnOceanTemperatureSensor(
                         dev_id=device_id,
                         dev_name=device_name,
-                        gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
+                        gateway_id=config_entry.runtime_data.gateway.chip_id,
                         description=SENSOR_DESC_TEMPERATURE,
                         scale_min=min_temp,
                         scale_max=max_temp,
@@ -167,7 +168,7 @@ async def async_setup_entry(
                     EnOceanHumiditySensor(
                         dev_id=device_id,
                         dev_name=device_name,
-                        gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
+                        gateway_id=config_entry.runtime_data.gateway.chip_id,
                         description=SENSOR_DESC_HUMIDITY,
                         dev_type=device_type,
                         name="Humidity",
@@ -192,9 +193,7 @@ async def async_setup_entry(
                         EnOceanTemperatureSensor(
                             dev_id=device_id,
                             dev_name=device_name,
-                            gateway_id=config_entry.runtime_data[
-                                ENOCEAN_DONGLE
-                            ].chip_id,
+                            gateway_id=config_entry.runtime_data.gateway.chip_id,
                             description=SENSOR_DESC_TEMPERATURE,
                             scale_min=0,
                             scale_max=40,
@@ -211,9 +210,7 @@ async def async_setup_entry(
                         EnOceanTemperatureSensor(
                             dev_id=device_id,
                             dev_name=device_name,
-                            gateway_id=config_entry.runtime_data[
-                                ENOCEAN_DONGLE
-                            ].chip_id,
+                            gateway_id=config_entry.runtime_data.gateway.chip_id,
                             description=SENSOR_DESC_TEMPERATURE,
                             scale_min=0,
                             scale_max=40,
@@ -225,9 +222,7 @@ async def async_setup_entry(
                         EnOceanHumiditySensor(
                             dev_id=device_id,
                             dev_name=device_name,
-                            gateway_id=config_entry.runtime_data[
-                                ENOCEAN_DONGLE
-                            ].chip_id,
+                            gateway_id=config_entry.runtime_data.gateway.chip_id,
                             description=SENSOR_DESC_HUMIDITY,
                             dev_type=device_type,
                             name="Humidity",
@@ -248,7 +243,7 @@ async def async_setup_entry(
                     EnOceanPowerSensor(
                         dev_id=device_id,
                         dev_name=device_name,
-                        gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
+                        gateway_id=config_entry.runtime_data.gateway.chip_id,
                         description=SENSOR_DESC_POWER,
                         dev_type=device_type,
                         name="Power usage",
@@ -264,7 +259,7 @@ async def async_setup_entry(
                     EnOceanTemperatureSensor(
                         dev_id=device_id,
                         dev_name=device_name,
-                        gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
+                        gateway_id=config_entry.runtime_data.gateway.chip_id,
                         description=SENSOR_DESC_TEMPERATURE,
                         scale_min=0,
                         scale_max=40,
@@ -284,7 +279,7 @@ async def async_setup_entry(
                     EnOceanWindowHandle(
                         dev_id=device_id,
                         dev_name=device_name,
-                        gateway_id=config_entry.runtime_data[ENOCEAN_DONGLE].chip_id,
+                        gateway_id=config_entry.runtime_data.gateway.chip_id,
                         description=SENSOR_DESC_WINDOWHANDLE,
                         dev_type=device_type,
                     )
@@ -325,7 +320,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = sensor_data.native_value
 
-    def value_changed(self, packet):
+    def value_changed(self, packet: Packet) -> None:
         """Update the internal state of the sensor."""
 
 
@@ -336,7 +331,7 @@ class EnOceanPowerSensor(EnOceanSensor):
     - A5-12-01 (Automated Meter Reading, Electricity)
     """
 
-    def value_changed(self, packet):
+    def value_changed(self, packet: Packet) -> None:
         """Update the internal state of the sensor."""
         if packet.rorg != 0xA5:
             return
@@ -374,12 +369,12 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         dev_name: str,
         description: SensorEntityDescription,
         *,
-        scale_min,
-        scale_max,
-        range_from,
-        range_to,
+        scale_min: int,
+        scale_max: int,
+        range_from: int,
+        range_to: int,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
-        name=None,
+        name: str | None = None,
     ) -> None:
         """Initialize the EnOcean temperature sensor device."""
         super().__init__(
@@ -395,7 +390,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         self.range_from = range_from
         self.range_to = range_to
 
-    def value_changed(self, packet):
+    def value_changed(self, packet: Packet) -> None:
         """Update the internal state of the sensor."""
         if packet.data[0] != 0xA5:
             return
@@ -417,7 +412,7 @@ class EnOceanHumiditySensor(EnOceanSensor):
     - A5-10-10 to A5-10-14 (Room Operating Panels)
     """
 
-    def value_changed(self, packet):
+    def value_changed(self, packet: Packet) -> None:
         """Update the internal state of the sensor."""
         if packet.rorg != 0xA5:
             return
@@ -433,7 +428,7 @@ class EnOceanWindowHandle(EnOceanSensor):
     - F6-10-00 (Mechanical handle / Hoppe AG)
     """
 
-    def value_changed(self, packet):
+    def value_changed(self, packet: Packet) -> None:
         """Update the internal state of the sensor."""
         action = (packet.data[1] & 0x70) >> 4
 
@@ -447,7 +442,7 @@ class EnOceanWindowHandle(EnOceanSensor):
         self.schedule_update_ha_state()
 
 
-def _get_a5_02_min_max_temp(device_id: str, eep: str):
+def _get_a5_02_min_max_temp(device_id: str, eep: str) -> tuple[int, int]:
     """Determine the min and max temp for an A5-02-XX temperature sensor."""
     sensor_range_type = int(eep[6:8], 16)
 

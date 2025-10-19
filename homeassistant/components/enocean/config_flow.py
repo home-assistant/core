@@ -3,20 +3,15 @@
 from copy import deepcopy
 from typing import Any
 
-from enocean.utils import from_hex_string, to_hex_string
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from . import dongle
+from .config_entry import EnOceanConfigEntry
 from .const import (
     CONF_ENOCEAN_DEVICE_ID,
     CONF_ENOCEAN_DEVICE_NAME,
@@ -75,7 +70,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             if user_input[CONF_DEVICE] == self.MANUAL_PATH_VALUE:
                 return await self.async_step_manual()
             if await self.validate_enocean_conf(user_input):
-                return self.create_enocean_entry(user_input)
+                return self.async_create_entry(title="EnOcean", data=user_input)
             errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
 
         devices = await self.hass.async_add_executor_job(dongle.detect)
@@ -107,7 +102,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             if await self.validate_enocean_conf(user_input):
-                return self.create_enocean_entry(user_input)
+                return self.async_create_entry(title="EnOcean", data=user_input)
             default_value = user_input[CONF_DEVICE]
             errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
 
@@ -119,19 +114,15 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def validate_enocean_conf(self, user_input) -> bool:
+    async def validate_enocean_conf(self, user_input: Any) -> bool:
         """Return True if the user_input contains a valid dongle path."""
         dongle_path = user_input[CONF_DEVICE]
         return await self.hass.async_add_executor_job(dongle.validate_path, dongle_path)
 
-    def create_enocean_entry(self, user_input):
-        """Create an entry for the provided configuration."""
-        return self.async_create_entry(title="EnOcean", data=user_input)
-
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: EnOceanConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
         return OptionsFlowHandler()
@@ -140,7 +131,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlow):
     """Handle an option flow for EnOcean."""
 
-    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_init(self, user_input: Any | None = None) -> ConfigFlowResult:
         """Show menu displaying the options."""
         devices = self.config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
@@ -159,7 +150,9 @@ class OptionsFlowHandler(OptionsFlow):
             ],
         )
 
-    async def async_step_add_device(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_add_device(
+        self, user_input: Any | None = None
+    ) -> ConfigFlowResult:
         """Add an EnOcean device."""
         errors: dict[str, str] = {}
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
@@ -286,7 +279,7 @@ class OptionsFlowHandler(OptionsFlow):
         )
 
     async def async_step_select_device_to_edit(
-        self, user_input=None
+        self, user_input: Any | None = None
     ) -> ConfigFlowResult:
         """Select a configured EnOcean device to edit."""
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
@@ -330,7 +323,7 @@ class OptionsFlowHandler(OptionsFlow):
         )
 
     async def async_step_edit_device(
-        self, user_input=None, device=None
+        self, user_input: Any | None = None, device: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Edit an EnOcean device."""
         errors: dict[str, str] = {}
@@ -339,7 +332,8 @@ class OptionsFlowHandler(OptionsFlow):
         device_id = "none"
         device_name = "none"
         device_type = EnOceanSupportedDeviceType()
-        sender_id = ""
+        sender_id: EnOceanID = EnOceanID(0)
+        sender_id_string: str = ""
 
         if device is not None:  # user_input will be ignored in this case
             device_id = device[CONF_ENOCEAN_DEVICE_ID]
@@ -347,17 +341,17 @@ class OptionsFlowHandler(OptionsFlow):
             device_type = get_supported_enocean_device_types()[
                 device[CONF_ENOCEAN_DEVICE_TYPE_ID]
             ]
-            sender_id = device[CONF_ENOCEAN_SENDER_ID]
+            sender_id_string = device[CONF_ENOCEAN_SENDER_ID]
 
         elif user_input is not None:
             # device id needs no validation as user cannot change it
             device_id = user_input[CONF_ENOCEAN_DEVICE_ID]
 
             # sender id must be either empty or a valid EnOcean ID
-            sender_id = user_input[CONF_ENOCEAN_SENDER_ID].strip()
-            if sender_id != "":
-                if EnOceanID.validate_string(sender_id):
-                    sender_id = self.normalize_enocean_id_string(sender_id)
+            sender_id_string = user_input[CONF_ENOCEAN_SENDER_ID].strip()
+            if sender_id_string != "":
+                if EnOceanID.validate_string(sender_id_string):
+                    sender_id = EnOceanID(sender_id_string)
                 else:
                     errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
 
@@ -374,7 +368,7 @@ class OptionsFlowHandler(OptionsFlow):
                     if dev[CONF_ENOCEAN_DEVICE_ID] == device_id:
                         dev[CONF_ENOCEAN_DEVICE_TYPE_ID] = device_type.unique_id
                         dev[CONF_ENOCEAN_DEVICE_NAME] = device_name
-                        dev[CONF_ENOCEAN_SENDER_ID] = sender_id
+                        dev[CONF_ENOCEAN_SENDER_ID] = sender_id.to_string()
                         break
 
                 return self.async_create_entry(
@@ -424,7 +418,9 @@ class OptionsFlowHandler(OptionsFlow):
             errors=errors,
         )
 
-    async def async_step_delete_device(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_delete_device(
+        self, user_input: Any | None = None
+    ) -> ConfigFlowResult:
         """Delete an EnOcean device."""
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
         device_list = [
@@ -468,7 +464,3 @@ class OptionsFlowHandler(OptionsFlow):
             step_id=ENOCEAN_STEP_ID_DELETE_DEVICE,
             data_schema=delete_device_schema,
         )
-
-    def normalize_enocean_id_string(self, id_string: str) -> str:
-        """Normalize the supplied EnOcean ID string."""
-        return to_hex_string(from_hex_string(id_string)).upper()

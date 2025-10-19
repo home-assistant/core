@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from enocean.protocol.packet import Packet
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -13,7 +14,6 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -23,8 +23,8 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .config_entry import EnOceanConfigEntry
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
-from .const import ENOCEAN_DONGLE
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 from .importer import (
@@ -63,7 +63,7 @@ def setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: EnOceanConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
@@ -86,7 +86,7 @@ async def async_setup_entry(
                         dev_name=device["name"],
                         dev_id=device_id,
                         dev_type=device_type,
-                        gateway_id=entry.runtime_data[ENOCEAN_DONGLE].chip_id,
+                        gateway_id=entry.runtime_data.gateway.chip_id,
                     )
                 ]
             )
@@ -105,9 +105,9 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         sender_id: EnOceanID,
         dev_id: EnOceanID,
         gateway_id: EnOceanID,
-        dev_name,
+        dev_name: str,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
-        name=None,
+        name: str | None = None,
     ) -> None:
         """Initialize the EnOcean light source."""
         super().__init__(
@@ -160,7 +160,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self.send_command(command, [], 0x01)
         self._attr_is_on = False
 
-    def value_changed(self, packet):
+    def value_changed(self, packet: Packet) -> None:
         """Update the internal state of this device.
 
         Dimmer devices like Eltako FUD61 send telegram in different RORGs.
