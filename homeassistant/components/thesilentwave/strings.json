@@ -2,14 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "TheSilentWave Setup",
-        "description": "Setup TheSilentWave integration",
+        "title": "TheSilentWave setup",
+        "description": "Set up TheSilentWave integration",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "host": "IP Address"
         },
         "data_description": {
-          "name": "A custom name for this device",
           "host": "The IP address of your TheSilentWave device"
         }
       }
