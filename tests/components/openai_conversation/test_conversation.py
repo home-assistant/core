@@ -459,7 +459,12 @@ async def test_web_search(
     )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
 
-    message = "Home Assistant now supports ChatGPT Search in Assist"
+    message = [
+        "Home Assistant now supports ",
+        "ChatGPT Search in Assist",
+        " ([release notes](https://www.home-assistant.io/blog/categories/release-notes/)",
+        ").",
+    ]
     mock_create_stream.return_value = [
         # Initial conversation
         (
@@ -490,7 +495,6 @@ async def test_web_search(
         }
     ]
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert result.response.speech["plain"]["speech"] == message, result.response.speech
 
     # Test follow-up message in multi-turn conversation
     mock_create_stream.return_value = [
@@ -506,8 +510,9 @@ async def test_web_search(
     )
 
     assert (
-        "do not include source citations"
-        in mock_create_stream.mock_calls[0][2]["input"][0]["content"]
+        isinstance(mock_create_stream.mock_calls[0][2]["input"][0]["content"], list)
+        and "do not include source citations"
+        in mock_create_stream.mock_calls[0][2]["input"][0]["content"][1]["text"]
     ) is not inline_citations
     assert mock_create_stream.mock_calls[1][2]["input"][1:] == snapshot
 

@@ -224,7 +224,7 @@
       'type': 'web_search_call',
     }),
     dict({
-      'content': 'Home Assistant now supports ChatGPT Search in Assist',
+      'content': 'Home Assistant now supports ChatGPT Search in Assist.',
       'role': 'assistant',
       'type': 'message',
     }),
@@ -257,7 +257,7 @@
       'type': 'web_search_call',
     }),
     dict({
-      'content': 'Home Assistant now supports ChatGPT Search in Assist',
+      'content': 'Home Assistant now supports ChatGPT Search in Assist ([release notes](https://www.home-assistant.io/blog/categories/release-notes/)).',
       'role': 'assistant',
       'type': 'message',
     }),

@@ -7,6 +7,7 @@ from collections.abc import AsyncGenerator, Callable, Iterable
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
+import re
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 import openai
@@ -254,12 +255,20 @@ def _convert_content_to_param(
 async def _transform_stream(  # noqa: C901 - This is complex, but better to have it in one place
     chat_log: conversation.ChatLog,
     stream: AsyncStream[ResponseStreamEvent],
+    remove_citations: bool = False,
 ) -> AsyncGenerator[
     conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
 ]:
     """Transform an OpenAI delta stream into HA format."""
     last_summary_index = None
     last_role: Literal["assistant", "tool_result"] | None = None
+
+    # Non-reasoning models don't follow our request to remove citations, so we remove
+    # them manually here. They always follow the same pattern: the citation is always
+    # in parentheses in Markdown format, the citation is always in a single delta event,
+    # and sometimes the closing parenthesis is split into a separate delta event.
+    remove_parentheses: bool = False
+    citation_regexp = re.compile(r"\(\[([^\]]+)\]\((https?:\/\/[^\)]+)\)")
 
     async for event in stream:
         LOGGER.debug("Received event: %s", event)
@@ -347,7 +356,23 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 yield {"native": event.item}
                 last_summary_index = -1  # Trigger new assistant message on next turn
         elif isinstance(event, ResponseTextDeltaEvent):
-            yield {"content": event.delta}
+            data = event.delta
+            if remove_parentheses:
+                data = data.removeprefix(")")
+                remove_parentheses = False
+            elif remove_citations and (match := citation_regexp.search(data)):
+                match_start, match_end = match.span()
+                # remove leading space if any
+                if data[match_start - 1 : match_start] == " ":
+                    match_start -= 1
+                # remove closing parenthesis:
+                if data[match_end : match_end + 1] == ")":
+                    match_end += 1
+                else:
+                    remove_parentheses = True
+                data = data[:match_start] + data[match_end:]
+            if data:
+                yield {"content": data}
         elif isinstance(event, ResponseReasoningSummaryTextDeltaEvent):
             # OpenAI can output several reasoning summaries
             # in a single ResponseReasoningItem. We split them as separate
@@ -492,6 +517,7 @@ class OpenAIBaseLLMEntity(Entity):
                 for tool in chat_log.llm_api.tools
             ]
 
+        remove_citations = False
         if options.get(CONF_WEB_SEARCH):
             web_search = WebSearchToolParam(
                 type="web_search",
@@ -512,17 +538,22 @@ class OpenAIBaseLLMEntity(Entity):
                 RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
             ):
                 system_message = cast(EasyInputMessageParam, messages[0])
-                extra_prompt = (
-                    "When providing information from web search, "
-                    "do not include source citations."
-                )
                 content = system_message["content"]
                 if isinstance(content, str):
-                    system_message["content"] = f"{content}\n{extra_prompt}"
-                elif isinstance(content, list):
-                    content.append(
-                        ResponseInputTextParam(type="input_text", text=extra_prompt)
+                    system_message["content"] = [
+                        ResponseInputTextParam(type="input_text", text=content)
+                    ]
+                system_message["content"].append(  # type: ignore[union-attr]
+                    ResponseInputTextParam(
+                        type="input_text",
+                        text="When doing a web search, do not include source citations",
                     )
+                )
+
+                if "reasoning" not in model_args:
+                    # Reasoning models handle this correctly with just a prompt
+                    remove_citations = True
+
             tools.append(web_search)
 
         if options.get(CONF_CODE_INTERPRETER):
@@ -592,7 +623,8 @@ class OpenAIBaseLLMEntity(Entity):
                         [
                             content
                             async for content in chat_log.async_add_delta_content_stream(
-                                self.entity_id, _transform_stream(chat_log, stream)
+                                self.entity_id,
+                                _transform_stream(chat_log, stream, remove_citations),
                             )
                         ]
                     )
