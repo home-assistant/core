@@ -323,7 +323,6 @@ class RpcEntityDescription(EntityDescription):
     use_polling_coordinator: bool = False
     supported: Callable = lambda _: False
     unit: Callable[[dict], str | None] | None = None
-    options_fn: Callable[[dict], list[str]] | None = None
     entity_class: Callable | None = None
     role: str | None = None
     models: set[str] | None = None
