@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from homeassistant.components.assist_pipeline.select import (
+from homeassistant.components.assist_pipeline import (
     AssistPipelineSelect,
     VadSensitivitySelect,
 )

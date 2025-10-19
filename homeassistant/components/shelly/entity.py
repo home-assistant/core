@@ -79,6 +79,9 @@ def async_setup_block_attribute_entities(
                 continue
 
             # Filter out non-existing sensors and sensors without a value
+            if description.models and coordinator.model not in description.models:
+                continue
+
             if getattr(block, sensor_id, None) is None:
                 continue
 
@@ -301,6 +304,7 @@ class BlockEntityDescription(EntityDescription):
     available: Callable[[Block], bool] | None = None
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
+    models: set[str] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -556,7 +560,9 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         self.entity_description = description
 
         self._attr_unique_id = f"{super().unique_id}-{attribute}"
-        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
+        self._attr_name = get_rpc_entity_name(
+            coordinator.device, key, description.name, description.role
+        )
         self._last_value = None
         id_key = key.split(":")[-1]
         self._id = int(id_key) if id_key.isnumeric() else None

@@ -486,7 +486,7 @@ async def test_rpc_rssi_sensor_removal(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC RSSI sensor removal if no WiFi stations enabled."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_rssi"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_signal_strength"
     entry = await init_integration(hass, 2)
 
     # WiFi1 enabled, do not remove sensor
@@ -926,7 +926,7 @@ async def test_rpc_pulse_counter_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-input:2-pulse_counter"
 
-    entity_id = f"{SENSOR_DOMAIN}.test_name_gas_counter_value"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_gas_pulse_counter_value"
     assert (state := hass.states.get(entity_id))
     assert state.state == "561.74"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
@@ -948,7 +948,7 @@ async def test_rpc_disabled_pulse_counter_sensors(
     entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter"
     assert hass.states.get(entity_id) is None
 
-    entity_id = f"{SENSOR_DOMAIN}.gas_counter_value"
+    entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter_value"
     assert hass.states.get(entity_id) is None
 
 
@@ -1089,6 +1089,7 @@ async def test_rpc_device_virtual_text_sensor(
         ("text", "text_generic", None),
     ],
 )
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_migrate_unique_id_virtual_components_roles(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -1574,7 +1575,7 @@ async def test_rpc_device_virtual_number_sensor_with_device_class(
     entity_registry: EntityRegistry,
 ) -> None:
     """Test a virtual number sensor with device class for RPC device."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_current_humidity"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_humidity"
     config = deepcopy(mock_rpc_device.config)
     config["number:203"] = {
         "name": "Current humidity",
@@ -1586,6 +1587,7 @@ async def test_rpc_device_virtual_number_sensor_with_device_class(
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
     status = deepcopy(mock_rpc_device.status)
+    status.pop("humidity:0")
     status["number:203"] = {"value": 34}
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
@@ -1722,7 +1724,7 @@ async def test_rpc_shelly_ev_sensors(
     }
     config["number:201"] = {
         "name": "Session energy",
-        "meta": {"ui": {"unit": "Wh", "view": "label"}},
+        "meta": {"ui": {"unit": "kWh", "view": "label"}},
         "role": "energy_charge",
     }
     config["number:202"] = {
@@ -1734,7 +1736,7 @@ async def test_rpc_shelly_ev_sensors(
 
     status = deepcopy(mock_rpc_device.status)
     status["number:200"] = {"value": "charger_charging"}
-    status["number:201"] = {"value": 5000}
+    status["number:201"] = {"value": 5.0}
     status["number:202"] = {"value": 60}
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
