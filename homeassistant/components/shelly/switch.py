@@ -143,6 +143,7 @@ RPC_SWITCHES = {
     "boolean_start_charging": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        name="Charging",
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
