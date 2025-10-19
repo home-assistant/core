@@ -129,8 +129,6 @@ def mock_server():
 
         # async methods
         server_mock.async_query = AsyncMock()
-        server_mock.connect = AsyncMock()
-        server_mock.disconnect = AsyncMock()
 
         yield server_mock
 

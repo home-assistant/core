@@ -186,13 +186,13 @@ async def query_unauthorized(*args, **kwargs):
     return False  # Simulate failure; set status separately
 
 
-class SimulatedQueryError(Exception):
+class SqueezeError(Exception):
     """Custom exception to simulate unexpected query failure."""
 
 
 async def query_exception(*args, **kwargs):
     """Simulate unexpected exception."""
-    raise SimulatedQueryError("Unexpected error")
+    raise SqueezeError("Unexpected error")
 
 
 @pytest.mark.parametrize(
