@@ -527,4 +527,29 @@ DISCOVERY_SCHEMAS = [
         vendor_id=(4447,),
         product_id=(8194,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="AqaraBooleanStateConfigurationCurrentSensitivityLevel",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="sensitivity_level",
+            options=["low", "standard", "high"],
+            device_to_ha={
+                0: "low",
+                1: "standard",
+                2: "high",
+            }.get,
+            ha_to_device={
+                "low": 0,
+                "standard": 1,
+                "high": 2,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
+        ),
+        vendor_id=(4447,4619),
+        product_id=(8197, 8195, 4097),
+    ),
 ]
