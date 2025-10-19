@@ -8,6 +8,8 @@ from datetime import datetime
 from enum import StrEnum
 from functools import partial
 
+from xbox.webapi.api.provider.people.models import Person
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -17,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import PresenceData, XboxConfigEntry, XboxUpdateCoordinator
+from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
 from .entity import XboxBaseEntity
 
 
@@ -37,14 +39,14 @@ class XboxSensor(StrEnum):
 class XboxSensorEntityDescription(SensorEntityDescription):
     """Xbox sensor description."""
 
-    value_fn: Callable[[PresenceData], StateType | datetime]
+    value_fn: Callable[[Person], StateType | datetime]
 
 
 SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
     XboxSensorEntityDescription(
         key=XboxSensor.STATUS,
         translation_key=XboxSensor.STATUS,
-        value_fn=lambda x: x.status,
+        value_fn=lambda x: x.presence_text,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.GAMER_SCORE,
@@ -55,13 +57,29 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         key=XboxSensor.ACCOUNT_TIER,
         translation_key=XboxSensor.ACCOUNT_TIER,
         entity_registry_enabled_default=False,
-        value_fn=lambda x: x.account_tier,
+        value_fn=lambda x: x.detail.account_tier,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.GOLD_TENURE,
         translation_key=XboxSensor.GOLD_TENURE,
         entity_registry_enabled_default=False,
-        value_fn=lambda x: x.gold_tenure,
+        value_fn=lambda x: x.detail.tenure,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.LAST_ONLINE,
+        translation_key=XboxSensor.LAST_ONLINE,
+        value_fn=(lambda x: x.last_seen),
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.FOLLOWING,
+        translation_key=XboxSensor.FOLLOWING,
+        value_fn=lambda x: x.detail.following_count,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.FOLLOWER,
+        translation_key=XboxSensor.FOLLOWER,
+        value_fn=lambda x: x.detail.follower_count,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.LAST_ONLINE,
