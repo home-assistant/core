@@ -14,7 +14,7 @@ PLATFORMS = [Platform.CAMERA]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the OPNsense component from a config entry."""
+    """Set up the Vivotek component from a config entry."""
 
     try:
         await async_test_config(hass, entry.data)
