@@ -67,6 +67,7 @@ from .const import (
     GEN2_RELEASE_URL,
     LOGGER,
     MAX_SCRIPT_SIZE,
+    ROLE_GENERIC,
     RPC_INPUTS_EVENTS_TYPES,
     SHAIR_MAX_WORK_HOURS,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -437,13 +438,18 @@ def get_rpc_sub_device_name(
 
 
 def get_rpc_entity_name(
-    device: RpcDevice, key: str, description: str | UndefinedType | None = None
+    device: RpcDevice,
+    key: str,
+    name: str | UndefinedType | None = None,
+    role: str | None = None,
 ) -> str | None:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
-    if description is not UNDEFINED and description:
-        return f"{channel_name} {description.lower()}" if channel_name else description
+    if name is not UNDEFINED and name:
+        if role and role != ROLE_GENERIC:
+            return name
+        return f"{channel_name} {name.lower()}" if channel_name else name
 
     return channel_name
 
@@ -484,7 +490,7 @@ def get_rpc_key_by_role(keys_dict: dict[str, Any], role: str) -> str | None:
 
 def get_rpc_role_by_key(keys_dict: dict[str, Any], key: str) -> str:
     """Return role by key for RPC device from a dict."""
-    return cast(str, keys_dict[key].get("role", "generic"))
+    return cast(str, keys_dict[key].get("role", ROLE_GENERIC))
 
 
 def id_from_key(key: str) -> int:

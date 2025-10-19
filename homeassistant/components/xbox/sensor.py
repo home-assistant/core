@@ -5,13 +5,11 @@ from __future__ import annotations
 from functools import partial
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import XboxUpdateCoordinator
+from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
 from .entity import XboxBaseEntity
 
 SENSOR_ATTRIBUTES = ["status", "gamer_score", "account_tier", "gold_tenure"]
@@ -19,18 +17,15 @@ SENSOR_ATTRIBUTES = ["status", "gamer_score", "account_tier", "gold_tenure"]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox Live friends."""
-    coordinator: XboxUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        "coordinator"
-    ]
+    coordinator = config_entry.runtime_data
 
     update_friends = partial(async_update_friends, coordinator, {}, async_add_entities)
 
-    unsub = coordinator.async_add_listener(update_friends)
-    hass.data[DOMAIN][config_entry.entry_id]["sensor_unsub"] = unsub
+    config_entry.async_on_unload(coordinator.async_add_listener(update_friends))
     update_friends()
 
 
