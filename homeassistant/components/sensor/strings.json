@@ -47,6 +47,7 @@
       "is_speed": "Current {entity_name} speed",
       "is_sulphur_dioxide": "Current {entity_name} sulphur dioxide concentration level",
       "is_temperature": "Current {entity_name} temperature",
+      "is_temperature_delta": "Current {entity_name} temperature interval",
       "is_value": "Current {entity_name} value",
       "is_volatile_organic_compounds": "Current {entity_name} volatile organic compounds concentration level",
       "is_volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::condition_type::is_volatile_organic_compounds%]",
@@ -104,6 +105,7 @@
       "speed": "{entity_name} speed changes",
       "sulphur_dioxide": "{entity_name} sulphur dioxide concentration changes",
       "temperature": "{entity_name} temperature changes",
+      "temperature_delta": "{entity_name} temperature interval changes",
       "value": "{entity_name} value changes",
       "volatile_organic_compounds": "{entity_name} volatile organic compounds concentration changes",
       "volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::trigger_type::volatile_organic_compounds%]",
@@ -245,6 +247,9 @@
     "pm1": {
       "name": "PM1"
     },
+    "pm4": {
+      "name": "PM4"
+    },
     "pm10": {
       "name": "PM10"
     },
@@ -286,6 +291,9 @@
     },
     "temperature": {
       "name": "Temperature"
+    },
+    "temperature_delta": {
+      "name": "Temperature delta"
     },
     "timestamp": {
       "name": "Timestamp"

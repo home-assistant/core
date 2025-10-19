@@ -66,6 +66,7 @@ from .const import (
     GEN2_RELEASE_URL,
     LOGGER,
     MAX_SCRIPT_SIZE,
+    ROLE_GENERIC,
     RPC_INPUTS_EVENTS_TYPES,
     SHAIR_MAX_WORK_HOURS,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -211,10 +212,7 @@ def is_block_exclude_from_relay(settings: dict[str, Any], block: Block) -> bool:
     if settings.get("mode") == "roller":
         return True
 
-    if TYPE_CHECKING:
-        assert block.channel is not None
-
-    return is_block_channel_type_light(settings, int(block.channel))
+    return is_block_channel_type_light(settings, block)
 
 
 def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
@@ -402,12 +400,12 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     if key in device.config and key != "em:0":
         # workaround for Pro 3EM, we don't want to get name for em:0
         if component_name := device.config[key].get("name"):
-            if component in (*VIRTUAL_COMPONENTS, "script"):
+            if component in (*VIRTUAL_COMPONENTS, "input", "presencezone", "script"):
                 return cast(str, component_name)
 
             return cast(str, component_name) if instances == 1 else None
 
-    if component in VIRTUAL_COMPONENTS:
+    if component in (*VIRTUAL_COMPONENTS, "input"):
         return f"{component.title()} {component_id}"
 
     return None
@@ -439,13 +437,15 @@ def get_rpc_sub_device_name(
 
 
 def get_rpc_entity_name(
-    device: RpcDevice, key: str, description: str | None = None
+    device: RpcDevice, key: str, name: str | None = None, role: str | None = None
 ) -> str | None:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
-    if description:
-        return f"{channel_name} {description.lower()}" if channel_name else description
+    if name:
+        if role and role != ROLE_GENERIC:
+            return name
+        return f"{channel_name} {name.lower()}" if channel_name else name
 
     return channel_name
 
@@ -476,6 +476,24 @@ def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     return [int(k.split(":")[1]) for k in keys_dict if k.startswith(f"{key}:")]
 
 
+def get_rpc_key_by_role(keys_dict: dict[str, Any], role: str) -> str | None:
+    """Return key by role for RPC device from a dict."""
+    for key, value in keys_dict.items():
+        if value.get("role") == role:
+            return key
+    return None
+
+
+def get_rpc_role_by_key(keys_dict: dict[str, Any], key: str) -> str:
+    """Return role by key for RPC device from a dict."""
+    return cast(str, keys_dict[key].get("role", ROLE_GENERIC))
+
+
+def id_from_key(key: str) -> int:
+    """Return id from key."""
+    return int(key.split(":")[-1])
+
+
 def is_rpc_momentary_input(
     config: dict[str, Any], status: dict[str, Any], key: str
 ) -> bool:
@@ -483,9 +501,12 @@ def is_rpc_momentary_input(
     return cast(bool, config[key]["type"] == "button")
 
 
-def is_block_channel_type_light(settings: dict[str, Any], channel: int) -> bool:
+def is_block_channel_type_light(settings: dict[str, Any], block: Block) -> bool:
     """Return true if block channel appliance type is set to light."""
-    app_type = settings["relays"][channel].get("appliance_type")
+    if TYPE_CHECKING:
+        assert block.channel is not None
+
+    app_type = settings["relays"][int(block.channel)].get("appliance_type")
     return app_type is not None and app_type.lower().startswith("light")
 
 
@@ -552,8 +573,15 @@ def percentage_to_brightness(percentage: int) -> int:
 
 def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
-    mac = name.partition(".")[0].partition("-")[-1]
-    return mac.upper() if len(mac) == 12 else None
+    base = name.split(".", 1)[0]
+    if "-" not in base:
+        return None
+
+    mac = base.rsplit("-", 1)[-1]
+    if len(mac) != 12 or not all(char in "0123456789abcdefABCDEF" for char in mac):
+        return None
+
+    return mac.upper()
 
 
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
@@ -630,11 +658,6 @@ def async_remove_shelly_rpc_entities(
             entity_reg.async_remove(entity_id)
 
 
-def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
-    """Return True if 'thermostat:<IDent>' is present in the status."""
-    return f"thermostat:{ident}" in status
-
-
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
     component = VIRTUAL_COMPONENTS_MAP.get(platform)
@@ -685,27 +708,25 @@ def async_remove_orphaned_entities(
     """Remove orphaned entities."""
     orphaned_entities = []
     entity_reg = er.async_get(hass)
-    device_reg = dr.async_get(hass)
 
-    if not (
-        devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
-    ):
-        return
+    entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
+    for entity in entities:
+        if not entity.entity_id.startswith(platform):
+            continue
+        if key_suffix is not None and key_suffix not in entity.unique_id:
+            continue
+        # we are looking for the component ID, e.g. boolean:201, em1data:1
+        if not (match := COMPONENT_ID_PATTERN.search(entity.unique_id)):
+            continue
 
-    for device in devices:
-        entities = er.async_entries_for_device(entity_reg, device.id, True)
-        for entity in entities:
-            if not entity.entity_id.startswith(platform):
-                continue
-            if key_suffix is not None and key_suffix not in entity.unique_id:
-                continue
-            # we are looking for the component ID, e.g. boolean:201, em1data:1
-            if not (match := COMPONENT_ID_PATTERN.search(entity.unique_id)):
-                continue
-
-            key = match.group()
-            if key not in keys:
-                orphaned_entities.append(entity.unique_id.split("-", 1)[1])
+        key = match.group()
+        if key not in keys:
+            LOGGER.debug(
+                "Found orphaned Shelly entity: %s, unique id: %s",
+                entity.entity_id,
+                entity.unique_id,
+            )
+            orphaned_entities.append(entity.unique_id.split("-", 1)[1])
 
     if orphaned_entities:
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
@@ -923,3 +944,35 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
 def format_ble_addr(ble_addr: str) -> str:
     """Format BLE address to use in unique_id."""
     return ble_addr.replace(":", "").upper()
+
+
+@callback
+def async_migrate_rpc_virtual_components_unique_ids(
+    config: dict[str, Any], entity_entry: er.RegistryEntry
+) -> dict[str, Any] | None:
+    """Migrate RPC virtual components unique_ids to include role in the ID.
+
+    This is needed to support multiple components with the same key.
+    The old unique_id format is: {mac}-{key}-{component}
+    The new unique_id format is: {mac}-{key}-{component}_{role}
+    """
+    for component in VIRTUAL_COMPONENTS:
+        if entity_entry.unique_id.endswith(f"-{component!s}"):
+            key = entity_entry.unique_id.split("-")[-2]
+            if key not in config:
+                continue
+            role = get_rpc_role_by_key(config, key)
+            new_unique_id = f"{entity_entry.unique_id}_{role}"
+            LOGGER.debug(
+                "Migrating unique_id for %s entity from [%s] to [%s]",
+                entity_entry.entity_id,
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            return {
+                "new_unique_id": entity_entry.unique_id.replace(
+                    entity_entry.unique_id, new_unique_id
+                )
+            }
+
+    return None
