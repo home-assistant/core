@@ -36,13 +36,11 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
     XboxSensorEntityDescription(
         key=XboxSensor.STATUS,
         translation_key=XboxSensor.STATUS,
-        entity_registry_enabled_default=False,
         value_fn=lambda x: x.status,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.GAMER_SCORE,
         translation_key=XboxSensor.GAMER_SCORE,
-        entity_registry_enabled_default=False,
         value_fn=lambda x: x.gamer_score,
     ),
     XboxSensorEntityDescription(

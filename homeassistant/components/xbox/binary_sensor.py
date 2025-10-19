@@ -72,7 +72,6 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
         key=XboxBinarySensor.IN_GAME,
         translation_key=XboxBinarySensor.IN_GAME,
         is_on_fn=lambda x: x.in_game,
-        entity_registry_enabled_default=False,
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_MULTIPLAYER,
