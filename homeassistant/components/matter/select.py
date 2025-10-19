@@ -549,7 +549,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
         ),
-        vendor_id=(4447,4619),
+        vendor_id=(4447, 4619),
         product_id=(8197, 8195, 4097),
     ),
 ]
