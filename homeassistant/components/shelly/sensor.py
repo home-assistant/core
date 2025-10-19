@@ -104,7 +104,7 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         super().__init__(coordinator, key, attribute, description)
 
         if self.option_map:
-            if description.role == "generic":
+            if description.role == ROLE_GENERIC:
                 self._attr_options = list(self.option_map.values())
             else:
                 self._attr_options = list(self.option_map)
@@ -120,7 +120,7 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         if not isinstance(attribute_value, str):
             return None
 
-        if self.entity_description.role == "generic":
+        if self.entity_description.role == ROLE_GENERIC:
             return self.option_map[attribute_value]
 
         return attribute_value
