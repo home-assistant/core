@@ -257,12 +257,6 @@
       "valve_position": {
         "name": "Valve position"
       },
-      "current_humidity": {
-        "name": "Current humidity"
-      },
-      "current_temperature": {
-        "name": "Current temperature"
-      },
       "water_flow_rate": {
         "name": "Water flow rate"
       },
