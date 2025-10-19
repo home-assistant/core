@@ -144,6 +144,11 @@ async def test_select_option_success(
     # Verify load_profile was called with the correct profile name
     mock_openrgb_client.load_profile.assert_called_once_with("Gaming")
 
+    # Verify the current option is set to the selected profile
+    state = hass.states.get("select.test_computer_profile")
+    assert state
+    assert state.state == "Gaming"
+
 
 @pytest.mark.usefixtures("mock_openrgb_client")
 async def test_select_option_not_found(
@@ -314,3 +319,100 @@ async def test_select_becomes_unavailable_when_profiles_removed(
     assert state
     assert state.state == STATE_UNAVAILABLE
     assert state.attributes.get("options") == []
+
+
+@pytest.mark.usefixtures("mock_openrgb_client")
+async def test_current_option_cleared_when_device_state_changes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+    mock_profiles: list[SimpleNamespace],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test current option is cleared when device state changes externally."""
+    mock_openrgb_client.profiles = mock_profiles
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Select a profile
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.test_computer_profile",
+            ATTR_OPTION: "Gaming",
+        },
+        blocking=True,
+    )
+
+    # Verify the current option is set
+    state = hass.states.get("select.test_computer_profile")
+    assert state
+    assert state.state == "Gaming"
+
+    # Simulate external device state change by modifying active_mode
+    mock_openrgb_device.active_mode = 0
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Verify current option is cleared because device state changed
+    state = hass.states.get("select.test_computer_profile")
+    assert state
+    assert state.state == "unknown"
+
+
+@pytest.mark.usefixtures("mock_openrgb_client")
+async def test_current_option_cleared_when_colors_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+    mock_profiles: list[SimpleNamespace],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test current option is cleared when device colors change externally."""
+    mock_openrgb_client.profiles = mock_profiles
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Select a profile
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.test_computer_profile",
+            ATTR_OPTION: "Work",
+        },
+        blocking=True,
+    )
+
+    # Verify the current option is set
+    state = hass.states.get("select.test_computer_profile")
+    assert state
+    assert state.state == "Work"
+
+    # Simulate external color change
+    mock_openrgb_device.colors[0].red = 0
+    mock_openrgb_device.colors[0].green = 255
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Verify current option is cleared because device colors changed
+    state = hass.states.get("select.test_computer_profile")
+    assert state
+    assert state.state == "unknown"

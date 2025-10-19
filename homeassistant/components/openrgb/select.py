@@ -31,8 +31,9 @@ class OpenRGBProfileSelect(CoordinatorEntity[OpenRGBCoordinator], SelectEntity):
 
     _attr_translation_key = "profile"
     _attr_has_entity_name = True
-    # https://gitlab.com/CalcProgrammer1/OpenRGB/-/issues/5178
-    _attr_current_option: str | None = None
+
+    _state_hash: int | None = None
+    _pending_profile: str | None = None
 
     def __init__(
         self, coordinator: OpenRGBCoordinator, entry: OpenRGBConfigEntry
@@ -50,11 +51,36 @@ class OpenRGBProfileSelect(CoordinatorEntity[OpenRGBCoordinator], SelectEntity):
         )
         self._update_attrs()
 
+    def _compute_state_hash(self) -> int:
+        """Compute a hash of device states (modes and all LED colors)."""
+        state_data = tuple(
+            (
+                device.active_mode,
+                tuple((color.red, color.green, color.blue) for color in device.colors),
+            )
+            for device in self.coordinator.client.devices
+        )
+        return hash(state_data)
+
     @callback
     def _update_attrs(self) -> None:
         """Update the attributes based on the current profile list."""
         profiles = self.coordinator.client.profiles
         self._attr_options = [profile.name for profile in profiles]
+
+        # Compute current state hash
+        current_hash = self._compute_state_hash()
+
+        # If a profile was just applied, set it as current
+        if self._pending_profile is not None:
+            self._attr_current_option = self._pending_profile
+            self._pending_profile = None
+        # Otherwise if state changed, we can no longer assume current profile
+        elif current_hash != self._state_hash:
+            self._attr_current_option = None
+
+        # Update stored hash
+        self._state_hash = current_hash
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -65,11 +91,7 @@ class OpenRGBProfileSelect(CoordinatorEntity[OpenRGBCoordinator], SelectEntity):
     @property
     def available(self) -> bool:
         """Return if the select is available."""
-        return (
-            super().available
-            and self._attr_options is not None
-            and len(self._attr_options) > 0
-        )
+        return super().available and bool(self._attr_options)
 
     async def async_select_option(self, option: str) -> None:
         """Load the selected profile."""
@@ -96,5 +118,5 @@ class OpenRGBProfileSelect(CoordinatorEntity[OpenRGBCoordinator], SelectEntity):
                     },
                 ) from err
 
-        # Refresh immediately to ensure profile changes are reflected
+        self._pending_profile = option
         await self.coordinator.async_refresh()
