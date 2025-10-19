@@ -94,13 +94,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
     for device in devices:
         # Check if the device is still present in homee
         device_identifiers = {identifier[1] for identifier in device.identifiers}
-        # homee itself uses just the uid, nodes use uid-nodeid
-        is_homee_hub = homee.settings.uid in device_identifiers
+        # homee itself uses just the uid, nodes use {uid}-{nodeid}
+        if homee.settings.uid in device_identifiers:
+            continue  # Hub itself is never removed.
         is_node_present = any(
             f"{homee.settings.uid}-{node.id}" in device_identifiers
             for node in homee.nodes
         )
-        if not is_node_present and not is_homee_hub:
+        if not is_node_present:
             _LOGGER.info("Removing device %s", device.name)
             device_registry.async_update_device(
                 device_id=device.id,
@@ -110,16 +111,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
     # Remove device at runtime when node is removed in homee
     async def _remove_node_callback(node: HomeeNode, add: bool) -> None:
         """Call when a node is removed."""
-        if not add:
-            device = device_registry.async_get_device(
-                identifiers={(DOMAIN, f"{entry.runtime_data.settings.uid}-{node.id}")}
+        if add:
+            return
+        device = device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{entry.runtime_data.settings.uid}-{node.id}")}
+        )
+        if device:
+            _LOGGER.info("Removing device %s", device.name)
+            device_registry.async_update_device(
+                device_id=device.id,
+                remove_config_entry_id=entry.entry_id,
             )
-            if device:
-                _LOGGER.info("Removing device %s", device.name)
-                device_registry.async_update_device(
-                    device_id=device.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
 
     homee.add_nodes_listener(_remove_node_callback)
 
