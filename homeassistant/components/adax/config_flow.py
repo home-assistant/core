@@ -18,15 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    ACCOUNT_ID,
-    CLOUD,
-    CONNECTION_TYPE,
-    DOMAIN,
-    LOCAL,
-    WIFI_PSWD,
-    WIFI_SSID,
-)
+from .const import ACCOUNT_ID, CLOUD, CONNECTION_TYPE, DOMAIN, LOCAL, WIFI_SSID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +58,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the local step."""
         data_schema = vol.Schema(
-            {vol.Required(WIFI_SSID): str, vol.Required(WIFI_PSWD): str}
+            {vol.Required(WIFI_SSID): str, vol.Required(CONF_PASSWORD): str}
         )
         if user_input is None:
             return self.async_show_form(
@@ -75,7 +67,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         wifi_ssid = user_input[WIFI_SSID].replace(" ", "")
-        wifi_pswd = user_input[WIFI_PSWD].replace(" ", "")
+        wifi_pswd = user_input[CONF_PASSWORD].replace(" ", "")
         configurator = adax_local.AdaxConfig(wifi_ssid, wifi_pswd)
 
         try:
