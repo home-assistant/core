@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "sensor": {
+      "status": {
+        "default": "mdi:message-text-outline"
+      },
+      "gamer_score": {
+        "default": "mdi:alpha-g-circle"
+      },
+      "account_tier": {
+        "default": "mdi:microsoft-xbox"
+      },
+      "gold_tenure": {
+        "default": "mdi:microsoft-xbox"
+      }
+    },
+    "binary_sensor": {
+      "online": {
+        "default": "mdi:account"
+      },
+      "in_party": {
+        "default": "mdi:account-group"
+      },
+      "in_game": {
+        "default": "mdi:microsoft-xbox-controller"
+      },
+      "in_multiplayer": {
+        "default": "mdi:account-multiple"
+      }
+    }
+  }
+}

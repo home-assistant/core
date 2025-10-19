@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -22,11 +21,14 @@ from xbox.webapi.api.provider.smartglass.models import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+type XboxConfigEntry = ConfigEntry[XboxUpdateCoordinator]
 
 
 @dataclass
@@ -85,6 +87,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
         self.data = XboxData({}, {})
         self.client: XboxLiveClient = client
         self.consoles: SmartglassConsoleList = consoles
+        self.current_friends: set[str] = set()
 
     async def _async_update_data(self) -> XboxData:
         """Fetch the latest console status."""
@@ -99,7 +102,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             _LOGGER.debug(
                 "%s status: %s",
                 console.name,
-                status.dict(),
+                status.model_dump(),
             )
 
             # Setup focus app
@@ -146,16 +149,45 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
 
             presence_data[friend.xuid] = _build_presence_data(friend)
 
+        if (
+            self.current_friends
+            - (new_friends := {x.xuid for x in presence_data.values()})
+            or not self.current_friends
+        ):
+            self.remove_stale_devices(presence_data)
+        self.current_friends = new_friends
+
         return XboxData(new_console_data, presence_data)
+
+    def remove_stale_devices(self, presence_data: dict[str, PresenceData]) -> None:
+        """Remove stale devices from registry."""
+
+        device_reg = dr.async_get(self.hass)
+        identifiers = {(DOMAIN, person.xuid) for person in presence_data.values()} | {
+            (DOMAIN, console.id) for console in self.consoles.result
+        }
+
+        for device in dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        ):
+            if not set(device.identifiers) & identifiers:
+                _LOGGER.debug("Removing stale device %s", device.name)
+                device_reg.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )
 
 
 def _build_presence_data(person: Person) -> PresenceData:
     """Build presence data from a person."""
     active_app: PresenceDetail | None = None
-    with suppress(StopIteration):
-        active_app = next(
-            presence for presence in person.presence_details if presence.is_primary
-        )
+
+    active_app = next(
+        (presence for presence in person.presence_details if presence.is_primary),
+        None,
+    )
+    in_game = (
+        active_app is not None and active_app.is_game and active_app.state == "Active"
+    )
 
     return PresenceData(
         xuid=person.xuid,
@@ -164,7 +196,7 @@ def _build_presence_data(person: Person) -> PresenceData:
         online=person.presence_state == "Online",
         status=person.presence_text,
         in_party=person.multiplayer_summary.in_party > 0,
-        in_game=active_app is not None and active_app.is_game,
+        in_game=in_game,
         in_multiplayer=person.multiplayer_summary.in_multiplayer_session,
         gamer_score=person.gamer_score,
         gold_tenure=person.detail.tenure,
