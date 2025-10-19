@@ -433,7 +433,7 @@ class OpenRouterEntity(Entity):
                             if isinstance(plain, dict) and "speech" in plain:
                                 speech = plain["speech"]
                         if speech is None:
-                            speech = json.dumps(payload, ensure_ascii=False)
+                            continue
                     except Exception:
                         speech = m.get("content")
                     assistant_items.append(conversation.AssistantContent(agent_id=chat_log.conversation_id, content=speech, tool_calls=[]))
