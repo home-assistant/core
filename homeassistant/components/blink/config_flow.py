@@ -10,7 +10,12 @@ from blinkpy.auth import Auth, BlinkTwoFARequiredError, LoginError, TokenRefresh
 from blinkpy.blinkpy import Blink, BlinkSetupError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -47,26 +52,30 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self.auth: Auth | None = None
         self.blink: Blink | None = None
 
+    async def _handle_user_input(self, user_input: dict[str, Any]):
+        """Handle user input."""
+        self.auth = Auth(
+            {**user_input, "device_id": DEVICE_ID},
+            no_prompt=True,
+            session=async_get_clientsession(self.hass),
+        )
+        self.blink = Blink(session=async_get_clientsession(self.hass))
+        self.blink.auth = self.auth
+        await self.async_set_unique_id(user_input[CONF_USERNAME])
+        if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            self._abort_if_unique_id_configured()
+
+        await validate_input(self.blink)
+        return self._async_finish_flow()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
-            self.auth = Auth(
-                {**user_input, "device_id": DEVICE_ID},
-                no_prompt=True,
-                session=async_get_clientsession(self.hass),
-            )
-            self.blink = Blink(session=async_get_clientsession(self.hass))
-            self.blink.auth = self.auth
-            await self.async_set_unique_id(user_input[CONF_USERNAME])
-            if self.source != SOURCE_REAUTH:
-                self._abort_if_unique_id_configured()
-
             try:
-                await validate_input(self.blink)
-                return self._async_finish_flow()
+                return await self._handle_user_input(user_input)
             except BlinkTwoFARequiredError:
                 return await self.async_step_2fa()
             except InvalidAuth:
@@ -118,6 +127,33 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Perform reauth upon migration of old entries."""
         return await self.async_step_user(dict(entry_data))
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration initiated by the user."""
+        errors = {}
+        if user_input is not None:
+            try:
+                return await self._handle_user_input(user_input)
+            except BlinkTwoFARequiredError:
+                return await self.async_step_2fa()
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
 
     @callback
     def _async_finish_flow(self) -> ConfigFlowResult:
