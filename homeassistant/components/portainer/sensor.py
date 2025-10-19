@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
     StateType,
 )
 from homeassistant.const import UnitOfInformation
@@ -53,6 +54,7 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         translation_key="api_version",
         value_fn=lambda data: data.docker_version.api_version,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     PortainerEndpointSensorEntityDescription(
         key="kernel_version",
@@ -95,6 +97,7 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         value_fn=lambda data: data.docker_info.containers,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PortainerEndpointSensorEntityDescription(
         key="containers_running",
@@ -102,6 +105,7 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         value_fn=lambda data: data.docker_info.containers_running,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PortainerEndpointSensorEntityDescription(
         key="containers_stopped",
@@ -109,6 +113,7 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         value_fn=lambda data: data.docker_info.containers_stopped,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PortainerEndpointSensorEntityDescription(
         key="containers_paused",
@@ -116,6 +121,7 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         value_fn=lambda data: data.docker_info.containers_paused,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PortainerEndpointSensorEntityDescription(
         key="images_count",
@@ -123,12 +129,14 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         value_fn=lambda data: data.docker_info.images,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PortainerEndpointSensorEntityDescription(
         key="memory_total",
         translation_key="memory_total",
         value_fn=lambda data: data.docker_info.mem_total,
         device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -139,6 +147,7 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         value_fn=lambda data: data.docker_info.ncpu,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
