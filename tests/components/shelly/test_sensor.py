@@ -1575,7 +1575,7 @@ async def test_rpc_device_virtual_number_sensor_with_device_class(
     entity_registry: EntityRegistry,
 ) -> None:
     """Test a virtual number sensor with device class for RPC device."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_current_humidity"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_humidity"
     config = deepcopy(mock_rpc_device.config)
     config["number:203"] = {
         "name": "Current humidity",
@@ -1587,6 +1587,7 @@ async def test_rpc_device_virtual_number_sensor_with_device_class(
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
     status = deepcopy(mock_rpc_device.status)
+    status.pop("humidity:0")
     status["number:203"] = {"value": 34}
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
@@ -1692,7 +1693,7 @@ async def test_rpc_shelly_ev_sensors(
 ) -> None:
     """Test Shelly EV sensors."""
     config = deepcopy(mock_rpc_device.config)
-    config["number:200"] = {
+    config["enum:200"] = {
         "name": "Charger state",
         "meta": {
             "ui": {
@@ -1710,20 +1711,20 @@ async def test_rpc_shelly_ev_sensors(
             }
         },
         "options": [
-            "charger_free",
-            "charger_insert",
-            "charger_free_fault",
-            "charger_wait",
             "charger_charging",
-            "charger_pause",
             "charger_end",
             "charger_fault",
+            "charger_free",
+            "charger_free_fault",
+            "charger_insert",
+            "charger_pause",
+            "charger_wait",
         ],
         "role": "work_state",
     }
     config["number:201"] = {
         "name": "Session energy",
-        "meta": {"ui": {"unit": "Wh", "view": "label"}},
+        "meta": {"ui": {"unit": "kWh", "view": "label"}},
         "role": "energy_charge",
     }
     config["number:202"] = {
@@ -1734,8 +1735,8 @@ async def test_rpc_shelly_ev_sensors(
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
     status = deepcopy(mock_rpc_device.status)
-    status["number:200"] = {"value": "charger_charging"}
-    status["number:201"] = {"value": 5000}
+    status["enum:200"] = {"value": "charger_charging"}
+    status["number:201"] = {"value": 5.0}
     status["number:202"] = {"value": 60}
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
