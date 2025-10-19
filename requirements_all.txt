@@ -256,7 +256,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.0.0
+aioesphomeapi==42.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1664,7 +1664,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.15.7
+opower==0.15.8
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2811,6 +2811,9 @@ sensorpush-ha==1.3.2
 
 # homeassistant.components.sensoterra
 sensoterra==2.0.1
+
+# homeassistant.components.elevenlabs
+sentence-stream==1.2.0
 
 # homeassistant.components.sentry
 sentry-sdk==1.45.1
