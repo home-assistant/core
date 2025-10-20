@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from datetime import datetime
 import json
 import logging
@@ -31,7 +31,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -70,6 +70,7 @@ from .const import (
 )
 from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 from .entity import SqueezeboxEntity
+from .util import safe_call
 
 if TYPE_CHECKING:
     from . import SqueezeboxConfigEntry
@@ -433,7 +434,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
-        await self._safe_call(
+        await safe_call(
             self._player.async_set_power,
             False,
             translation_key="exceptions.turn_off_failed",
@@ -444,7 +445,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         volume_percent = str(round(volume * 100))
-        await self._safe_call(
+        await safe_call(
             self._player.async_set_volume,
             volume_percent,
             translation_key="exceptions.set_volume_failed",
@@ -454,7 +455,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
-        await self._safe_call(
+        await safe_call(
             self._player.async_set_muting,
             mute,
             translation_key="exceptions.set_mute_failed",
@@ -464,7 +465,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_media_stop(self) -> None:
         """Send stop command to media player."""
-        await self._safe_call(
+        await safe_call(
             self._player.async_stop,
             translation_key="exceptions.stop_failed",
             translation_placeholders={"error": "command rejected"},
@@ -473,7 +474,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_media_play_pause(self) -> None:
         """Send pause/play toggle command to media player."""
-        await self._safe_call(
+        await safe_call(
             self._player.async_toggle_pause,
             translation_key="exceptions.play_pause_failed",
             translation_placeholders={"error": "command rejected"},
@@ -482,7 +483,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_media_play(self) -> None:
         """Send play command to media player."""
-        await self._safe_call(
+        await safe_call(
             self._player.async_play,
             translation_key="exceptions.play_failed",
             translation_placeholders={"error": "command rejected"},
@@ -491,7 +492,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_media_pause(self) -> None:
         """Send pause command to media player."""
-        await self._safe_call(
+        await safe_call(
             self._player.async_pause,
             translation_key="exceptions.pause_failed",
             translation_placeholders={"error": "command rejected"},
@@ -500,7 +501,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        await self._safe_call(
+        await safe_call(
             self._player.async_index,
             "+1",
             translation_key="exceptions.next_track_failed",
@@ -510,7 +511,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        await self._safe_call(
+        await safe_call(
             self._player.async_index,
             "-1",
             translation_key="exceptions.previous_track_failed",
@@ -520,7 +521,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
-        await self._safe_call(
+        await safe_call(
             self._player.async_time,
             position,
             translation_key="exceptions.seek_failed",
@@ -530,7 +531,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        await self._safe_call(
+        await safe_call(
             self._player.async_set_power,
             True,
             translation_key="exceptions.turn_on_failed",
@@ -723,7 +724,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         else:
             repeat_mode = "none"
 
-        await self._safe_call(
+        await safe_call(
             self._player.async_set_repeat,
             repeat_mode,
             translation_key="exceptions.set_repeat_failed",
@@ -734,7 +735,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle mode."""
         shuffle_mode = "song" if shuffle else "none"
-        await self._safe_call(
+        await safe_call(
             self._player.async_set_shuffle,
             shuffle_mode,
             translation_key="exceptions.set_shuffle_failed",
@@ -744,7 +745,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_clear_playlist(self) -> None:
         """Send the media player the command to clear the playlist."""
-        await self._safe_call(
+        await safe_call(
             self._player.async_clear_playlist,
             translation_key="exceptions.clear_playlist_failed",
             translation_placeholders={"error": "command rejected"},
@@ -763,7 +764,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         if parameters:
             all_params.extend(parameters)
 
-        await self._safe_call(
+        await safe_call(
             self._player.async_query,
             *all_params,
             translation_key="exceptions.call_method_failed",
@@ -782,7 +783,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         if parameters:
             all_params.extend(parameters)
 
-        self._query_result = await self._safe_call(
+        self._query_result = await safe_call(
             self._player.async_query,
             *all_params,
             translation_key="exceptions.call_query_failed",
@@ -821,7 +822,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_unjoin_player(self) -> None:
         """Unsync this Squeezebox player."""
-        await self._safe_call(
+        await safe_call(
             self._player.async_unsync,
             translation_key="exceptions.unjoin_failed",
             translation_placeholders={"error": "command rejected"},
@@ -899,37 +900,4 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         result = await self._async_fetch_image(image_url)
         if result == (None, None):
             _LOGGER.debug("Error retrieving proxied album art from %s", image_url)
-        return result
-
-    async def _safe_call(
-        self,
-        method: Callable[..., Awaitable[Any]],
-        *args: Any,
-        translation_key: str,
-        translation_placeholders: dict[str, Any] | None = None,
-        **kwargs: Any,
-    ) -> Any:
-        """Call a player method safely and raise HomeAssistantError on failure with translated message."""
-        try:
-            result = await method(*args, **kwargs)
-        except ValueError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=translation_key,
-                translation_placeholders={
-                    **(translation_placeholders or {}),
-                    "error": str(err),
-                },
-            ) from err
-
-        if result is False or result is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=translation_key,
-                translation_placeholders={
-                    **(translation_placeholders or {}),
-                    "error": "unknown failure",
-                },
-            )
-
         return result

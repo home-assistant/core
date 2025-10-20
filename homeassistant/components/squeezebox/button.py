@@ -15,6 +15,7 @@ from . import SqueezeboxConfigEntry
 from .const import SIGNAL_PLAYER_DISCOVERED
 from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 from .entity import SqueezeboxEntity
+from .util import safe_call
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,4 +158,10 @@ class SqueezeboxButtonEntity(SqueezeboxEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Execute the button action."""
-        await self._player.async_query("button", self.entity_description.press_action)
+        await safe_call(
+            self._player.async_query,
+            "button",
+            self.entity_description.press_action,
+            translation_key="exceptions.press_failed",
+            translation_placeholders={"action": self.entity_description.press_action},
+        )
