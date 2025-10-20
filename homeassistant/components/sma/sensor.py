@@ -876,7 +876,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self._sensor = pysma_sensor
 
         self._attr_device_info = DeviceInfo(
-            configuration_url=URL(url),
+            configuration_url=url,
             identifiers={(DOMAIN, entry.unique_id)},
             manufacturer=coordinator.sma_device_info["manufacturer"],
             model=coordinator.sma_device_info["type"],
