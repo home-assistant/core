@@ -574,10 +574,8 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             if media_type not in MediaType.MUSIC:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="invalid_announce_media_type",
-                    translation_placeholders={
-                        "media_type": str(media_type),
-                    },
+                    translation_key="exceptions.invalid_announce_media_type",
+                    translation_placeholders={"media_type": str(media_type)},
                 )
 
             extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
@@ -588,9 +586,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="invalid_announce_volume",
-                    translation_placeholders={
-                        "announce_volume": ATTR_ANNOUNCE_VOLUME,
-                    },
+                    translation_placeholders={"announce_volume": ATTR_ANNOUNCE_VOLUME},
                 ) from None
             else:
                 self._player.set_announce_volume(announce_volume)
@@ -602,7 +598,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                     translation_domain=DOMAIN,
                     translation_key="invalid_announce_timeout",
                     translation_placeholders={
-                        "announce_timeout": ATTR_ANNOUNCE_TIMEOUT,
+                        "announce_timeout": ATTR_ANNOUNCE_TIMEOUT
                     },
                 ) from None
             else:
@@ -610,15 +606,19 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
         if media_type in MediaType.MUSIC:
             if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
-                # do not process special squeezebox "source" media ids
                 media_id = async_process_play_media_url(self.hass, media_id)
 
-            await self._player.async_load_url(media_id, cmd)
+            await safe_library_call(
+                self._player.async_load_url,
+                media_id,
+                cmd,
+                translation_key="exceptions.load_url_failed",
+                translation_placeholders={"media_id": media_id, "cmd": cmd},
+            )
             return
 
         if media_type == MediaType.PLAYLIST:
             try:
-                # a saved playlist by number
                 payload = {
                     "search_id": media_id,
                     "search_type": MediaType.PLAYLIST,
@@ -627,7 +627,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                     self._player, payload, self.browse_limit, self._browse_data
                 )
             except BrowseError:
-                # a list of urls
                 content = json.loads(media_id)
                 playlist = content["urls"]
                 index = content["index"]
@@ -639,12 +638,19 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             playlist = await generate_playlist(
                 self._player, payload, self.browse_limit, self._browse_data
             )
-
             _LOGGER.debug("Generated playlist: %s", playlist)
 
-        await self._player.async_load_playlist(playlist, cmd)
+        await safe_library_call(
+            self._player.async_load_playlist,
+            playlist,
+            cmd,
+            translation_key="exceptions.load_playlist_failed",
+            translation_placeholders={"cmd": cmd},
+        )
+
         if index is not None:
             await self._player.async_index(index)
+
         await self.coordinator.async_refresh()
 
     async def async_search_media(
@@ -890,14 +896,19 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             image_url = self._synthetic_media_browser_thumbnail_items.get(
                 media_image_id
             )
-
             if image_url is None:
                 _LOGGER.debug("Synthetic ID %s not found in cache", media_image_id)
                 return (None, None)
         else:
-            image_url = self._player.generate_image_url_from_track_id(media_image_id)
+            image_url = await safe_library_call(
+                self._player.generate_image_url_from_track_id,
+                media_image_id,
+                translation_key="exceptions.generate_image_url_failed",
+                translation_placeholders={"track_id": media_image_id},
+            )
 
         result = await self._async_fetch_image(image_url)
         if result == (None, None):
             _LOGGER.debug("Error retrieving proxied album art from %s", image_url)
+
         return result

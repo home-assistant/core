@@ -261,6 +261,15 @@
     },
     "press_failed": {
       "message": "Failed to execute button action {action}."
+    },
+    "load_url_failed": {
+      "message": "Failed to load media URL {media_id} with command {cmd}."
+    },
+    "load_playlist_failed": {
+      "message": "Failed to load playlist with command {cmd}."
+    },
+    "generate_image_url_failed": {
+      "message": "Failed to generate image URL for track ID {track_id}."
     }
   }
 }
