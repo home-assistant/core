@@ -9,6 +9,7 @@ from datetime import timedelta
 from io import BytesIO
 import logging
 from typing import Any
+from uuid import UUID
 
 from aiohttp import ClientError
 from habiticalib import (
@@ -46,6 +47,14 @@ class HabiticaData:
 
     user: UserData
     tasks: list[TaskData]
+
+
+@dataclass
+class HabiticaPartyData:
+    """Habitica party data."""
+
+    party: GroupData
+    members: dict[UUID, UserData]
 
 
 type HabiticaConfigEntry = ConfigEntry[HabiticaDataUpdateCoordinator]
@@ -192,11 +201,21 @@ class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
         return png.getvalue()
 
 
-class HabiticaPartyCoordinator(HabiticaBaseCoordinator[GroupData]):
+class HabiticaPartyCoordinator(HabiticaBaseCoordinator[HabiticaPartyData]):
     """Habitica Party Coordinator."""
 
     _update_interval = timedelta(minutes=15)
 
-    async def _update_data(self) -> GroupData:
+    async def _update_data(self) -> HabiticaPartyData:
         """Fetch the latest party data."""
-        return (await self.habitica.get_group()).data
+
+        return HabiticaPartyData(
+            party=(await self.habitica.get_group()).data,
+            members={
+                member.id: member
+                for member in (
+                    await self.habitica.get_group_members(public_fields=True)
+                ).data
+                if member.id
+            },
+        )

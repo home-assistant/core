@@ -13,15 +13,16 @@ from pyportainer import (
     PortainerTimeoutError,
 )
 from pyportainer.models.docker import DockerContainer
+from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, ENDPOINT_STATUS_DOWN
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -38,6 +39,8 @@ class PortainerCoordinatorData:
     name: str | None
     endpoint: Endpoint
     containers: dict[str, DockerContainer]
+    docker_version: DockerVersion
+    docker_info: DockerInfo
 
 
 class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorData]]):
@@ -66,7 +69,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         try:
             await self.portainer.get_endpoints()
         except PortainerAuthenticationError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
@@ -87,14 +90,14 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
     async def _async_update_data(self) -> dict[int, PortainerCoordinatorData]:
         """Fetch data from Portainer API."""
         _LOGGER.debug(
-            "Fetching data from Portainer API: %s", self.config_entry.data[CONF_HOST]
+            "Fetching data from Portainer API: %s", self.config_entry.data[CONF_URL]
         )
 
         try:
             endpoints = await self.portainer.get_endpoints()
         except PortainerAuthenticationError as err:
             _LOGGER.error("Authentication error: %s", repr(err))
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
@@ -110,8 +113,18 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
+            if endpoint.status == ENDPOINT_STATUS_DOWN:
+                _LOGGER.debug(
+                    "Skipping offline endpoint: %s (ID: %d)",
+                    endpoint.name,
+                    endpoint.id,
+                )
+                continue
+
             try:
                 containers = await self.portainer.get_containers(endpoint.id)
+                docker_version = await self.portainer.docker_version(endpoint.id)
+                docker_info = await self.portainer.docker_info(endpoint.id)
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
                 raise UpdateFailed(
@@ -121,7 +134,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 ) from err
             except PortainerAuthenticationError as err:
                 _LOGGER.exception("Authentication error")
-                raise UpdateFailed(
+                raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="invalid_auth",
                     translation_placeholders={"error": repr(err)},
@@ -132,6 +145,8 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 name=endpoint.name,
                 endpoint=endpoint,
                 containers={container.id: container for container in containers},
+                docker_version=docker_version,
+                docker_info=docker_info,
             )
 
         return mapped_endpoints

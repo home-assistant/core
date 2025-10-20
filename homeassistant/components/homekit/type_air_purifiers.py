@@ -219,7 +219,7 @@ class AirPurifier(Fan):
         return preset_mode.lower() != "auto"
 
     @callback
-    @pyhap_callback  # type: ignore[misc]
+    @pyhap_callback  # type: ignore[untyped-decorator]
     def run(self) -> None:
         """Handle accessory driver started event.
 
