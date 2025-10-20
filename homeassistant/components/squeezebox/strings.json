@@ -258,6 +258,9 @@
     },
     "unjoin_failed": {
       "message": "Failed to unsync the player: {error}"
+    },
+    "press_failed": {
+      "message": "Failed to execute button action {action}."
     }
   }
 }
