@@ -2,32 +2,13 @@
 
 from __future__ import annotations
 
-import argparse
 import json
 from pathlib import Path
 
 from .const import INTEGRATIONS_DIR
 from .develop import InvalidSubstitutionKey, substitute_reference
 from .upload import generate_upload_data
-from .util import extract_placeholders, flatten_translations, get_base_arg_parser
-
-
-def valid_integration(integration):
-    """Test if it's a valid integration."""
-    if not (INTEGRATIONS_DIR / integration).is_dir():
-        raise argparse.ArgumentTypeError(
-            f"The integration {integration} does not exist."
-        )
-    return integration
-
-
-def get_arguments() -> argparse.Namespace:
-    """Get parsed passed in arguments."""
-    parser = get_base_arg_parser()
-    parser.add_argument(
-        "--integration", type=valid_integration, help="Integration to validate."
-    )
-    return parser.parse_args()
+from .util import extract_placeholders, flatten_translations
 
 
 def validate_integration_placeholders(
@@ -44,7 +25,7 @@ def validate_integration_placeholders(
     for translation_file in (integration_path / "translations").glob("*.json"):
         locale = translation_file.stem
 
-        # Skip platform-specific files (e.g., sensor.nl.json) and backup files
+        # Skip things like `sensor.nl.json` and backup files
         if "." in locale:
             continue
 
@@ -63,9 +44,7 @@ def validate_integration_placeholders(
                 english_value = substitute_reference(
                     flattened_english[full_key], flattened_english
                 )
-                localized_value = substitute_reference(
-                    localized_value, flattened_english
-                )
+                localized_value = substitute_reference(localized_value, localized_flat)
             except InvalidSubstitutionKey as err:
                 errors.append(f"  [{locale}] {key}: {err}")
                 continue
@@ -103,29 +82,18 @@ def validate_integration_placeholders(
 
 def run():
     """Run the validation."""
-    args = get_arguments()
 
     # Load all English translations once
-    print("Loading English translations...")
     translations = generate_upload_data()
     flattened_english = flatten_translations(translations)
 
-    if args.integration:
-        integrations = [args.integration]
-    else:
-        # Validate all integrations
-        integrations = sorted(
-            [
-                d.name
-                for d in INTEGRATIONS_DIR.iterdir()
-                if d.is_dir() and (d / "strings.json").is_file()
-            ]
-        )
-
     return_code = 0
 
-    for integration in integrations:
-        integration_path = INTEGRATIONS_DIR / integration
+    for integration_path in INTEGRATIONS_DIR.iterdir():
+        if not (integration_path / "strings.json").is_file():
+            continue
+
+        integration = integration_path.name
         errors = validate_integration_placeholders(
             integration, integration_path, flattened_english
         )
