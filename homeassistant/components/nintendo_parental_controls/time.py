@@ -23,7 +23,7 @@ from .entity import Device, NintendoDevice
 _LOGGER = logging.getLogger(__name__)
 
 # Coordinator is used to centralize the data updates
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 
 class NintendoParentalControlsTime(StrEnum):
