@@ -61,6 +61,33 @@
     },
     "bedtime_alarm_out_of_range": {
       "message": "{value} not accepted. Bedtime Alarm must be between {bedtime_alarm_min} and {bedtime_alarm_max}. To disable, set to {bedtime_alarm_disable}."
+    },
+    "config_entry_not_found": {
+      "message": "Config entry not found."
+    },
+    "device_not_found": {
+      "message": "Device not found."
+    }
+  },
+  "services": {
+    "add_bonus_time": {
+      "description": "Add bonus screen time to the selected Nintendo Switch.",
+      "fields": {
+        "bonus_time": {
+          "description": "The amount of bonus time to add in minutes. Maximum is 30 minutes, minimum is 5.",
+          "name": "Bonus Time"
+        },
+        "device_id": {
+          "description": "The ID of the device to add bonus time to.",
+          "example": "1234567890abcdef",
+          "name": "Device"
+        },
+        "config_entry_id": {
+          "description": "The ID of the account to which the device belongs.",
+          "name": "Account"
+        }
+      },
+      "name": "Add Bonus Time"
     }
   }
 }

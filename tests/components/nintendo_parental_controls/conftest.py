@@ -35,6 +35,7 @@ def mock_nintendo_device() -> Device:
     mock.limit_time = 120
     mock.today_playing_time = 110
     mock.bedtime_alarm = time(hour=19)
+    mock.add_extra_time.return_value = None
     mock.set_bedtime_alarm.return_value = None
     mock.update_max_daily_playtime.return_value = None
     mock.forced_termination_mode = True
