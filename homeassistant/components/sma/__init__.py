@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_GROUP, DOMAIN, PYSMA_OBJECT, PYSMA_REMOVE_LISTENER
+from .const import CONF_GROUP
 from .coordinator import SMADataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -61,15 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        data = hass.data[DOMAIN].pop(entry.entry_id)
-        await data[PYSMA_OBJECT].close_session()
-        data[PYSMA_REMOVE_LISTENER]()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
