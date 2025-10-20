@@ -102,7 +102,7 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
         else:
             self._attr_is_volume_muted = False
             self._attr_volume_level = matter_volume / 254.0
-        # No state in the Speaker endpoint as it dedicated to volume control
+        # No state in the Speaker endpoint as it is dedicated to volume control
         self._attr_state = MediaPlayerState.ON
 
     @callback
