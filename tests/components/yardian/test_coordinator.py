@@ -1,7 +1,7 @@
 """Tests for the Yardian coordinator."""
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pyyardian import NotAuthorizedException
@@ -11,8 +11,8 @@ from homeassistant.components.yardian.coordinator import (
     YardianCombinedState,
     YardianUpdateCoordinator,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from tests.common import MockConfigEntry
 
@@ -41,10 +41,16 @@ async def test_coordinator_combines_state(hass: HomeAssistant) -> None:
     )
     client.fetch_oper_info.return_value = {"iStandby": 1}
 
-    coordinator = YardianUpdateCoordinator(hass, entry, client)
+    with patch(
+        "homeassistant.components.yardian.AsyncYardianClient", return_value=client
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    state = await coordinator._async_update_data()
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    assert isinstance(coordinator, YardianUpdateCoordinator)
 
+    state = coordinator.data
     assert isinstance(state, YardianCombinedState)
     assert state.zones == [["Zone 1", 1]]
     assert state.active_zones == {0}
@@ -71,7 +77,20 @@ async def test_coordinator_raises_auth_failed(hass: HomeAssistant) -> None:
     client = AsyncMock()
     client.fetch_device_state.side_effect = NotAuthorizedException
 
-    coordinator = YardianUpdateCoordinator(hass, entry, client)
+    with (
+        patch(
+            "homeassistant.components.yardian.AsyncYardianClient", return_value=client
+        ),
+        patch.object(
+            hass.config_entries.flow,
+            "async_init",
+            AsyncMock(
+                return_value={"type": "abort", "reason": "reauth_not_supported"}
+            ),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    with pytest.raises(ConfigEntryAuthFailed):
-        await coordinator._async_update_data()
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert hass.data.get(DOMAIN, {}).get(entry.entry_id) is None

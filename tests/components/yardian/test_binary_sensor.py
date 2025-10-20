@@ -78,7 +78,7 @@ async def test_binary_sensors_setup(hass: HomeAssistant) -> None:
     ent_reg = er.async_get(hass)
 
     entity_id = ent_reg.async_get_entity_id(
-        "binary_sensor", DOMAIN, "yid123_watering-running"
+        "binary_sensor", DOMAIN, "yid123-watering_running"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
@@ -114,9 +114,11 @@ async def test_binary_sensor_state_updates(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     ent_reg = er.async_get(hass)
-    standby_id = ent_reg.async_get_entity_id("binary_sensor", DOMAIN, "yid123_standby")
+    standby_id = ent_reg.async_get_entity_id(
+        "binary_sensor", DOMAIN, "yid123-standby"
+    )
     freeze_id = ent_reg.async_get_entity_id(
-        "binary_sensor", DOMAIN, "yid123_freeze-prevent"
+        "binary_sensor", DOMAIN, "yid123-freeze_prevent"
     )
     assert standby_id and freeze_id
 
@@ -160,7 +162,7 @@ async def test_zone_enabled_sensor_enabling(hass: HomeAssistant) -> None:
 
     ent_reg = er.async_get(hass)
     zone_entity_id = ent_reg.async_get_entity_id(
-        "binary_sensor", DOMAIN, "yid123_zone-enabled-0"
+        "binary_sensor", DOMAIN, "yid123-zone_enabled_0"
     )
     assert zone_entity_id is not None
 
@@ -215,7 +217,7 @@ async def test_zone_enabled_sensors_disabled_by_default(hass: HomeAssistant) -> 
 
     for idx in range(3):
         entity_id = ent_reg.async_get_entity_id(
-            "binary_sensor", DOMAIN, f"yid123_zone-enabled-{idx}"
+            "binary_sensor", DOMAIN, f"yid123-zone_enabled_{idx}"
         )
         assert entity_id is not None
         reg_entry = ent_reg.async_get(entity_id)

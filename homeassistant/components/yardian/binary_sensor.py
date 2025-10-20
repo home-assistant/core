@@ -25,7 +25,6 @@ class YardianBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Entity description for Yardian binary sensors."""
 
     value_fn: Callable[[YardianUpdateCoordinator], bool | None]
-    translation_placeholders: dict[str, str] | None = None
 
 
 def _zone_enabled_value(
@@ -63,21 +62,18 @@ SENSOR_DESCRIPTIONS: tuple[YardianBinarySensorEntityDescription, ...] = (
     YardianBinarySensorEntityDescription(
         key="watering_running",
         translation_key="watering_running",
-        unique_id_suffix="watering-running",
         device_class=BinarySensorDeviceClass.RUNNING,
         value_fn=lambda coordinator: bool(coordinator.data.active_zones),
     ),
     YardianBinarySensorEntityDescription(
         key="standby",
         translation_key="standby",
-        unique_id_suffix="standby",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_standby_value,
     ),
     YardianBinarySensorEntityDescription(
         key="freeze_prevent",
         translation_key="freeze_prevent",
-        unique_id_suffix="freeze-prevent",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_freeze_prevent_value,
@@ -102,7 +98,6 @@ async def async_setup_entry(
         YardianBinarySensorEntityDescription(
             key=f"zone_enabled_{zone_id}",
             translation_key="zone_enabled",
-            unique_id_suffix=f"zone-enabled-{zone_id}",
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
             value_fn=_zone_value_factory(zone_id),
