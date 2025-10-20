@@ -11,6 +11,7 @@ from homeassistant.components.adax.const import (
     CONNECTION_TYPE,
     DOMAIN,
     LOCAL,
+    WIFI_PSWD,
     WIFI_SSID,
 )
 from homeassistant.const import CONF_PASSWORD
@@ -148,7 +149,7 @@ async def test_local_create_entry(hass: HomeAssistant) -> None:
 
     test_data = {
         WIFI_SSID: "ssid",
-        CONF_PASSWORD: "pswd",
+        WIFI_PSWD: "pswd",
     }
 
     with (
@@ -187,7 +188,7 @@ async def test_local_flow_entry_already_exists(hass: HomeAssistant) -> None:
 
     test_data = {
         WIFI_SSID: "ssid",
-        CONF_PASSWORD: "pswd",
+        WIFI_PSWD: "pswd",
     }
 
     first_entry = MockConfigEntry(
@@ -213,7 +214,7 @@ async def test_local_flow_entry_already_exists(hass: HomeAssistant) -> None:
 
     test_data = {
         WIFI_SSID: "ssid",
-        CONF_PASSWORD: "pswd",
+        WIFI_PSWD: "pswd",
     }
 
     with patch("adax_local.AdaxConfig", autospec=True) as mock_client_class:
@@ -251,7 +252,7 @@ async def test_local_connection_error(hass: HomeAssistant) -> None:
 
     test_data = {
         WIFI_SSID: "ssid",
-        CONF_PASSWORD: "pswd",
+        WIFI_PSWD: "pswd",
     }
 
     with patch(
@@ -286,7 +287,7 @@ async def test_local_heater_not_available(hass: HomeAssistant) -> None:
 
     test_data = {
         WIFI_SSID: "ssid",
-        CONF_PASSWORD: "pswd",
+        WIFI_PSWD: "pswd",
     }
 
     with patch(
@@ -321,7 +322,7 @@ async def test_local_heater_not_found(hass: HomeAssistant) -> None:
 
     test_data = {
         WIFI_SSID: "ssid",
-        CONF_PASSWORD: "pswd",
+        WIFI_PSWD: "pswd",
     }
 
     with patch(
@@ -356,7 +357,7 @@ async def test_local_invalid_wifi_cred(hass: HomeAssistant) -> None:
 
     test_data = {
         WIFI_SSID: "ssid",
-        CONF_PASSWORD: "pswd",
+        WIFI_PSWD: "pswd",
     }
 
     with patch(
