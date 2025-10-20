@@ -241,7 +241,8 @@ class AuthManager:
         """Retrieve a user."""
         return self._store.async_get_user(user_id)
 
-    async def async_get_owner(self) -> models.User | None:
+    @callback
+    def async_get_owner(self) -> models.User | None:
         """Retrieve the owner."""
         users = self.async_get_users()
         return next((user for user in users if user.is_owner), None)
@@ -263,7 +264,7 @@ class AuthManager:
 
         return None
 
-    async def async_create_system_user(
+    async def async_create_system_user(  # NOSONAR - kept async for public API compatibility
         self,
         name: str,
         *,
@@ -283,7 +284,7 @@ class AuthManager:
 
         return user
 
-    async def async_create_user(
+    async def async_create_user(  # NOSONAR - kept async for public API compatibility
         self,
         name: str,
         *,
@@ -363,7 +364,7 @@ class AuthManager:
 
         self.hass.bus.async_fire(EVENT_USER_REMOVED, {"user_id": user.id})
 
-    async def async_update_user(
+    async def async_update_user(  # NOSONAR - kept async for public API compatibility
         self,
         user: models.User,
         name: str | None = None,

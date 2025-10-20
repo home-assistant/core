@@ -859,7 +859,7 @@ class Config:
                 # owner account.
                 data["language"] = "en"
                 try:
-                    owner = await self.hass.auth.async_get_owner()
+                    owner = self.hass.auth.async_get_owner()
                     if owner is not None:
                         from .components.frontend import (  # noqa: PLC0415
                             storage as frontend_store,
