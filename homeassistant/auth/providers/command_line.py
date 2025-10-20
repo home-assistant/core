@@ -112,7 +112,7 @@ class CommandLineAuthProvider(AuthProvider):
     ) -> Credentials:
         """Get credentials based on the flow result."""
         username = flow_result["username"]
-        for credential in await self.async_credentials():
+        for credential in self.async_credentials():
             if credential.data["username"] == username:
                 return credential
 

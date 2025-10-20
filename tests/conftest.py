@@ -705,7 +705,7 @@ async def hass_access_token(
     hass: HomeAssistant, hass_admin_user: MockUser, hass_admin_credential: Credentials
 ) -> str:
     """Return an access token to access Home Assistant."""
-    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
+    hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
 
     refresh_token = await hass.auth.async_create_refresh_token(
         hass_admin_user, CLIENT_ID, credential=hass_admin_credential
@@ -726,7 +726,7 @@ async def hass_admin_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
     """Return a Home Assistant admin user."""
-    admin_group = await hass.auth.async_get_group(GROUP_ID_ADMIN)
+    admin_group = hass.auth.async_get_group(GROUP_ID_ADMIN)
     return MockUser(groups=[admin_group]).add_to_hass(hass)
 
 
@@ -735,7 +735,7 @@ async def hass_read_only_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
     """Return a Home Assistant read only user."""
-    read_only_group = await hass.auth.async_get_group(GROUP_ID_READ_ONLY)
+    read_only_group = hass.auth.async_get_group(GROUP_ID_READ_ONLY)
     return MockUser(groups=[read_only_group]).add_to_hass(hass)
 
 
@@ -766,7 +766,7 @@ async def hass_supervisor_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
     """Return the Home Assistant Supervisor user."""
-    admin_group = await hass.auth.async_get_group(GROUP_ID_ADMIN)
+    admin_group = hass.auth.async_get_group(GROUP_ID_ADMIN)
     return MockUser(
         name=HASSIO_USER_NAME, groups=[admin_group], system_generated=True
     ).add_to_hass(hass)

@@ -18,7 +18,7 @@ async def test_user_management(
     hass: HomeAssistant, config_entry, setup_voip, snapshot: SnapshotAssertion
 ) -> None:
     """Test creating and removing voip user."""
-    user = await hass.auth.async_get_user(config_entry.data["user"])
+    user = hass.auth.async_get_user(config_entry.data["user"])
     assert user is not None
     assert user.is_active
     assert user.system_generated
@@ -30,4 +30,4 @@ async def test_user_management(
 
     await hass.config_entries.async_remove(config_entry.entry_id)
 
-    assert await hass.auth.async_get_user(user.id) is None
+    assert hass.auth.async_get_user(user.id) is None

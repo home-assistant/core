@@ -110,7 +110,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         """Return a flow to login."""
         assert context is not None
         ip_addr = cast(IPAddress, context.get("ip_address"))
-        users = await self.store.async_get_users()
+        users = self.store.async_get_users()
         available_users = [
             user for user in users if not user.system_generated and user.is_active
         ]
@@ -152,7 +152,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         """Get credentials based on the flow result."""
         user_id = flow_result["user"]
 
-        users = await self.store.async_get_users()
+        users = self.store.async_get_users()
         for user in users:
             if user.id != user_id:
                 continue
@@ -163,12 +163,12 @@ class TrustedNetworksAuthProvider(AuthProvider):
             if not user.is_active:
                 continue
 
-            for credential in await self.async_credentials():
+            for credential in self.async_credentials():
                 if credential.data["user_id"] == user_id:
                     return credential
 
             cred = self.async_create_credentials({"user_id": user_id})
-            await self.store.async_link_user(user, cred)
+            self.store.async_link_user(user, cred)
             return cred
 
         # We only allow login as exist user

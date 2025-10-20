@@ -373,7 +373,7 @@ class HassAuthProvider(AuthProvider):
         norm_username = self.data.normalize_username
         username = norm_username(flow_result["username"])
 
-        for credential in await self.async_credentials():
+        for credential in self.async_credentials():
             if norm_username(credential.data["username"]) == username:
                 return credential
 
