@@ -34,7 +34,10 @@ async def test_async_setup_entry(
     "exc", [ApiError("API Error"), RetryError("Retry Error"), TimeoutError]
 )
 async def test_config_not_ready(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, exc: Exception
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
+    exc: Exception,
 ) -> None:
     """Test for setup failure if the connection to the service fails."""
     with patch(
@@ -65,7 +68,9 @@ async def test_unload_entry(
 
 
 async def test_config_auth_failed(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
 ) -> None:
     """Test for setup failure if the auth fails."""
     with patch(
