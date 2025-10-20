@@ -38,11 +38,6 @@ def _zone_enabled_value(
         return None
 
 
-def _watering_running_value(coordinator: YardianUpdateCoordinator) -> bool:
-    """Return True if any zone is currently active."""
-    return bool(coordinator.data.active_zones)
-
-
 def _standby_value(coordinator: YardianUpdateCoordinator) -> bool:
     """Return True if controller is in standby mode."""
     return bool(coordinator.data.oper_info.get("iStandby", 0))
@@ -70,7 +65,7 @@ SENSOR_DESCRIPTIONS: tuple[YardianBinarySensorEntityDescription, ...] = (
         translation_key="watering_running",
         unique_id_suffix="watering-running",
         device_class=BinarySensorDeviceClass.RUNNING,
-        value_fn=_watering_running_value,
+        value_fn=lambda coordinator: bool(coordinator.data.active_zones),
     ),
     YardianBinarySensorEntityDescription(
         key="standby",
