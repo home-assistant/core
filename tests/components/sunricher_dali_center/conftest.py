@@ -105,13 +105,13 @@ def mock_devices() -> list[MagicMock]:
 
 
 @pytest.fixture
-def mock_discovery() -> Generator[MagicMock]:
+def mock_discovery(mock_gateway: MagicMock) -> Generator[MagicMock]:
     """Mock DaliGatewayDiscovery."""
     with patch(
         "homeassistant.components.sunricher_dali_center.config_flow.DaliGatewayDiscovery"
     ) as mock_discovery_class:
         mock_discovery = mock_discovery_class.return_value
-        mock_discovery.discover_gateways = AsyncMock()
+        mock_discovery.discover_gateways = AsyncMock(return_value=[mock_gateway])
         yield mock_discovery
 
 

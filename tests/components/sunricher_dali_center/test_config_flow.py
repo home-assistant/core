@@ -29,8 +29,6 @@ async def test_discovery_flow_success(
     mock_gateway: MagicMock,
 ) -> None:
     """Test a successful discovery flow."""
-    mock_discovery.discover_gateways.return_value = [mock_gateway]
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -137,7 +135,6 @@ async def test_discovery_connection_failure(
     mock_gateway: MagicMock,
 ) -> None:
     """Test connection failure when validating the selected gateway."""
-    mock_discovery.discover_gateways.return_value = [mock_gateway]
     mock_gateway.connect.side_effect = DaliGatewayError("failure")
 
     result = await hass.config_entries.flow.async_init(
@@ -162,7 +159,6 @@ async def test_discovery_connection_failure(
     mock_gateway.disconnect.assert_not_awaited()
 
     mock_gateway.connect.side_effect = None
-    mock_gateway.connect.return_value = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"selected_gateway": mock_gateway.gw_sn},
@@ -179,8 +175,6 @@ async def test_discovery_duplicate_filtered(
 ) -> None:
     """Test that already configured gateways are filtered out."""
     mock_config_entry.add_to_hass(hass)
-
-    mock_discovery.discover_gateways.return_value = [mock_gateway]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -214,8 +208,6 @@ async def test_discovery_unique_id_already_configured(
     mock_gateway: MagicMock,
 ) -> None:
     """Test duplicate protection when the entry appears during the flow."""
-    mock_discovery.discover_gateways.return_value = [mock_gateway]
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

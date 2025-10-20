@@ -17,7 +17,6 @@ async def test_setup_entry_success(
 ) -> None:
     """Test successful setup of config entry."""
     mock_config_entry.add_to_hass(hass)
-    mock_gateway.connect.return_value = None
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
