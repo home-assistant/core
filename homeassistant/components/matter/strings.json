@@ -176,6 +176,11 @@
         }
       }
     },
+    "media_player": {
+      "media_player": {
+        "name": "[%key:component::media_player::title%]"
+      }
+    },
     "number": {
       "on_level": {
         "name": "On level"
