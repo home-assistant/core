@@ -1,6 +1,6 @@
 """Test button of NextDNS integration."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
@@ -26,6 +26,7 @@ async def test_button(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
 ) -> None:
     """Test states of the button."""
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.BUTTON]):
@@ -36,23 +37,22 @@ async def test_button(
 
 @pytest.mark.freeze_time("2023-10-21")
 async def test_button_press(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
 ) -> None:
     """Test button press."""
     await init_integration(hass, mock_config_entry)
 
-    with (
-        patch("homeassistant.components.nextdns.NextDns.clear_logs") as mock_clear_logs,
-    ):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
-    mock_clear_logs.assert_called_once()
+    mock_nextdns_client.clear_logs.assert_called_once()
 
     state = hass.states.get("button.fake_profile_clear_logs")
     assert state
@@ -69,17 +69,19 @@ async def test_button_press(
     ],
 )
 async def test_button_failure(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, exc: Exception
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
+    exc: Exception,
 ) -> None:
     """Tests that the press action throws HomeAssistantError."""
     await init_integration(hass, mock_config_entry)
 
-    with (
-        patch("homeassistant.components.nextdns.NextDns.clear_logs", side_effect=exc),
-        pytest.raises(
-            HomeAssistantError,
-            match="An error occurred while calling the NextDNS API method for button.fake_profile_clear_logs",
-        ),
+    mock_nextdns_client.clear_logs.side_effect = exc
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while calling the NextDNS API method for button.fake_profile_clear_logs",
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -90,21 +92,21 @@ async def test_button_failure(
 
 
 async def test_button_auth_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
 ) -> None:
     """Tests that the press action starts re-auth flow."""
     await init_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.nextdns.NextDns.clear_logs",
-        side_effect=InvalidApiKeyError,
-    ):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
-            blocking=True,
-        )
+    mock_nextdns_client.clear_logs.side_effect = InvalidApiKeyError
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
+        blocking=True,
+    )
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 

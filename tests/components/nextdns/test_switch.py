@@ -130,17 +130,20 @@ async def test_availability(
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
-    freezer.tick(timedelta(minutes=10))
     mock_nextdns_client.set_setting.side_effect = exc
 
+    freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    freezer.tick(timedelta(minutes=10))
     mock_nextdns_client.set_setting.side_effect = None
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
