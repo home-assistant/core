@@ -7443,17 +7443,17 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "watts": {
-      "name": "Watts Vision +",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "watson_tts": {
       "name": "IBM Watson TTS",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "watts": {
+      "name": "Watts Vision +",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "watttime": {
       "name": "WattTime",
