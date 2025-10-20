@@ -8,7 +8,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .config_entry import EnOceanConfigEntry, EnOceanConfigRuntimeData
 from .config_flow import CONF_ENOCEAN_DEVICES
-from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, LOGGER, PLATFORMS
+from .const import DATA_ENOCEAN, DOMAIN, LOGGER, PLATFORMS
 from .dongle import EnOceanDongle
 
 
@@ -17,12 +17,10 @@ async def async_setup_entry(
     config_entry: EnOceanConfigEntry,
 ) -> bool:
     """Set up an EnOcean dongle for the given entry."""
-    enocean_data = hass.data.setdefault(DATA_ENOCEAN, {})
     usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
     await usb_dongle.async_setup()
 
     # PLAN IS TO move the following instead into the config_entry's runtime_data
-    enocean_data[ENOCEAN_DONGLE] = usb_dongle
     config_entry.runtime_data = EnOceanConfigRuntimeData(gateway=usb_dongle)
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
@@ -72,8 +70,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: EnOceanConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EnOceanConfigEntry) -> bool:
     """Unload EnOcean config entry."""
-    enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
-    enocean_dongle.unload()
+    entry.runtime_data.gateway.unload()
 
     if unload_platforms := await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS

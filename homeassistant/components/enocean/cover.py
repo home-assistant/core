@@ -117,8 +117,8 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
     ) -> None:
         """Initialize the EnOcean Cover."""
         super().__init__(
-            enocean_device_id=enocean_device_id,
-            enocean_gateway_id=gateway_id,
+            enocean_id=enocean_device_id,
+            gateway_id=gateway_id,
             device_name=device_name,
             dev_type=dev_type,
             name=name,

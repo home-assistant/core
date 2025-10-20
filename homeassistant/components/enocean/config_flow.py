@@ -18,11 +18,9 @@ from .const import (
     CONF_ENOCEAN_DEVICE_TYPE_ID,
     CONF_ENOCEAN_DEVICES,
     CONF_ENOCEAN_SENDER_ID,
-    DATA_ENOCEAN,
     DOMAIN,
     ENOCEAN_DEFAULT_DEVICE_NAME,
     ENOCEAN_DEVICE_TYPE_ID,
-    ENOCEAN_DONGLE,
     ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED,
     ENOCEAN_ERROR_DEVICE_NAME_EMPTY,
     ENOCEAN_ERROR_INVALID_DEVICE_ID,
@@ -162,9 +160,7 @@ class OptionsFlowHandler(OptionsFlow):
         default_device_type = ""
         default_device_id = ""
         default_device_name = ""
-        default_sender_id = self.hass.data[DATA_ENOCEAN][
-            ENOCEAN_DONGLE
-        ].base_id.to_string()
+        default_sender_id = self.config_entry.runtime_data.gateway.base_id.to_string()
 
         device_id: EnOceanID | None = None
         device_name: str | None = None
@@ -195,7 +191,7 @@ class OptionsFlowHandler(OptionsFlow):
 
             # sender id must be a valid EnOceanID string
             if user_input[CONF_ENOCEAN_SENDER_ID].strip() == "":
-                sender_id = self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].base_id
+                sender_id = self.config_entry.runtime_data.gateway.base_id
             elif not EnOceanID.validate_string(user_input[CONF_ENOCEAN_SENDER_ID]):
                 errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
             else:
@@ -263,9 +259,7 @@ class OptionsFlowHandler(OptionsFlow):
                     default=default_sender_id,
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
-                        options=self.hass.data[DATA_ENOCEAN][
-                            ENOCEAN_DONGLE
-                        ].valid_sender_ids(),
+                        options=self.config_entry.runtime_data.gateway.valid_sender_ids(),
                         custom_value=False,
                     )
                 ),
@@ -403,9 +397,7 @@ class OptionsFlowHandler(OptionsFlow):
                     # of enocean lib).
                     # Hence the use of a SelectSelector.
                     selector.SelectSelectorConfig(
-                        options=self.hass.data[DATA_ENOCEAN][
-                            ENOCEAN_DONGLE
-                        ].valid_sender_ids(),
+                        options=self.config_entry.runtime_data.gateway.valid_sender_ids(),
                         custom_value=False,
                     )
                 ),

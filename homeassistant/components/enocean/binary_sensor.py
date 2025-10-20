@@ -93,8 +93,8 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the EnOcean binary sensor."""
         super().__init__(
-            enocean_device_id=device_id,
-            enocean_gateway_id=enocean_gateway_id,
+            enocean_id=device_id,
+            gateway_id=enocean_gateway_id,
             device_name=device_name,
             dev_type=dev_type,
             name=name,

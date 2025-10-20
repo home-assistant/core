@@ -111,8 +111,8 @@ class EnOceanLight(EnOceanEntity, LightEntity):
     ) -> None:
         """Initialize the EnOcean light source."""
         super().__init__(
-            enocean_device_id=dev_id,
-            enocean_gateway_id=gateway_id,
+            enocean_id=dev_id,
+            gateway_id=gateway_id,
             device_name=dev_name,
             name=name,
             dev_type=dev_type,

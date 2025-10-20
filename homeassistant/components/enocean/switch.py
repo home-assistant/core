@@ -128,8 +128,8 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     ) -> None:
         """Initialize the EnOcean switch device."""
         super().__init__(
-            enocean_device_id=dev_id,
-            enocean_gateway_id=gateway_id,
+            enocean_id=dev_id,
+            gateway_id=gateway_id,
             device_name=dev_name,
             name=name,
             dev_type=dev_type,

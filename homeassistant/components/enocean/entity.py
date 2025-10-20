@@ -10,13 +10,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    DATA_ENOCEAN,
-    DOMAIN,
-    ENOCEAN_DONGLE,
-    SIGNAL_RECEIVE_MESSAGE,
-    SIGNAL_SEND_MESSAGE,
-)
+from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 from .enocean_id import EnOceanID
 from .supported_device_type import EnOceanSupportedDeviceType
 
@@ -26,28 +20,28 @@ class EnOceanEntity(Entity):
 
     def __init__(
         self,
-        enocean_device_id: EnOceanID,
-        enocean_gateway_id: EnOceanID,
+        enocean_id: EnOceanID,
+        gateway_id: EnOceanID,
         device_name: str,
         name: str | None = None,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
     ) -> None:
         """Initialize the entity."""
         super().__init__()
-        self._enocean_device_id: EnOceanID = enocean_device_id
-        self._device_name: str = device_name
-        self.dev_type = dev_type
+
+        # set base class attributes
         self._attr_name = name
         self._attr_has_entity_name = name is not None
-        self._gateway_id = enocean_gateway_id
         self._attr_should_poll = False
-        # _LOGGER.warning("unique_id: %s", f"{enocean_device_id.to_string()}-{self.platform}-{name}")
-        # self._attr_unique_id = f"{enocean_device_id.to_string()}-{self._attr_device_class}-{name}"
+
+        # define EnOcean-specific attributes
+        self._enocean_device_id: EnOceanID = enocean_id
+        self._device_name: str = device_name
+        self.dev_type = dev_type
+        self._gateway_id = gateway_id
 
     async def async_added_to_hass(self) -> None:
         """Get gateway ID and register callback."""
-        self._gateway_id = self.hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE].chip_id
-
         _LOGGER.warning(
             "Unique_id: %s, Friendly_name: %s",
             self.unique_id,
@@ -114,14 +108,12 @@ class EnOceanEntity(Entity):
         )
 
         if self._enocean_device_id.to_number() == self._gateway_id.to_number():
+            if self.platform.config_entry is None:
+                return info
             info.update(
                 {
-                    "sw_version": self.hass.data[DATA_ENOCEAN][
-                        ENOCEAN_DONGLE
-                    ].sw_version,
-                    "hw_version": self.hass.data[DATA_ENOCEAN][
-                        ENOCEAN_DONGLE
-                    ].chip_version,
+                    "sw_version": self.platform.config_entry.runtime_data.gateway.sw_version,
+                    "hw_version": self.platform.config_entry.runtime_data.gateway.chip_version,
                 }
             )
             return info
