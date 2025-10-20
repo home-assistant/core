@@ -56,13 +56,29 @@ class AuthStore:
         """Initialize the auth store."""
         self.hass = hass
         self._loaded = False
-        self._users: dict[str, models.User] = None  # type: ignore[assignment]
-        self._groups: dict[str, models.Group] = None  # type: ignore[assignment]
-        self._perm_lookup: PermissionLookup = None  # type: ignore[assignment]
+        self._users: dict[str, models.User] = {}
+        self._perm_lookup: PermissionLookup | None = None
         self._store = Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._token_id_to_user_id: dict[str, str] = {}
+        # Initialize default system groups
+        self._groups: dict[str, models.Group] = {}
+        admin_group = _system_admin_group()
+        self._groups[admin_group.id] = admin_group
+        user_group = _system_user_group()
+        self._groups[user_group.id] = user_group
+        read_only_group = _system_read_only_group()
+        self._groups[read_only_group.id] = read_only_group
+
+    @property
+    def perm_lookup(self) -> PermissionLookup:
+        """Get or create permission lookup."""
+        if self._perm_lookup is None:
+            dev_reg = dr.async_get(self.hass)
+            ent_reg = er.async_get(self.hass)
+            self._perm_lookup = PermissionLookup(ent_reg, dev_reg)
+        return self._perm_lookup
 
     @callback
     def async_get_groups(self) -> list[models.Group]:
@@ -107,7 +123,7 @@ class AuthStore:
             # Until we get group management, we just put everyone in the
             # same group.
             "groups": groups,
-            "perm_lookup": self._perm_lookup,
+            "perm_lookup": self.perm_lookup,
         }
 
         kwargs.update(
