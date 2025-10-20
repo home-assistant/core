@@ -140,8 +140,8 @@ class AsusWrtBridge(ABC):
 
     def __init__(self, host: str) -> None:
         """Initialize Bridge."""
-        self._host: str = host
         self._configuration_url: str = f"http://{host}"
+        self._host: str = host
         self._firmware: str | None = None
         self._label_mac: str | None = None
         self._model: str | None = None
@@ -149,7 +149,7 @@ class AsusWrtBridge(ABC):
         self._serial_number: str | None = None
 
     @property
-    def configuration_url(self) -> str | None:
+    def configuration_url(self) -> str:
         """Return configuration URL."""
         return self._configuration_url
 
