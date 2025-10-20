@@ -47,7 +47,7 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator):
             ),
         )
         self.sma = sma
-        # @Erwin: make Dataclasses
+        # TODO: Convert sma_device_info and sensors to dataclasses for stronger typing.
         self.sma_device_info = None
         self.sensors = None
 
