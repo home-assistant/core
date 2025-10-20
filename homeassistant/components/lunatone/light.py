@@ -120,9 +120,7 @@ class LunatoneLight(
         assert self._device
 
         if brightness_supported(self.supported_color_modes):
-            brightness = self._last_brightness
-            if ATTR_BRIGHTNESS in kwargs:
-                brightness = kwargs[ATTR_BRIGHTNESS]
+            brightness = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness)
             await self._device.fade_to_brightness(
                 brightness_to_value(self.BRIGHTNESS_SCALE, brightness)
             )
