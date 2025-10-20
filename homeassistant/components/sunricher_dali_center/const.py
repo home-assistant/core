@@ -2,4 +2,4 @@
 
 DOMAIN = "sunricher_dali_center"
 MANUFACTURER = "Sunricher"
-CONF_SN = "gateway_sn"
+CONF_SERIAL_NUMBER = "serial_number"
