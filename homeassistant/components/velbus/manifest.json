@@ -3,7 +3,7 @@
   "name": "Velbus",
   "codeowners": ["@Cereal2nd", "@brefra"],
   "config_flow": true,
-  "dependencies": ["usb"],
+  "dependencies": ["usb", "file_upload"],
   "documentation": "https://www.home-assistant.io/integrations/velbus",
   "integration_type": "hub",
   "iot_class": "local_push",
