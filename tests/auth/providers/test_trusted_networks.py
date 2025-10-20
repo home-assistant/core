@@ -278,7 +278,7 @@ async def test_login_flow(
     schema = step["data_schema"]
     assert schema({"user": owner.id})
     with pytest.raises(vol.Invalid):
-        assert schema({"user": "invalid-user"})
+        schema({"user": "invalid-user"})
 
     # login with valid user
     step = await flow.async_step_init({"user": user.id})
@@ -323,7 +323,7 @@ async def test_trusted_users_login(
     # only owner listed
     assert schema({"user": owner.id})
     with pytest.raises(vol.Invalid):
-        assert schema({"user": user.id})
+        schema({"user": user.id})
 
     # from trusted network, list users intersect trusted_users
     flow = await provider_with_user.async_login_flow(
@@ -336,9 +336,9 @@ async def test_trusted_users_login(
     # only user listed
     assert schema({"user": user.id})
     with pytest.raises(vol.Invalid):
-        assert schema({"user": owner.id})
+        schema({"user": owner.id})
     with pytest.raises(vol.Invalid):
-        assert schema({"user": sys_user.id})
+        schema({"user": sys_user.id})
 
     # from trusted network, list users intersect trusted_users
     flow = await provider_with_user.async_login_flow({"ip_address": ip_address("::1")})
@@ -350,7 +350,7 @@ async def test_trusted_users_login(
     assert schema({"user": owner.id})
     assert schema({"user": user.id})
     with pytest.raises(vol.Invalid):
-        assert schema({"user": sys_user.id})
+        schema({"user": sys_user.id})
 
     # from trusted network, list users intersect trusted_users
     flow = await provider_with_user.async_login_flow(
@@ -362,11 +362,11 @@ async def test_trusted_users_login(
     schema = step["data_schema"]
     # no user listed
     with pytest.raises(vol.Invalid):
-        assert schema({"user": owner.id})
+        schema({"user": owner.id})
     with pytest.raises(vol.Invalid):
-        assert schema({"user": user.id})
+        schema({"user": user.id})
     with pytest.raises(vol.Invalid):
-        assert schema({"user": sys_user.id})
+        schema({"user": sys_user.id})
 
 
 async def test_trusted_group_login(
@@ -410,7 +410,7 @@ async def test_trusted_group_login(
     # only user listed
     assert schema({"user": user.id})
     with pytest.raises(vol.Invalid):
-        assert schema({"user": owner.id})
+        schema({"user": owner.id})
 
     # from trusted network, list users intersect trusted_users
     flow = await provider_with_user.async_login_flow(
