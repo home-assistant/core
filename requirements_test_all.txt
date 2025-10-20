@@ -10,7 +10,7 @@ AEMET-OpenData==0.6.4
 AIOSomecomfort==0.0.33
 
 # homeassistant.components.adax
-Adax-local==0.1.5
+Adax-local==0.2.0
 
 # homeassistant.components.doorbird
 DoorBirdPy==3.0.8
@@ -201,7 +201,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.1
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.2.1
+aioautomower==2.3.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -244,7 +244,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.0.0
+aioesphomeapi==42.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -301,7 +301,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.0.0
+aiomealie==1.0.1
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -530,7 +530,7 @@ aurorapy==0.2.7
 autarco==3.2.0
 
 # homeassistant.components.husqvarna_automower_ble
-automower-ble==0.2.7
+automower-ble==0.2.8
 
 # homeassistant.components.generic
 # homeassistant.components.stream
@@ -1153,7 +1153,7 @@ kegtron-ble==1.0.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.10.9.185845
+knx-frontend==2025.10.17.202411
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1423,7 +1423,7 @@ openrgb-python==0.3.5
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.15.7
+opower==0.15.8
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1473,7 +1473,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.8.0
+plugwise==1.8.1
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
@@ -1638,7 +1638,7 @@ pycsspeechtts==1.0.8
 # pycups==2.0.4
 
 # homeassistant.components.cync
-pycync==0.4.1
+pycync==0.4.2
 
 # homeassistant.components.daikin
 pydaikin==2.17.1
@@ -1929,10 +1929,10 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.3
+pyportainer==1.0.4
 
 # homeassistant.components.probe_plus
-pyprobeplus==1.1.0
+pyprobeplus==1.1.1
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
@@ -2337,6 +2337,9 @@ sensorpush-ha==1.3.2
 # homeassistant.components.sensoterra
 sensoterra==2.0.1
 
+# homeassistant.components.elevenlabs
+sentence-stream==1.2.0
+
 # homeassistant.components.sentry
 sentry-sdk==1.45.1
 
@@ -2537,7 +2540,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.22.0
+uiprotect==7.23.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2621,7 +2624,7 @@ webmin-xmlrpc==0.0.2
 weheat==2025.6.10
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.21.3
+whirlpool-sixth-sense==1.0.2
 
 # homeassistant.components.whois
 whois==0.9.27

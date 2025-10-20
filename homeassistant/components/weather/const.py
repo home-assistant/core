@@ -77,6 +77,7 @@ VALID_UNITS_VISIBILITY: set[str] = {
     UnitOfLength.MILES,
 }
 VALID_UNITS_WIND_SPEED: set[str] = {
+    UnitOfSpeed.BEAUFORT,
     UnitOfSpeed.FEET_PER_SECOND,
     UnitOfSpeed.KILOMETERS_PER_HOUR,
     UnitOfSpeed.KNOTS,
