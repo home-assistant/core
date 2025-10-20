@@ -186,7 +186,7 @@ class OptionsFlowHandler(OptionsFlow):
                         break
 
             device_type_id = user_input[ENOCEAN_DEVICE_TYPE_ID]
-            device_type = EnOceanDeviceType.getSupportedDeviceTypes()[device_type_id]
+            device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
 
             # sender id must be a valid EnOceanID string
             if user_input[CONF_ENOCEAN_SENDER_ID].strip() == "":
@@ -227,7 +227,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         supported_devices = [
             esd.select_option_dict
-            for esd in list(EnOceanDeviceType.getSupportedDeviceTypes().values())
+            for esd in list(EnOceanDeviceType.get_supported_device_types().values())
         ]
         supported_devices.sort(key=lambda entry: entry["label"].upper())
 
@@ -331,7 +331,7 @@ class OptionsFlowHandler(OptionsFlow):
         if device is not None:  # user_input will be ignored in this case
             device_id = device[CONF_ENOCEAN_DEVICE_ID]
             device_name = device[CONF_ENOCEAN_DEVICE_NAME]
-            device_type = EnOceanDeviceType.getSupportedDeviceTypes()[
+            device_type = EnOceanDeviceType.get_supported_device_types()[
                 device[CONF_ENOCEAN_DEVICE_TYPE_ID]
             ]
             sender_id_string = device[CONF_ENOCEAN_SENDER_ID]
@@ -349,7 +349,7 @@ class OptionsFlowHandler(OptionsFlow):
                     errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
 
             device_type_id = user_input[ENOCEAN_DEVICE_TYPE_ID]
-            device_type = EnOceanDeviceType.getSupportedDeviceTypes()[device_type_id]
+            device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
 
             # device name must not be empty
             device_name = user_input[CONF_ENOCEAN_DEVICE_NAME].strip()
@@ -370,7 +370,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         supported_devices = [
             esd.select_option_dict
-            for esd in list(EnOceanDeviceType.getSupportedDeviceTypes().values())
+            for esd in list(EnOceanDeviceType.get_supported_device_types().values())
         ]
         supported_devices.sort(key=lambda entry: entry["label"].upper())
 

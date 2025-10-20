@@ -49,7 +49,7 @@ async def async_setup_entry(
 
     for device in devices:
         device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
-        device_type = EnOceanDeviceType.getSupportedDeviceTypes()[device_type_id]
+        device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
         eep = device_type.eep
 
         if eep in ENOCEAN_BINARY_SENSOR_EEPS:

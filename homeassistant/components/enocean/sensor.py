@@ -106,7 +106,7 @@ async def async_setup_entry(
         device_id = EnOceanID(device[CONF_ENOCEAN_DEVICE_ID])
         device_name = device[CONF_ENOCEAN_DEVICE_NAME]
         device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
-        device_type = EnOceanDeviceType.getSupportedDeviceTypes()[device_type_id]
+        device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
         eep = device_type.eep
         eep_type = int(eep[6:8], 16)
 

@@ -36,7 +36,7 @@ class EnOceanDeviceType:
         return selector.SelectOptionDict(value=self.unique_id, label=label)
 
     @classmethod
-    def getSupportedDeviceTypes(cls) -> dict[str, "EnOceanDeviceType"]:
+    def get_supported_device_types(cls) -> dict[str, "EnOceanDeviceType"]:
         """Get a dictionary mapping from EnOcean device type id to EnOceanSupportedDeviceType."""
         return {
             # A5-02 Temperature Sensors
