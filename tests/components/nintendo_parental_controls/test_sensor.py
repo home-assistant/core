@@ -1,4 +1,4 @@
-"""Test sensir platform."""
+"""Test sensor platform."""
 
 from unittest.mock import AsyncMock, patch
 
