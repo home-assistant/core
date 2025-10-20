@@ -63,7 +63,7 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator):
             await self.async_close_sma_session()
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="invalid_auth",
+                translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except SmaAuthenticationException as err:
