@@ -114,7 +114,6 @@ SETTINGS = Settings(
     block_social_networks=True,
     block_video_streaming=True,
 )
-ProfileInfo(id="fakepr", fingerprint="fakeprofile12", name="Fake Profile")
 
 
 @pytest.fixture
