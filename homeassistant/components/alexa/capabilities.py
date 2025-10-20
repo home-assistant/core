@@ -1158,40 +1158,47 @@ class AlexaThermostatController(AlexaCapability):
             return None
 
         if name == "thermostatMode":
-            if self.entity.domain == water_heater.DOMAIN:
-                return None
-            preset = self.entity.attributes.get(climate.ATTR_PRESET_MODE)
+            return self._get_thermostat_mode()
 
-            mode: dict[str, str] | str | None
-            if preset in API_THERMOSTAT_PRESETS:
-                mode = API_THERMOSTAT_PRESETS[preset]
-            elif self.entity.state == STATE_UNKNOWN:
-                return None
-            else:
-                if self.entity.state not in API_THERMOSTAT_MODES:
-                    _LOGGER.error(
-                        "%s (%s) has unsupported state value '%s'",
-                        self.entity.entity_id,
-                        type(self.entity),
-                        self.entity.state,
-                    )
-                    raise UnsupportedProperty(name)
-                mode = API_THERMOSTAT_MODES[HVACMode(self.entity.state)]
-            return mode
+        if name in ("targetSetpoint", "lowerSetpoint", "upperSetpoint"):
+            return self._get_setpoint(name)
 
-        unit = self.hass.config.units.temperature_unit
-        if name == "targetSetpoint":
-            temp = self.entity.attributes.get(ATTR_TEMPERATURE)
-        elif name == "lowerSetpoint":
-            temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)
-        elif name == "upperSetpoint":
-            temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)
-        else:
-            raise UnsupportedProperty(name)
+        raise UnsupportedProperty(name)
 
-        if temp is None:
+    def _get_thermostat_mode(self) -> dict[str, str] | str | None:
+        """Return the thermostat mode property."""
+        if self.entity.domain == water_heater.DOMAIN:
             return None
 
+        preset = self.entity.attributes.get(climate.ATTR_PRESET_MODE)
+        if preset in API_THERMOSTAT_PRESETS:
+            return API_THERMOSTAT_PRESETS[preset]
+
+        if self.entity.state == STATE_UNKNOWN:
+            return None
+
+        if self.entity.state not in API_THERMOSTAT_MODES:
+            _LOGGER.error(
+                "%s (%s) has unsupported state value '%s'",
+                self.entity.entity_id,
+                type(self.entity),
+                self.entity.state,
+            )
+            raise UnsupportedProperty("thermostatMode")
+
+        return API_THERMOSTAT_MODES[HVACMode(self.entity.state)]
+
+    def _get_setpoint(self, name: str) -> dict[str, float | str] | None:
+        """Return the setpoint property."""
+        unit = self.hass.config.units.temperature_unit
+        attr_map = {
+            "targetSetpoint": ATTR_TEMPERATURE,
+            "lowerSetpoint": climate.ATTR_TARGET_TEMP_LOW,
+            "upperSetpoint": climate.ATTR_TARGET_TEMP_HIGH,
+        }
+        temp = self.entity.attributes.get(attr_map[name])
+        if temp is None:
+            return None
         try:
             temp = float(temp)
         except ValueError:
@@ -1199,7 +1206,6 @@ class AlexaThermostatController(AlexaCapability):
                 "Invalid temp value %s for %s in %s", temp, name, self.entity.entity_id
             )
             return None
-
         return {"value": temp, "scale": API_TEMP_UNITS[unit]}
 
     def configuration(self) -> dict[str, Any] | None:
@@ -1502,110 +1508,107 @@ class AlexaModeController(AlexaCapability):
 
         return None
 
+    def _create_dynamic_mode_resource(
+        self,
+        catalog_labels: list[str],
+        instance_prefix: str,
+        modes: list[str],
+        add_fake_mode_if_single: bool = True,
+    ) -> dict[str, list[dict[str, Any]]]:
+        """Create mode resource for entities with dynamic mode lists."""
+        self._resource = AlexaModeResource(catalog_labels, False)
+
+        for mode in modes:
+            self._resource.add_mode(f"{instance_prefix}.{mode}", [mode])
+
+        # Add fake mode if only one mode exists to prevent Alexa discovery issues
+        if add_fake_mode_if_single and len(modes) == 1:
+            self._resource.add_mode(
+                f"{instance_prefix}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
+            )
+
+        return self._resource.serialize_capability_resources()
+
+    def _create_static_mode_resource(
+        self,
+        catalog_labels: list[str],
+        modes: dict[str, list[str]],
+    ) -> dict[str, list[dict[str, Any]]]:
+        """Create mode resource for entities with predefined modes."""
+        self._resource = AlexaModeResource(catalog_labels, False)
+
+        for mode_key, mode_labels in modes.items():
+            self._resource.add_mode(mode_key, mode_labels)
+
+        return self._resource.serialize_capability_resources()
+
     def capability_resources(self) -> dict[str, list[dict[str, Any]]]:
         """Return capabilityResources object."""
-
         # Fan Direction Resource
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
-            self._resource = AlexaModeResource(
-                [AlexaGlobalCatalog.SETTING_DIRECTION], False
+            return self._create_static_mode_resource(
+                [AlexaGlobalCatalog.SETTING_DIRECTION],
+                {
+                    f"{fan.ATTR_DIRECTION}.{fan.DIRECTION_FORWARD}": [
+                        fan.DIRECTION_FORWARD
+                    ],
+                    f"{fan.ATTR_DIRECTION}.{fan.DIRECTION_REVERSE}": [
+                        fan.DIRECTION_REVERSE
+                    ],
+                },
             )
-            self._resource.add_mode(
-                f"{fan.ATTR_DIRECTION}.{fan.DIRECTION_FORWARD}", [fan.DIRECTION_FORWARD]
-            )
-            self._resource.add_mode(
-                f"{fan.ATTR_DIRECTION}.{fan.DIRECTION_REVERSE}", [fan.DIRECTION_REVERSE]
-            )
-            return self._resource.serialize_capability_resources()
 
         # Fan preset_mode
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
-            self._resource = AlexaModeResource(
-                [AlexaGlobalCatalog.SETTING_PRESET], False
-            )
             preset_modes = self.entity.attributes.get(fan.ATTR_PRESET_MODES) or []
-            for preset_mode in preset_modes:
-                self._resource.add_mode(
-                    f"{fan.ATTR_PRESET_MODE}.{preset_mode}", [preset_mode]
-                )
-            # Fans with a single preset_mode completely break Alexa discovery, add a
-            # fake preset (see issue #53832).
-            if len(preset_modes) == 1:
-                self._resource.add_mode(
-                    f"{fan.ATTR_PRESET_MODE}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
-                )
-            return self._resource.serialize_capability_resources()
+            return self._create_dynamic_mode_resource(
+                [AlexaGlobalCatalog.SETTING_PRESET], fan.ATTR_PRESET_MODE, preset_modes
+            )
 
         # Humidifier modes
         if self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
-            self._resource = AlexaModeResource([AlexaGlobalCatalog.SETTING_MODE], False)
             modes = self.entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES) or []
-            for mode in modes:
-                self._resource.add_mode(f"{humidifier.ATTR_MODE}.{mode}", [mode])
-            # Humidifiers or Fans with a single mode completely break Alexa discovery,
-            # add a fake preset (see issue #53832).
-            if len(modes) == 1:
-                self._resource.add_mode(
-                    f"{humidifier.ATTR_MODE}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
-                )
-            return self._resource.serialize_capability_resources()
+            return self._create_dynamic_mode_resource(
+                [AlexaGlobalCatalog.SETTING_MODE], humidifier.ATTR_MODE, modes
+            )
 
         # Water heater operation modes
         if self.instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
-            self._resource = AlexaModeResource([AlexaGlobalCatalog.SETTING_MODE], False)
             operation_modes = (
                 self.entity.attributes.get(water_heater.ATTR_OPERATION_LIST) or []
             )
-            for operation_mode in operation_modes:
-                self._resource.add_mode(
-                    f"{water_heater.ATTR_OPERATION_MODE}.{operation_mode}",
-                    [operation_mode],
-                )
-            # Devices with a single mode completely break Alexa discovery,
-            # add a fake preset (see issue #53832).
-            if len(operation_modes) == 1:
-                self._resource.add_mode(
-                    f"{water_heater.ATTR_OPERATION_MODE}.{PRESET_MODE_NA}",
-                    [PRESET_MODE_NA],
-                )
-            return self._resource.serialize_capability_resources()
+            return self._create_dynamic_mode_resource(
+                [AlexaGlobalCatalog.SETTING_MODE],
+                water_heater.ATTR_OPERATION_MODE,
+                operation_modes,
+            )
 
         # Remote Resource
         if self.instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
             # Use the mode controller for a remote because the input controller
             # only allows a preset of names as an input.
-            self._resource = AlexaModeResource([AlexaGlobalCatalog.SETTING_MODE], False)
             activities = self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST) or []
-            for activity in activities:
-                self._resource.add_mode(
-                    f"{remote.ATTR_ACTIVITY}.{activity}", [activity]
-                )
-            # Remotes with a single activity completely break Alexa discovery, add a
-            # fake activity to the mode controller (see issue #53832).
-            if len(activities) == 1:
-                self._resource.add_mode(
-                    f"{remote.ATTR_ACTIVITY}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
-                )
-            return self._resource.serialize_capability_resources()
+            return self._create_dynamic_mode_resource(
+                [AlexaGlobalCatalog.SETTING_MODE], remote.ATTR_ACTIVITY, activities
+            )
 
         # Cover Position Resources
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-            self._resource = AlexaModeResource(
-                ["Position", AlexaGlobalCatalog.SETTING_OPENING], False
+            return self._create_static_mode_resource(
+                ["Position", AlexaGlobalCatalog.SETTING_OPENING],
+                {
+                    f"{cover.ATTR_POSITION}.{cover.STATE_OPEN}": [
+                        AlexaGlobalCatalog.VALUE_OPEN
+                    ],
+                    f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}": [
+                        AlexaGlobalCatalog.VALUE_CLOSE
+                    ],
+                    f"{cover.ATTR_POSITION}.custom": [
+                        "Custom",
+                        AlexaGlobalCatalog.SETTING_PRESET,
+                    ],
+                },
             )
-            self._resource.add_mode(
-                f"{cover.ATTR_POSITION}.{cover.STATE_OPEN}",
-                [AlexaGlobalCatalog.VALUE_OPEN],
-            )
-            self._resource.add_mode(
-                f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}",
-                [AlexaGlobalCatalog.VALUE_CLOSE],
-            )
-            self._resource.add_mode(
-                f"{cover.ATTR_POSITION}.custom",
-                ["Custom", AlexaGlobalCatalog.SETTING_PRESET],
-            )
-            return self._resource.serialize_capability_resources()
 
         # Valve position resources
         if self.instance == f"{valve.DOMAIN}.state":
@@ -1613,22 +1616,24 @@ class AlexaModeController(AlexaCapability):
             self._resource = AlexaModeResource(
                 ["Preset", AlexaGlobalCatalog.SETTING_PRESET], False
             )
-            modes = 0
+            modes_count = 0
+
             if supported_features & valve.ValveEntityFeature.OPEN:
                 self._resource.add_mode(
                     f"state.{valve.STATE_OPEN}",
                     ["Open", AlexaGlobalCatalog.SETTING_PRESET],
                 )
-                modes += 1
+                modes_count += 1
+
             if supported_features & valve.ValveEntityFeature.CLOSE:
                 self._resource.add_mode(
                     f"state.{valve.STATE_CLOSED}",
                     ["Closed", AlexaGlobalCatalog.SETTING_PRESET],
                 )
-                modes += 1
+                modes_count += 1
 
             # Alexa requires at least 2 modes
-            if modes == 1:
+            if modes_count == 1:
                 self._resource.add_mode(f"state.{PRESET_MODE_NA}", [PRESET_MODE_NA])
 
             return self._resource.serialize_capability_resources()
