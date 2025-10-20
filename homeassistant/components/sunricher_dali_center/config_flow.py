@@ -63,8 +63,6 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(selected_gateway.gw_sn)
             self._abort_if_unique_id_configured()
 
-            title = selected_gateway.name
-
             try:
                 await selected_gateway.connect()
             except DaliGatewayError as err:
@@ -77,7 +75,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await selected_gateway.disconnect()
                 return self.async_create_entry(
-                    title=title,
+                    title=selected_gateway.name,
                     data={
                         CONF_SN: selected_gateway.gw_sn,
                         CONF_HOST: selected_gateway.gw_ip,
