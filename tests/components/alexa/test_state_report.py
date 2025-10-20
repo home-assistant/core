@@ -12,7 +12,7 @@ from homeassistant.components.alexa.resources import AlexaGlobalCatalog
 from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
-from .test_common import TEST_URL, get_default_config
+from test_common import TEST_URL, get_default_config
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 

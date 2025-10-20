@@ -31,7 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_common import (
+from test_common import (
     assert_request_calls_service,
     assert_request_fails,
     get_default_config,
