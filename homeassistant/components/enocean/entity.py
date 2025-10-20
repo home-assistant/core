@@ -11,8 +11,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatche
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .enocean_device_type import EnOceanDeviceType
 from .enocean_id import EnOceanID
-from .supported_device_type import EnOceanDeviceType
 
 
 class EnOceanEntity(Entity):

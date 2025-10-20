@@ -34,9 +34,9 @@ from .config_flow import (
     CONF_ENOCEAN_DEVICES,
 )
 from .const import LOGGER
+from .enocean_device_type import EnOceanDeviceType
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
-from .supported_device_type import EnOceanDeviceType, get_supported_enocean_device_types
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
@@ -106,7 +106,7 @@ async def async_setup_entry(
         device_id = EnOceanID(device[CONF_ENOCEAN_DEVICE_ID])
         device_name = device[CONF_ENOCEAN_DEVICE_NAME]
         device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
-        device_type = get_supported_enocean_device_types()[device_type_id]
+        device_type = EnOceanDeviceType.getSupportedDeviceTypes()[device_type_id]
         eep = device_type.eep
         eep_type = int(eep[6:8], 16)
 

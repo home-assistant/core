@@ -15,9 +15,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .config_entry import EnOceanConfigEntry
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
 from .const import ENOCEAN_BINARY_SENSOR_EEPS
+from .enocean_device_type import EnOceanDeviceType
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
-from .supported_device_type import EnOceanDeviceType, get_supported_enocean_device_types
 
 DEFAULT_NAME = ""
 DEPENDENCIES = ["enocean"]
@@ -49,7 +49,7 @@ async def async_setup_entry(
 
     for device in devices:
         device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
-        device_type = get_supported_enocean_device_types()[device_type_id]
+        device_type = EnOceanDeviceType.getSupportedDeviceTypes()[device_type_id]
         eep = device_type.eep
 
         if eep in ENOCEAN_BINARY_SENSOR_EEPS:

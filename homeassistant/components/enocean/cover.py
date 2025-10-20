@@ -34,9 +34,9 @@ from .config_flow import (
     CONF_ENOCEAN_SENDER_ID,
 )
 from .const import SIGNAL_SEND_MESSAGE
+from .enocean_device_type import EnOceanDeviceType
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
-from .supported_device_type import EnOceanDeviceType, get_supported_enocean_device_types
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ async def async_setup_entry(
 
     for device in devices:
         device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
-        device_type = get_supported_enocean_device_types()[device_type_id]
+        device_type = EnOceanDeviceType.getSupportedDeviceTypes()[device_type_id]
         eep = device_type.eep
         if eep != "D2-05-00":
             continue
