@@ -266,9 +266,11 @@ def ensure_and_check_conflicting_scales_and_offsets(config: dict[str, Any]) -> d
     for generic_key, target_key, current_key, default_value in config_keys:
         if generic_key in config and (target_key in config or current_key in config):
             raise vol.Invalid(
-                f"Cannot use {target_key} or {current_key} with {generic_key} in the same configuration."
+                f"Cannot use both '{generic_key}' and temperature-specific parameters "
+                f"('{target_key}' or '{current_key}') in the same configuration. "
+                f"Either the '{generic_key}' parameter (which applies to both temperatures) "
+                "or the new temperature-specific parameters, but not both."
             )
-
         if generic_key in config:
             value = config.pop(generic_key)
             config[target_key] = value
