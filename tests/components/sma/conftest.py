@@ -53,10 +53,12 @@ def mock_sma_client() -> Generator[MagicMock]:
         sma_instance.device_info = AsyncMock(return_value=MOCK_DEVICE)
         sma_instance.new_session = AsyncMock(return_value=True)
         sma_instance.close_session = AsyncMock(return_value=True)
-        sma_instance.get_sensors.return_value = Sensors(
-            sensor_map[GENERIC_SENSORS]
-            + sensor_map[OPTIMIZERS_VIA_INVERTER]
-            + sensor_map[ENERGY_METER_VIA_INVERTER]
+        sma_instance.get_sensors = AsyncMock(
+            return_value=Sensors(
+                sensor_map[GENERIC_SENSORS]
+                + sensor_map[OPTIMIZERS_VIA_INVERTER]
+                + sensor_map[ENERGY_METER_VIA_INVERTER]
+            )
         )
 
         default_sensor_values = {
