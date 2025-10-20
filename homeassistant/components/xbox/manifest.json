@@ -4,6 +4,11 @@
   "codeowners": ["@hunterjm"],
   "config_flow": true,
   "dependencies": ["auth", "application_credentials"],
+  "dhcp": [
+    {
+      "hostname": "xbox*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/xbox",
   "iot_class": "cloud_polling",
   "requirements": ["xbox-webapi==2.1.0"]
