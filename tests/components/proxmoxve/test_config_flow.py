@@ -239,26 +239,20 @@ async def test_import_flow(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG[DOMAIN]
     )
 
-    # The import step should present the setup step to pick nodes
     assert result["type"] == "form"
     assert result["step_id"] == "setup"
 
-    # Submit selected nodes (simulate setup step)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"nodes": ["pve1"]},
     )
     await hass.async_block_till_done()
 
-    # Entry should now be created
     assert result["type"] == "create_entry"
     assert result["title"] == "127.0.0.1"
     assert result["data"][CONF_HOST] == "127.0.0.1"
-
-    # Check that async_setup_entry was called
     assert len(mock_setup_entry.mock_calls) == 1
 
-    # Optionally, verify entry is loaded
     entry = next(
         entry
         for entry in hass.config_entries.async_entries(DOMAIN)
