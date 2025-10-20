@@ -48,6 +48,11 @@
       "suspend_software": {
         "name": "Suspend software"
       }
+    },
+    "number": {
+      "today_max_screentime": {
+        "name": "Max screentime today"
+      }
     }
   },
   "exceptions": {
