@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 
@@ -17,9 +19,16 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+
+
+@dataclass(frozen=True, kw_only=True)
+class MatterMediaPlayerEntityDescription(
+    MediaPlayerEntityDescription, MatterEntityDescription
+):
+    """Matter media player entity description."""
 
 
 async def async_setup_entry(
@@ -35,7 +44,7 @@ async def async_setup_entry(
 class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
     """Representation of a Matter Media Player entity."""
 
-    entity_description: MediaPlayerEntityDescription
+    entity_description: MatterMediaPlayerEntityDescription
     _platform_translation_key = "mediaplayer"
 
     async def async_set_volume_level(self, volume: float) -> None:
@@ -58,12 +67,6 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
         """Mute or unmute the media player."""
         # OnOff attribute == True state means volume is on, so HA should show mute switch as off
         if mute:
-            # Save current volume before muting to be able to restore it
-            current_volume = self._attr_volume_level or 1
-            matter_volume_level = int(current_volume * 254)
-            await self.write_attribute(
-                matter_volume_level, clusters.LevelControl.Attributes.OnLevel
-            )
             # Send Matter Off command
             await self.send_device_command(
                 clusters.OnOff.Commands.Off(),
@@ -111,7 +114,7 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.MEDIA_PLAYER,
-        entity_description=MediaPlayerEntityDescription(
+        entity_description=MatterMediaPlayerEntityDescription(
             key="MatterMediaPlayer", name=None
         ),
         entity_class=MatterMediaPlayer,
