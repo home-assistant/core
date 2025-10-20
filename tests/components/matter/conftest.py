@@ -126,7 +126,6 @@ async def integration_fixture(
         "smoke_detector",
         "solar_inverter",
         "speaker",
-        "switchbot_k11_plus",
         "switch_unit",
         "switchbot_k11_plus",
         "temperature_sensor",
