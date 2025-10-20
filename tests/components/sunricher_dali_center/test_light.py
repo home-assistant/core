@@ -25,10 +25,10 @@ TEST_RGBW_DEVICE_ID = "01040000056A242121110E"
 
 
 def _dispatch_status(
-    mock_gateway: MagicMock, device_id: str, status: dict[str, Any]
+    gateway: MagicMock, device_id: str, status: dict[str, Any]
 ) -> None:
     """Invoke the status callback registered on the gateway mock."""
-    callback = mock_gateway.on_light_status
+    callback = gateway.on_light_status
     assert callable(callback)
     callback(device_id, status)
 
@@ -43,7 +43,7 @@ def platforms() -> list[Platform]:
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_dali_gateway: MagicMock,
+    mock_gateway: MagicMock,
     mock_devices: list[MagicMock],
     platforms: list[Platform],
 ) -> MockConfigEntry:
@@ -137,7 +137,7 @@ async def test_dispatcher_connection(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_devices: list[MagicMock],
-    mock_dali_gateway: MagicMock,
+    mock_gateway: MagicMock,
 ) -> None:
     """Test that dispatcher signals are properly connected."""
     entity_entry = er.async_get(hass).async_get(TEST_DIMMER_ENTITY_ID)
@@ -148,7 +148,7 @@ async def test_dispatcher_connection(
 
     status_update: dict[str, Any] = {"is_on": True, "brightness": 128}
 
-    _dispatch_status(mock_dali_gateway, TEST_DIMMER_DEVICE_ID, status_update)
+    _dispatch_status(mock_gateway, TEST_DIMMER_DEVICE_ID, status_update)
     await hass.async_block_till_done()
 
     state_after = hass.states.get(TEST_DIMMER_ENTITY_ID)
@@ -168,10 +168,10 @@ async def test_dispatcher_connection(
 async def test_status_updates(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_dali_gateway: MagicMock,
+    mock_gateway: MagicMock,
     device_id: str,
     status_update: dict[str, Any],
 ) -> None:
     """Test various status updates for different device types."""
-    _dispatch_status(mock_dali_gateway, device_id, status_update)
+    _dispatch_status(mock_gateway, device_id, status_update)
     await hass.async_block_till_done()

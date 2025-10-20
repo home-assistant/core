@@ -221,12 +221,7 @@ async def test_discovery_unique_id_already_configured(
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    duplicate_entry = MockConfigEntry(
-        domain=mock_config_entry.domain,
-        data=dict(mock_config_entry.data),
-        unique_id=mock_config_entry.unique_id,
-    )
-    duplicate_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

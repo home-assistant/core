@@ -13,40 +13,40 @@ from tests.common import MockConfigEntry
 async def test_setup_entry_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_dali_gateway: MagicMock,
+    mock_gateway: MagicMock,
 ) -> None:
     """Test successful setup of config entry."""
     mock_config_entry.add_to_hass(hass)
-    mock_dali_gateway.connect.return_value = None
+    mock_gateway.connect.return_value = None
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    mock_dali_gateway.connect.assert_called_once()
+    mock_gateway.connect.assert_called_once()
 
 
 async def test_setup_entry_connection_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_dali_gateway: MagicMock,
+    mock_gateway: MagicMock,
 ) -> None:
     """Test setup fails when gateway connection fails."""
     mock_config_entry.add_to_hass(hass)
-    mock_dali_gateway.connect.side_effect = DaliGatewayError("Connection failed")
+    mock_gateway.connect.side_effect = DaliGatewayError("Connection failed")
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    mock_dali_gateway.connect.assert_called_once()
+    mock_gateway.connect.assert_called_once()
 
 
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_dali_gateway: MagicMock,
+    mock_gateway: MagicMock,
 ) -> None:
     """Test successful unloading of config entry."""
     mock_config_entry.add_to_hass(hass)

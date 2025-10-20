@@ -21,21 +21,6 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_gateway() -> MagicMock:
-    """Return a mocked gateway with default values."""
-    gateway = MagicMock()
-    gateway.gw_sn = "6A242121110E"
-    gateway.gw_ip = "192.168.1.100"
-    gateway.port = 1883
-    gateway.name = "Test Gateway"
-    gateway.username = "gateway_user"
-    gateway.passwd = "gateway_pass"
-    gateway.connect = AsyncMock()
-    gateway.disconnect = AsyncMock()
-    return gateway
-
-
-@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
@@ -78,52 +63,45 @@ def _create_mock_device(
 
 
 @pytest.fixture
-def mock_devices(mock_dali_gateway: MagicMock) -> Generator[list[MagicMock]]:
+def mock_devices() -> list[MagicMock]:
     """Return mocked Device objects."""
-    with patch(
-        "homeassistant.components.sunricher_dali_center.light.Device"
-    ) as mock_device_class:
-        devices = [
-            _create_mock_device(
-                "01010000026A242121110E",
-                "0101",
-                "Dimmer 0000-02",
-                "DALI DT6 Dimmable Driver",
-                "brightness",
-            ),
-            _create_mock_device(
-                "01020000036A242121110E",
-                "0102",
-                "CCT 0000-03",
-                "DALI DT8 Tc Dimmable Driver",
-                "color_temp",
-            ),
-            _create_mock_device(
-                "01030000046A242121110E",
-                "0103",
-                "HS Color Light",
-                "DALI HS Color Driver",
-                "hs",
-            ),
-            _create_mock_device(
-                "01040000056A242121110E",
-                "0104",
-                "RGBW Light",
-                "DALI RGBW Driver",
-                "rgbw",
-            ),
-            _create_mock_device(
-                "01010000026A242121110E",
-                "0101",
-                "Duplicate Dimmer",
-                "DALI DT6 Dimmable Driver",
-                "brightness",
-            ),
-        ]
-        mock_device_class.side_effect = devices
-        mock_dali_gateway.discover_devices = AsyncMock(return_value=devices)
-
-        yield devices
+    return [
+        _create_mock_device(
+            "01010000026A242121110E",
+            "0101",
+            "Dimmer 0000-02",
+            "DALI DT6 Dimmable Driver",
+            "brightness",
+        ),
+        _create_mock_device(
+            "01020000036A242121110E",
+            "0102",
+            "CCT 0000-03",
+            "DALI DT8 Tc Dimmable Driver",
+            "color_temp",
+        ),
+        _create_mock_device(
+            "01030000046A242121110E",
+            "0103",
+            "HS Color Light",
+            "DALI HS Color Driver",
+            "hs",
+        ),
+        _create_mock_device(
+            "01040000056A242121110E",
+            "0104",
+            "RGBW Light",
+            "DALI RGBW Driver",
+            "rgbw",
+        ),
+        _create_mock_device(
+            "01010000026A242121110E",
+            "0101",
+            "Duplicate Dimmer",
+            "DALI DT6 Dimmable Driver",
+            "brightness",
+        ),
+    ]
 
 
 @pytest.fixture
@@ -138,7 +116,7 @@ def mock_discovery() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_dali_gateway() -> Generator[MagicMock]:
+def mock_gateway(mock_devices: list[MagicMock]) -> Generator[MagicMock]:
     """Return a mocked DaliGateway."""
     with (
         patch(
@@ -151,7 +129,14 @@ def mock_dali_gateway() -> Generator[MagicMock]:
     ):
         mock_gateway = mock_gateway_class.return_value
         mock_gateway.gw_sn = "6A242121110E"
+        mock_gateway.gw_ip = "192.168.1.100"
+        mock_gateway.port = 1883
         mock_gateway.name = "Test Gateway"
+        mock_gateway.username = "gateway_user"
+        mock_gateway.passwd = "gateway_pass"
+        mock_gateway.connect = AsyncMock()
+        mock_gateway.disconnect = AsyncMock()
+        mock_gateway.discover_devices = AsyncMock(return_value=mock_devices)
         yield mock_gateway
 
 
