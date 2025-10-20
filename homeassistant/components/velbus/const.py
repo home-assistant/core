@@ -21,8 +21,6 @@ SERVICE_SYNC: Final = "sync_clock"
 SERVICE_SET_MEMO_TEXT: Final = "set_memo_text"
 SERVICE_CLEAR_CACHE: Final = "clear_cache"
 
-STORAGE_PATH = ".storage/local_calendar.{key}.ics"
-
 PRESET_MODES: Final = {
     PRESET_ECO: "safe",
     PRESET_AWAY: "night",
