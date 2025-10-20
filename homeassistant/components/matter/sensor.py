@@ -84,7 +84,6 @@ OPERATIONAL_STATE_MAP = {
     clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "running",
     clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "paused",
     clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
-    "unknown": "unknown",
 }
 
 OPERATIONAL_STATE_ERROR_MAP = {
@@ -124,7 +123,6 @@ RVC_OPERATIONAL_STATE_ERROR_MAP = {
     clusters.RvcOperationalState.Enums.ErrorStateEnum.kWheelsJammed: "wheels_jammed",
     clusters.RvcOperationalState.Enums.ErrorStateEnum.kBrushJammed: "brush_jammed",
     clusters.RvcOperationalState.Enums.ErrorStateEnum.kNavigationSensorObscured: "navigation_sensor_obscured",
-    "unknown": "unknown",
 }
 
 BOOST_STATE_MAP = {
@@ -1153,7 +1151,7 @@ DISCOVERY_SCHEMAS = [
                     x.errorStateLabel
                     if 0x80 <= x.errorStateID <= 0xBF
                     and getattr(x, "errorStateLabel", None)
-                    else "unknown"
+                    else None
                 )
             ),
         ),
@@ -1259,7 +1257,7 @@ DISCOVERY_SCHEMAS = [
                     x.errorStateLabel
                     if 0x80 <= x.errorStateID <= 0xBF
                     and getattr(x, "errorStateLabel", None)
-                    else "unknown"
+                    else None
                 )
             ),
         ),

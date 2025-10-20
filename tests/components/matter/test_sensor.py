@@ -681,7 +681,6 @@ async def test_vacuum_operational_error_sensor(
         "wheels_jammed",
         "brush_jammed",
         "navigation_sensor_obscured",
-        "unknown",
     ]
     # test Rvc error
     set_node_attribute(matter_node, 1, 97, 5, {0: 66})
