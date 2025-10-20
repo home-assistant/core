@@ -1221,6 +1221,65 @@
     'state': 'previous',
   })
 # ---
+# name: test_selects[heiman_motion_sensor_m1][select.smart_motion_sensor_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.smart_motion_sensor_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity_level',
+    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-AqaraBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[heiman_motion_sensor_m1][select.smart_motion_sensor_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart motion sensor Sensitivity',
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.smart_motion_sensor_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_button_press_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
