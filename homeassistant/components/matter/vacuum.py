@@ -279,12 +279,11 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             self._attr_current_area_name = area_name
         else:
             self._attr_current_area = None
-            self._attr_current_area_name = None
-
-        # optional SelectedAreas attribute
-        if self.get_matter_attribute_value(
+        selected_areas = self.get_matter_attribute_value(
             clusters.ServiceArea.Attributes.SelectedAreas
-        ):
+        )
+        if selected_areas:
+            self._attr_selected_areas = selected_areas
             self._attr_selected_areas = self.get_matter_attribute_value(
                 clusters.ServiceArea.Attributes.SelectedAreas
             )
