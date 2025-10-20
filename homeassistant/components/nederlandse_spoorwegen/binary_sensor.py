@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -23,12 +24,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_ROUTES, DOMAIN, INTEGRATION_TITLE, ROUTE_MODEL, ROUTES_SCHEMA
 from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
-from .utils import (
-    get_arrival_delay,
-    get_coordinator_data_attribute,
-    get_departure_delay,
-    get_going,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,36 +43,41 @@ class NSSensorEntityDescription(BinarySensorEntityDescription):
     value_fn: Callable[[Any], Any] | None = None
 
 
+def get_delay(planned: datetime | None, actual: datetime | None) -> bool:
+    """Return True if delay is present, False otherwise."""
+    return bool(planned and actual and planned != actual)
+
+
 BINARY_SENSOR_DESCRIPTIONS = [
     NSSensorEntityDescription(
         key="is_departure_delayed",
         translation_key="is_departure_delayed",
         name="Departure delayed",
         icon="mdi:bell-alert-outline",
-        data_fn=lambda coordinator: get_coordinator_data_attribute(
-            coordinator, "first_trip"
+        data_fn=lambda coordinator: getattr(coordinator.data, "first_trip", None),
+        value_fn=lambda trip: get_delay(
+            getattr(trip, "departure_time_planned", None),
+            getattr(trip, "departure_time_actual", None),
         ),
-        value_fn=get_departure_delay,
     ),
     NSSensorEntityDescription(
         key="is_arrival_delayed",
         translation_key="is_arrival_delayed",
         name="Arrival delayed",
         icon="mdi:bell-alert-outline",
-        data_fn=lambda coordinator: get_coordinator_data_attribute(
-            coordinator, "first_trip"
+        data_fn=lambda coordinator: getattr(coordinator.data, "first_trip", None),
+        value_fn=lambda trip: get_delay(
+            getattr(trip, "arrival_time_planned", None),
+            getattr(trip, "arrival_time_actual", None),
         ),
-        value_fn=get_arrival_delay,
     ),
     NSSensorEntityDescription(
         key="is_going",
         translation_key="is_going",
         name="Going",
         icon="mdi:bell-cancel-outline",
-        data_fn=lambda coordinator: get_coordinator_data_attribute(
-            coordinator, "first_trip"
-        ),
-        value_fn=get_going,
+        data_fn=lambda coordinator: getattr(coordinator.data, "first_trip", None),
+        value_fn=lambda trip: getattr(trip, "going", None),
     ),
 ]
 
