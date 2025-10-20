@@ -201,7 +201,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.1
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.2.1
+aioautomower==2.3.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -244,7 +244,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.1.0
+aioesphomeapi==42.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1638,7 +1638,7 @@ pycsspeechtts==1.0.8
 # pycups==2.0.4
 
 # homeassistant.components.cync
-pycync==0.4.1
+pycync==0.4.2
 
 # homeassistant.components.daikin
 pydaikin==2.17.1
