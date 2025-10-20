@@ -37,12 +37,12 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 8
+  CACHE_VERSION: 9
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
   HA_SHORT_VERSION: "2025.11"
   DEFAULT_PYTHON: "3.13"
-  ALL_PYTHON_VERSIONS: "['3.13']"
+  ALL_PYTHON_VERSIONS: "['3.13', '3.14']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -428,7 +428,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
+        python-version: &matrix-python ${{ fromJson(needs.info.outputs.python_versions) }}
     steps:
       - *checkout
       - &setup-python-matrix
@@ -514,9 +514,7 @@ jobs:
         if: steps.cache-apt-check.outputs.cache-hit != 'true'
         uses: &actions-cache-save actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
+          path: *path-apt-cache
           key: *key-apt-cache
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
@@ -525,7 +523,7 @@ jobs:
           . venv/bin/activate
           python --version
           pip install "$(grep '^uv' < requirements.txt)"
-          uv pip install -U "pip>=21.3.1" setuptools wheel
+          uv pip install -U "pip>=25.2"
           uv pip install -r requirements.txt
           python -m script.gen_requirements_all ci
           uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
@@ -625,7 +623,7 @@ jobs:
     steps:
       - *checkout
       - name: Dependency review
-        uses: actions/dependency-review-action@56339e523c0409420f6c2c9a2f4292bbb3c07dd3 # v4.8.0
+        uses: actions/dependency-review-action@40c09b7dc99638e5ddb0bfd91c1673effc064d8a # v4.8.1
         with:
           license-check: false # We use our own license audit checks
 
@@ -641,7 +639,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+        python-version: *matrix-python
     steps:
       - *checkout
       - *setup-python-matrix
@@ -838,8 +836,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
-        group: ${{ fromJson(needs.info.outputs.test_groups) }}
+        python-version: *matrix-python
+        group: &matrix-group ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
       - *cache-restore-apt
       - name: Install additional OS dependencies
@@ -964,7 +962,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+        python-version: *matrix-python
         mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
     steps:
       - *cache-restore-apt
@@ -1081,7 +1079,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+        python-version: *matrix-python
         postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
     steps:
       - *cache-restore-apt
@@ -1218,8 +1216,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
-        group: ${{ fromJson(needs.info.outputs.test_groups) }}
+        python-version: *matrix-python
+        group: *matrix-group
     steps:
       - *cache-restore-apt
       - name: Install additional OS dependencies

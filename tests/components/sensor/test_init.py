@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
+import math
 from typing import Any
 from unittest.mock import patch
 
@@ -791,6 +792,26 @@ async def test_unit_translation_key_without_platform_raises(
             1,
         ),
         (
+            SensorDeviceClass.TEMPERATURE_DELTA,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            2,
+            3.6,
+            "3.6",
+            1,
+        ),
+        (
+            SensorDeviceClass.TEMPERATURE_DELTA,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.CELSIUS,
+            1,
+            pytest.approx(0.555556),
+            "0.6",
+            1,
+        ),
+        (
             SensorDeviceClass.ATMOSPHERIC_PRESSURE,
             UnitOfPressure.INHG,
             UnitOfPressure.HPA,
@@ -1162,6 +1183,15 @@ async def test_custom_unit(
             100,
             100,
             SensorDeviceClass.WEIGHT,
+        ),
+        (
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            10,
+            10,
+            18,
+            SensorDeviceClass.TEMPERATURE_DELTA,
         ),
     ],
 )
@@ -1813,6 +1843,7 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
         (SensorDeviceClass.SOUND_PRESSURE, UnitOfSoundPressure.DECIBEL, 0),
         (SensorDeviceClass.SPEED, UnitOfSpeed.MILLIMETERS_PER_SECOND, 0),
         (SensorDeviceClass.TEMPERATURE, UnitOfTemperature.KELVIN, 1),
+        (SensorDeviceClass.TEMPERATURE_DELTA, UnitOfTemperature.KELVIN, 1),
         (SensorDeviceClass.VOLTAGE, UnitOfElectricPotential.VOLT, 0),
         (SensorDeviceClass.VOLUME, UnitOfVolume.MILLILITERS, 0),
         (SensorDeviceClass.VOLUME_FLOW_RATE, UnitOfVolumeFlowRate.LITERS_PER_SECOND, 0),
@@ -2228,6 +2259,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.SPEED,
         SensorDeviceClass.SULPHUR_DIOXIDE,
         SensorDeviceClass.TEMPERATURE,
+        SensorDeviceClass.TEMPERATURE_DELTA,
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         SensorDeviceClass.VOLTAGE,
@@ -2313,9 +2345,11 @@ async def test_state_classes_with_invalid_unit_of_measurement(
         (datetime(2012, 11, 10, 7, 35, 1), "non-numeric"),
         (date(2012, 11, 10), "non-numeric"),
         ("inf", "non-finite"),
-        (float("inf"), "non-finite"),
+        (math.inf, "non-finite"),
+        (float("inf"), "non-finite"),  # pylint: disable=consider-math-not-float
         ("nan", "non-finite"),
-        (float("nan"), "non-finite"),
+        (math.nan, "non-finite"),
+        (float("nan"), "non-finite"),  # pylint: disable=consider-math-not-float
     ],
 )
 async def test_non_numeric_validation_error(
