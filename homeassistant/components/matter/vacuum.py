@@ -249,6 +249,18 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             raise MatterError(f"Failed to start cleaning areas {areas}: {err}") from err
         return None
 
+    def _get_area_name_by_id(self, area_id: int) -> str | None:
+        """Get the area name by area ID."""
+        if self.matter_areas:
+            for area in self.matter_areas:
+                if getattr(area, "areaID", None) == area_id:
+                    area_info = getattr(area, "areaInfo", None)
+                    if area_info is not None:
+                        location_info = getattr(area_info, "locationInfo", None)
+                        if location_info is not None:
+                            return getattr(location_info, "locationName", None)
+        return None
+
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
@@ -258,22 +270,11 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             clusters.ServiceArea.Attributes.SupportedAreas
         )
         # optional CurrentArea attribute
-        # pylint: disable=too-many-nested-blocks
         current_area = self.get_matter_attribute_value(
             clusters.ServiceArea.Attributes.CurrentArea
         )
         if current_area:
-            # get areaInfo.locationInfo.locationName for current_area in SupportedAreas list
-            area_name = None
-            if self.matter_areas:
-                for area in self.matter_areas:
-                    if getattr(area, "areaID", None) == current_area:
-                        area_info = getattr(area, "areaInfo", None)
-                        if area_info is not None:
-                            location_info = getattr(area_info, "locationInfo", None)
-                            if location_info is not None:
-                                area_name = getattr(location_info, "locationName", None)
-                        break
+            area_name = self._get_area_name_by_id(current_area)
             self._attr_current_area = current_area
             self._attr_current_area_name = area_name
         else:
