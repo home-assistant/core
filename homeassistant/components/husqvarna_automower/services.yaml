@@ -19,6 +19,13 @@ override_schedule:
           options:
             - "mow"
             - "park"
+    external_reason:
+      required: false
+      example: "200000"
+      selector:
+        number:
+          min: 200000
+          max: 299999
 
 override_schedule_work_area:
   target:

@@ -486,6 +486,12 @@
     "command_send_failed": {
       "message": "Failed to send command: {exception}"
     },
+    "external_reason": {
+      "message": "The maximum duration in combination with an external reason are 25h."
+    },
+    "external_reason_mow": {
+      "message": "External reason is only allowed with override mode `park`"
+    },
     "work_areas_not_supported": {
       "message": "This mower does not support work areas."
     },
@@ -513,6 +519,10 @@
         "override_mode": {
           "name": "Override mode",
           "description": "With which action the schedule should be overridden."
+        },
+        "external_reason": {
+          "name": "External reason",
+          "description": "For parking the mower with a duration. The external reason is only available if the mower support work areas. Else the external reason will be ignored. The exernal reason will be automatically removed after 25 hours."
         }
       }
     },
