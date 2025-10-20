@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 from typing import Any
 
+from ns_api import Trip
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -37,25 +38,37 @@ from .const import (
     ROUTE_MODEL,
 )
 from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
-from .utils import (
-    get_actual_arrival_platform,
-    get_actual_arrival_time_str,
-    get_actual_departure_platform,
-    get_actual_departure_time_str,
-    get_arrival_delay,
-    get_coordinator_data_attribute,
-    get_departure_delay,
-    get_departure_time,
-    get_departure_time_str,
-    get_going,
-    get_planned_arrival_platform,
-    get_planned_arrival_time_str,
-    get_planned_departure_platform,
-    get_planned_departure_time_str,
-    get_route,
-    get_status,
-    get_transfers,
-)
+
+
+def _get_departure_time(
+    planned: datetime | None, actual: datetime | None
+) -> datetime | None:
+    """Get next departure time from trip data."""
+    return actual or planned
+
+
+def _get_time_str(time: datetime | None) -> str | None:
+    """Get time as string."""
+    return time.strftime("%H:%M") if time else None
+
+
+def _get_route(trip: Trip) -> list[str]:
+    """Get the route as a list of station names from trip data."""
+    trip_parts = trip.trip_parts or []
+    if not trip_parts:
+        return []
+    route = []
+    departure = trip.departure
+    if departure:
+        route.append(departure)
+    route.extend(part.destination for part in trip_parts)
+    return route
+
+
+def _get_delay(planned: datetime | None, actual: datetime | None) -> bool:
+    """Return True if delay is present, False otherwise."""
+    return bool(planned and actual and planned != actual)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -176,38 +189,71 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
 
     @property
     def native_value(self) -> datetime | None:
-        """Return the native value of the sensor."""
-        first_trip = get_coordinator_data_attribute(self.coordinator, "first_trip")
-        return get_departure_time(first_trip)
+        """Return the native value of the sensor (actual or planned departure time)."""
+        first_trip = self.coordinator.data.first_trip
+        if not first_trip:
+            return None
+        actual = getattr(first_trip, "departure_time_actual", None)
+        planned = getattr(first_trip, "departure_time_planned", None)
+        return actual or planned
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        first_trip = get_coordinator_data_attribute(self.coordinator, "first_trip")
-        next_trip = get_coordinator_data_attribute(self.coordinator, "next_trip")
+        first_trip = self.coordinator.data.first_trip
+        next_trip = self.coordinator.data.next_trip
 
         if not first_trip:
             return None
 
-        route = get_route(first_trip)
-        status = get_status(first_trip)
+        route = _get_route(first_trip)
+        status = getattr(first_trip, "status", None)
 
         # Static attributes
         return {
-            "going": get_going(first_trip),
-            "departure_time_planned": get_planned_departure_time_str(first_trip),
-            "departure_time_actual": get_actual_departure_time_str(first_trip),
-            "departure_delay": get_departure_delay(first_trip),
-            "departure_platform_planned": get_planned_departure_platform(first_trip),
-            "departure_platform_actual": get_actual_departure_platform(first_trip),
-            "arrival_time_planned": get_planned_arrival_time_str(first_trip),
-            "arrival_time_actual": get_actual_arrival_time_str(first_trip),
-            "arrival_delay": get_arrival_delay(first_trip),
-            "arrival_platform_planned": get_planned_arrival_platform(first_trip),
-            "arrival_platform_actual": get_actual_arrival_platform(first_trip),
-            "next": get_departure_time_str(next_trip) if next_trip else None,
+            "going": getattr(first_trip, "going", None),
+            "departure_time_planned": _get_time_str(
+                getattr(first_trip, "departure_time_planned", None)
+            ),
+            "departure_time_actual": _get_time_str(
+                getattr(first_trip, "departure_time_actual", None)
+            ),
+            "departure_delay": _get_delay(
+                getattr(first_trip, "departure_time_planned", None),
+                getattr(first_trip, "departure_time_actual", None),
+            ),
+            "departure_platform_planned": getattr(
+                first_trip, "departure_platform_planned", None
+            ),
+            "departure_platform_actual": getattr(
+                first_trip, "departure_platform_actual", None
+            ),
+            "arrival_time_planned": _get_time_str(
+                getattr(first_trip, "arrival_time_planned", None)
+            ),
+            "arrival_time_actual": _get_time_str(
+                getattr(first_trip, "arrival_time_actual", None)
+            ),
+            "arrival_delay": _get_delay(
+                getattr(first_trip, "arrival_time_planned", None),
+                getattr(first_trip, "arrival_time_actual", None),
+            ),
+            "arrival_platform_planned": getattr(
+                first_trip, "arrival_platform_planned", None
+            ),
+            "arrival_platform_actual": getattr(
+                first_trip, "arrival_platform_actual", None
+            ),
+            "next": _get_time_str(
+                _get_departure_time(
+                    getattr(next_trip, "departure_time_actual", None),
+                    getattr(next_trip, "departure_time_planned", None),
+                )
+            )
+            if next_trip
+            else None,
             "status": status.lower() if status else None,
-            "transfers": get_transfers(first_trip),
+            "transfers": getattr(first_trip, "nr_transfers", 0),
             "route": route,
             "remarks": None,
         }
