@@ -1073,7 +1073,7 @@ async def test_listener_unsubscribe_releases_coordinator(hass: HomeAssistant) ->
 )
 async def test_update_failed_retry_after(
     hass: HomeAssistant,
-    exc: tuple[Exception, type[Exception], str],
+    exc: Exception,
     expected_exception: type[Exception],
     message: str,
     method: str,
