@@ -1,12 +1,18 @@
 """Test Matter media_player."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
+from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_VOLUME_MUTED,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_VOLUME_MUTE,
+)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -32,3 +38,33 @@ async def test_media_player(
     """Test media player."""
     state = hass.states.get("media_player.mock_speaker")
     assert state
+
+
+@pytest.mark.parametrize("node_fixture", ["speaker"])
+async def test_volume_mute_on(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    node_fixture: str,
+) -> None:
+    """Test muting the media player."""
+    entity_id = "media_player.mock_speaker"
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_VOLUME_MUTED: True,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.OnOff.Commands.Off(),
+    )
