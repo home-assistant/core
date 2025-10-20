@@ -6,8 +6,6 @@ import asyncio
 from dataclasses import dataclass
 import datetime
 import logging
-from typing import Any
-
 from pyyardian import AsyncYardianClient, NetworkException, NotAuthorizedException
 from pyyardian.typing import OperationInfo
 
@@ -24,11 +22,20 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = datetime.timedelta(seconds=30)
 
 
+@dataclass(slots=True)
+class YardianZone:
+    """Normalized metadata for a Yardian irrigation zone."""
+
+    name: str
+    is_enabled: bool
+    raw: tuple[object, ...] = ()
+
+
 @dataclass
 class YardianCoordinatorData:
     """Combined device state for Yardian."""
 
-    zones: list[list[Any]]
+    zones: list[YardianZone]
     active_zones: set[int]
     oper_info: OperationInfo
 
@@ -78,7 +85,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
                 _LOGGER.debug(
                     "Fetching Yardian device state for %s (controller=%s)",
                     self._name,
-                    type(self.controller).__name__,
+                    self.controller,
                 )
                 # Fetch device state and operation info; specific exceptions are
                 # handled by the outer block to avoid double-logging.
@@ -93,15 +100,28 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
         except NetworkException as e:
             raise UpdateFailed("Failed to communicate with device") from e
 
-        oper_keys = list(oper_info.keys()) if hasattr(oper_info, "keys") else []
+        oper_keys = list(oper_info.keys())
         _LOGGER.debug(
             "Fetched Yardian data: zones=%s active=%s oper_keys=%s",
             len(getattr(dev_state, "zones", [])),
             len(getattr(dev_state, "active_zones", [])),
             oper_keys,
         )
+        zones: list[YardianZone] = []
+        for index, zone_info in enumerate(dev_state.zones):
+            # Zone info comes from the proprietary API as a positional list.
+            name = str(zone_info[0]) if zone_info else f"Zone {index + 1}"
+            is_enabled = bool(zone_info[1]) if len(zone_info) > 1 else True
+            zones.append(
+                YardianZone(
+                    name=name,
+                    is_enabled=is_enabled,
+                    raw=tuple(zone_info),
+                )
+            )
+
         return YardianCoordinatorData(
-            zones=dev_state.zones,
-            active_zones=dev_state.active_zones,
+            zones=zones,
+            active_zones=set(dev_state.active_zones),
             oper_info=oper_info,
         )
