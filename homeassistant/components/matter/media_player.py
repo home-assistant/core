@@ -128,8 +128,8 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.OnOff.Attributes.OnOff,
             clusters.LevelControl.Attributes.CurrentLevel,
-            clusters.LevelControl.Attributes.MaxLevel,
         ),
+        optional_attributes=(clusters.LevelControl.Attributes.MaxLevel,),
         device_type=(device_types.Speaker,),
     ),
 ]
