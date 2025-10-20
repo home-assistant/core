@@ -24,7 +24,6 @@ from .coordinator import YardianUpdateCoordinator
 class YardianBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Entity description for Yardian binary sensors."""
 
-    unique_id_suffix: str
     value_fn: Callable[[YardianUpdateCoordinator], bool | None]
     translation_placeholders: dict[str, str] | None = None
 
