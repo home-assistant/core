@@ -159,6 +159,5 @@ async def init_integration(
     """Set up the NextDNS integration in Home Assistant."""
     mock_config_entry.add_to_hass(hass)
 
-    with mock_nextdns():
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
