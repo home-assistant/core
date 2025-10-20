@@ -7,12 +7,10 @@ from collections.abc import Iterable
 import re
 from typing import Any
 
-from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.smartglass.models import (
     InputKeyType,
     PowerState,
     SmartglassConsole,
-    SmartglassConsoleList,
 )
 
 from homeassistant.components.remote import (
@@ -21,30 +19,25 @@ from homeassistant.components.remote import (
     DEFAULT_DELAY_SECS,
     RemoteEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import ConsoleData, XboxUpdateCoordinator
+from .coordinator import ConsoleData, XboxConfigEntry, XboxUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: XboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox media_player from a config entry."""
-    client: XboxLiveClient = hass.data[DOMAIN][entry.entry_id]["client"]
-    consoles: SmartglassConsoleList = hass.data[DOMAIN][entry.entry_id]["consoles"]
-    coordinator: XboxUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "coordinator"
-    ]
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        [XboxRemote(client, console, coordinator) for console in consoles.result]
+        [XboxRemote(console, coordinator) for console in coordinator.consoles.result]
     )
 
 
@@ -53,14 +46,13 @@ class XboxRemote(CoordinatorEntity[XboxUpdateCoordinator], RemoteEntity):
 
     def __init__(
         self,
-        client: XboxLiveClient,
         console: SmartglassConsole,
         coordinator: XboxUpdateCoordinator,
     ) -> None:
         """Initialize the Xbox Media Player."""
         super().__init__(coordinator)
-        self.client: XboxLiveClient = client
-        self._console: SmartglassConsole = console
+        self.client = coordinator.client
+        self._console = console
 
     @property
     def name(self):
