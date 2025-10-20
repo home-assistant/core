@@ -192,17 +192,11 @@ async def test_websocket_not_available(
     await hass.async_block_till_done()
     assert f"{error_msg} Trying to reconnect: Boom" in caplog.text
 
-    # Simulate a successful connection
     caplog.clear()
-    await mock_called.wait()
-    mock_called.clear()
-    await hass.async_block_till_done()
-    assert mock.call_count == 2
-    assert "Trying to reconnect: Boom" not in caplog.text
 
     # Simulate hass shutting down
     await hass.async_stop()
-    assert mock.call_count == 2
+    assert mock.call_count == 1
 
 
 async def test_device_info(

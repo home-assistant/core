@@ -45,6 +45,55 @@
       "status": {
         "name": "Status"
       }
+    },
+    "sensor": {
+      "image": {
+        "name": "Image"
+      },
+      "operating_system": {
+        "name": "Operating system"
+      },
+      "operating_system_version": {
+        "name": "Operating system version"
+      },
+      "api_version": {
+        "name": "API version"
+      },
+      "kernel_version": {
+        "name": "Kernel version"
+      },
+      "architecture": {
+        "name": "Architecture"
+      },
+      "containers_running": {
+        "name": "Containers running"
+      },
+      "containers_stopped": {
+        "name": "Containers stopped"
+      },
+      "containers_paused": {
+        "name": "Containers paused"
+      },
+      "images_count": {
+        "name": "Image count"
+      },
+      "containers_count": {
+        "name": "Container count"
+      },
+      "memory_total": {
+        "name": "Total memory"
+      },
+      "docker_version": {
+        "name": "Docker version"
+      },
+      "cpu_total": {
+        "name": "Total CPU"
+      }
+    },
+    "switch": {
+      "container": {
+        "name": "Container"
+      }
     }
   },
   "exceptions": {

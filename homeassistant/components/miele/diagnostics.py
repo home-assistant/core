@@ -65,6 +65,7 @@ async def async_get_device_diagnostics(
     info = {
         "manufacturer": device.manufacturer,
         "model": device.model,
+        "model_id": device.model_id,
     }
 
     coordinator = config_entry.runtime_data

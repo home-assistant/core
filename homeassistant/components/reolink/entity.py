@@ -252,7 +252,7 @@ class ReolinkHostChimeCoordinatorEntity(ReolinkHostCoordinatorEntity):
         chime: Chime,
         coordinator: DataUpdateCoordinator[None] | None = None,
     ) -> None:
-        """Initialize ReolinkChimeCoordinatorEntity for a chime."""
+        """Initialize ReolinkHostChimeCoordinatorEntity for a chime."""
         super().__init__(reolink_data, coordinator)
         self._channel = chime.channel
         self._chime = chime
