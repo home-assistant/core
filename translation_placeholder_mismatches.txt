@@ -1,0 +1,350 @@
+Validating translation placeholders...
+❌ Found 42 translation placeholder mismatches:
+
+1. homeassistant/components/snoo/switch.py
+   Component: snoo
+   Translation key: switch_on_failed
+   Code passes: ['name', 'status']
+   String expects: ['name']
+   ⚠️  Missing in strings.json: ['status']
+   Translation string: Turning {name} on failed...
+
+2. homeassistant/components/snoo/switch.py
+   Component: snoo
+   Translation key: switch_off_failed
+   Code passes: ['name', 'status']
+   String expects: ['name']
+   ⚠️  Missing in strings.json: ['status']
+   Translation string: Turning {name} off failed...
+
+3. homeassistant/components/stookwijzer/__init__.py
+   Component: stookwijzer
+   Translation key: location_migration_failed
+   Code passes: ['entry_title']
+   String expects: []
+   ⚠️  Missing in strings.json: ['entry_title']
+   Translation string: The Stookwijzer integration was unable to automatically migrate your location to a new format the up...
+
+4. homeassistant/components/dsmr_reader/sensor.py
+   Component: dsmr_reader
+   Translation key: cannot_subscribe_mqtt_topic
+   Code passes: ['topic', 'topic_title']
+   String expects: ['topic']
+   ⚠️  Missing in strings.json: ['topic_title']
+   Translation string: The DSMR Reader integration cannot subscribe to the MQTT topic: `{topic}`. Please check the configur...
+
+5. homeassistant/components/bryant_evolution/climate.py
+   Component: bryant_evolution
+   Translation key: failed_to_parse_hvac_mode
+   Code passes: ['current_temperature', 'mode_and_active', 'target_temperature_low']
+   String expects: ['mode']
+   ⚠️  Missing in strings.json: ['current_temperature', 'mode_and_active', 'target_temperature_low']
+   ⚠️  Unused in strings.json: ['mode']
+   Translation string: Cannot parse response to HVACMode: {mode}...
+
+6. homeassistant/components/tplink/deprecate.py
+   Component: tplink
+   Translation key: deprecated_entity
+   Code passes: ['entity', 'info', 'new_platform', 'platform']
+   String expects: ['entity', 'info', 'new_platform']
+   ⚠️  Missing in strings.json: ['platform']
+   Translation string: We detected that entity `{entity}` is being used in `{info}`
+
+We have created a new `{new_platform}`...
+
+7. homeassistant/components/webostv/notify.py
+   Component: webostv
+   Translation key: notify_device_off
+   Code passes: ['func', 'name']
+   String expects: ['name']
+   ⚠️  Missing in strings.json: ['func']
+   Translation string: Error sending notification to device {name}: Device is off and cannot be controlled....
+
+8. homeassistant/components/bring/services.py
+   Component: bring
+   Translation key: entity_not_found
+   Code passes: []
+   String expects: ['entity_id']
+   ⚠️  Unused in strings.json: ['entity_id']
+   Translation string: Failed to send reaction for Bring! — Unknown entity {entity_id}...
+
+9. homeassistant/components/rehlko/__init__.py
+   Component: rehlko
+   Translation key: invalid_auth
+   Code passes: []
+   String expects: ['email']
+   ⚠️  Unused in strings.json: ['email']
+   Translation string: Authentication failed for email {email}....
+
+10. homeassistant/components/shelly/update.py
+   Component: shelly
+   Translation key: ota_update_rpc_error
+   Code passes: ['device', 'entity']
+   String expects: ['device']
+   ⚠️  Missing in strings.json: ['entity']
+   Translation string: RPC call error occurred while triggering OTA update for {device}...
+
+11. homeassistant/components/homee/sensor.py
+   Component: homee
+   Translation key: deprecated_entity
+   Code passes: ['entity', 'name']
+   String expects: ['entity']
+   ⚠️  Missing in strings.json: ['name']
+   Translation string: The Homee entity `{entity}` is deprecated and will be removed in release 2025.12.
+The valve is avail...
+
+12. homeassistant/components/google_photos/services.py
+   Component: google_photos
+   Translation key: missing_upload_permission
+   Code passes: ['target']
+   String expects: []
+   ⚠️  Missing in strings.json: ['target']
+   Translation string: Home Assistant was not granted permission to upload to Google Photos...
+
+13. homeassistant/components/datadog/config_flow.py
+   Component: datadog
+   Translation key: deprecated_yaml_import_connection_error
+   Code passes: ['domain', 'integration_title', 'url']
+   String expects: ['domain', 'url']
+   ⚠️  Missing in strings.json: ['integration_title']
+   Translation string: There was an error connecting to the Datadog Agent when trying to import the YAML configuration.
+
+En...
+
+14. homeassistant/components/rova/__init__.py
+   Component: rova
+   Translation key: no_rova_area
+   Code passes: []
+   String expects: ['zip_code']
+   ⚠️  Unused in strings.json: ['zip_code']
+   Translation string: Rova does not collect at {zip_code} anymore.
+
+Please remove the integration....
+
+15. homeassistant/components/here_travel_time/__init__.py
+   Component: here_travel_time
+   Translation key: multiple_here_travel_time_entries
+   Code passes: ['pricing_page']
+   String expects: []
+   ⚠️  Missing in strings.json: ['pricing_page']
+   Translation string: HERE deprecated the previous free tier. The new Base Plan has only 5000 instead of the previous 3000...
+
+16. homeassistant/components/esphome/manager.py
+   Component: esphome
+   Translation key: api_password_deprecated
+   Code passes: ['name']
+   String expects: []
+   ⚠️  Missing in strings.json: ['name']
+   Translation string: The API password for ESPHome is deprecated and the use of an API encryption key is recommended inste...
+
+17. homeassistant/components/esphome/manager.py
+   Component: esphome
+   Translation key: service_calls_not_allowed
+   Code passes: ['name']
+   String expects: []
+   ⚠️  Missing in strings.json: ['name']
+   Translation string: The ESPHome device attempted to perform a Home Assistant action, but this functionality is not enabl...
+
+18. homeassistant/components/homeassistant_alerts/__init__.py
+   Component: homeassistant_alerts
+   Translation key: alert
+   Code passes: ['description', 'title']
+   String expects: ['description']
+   ⚠️  Missing in strings.json: ['title']
+   Translation string: {description}...
+
+19. homeassistant/components/mqtt/entity.py
+   Component: mqtt
+   Translation key: invalid_platform_config
+   Code passes: ['config', 'config_file', 'domain', 'error', 'line']
+   String expects: ['domain']
+   ⚠️  Missing in strings.json: ['config', 'config_file', 'error', 'line']
+   Translation string: Reloading YAML config for manually configured MQTT `{domain}` item failed. See logs for more details...
+
+20. homeassistant/components/local_file/__init__.py
+   Component: local_file
+   Translation key: not_readable_path
+   Code passes: ['file_path']
+   String expects: []
+   ⚠️  Missing in strings.json: ['file_path']
+   Translation string: The provided path to the file can not be read...
+
+21. homeassistant/components/html5/issues.py
+   Component: html5
+   Translation key: deprecated_yaml_import_issue
+   Code passes: ['domain', 'integration_title']
+   String expects: []
+   ⚠️  Missing in strings.json: ['domain', 'integration_title']
+   Translation string: Configuring HTML5 push notification using YAML has been deprecated. An automatic import of your exis...
+
+22. homeassistant/components/home_connect/switch.py
+   Component: home_connect
+   Translation key: turn_on
+   Code passes: ['entity_id', 'key']
+   String expects: ['entity_id', 'error', 'key']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error turning on {entity_id} ({key}): {error}...
+
+23. homeassistant/components/home_connect/switch.py
+   Component: home_connect
+   Translation key: turn_off
+   Code passes: ['entity_id', 'key']
+   String expects: ['entity_id', 'error', 'key']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error turning off {entity_id} ({key}): {error}...
+
+24. homeassistant/components/home_connect/switch.py
+   Component: home_connect
+   Translation key: power_on
+   Code passes: ['appliance_name']
+   String expects: ['appliance_name', 'error']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error turning on {appliance_name}: {error}...
+
+25. homeassistant/components/home_connect/switch.py
+   Component: home_connect
+   Translation key: power_off
+   Code passes: ['appliance_name', 'value']
+   String expects: ['appliance_name', 'error', 'value']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error turning off {appliance_name} with value "{value}": {error}...
+
+26. homeassistant/components/home_connect/button.py
+   Component: home_connect
+   Translation key: execute_command
+   Code passes: ['command']
+   String expects: ['command', 'error']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error executing command {command}: {error}...
+
+27. homeassistant/components/home_connect/select.py
+   Component: home_connect
+   Translation key: set_setting_entity
+   Code passes: ['entity_id', 'key', 'value']
+   String expects: ['entity_id', 'error', 'key', 'value']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error assigning the value "{value}" to the setting "{key}" for {entity_id}: {error}...
+
+28. homeassistant/components/home_connect/services.py
+   Component: home_connect
+   Translation key: set_setting
+   Code passes: ['key', 'value']
+   String expects: ['error', 'key', 'value']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error assigning the value "{value}" to the setting "{key}": {error}...
+
+29. homeassistant/components/home_connect/light.py
+   Component: home_connect
+   Translation key: turn_on_light
+   Code passes: ['entity_id']
+   String expects: ['entity_id', 'error']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error turning on {entity_id}: {error}...
+
+30. homeassistant/components/home_connect/light.py
+   Component: home_connect
+   Translation key: turn_off_light
+   Code passes: ['entity_id']
+   String expects: ['entity_id', 'error']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error turning off {entity_id}: {error}...
+
+31. homeassistant/components/home_connect/light.py
+   Component: home_connect
+   Translation key: set_light_brightness
+   Code passes: ['entity_id']
+   String expects: ['entity_id', 'error']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error setting brightness of {entity_id}: {error}...
+
+32. homeassistant/components/home_connect/light.py
+   Component: home_connect
+   Translation key: select_light_custom_color
+   Code passes: ['entity_id']
+   String expects: ['entity_id', 'error']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error selecting custom color of {entity_id}: {error}...
+
+33. homeassistant/components/home_connect/light.py
+   Component: home_connect
+   Translation key: set_light_color
+   Code passes: ['entity_id']
+   String expects: ['entity_id', 'error']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error setting color of {entity_id}: {error}...
+
+34. homeassistant/components/home_connect/light.py
+   Component: home_connect
+   Translation key: set_light_color
+   Code passes: ['entity_id']
+   String expects: ['entity_id', 'error']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error setting color of {entity_id}: {error}...
+
+35. homeassistant/components/home_connect/number.py
+   Component: home_connect
+   Translation key: set_setting_entity
+   Code passes: ['entity_id', 'key', 'value']
+   String expects: ['entity_id', 'error', 'key', 'value']
+   ⚠️  Unused in strings.json: ['error']
+   Translation string: Error assigning the value "{value}" to the setting "{key}" for {entity_id}: {error}...
+
+36. homeassistant/components/london_underground/sensor.py
+   Component: london_underground
+   Translation key: deprecated_yaml_import_issue
+   Code passes: ['domain', 'integration_title']
+   String expects: []
+   ⚠️  Missing in strings.json: ['domain', 'integration_title']
+   Translation string: Configuring London Underground using YAML sensor platform is deprecated.
+
+While importing your confi...
+
+37. homeassistant/components/habitica/notify.py
+   Component: habitica
+   Translation key: send_message_forbidden
+   Code passes: ['reason']
+   String expects: ['name', 'reason']
+   ⚠️  Unused in strings.json: ['name']
+   Translation string: You are not allowed to send messages to {name}. ({reason})...
+
+38. homeassistant/components/habitica/notify.py
+   Component: habitica
+   Translation key: send_message_not_found
+   Code passes: ['reason']
+   String expects: ['name', 'reason']
+   ⚠️  Unused in strings.json: ['name']
+   Translation string: Unable to send message, {name} not found. ({reason})...
+
+39. homeassistant/components/system_bridge/__init__.py
+   Component: system_bridge
+   Translation key: unsupported_version
+   Code passes: ['host']
+   String expects: ['host', 'title']
+   ⚠️  Unused in strings.json: ['title']
+   Translation string: You are not running a supported version of System Bridge for {title} ({host}). Please upgrade to the...
+
+40. homeassistant/components/comelit/config_flow.py
+   Component: comelit
+   Translation key: cannot_authenticate
+   Code passes: ['error']
+   String expects: []
+   ⚠️  Missing in strings.json: ['error']
+   Translation string: Error authenticating...
+
+41. homeassistant/components/litterrobot/switch.py
+   Component: litterrobot
+   Translation key: deprecated_entity
+   Code passes: ['entity', 'name']
+   String expects: ['entity']
+   ⚠️  Missing in strings.json: ['name']
+   Translation string: The Litter-Robot entity `{entity}` is deprecated and will be removed in a future release.
+Please upd...
+
+42. homeassistant/components/swiss_public_transport/__init__.py
+   Component: swiss_public_transport
+   Translation key: invalid_data
+   Code passes: ['config_title', 'error']
+   String expects: ['config_title', 'error', 'stationboard_url']
+   ⚠️  Unused in strings.json: ['stationboard_url']
+   Translation string: Setup failed for entry {config_title} with invalid data, check at the [stationboard]({stationboard_u...
+
