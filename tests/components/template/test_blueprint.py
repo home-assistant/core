@@ -34,6 +34,7 @@ from homeassistant.components.template.config import (
 from homeassistant.const import STATE_ON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
@@ -523,3 +524,17 @@ async def test_variables_for_entity(
     state = hass.states.get(f"{domain}.test")
     assert state is not None
     assert state.state == expected
+
+
+@pytest.mark.asyncio
+async def test_blueprint_variables_loaded(hass):
+    """Test that blueprint variables are available on HA start/reload."""
+    conf_section = type(
+        "ConfSection", (), {"variables": {"switch": "switch.test_switch"}}
+    )()
+    
+    tpl = Template("{{ switch }}", hass)
+    
+    rendered = tpl.async_render({"switch": conf_section.variables["switch"]})
+    
+    assert rendered == "switch.test_switch"
