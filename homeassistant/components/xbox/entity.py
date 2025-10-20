@@ -4,8 +4,17 @@ from __future__ import annotations
 
 from xbox.webapi.api.provider.smartglass.models import ConsoleType, SmartglassConsole
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -83,3 +92,58 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
     def data(self) -> ConsoleData:
         """Return coordinator data for this console."""
         return self.coordinator.data.consoles[self._console.id]
+
+
+def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Get list of related automations and scripts."""
+    used_in = automations_with_entity(hass, entity_id)
+    used_in += scripts_with_entity(hass, entity_id)
+    return used_in
+
+
+def check_deprecated_entity(
+    hass: HomeAssistant,
+    entity: XboxBaseEntity,
+    entity_domain: str,
+) -> bool:
+    """Check for deprecated entity.
+
+    If deprecated entity doesn't exist, don't create it.
+    If deprecated entity is disabled, remove it.
+    If deprecated entity is used, raise a repair issue.
+    """
+    if not getattr(entity.entity_description, "deprecated", False):
+        return True
+    ent_reg = er.async_get(hass)
+    if entity_id := ent_reg.async_get_entity_id(
+        entity_domain,
+        DOMAIN,
+        f"{entity.xuid}_{entity.entity_description.key}",
+    ):
+        if (entity_entry := ent_reg.async_get(entity_id)) is not None:
+            if entity_entry.disabled:
+                ent_reg.async_remove(entity_id)
+                async_delete_issue(
+                    hass,
+                    DOMAIN,
+                    f"deprecated_entity_{entity.xuid}_{entity.entity_description.key}",
+                )
+                return False
+
+            if entity_used_in(hass, entity_id):
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"deprecated_entity_{entity.xuid}_{entity.entity_description.key}",
+                    breaks_in_ha_version="2026.5.0",
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="deprecated_entity",
+                    translation_placeholders={
+                        "name": str(entity_entry.name or entity_entry.original_name),
+                        "entity": entity_id,
+                    },
+                )
+            return True
+
+    return False

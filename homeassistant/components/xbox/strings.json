@@ -77,5 +77,11 @@
     "timeout_exception": {
       "message": "Failed to connect to Xbox Network due to a connection timeout"
     }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "title": "The Xbox {name} entity is deprecated",
+      "description": "The Xbox entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
+    }
   }
 }
