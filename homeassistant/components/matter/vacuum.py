@@ -197,12 +197,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             for area in self.matter_areas:
                 area_id = getattr(area, "areaID", None)
                 map_id = getattr(area, "mapID", None)
-                location_name = None
-                area_info = getattr(area, "areaInfo", None)
-                if area_info is not None:
-                    location_info = getattr(area_info, "locationInfo", None)
-                    if location_info is not None:
-                        location_name = getattr(location_info, "locationName", None)
+                location_name = self._get_area_name_by_id(area_id) if area_id else None
                 if area_id is not None:
                     if map_id is NullValue:
                         areas[area_id] = {"name": location_name}
@@ -214,7 +209,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 clusters.ServiceArea.Attributes.SupportedMaps
             )
             maps = []
-            if supported_maps != NullValue:  # chip.clusters.Types.Nullable
+            if supported_maps != NullValue:
                 maps = [
                     {
                         "map_id": getattr(m, "mapID", None)
