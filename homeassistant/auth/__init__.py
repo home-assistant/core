@@ -271,7 +271,7 @@ class AuthManager:
         local_only: bool | None = None,
     ) -> models.User:
         """Create a system user."""
-        user = await self._store.async_create_user(
+        user = self._store.async_create_user(
             name=name,
             system_generated=True,
             is_active=True,
@@ -301,7 +301,7 @@ class AuthManager:
         if self._user_should_be_owner():
             kwargs["is_owner"] = True
 
-        user = await self._store.async_create_user(**kwargs)
+        user = self._store.async_create_user(**kwargs)
 
         self.hass.bus.async_fire(EVENT_USER_ADDED, {"user_id": user.id})
 
@@ -324,7 +324,7 @@ class AuthManager:
 
         info = await auth_provider.async_user_meta_for_credentials(credentials)
 
-        user = await self._store.async_create_user(
+        user = self._store.async_create_user(
             credentials=credentials,
             name=info.name,
             is_active=info.is_active,

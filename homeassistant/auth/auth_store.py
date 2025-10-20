@@ -84,7 +84,8 @@ class AuthStore:
         """Retrieve a user by id."""
         return self._users.get(user_id)
 
-    async def async_create_user(
+    @callback
+    def async_create_user(
         self,
         name: str | None,
         is_owner: bool | None = None,

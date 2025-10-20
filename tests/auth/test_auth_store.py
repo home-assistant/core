@@ -308,7 +308,7 @@ async def test_duplicate_uuid(
     await store.async_load()
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex_mock:
         hex_mock.side_effect = ["user-id", "new-id"]
-        user = await store.async_create_user("Test User")
+        user = store.async_create_user("Test User")
     assert len(hex_mock.mock_calls) == 2
     assert user.id == "new-id"
 
@@ -319,7 +319,7 @@ async def test_add_remove_user_affects_tokens(
     """Test adding and removing a user removes the tokens."""
     store = auth_store.AuthStore(hass)
     await store.async_load()
-    user = await store.async_create_user("Test User")
+    user = store.async_create_user("Test User")
     assert user.name == "Test User"
     refresh_token = await store.async_create_refresh_token(
         user, "client_id", "access_token_expiration"
