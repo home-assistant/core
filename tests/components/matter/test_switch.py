@@ -232,3 +232,25 @@ async def test_evse_sensor(
         ),
         timed_request_timeout_ms=3000,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_evse_charging"])
+async def test_matter_exception_on_evse_enable_charging_command(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test if a MatterError gets converted to HomeAssistantError by using a EVSE fixture."""
+    state = hass.states.get("switch.evse_enable_charging")
+    assert state
+    matter_client.send_device_command.side_effect = MatterError(
+        "Unable to enable charging"
+    )
+    with pytest.raises(HomeAssistantError):
+        # MatterGenericCommandSwitchEntity: enable charging
+        await hass.services.async_call(
+            "switch",
+            "turn_on",
+            {"entity_id": "switch.evse_enable_charging"},
+            blocking=True,
+        )
