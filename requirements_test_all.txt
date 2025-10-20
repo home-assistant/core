@@ -103,10 +103,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==8.0;python_version<'3.14'
-
-# homeassistant.components.python_script
-RestrictedPython==8.1a1.dev0;python_version>='3.14'
+RestrictedPython==8.1
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -182,7 +179,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.1
 
 # homeassistant.components.alexa_devices
-aioamazondevices==6.4.4
+aioamazondevices==6.4.6
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -618,7 +615,7 @@ boschshcpy==0.2.107
 botocore==1.37.1
 
 # homeassistant.components.bring
-bring-api==1.1.0
+bring-api==1.1.1
 
 # homeassistant.components.broadlink
 broadlink==0.19.0
@@ -1638,7 +1635,7 @@ pycsspeechtts==1.0.8
 # pycups==2.0.4
 
 # homeassistant.components.cync
-pycync==0.4.1
+pycync==0.4.2
 
 # homeassistant.components.daikin
 pydaikin==2.17.1
