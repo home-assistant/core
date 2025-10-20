@@ -1,43 +1,24 @@
-"""The sma integration."""
+"""The SMA integration."""
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from pysma import SMA
-from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_CONNECTIONS,
     CONF_HOST,
-    CONF_MAC,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_GROUP,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    PYSMA_COORDINATOR,
-    PYSMA_DEVICE_INFO,
-    PYSMA_OBJECT,
-    PYSMA_REMOVE_LISTENER,
-    PYSMA_SENSORS,
-)
+from .const import CONF_GROUP, DOMAIN, PYSMA_OBJECT, PYSMA_REMOVE_LISTENER
 from .coordinator import SMADataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -69,97 +50,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # A habbit is that SMA stay open. Enforce closing the session on shutdown
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, coordinator.async_close_sma_session
+    # Ensure the SMA session closes when Home Assistant stops
+    async def _async_handle_shutdown(event: Event) -> None:
+        await coordinator.async_close_sma_session()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_handle_shutdown)
     )
 
-    return True
-
-
-async def old_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    try:
-        # Get updated device info
-        sma_device_info = await sma.device_info()
-        # Get all device sensors
-        sensor_def = await sma.get_sensors()
-    except (
-        pysma.exceptions.SmaReadException,
-        pysma.exceptions.SmaConnectionException,
-    ) as exc:
-        raise ConfigEntryNotReady from exc
-    except pysma.exceptions.SmaAuthenticationException as exc:
-        raise ConfigEntryAuthFailed from exc
-
-    if TYPE_CHECKING:
-        assert entry.unique_id
-
-    # Create DeviceInfo object from sma_device_info
-    device_info = DeviceInfo(
-        configuration_url=url,
-        identifiers={(DOMAIN, entry.unique_id)},
-        manufacturer=sma_device_info["manufacturer"],
-        model=sma_device_info["type"],
-        name=sma_device_info["name"],
-        sw_version=sma_device_info["sw_version"],
-        serial_number=sma_device_info["serial"],
-    )
-
-    # Add the MAC address to connections, if it comes via DHCP
-    if CONF_MAC in entry.data:
-        device_info[ATTR_CONNECTIONS] = {
-            (dr.CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])
-        }
-
-    # Define the coordinator
-    async def async_update_data():
-        """Update the used SMA sensors."""
-        try:
-            await sma.read(sensor_def)
-        except (
-            pysma.exceptions.SmaReadException,
-            pysma.exceptions.SmaConnectionException,
-        ) as exc:
-            raise UpdateFailed(exc) from exc
-
-    interval = timedelta(
-        seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    )
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name="sma",
-        update_method=async_update_data,
-        update_interval=interval,
-    )
-
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
-        await sma.close_session()
-        raise
-
-    # Ensure we logout on shutdown
-    async def async_close_session(event):
-        """Close the session."""
-        await sma.close_session()
-
-    remove_stop_listener = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, async_close_session
-    )
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        PYSMA_OBJECT: sma,
-        PYSMA_COORDINATOR: coordinator,
-        PYSMA_SENSORS: sensor_def,
-        PYSMA_REMOVE_LISTENER: remove_stop_listener,
-        PYSMA_DEVICE_INFO: device_info,
-    }
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -180,7 +78,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Migrating from version %s", entry.version)
 
     if entry.version == 1:
-        # 1 -> 2: Unique ID from integer to string
         if entry.minor_version == 1:
             minor_version = 2
             hass.config_entries.async_update_entry(
