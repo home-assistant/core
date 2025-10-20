@@ -68,3 +68,60 @@ async def test_volume_mute_on(
         endpoint_id=1,
         command=clusters.OnOff.Commands.Off(),
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["speaker"])
+async def test_media_player_actions(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    node_fixture: str,
+) -> None:
+    """Test media_player entity actions."""
+    entity_id = "media_player.mock_speaker"
+    state = hass.states.get(entity_id)
+    assert state
+
+    # test mute_volume action (from idle state)
+    await hass.services.async_call(
+        "media_player",
+        "volume_mute",
+        {
+            "entity_id": entity_id,
+            "is_volume_muted": True,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.OnOff.Commands.Off(),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # test volume_set action
+    await hass.services.async_call(
+        "media_player",
+        "volume_set",
+        {
+            "entity_id": entity_id,
+            "volume_level": 0.5,  # 50% volume
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 2
+    # First command unmutes
+    assert matter_client.send_device_command.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.OnOff.Commands.On(),
+    )
+    # Second command sets volume
+    assert matter_client.send_device_command.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.LevelControl.Commands.MoveToLevel(level=127),  # 50%
+    )
+    matter_client.send_device_command.reset_mock()
