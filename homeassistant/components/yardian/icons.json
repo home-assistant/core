@@ -9,7 +9,6 @@
       "watering_running": {
         "default": "mdi:sprinkler",
         "state": {
-          "on": "mdi:sprinkler",
           "off": "mdi:sprinkler-variant"
         }
       },
