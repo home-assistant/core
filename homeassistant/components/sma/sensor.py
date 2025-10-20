@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pysma
-from yarl import URL
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.components.sma.coordinator import SMADataUpdateCoordinator
 from homeassistant.const import (
     CONF_HOST,
     CONF_SSL,
@@ -34,6 +32,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SMAConfigEntry
 from .const import DOMAIN
+from .coordinator import SMADataUpdateCoordinator
 
 SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "status": SensorEntityDescription(
@@ -849,11 +848,11 @@ async def async_setup_entry(
             sensor,
             entry,
         )
-        for sensor in coordinator.sensors
+        for sensor in coordinator.data.sensors
     )
 
 
-class SMAsensor(CoordinatorEntity, SensorEntity):
+class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
     """Representation of a SMA sensor."""
 
     def __init__(
@@ -874,15 +873,16 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         url = f"{protocol}://{entry.data[CONF_HOST]}"
 
         self._sensor = pysma_sensor
+        assert entry.unique_id
 
         self._attr_device_info = DeviceInfo(
             configuration_url=url,
             identifiers={(DOMAIN, entry.unique_id)},
-            manufacturer=coordinator.sma_device_info["manufacturer"],
-            model=coordinator.sma_device_info["type"],
-            name=coordinator.sma_device_info["name"],
-            sw_version=coordinator.sma_device_info["sw_version"],
-            serial_number=coordinator.sma_device_info["serial"],
+            manufacturer=coordinator.data.sma_device_info["manufacturer"],
+            model=coordinator.data.sma_device_info["type"],
+            name=coordinator.data.sma_device_info["name"],
+            sw_version=coordinator.data.sma_device_info["sw_version"],
+            serial_number=coordinator.data.sma_device_info["serial"],
         )
         self._attr_unique_id = (
             f"{entry.unique_id}-{pysma_sensor.key}_{pysma_sensor.key_idx}"

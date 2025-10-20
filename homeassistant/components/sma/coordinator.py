@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -11,6 +12,7 @@ from pysma.exceptions import (
     SmaConnectionException,
     SmaReadException,
 )
+from pysma.sensor import Sensor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -23,7 +25,15 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class SMADataUpdateCoordinator(DataUpdateCoordinator):
+@dataclass(slots=True)
+class SMACoordinatorData:
+    """Data class for SMA sensors."""
+
+    sma_device_info: dict[str, str]
+    sensors: list[Sensor]
+
+
+class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
     """Data Update Coordinator for SMA."""
 
     config_entry: ConfigEntry
@@ -47,15 +57,14 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator):
             ),
         )
         self.sma = sma
-        # TODO: Convert sma_device_info and sensors to dataclasses for stronger typing.
-        self.sma_device_info = None
-        self.sensors = None
+        self._sma_device_info: dict[str, str] = {}
+        self._sensors: list[Sensor] = []
 
     async def _async_setup(self) -> None:
         """Setup the SMA Data Update Coordinator."""
         try:
-            self.sma_device_info = await self.sma.device_info()
-            self.sensors = await self.sma.get_sensors()
+            self._sma_device_info = await self.sma.device_info()
+            self._sensors = await self.sma.get_sensors()
         except (
             SmaReadException,
             SmaConnectionException,
@@ -73,10 +82,10 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> SMACoordinatorData:
         """Update the used SMA sensors."""
         try:
-            await self.sma.read(self.sensors)
+            await self.sma.read(self._sensors)
         except (
             SmaReadException,
             SmaConnectionException,
@@ -92,6 +101,11 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator):
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
             ) from err
+
+        return SMACoordinatorData(
+            sma_device_info=self._sma_device_info,
+            sensors=self._sensors,
+        )
 
     async def async_close_sma_session(self) -> None:
         """Close the SMA session."""
