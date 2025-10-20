@@ -1,7 +1,7 @@
 """Test switch of NextDNS integration."""
 
 from datetime import timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration, mock_nextdns
+from . import init_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -38,6 +38,7 @@ async def test_switch(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
 ) -> None:
     """Test states of the switches."""
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.SWITCH]):
@@ -47,7 +48,9 @@ async def test_switch(
 
 
 async def test_switch_on(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
 ) -> None:
     """Test the switch can be turned on."""
     await init_integration(hass, mock_config_entry)
@@ -56,26 +59,25 @@ async def test_switch_on(
     assert state
     assert state.state == STATE_OFF
 
-    with patch(
-        "homeassistant.components.nextdns.NextDns.set_setting", return_value=True
-    ) as mock_switch_on:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
-        state = hass.states.get("switch.fake_profile_block_page")
-        assert state
-        assert state.state == STATE_ON
+    state = hass.states.get("switch.fake_profile_block_page")
+    assert state
+    assert state.state == STATE_ON
 
-        mock_switch_on.assert_called_once()
+    mock_nextdns_client.set_setting.assert_called_once()
 
 
 async def test_switch_off(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
 ) -> None:
     """Test the switch can be turned on."""
     await init_integration(hass, mock_config_entry)
@@ -84,22 +86,19 @@ async def test_switch_off(
     assert state
     assert state.state == STATE_ON
 
-    with patch(
-        "homeassistant.components.nextdns.NextDns.set_setting", return_value=True
-    ) as mock_switch_on:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.fake_profile_web3"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.fake_profile_web3"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
-        state = hass.states.get("switch.fake_profile_web3")
-        assert state
-        assert state.state == STATE_OFF
+    state = hass.states.get("switch.fake_profile_web3")
+    assert state
+    assert state.state == STATE_OFF
 
-        mock_switch_on.assert_called_once()
+    mock_nextdns_client.set_setting.assert_called_once()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -117,6 +116,7 @@ async def test_availability(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    mock_nextdns_client: AsyncMock,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.SWITCH]):
@@ -131,20 +131,16 @@ async def test_availability(
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
     freezer.tick(timedelta(minutes=10))
-    with patch(
-        "homeassistant.components.nextdns.NextDns.get_settings",
-        side_effect=exc,
-    ):
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    mock_nextdns_client.set_setting.side_effect = exc
+
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     freezer.tick(timedelta(minutes=10))
-    with mock_nextdns():
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    mock_nextdns_client.set_setting.side_effect = None
 
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
@@ -160,15 +156,17 @@ async def test_availability(
     ],
 )
 async def test_switch_failure(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, exc: Exception
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
+    exc: Exception,
 ) -> None:
     """Tests that the turn on/off service throws HomeAssistantError."""
     await init_integration(hass, mock_config_entry)
 
-    with (
-        patch("homeassistant.components.nextdns.NextDns.set_setting", side_effect=exc),
-        pytest.raises(HomeAssistantError),
-    ):
+    mock_nextdns_client.set_setting.side_effect = exc
+
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -178,21 +176,21 @@ async def test_switch_failure(
 
 
 async def test_switch_auth_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
 ) -> None:
     """Tests that the turn on/off action starts re-auth flow."""
     await init_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.nextdns.NextDns.set_setting",
-        side_effect=InvalidApiKeyError,
-    ):
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
-            blocking=True,
-        )
+    mock_nextdns_client.set_setting.side_effect = InvalidApiKeyError
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+        blocking=True,
+    )
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 

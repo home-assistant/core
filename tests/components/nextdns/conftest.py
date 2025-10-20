@@ -157,5 +157,6 @@ def mock_nextdns_client() -> Generator[AsyncMock]:
         client.get_profiles.return_value = PROFILES
         client.get_settings.return_value = SETTINGS
         client.get_profile_name = Mock(return_value="Fake Profile")
+        client.set_setting.return_value = True
 
         yield client
