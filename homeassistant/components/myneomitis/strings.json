@@ -1,44 +1,64 @@
 {
   "title": "MyNeomitis",
   "description": "Connect the MyNeomitis devices (radiators, towel rails, relays, underfloor heating) to Home Assistant using the cloud API.",
-  "config_flow": {
-    "user": {
-      "title": "Connect to MyNeomitis"
-    }
-  },
   "config": {
+    "step": {
+      "user": {
+        "title": "Connect to MyNeomitis",
+        "description": "Enter your MyNeomitis account credentials.",
+        "data": {
+          "email": "Email address",
+          "password": "Password"
+        },
+        "data_description": {
+          "email": "Votre adresse e-mail utilisée pour votre compte MyNeomitis",
+          "password": "Votre mot de passe MyNeomitis"
+        }
+      }
+    },
     "abort": {
       "already_configured": "This integration is already configured."
-    }
-  },
-  "errors": {
-    "auth_failed": {
-      "title": "Authentication failed",
-      "description": "Please check your email address and password."
     },
-    "connection_error": {
-      "title": "Connection error",
-      "description": "Could not connect to the MyNeomitis service. Please try again later."
-    },
-    "unknown_error": {
-      "title": "Unknown error",
-      "description": "An unexpected error occurred. Please try again."
+    "error": {
+      "auth_failed": "Authentication failed. Please check your email address and password.",
+      "connection_error": "Could not connect to the MyNeomitis service. Please try again later.",
+      "unknown_error": "An unexpected error occurred. Please try again."
     }
   },
   "entity": {
+    "climate": {
+      "climate_myneomitis": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "comfort": "Comfort",
+              "eco": "Eco",
+              "antifrost": "Frost protection",
+              "standby": "Standby",
+              "boost": "Boost",
+              "setpoint": "Setpoint",
+              "comfort +": "Comfort +",
+              "eco-1": "Eco -1",
+              "eco-2": "Eco -2",
+              "auto": "Auto"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "select_myneomitis": {
         "state": {
-          "on": "[%key:common::state::on%]",
-          "off": "[%key:common::state::off%]",
-          "auto": "[%key:common::state::auto%]",
+          "on": "On",
+          "off": "Off",
+          "auto": "Auto",
           "boost": "Boost",
           "comfort": "Comfort",
           "eco": "Eco",
           "eco-1": "Eco -1",
           "eco-2": "Eco -2",
           "antifrost": "Frost protection",
-          "standby": "[%key:common::state::standby%]",
+          "standby": "Standby",
           "heating": "Heating",
           "cooling": "Cooling"
         }
