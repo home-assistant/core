@@ -11,6 +11,7 @@ from typing import Any
 import warnings
 
 # Suppress FutureWarning from miio library about functools.partial
+# This must be done before importing miio to be effective
 warnings.filterwarnings(
     "ignore",
     message="functools.partial will be a method descriptor",
@@ -18,7 +19,7 @@ warnings.filterwarnings(
     module="miio.miot_device",
 )
 
-from miio import (
+from miio import (  # noqa: E402
     AirFresh,
     AirFreshA1,
     AirFreshT2017,
@@ -42,15 +43,15 @@ from miio import (
     Timer,
     VacuumStatus,
 )
-from miio.gateway.gateway import GatewayException
+from miio.gateway.gateway import GatewayException  # noqa: E402
 
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform  # noqa: E402
+from homeassistant.core import HomeAssistant, callback  # noqa: E402
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady  # noqa: E402
+from homeassistant.helpers import device_registry as dr, entity_registry as er  # noqa: E402
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed  # noqa: E402
 
-from .const import (
+from .const import (  # noqa: E402
     ATTR_AVAILABLE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
@@ -80,8 +81,8 @@ from .const import (
     AuthException,
     SetupException,
 )
-from .gateway import ConnectXiaomiGateway
-from .typing import XiaomiMiioConfigEntry, XiaomiMiioRuntimeData
+from .gateway import ConnectXiaomiGateway  # noqa: E402
+from .typing import XiaomiMiioConfigEntry, XiaomiMiioRuntimeData  # noqa: E402
 
 _LOGGER = logging.getLogger(__name__)
 
