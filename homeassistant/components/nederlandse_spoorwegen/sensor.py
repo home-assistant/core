@@ -40,10 +40,12 @@ from .const import (
 from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
 
 
-def _get_departure_time(
-    planned: datetime | None, actual: datetime | None
-) -> datetime | None:
+def _get_departure_time(trip: Trip | None) -> datetime | None:
     """Get next departure time from trip data."""
+    if not trip:
+        return None
+    actual = getattr(trip, "departure_time_actual", None)
+    planned = getattr(trip, "departure_time_planned", None)
     return actual or planned
 
 
@@ -189,13 +191,13 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
 
     @property
     def native_value(self) -> datetime | None:
-        """Return the native value of the sensor (actual or planned departure time)."""
-        first_trip = self.coordinator.data.first_trip
-        if not first_trip:
+        """Return the native value of the sensor."""
+        route_data = self.coordinator.data
+        if not route_data.first_trip:
             return None
-        actual = getattr(first_trip, "departure_time_actual", None)
-        planned = getattr(first_trip, "departure_time_planned", None)
-        return actual or planned
+
+        first_trip = route_data.first_trip
+        return _get_departure_time(first_trip)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -244,14 +246,7 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
             "arrival_platform_actual": getattr(
                 first_trip, "arrival_platform_actual", None
             ),
-            "next": _get_time_str(
-                _get_departure_time(
-                    getattr(next_trip, "departure_time_actual", None),
-                    getattr(next_trip, "departure_time_planned", None),
-                )
-            )
-            if next_trip
-            else None,
+            "next": _get_time_str(_get_departure_time(next_trip)),
             "status": status.lower() if status else None,
             "transfers": getattr(first_trip, "nr_transfers", 0),
             "route": route,
