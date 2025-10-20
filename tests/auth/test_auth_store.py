@@ -393,3 +393,551 @@ async def test_set_expiry_date(
 
     store.async_set_expiry(token, enable_expiry=True)
     assert token.expire_at is not None
+
+
+def test_load_groups_with_system_groups(hass: HomeAssistant) -> None:
+    """Test _load_groups creates system groups correctly."""
+    store = auth_store.AuthStore(hass)
+    store._loaded = True
+    
+    data = {
+        "groups": [
+            {"id": auth_store.GROUP_ID_ADMIN, "name": "Administrators"},
+            {"id": auth_store.GROUP_ID_USER, "name": "Users"},
+        ]
+    }
+    
+    groups, group_without_policy, migrate_users = store._load_groups(data)
+    
+    assert len(groups) == 3  # Admin, User, and Read Only
+    assert auth_store.GROUP_ID_ADMIN in groups
+    assert auth_store.GROUP_ID_USER in groups
+    assert auth_store.GROUP_ID_READ_ONLY in groups
+    assert group_without_policy is None
+    assert migrate_users is False
+    
+    # Verify system groups have correct properties
+    admin_group = groups[auth_store.GROUP_ID_ADMIN]
+    assert admin_group.system_generated is True
+    assert admin_group.name == auth_store.GROUP_NAME_ADMIN
+
+
+def test_load_groups_with_empty_data(hass: HomeAssistant) -> None:
+    """Test _load_groups with no groups data."""
+    store = auth_store.AuthStore(hass)
+    store._loaded = True
+    
+    data = {}
+    
+    groups, group_without_policy, migrate_users = store._load_groups(data)
+    
+    # Should create all 3 system groups
+    assert len(groups) == 3
+    assert auth_store.GROUP_ID_ADMIN in groups
+    assert auth_store.GROUP_ID_USER in groups
+    assert auth_store.GROUP_ID_READ_ONLY in groups
+    assert group_without_policy is None
+    assert migrate_users is True  # Should migrate users when no groups exist
+
+
+def test_load_groups_with_custom_group(hass: HomeAssistant) -> None:
+    """Test _load_groups with custom group that has a policy."""
+    store = auth_store.AuthStore(hass)
+    store._loaded = True
+    
+    custom_policy = {"entities": {"domains": {"light": True}}}
+    data = {
+        "groups": [
+            {
+                "id": "custom-group-id",
+                "name": "Custom Group",
+                "policy": custom_policy,
+            }
+        ]
+    }
+    
+    groups, group_without_policy, migrate_users = store._load_groups(data)
+    
+    # Should have custom group plus 3 system groups
+    assert len(groups) == 4
+    assert "custom-group-id" in groups
+    assert groups["custom-group-id"].name == "Custom Group"
+    assert groups["custom-group-id"].policy == custom_policy
+    assert groups["custom-group-id"].system_generated is False
+    assert group_without_policy is None
+    assert migrate_users is False
+
+
+def test_load_groups_with_group_without_policy(hass: HomeAssistant) -> None:
+    """Test _load_groups with custom group without policy (should be skipped)."""
+    store = auth_store.AuthStore(hass)
+    store._loaded = True
+    
+    data = {
+        "groups": [
+            {
+                "id": "no-policy-group",
+                "name": "Group Without Policy",
+            }
+        ]
+    }
+    
+    groups, group_without_policy, migrate_users = store._load_groups(data)
+    
+    # Group without policy should be skipped, only system groups created
+    assert len(groups) == 3
+    assert "no-policy-group" not in groups
+    assert group_without_policy == "no-policy-group"
+    assert migrate_users is False
+
+
+def test_load_users_basic(hass: HomeAssistant) -> None:
+    """Test _load_users loads users correctly."""
+    store = auth_store.AuthStore(hass)
+    store._loaded = True
+    
+    from homeassistant.auth.permissions.models import PermissionLookup
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
+    
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    perm_lookup = PermissionLookup(ent_reg, dev_reg)
+    
+    # Create groups first
+    groups = {
+        auth_store.GROUP_ID_ADMIN: auth_store._system_admin_group(),
+        auth_store.GROUP_ID_USER: auth_store._system_user_group(),
+    }
+    
+    data = {
+        "users": [
+            {
+                "id": "test-user-id",
+                "name": "Test User",
+                "is_owner": False,
+                "is_active": True,
+                "system_generated": False,
+                "group_ids": [auth_store.GROUP_ID_USER],
+            }
+        ]
+    }
+    
+    users = store._load_users(data, groups, perm_lookup, None, False)
+    
+    assert len(users) == 1
+    assert "test-user-id" in users
+    user = users["test-user-id"]
+    assert user.name == "Test User"
+    assert user.is_owner is False
+    assert user.is_active is True
+    assert user.system_generated is False
+    assert len(user.groups) == 1
+    assert user.groups[0].id == auth_store.GROUP_ID_USER
+
+
+def test_load_users_with_migration(hass: HomeAssistant) -> None:
+    """Test _load_users migrates users to admin group when needed."""
+    store = auth_store.AuthStore(hass)
+    store._loaded = True
+    
+    from homeassistant.auth.permissions.models import PermissionLookup
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
+    
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    perm_lookup = PermissionLookup(ent_reg, dev_reg)
+    
+    groups = {
+        auth_store.GROUP_ID_ADMIN: auth_store._system_admin_group(),
+    }
+    
+    data = {
+        "users": [
+            {
+                "id": "test-user-id",
+                "name": "Test User",
+                "is_owner": True,
+                "is_active": True,
+                "system_generated": False,
+                "group_ids": [],
+            }
+        ]
+    }
+    
+    users = store._load_users(data, groups, perm_lookup, None, True)
+    
+    assert len(users) == 1
+    user = users["test-user-id"]
+    # Non-system user should be migrated to admin group
+    assert len(user.groups) == 1
+    assert user.groups[0].id == auth_store.GROUP_ID_ADMIN
+
+
+def test_load_users_system_user_no_migration(hass: HomeAssistant) -> None:
+    """Test _load_users doesn't migrate system-generated users."""
+    store = auth_store.AuthStore(hass)
+    store._loaded = True
+    
+    from homeassistant.auth.permissions.models import PermissionLookup
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
+    
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    perm_lookup = PermissionLookup(ent_reg, dev_reg)
+    
+    groups = {
+        auth_store.GROUP_ID_ADMIN: auth_store._system_admin_group(),
+    }
+    
+    data = {
+        "users": [
+            {
+                "id": "system-user-id",
+                "name": "System User",
+                "is_owner": False,
+                "is_active": True,
+                "system_generated": True,
+                "group_ids": [],
+            }
+        ]
+    }
+    
+    users = store._load_users(data, groups, perm_lookup, None, True)
+    
+    assert len(users) == 1
+    user = users["system-user-id"]
+    # System user should NOT be migrated
+    assert len(user.groups) == 0
+
+
+def test_load_credentials_basic(hass: HomeAssistant) -> None:
+    """Test _load_credentials loads credentials correctly."""
+    store = auth_store.AuthStore(hass)
+    store._loaded = True
+    
+    from homeassistant.auth.permissions.models import PermissionLookup
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
+    from homeassistant.auth import models
+    
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    perm_lookup = PermissionLookup(ent_reg, dev_reg)
+    
+    # Create a user
+    users = {
+        "test-user-id": models.User(
+            id="test-user-id",
+            name="Test User",
+            is_owner=False,
+            is_active=True,
+            system_generated=False,
+            groups=[],
+            perm_lookup=perm_lookup,
+        )
+    }
+    
+    data = {
+        "credentials": [
+            {
+                "id": "cred-id-1",
+                "user_id": "test-user-id",
+                "auth_provider_type": "homeassistant",
+                "auth_provider_id": None,
+                "data": {"username": "testuser"},
+            }
+        ]
+    }
+    
+    credentials = store._load_credentials(data, users)
+    
+    assert len(credentials) == 1
+    assert "cred-id-1" in credentials
+    cred = credentials["cred-id-1"]
+    assert cred.id == "cred-id-1"
+    assert cred.auth_provider_type == "homeassistant"
+    assert cred.data == {"username": "testuser"}
+    assert cred.is_new is False
+    
+    # Verify credential was added to user
+    assert len(users["test-user-id"].credentials) == 1
+    assert users["test-user-id"].credentials[0] == cred
+
+
+def test_load_credentials_multiple_users(hass: HomeAssistant) -> None:
+    """Test _load_credentials with multiple users and credentials."""
+    store = auth_store.AuthStore(hass)
+    store._loaded = True
+    
+    from homeassistant.auth.permissions.models import PermissionLookup
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
+    from homeassistant.auth import models
+    
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    perm_lookup = PermissionLookup(ent_reg, dev_reg)
+    
+    # Create multiple users
+    users = {
+        "user-1": models.User(
+            id="user-1",
+            name="User 1",
+            is_owner=False,
+            is_active=True,
+            system_generated=False,
+            groups=[],
+            perm_lookup=perm_lookup,
+        ),
+        "user-2": models.User(
+            id="user-2",
+            name="User 2",
+            is_owner=False,
+            is_active=True,
+            system_generated=False,
+            groups=[],
+            perm_lookup=perm_lookup,
+        ),
+    }
+    
+    data = {
+        "credentials": [
+            {
+                "id": "cred-1",
+                "user_id": "user-1",
+                "auth_provider_type": "homeassistant",
+                "auth_provider_id": None,
+                "data": {"username": "user1"},
+            },
+            {
+                "id": "cred-2",
+                "user_id": "user-1",
+                "auth_provider_type": "google",
+                "auth_provider_id": None,
+                "data": {"email": "user1@example.com"},
+            },
+            {
+                "id": "cred-3",
+                "user_id": "user-2",
+                "auth_provider_type": "homeassistant",
+                "auth_provider_id": None,
+                "data": {"username": "user2"},
+            },
+        ]
+    }
+    
+    credentials = store._load_credentials(data, users)
+    
+    assert len(credentials) == 3
+    assert len(users["user-1"].credentials) == 2
+    assert len(users["user-2"].credentials) == 1
+
+
+def test_load_refresh_tokens_basic(hass: HomeAssistant) -> None:
+    """Test _load_refresh_tokens loads tokens correctly."""
+    store = auth_store.AuthStore(hass)
+    store._loaded = True
+    
+    from homeassistant.auth.permissions.models import PermissionLookup
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
+    from homeassistant.auth import models
+    
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    perm_lookup = PermissionLookup(ent_reg, dev_reg)
+    
+    # Create a user
+    users = {
+        "test-user-id": models.User(
+            id="test-user-id",
+            name="Test User",
+            is_owner=False,
+            is_active=True,
+            system_generated=False,
+            groups=[],
+            perm_lookup=perm_lookup,
+        )
+    }
+    
+    credentials = {}
+    
+    data = {
+        "refresh_tokens": [
+            {
+                "id": "token-id-1",
+                "user_id": "test-user-id",
+                "client_id": "http://localhost:8123/",
+                "created_at": "2024-10-21T13:43:19.774637+00:00",
+                "access_token_expiration": 1800.0,
+                "token": "test-token",
+                "jwt_key": "test-jwt-key",
+                "last_used_at": "2024-10-21T14:00:00.000000+00:00",
+                "last_used_ip": "192.168.1.1",
+            }
+        ]
+    }
+    
+    store._load_refresh_tokens(data, users, credentials)
+    
+    assert len(users["test-user-id"].refresh_tokens) == 1
+    token = list(users["test-user-id"].refresh_tokens.values())[0]
+    assert token.id == "token-id-1"
+    assert token.client_id == "http://localhost:8123/"
+    assert token.token == "test-token"
+    assert token.jwt_key == "test-jwt-key"
+    assert token.last_used_ip == "192.168.1.1"
+    assert token.token_type == models.TOKEN_TYPE_NORMAL
+
+
+def test_load_refresh_tokens_with_credential(hass: HomeAssistant) -> None:
+    """Test _load_refresh_tokens associates credentials correctly."""
+    store = auth_store.AuthStore(hass)
+    store._loaded = True
+    
+    from homeassistant.auth.permissions.models import PermissionLookup
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
+    from homeassistant.auth import models
+    
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    perm_lookup = PermissionLookup(ent_reg, dev_reg)
+    
+    # Create a user
+    users = {
+        "test-user-id": models.User(
+            id="test-user-id",
+            name="Test User",
+            is_owner=False,
+            is_active=True,
+            system_generated=False,
+            groups=[],
+            perm_lookup=perm_lookup,
+        )
+    }
+    
+    # Create a credential
+    cred = models.Credentials(
+        id="cred-id-1",
+        is_new=False,
+        auth_provider_type="homeassistant",
+        auth_provider_id=None,
+        data={"username": "testuser"},
+    )
+    credentials = {"cred-id-1": cred}
+    
+    data = {
+        "refresh_tokens": [
+            {
+                "id": "token-id-1",
+                "user_id": "test-user-id",
+                "client_id": "http://localhost:8123/",
+                "created_at": "2024-10-21T13:43:19.774637+00:00",
+                "access_token_expiration": 1800.0,
+                "token": "test-token",
+                "jwt_key": "test-jwt-key",
+                "credential_id": "cred-id-1",
+            }
+        ]
+    }
+    
+    store._load_refresh_tokens(data, users, credentials)
+    
+    assert len(users["test-user-id"].refresh_tokens) == 1
+    token = list(users["test-user-id"].refresh_tokens.values())[0]
+    assert token.credential == cred
+
+
+def test_load_refresh_tokens_skips_invalid_created_at(
+    hass: HomeAssistant,
+) -> None:
+    """Test _load_refresh_tokens skips tokens with invalid created_at."""
+    store = auth_store.AuthStore(hass)
+    store._loaded = True
+    
+    from homeassistant.auth.permissions.models import PermissionLookup
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
+    from homeassistant.auth import models
+    
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    perm_lookup = PermissionLookup(ent_reg, dev_reg)
+    
+    # Create a user
+    users = {
+        "test-user-id": models.User(
+            id="test-user-id",
+            name="Test User",
+            is_owner=False,
+            is_active=True,
+            system_generated=False,
+            groups=[],
+            perm_lookup=perm_lookup,
+        )
+    }
+    
+    credentials = {}
+    
+    data = {
+        "refresh_tokens": [
+            {
+                "id": "token-id-1",
+                "user_id": "test-user-id",
+                "client_id": "http://localhost:8123/",
+                "created_at": "invalid-date",
+                "access_token_expiration": 1800.0,
+                "token": "test-token",
+                "jwt_key": "test-jwt-key",
+            }
+        ]
+    }
+    
+    store._load_refresh_tokens(data, users, credentials)
+    
+    # Token should be skipped due to invalid created_at
+    assert len(users["test-user-id"].refresh_tokens) == 0
+
+
+def test_load_refresh_tokens_skips_missing_jwt_key(hass: HomeAssistant) -> None:
+    """Test _load_refresh_tokens skips tokens without jwt_key."""
+    store = auth_store.AuthStore(hass)
+    store._loaded = True
+    
+    from homeassistant.auth.permissions.models import PermissionLookup
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
+    from homeassistant.auth import models
+    
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    perm_lookup = PermissionLookup(ent_reg, dev_reg)
+    
+    # Create a user
+    users = {
+        "test-user-id": models.User(
+            id="test-user-id",
+            name="Test User",
+            is_owner=False,
+            is_active=True,
+            system_generated=False,
+            groups=[],
+            perm_lookup=perm_lookup,
+        )
+    }
+    
+    credentials = {}
+    
+    data = {
+        "refresh_tokens": [
+            {
+                "id": "token-id-1",
+                "user_id": "test-user-id",
+                "client_id": "http://localhost:8123/",
+                "created_at": "2024-10-21T13:43:19.774637+00:00",
+                "access_token_expiration": 1800.0,
+                "token": "test-token",
+                # jwt_key is missing
+            }
+        ]
+    }
+    
+    store._load_refresh_tokens(data, users, credentials)
+    
+    # Token should be skipped due to missing jwt_key
+    assert len(users["test-user-id"].refresh_tokens) == 0
