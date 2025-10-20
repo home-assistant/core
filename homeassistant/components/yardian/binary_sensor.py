@@ -137,8 +137,6 @@ class YardianBinarySensor(
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.yid}-{description.key}"
         self._attr_device_info = coordinator.device_info
-        if description.translation_placeholders is not None:
-            self._attr_translation_placeholders = description.translation_placeholders
 
     @property
     def is_on(self) -> bool | None:
