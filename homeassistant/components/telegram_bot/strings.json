@@ -167,7 +167,69 @@
   "entity": {
     "event": {
       "update_event": {
-        "name": "Update event"
+        "name": "Update event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "telegram_attachment": "Attachment received",
+              "telegram_callback": "Callback query received",
+              "telegram_command": "Command received",
+              "telegram_text": "Text message received",
+              "telegram_sent": "Message sent"
+            }
+          },
+          "args": {
+            "name": "Receieved command arguments"
+          },
+          "chat_id": {
+            "name": "Chat ID"
+          },
+          "command": {
+            "name": "Receieved command"
+          },
+          "data": {
+            "name": "Received callback query"
+          },
+          "date": {
+            "name": "Received datetime"
+          },
+          "file_id": {
+            "name": "Received file ID"
+          },
+          "file_mime_type": {
+            "name": "Received file MIME type"
+          },
+          "file_name": {
+            "name": "Received file name"
+          },
+          "file_size": {
+            "name": "Received file size (bytes)"
+          },
+          "from_first": {
+            "name": "Received From first name"
+          },
+          "from_last": {
+            "name": "Received from last name"
+          },
+          "id": {
+            "name": "ID"
+          },
+          "message_id": {
+            "name": "Sent message ID"
+          },
+          "message_tag": {
+            "name": "Sent message tag"
+          },
+          "message_thread_id": {
+            "name": "Received message thread ID"
+          },
+          "text": {
+            "name": "Received text/caption"
+          },
+          "user_id": {
+            "name": "Received from user ID"
+          }
+        }
       }
     }
   },
