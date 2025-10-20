@@ -7,6 +7,7 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Mapping, Sequence
 from glob import glob
+import json
 import logging
 import os
 from typing import Any
@@ -82,16 +83,59 @@ def run(script_args: list) -> int:
     parser.add_argument(
         "-s", "--secrets", action="store_true", help="Show secret information"
     )
+    parser.add_argument("--json", action="store_true", help="Output JSON format")
+    parser.add_argument(
+        "--fail-on-warnings",
+        action="store_true",
+        help="Exit non-zero if warnings are present",
+    )
 
-    args, unknown = parser.parse_known_args()
+    args, unknown = parser.parse_known_args(script_args)
     if unknown:
         print(color("red", "Unknown arguments:", ", ".join(unknown)))
 
     config_dir = os.path.join(os.getcwd(), args.config)
 
-    print(color("bold", "Testing configuration at", config_dir))
+    if not args.json:
+        print(color("bold", "Testing configuration at", config_dir))
 
     res = check(config_dir, args.secrets)
+
+    # JSON output branch
+    if args.json:
+        json_object = {
+            "config_dir": config_dir,
+            "total_errors": sum(len(errors) for errors in res["except"].values()),
+            "total_warnings": sum(len(warnings) for warnings in res["warn"].values()),
+            "errors": res["except"],
+            "warnings": res["warn"],
+            "components": list(res["components"].keys()),
+        }
+
+        # Include secrets information if requested
+        if args.secrets:
+            # Build list of missing secrets (referenced but not found)
+            missing_secrets = [
+                key for key, val in res["secrets"].items() if val is None
+            ]
+
+            # Build list of used secrets (found and used)
+            used_secrets = [
+                key for key, val in res["secrets"].items() if val is not None
+            ]
+
+            json_object["secrets"] = {
+                "secret_files": res["secret_cache"],
+                "used_secrets": used_secrets,
+                "missing_secrets": missing_secrets,
+                "total_secrets": len(res["secrets"]),
+                "total_missing": len(missing_secrets),
+            }
+
+        print(json.dumps(json_object, indent=2))
+
+        # Determine exit code for JSON mode
+        return 1 if res["except"] or (args.fail_on_warnings and res["warn"]) else 0
 
     domain_info: list[str] = []
     if args.info:
@@ -165,7 +209,8 @@ def run(script_args: list) -> int:
                 continue
             print(" -", skey + ":", sval)
 
-    return len(res["except"])
+    # Determine final exit code
+    return 1 if res["except"] or (args.fail_on_warnings and res["warn"]) else 0
 
 
 def check(config_dir, secrets=False):
