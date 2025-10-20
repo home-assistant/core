@@ -49,12 +49,11 @@ async def async_setup_entry(
 
     gateway.on_light_status = _on_light_status
 
-    new_lights = [
+    async_add_entities(
         DaliCenterLight(device)
         for device in devices
         if is_light_device(device.dev_type)
-    ]
-    async_add_entities(new_lights)
+    )
 
 
 class DaliCenterLight(LightEntity):
