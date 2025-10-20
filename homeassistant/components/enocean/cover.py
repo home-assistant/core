@@ -74,7 +74,7 @@ async def async_setup_entry(
             continue
 
         device_id = EnOceanID(device[CONF_ENOCEAN_DEVICE_ID])
-        sender_id = EnOceanID(0)
+        sender_id = config_entry.runtime_data.gateway.base_id
         if device[CONF_ENOCEAN_SENDER_ID] != "":
             sender_id = EnOceanID(device[CONF_ENOCEAN_SENDER_ID])
 
@@ -82,10 +82,10 @@ async def async_setup_entry(
             [
                 EnOceanCover(
                     sender_id=sender_id,
-                    enocean_device_id=device_id,
+                    enocean_id=device_id,
                     gateway_id=config_entry.runtime_data.gateway.chip_id,
                     device_name=device[CONF_ENOCEAN_DEVICE_NAME],
-                    dev_type=device_type,
+                    device_type=device_type,
                     name=None,
                 )
             ]
@@ -106,21 +106,31 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
     def __init__(
         self,
         sender_id: EnOceanID,
-        enocean_device_id: EnOceanID,
+        enocean_id: EnOceanID,
         gateway_id: EnOceanID,
         device_name: str,
-        dev_type: EnOceanDeviceType,
+        device_type: EnOceanDeviceType,
         name: str | None,
     ) -> None:
         """Initialize the EnOcean Cover."""
         super().__init__(
-            enocean_id=enocean_device_id,
+            enocean_id=enocean_id,
             gateway_id=gateway_id,
             device_name=device_name,
-            device_type=dev_type,
+            device_type=device_type,
             name=name,
         )
+
+        # set base class attributes
         self._attr_device_class = CoverDeviceClass.BLIND
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.SET_POSITION
+        )
+
+        # set EnOcean-specific attributes
         self._position: int | None = None
         self._attr_is_closed: bool | None = None
         self._is_opening = False
@@ -131,12 +141,6 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._watchdog_enabled = False
         self._watchdog_seconds_remaining: float = 0
         self._watchdog_queries_remaining: int = 5
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.STOP
-            | CoverEntityFeature.SET_POSITION
-        )
 
     @property
     def current_cover_position(self) -> int | None:

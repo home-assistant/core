@@ -35,22 +35,22 @@ class EnOceanID:
 
     def __init__(self, id: int | str) -> None:
         """Initialize the EnOceanID from an integer or string."""
-        enOceanID = -1
+        numeric_id = -1
         if isinstance(id, str):
-            enOceanID = EnOceanID.from_string(id).to_number()
+            numeric_id = EnOceanID.from_string(id).to_number()
         if isinstance(id, int):
-            enOceanID = id
-        if not isinstance(enOceanID, int):
+            numeric_id = id
+        if not isinstance(numeric_id, int):
             raise TypeError(
                 "ID must be an integer or a hex string that can be converted to an integer."
             )
-        if enOceanID < 0:
+        if numeric_id < 0:
             raise ValueError("ID out of bounds (must be at least 0).")
-        if enOceanID > 0xFFFFFFFF:
+        if numeric_id > 0xFFFFFFFF:
             raise ValueError(
                 "ID out of bounds (must be smaller than 0xFFFFFFFF = 4294967295)."
             )
-        self._id = enOceanID
+        self.__id = numeric_id
 
     @classmethod
     def from_number(cls, id: int) -> "EnOceanID":
@@ -91,11 +91,11 @@ class EnOceanID:
 
     def to_number(self) -> int:
         """Return the EnOcean ID as integer."""
-        return self._id
+        return self.__id
 
     def to_string(self) -> str:
         """Return the EnOcean ID as colon-separated hex string."""
-        s = f"{self._id:08X}"
+        s = f"{self.__id:08X}"
         return f"{s[0:2]}:{s[2:4]}:{s[4:6]}:{s[6:8]}"
 
     def to_json(self) -> str:
@@ -105,12 +105,12 @@ class EnOceanID:
     def to_bytelist(self) -> list[int]:
         """Return the EnOcean ID as list of bytes."""
         return [
-            (self._id >> 24) & 0xFF,
-            (self._id >> 16) & 0xFF,
-            (self._id >> 8) & 0xFF,
-            self._id & 0xFF,
+            (self.__id >> 24) & 0xFF,
+            (self.__id >> 16) & 0xFF,
+            (self.__id >> 8) & 0xFF,
+            self.__id & 0xFF,
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return the EnOcean ID as string."""
         return self.to_string()

@@ -31,7 +31,7 @@ class EnOceanEntity(Entity):
 
         # set base class attributes
         self._attr_name = name
-        self._attr_has_entity_name = name is not None
+        self._attr_has_entity_name = True
         self._attr_should_poll = False
 
         # define EnOcean-specific attributes
@@ -43,8 +43,9 @@ class EnOceanEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Get gateway ID and register callback."""
         _LOGGER.warning(
-            "Unique_id: %s, Friendly_name: %s",
+            "Unique_id: %s, entity_name: %s, Friendly_name: %s",
             self.unique_id,
+            self.name,
             self._friendly_name_internal(),
         )
 
