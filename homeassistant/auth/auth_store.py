@@ -214,7 +214,7 @@ class AuthStore:
 
         self._async_schedule_save()
 
-    async def async_create_refresh_token(
+    async def async_create_refresh_token(  # NOSONAR - kept async for public API compatibility
         self,
         user: models.User,
         client_id: str | None = None,
