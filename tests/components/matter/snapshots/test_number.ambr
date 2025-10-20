@@ -1154,6 +1154,64 @@
     'state': '255',
   })
 # ---
+# name: test_numbers[heiman_motion_sensor_m1][number.smart_motion_sensor_hold_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.smart_motion_sensor_hold_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hold time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hold_time',
+    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-OccupancySensingHoldTime-1030-3',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[heiman_motion_sensor_m1][number.smart_motion_sensor_hold_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart motion sensor Hold time',
+      'max': 65534,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.smart_motion_sensor_hold_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '70',
+  })
+# ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
