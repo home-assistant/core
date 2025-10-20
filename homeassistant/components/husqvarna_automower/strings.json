@@ -448,6 +448,9 @@
           "demo": "Demo"
         }
       },
+      "remaining_charging_time": {
+        "name": "Remaining charging time"
+      },
       "uptime": {
         "name": "Uptime"
       },

@@ -124,6 +124,13 @@ def _get_current_work_area_name(data: MowerAttributes) -> str:
 
 
 @callback
+def _get_remaining_charging_time(data: MowerAttributes) -> int | None:
+    if data.battery.remaining_charging_time is not None:
+        return int(data.battery.remaining_charging_time.total_seconds())
+    return None
+
+
+@callback
 def _get_current_work_area_dict(data: MowerAttributes) -> Mapping[str, Any]:
     """Return the name of the current work area."""
     if TYPE_CHECKING:
@@ -318,6 +325,15 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         extra_state_attributes_fn=_get_current_work_area_dict,
         option_fn=_get_work_area_names,
         value_fn=_get_current_work_area_name,
+    ),
+    AutomowerSensorEntityDescription(
+        key="remaining_charging_time",
+        translation_key="remaining_charging_time",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
+        value_fn=_get_remaining_charging_time,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
     ),
 )
 
