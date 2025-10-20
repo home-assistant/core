@@ -49,6 +49,13 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
+        # Read device max level (defaults to 254 if unavailable)
+        max_level = self.get_matter_attribute_value(
+            clusters.LevelControl.Attributes.MaxLevel
+        )
+        if not isinstance(max_level, int) or max_level <= 0:
+            max_level = 254
+
         if volume == 0:
             # If volume level is 0, turn off the volume
             await self.async_mute_volume(True)
@@ -121,7 +128,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.OnOff.Attributes.OnOff,
             clusters.LevelControl.Attributes.CurrentLevel,
-            clusters.LevelControl.Attributes.OnLevel,
+            clusters.LevelControl.Attributes.MaxLevel,
         ),
         device_type=(device_types.Speaker,),
     ),
