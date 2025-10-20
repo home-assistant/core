@@ -27,14 +27,6 @@ async def test_tfame_data_get_identifier() -> None:
     assert identifier == host
 
 
-# @pytest.mark.asyncio
-# async def test_tfame_data_exception():
-#    """Optional: test raising TFAmeException."""
-# Example of raising exception if you want to add validation
-#    with pytest.raises(TFAmeException):
-#        raise TFAmeException("Test error")
-
-
 def test_tfame_data_raises_on_empty_host() -> None:
     """Test that empty host raises exception."""
     with pytest.raises(TFAmeException) as excinfo:

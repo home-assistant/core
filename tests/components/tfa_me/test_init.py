@@ -6,11 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.tfa_me import (
-    async_unload_entry,
-    get_instances,
-    get_running_instances,
-)
+from homeassistant.components.tfa_me import async_unload_entry
 from homeassistant.components.tfa_me.const import CONF_MULTIPLE_ENTITIES, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -48,7 +44,7 @@ async def test_full_entry_setup(hass: HomeAssistant) -> None:
     assert mock_config_entry.state.name == "LOADED"
     assert mock_config_entry.entry_id in hass.data[DOMAIN]
 
-    # assert mock_config_entry.entry_id in hass.data[DOMAIN]
+    # Asserts
     coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
     assert coordinator.host == "127.0.0.1"
 
@@ -78,27 +74,3 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
 
     assert result is True
     assert mock_config_entry.entry_id not in hass.data[DOMAIN]
-
-
-@pytest.mark.asyncio
-async def test_get_instances_and_running(
-    hass: HomeAssistant,
-) -> None:
-    """Test get_instances and get_running_instances."""
-    mock_config_entry = mock_config_entryX()
-    mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.tfa_me.TFAmeDataCoordinator.async_config_entry_first_refresh",
-        new=AsyncMock(return_value=True),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Now state is LOADED
-    assert mock_config_entry.state.name == "LOADED"
-
-    instances = await get_instances(hass)
-    running = await get_running_instances(hass)
-
-    assert mock_config_entry in instances
-    assert mock_config_entry in running

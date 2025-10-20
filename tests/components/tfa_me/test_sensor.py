@@ -29,7 +29,7 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from tests.common import MockConfigEntry
+from tests.common import Mock, MockConfigEntry
 
 
 @pytest.fixture
@@ -299,8 +299,6 @@ def mock_entry(mock_coordinator):
     entry = AsyncMock()
     entry.entry_id = "1234"
     entry.runtime_data = mock_coordinator
-    # entry.runtime_data = mock_coordinator.data
-    # entry.coordinator = mock_coordinator
     return entry
 
 
@@ -331,7 +329,7 @@ async def test_async_setup_entry_adds_entities(
         added_entities.extend(entities)
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][mock_entry.entry_id] = mock_entry  # .coordinator
+    hass.data[DOMAIN][mock_entry.entry_id] = mock_entry
 
     await async_setup_entry(hass, mock_entry, _async_add_entities)
 
@@ -369,7 +367,7 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
     # unique_id
     assert entity.unique_id == "tfame_sensor.a01234567_temperature"
 
-    # name
+    # Name
     assert entity.name == "A01234567 Temperature"
 
     # measurement_name
@@ -378,10 +376,10 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
     # native_value should return float value
     assert float(entity.native_value) == 23.5
 
-    # unit
+    # Unit
     assert entity.native_unit_of_measurement == "°C"
 
-    # attributes
+    # Attributes
     attrs = entity.extra_state_attributes
     assert attrs["sensor_name"] == "A01234567"
     assert attrs["measurement"] == "temperature"
@@ -486,7 +484,7 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
     assert float(entity5.init_measure_value) == 7.4
     assert float(entity5.native_value) == 0.0
 
-    # station barometric pressure
+    # Station barometric pressure
     entity6 = TFAmeSensorEntity(
         coordinator=mock_coordinator,
         sensor_id="057654321",
@@ -500,7 +498,7 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
     del mock_coordinator.data[entity.entity_id]["unit"]
     assert entity.native_unit_of_measurement == ""
 
-    # station barometric pressure without "measurement"
+    # Station barometric pressure without "measurement"
     entity7 = TFAmeSensorEntity(
         coordinator=mock_coordinator,
         sensor_id="057654322",
@@ -511,7 +509,7 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
     attrs = entity7.extra_state_attributes
     assert attrs == {}
 
-    # station barometric pressure without "unit"
+    # Station barometric pressure without "unit"
     entity8 = TFAmeSensorEntity(
         coordinator=mock_coordinator,
         sensor_id="057654323",
@@ -519,7 +517,6 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
     )
     assert entity8.native_unit_of_measurement == ""
 
-    # mock_coordinator.async_discover_new_entities()
     await mock_coordinator._handle_coordinator_update()
 
 
@@ -556,7 +553,7 @@ async def test_wind_sensor(mock_coordinator) -> None:
         entity_id="sensor.a2ffffffc_rssi",
     )
     assert entity_4.native_value is None
-    # wrong id
+    # Wrong id
     assert entity_4.get_timeout("xx") == 0
 
 
@@ -723,7 +720,6 @@ def mock_config_entry(hass: HomeAssistant, tfa_me_mock_entry) -> ConfigEntry:
     )
     cordy.sensor_entity_list = []
     cordy.data = {}
-    # entry.coordinator = cordy
     entry.runtime_data = cordy
     entry.data = {}
     return entry
@@ -737,7 +733,7 @@ async def test_async_discover_new_entities(
     now = datetime.now().timestamp()
 
     # Arrange:
-    async_add_entities = AsyncMock()
+    async_add_entities = Mock()
 
     # Initial coordinator data, one entity
     entity_id_existing = "sensor.a0f169ad1_temperature"

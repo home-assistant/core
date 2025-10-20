@@ -155,7 +155,7 @@ async def test_create_entry_success_with_id(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
-                CONF_IP_ADDRESS: "012-345-678",  # fast: "127.0.0.1",  # SLOW if not patched: "012-345-678",
+                CONF_IP_ADDRESS: "012-345-678",
                 CONF_MULTIPLE_ENTITIES: False,
             },
         )

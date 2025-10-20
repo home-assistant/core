@@ -48,7 +48,7 @@ async def test_update_data_with_ip(hass: HomeAssistant, tfa_me_mock_entry) -> No
     """Test normal update (with IP) with some sensor types."""
     now = datetime.now().timestamp()
 
-    # Fake JSON reply
+    # Create dummy JSON reply
     dummy_json = {
         "gateway_id": "017654321",
         "sensors": [
@@ -129,7 +129,7 @@ async def test_update_data_with_mdns(
     """Test normal update (with MDNS name) with some sensor types."""
     now = datetime.now().timestamp()
 
-    # Fake JSON reply
+    # Create dummy JSON reply
     dummy_json = {
         "gateway_id": "017654321",
         "sensors": [
