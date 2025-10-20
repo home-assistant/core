@@ -26,7 +26,8 @@ from aioesphomeapi import (
     VoiceAssistantFeature,
     VoiceAssistantTimerEventType,
 )
-from aiohttp import web
+import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import (
@@ -34,7 +35,7 @@ from homeassistant.components.assist_pipeline import (
     PipelineEventType,
     PipelineStage,
 )
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.intent import (
     TimerEventType,
     TimerInfo,
@@ -47,7 +48,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.network import get_url
 
-from .const import DOMAIN, WAKE_WORDS_DIR_NAME
+from .const import DOMAIN, WAKE_WORDS_API_PATH, WAKE_WORDS_DIR_NAME
 from .entity import EsphomeAssistEntity, convert_api_error_ha_error
 from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
@@ -91,6 +92,13 @@ _TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventTy
 
 _ANNOUNCEMENT_TIMEOUT_SEC = 5 * 60  # 5 minutes
 _CONFIG_TIMEOUT_SEC = 5
+_WAKE_WORD_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required("type"): str,
+        vol.Required("wake_word"): str,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup_entry(
@@ -197,19 +205,22 @@ class EsphomeAssistSatellite(
         wake_words = {}
         for config_path in self._wake_words_dir.glob("*.json"):
             wake_word_id = config_path.stem
+            model_path = config_path.with_suffix(".tflite")
+            if not model_path.exists():
+                # Missing model file
+                continue
 
             with open(config_path, encoding="utf-8") as config_file:
                 config_dict = json.load(config_file)
-                if not (model := config_dict.get("model")) or (
-                    not (model_path := (self._wake_words_dir / model)).exists()
-                ):
-                    # Missing model file
-                    continue
-
-                if not (model_type := config_dict.get("type")) or (
-                    not (wake_word := config_dict.get("wake_word"))
-                ):
+                try:
+                    config = _WAKE_WORD_CONFIG_SCHEMA(config_dict)
+                except vol.Invalid as err:
                     # Invalid config
+                    _LOGGER.debug(
+                        "Invalid wake word config: path=%s, error=%s",
+                        config_path,
+                        humanize_error(config_dict, err),
+                    )
                     continue
 
                 with open(model_path, "rb") as model_file:
@@ -217,17 +228,19 @@ class EsphomeAssistSatellite(
 
                 model_size = model_path.stat().st_size
                 config_rel_path = config_path.relative_to(self._wake_words_dir)
-                base_url = get_url(self.hass)
+
+                # Only intended for the internal network
+                base_url = get_url(self.hass, prefer_external=False, allow_cloud=False)
 
                 wake_words[wake_word_id] = VoiceAssistantExternalWakeWord.from_dict(
                     {
                         "id": wake_word_id,
-                        "wake_word": wake_word,
+                        "wake_word": config["wake_word"],
                         "trained_languages": config_dict.get("trained_languages", []),
-                        "model_type": model_type,
+                        "model_type": config["type"],
                         "model_size": model_size,
                         "model_hash": model_hash,
-                        "url": f"{base_url}/api/esphome/wake_words/{config_rel_path}",
+                        "url": f"{base_url}{WAKE_WORDS_API_PATH}/{config_rel_path}",
                     }
                 )
 
@@ -844,30 +857,13 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         self.transport.sendto(data, self.remote_addr)
 
 
-class WakeWordModelView(HomeAssistantView):
-    """Web view for custom wake word models."""
-
-    requires_auth = False
-    url = "/api/esphome/wake_words/{filename}"
-    name = "api:esphome:wake_words"
-
-    def __init__(self, wake_words_dir: Path) -> None:
-        """Initialize web view."""
-        self._wake_words_dir = wake_words_dir
-
-    async def get(self, request: web.Request, filename: str) -> web.FileResponse:
-        """Start a get request."""
-        model_path = (self._wake_words_dir / filename).resolve()
-        if not model_path.is_relative_to(self._wake_words_dir):
-            # Must be within the custom wake words directory
-            raise web.HTTPForbidden
-
-        return web.FileResponse(model_path)
-
-
-@callback
-def async_setup(hass: HomeAssistant) -> None:
-    """Set up the ffmpeg proxy."""
-    hass.http.register_view(
-        WakeWordModelView(Path(hass.config.path(WAKE_WORDS_DIR_NAME)))
+async def async_setup(hass: HomeAssistant) -> None:
+    """Set up the satellite."""
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                url_path=WAKE_WORDS_API_PATH,
+                path=hass.config.path(WAKE_WORDS_DIR_NAME),
+            )
+        ]
     )

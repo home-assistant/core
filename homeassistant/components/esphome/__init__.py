@@ -31,7 +31,7 @@ CLIENT_INFO = f"Home Assistant {ha_version}"
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the esphome component."""
     ffmpeg_proxy.async_setup(hass)
-    assist_satellite.async_setup(hass)
+    await assist_satellite.async_setup(hass)
     await dashboard.async_setup(hass)
     return True
 

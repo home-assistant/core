@@ -29,3 +29,4 @@ DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_URL_VERSION}.html"
 NO_WAKE_WORD: Final[str] = "no_wake_word"
 
 WAKE_WORDS_DIR_NAME = "custom_wake_words"
+WAKE_WORDS_API_PATH = "/api/esphome/wake_words"
