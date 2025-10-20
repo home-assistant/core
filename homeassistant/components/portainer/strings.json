@@ -13,6 +13,15 @@
           "verify_ssl": "Whether to verify SSL certificates. Disable only if you have a self-signed certificate"
         },
         "description": "You can create an access token in the Portainer UI. Go to **My account > Access tokens** and select **Add access token**"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "The new API access token for authenticating with Portainer"
+        },
+        "description": "The access token for your Portainer instance needs to be re-authenticated. You can create a new access token in the Portainer UI. Go to **My account > Access tokens** and select **Add access token**"
       }
     },
     "error": {
@@ -22,7 +31,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "device": {
@@ -34,6 +44,55 @@
     "binary_sensor": {
       "status": {
         "name": "Status"
+      }
+    },
+    "sensor": {
+      "image": {
+        "name": "Image"
+      },
+      "operating_system": {
+        "name": "Operating system"
+      },
+      "operating_system_version": {
+        "name": "Operating system version"
+      },
+      "api_version": {
+        "name": "API version"
+      },
+      "kernel_version": {
+        "name": "Kernel version"
+      },
+      "architecture": {
+        "name": "Architecture"
+      },
+      "containers_running": {
+        "name": "Containers running"
+      },
+      "containers_stopped": {
+        "name": "Containers stopped"
+      },
+      "containers_paused": {
+        "name": "Containers paused"
+      },
+      "images_count": {
+        "name": "Image count"
+      },
+      "containers_count": {
+        "name": "Container count"
+      },
+      "memory_total": {
+        "name": "Total memory"
+      },
+      "docker_version": {
+        "name": "Docker version"
+      },
+      "cpu_total": {
+        "name": "Total CPU"
+      }
+    },
+    "switch": {
+      "container": {
+        "name": "Container"
       }
     }
   },
