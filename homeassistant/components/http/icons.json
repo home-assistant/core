@@ -1,0 +1,7 @@
+{
+  "services": {
+    "unban_all_addresses": {
+      "service": "mdi:cancel"
+    }
+  }
+}
