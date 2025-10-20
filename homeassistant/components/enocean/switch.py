@@ -11,27 +11,16 @@ from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
-from homeassistant.const import CONF_ID, CONF_NAME, Platform
+from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_entry import EnOceanConfigEntry
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
-from .importer import (
-    EnOceanPlatformConfig,
-    register_platform_config_for_migration_to_config_entry,
-)
-from .supported_device_type import (
-    EnOceanSupportedDeviceType,
-    get_supported_enocean_device_types,
-)
+from .supported_device_type import EnOceanDeviceType, get_supported_enocean_device_types
 
 CONF_CHANNEL = "channel"
 DEFAULT_NAME = ""
@@ -43,18 +32,6 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_CHANNEL, default=0): cv.positive_int,
     }
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the EnOcean switch platform."""
-    register_platform_config_for_migration_to_config_entry(
-        EnOceanPlatformConfig(platform=Platform.SWITCH, config=config)
-    )
 
 
 async def async_setup_entry(
@@ -123,7 +100,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         gateway_id: EnOceanID,
         dev_name: str,
         channel: int,
-        dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+        dev_type: EnOceanDeviceType = EnOceanDeviceType(),
         name: str | None = None,
     ) -> None:
         """Initialize the EnOcean switch device."""
@@ -132,7 +109,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
             gateway_id=gateway_id,
             device_name=dev_name,
             name=name,
-            dev_type=dev_type,
+            device_type=dev_type,
         )
         self._light = None
         self.channel = channel
@@ -145,7 +122,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         optional = [0x03]
-        optional.extend(self._enocean_device_id.to_bytelist())
+        optional.extend(self.__enocean_id.to_bytelist())
         optional.extend([0xFF, 0x00])
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00],
@@ -157,7 +134,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         optional = [0x03]
-        optional.extend(self._enocean_device_id.to_bytelist())
+        optional.extend(self.__enocean_id.to_bytelist())
         optional.extend([0xFF, 0x00])
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],

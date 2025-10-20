@@ -36,10 +36,7 @@ from .config_flow import (
 from .const import LOGGER
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
-from .supported_device_type import (
-    EnOceanSupportedDeviceType,
-    get_supported_enocean_device_types,
-)
+from .supported_device_type import EnOceanDeviceType, get_supported_enocean_device_types
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
@@ -297,7 +294,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         dev_name: str,
         description: SensorEntityDescription,
         gateway_id: EnOceanID,
-        dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+        dev_type: EnOceanDeviceType = EnOceanDeviceType(),
         name: str | None = None,
     ) -> None:
         """Initialize the EnOcean sensor device."""
@@ -305,7 +302,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
             enocean_id=dev_id,
             device_name=dev_name,
             name=name,
-            dev_type=dev_type,
+            device_type=dev_type,
             gateway_id=gateway_id,
         )
         self.entity_description = description
@@ -373,7 +370,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         scale_max: int,
         range_from: int,
         range_to: int,
-        dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+        dev_type: EnOceanDeviceType = EnOceanDeviceType(),
         name: str | None = None,
     ) -> None:
         """Initialize the EnOcean temperature sensor device."""

@@ -36,10 +36,7 @@ from .config_flow import (
 from .const import SIGNAL_SEND_MESSAGE
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
-from .supported_device_type import (
-    EnOceanSupportedDeviceType,
-    get_supported_enocean_device_types,
-)
+from .supported_device_type import EnOceanDeviceType, get_supported_enocean_device_types
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,7 +109,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         enocean_device_id: EnOceanID,
         gateway_id: EnOceanID,
         device_name: str,
-        dev_type: EnOceanSupportedDeviceType,
+        dev_type: EnOceanDeviceType,
         name: str | None,
     ) -> None:
         """Initialize the EnOcean Cover."""
@@ -120,7 +117,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             enocean_id=enocean_device_id,
             gateway_id=gateway_id,
             device_name=device_name,
-            dev_type=dev_type,
+            device_type=dev_type,
             name=name,
         )
         self._attr_device_class = CoverDeviceClass.BLIND
@@ -261,12 +258,12 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def send_telegram(self, command: EnOceanCoverCommand, position: int = 0) -> None:
         """Send an EnOcean telegram with the respective command."""
-        _LOGGER.warning(self.enocean_device_id.to_bytelist())
+        _LOGGER.warning(self.enocean_id.to_bytelist())
         packet = RadioPacket.create(
             rorg=RORG.VLD,
             rorg_func=0x05,
             rorg_type=0x00,
-            destination=self.enocean_device_id.to_bytelist(),
+            destination=self.enocean_id.to_bytelist(),
             sender=self._sender_id.to_bytelist(),
             command=command.value,
             POS=position,

@@ -36,10 +36,7 @@ from .const import (
     ERROR_INVALID_DONGLE_PATH,
 )
 from .enocean_id import EnOceanID
-from .supported_device_type import (
-    EnOceanSupportedDeviceType,
-    get_supported_enocean_device_types,
-)
+from .supported_device_type import EnOceanDeviceType, get_supported_enocean_device_types
 
 
 class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -325,7 +322,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         device_id = "none"
         device_name = "none"
-        device_type = EnOceanSupportedDeviceType()
+        device_type = EnOceanDeviceType()
         sender_id: EnOceanID = EnOceanID(0)
         sender_id_string: str = ""
 

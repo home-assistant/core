@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 from .enocean_id import EnOceanID
-from .supported_device_type import EnOceanSupportedDeviceType
+from .supported_device_type import EnOceanDeviceType
 
 
 class EnOceanEntity(Entity):
@@ -24,7 +24,7 @@ class EnOceanEntity(Entity):
         gateway_id: EnOceanID,
         device_name: str,
         name: str | None = None,
-        dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+        device_type: EnOceanDeviceType = EnOceanDeviceType(),
     ) -> None:
         """Initialize the entity."""
         super().__init__()
@@ -35,10 +35,10 @@ class EnOceanEntity(Entity):
         self._attr_should_poll = False
 
         # define EnOcean-specific attributes
-        self._enocean_device_id: EnOceanID = enocean_id
-        self._device_name: str = device_name
-        self.dev_type = dev_type
-        self._gateway_id = gateway_id
+        self.__enocean_id: EnOceanID = enocean_id
+        self.__device_name: str = device_name
+        self.__device_type = device_type
+        self.__gateway_id = gateway_id
 
     async def async_added_to_hass(self) -> None:
         """Get gateway ID and register callback."""
@@ -56,7 +56,7 @@ class EnOceanEntity(Entity):
 
     def _message_received_callback(self, packet: Packet) -> None:
         """Handle incoming packets."""
-        if packet.sender_int == self._enocean_device_id.to_number():
+        if packet.sender_int == self.__enocean_id.to_number():
             self.value_changed(packet)
 
     @abstractmethod
@@ -73,7 +73,7 @@ class EnOceanEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID for this entity."""
-        uid = f"{self.enocean_device_id.to_string()}.{self.platform.domain}"
+        uid = f"{self.enocean_id.to_string()}.{self.platform.domain}"
         if self.device_class:
             uid += f".{self.device_class}"
         else:
@@ -84,14 +84,14 @@ class EnOceanEntity(Entity):
         return uid
 
     @property
-    def enocean_device_id(self) -> EnOceanID:
-        """Return the EnOcean id as EnOceanID."""
-        return self._enocean_device_id
+    def enocean_id(self) -> EnOceanID:
+        """Return the EnOcean device id."""
+        return self.__enocean_id
 
     @property
     def gateway_id(self) -> EnOceanID:
-        """Return the gateway's chip id as colon-separated hex string (NOT YET IMPLEMENTED)."""
-        return self._gateway_id
+        """Return the gateway's chip id."""
+        return self.__gateway_id
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -99,15 +99,15 @@ class EnOceanEntity(Entity):
 
         info = DeviceInfo(
             {
-                "identifiers": {(DOMAIN, self._enocean_device_id.to_string())},
-                "name": self._device_name,
-                "manufacturer": self.dev_type.manufacturer,
-                "model": self.dev_type.model,
-                "serial_number": self._enocean_device_id.to_string(),
+                "identifiers": {(DOMAIN, self.__enocean_id.to_string())},
+                "name": self.__device_name,
+                "manufacturer": self.__device_type.manufacturer,
+                "model": self.__device_type.model,
+                "serial_number": self.__enocean_id.to_string(),
             }
         )
 
-        if self._enocean_device_id.to_number() == self._gateway_id.to_number():
+        if self.__enocean_id.to_number() == self.__gateway_id.to_number():
             if self.platform.config_entry is None:
                 return info
             info.update(
@@ -119,5 +119,5 @@ class EnOceanEntity(Entity):
             return info
 
         info.update({"via_device": (DOMAIN, self.gateway_id.to_string())})
-        info.update({"model_id": "EEP " + self.dev_type.eep})
+        info.update({"model_id": "EEP " + self.__device_type.eep})
         return info

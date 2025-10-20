@@ -17,10 +17,7 @@ from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
 from .const import ENOCEAN_BINARY_SENSOR_EEPS
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
-from .supported_device_type import (
-    EnOceanSupportedDeviceType,
-    get_supported_enocean_device_types,
-)
+from .supported_device_type import EnOceanDeviceType, get_supported_enocean_device_types
 
 DEFAULT_NAME = ""
 DEPENDENCIES = ["enocean"]
@@ -41,7 +38,7 @@ async def async_setup_entry(
                 enocean_gateway_id=config_entry.runtime_data.gateway.chip_id,
                 device_name="EnOcean Gateway",
                 name="Teach-In Active",
-                dev_type=EnOceanSupportedDeviceType(
+                dev_type=EnOceanDeviceType(
                     manufacturer="EnOcean", model="TCM300/310 Transmitter", eep=""
                 ),
             )
@@ -88,7 +85,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         device_name: str,
         device_class: BinarySensorDeviceClass | None = None,
         channel: str | None = None,
-        dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+        dev_type: EnOceanDeviceType = EnOceanDeviceType(),
         name: str | None = None,
     ) -> None:
         """Initialize the EnOcean binary sensor."""
@@ -96,7 +93,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
             enocean_id=device_id,
             gateway_id=enocean_gateway_id,
             device_name=device_name,
-            dev_type=dev_type,
+            device_type=dev_type,
             name=name,
         )
         self._attr_device_class = device_class

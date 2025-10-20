@@ -14,27 +14,16 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.const import CONF_ID, CONF_NAME, Platform
+from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_entry import EnOceanConfigEntry
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
 from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
-from .importer import (
-    EnOceanPlatformConfig,
-    register_platform_config_for_migration_to_config_entry,
-)
-from .supported_device_type import (
-    EnOceanSupportedDeviceType,
-    get_supported_enocean_device_types,
-)
+from .supported_device_type import EnOceanDeviceType, get_supported_enocean_device_types
 
 CONF_SENDER_ID = "sender_id"
 
@@ -47,18 +36,6 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
-
-
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the EnOcean light platform."""
-    register_platform_config_for_migration_to_config_entry(
-        EnOceanPlatformConfig(platform=Platform.LIGHT, config=config)
-    )
 
 
 async def async_setup_entry(
@@ -106,7 +83,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         dev_id: EnOceanID,
         gateway_id: EnOceanID,
         dev_name: str,
-        dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+        dev_type: EnOceanDeviceType = EnOceanDeviceType(),
         name: str | None = None,
     ) -> None:
         """Initialize the EnOcean light source."""
@@ -115,7 +92,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
             gateway_id=gateway_id,
             device_name=dev_name,
             name=name,
-            dev_type=dev_type,
+            device_type=dev_type,
         )
         self._attr_is_on = False
         self._attr_brightness = None
