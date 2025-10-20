@@ -21,7 +21,6 @@
       "zone_enabled": {
         "default": "mdi:toggle-switch",
         "state": {
-          "on": "mdi:toggle-switch",
           "off": "mdi:toggle-switch-off"
         }
       }
