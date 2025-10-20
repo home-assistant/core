@@ -6,7 +6,7 @@ aiodns==3.5.0
 aiohasupervisor==0.3.3
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
-aiohttp==3.13.0
+aiohttp==3.13.1
 aiohttp_cors==0.8.1
 aiousbwatcher==1.1.1
 aiozoneinfo==0.2.3
@@ -36,7 +36,7 @@ fnv-hash-fast==1.6.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
 habluetooth==5.7.0
-hass-nabucasa==1.3.0
+hass-nabucasa==1.4.0
 hassil==3.2.0
 home-assistant-bluetooth==1.13.1
 home-assistant-frontend==20251001.4
@@ -49,7 +49,7 @@ mutagen==1.47.0
 orjson==3.11.3
 packaging>=23.1
 paho-mqtt==2.1.0
-Pillow==11.3.0
+Pillow==12.0.0
 propcache==0.4.1
 psutil-home-assistant==0.0.1
 PyJWT==2.10.1
@@ -130,10 +130,10 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.12.0
+pydantic==2.12.2
 
-# Required for Python 3.12.4 compatibility (#119223).
-mashumaro>=3.13.1
+# Required for Python 3.14.0 compatibility (#119223).
+mashumaro>=3.17.0
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
