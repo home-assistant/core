@@ -35,7 +35,7 @@ async def async_setup_entry(
 
             # unfound case
             if (coordinator_data := coordinator.data) is None:
-                return
+                continue
 
             name = coordinator_data["name"]
             sensor = create_binary_sensor(
