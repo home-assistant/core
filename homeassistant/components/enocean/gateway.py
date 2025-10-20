@@ -1,9 +1,8 @@
-"""Representation of an EnOcean dongle."""
+"""Representation of an EnOcean gateway."""
 
 from collections.abc import Callable
 import glob
 import logging
-from os.path import basename, normpath
 
 from enocean.communicators import SerialCommunicator
 from enocean.protocol.packet import Packet, RadioPacket
@@ -20,88 +19,83 @@ from .enocean_id import EnOceanID
 _LOGGER = logging.getLogger(__name__)
 
 
-class EnOceanDongle:
-    """Representation of an EnOcean dongle.
+class EnOceanGateway:
+    """Representation of an EnOcean gateway.
 
-    The dongle is responsible for receiving the EnOcean frames,
+    The gateway is responsible for receiving the EnOcean frames,
     creating devices if needed, and dispatching messages to platforms.
     """
 
     def __init__(self, hass: HomeAssistant, serial_path: str) -> None:
-        """Initialize the EnOcean dongle."""
-
-        # callback needs to be set after initialization
-        # in order for chip_id and base_id to be available
-        self._communicator = SerialCommunicator(port=serial_path)
-        self.serial_path = serial_path
-        self.identifier = basename(normpath(serial_path))
-        self.hass = hass
-        self.dispatcher_disconnect_handle: Callable[[], None] | None = None
-        self._base_id: EnOceanID = EnOceanID(0)
-        self._chip_id: EnOceanID = EnOceanID(0)
-        self._chip_version: int = 0
-        self._sw_version: str = "n/a"
+        """Initialize the EnOcean gateway."""
+        self.__communicator: SerialCommunicator = SerialCommunicator(port=serial_path)
+        self.__hass: HomeAssistant = hass
+        self.__dispatcher_disconnect_handle: Callable[[], None] | None = None
+        self.__base_id: EnOceanID = EnOceanID(0)
+        self.__chip_id: EnOceanID = EnOceanID(0)
+        self.__chip_version: int = 0
+        self.__sw_version: str = "n/a"
 
     async def async_setup(self) -> None:
-        """Finish the setup of the bridge and supported platforms."""
-        self._communicator.start()
-        self._chip_id = EnOceanID(to_hex_string(self._communicator.chip_id))
-        self._base_id = EnOceanID(to_hex_string(self._communicator.base_id))
+        """Finish the setup of the gateway and supported platforms."""
+        self.__communicator.start()
+        self.__chip_id = EnOceanID(to_hex_string(self.__communicator.chip_id))
+        self.__base_id = EnOceanID(to_hex_string(self.__communicator.base_id))
 
-        self._chip_version = self._communicator.version_info.chip_version
+        self.__chip_version = self.__communicator.version_info.chip_version
 
-        self._sw_version = (
-            self._communicator.version_info.app_version.versionString()
+        self.__sw_version = (
+            self.__communicator.version_info.app_version.versionString()
             + " (App), "
-            + self._communicator.version_info.api_version.versionString()
+            + self.__communicator.version_info.api_version.versionString()
             + " (API)"
         )
 
         # callback needs to be set after initialization
         # in order for chip_id and base_id to be available
-        self._communicator.callback = self.callback
+        self.__communicator.callback = self.callback
 
-        self.dispatcher_disconnect_handle = async_dispatcher_connect(
-            self.hass, SIGNAL_SEND_MESSAGE, self._send_message_callback
+        self.__dispatcher_disconnect_handle = async_dispatcher_connect(
+            self.__hass, SIGNAL_SEND_MESSAGE, self._send_message_callback
         )
 
     def unload(self) -> None:
         """Disconnect callbacks established at init time."""
-        if self.dispatcher_disconnect_handle:
-            self.dispatcher_disconnect_handle()
-            self.dispatcher_disconnect_handle = None
+        if self.__dispatcher_disconnect_handle:
+            self.__dispatcher_disconnect_handle()
+            self.__dispatcher_disconnect_handle = None
 
-        if self._communicator:
-            if self._communicator.is_alive():
-                self._communicator.stop()
+        if self.__communicator:
+            if self.__communicator.is_alive():
+                self.__communicator.stop()
 
     @property
     def base_id(self) -> EnOceanID:
-        """Get the dongle's base id."""
-        return self._base_id
+        """Get the gateway's base id."""
+        return self.__base_id
 
     @property
     def chip_id(self) -> EnOceanID:
-        """Get the dongle's chip id."""
-        return self._chip_id
+        """Get the gateway's chip id."""
+        return self.__chip_id
 
     def valid_sender_ids(self) -> list[selector.SelectOptionDict]:
         """Return a list of valid sender ids."""
 
-        if not self._base_id or not self._chip_id:
+        if not self.__base_id or not self.__chip_id:
             return []
 
         valid_senders = [
             selector.SelectOptionDict(
-                value=self._chip_id.to_string(),
-                label="Chip ID (" + self._chip_id.to_string() + ")",
+                value=self.__chip_id.to_string(),
+                label="Chip ID (" + self.__chip_id.to_string() + ")",
             ),
             selector.SelectOptionDict(
-                value=self._base_id.to_string(),
-                label="Base ID (" + self._base_id.to_string() + ")",
+                value=self.__base_id.to_string(),
+                label="Base ID (" + self.__base_id.to_string() + ")",
             ),
         ]
-        base_id_int = self._base_id.to_number()
+        base_id_int = self.__base_id.to_number()
         valid_senders.extend(
             [
                 selector.SelectOptionDict(
@@ -120,17 +114,17 @@ class EnOceanDongle:
 
     @property
     def chip_version(self) -> int:
-        """Get the dongle's chip version."""
-        return self._chip_version
+        """Get the gateway's chip version."""
+        return self.__chip_version
 
     @property
     def sw_version(self) -> str:
-        """Get the dongle's software version."""
-        return self._sw_version
+        """Get the gateway's software version."""
+        return self.__sw_version
 
     def _send_message_callback(self, command: Packet) -> None:
-        """Send a command through the EnOcean dongle."""
-        self._communicator.send(command)
+        """Send a command through the EnOcean gateway."""
+        self.__communicator.send(command)
 
     def callback(self, packet: Packet) -> None:
         """Handle EnOcean device's callback.
@@ -140,11 +134,11 @@ class EnOceanDongle:
         """
         if isinstance(packet, RadioPacket):
             _LOGGER.debug("Received radio packet: %s", packet)
-            dispatcher_send(self.hass, SIGNAL_RECEIVE_MESSAGE, packet)
+            dispatcher_send(self.__hass, SIGNAL_RECEIVE_MESSAGE, packet)
 
 
 def detect() -> list[str]:
-    """Return a list of candidate paths for USB EnOcean dongles.
+    """Return a list of candidate paths for USB EnOcean gateways.
 
     This method is currently a bit simplistic, it may need to be
     improved to support more configurations and OS.

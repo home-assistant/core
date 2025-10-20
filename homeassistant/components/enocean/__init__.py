@@ -9,19 +9,18 @@ from homeassistant.helpers import device_registry as dr
 from .config_entry import EnOceanConfigEntry, EnOceanConfigRuntimeData
 from .config_flow import CONF_ENOCEAN_DEVICES
 from .const import DATA_ENOCEAN, DOMAIN, LOGGER, PLATFORMS
-from .dongle import EnOceanDongle
+from .gateway import EnOceanGateway
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EnOceanConfigEntry,
 ) -> bool:
-    """Set up an EnOcean dongle for the given entry."""
-    usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
-    await usb_dongle.async_setup()
+    """Set up an EnOcean gateway for the given config entry."""
+    gateway = EnOceanGateway(hass, config_entry.data[CONF_DEVICE])
+    await gateway.async_setup()
 
-    # PLAN IS TO move the following instead into the config_entry's runtime_data
-    config_entry.runtime_data = EnOceanConfigRuntimeData(gateway=usb_dongle)
+    config_entry.runtime_data = EnOceanConfigRuntimeData(gateway=gateway)
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
     async_cleanup_device_registry(hass=hass, entry=config_entry)

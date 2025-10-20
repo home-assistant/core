@@ -2,7 +2,7 @@
 
 from homeassistant.config_entries import ConfigEntry
 
-from .dongle import EnOceanDongle
+from .gateway import EnOceanGateway
 
 type EnOceanConfigEntry = ConfigEntry[EnOceanConfigRuntimeData]
 
@@ -10,11 +10,11 @@ type EnOceanConfigEntry = ConfigEntry[EnOceanConfigRuntimeData]
 class EnOceanConfigRuntimeData:
     """Runtime data for EnOcean config entries."""
 
-    def __init__(self, gateway: EnOceanDongle) -> None:
+    def __init__(self, gateway: EnOceanGateway) -> None:
         """Initialize runtime data."""
         self._gateway = gateway
 
     @property
-    def gateway(self) -> EnOceanDongle:
+    def gateway(self) -> EnOceanGateway:
         """Return the EnOcean gateway."""
         return self._gateway

@@ -10,7 +10,7 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 
-from . import dongle
+from . import gateway
 from .config_entry import EnOceanConfigEntry
 from .const import (
     CONF_ENOCEAN_DEVICE_ID,
@@ -68,7 +68,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title="EnOcean", data=user_input)
             errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
 
-        devices = await self.hass.async_add_executor_job(dongle.detect)
+        devices = await self.hass.async_add_executor_job(gateway.detect)
         if len(devices) == 0:
             return await self.async_step_manual(user_input)
         devices.append(self.MANUAL_PATH_VALUE)
@@ -112,7 +112,9 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     async def validate_enocean_conf(self, user_input: Any) -> bool:
         """Return True if the user_input contains a valid dongle path."""
         dongle_path = user_input[CONF_DEVICE]
-        return await self.hass.async_add_executor_job(dongle.validate_path, dongle_path)
+        return await self.hass.async_add_executor_job(
+            gateway.validate_path, dongle_path
+        )
 
     @staticmethod
     @callback
