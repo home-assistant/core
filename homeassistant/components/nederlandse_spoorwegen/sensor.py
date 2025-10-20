@@ -54,8 +54,10 @@ def _get_time_str(time: datetime | None) -> str | None:
     return time.strftime("%H:%M") if time else None
 
 
-def _get_route(trip: Trip) -> list[str]:
+def _get_route(trip: Trip | None) -> list[str]:
     """Get the route as a list of station names from trip data."""
+    if not trip:
+        return []
     trip_parts = trip.trip_parts or []
     if not trip_parts:
         return []
