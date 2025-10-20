@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -13,23 +14,28 @@ from .daybetter_api import DayBetterApi
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class DayBetterRuntimeData:
+    """Runtime data for DayBetter Services."""
+
+    api: DayBetterApi
+    devices: list[dict[str, Any]]
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up DayBetter Services from a config entry."""
     _LOGGER.debug("Setting up DayBetter Services integration")
 
     # Initialize the API client
-    token = entry.data.get("token")
-    if not token:
-        _LOGGER.error("No token found in config entry")
-        return False
-
+    token = entry.data[CONF_TOKEN]
     api = DayBetterApi(hass, token)
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {"api": api}
 
-    # Fetch devices and store them
+    # Fetch devices
     devices = await api.fetch_devices()
-    hass.data[DOMAIN][entry.entry_id]["devices"] = devices
+
+    # Store runtime data
+    runtime_data = DayBetterRuntimeData(api=api, devices=devices)
+    entry.runtime_data = runtime_data
 
     # Setup platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -43,8 +49,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
+        entry.runtime_data = None
 
     return unload_ok

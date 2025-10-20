@@ -57,7 +57,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         new_data = user_input.copy()
                         new_data[CONF_TOKEN] = token
 
-                        _LOGGER.info("DayBetter auth OK")
+                        _LOGGER.debug("DayBetter auth OK")
                         # Save information such as tokens and refresh_token
                         return self.async_create_entry(
                             title="DayBetter Services", data=new_data
@@ -71,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "connection_error"
             except Exception as ex:
                 _LOGGER.exception("Unexpected error during DayBetter auth: %s", ex)
-                errors["base"] = "connection_error"
+                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -131,7 +131,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "connection_error"
             except Exception as ex:
                 _LOGGER.exception("Unexpected error during DayBetter reauth: %s", ex)
-                errors["base"] = "connection_error"
+                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -140,14 +140,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"title": self._reauth_entry.title},
         )
 
-    async def async_step_import(
-        self, import_data: dict[str, Any]
-    ) -> config_entries.ConfigFlowResult:
-        """Handle import from configuration.yaml."""
-        return await self.async_step_user(import_data)
-
-    async def async_step_user_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Handle import from configuration.yaml."""
-        return await self.async_step_user(user_input)

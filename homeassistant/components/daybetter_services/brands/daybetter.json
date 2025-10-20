@@ -1,5 +1,0 @@
-{
-  "name": "DayBetter",
-  "integrations": ["daybetter_services"],
-  "iot_standards": []
-}
