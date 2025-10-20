@@ -91,7 +91,7 @@ async def test_form_exceptions(
     )
 
     with patch(
-        "homeassistant.components.sma.coordinator.SMA.new_session",
+        "homeassistant.components.sma.config_flow.pysma.SMA.new_session",
         side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
