@@ -74,8 +74,19 @@ def mock_growatt_v1_api():
         }
 
         # Called by MIN device coordinator during refresh
-        # Empty dict is sufficient for switch/number tests (sensor tests would need real energy data)
-        mock_v1_api.min_energy.return_value = {}
+        # Provide realistic energy data for sensor tests
+        mock_v1_api.min_energy.return_value = {
+            "eChargeToday": 5.2,
+            "eChargeTotal": 125.8,
+            "eDischargeToday": 8.1,
+            "eDischargeTotal": 245.6,
+            "eSelfToday": 12.5,
+            "eSelfTotal": 320.4,
+            "eBatChargeToday": 6.3,
+            "eBatChargeTotal": 150.2,
+            "eBatDischargeToday": 7.8,
+            "eBatDischargeTotal": 180.5,
+        }
 
         # Called by total coordinator during refresh
         mock_v1_api.plant_energy_overview.return_value = {

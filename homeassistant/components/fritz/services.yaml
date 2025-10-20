@@ -17,3 +17,24 @@ set_guest_wifi_password:
         number:
           min: 8
           max: 63
+dial:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: fritz
+          entity:
+            device_class: connectivity
+    number:
+      required: true
+      selector:
+        text:
+    max_ring_seconds:
+      default: 15
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: seconds

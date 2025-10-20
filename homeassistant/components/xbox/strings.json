@@ -23,5 +23,41 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status"
+      },
+      "gamer_score": {
+        "name": "Gamerscore",
+        "unit_of_measurement": "points"
+      },
+      "account_tier": {
+        "name": "Account tier"
+      },
+      "gold_tenure": {
+        "name": "Gold tenure"
+      }
+    },
+    "binary_sensor": {
+      "in_party": {
+        "name": "In party"
+      },
+      "in_game": {
+        "name": "In game"
+      },
+      "in_multiplayer": {
+        "name": "In multiplayer"
+      }
+    }
+  },
+  "exceptions": {
+    "request_exception": {
+      "message": "Failed to connect to Xbox Network: {error}"
+    },
+    "timeout_exception": {
+      "message": "Failed to connect to Xbox Network due to a connection timeout"
+    }
   }
 }
