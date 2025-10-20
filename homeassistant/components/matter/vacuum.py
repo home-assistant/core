@@ -259,7 +259,9 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         )
         # optional CurrentArea attribute
         # pylint: disable=too-many-nested-blocks
-        current_area = self.get_matter_attribute_value(clusters.ServiceArea.Attributes.CurrentArea)
+        current_area = self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.CurrentArea
+        )
         if current_area:
             # get areaInfo.locationInfo.locationName for current_area in SupportedAreas list
             area_name = None
