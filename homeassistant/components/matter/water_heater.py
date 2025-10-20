@@ -90,17 +90,17 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         self,
         duration: int,
         emergency_boost: bool = False,
-        temporary_setpoint: int = Nullable,
+        temporary_setpoint: int | None = None,
     ) -> None:
         """Set boost."""
-        boost_info: type[
-            clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct
-        ] = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
+        boost_info: clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
             duration=duration,
             emergencyBoost=emergency_boost,
-            temporarySetpoint=temporary_setpoint * TEMPERATURE_SCALING_FACTOR
-            if temporary_setpoint is not Nullable
-            else Nullable,
+            temporarySetpoint=(
+                temporary_setpoint * TEMPERATURE_SCALING_FACTOR
+                if temporary_setpoint is not None
+                else Nullable
+            ),
         )
         try:
             await self.send_device_command(
