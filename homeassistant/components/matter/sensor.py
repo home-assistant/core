@@ -1145,12 +1145,11 @@ DISCOVERY_SCHEMAS = [
                 # 1. If errorStateID is known in the mapping, return the mapped value.
                 # 2. If errorStateID is in the manufacturer range (0x80 to 0xBF) and errorStateLabel is present, return that label.
                 # 3. Otherwise, return "unknown".
-                OPERATIONAL_STATE_ERROR_MAP[x.errorStateID]
-                if x.errorStateID in OPERATIONAL_STATE_ERROR_MAP
-                else (
-                    x.errorStateLabel
+                OPERATIONAL_STATE_ERROR_MAP.get(x.errorStateID)
+                or (
+                    label
                     if 0x80 <= x.errorStateID <= 0xBF
-                    and getattr(x, "errorStateLabel", None)
+                    and (label := getattr(x, "errorStateLabel", None))
                     else None
                 )
             ),
@@ -1251,12 +1250,11 @@ DISCOVERY_SCHEMAS = [
                 # 1. If errorStateID is known in the mapping, return the mapped value.
                 # 2. If errorStateID is in the manufacturer range (0x80 to 0xBF) and errorStateLabel is present, return that label.
                 # 3. Otherwise, return "unknown".
-                RVC_OPERATIONAL_STATE_ERROR_MAP[x.errorStateID]
-                if x.errorStateID in RVC_OPERATIONAL_STATE_ERROR_MAP
-                else (
-                    x.errorStateLabel
+                RVC_OPERATIONAL_STATE_ERROR_MAP.get(x.errorStateID)
+                or (
+                    label
                     if 0x80 <= x.errorStateID <= 0xBF
-                    and getattr(x, "errorStateLabel", None)
+                    and (label := getattr(x, "errorStateLabel", None))
                     else None
                 )
             ),
