@@ -44,6 +44,8 @@ WATER_HEATER_SYSTEM_MODE_MAP = {
     STATE_OFF: 0,
 }
 
+DEFAULT_BOOST_DURATION = 3600  # 1 hour
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -82,7 +84,6 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     )
     _attr_target_temperature: float | None = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    duration = 3600  # 1 hour
     _platform_translation_key = "water_heater"
 
     async def async_set_boost(
@@ -92,11 +93,10 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         temporary_setpoint: int = Nullable,
     ) -> None:
         """Set boost."""
-        self.duration = duration
         boost_info: type[
             clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct
         ] = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
-            duration=self.duration,
+            duration=duration,
             emergencyBoost=emergency_boost,
             temporarySetpoint=temporary_setpoint * TEMPERATURE_SCALING_FACTOR
             if temporary_setpoint is not Nullable
@@ -126,11 +126,11 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         self._attr_current_operation = operation_mode
-        # Boost 1h (3600s)
+        # Use the constant for boost duration
         boost_info: type[
             clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct
         ] = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
-            duration=self.duration
+            duration=DEFAULT_BOOST_DURATION
         )
         system_mode_value = WATER_HEATER_SYSTEM_MODE_MAP[operation_mode]
         await self.write_attribute(
