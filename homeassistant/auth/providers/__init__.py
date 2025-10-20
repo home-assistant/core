@@ -83,9 +83,10 @@ class AuthProvider:
         """Return whether multi-factor auth supported by the auth provider."""
         return True
 
-    async def async_credentials(self) -> list[Credentials]:
+    @callback
+    def async_credentials(self) -> list[Credentials]:
         """Return all credentials of this provider."""
-        users = await self.store.async_get_users()
+        users = self.store.async_get_users()
         return [
             credentials
             for user in users

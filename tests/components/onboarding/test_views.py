@@ -203,7 +203,7 @@ async def test_onboarding_user(
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    cur_users = len(await hass.auth.async_get_users())
+    cur_users = len(hass.auth.async_get_users())
     client = await hass_client_no_auth()
 
     resp = await client.post(
@@ -223,8 +223,8 @@ async def test_onboarding_user(
     data = await resp.json()
     assert "auth_code" in data
 
-    users = await hass.auth.async_get_users()
-    assert len(await hass.auth.async_get_users()) == cur_users + 1
+    users = hass.auth.async_get_users()
+    assert len(hass.auth.async_get_users()) == cur_users + 1
     user = next((user for user in users if user.name == "Test Name"), None)
     assert user is not None
     assert len(user.credentials) == 1
@@ -360,7 +360,7 @@ async def test_onboarding_integration(
     assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
 
     # Onboarding refresh token and new refresh token
-    user = await hass.auth.async_get_user(hass_admin_user.id)
+    user = hass.auth.async_get_user(hass_admin_user.id)
     assert len(user.refresh_tokens) == 2, user
 
 
@@ -419,7 +419,7 @@ async def test_onboarding_integration_invalid_redirect_uri(
     assert const.STEP_INTEGRATION in hass_storage[const.DOMAIN]["data"]["done"]
 
     # Only refresh token from onboarding should be there
-    for user in await hass.auth.async_get_users():
+    for user in hass.auth.async_get_users():
         assert len(user.refresh_tokens) == 1, user
 
 

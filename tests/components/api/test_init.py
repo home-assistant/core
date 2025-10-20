@@ -834,7 +834,7 @@ async def test_states_view_filters(
         data={"username": "readonly"},
         is_new=False,
     )
-    await hass.auth.async_link_user(hass_read_only_user, read_only_user_credential)
+    hass.auth.async_link_user(hass_read_only_user, read_only_user_credential)
 
     refresh_token = await hass.auth.async_create_refresh_token(
         hass_read_only_user, CLIENT_ID, credential=read_only_user_credential

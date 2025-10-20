@@ -89,7 +89,7 @@ async def test_login(hass: HomeAssistant) -> None:
     user = MockUser(
         id="mock-user", is_owner=False, is_active=False, name="Paulus"
     ).add_to_auth_manager(hass.auth)
-    await hass.auth.async_link_user(
+    hass.auth.async_link_user(
         user,
         Credentials(
             id="mock-id",

@@ -430,7 +430,7 @@ class LinkUserView(HomeAssistantView):
         if credentials is None:
             return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
 
-        linked_user = await hass.auth.async_get_user_by_credentials(credentials)
+        linked_user = hass.auth.async_get_user_by_credentials(credentials)
         if linked_user != user and linked_user is not None:
             return self.json_message(
                 "Credential already linked", status_code=HTTPStatus.BAD_REQUEST
@@ -438,7 +438,7 @@ class LinkUserView(HomeAssistantView):
 
         # No-op if credential is already linked to the user it will be linked to
         if linked_user != user:
-            await hass.auth.async_link_user(user, credentials)
+            hass.auth.async_link_user(user, credentials)
         return self.json_message("User linked")
 
 

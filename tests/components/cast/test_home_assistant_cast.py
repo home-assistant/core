@@ -132,7 +132,7 @@ async def test_remove_entry(hass: HomeAssistant) -> None:
     assert "cast" in hass.config.components
 
     user_id = entry.data.get("user_id")
-    assert await hass.auth.async_get_user(user_id)
+    assert hass.auth.async_get_user(user_id)
 
     assert await hass.config_entries.async_remove(entry.entry_id)
-    assert not await hass.auth.async_get_user(user_id)
+    assert not hass.auth.async_get_user(user_id)

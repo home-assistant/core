@@ -64,19 +64,23 @@ class AuthStore:
         )
         self._token_id_to_user_id: dict[str, str] = {}
 
-    async def async_get_groups(self) -> list[models.Group]:
+    @callback
+    def async_get_groups(self) -> list[models.Group]:
         """Retrieve all users."""
         return list(self._groups.values())
 
-    async def async_get_group(self, group_id: str) -> models.Group | None:
+    @callback
+    def async_get_group(self, group_id: str) -> models.Group | None:
         """Retrieve all users."""
         return self._groups.get(group_id)
 
-    async def async_get_users(self) -> list[models.User]:
+    @callback
+    def async_get_users(self) -> list[models.User]:
         """Retrieve all users."""
         return list(self._users.values())
 
-    async def async_get_user(self, user_id: str) -> models.User | None:
+    @callback
+    def async_get_user(self, user_id: str) -> models.User | None:
         """Retrieve a user by id."""
         return self._users.get(user_id)
 
@@ -130,10 +134,11 @@ class AuthStore:
             return new_user
 
         # Saving is done inside the link.
-        await self.async_link_user(new_user, credentials)
+        self.async_link_user(new_user, credentials)
         return new_user
 
-    async def async_link_user(
+    @callback
+    def async_link_user(
         self, user: models.User, credentials: models.Credentials
     ) -> None:
         """Add credentials to an existing user."""
@@ -141,7 +146,8 @@ class AuthStore:
         self._async_schedule_save()
         credentials.is_new = False
 
-    async def async_remove_user(self, user: models.User) -> None:
+    @callback
+    def async_remove_user(self, user: models.User) -> None:
         """Remove a user."""
         user = self._users.pop(user.id)
         for refresh_token_id in user.refresh_tokens:
@@ -149,7 +155,8 @@ class AuthStore:
         user.refresh_tokens.clear()
         self._async_schedule_save()
 
-    async def async_update_user(
+    @callback
+    def async_update_user(
         self,
         user: models.User,
         name: str | None = None,
@@ -177,17 +184,20 @@ class AuthStore:
 
         self._async_schedule_save()
 
-    async def async_activate_user(self, user: models.User) -> None:
+    @callback
+    def async_activate_user(self, user: models.User) -> None:
         """Activate a user."""
         user.is_active = True
         self._async_schedule_save()
 
-    async def async_deactivate_user(self, user: models.User) -> None:
+    @callback
+    def async_deactivate_user(self, user: models.User) -> None:
         """Activate a user."""
         user.is_active = False
         self._async_schedule_save()
 
-    async def async_remove_credentials(self, credentials: models.Credentials) -> None:
+    @callback
+    def async_remove_credentials(self, credentials: models.Credentials) -> None:
         """Remove credentials."""
         for user in self._users.values():
             found = None

@@ -43,7 +43,7 @@ async def test_ws_setup_depose_mfa(
     cred = await hass.auth.auth_providers[0].async_get_or_create_credentials(
         {"username": "test-user"}
     )
-    await hass.auth.async_link_user(user, cred)
+    hass.auth.async_link_user(user, cred)
     refresh_token = await hass.auth.async_create_refresh_token(user, CLIENT_ID)
     access_token = hass.auth.async_create_access_token(refresh_token)
 
