@@ -69,7 +69,7 @@
   "issues": {
     "no_devices_found": {
       "title": "No Nintendo devices found",
-      "description": "No Nintendo devices were found for the linked account ({account_id}). Please ensure that you have at least one Nintendo device registered to this account."
+      "description": "No Nintendo devices were found for the linked account ({account_id}). Please ensure that you have at least one Nintendo device registered to this account and paired with the Nintendo Switch Parental Controls app."
     }
   }
 }
