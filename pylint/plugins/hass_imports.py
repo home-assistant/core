@@ -132,9 +132,6 @@ _IGNORE_ROOT_IMPORT = (
     "homeassistant_hardware",
     "http",
     "recorder",
-    "rest",
-    "script",
-    "stream",
 )
 
 

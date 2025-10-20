@@ -115,7 +115,10 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         """Return the currently set speed."""
 
         current_level = self.device.state.fan_level
-        if self.device.state.mode == VS_FAN_MODE_MANUAL and current_level is not None:
+        if (
+            self.device.state.mode in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL)
+            and current_level is not None
+        ):
             if current_level == 0:
                 return 0
             return ordered_list_item_to_percentage(
@@ -207,7 +210,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
                 )
 
         # Switch to manual mode if not already set
-        if self.device.state.mode != VS_FAN_MODE_MANUAL:
+        if self.device.state.mode not in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL):
             if not await self.device.set_manual_mode():
                 raise HomeAssistantError(
                     "An error occurred while setting manual mode."
