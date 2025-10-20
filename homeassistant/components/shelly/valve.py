@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import BLOCK_GENERATIONS, MODEL_GAS
+from aioshelly.const import MODEL_GAS, RPC_GENERATIONS
 
 from homeassistant.components.valve import (
     ValveDeviceClass,
@@ -135,15 +135,34 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up valves for device."""
-    if get_device_entry_gen(config_entry) in BLOCK_GENERATIONS:
-        return async_setup_block_entry(hass, config_entry, async_add_entities)
+    """Set up valve entities."""
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-    return async_setup_rpc_entry(hass, config_entry, async_add_entities)
+    return _async_setup_block_entry(hass, config_entry, async_add_entities)
 
 
 @callback
-def async_setup_rpc_entry(
+def _async_setup_block_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for BLOCK device."""
+    coordinator = config_entry.runtime_data.block
+    assert coordinator
+
+    async_setup_block_attribute_entities(
+        hass,
+        async_add_entities,
+        coordinator,
+        BLOCK_VALVES,
+        BlockShellyValve,
+    )
+
+
+@callback
+def _async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
@@ -154,25 +173,6 @@ def async_setup_rpc_entry(
 
     async_setup_entry_rpc(
         hass, config_entry, async_add_entities, RPC_VALVES, RpcShellyWaterValve
-    )
-
-
-@callback
-def async_setup_block_entry(
-    hass: HomeAssistant,
-    config_entry: ShellyConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up valve for device."""
-    coordinator = config_entry.runtime_data.block
-    assert coordinator
-
-    async_setup_block_attribute_entities(
-        hass,
-        async_add_entities,
-        coordinator,
-        BLOCK_VALVES,
-        BlockShellyValve,
     )
 
 

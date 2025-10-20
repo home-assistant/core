@@ -37,7 +37,7 @@ rules:
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold
