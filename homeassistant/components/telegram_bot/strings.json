@@ -169,6 +169,10 @@
       "name": "Send message",
       "description": "Sends a notification.",
       "fields": {
+        "notify_target": {
+          "name": "Notify target",
+          "description": "Notification targets."
+        },
         "config_entry_id": {
           "name": "Config entry ID",
           "description": "The config entry representing the Telegram bot to send the message."

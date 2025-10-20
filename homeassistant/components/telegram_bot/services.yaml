@@ -2,24 +2,32 @@
 
 send_message:
   fields:
+    notify_target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     config_entry_id:
       selector:
         config_entry:
           integration: telegram_bot
-    message:
-      required: true
-      example: The garage door has been open for 10 minutes.
-      selector:
-        text:
-    title:
-      example: "Your Garage Door Friend"
-      selector:
-        text:
     target:
       example: "[12345, 67890] or 12345"
       selector:
         text:
           multiple: true
+    title:
+      example: "Your Garage Door Friend"
+      selector:
+        text:
+    message:
+      required: true
+      example: The garage door has been open for 10 minutes.
+      selector:
+        text:
     parse_mode:
       selector:
         select:

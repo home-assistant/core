@@ -58,6 +58,7 @@ from .const import (
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
     ATTR_MESSAGEID,
+    ATTR_NOTIFY_TARGET,
     ATTR_ONE_TIME_KEYBOARD,
     ATTR_OPEN_PERIOD,
     ATTR_OPTIONS,
@@ -149,6 +150,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 BASE_SERVICE_SCHEMA = vol.Schema(
     {
+        vol.Optional(ATTR_NOTIFY_TARGET): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(ATTR_PARSER): cv.string,
