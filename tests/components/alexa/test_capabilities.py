@@ -5,10 +5,17 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import fan
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.alexa import smart_home
+from homeassistant.components.alexa.capabilities import (
+    AlexaModeController,
+    AlexaThermostatController,
+)
+from homeassistant.components.alexa.const import PRESET_MODE_NA
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_TEMPERATURE,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -1565,3 +1572,69 @@ async def test_get_property_blowup(
         properties.assert_not_has_property("Alexa.ThermostatController", "temperature")
 
     assert "Boom Fail" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("state", "attributes", "prop", "expected"),
+    [
+        ("heat", {"preset_mode": None}, "thermostatMode", "HEAT"),
+        ("eco", {"preset_mode": "eco"}, "thermostatMode", "ECO"),
+        ("unavailable", {}, "thermostatMode", None),
+        (
+            "heat",
+            {"temperature": 21.5},
+            "targetSetpoint",
+            {"value": 21.5, "scale": "CELSIUS"},
+        ),
+        ("heat", {}, "targetSetpoint", None),
+        ("heat", {"temperature": "not-a-number"}, "targetSetpoint", None),
+    ],
+)
+async def test_get_property_refactored_function_hass(
+    hass: HomeAssistant, state, attributes, prop, expected
+) -> None:
+    """Test refactored get_property logic using a real hass instance."""
+    entity_id = "climate.test"
+    # Map 'temperature' to correct HA attribute if needed
+    attrs = dict(attributes)
+    if "temperature" in attrs:
+        attrs[ATTR_TEMPERATURE] = attrs.pop("temperature")
+    hass.states.async_set(entity_id, state, attrs)
+    # Create AlexaThermostatController against real hass and entity
+    entity = hass.states.get(entity_id)
+    cap = AlexaThermostatController(hass, entity)
+    assert cap.get_property(prop) == expected
+
+
+# Essential tests for refactored capability_resources method
+async def test_mode_controller_dynamic_mode_resource_with_fake_mode(
+    hass: HomeAssistant,
+) -> None:
+    """Test that single dynamic modes get fake mode added for Alexa compatibility."""
+    entity_id = "fan.test_fan"
+    hass.states.async_set(entity_id, "on", {fan.ATTR_PRESET_MODES: ["low"]})
+    entity = hass.states.get(entity_id)
+
+    controller = AlexaModeController(entity, f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}")
+    controller.capability_resources()  # Set up the resource
+    config = controller.configuration()
+
+    modes = [mode["value"] for mode in config["supportedModes"]]
+    # Critical: single mode should trigger fake mode addition
+    assert f"{fan.ATTR_PRESET_MODE}.low" in modes
+    assert f"{fan.ATTR_PRESET_MODE}.{PRESET_MODE_NA}" in modes
+    assert len(modes) == 2
+
+
+async def test_mode_controller_unknown_instance_returns_empty(
+    hass: HomeAssistant,
+) -> None:
+    """Test that unknown instances return empty dict as before refactoring."""
+    entity_id = "switch.test_switch"
+    hass.states.async_set(entity_id, "on", {})
+    entity = hass.states.get(entity_id)
+
+    controller = AlexaModeController(entity, "unknown.instance")
+    resources = controller.capability_resources()
+
+    assert resources == {}
