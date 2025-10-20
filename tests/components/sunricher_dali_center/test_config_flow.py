@@ -4,7 +4,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 from PySrDaliGateway.exceptions import DaliGatewayError
 
-from homeassistant.components.sunricher_dali_center.const import CONF_SN, DOMAIN
+from homeassistant.components.sunricher_dali_center.const import (
+    CONF_SERIAL_NUMBER,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -46,7 +49,7 @@ async def test_discovery_flow_success(
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == mock_gateway.name
     assert result.get("data") == {
-        CONF_SN: mock_gateway.gw_sn,
+        CONF_SERIAL_NUMBER: mock_gateway.gw_sn,
         CONF_HOST: mock_gateway.gw_ip,
         CONF_PORT: mock_gateway.port,
         CONF_NAME: mock_gateway.name,

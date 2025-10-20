@@ -24,7 +24,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_SN, DOMAIN
+from .const import CONF_SERIAL_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=selected_gateway.name,
                     data={
-                        CONF_SN: selected_gateway.gw_sn,
+                        CONF_SERIAL_NUMBER: selected_gateway.gw_sn,
                         CONF_HOST: selected_gateway.gw_ip,
                         CONF_PORT: selected_gateway.port,
                         CONF_NAME: selected_gateway.name,
@@ -96,7 +96,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "discovery_failed"
             else:
                 configured_gateways = {
-                    entry.data[CONF_SN]
+                    entry.data[CONF_SERIAL_NUMBER]
                     for entry in self.hass.config_entries.async_entries(DOMAIN)
                 }
 

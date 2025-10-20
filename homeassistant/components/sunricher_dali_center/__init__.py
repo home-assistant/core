@@ -20,7 +20,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_SN, DOMAIN, MANUFACTURER
+from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 from .types import DaliCenterConfigEntry, DaliCenterData
 
 _PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     """Set up DALI Center from a config entry."""
 
     gateway = DaliGateway(
-        entry.data[CONF_SN],
+        entry.data[CONF_SERIAL_NUMBER],
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
         entry.data[CONF_USERNAME],
