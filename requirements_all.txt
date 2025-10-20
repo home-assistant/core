@@ -271,7 +271,7 @@ aiogithubapi==24.6.0
 aioguardian==2022.07.0
 
 # homeassistant.components.harmony
-aioharmony==0.5.3;python_version<'3.14'
+aioharmony==0.5.3
 
 # homeassistant.components.hassio
 aiohasupervisor==0.3.3
@@ -886,7 +886,7 @@ elmax-api==0.0.6.4rc0
 elvia==0.1.0
 
 # homeassistant.components.xmpp
-emoji==2.8.0;python_version<'3.14'
+emoji==2.8.0
 
 # homeassistant.components.emulated_roku
 emulated-roku==0.3.0
@@ -2852,7 +2852,7 @@ skyboxremote==0.0.6
 slack_sdk==3.33.4
 
 # homeassistant.components.xmpp
-slixmpp==1.10.0;python_version<'3.14'
+slixmpp==1.12.0
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.5.5
