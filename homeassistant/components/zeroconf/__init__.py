@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Callable, Mapping
 from contextlib import suppress
+from dataclasses import dataclass, field
 from functools import partial
 from ipaddress import IPv4Address, IPv6Address
 import logging
@@ -15,6 +18,7 @@ from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components import network
 from homeassistant.const import (
+    EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_STOP,
     __version__,
@@ -27,6 +31,7 @@ from homeassistant.helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID as _ATTR_PROPERTIES_ID,
@@ -49,7 +54,6 @@ from .usage import install_multiple_zeroconf_catcher
 
 _LOGGER = logging.getLogger(__name__)
 
-
 CONF_DEFAULT_INTERFACE = "default_interface"
 CONF_IPV6 = "ipv6"
 DEFAULT_DEFAULT_INTERFACE = True
@@ -61,6 +65,20 @@ MAX_PROPERTY_VALUE_LEN = 230
 
 # Dns label max length
 MAX_NAME_LEN = 63
+
+DATA_HOMEASSISTANT_SERVICE = "zeroconf_homeassistant_service"
+
+
+@dataclass(slots=True)
+class _HomeAssistantServiceState:
+    """Track the Home Assistant Zeroconf service."""
+
+    aio_zc: HaAsyncZeroconf
+    info: AsyncServiceInfo
+    uuid: str
+    listeners: list[Callable[[], None]] = field(default_factory=list)
+    lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+
 
 # Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
 _DEPRECATED_ATTR_PROPERTIES_ID = DeprecatedConstant(
@@ -208,10 +226,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         Wait till started or otherwise HTTP is not up and running.
         """
-        await _async_register_hass_zc_service(aio_zc, local_service_info)
+        await _async_register_hass_zc_service(hass, aio_zc, local_service_info)
 
     async def _async_zeroconf_hass_stop(_event: Event) -> None:
         await discovery.async_stop()
+        _async_cleanup_homeassistant_service_state(hass)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_zeroconf_hass_stop)
     async_when_setup_or_start(hass, "frontend", _async_zeroconf_hass_start)
@@ -227,13 +246,154 @@ def _filter_disallowed_characters(name: str) -> str:
     return name.replace(".", " ")
 
 
-async def _async_register_hass_zc_service(
-    aio_zc: HaAsyncZeroconf, local_service_info: AsyncServiceInfo
+def _get_property(properties: Mapping[Any, Any], key: str) -> Any:
+    """Return a property value allowing for str or bytes keys."""
+    str_mapping = cast(Mapping[str, Any], properties)
+    if key in str_mapping:
+        return str_mapping[key]
+
+    bytes_mapping = cast(Mapping[bytes, Any], properties)
+    return bytes_mapping.get(key.encode())
+
+
+def _get_location_name(properties: Mapping[Any, Any]) -> str | None:
+    """Return the `location_name` property as string when available."""
+    value = _get_property(properties, "location_name")
+    if isinstance(value, str):
+        return value
+    if isinstance(value, bytes):
+        return value.decode()
+    return None
+
+
+@callback
+def _async_cleanup_homeassistant_service_state(hass: HomeAssistant) -> None:
+    """Remove listeners tracking the Home Assistant Zeroconf service."""
+    if (state := hass.data.pop(DATA_HOMEASSISTANT_SERVICE, None)) is None:
+        return
+
+    for unsub in state.listeners:
+        unsub()
+
+
+async def _async_build_service_info(hass: HomeAssistant, uuid: str) -> AsyncServiceInfo:
+    """Build AsyncServiceInfo for this Home Assistant instance."""
+    valid_location_name = _truncate_location_name_to_valid(
+        _filter_disallowed_characters(hass.config.location_name or "Home")
+    )
+
+    params = {
+        "location_name": valid_location_name,
+        "uuid": uuid,
+        "version": __version__,
+        "external_url": "",
+        "internal_url": "",
+        # Old base URL, for backward compatibility
+        "base_url": "",
+        # Always needs authentication
+        "requires_api_password": True,
+    }
+
+    with suppress(NoURLAvailableError):
+        params["external_url"] = get_url(hass, allow_internal=False)
+
+    with suppress(NoURLAvailableError):
+        params["internal_url"] = get_url(hass, allow_external=False)
+
+    params["base_url"] = params["external_url"] or params["internal_url"]
+
+    _suppress_invalid_properties(params)
+
+    return AsyncServiceInfo(
+        ZEROCONF_TYPE,
+        name=f"{valid_location_name}.{ZEROCONF_TYPE}",
+        server=f"{uuid}.local.",
+        parsed_addresses=await network.async_get_announce_addresses(hass),
+        port=hass.http.server_port,
+        properties=params,
+    )
+
+
+async def _async_refresh_homeassistant_service(
+    hass: HomeAssistant, state: _HomeAssistantServiceState
 ) -> None:
-    """Register the zeroconf service for the local Home Assistant instance."""
+    """Refresh the Zeroconf announcement for this Home Assistant instance."""
+    async with state.lock:
+        new_info = await _async_build_service_info(hass, state.uuid)
+
+        previous_location = _get_location_name(state.info.properties)
+        current_location = _get_location_name(new_info.properties)
+
+        if previous_location != current_location:
+            await state.aio_zc.async_unregister_service(state.info)
+            await state.aio_zc.async_register_service(new_info, allow_name_change=True)
+            state.info = new_info
+            return
+
+        if new_info.name != state.info.name:
+            new_info.name = state.info.name
+
+        await state.aio_zc.async_update_service(new_info)
+        state.info = new_info
+
+
+@callback
+def _async_setup_homeassistant_service_updaters(
+    hass: HomeAssistant, aio_zc: HaAsyncZeroconf, uuid: str, info: AsyncServiceInfo
+) -> None:
+    """Register listeners to keep Zeroconf properties up to date."""
+    _async_cleanup_homeassistant_service_state(hass)
+
+    state = _HomeAssistantServiceState(aio_zc=aio_zc, info=info, uuid=uuid)
+    hass.data[DATA_HOMEASSISTANT_SERVICE] = state
+
+    @callback
+    def _handle_core_config_update(_: Event) -> None:
+        hass.async_create_task(_async_refresh_homeassistant_service(hass, state))
+
+    state.listeners.append(
+        hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, _handle_core_config_update)
+    )
+
+    async def _async_setup_cloud_listener(
+        _hass: HomeAssistant, _component: str
+    ) -> None:
+        from homeassistant.components.cloud import (  # noqa: PLC0415
+            SIGNAL_CLOUD_CONNECTION_STATE,
+            CloudConnectionState,
+            async_is_connected,
+        )
+
+        @callback
+        def _handle_cloud_state(_: CloudConnectionState) -> None:
+            hass.async_create_task(_async_refresh_homeassistant_service(hass, state))
+
+        state.listeners.append(
+            async_dispatcher_connect(
+                hass, SIGNAL_CLOUD_CONNECTION_STATE, _handle_cloud_state
+            )
+        )
+
+        if async_is_connected(hass):
+            hass.async_create_task(_async_refresh_homeassistant_service(hass, state))
+
+    async_when_setup_or_start(hass, "cloud", _async_setup_cloud_listener)
+
+
+async def _async_register_hass_zc_service(
+    hass: HomeAssistant, aio_zc: HaAsyncZeroconf, local_service_info: AsyncServiceInfo
+) -> None:
+    uuid_value = _get_property(local_service_info.properties, "uuid")
+    if isinstance(uuid_value, bytes):
+        uuid_value = uuid_value.decode()
+    if not isinstance(uuid_value, str):
+        uuid_value = await instance_id.async_get(hass)
 
     _LOGGER.info("Starting Zeroconf broadcast")
     await aio_zc.async_register_service(local_service_info, allow_name_change=True)
+    _async_setup_homeassistant_service_updaters(
+        hass, aio_zc, uuid_value, local_service_info
+    )
 
 
 def _suppress_invalid_properties(properties: dict) -> None:
@@ -274,43 +434,8 @@ def _truncate_location_name_to_valid(location_name: str) -> str:
 
 async def _async_get_local_service_info(hass: HomeAssistant) -> AsyncServiceInfo:
     """Return the zeroconf service info for the local Home Assistant instance."""
-    valid_location_name = _truncate_location_name_to_valid(
-        _filter_disallowed_characters(hass.config.location_name or "Home")
-    )
     uuid = await instance_id.async_get(hass)
-
-    params = {
-        "location_name": valid_location_name,
-        "uuid": uuid,
-        "version": __version__,
-        "external_url": "",
-        "internal_url": "",
-        # Old base URL, for backward compatibility
-        "base_url": "",
-        # Always needs authentication
-        "requires_api_password": True,
-    }
-
-    # Get instance URL's
-    with suppress(NoURLAvailableError):
-        params["external_url"] = get_url(hass, allow_internal=False)
-
-    with suppress(NoURLAvailableError):
-        params["internal_url"] = get_url(hass, allow_external=False)
-
-    # Set old base URL based on external or internal
-    params["base_url"] = params["external_url"] or params["internal_url"]
-
-    _suppress_invalid_properties(params)
-
-    return AsyncServiceInfo(
-        ZEROCONF_TYPE,
-        name=f"{valid_location_name}.{ZEROCONF_TYPE}",
-        server=f"{uuid}.local.",
-        parsed_addresses=await network.async_get_announce_addresses(hass),
-        port=hass.http.server_port,
-        properties=params,
-    )
+    return await _async_build_service_info(hass, uuid)
 
 
 # These can be removed if no deprecated constant are in this module anymore
