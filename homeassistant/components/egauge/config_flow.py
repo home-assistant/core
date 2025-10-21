@@ -5,11 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from egauge_async.json import (
-    EgaugeAuthenticationError,
-    EgaugeConnectionError,
-    EgaugeJsonClient,
-)
+from egauge_async.json.client import EgaugeAuthenticationError, EgaugeJsonClient
+from httpx import ConnectError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -41,7 +38,7 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
                 serial_number = await client.get_device_serial_number()
             except EgaugeAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except EgaugeConnectionError:
+            except ConnectError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
@@ -91,7 +88,7 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
                 await client.get_device_serial_number()
             except EgaugeAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except EgaugeConnectionError:
+            except ConnectError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")

@@ -2,7 +2,8 @@
 
 from unittest.mock import MagicMock
 
-from egauge_async.json import EgaugeAuthenticationError, EgaugeConnectionError
+from egauge_async.json.client import EgaugeAuthenticationError
+from httpx import ConnectError
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -34,7 +35,7 @@ async def test_setup_connection_error(
 ) -> None:
     """Test setup with connection error."""
     mock_config_entry.add_to_hass(hass)
-    mock_egauge_client.get_device_serial_number.side_effect = EgaugeConnectionError
+    mock_egauge_client.get_device_serial_number.side_effect = ConnectError
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

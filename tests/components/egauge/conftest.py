@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from egauge_async.json import RegisterInfo, RegisterType
+from egauge_async.json.models import RegisterInfo, RegisterType
 import pytest
 
 from homeassistant.components.egauge.const import DOMAIN

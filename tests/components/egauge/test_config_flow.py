@@ -2,7 +2,8 @@
 
 from unittest.mock import MagicMock
 
-from egauge_async.json import EgaugeAuthenticationError, EgaugeConnectionError
+from egauge_async.json.client import EgaugeAuthenticationError
+from httpx import ConnectError
 import pytest
 
 from homeassistant.components.egauge.const import DOMAIN
@@ -59,7 +60,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     ("side_effect", "expected_error"),
     [
         (EgaugeAuthenticationError, "invalid_auth"),
-        (EgaugeConnectionError, "cannot_connect"),
+        (ConnectError, "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -153,7 +154,7 @@ async def test_reauth_flow(
     ("side_effect", "expected_error"),
     [
         (EgaugeAuthenticationError, "invalid_auth"),
-        (EgaugeConnectionError, "cannot_connect"),
+        (ConnectError, "cannot_connect"),
         (Exception, "unknown"),
     ],
 )

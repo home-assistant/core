@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from egauge_async.json import RegisterInfo, RegisterType
+from egauge_async.json.models import RegisterInfo, RegisterType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

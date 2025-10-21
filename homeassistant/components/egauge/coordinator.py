@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from egauge_async.json import (
+from egauge_async.json.client import (
     EgaugeAuthenticationError,
-    EgaugeConnectionError,
     EgaugeJsonClient,
     EgaugeParsingException,
-    RegisterInfo,
 )
+from egauge_async.json.models import RegisterInfo
+from httpx import ConnectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -54,7 +54,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
                 self._register_info = await self.client.get_register_info()
             except EgaugeAuthenticationError as err:
                 raise ConfigEntryAuthFailed from err
-            except (EgaugeConnectionError, EgaugeParsingException) as err:
+            except (ConnectError, EgaugeParsingException) as err:
                 raise UpdateFailed(f"Error fetching device info: {err}") from err
 
         # Every time: fetch dynamic measurements
@@ -63,7 +63,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             counters = await self.client.get_current_counters()
         except EgaugeAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
-        except (EgaugeConnectionError, EgaugeParsingException) as err:
+        except (ConnectError, EgaugeParsingException) as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
 
         return EgaugeData(

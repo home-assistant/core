@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from egauge_async.json import EgaugeJsonClient
+from egauge_async.json.client import EgaugeJsonClient
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant

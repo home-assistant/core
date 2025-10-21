@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from egauge_async.json import RegisterInfo
+from egauge_async.json.models import RegisterInfo
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from egauge_async.json import RegisterInfo
+from egauge_async.json.models import RegisterInfo
 
 from homeassistant.config_entries import ConfigEntry
 
