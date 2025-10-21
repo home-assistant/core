@@ -34,7 +34,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up buienradar radar-loop camera component."""
-    await hass.config_entries.async_forward_entry_setup(entry, "sensor")
     config = entry.data
     options = entry.options
 
