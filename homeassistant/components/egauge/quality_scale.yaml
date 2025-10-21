@@ -1,9 +1,30 @@
 rules:
   # Bronze (mandatory)
-  config-flow: done
-  entity-unique-id: done
-  test-before-configure: done
-  test-before-setup: done
   action-setup:
     status: exempt
     comment: Integration does not register custom actions
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions
+  docs-high-level-description:
+    status: exempt
+    comment: Documentation to be added before public release
+  docs-installation-instructions:
+    status: exempt
+    comment: Documentation to be added before public release
+  docs-removal-instructions:
+    status: exempt
+    comment: Documentation to be added before public release
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
