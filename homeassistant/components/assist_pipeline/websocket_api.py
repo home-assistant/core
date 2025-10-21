@@ -389,55 +389,95 @@ def websocket_get_run(
     }
 )
 @callback
+# Original
+# def websocket_list_languages(
+#     hass: HomeAssistant,
+#     connection: websocket_api.connection.ActiveConnection,
+#     msg: dict[str, Any],
+# ) -> None:
+#     """List languages which are supported by a complete pipeline.
+
+#     This will return a list of languages which are supported by at least one stt, tts
+#     and conversation engine respectively.
+#     """
+#     conv_language_tags = conversation.async_get_conversation_languages(hass)
+#     stt_language_tags = stt.async_get_speech_to_text_languages(hass)
+#     tts_language_tags = tts.async_get_text_to_speech_languages(hass)
+#     pipeline_languages: set[str] | None = None
+
+#     if conv_language_tags and conv_language_tags != MATCH_ALL:
+#         languages = set()
+#         for language_tag in conv_language_tags:
+#             dialect = language_util.Dialect.parse(language_tag)
+#             languages.add(dialect.language)
+#         pipeline_languages = languages
+
+#     if stt_language_tags:
+#         languages = set()
+#         for language_tag in stt_language_tags:
+#             dialect = language_util.Dialect.parse(language_tag)
+#             languages.add(dialect.language)
+#         if pipeline_languages is not None:
+#             pipeline_languages = language_util.intersect(pipeline_languages, languages)
+#         else:
+#             pipeline_languages = languages
+
+#     if tts_language_tags:
+#         languages = set()
+#         for language_tag in tts_language_tags:
+#             dialect = language_util.Dialect.parse(language_tag)
+#             languages.add(dialect.language)
+#         if pipeline_languages is not None:
+#             pipeline_languages = language_util.intersect(pipeline_languages, languages)
+#         else:
+#             pipeline_languages = languages
+
+#     connection.send_result(
+#         msg["id"],
+#         {
+#             "languages": (
+#                 sorted(pipeline_languages) if pipeline_languages else pipeline_languages
+#             )
+#         },
+#     )
+
+#Refactor
 def websocket_list_languages(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """List languages which are supported by a complete pipeline.
-
-    This will return a list of languages which are supported by at least one stt, tts
+    Returns a list of languages supported by at least one STT, TTS,
     and conversation engine respectively.
     """
-    conv_language_tags = conversation.async_get_conversation_languages(hass)
-    stt_language_tags = stt.async_get_speech_to_text_languages(hass)
-    tts_language_tags = tts.async_get_text_to_speech_languages(hass)
+
+    def extract_languages(language_tags: set[str] | None) -> set[str]:
+        """Convert tags to base language codes."""
+        if not language_tags or language_tags == MATCH_ALL:
+            return set()
+        return {
+            language_util.Dialect.parse(tag).language
+            for tag in language_tags
+        }
+
+    conv_languages = extract_languages(conversation.async_get_conversation_languages(hass))
+    stt_languages = extract_languages(stt.async_get_speech_to_text_languages(hass))
+    tts_languages = extract_languages(tts.async_get_text_to_speech_languages(hass))
+
+    # Intersect all non-empty sets
     pipeline_languages: set[str] | None = None
-
-    if conv_language_tags and conv_language_tags != MATCH_ALL:
-        languages = set()
-        for language_tag in conv_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        pipeline_languages = languages
-
-    if stt_language_tags:
-        languages = set()
-        for language_tag in stt_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        if pipeline_languages is not None:
-            pipeline_languages = language_util.intersect(pipeline_languages, languages)
-        else:
-            pipeline_languages = languages
-
-    if tts_language_tags:
-        languages = set()
-        for language_tag in tts_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        if pipeline_languages is not None:
-            pipeline_languages = language_util.intersect(pipeline_languages, languages)
-        else:
-            pipeline_languages = languages
+    for lang_set in (conv_languages, stt_languages, tts_languages):
+        if not lang_set:
+            continue
+        pipeline_languages = (
+            lang_set if pipeline_languages is None
+            else language_util.intersect(pipeline_languages, lang_set)
+        )
 
     connection.send_result(
         msg["id"],
-        {
-            "languages": (
-                sorted(pipeline_languages) if pipeline_languages else pipeline_languages
-            )
-        },
+        {"languages": sorted(pipeline_languages) if pipeline_languages else []},
     )
 
 
