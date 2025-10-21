@@ -1,8 +1,6 @@
 """Test Kostal Plenticore number."""
 
-from collections.abc import Generator, Iterable
 from datetime import timedelta
-from unittest.mock import patch
 
 from pykoplenti import ApiClient, SettingsData
 import pytest
@@ -22,121 +20,12 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-@pytest.fixture
-def mock_plenticore_client() -> Generator[ApiClient]:
-    """Return a patched ExtendedApiClient."""
-    with patch(
-        "homeassistant.components.kostal_plenticore.coordinator.ExtendedApiClient",
-        autospec=True,
-    ) as plenticore_client_class:
-        yield plenticore_client_class.return_value
-
-
-DEFAULT_SETTING_VALUES = {
-    "devices:local": {
-        "Properties:StringCnt": "2",
-        "EnergySensor:SensorPosition": "1",
-        "EnergySensor:InstalledSensor": "1",
-        "Battery:Type": "0",
-        "Properties:String0Features": "1",
-        "Properties:String1Features": "1",
-        "Properties:SerialNo": "42",
-        "Branding:ProductName1": "PLENTICORE",
-        "Branding:ProductName2": "plus 10",
-        "Properties:VersionIOC": "01.45",
-        "Properties:VersionMC": " 01.46",
-        "Battery:MinSoc": "5",
-        "Battery:MinHomeComsumption": "50",
-    },
-    "scb:network": {"Hostname": "scb"},
-}
-
-
-@pytest.fixture
-def mock_get_setting_values(
-    mock_plenticore_client: ApiClient,
-) -> dict[str, dict[str, str]]:
-    """Add a setting value to the given Plenticore client.
-
-    Returns a list with setting values which can be extended by test cases.
-    """
-
-    mock_plenticore_client.get_settings.return_value = {
-        "devices:local": [
-            SettingsData(
-                min="5",
-                max="100",
-                default=None,
-                access="readwrite",
-                unit="%",
-                id="Battery:MinSoc",
-                type="byte",
-            ),
-            SettingsData(
-                min="50",
-                max="38000",
-                default=None,
-                access="readwrite",
-                unit="W",
-                id="Battery:MinHomeComsumption",
-                type="byte",
-            ),
-        ],
-        "scb:network": [
-            SettingsData(
-                min="1",
-                max="63",
-                default=None,
-                access="readwrite",
-                unit=None,
-                id="Hostname",
-                type="string",
-            )
-        ],
-    }
-
-    # Add default settings values - this values are always retrieved by the integration on startup
-    setting_values = DEFAULT_SETTING_VALUES.copy()
-
-    def default_settings_data(*args):
-        # the get_setting_values method can be called with different argument types and numbers
-        match args:
-            case (str() as module_id, str() as data_id):
-                request = {module_id: [data_id]}
-            case (str() as module_id, Iterable() as data_ids):
-                request = {module_id: data_ids}
-            case ({},):
-                request = args[0]
-            case _:
-                raise NotImplementedError
-
-        result = {}
-        for module_id, data_ids in request.items():
-            if (values := setting_values.get(module_id)) is not None:
-                result[module_id] = {}
-                for data_id in data_ids:
-                    if data_id in values:
-                        result[module_id][data_id] = values[data_id]
-                    else:
-                        raise ValueError(
-                            f"Missing data_id {data_id} in module {module_id}"
-                        )
-            else:
-                raise ValueError(f"Missing module_id {module_id}")
-
-        return result
-
-    mock_plenticore_client.get_setting_values.side_effect = default_settings_data
-
-    return setting_values
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_all_entries(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_plenticore_client: ApiClient,
+    mock_get_settings: dict[str, list[SettingsData]],
     mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test if all available entries are setup."""
@@ -157,25 +46,12 @@ async def test_setup_no_entries(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_plenticore_client: ApiClient,
-    mock_get_setting_values: dict[str, dict[str, str]],
+    mock_get_settings: dict[str, list[SettingsData]],
 ) -> None:
     """Test that no entries are setup if Plenticore does not provide data."""
 
     # remove all settings except hostname which is used during setup
-    mock_plenticore_client.get_settings.return_value = {
-        "scb:network": [
-            SettingsData(
-                min="1",
-                max="63",
-                default=None,
-                access="readwrite",
-                unit=None,
-                id="Hostname",
-                type="string",
-            )
-        ],
-    }
+    mock_get_settings["devices:local"].clear()
 
     mock_config_entry.add_to_hass(hass)
 
@@ -190,7 +66,7 @@ async def test_setup_no_entries(
 async def test_number_has_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_plenticore_client: ApiClient,
+    mock_get_settings: dict[str, list[SettingsData]],
     mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test if number has a value if data is provided on update."""
@@ -215,7 +91,7 @@ async def test_number_has_value(
 async def test_number_is_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_plenticore_client: ApiClient,
+    mock_get_settings: dict[str, list[SettingsData]],
     mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test if number is unavailable if no data is provided on update."""
@@ -239,6 +115,7 @@ async def test_set_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
+    mock_get_settings: dict[str, list[SettingsData]],
     mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test if a new value could be set."""
