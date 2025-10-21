@@ -13,9 +13,9 @@ PRESET_MODE_MAP = {
     "standby": 4,
     "boost": 6,
     "setpoint": 8,
-    "comfort +": 20,
-    "eco-1": 40,
-    "eco-2": 41,
+    "comfort_plus": 20,
+    "eco_1": 40,
+    "eco_2": 41,
     "auto": 60,
 }
 
