@@ -1,8 +1,8 @@
 """Config flow for buienradar integration."""
 
 from __future__ import annotations
-
 import copy
+import asyncio
 from typing import Any, cast
 
 import voluptuous as vol
@@ -58,6 +58,7 @@ OPTIONS_SCHEMA = vol.Schema(
 
 
 async def _options_suggested_values(handler: SchemaCommonFlowHandler) -> dict[str, Any]:
+    await asyncio.sleep(0)  # ensure async
     parent_handler = cast(SchemaOptionsFlowHandler, handler.parent_handler)
     suggested_values = copy.deepcopy(dict(parent_handler.config_entry.data))
     suggested_values.update(parent_handler.options)

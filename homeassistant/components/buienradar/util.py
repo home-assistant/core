@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 from typing import Any
-
+import asyncio
 import aiohttp
 from buienradar.buienradar import parse_data
 from buienradar.constants import (
@@ -72,6 +72,7 @@ class BrData:
 
     async def update_devices(self):
         """Update all devices/sensors."""
+        await asyncio.sleep(0) 
         if not self.devices:
             return
 
