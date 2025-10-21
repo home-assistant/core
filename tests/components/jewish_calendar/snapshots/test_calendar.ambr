@@ -1,0 +1,148 @@
+# serializer version: 1
+# name: test_event_types_snapshot[test_date0-calendar_events0-New York]
+  list([
+    dict({
+      'description': 'Hebrew date: ה\' שבט ה\' תשפ"ד',
+      'end': '2024-01-16',
+      'start': '2024-01-15',
+      'summary': 'ה\' שבט ה\' תשפ"ד',
+    }),
+  ])
+# ---
+# name: test_event_types_snapshot[test_date1-calendar_events1-Jerusalem]
+  list([
+    dict({
+      'description': 'Hebrew date: ה\' שבט ה\' תשפ"ד',
+      'end': '2024-01-16',
+      'start': '2024-01-15',
+      'summary': 'ה\' שבט ה\' תשפ"ד',
+    }),
+  ])
+# ---
+# name: test_event_types_snapshot[test_date10-calendar_events10-New York]
+  list([
+    dict({
+      'description': 'Hebrew date: ב\' שבט ה\' תשפ"ד',
+      'end': '2024-01-13',
+      'start': '2024-01-12',
+      'summary': 'ב\' שבט ה\' תשפ"ד',
+    }),
+    dict({
+      'description': 'Parshat Hashavua: וארא',
+      'end': '2024-01-13',
+      'start': '2024-01-12',
+      'summary': 'וארא',
+    }),
+    dict({
+      'description': 'Candle lighting time: 16:31',
+      'end': '2024-01-12T21:31:00+00:00',
+      'start': '2024-01-12T21:31:00+00:00',
+      'summary': 'Candle Lighting',
+    }),
+  ])
+# ---
+# name: test_event_types_snapshot[test_date11-calendar_events11-Jerusalem]
+  list([
+    dict({
+      'description': 'Hebrew date: ג\' שבט ה\' תשפ"ד',
+      'end': '2024-01-14',
+      'start': '2024-01-13',
+      'summary': 'ג\' שבט ה\' תשפ"ד',
+    }),
+    dict({
+      'description': 'Parshat Hashavua: וארא',
+      'end': '2024-01-14',
+      'start': '2024-01-13',
+      'summary': 'וארא',
+    }),
+    dict({
+      'description': 'Havdalah time: 17:35',
+      'end': '2024-01-13T15:35:00+00:00',
+      'start': '2024-01-13T15:35:00+00:00',
+      'summary': 'Havdalah',
+    }),
+  ])
+# ---
+# name: test_event_types_snapshot[test_date2-calendar_events2-New York]
+  list([
+    dict({
+      'description': 'Parshat Hashavua: שופטים',
+      'end': '2024-09-08',
+      'start': '2024-09-07',
+      'summary': 'שופטים',
+    }),
+  ])
+# ---
+# name: test_event_types_snapshot[test_date3-calendar_events3-Jerusalem]
+  list([
+    dict({
+      'description': '''
+        Jewish Holiday: שושן פורים
+        Holiday Type: HolidayTypes.MELACHA_PERMITTED_HOLIDAY
+      ''',
+      'end': '2024-03-26',
+      'start': '2024-03-25',
+      'summary': 'שושן פורים',
+    }),
+  ])
+# ---
+# name: test_event_types_snapshot[test_date4-calendar_events4-New York]
+  list([
+    dict({
+      'description': 'Sefirat HaOmer: היום יום אחד לעומר',
+      'end': '2024-04-25',
+      'start': '2024-04-24',
+      'summary': "א' לעומר",
+    }),
+  ])
+# ---
+# name: test_event_types_snapshot[test_date5-calendar_events5-Jerusalem]
+  list([
+    dict({
+      'description': 'Daf Yomi: בבא בתרא כ',
+      'end': '2024-07-16',
+      'start': '2024-07-15',
+      'summary': 'בבא בתרא כ',
+    }),
+  ])
+# ---
+# name: test_event_types_snapshot[test_date6-calendar_events6-New York]
+  list([
+    dict({
+      'description': 'Candle lighting time: 16:31',
+      'end': '2024-01-12T21:31:00+00:00',
+      'start': '2024-01-12T21:31:00+00:00',
+      'summary': 'Candle Lighting',
+    }),
+  ])
+# ---
+# name: test_event_types_snapshot[test_date7-calendar_events7-Jerusalem]
+  list([
+    dict({
+      'description': 'Candle lighting time: 16:14',
+      'end': '2024-01-12T14:14:00+00:00',
+      'start': '2024-01-12T14:14:00+00:00',
+      'summary': 'Candle Lighting',
+    }),
+  ])
+# ---
+# name: test_event_types_snapshot[test_date8-calendar_events8-New York]
+  list([
+    dict({
+      'description': 'Havdalah time: 17:35',
+      'end': '2024-01-13T22:35:00+00:00',
+      'start': '2024-01-13T22:35:00+00:00',
+      'summary': 'Havdalah',
+    }),
+  ])
+# ---
+# name: test_event_types_snapshot[test_date9-calendar_events9-Jerusalem]
+  list([
+    dict({
+      'description': 'Havdalah time: 17:35',
+      'end': '2024-01-13T15:35:00+00:00',
+      'start': '2024-01-13T15:35:00+00:00',
+      'summary': 'Havdalah',
+    }),
+  ])
+# ---
