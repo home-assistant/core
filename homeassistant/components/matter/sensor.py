@@ -1241,9 +1241,9 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="RvcOperationalStateOperationalError",
-            entity_category=EntityCategory.DIAGNOSTIC,
             translation_key="operational_error",
             device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
             options=list(RVC_OPERATIONAL_STATE_ERROR_MAP.values()),
             device_to_ha=lambda x: (
                 # Determine the error label for the RVC operational state:
