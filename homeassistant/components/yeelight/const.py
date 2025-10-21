@@ -4,6 +4,11 @@ from datetime import timedelta
 
 from homeassistant.const import Platform
 
+FLOW_TRANSITIONS_URL = "https://yeelight.readthedocs.io/en/stable/flow.html"
+FLOW_OBJECTS_URL = (
+    "https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects"
+)
+
 DOMAIN = "yeelight"
 
 
