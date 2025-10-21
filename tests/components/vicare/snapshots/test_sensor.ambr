@@ -2920,7 +2920,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'gateway5_zigbee_################-battery_level',
+    'unique_id': 'gateway5_zigbee_d87a3bfffe5d844a-battery_level',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2937,10 +2937,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '36',
+    'state': '89',
   })
 # ---
-# name: test_all_entities[sensor.model5_signal_strength-entry]
+# name: test_all_entities[sensor.model5_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2954,8 +2954,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.model5_signal_strength',
+    'entity_category': None,
+    'entity_id': 'sensor.model5_humidity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2965,31 +2965,32 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
-    'original_name': 'Signal strength',
+    'original_name': 'Humidity',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'zigbee_signal_strength',
-    'unique_id': 'gateway5_zigbee_################-zigbee_signal_strength',
+    'translation_key': None,
+    'unique_id': 'gateway5_zigbee_d87a3bfffe5d844a-room_humidity',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.model5_signal_strength-state]
+# name: test_all_entities[sensor.model5_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model5 Signal strength',
+      'device_class': 'humidity',
+      'friendly_name': 'model5 Humidity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model5_signal_strength',
+    'entity_id': 'sensor.model5_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '90',
+    'state': '53',
   })
 # ---
 # name: test_all_entities[sensor.model5_temperature-entry]
@@ -3028,7 +3029,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'gateway5_zigbee_################-room_temperature',
+    'unique_id': 'gateway5_zigbee_d87a3bfffe5d844a-room_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3045,10 +3046,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '21.5',
+    'state': '17.5',
   })
 # ---
-# name: test_all_entities[sensor.model5_valve_position-entry]
+# name: test_all_entities[sensor.model6_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3063,7 +3064,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.model5_valve_position',
+    'entity_id': 'sensor.model6_humidity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3073,34 +3074,35 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
-    'original_name': 'Valve position',
+    'original_name': 'Humidity',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'valve_position',
-    'unique_id': 'gateway5_zigbee_################-valve_position',
+    'translation_key': None,
+    'unique_id': 'gateway6_zigbee_5cc7c1fffea33a3b-room_humidity',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.model5_valve_position-state]
+# name: test_all_entities[sensor.model6_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model5 Valve position',
+      'device_class': 'humidity',
+      'friendly_name': 'model6 Humidity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model5_valve_position',
+    'entity_id': 'sensor.model6_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': '52',
   })
 # ---
-# name: test_all_entities[sensor.model6_signal_strength-entry]
+# name: test_all_entities[sensor.model6_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3114,8 +3116,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.model6_signal_strength',
+    'entity_category': None,
+    'entity_id': 'sensor.model6_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3124,32 +3126,36 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Signal strength',
+    'original_name': 'Temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'zigbee_signal_strength',
-    'unique_id': 'gateway6_zigbee_################-zigbee_signal_strength',
-    'unit_of_measurement': '%',
+    'translation_key': None,
+    'unique_id': 'gateway6_zigbee_5cc7c1fffea33a3b-room_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.model6_signal_strength-state]
+# name: test_all_entities[sensor.model6_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model6 Signal strength',
+      'device_class': 'temperature',
+      'friendly_name': 'model6 Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model6_signal_strength',
+    'entity_id': 'sensor.model6_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '46',
+    'state': '16.9',
   })
 # ---
 # name: test_all_entities[sensor.model7_battery-entry]
@@ -3185,7 +3191,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'gateway7_zigbee_d87a3bfffe5d844a-battery_level',
+    'unique_id': 'gateway7_zigbee_################-battery_level',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3202,10 +3208,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '89',
+    'state': '36',
   })
 # ---
-# name: test_all_entities[sensor.model7_humidity-entry]
+# name: test_all_entities[sensor.model7_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3219,8 +3225,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model7_humidity',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model7_signal_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3230,32 +3236,31 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Humidity',
+    'original_name': 'Signal strength',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'gateway7_zigbee_d87a3bfffe5d844a-room_humidity',
+    'translation_key': 'zigbee_signal_strength',
+    'unique_id': 'gateway7_zigbee_################-zigbee_signal_strength',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.model7_humidity-state]
+# name: test_all_entities[sensor.model7_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'model7 Humidity',
+      'friendly_name': 'model7 Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model7_humidity',
+    'entity_id': 'sensor.model7_signal_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '53',
+    'state': '90',
   })
 # ---
 # name: test_all_entities[sensor.model7_temperature-entry]
@@ -3294,7 +3299,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'gateway7_zigbee_d87a3bfffe5d844a-room_temperature',
+    'unique_id': 'gateway7_zigbee_################-room_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3311,10 +3316,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '17.5',
+    'state': '21.5',
   })
 # ---
-# name: test_all_entities[sensor.model8_humidity-entry]
+# name: test_all_entities[sensor.model7_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3329,7 +3334,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.model8_humidity',
+    'entity_id': 'sensor.model7_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3339,35 +3344,34 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Humidity',
+    'original_name': 'Valve position',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'gateway8_zigbee_5cc7c1fffea33a3b-room_humidity',
+    'translation_key': 'valve_position',
+    'unique_id': 'gateway7_zigbee_################-valve_position',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.model8_humidity-state]
+# name: test_all_entities[sensor.model7_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'model8 Humidity',
+      'friendly_name': 'model7 Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model8_humidity',
+    'entity_id': 'sensor.model7_valve_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '52',
+    'state': '2',
   })
 # ---
-# name: test_all_entities[sensor.model8_temperature-entry]
+# name: test_all_entities[sensor.model8_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3381,8 +3385,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model8_temperature',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model8_signal_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3391,36 +3395,84 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature',
+    'original_name': 'Signal strength',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'gateway8_zigbee_5cc7c1fffea33a3b-room_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'translation_key': 'zigbee_signal_strength',
+    'unique_id': 'gateway8_zigbee_################-zigbee_signal_strength',
+    'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.model8_temperature-state]
+# name: test_all_entities[sensor.model8_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'model8 Temperature',
+      'friendly_name': 'model8 Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model8_temperature',
+    'entity_id': 'sensor.model8_signal_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '16.9',
+    'state': '46',
+  })
+# ---
+# name: test_all_entities[sensor.model9_signal_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model9_signal_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Signal strength',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zigbee_signal_strength',
+    'unique_id': 'gateway9_zigbee_################-zigbee_signal_strength',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.model9_signal_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model9 Signal strength',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model9_signal_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '37',
   })
 # ---
 # name: test_all_entities[sensor.vitovalor_hydraulic_separator_temperature-entry]
