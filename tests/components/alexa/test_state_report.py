@@ -1,7 +1,7 @@
 """Test report state."""
 
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import pytest
@@ -9,6 +9,11 @@ import pytest
 from homeassistant import core
 from homeassistant.components.alexa import errors, state_report
 from homeassistant.components.alexa.resources import AlexaGlobalCatalog
+from homeassistant.components.alexa.state_report import (
+    _determine_report_and_doorbell,
+    _entity_state_filter,
+    _extra_significant_check,
+)
 from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
@@ -794,3 +799,112 @@ async def test_proactive_mode_filter_states(
 
         await hass.async_block_till_done()
     assert len(aioclient_mock.mock_calls) == 1
+
+
+def test_alexa_state_report_helper_methods():
+    """Test state report helper methods."""
+    # Test _extra_significant_check
+    hass = Mock()
+    old_attrs = {"temperature": 20.0}
+    new_attrs = {"temperature": 21.0}
+    old_extra_arg = [{"name": "temperature", "value": 20.0}]
+    new_extra_arg = [{"name": "temperature", "value": 21.0}]
+
+    # Test with different extra args (should be significant)
+    result = _extra_significant_check(
+        hass, "on", old_attrs, old_extra_arg, "on", new_attrs, new_extra_arg
+    )
+    assert result is True
+
+    # Test with same extra args (should not be significant)
+    result = _extra_significant_check(
+        hass, "on", old_attrs, old_extra_arg, "on", new_attrs, old_extra_arg
+    )
+    assert result is False
+
+    # Test with None old_extra_arg (should not be significant)
+    result = _extra_significant_check(
+        hass, "on", old_attrs, None, "on", new_attrs, new_extra_arg
+    )
+    assert result is False
+
+    # Test _entity_state_filter
+    hass = Mock()
+    hass.is_running = True
+    config = Mock()
+    config.should_expose.return_value = True
+
+    # Test valid state change (binary_sensor domain is in ENTITY_ADAPTERS)
+    data = {
+        "entity_id": "binary_sensor.test",
+        "old_state": None,
+        "new_state": Mock(domain="binary_sensor"),
+    }
+    result = _entity_state_filter(hass, config, data)
+    assert result is True
+
+    # Test with hass not running
+    hass.is_running = False
+    result = _entity_state_filter(hass, config, data)
+    assert result is False
+    hass.is_running = True
+
+    # Test with None new_state
+    data["new_state"] = None
+    result = _entity_state_filter(hass, config, data)
+    assert result is False
+
+    # Test with unsupported domain
+    data["new_state"] = Mock(domain="unsupported_domain")
+    result = _entity_state_filter(hass, config, data)
+    assert result is False
+
+    # Test with entity not exposed by config
+    data["new_state"] = Mock(domain="binary_sensor")
+    config.should_expose.return_value = False
+    result = _entity_state_filter(hass, config, data)
+    assert result is False
+
+    # Test _determine_report_and_doorbell
+    alexa_entity = Mock()
+
+    # Test entity with proactive reporting
+    interface1 = Mock()
+    interface1.properties_proactively_reported.return_value = True
+    interface1.name.return_value = "Alexa.PowerController"
+    alexa_entity.interfaces.return_value = [interface1]
+
+    should_report, should_doorbell = _determine_report_and_doorbell(alexa_entity)
+    assert should_report is True
+    assert should_doorbell is False
+
+    # Test entity with doorbell interface
+    interface2 = Mock()
+    interface2.properties_proactively_reported.return_value = False
+    interface2.name.return_value = "Alexa.DoorbellEventSource"
+    alexa_entity.interfaces.return_value = [interface2]
+
+    should_report, should_doorbell = _determine_report_and_doorbell(alexa_entity)
+    assert should_report is False
+    assert should_doorbell is True
+
+    # Test entity with both
+    interface3 = Mock()
+    interface3.properties_proactively_reported.return_value = True
+    interface3.name.return_value = "Alexa.BrightnessController"
+    alexa_entity.interfaces.return_value = [interface3, interface2]
+
+    should_report, should_doorbell = _determine_report_and_doorbell(alexa_entity)
+    assert should_report is True
+    assert should_doorbell is True
+
+    # Test entity with neither
+    interface4 = Mock()
+    interface4.properties_proactively_reported.return_value = False
+    interface4.name.return_value = "Alexa.EndpointHealth"
+    alexa_entity.interfaces.return_value = [interface4]
+
+    should_report, should_doorbell = _determine_report_and_doorbell(alexa_entity)
+    assert should_report is False
+    assert should_doorbell is False
+
