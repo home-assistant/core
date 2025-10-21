@@ -38,6 +38,17 @@
       },
       "gold_tenure": {
         "name": "Gold tenure"
+      },
+      "last_online": {
+        "name": "Last online"
+      },
+      "following": {
+        "name": "Following",
+        "unit_of_measurement": "people"
+      },
+      "follower": {
+        "name": "Follower",
+        "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
       }
     },
     "binary_sensor": {
@@ -49,6 +60,9 @@
       },
       "in_multiplayer": {
         "name": "In multiplayer"
+      },
+      "has_game_pass": {
+        "name": "Subscribed to Xbox Game Pass"
       }
     }
   },
