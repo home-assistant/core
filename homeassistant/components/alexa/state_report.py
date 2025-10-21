@@ -253,19 +253,88 @@ async def async_enable_proactive_mode(
 
     Proactive mode makes this component report state changes to Alexa.
     """
+    # Validate we can get access token.
     await smart_home_config.async_get_access_token()
 
-    checker = await create_checker(hass, DOMAIN, _extra_significant_check)
+    @callback
+    def extra_significant_check(
+        hass: HomeAssistant,
+        old_state: str,
+        old_attrs: Mapping[Any, Any],
+        old_extra_arg: Any,
+        new_state: str,
+        new_attrs: Mapping[Any, Any],
+        new_extra_arg: Any,
+    ) -> bool:
+        """Check if the serialized data has changed."""
+        return old_extra_arg is not None and old_extra_arg != new_extra_arg
+
+    checker = await create_checker(hass, DOMAIN, extra_significant_check)
 
     @callback
     def _async_entity_state_filter(data: EventStateChangedData) -> bool:
-        return _entity_state_filter(hass, smart_home_config, data)
+        if not hass.is_running:
+            return False
+
+        if not (new_state := data["new_state"]):
+            return False
+
+        if new_state.domain not in ENTITY_ADAPTERS:
+            return False
+
+        changed_entity = data["entity_id"]
+        if not smart_home_config.should_expose(changed_entity):
+            _LOGGER.debug("Not exposing %s because filtered by config", changed_entity)
+            return False
+
+        return True
 
     async def _async_entity_state_listener(
         event_: Event[EventStateChangedData],
     ) -> None:
-        await _handle_entity_state_listener(
-            hass, smart_home_config, checker, event_
+        data = event_.data
+        new_state = data["new_state"]
+        if TYPE_CHECKING:
+            assert new_state is not None
+
+        alexa_changed_entity: AlexaEntity = ENTITY_ADAPTERS[new_state.domain](
+            hass, smart_home_config, new_state
+        )
+        # Determine how entity should be reported on
+        should_report = False
+        should_doorbell = False
+
+        for interface in alexa_changed_entity.interfaces():
+            if not should_report and interface.properties_proactively_reported():
+                should_report = True
+
+            if interface.name() == "Alexa.DoorbellEventSource":
+                should_doorbell = True
+                break
+
+        if not should_report and not should_doorbell:
+            return
+
+        if should_doorbell:
+            old_state = data["old_state"]
+            if new_state.domain == event.DOMAIN or (
+                new_state.state == STATE_ON
+                and (old_state is None or old_state.state != STATE_ON)
+            ):
+                await async_send_doorbell_event_message(
+                    hass, smart_home_config, alexa_changed_entity
+                )
+            return
+
+        alexa_properties = list(alexa_changed_entity.serialize_properties())
+
+        if not checker.async_is_significant_change(
+            new_state, extra_arg=alexa_properties
+        ):
+            return
+
+        await async_send_changereport_message(
+            hass, smart_home_config, alexa_changed_entity, alexa_properties
         )
 
     return hass.bus.async_listen(
@@ -273,98 +342,6 @@ async def async_enable_proactive_mode(
         _async_entity_state_listener,
         event_filter=_async_entity_state_filter,
     )
-
-
-@callback
-def _extra_significant_check(
-    hass: HomeAssistant,
-    old_state: str,
-    old_attrs: Mapping[Any, Any],
-    old_extra_arg: Any,
-    new_state: str,
-    new_attrs: Mapping[Any, Any],
-    new_extra_arg: Any,
-) -> bool:
-    """Check if the serialized data has changed."""
-    return old_extra_arg is not None and old_extra_arg != new_extra_arg
-
-
-@callback
-def _entity_state_filter(
-    hass: HomeAssistant, smart_home_config: "AbstractConfig", data: EventStateChangedData
-) -> bool:
-    if not hass.is_running:
-        return False
-
-    if not (new_state := data["new_state"]):
-        return False
-
-    if new_state.domain not in ENTITY_ADAPTERS:
-        return False
-
-    changed_entity = data["entity_id"]
-    if not smart_home_config.should_expose(changed_entity):
-        _LOGGER.debug("Not exposing %s because filtered by config", changed_entity)
-        return False
-
-    return True
-
-
-async def _handle_entity_state_listener(
-    hass: HomeAssistant,
-    smart_home_config: "AbstractConfig",
-    checker,
-    event_: Event[EventStateChangedData],
-) -> None:
-    data = event_.data
-    new_state = data["new_state"]
-    if TYPE_CHECKING:
-        assert new_state is not None
-
-    alexa_changed_entity: AlexaEntity = ENTITY_ADAPTERS[new_state.domain](
-        hass, smart_home_config, new_state
-    )
-    should_report, should_doorbell = _determine_report_and_doorbell(alexa_changed_entity)
-
-    if not should_report and not should_doorbell:
-        return
-
-    if should_doorbell:
-        old_state = data["old_state"]
-        if new_state.domain == event.DOMAIN or (
-            new_state.state == STATE_ON
-            and (old_state is None or old_state.state != STATE_ON)
-        ):
-            await async_send_doorbell_event_message(
-                hass, smart_home_config, alexa_changed_entity
-            )
-        return
-
-    alexa_properties = list(alexa_changed_entity.serialize_properties())
-
-    if not checker.async_is_significant_change(
-        new_state, extra_arg=alexa_properties
-    ):
-        return
-
-    await async_send_changereport_message(
-        hass, smart_home_config, alexa_changed_entity, alexa_properties
-    )
-
-
-def _determine_report_and_doorbell(alexa_changed_entity: AlexaEntity) -> tuple[bool, bool]:
-    should_report = False
-    should_doorbell = False
-
-    for interface in alexa_changed_entity.interfaces():
-        if not should_report and interface.properties_proactively_reported():
-            should_report = True
-
-        if interface.name() == "Alexa.DoorbellEventSource":
-            should_doorbell = True
-            break
-
-    return should_report, should_doorbell
 
 
 async def async_send_changereport_message(
