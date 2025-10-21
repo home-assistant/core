@@ -1487,54 +1487,65 @@ async def test_send_message_multi_target(
 
 
 @pytest.mark.parametrize(
-    (
-        "file_id",
-        "hass_file_name",
-        "hass_directory_path",
-        "telegram_file_name",
-    ),
+    ("telegram_file_name", "schema_request", "expected_download_path"),
     [
-        (
-            "some-file-id-1",
-            None,
-            None,
+        pytest.param(
             "file_name1.jpg",
-        ),  # user didn't provide file_name or directory path - use telegram file name
-        (
-            "some-file-id-2",
-            "custom_name2.jpg",
-            None,
+            {ATTR_FILE_ID: "some-file-id-1"},
+            lambda hass: f"{hass.config.path(DOMAIN)}/file_name1.jpg",
+            id="no_custom_name_no_custom_dir",
+        ),
+        pytest.param(
             "file_name2.jpg",
-        ),  # user provide file_name but not directory_path
-        (
-            "some-file-id-3",
-            None,
-            "/tmp/tempfolder3",  # noqa: S108
+            {ATTR_FILE_ID: "some-file-id-2", ATTR_FILE_NAME: "custom_name2.jpg"},
+            lambda hass: f"{hass.config.path(DOMAIN)}/custom_name2.jpg",
+            id="custom_name_no_custom_dir",
+        ),
+        pytest.param(
             "file_name3.jpg",
-        ),  # user provide directory_path but not file_name
-        (
-            "some-file-id-4",
-            "custom_name4.jpg",
-            "/tmp/tempfolder4",  # noqa: S108
+            {
+                ATTR_FILE_ID: "some-file-id-3",
+                ATTR_DIRECTORY_PATH: "/tmp/tempfolder3",  # noqa: S108
+            },
+            lambda hass: "/tmp/tempfolder3/file_name3.jpg",  # noqa: S108
+            id="no_custom_name_custom_dir",
+        ),
+        pytest.param(
             "file_name4.jpg",
-        ),  # user provide file_name and directory_path
+            {
+                ATTR_FILE_ID: "some-file-id-4",
+                ATTR_FILE_NAME: "custom_name4.jpg",
+                ATTR_DIRECTORY_PATH: "/tmp/tempfolder4",  # noqa: S108
+            },
+            lambda hass: "/tmp/tempfolder4/custom_name4.jpg",  # noqa: S108
+            id="custom_name_custom_dir",
+        ),
     ],
 )
 async def test_download_file(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
-    file_id: str,
-    hass_file_name: str | None,
-    hass_directory_path: str | None,
     telegram_file_name: str,
+    schema_request: dict[str, Any],
+    expected_download_path: Any,
 ) -> None:
     """Test download file."""
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    TELEGRAM_FILE = File(
+    expected_path = expected_download_path(hass)
+    expected_directory = os.path.dirname(expected_path)
+    allowlist_dir = (
+        expected_directory
+        if os.path.exists(expected_directory)
+        else os.path.dirname(expected_directory)
+    )
+    hass.config.allowlist_external_dirs.add(allowlist_dir)
+
+    file_id = schema_request[ATTR_FILE_ID]
+    telegram_file = File(
         file_id=file_id,
         file_unique_id="file_unique_id",
         file_path=f"file/path/{telegram_file_name}",
@@ -1543,36 +1554,13 @@ async def test_download_file(
     with (
         patch(
             "homeassistant.components.telegram_bot.bot.Bot.get_file",
-            AsyncMock(return_value=TELEGRAM_FILE),
+            AsyncMock(return_value=telegram_file),
         ) as get_file_mock,
         patch(
             "telegram.File.download_to_drive",
             AsyncMock(return_value=f"/custom/path/{telegram_file_name}"),
         ) as download_to_drive_mock,
     ):
-        schema_request = {
-            ATTR_FILE_ID: file_id,
-        }
-        if hass_file_name:
-            expected_file_name = hass_file_name
-            schema_request[ATTR_FILE_NAME] = hass_file_name
-        else:
-            expected_file_name = telegram_file_name
-
-        if hass_directory_path:
-            expected_directory_path = hass_directory_path
-            schema_request[ATTR_DIRECTORY_PATH] = expected_directory_path
-        else:
-            # use config dir as default directory path for test
-            expected_directory_path = hass.config.path(DOMAIN)
-
-        if os.path.exists(expected_directory_path):
-            hass.config.allowlist_external_dirs.add(expected_directory_path)
-        else:
-            hass.config.allowlist_external_dirs.add(
-                os.path.dirname(expected_directory_path)
-            )
-
         await hass.services.async_call(
             DOMAIN,
             "download_file",
@@ -1581,12 +1569,8 @@ async def test_download_file(
         )
 
     await hass.async_block_till_done()
-    get_file_mock.assert_called_once_with(
-        file_id=file_id,
-    )
-    download_to_drive_mock.assert_called_once_with(
-        custom_path=f"{expected_directory_path}/{expected_file_name}",
-    )
+    get_file_mock.assert_called_once_with(file_id=file_id)
+    download_to_drive_mock.assert_called_once_with(custom_path=expected_path)
 
 
 async def test_download_file_when_bot_failed_to_get_file(
