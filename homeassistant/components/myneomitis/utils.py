@@ -86,11 +86,16 @@ def format_week_schedule(
         for block in blocks:
             start = seconds_to_hhmm(block["begin"])
             end = seconds_to_hhmm(block["end"])
-            mode = (
-                REVERSE_PRESET_MODE_MAP.get(block.get("value"), "unknown")
-                if not isRelais
-                else REVERSE_PRESET_MODE_MAP_RELAIS.get(block.get("value"), "unknown")
-            )
+            val = block.get("value")
+            if not isRelais:
+                if isinstance(val, int):
+                    mode = REVERSE_PRESET_MODE_MAP.get(val, "unknown")
+                else:
+                    mode = "unknown"
+            elif isinstance(val, int):
+                mode = REVERSE_PRESET_MODE_MAP_RELAIS.get(val, "unknown")
+            else:
+                mode = "unknown"
             mode = mode.ljust(10)
             lines.append(f"{start} → {end} : {mode}")
 
@@ -110,16 +115,17 @@ def parents_to_dict(parents_str: str) -> dict[str, str | None]:
 
     """
     elements = [el for el in parents_str.split(",") if el]
+    result: dict[str, str | None] = {}
     if not elements:
-        return {}
-    result = {"gateway": elements[0]}
+        return result
+    result["gateway"] = elements[0]
     if len(elements) > 1:
         result["primary"] = elements[1]
     return result
 
 
 def get_device_by_rfid(
-    devices: list[dict[str, Any]], rfid: str
+    devices: list[dict[str, Any]], rfid: str | None
 ) -> dict[str, Any] | None:
     """Return the device dictionary matching the given RFID.
 

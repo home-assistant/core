@@ -9,8 +9,10 @@ import logging
 from typing import Any
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .logger import log_ws_update_switch, log_ws_update_ufh
@@ -70,7 +72,7 @@ class MyNeoSelect(SelectEntity):
             parents_to_dict(device["parents"]) if "parents" in device else {}
         )
         self._primary_parent = (
-            get_device_by_rfid(devices, self._parents["primary"])
+            get_device_by_rfid(devices, self._parents.get("primary") or "")
             if "primary" in self._parents
             else {}
         )
@@ -89,7 +91,7 @@ class MyNeoSelect(SelectEntity):
                 if self._type == "relais"
                 else REVERSE_PRESET_MODE_MAP
             )
-            self._attr_options = PRESET_OPTIONS.get(self._type)
+            self._attr_options = PRESET_OPTIONS.get(self._type, [])
             self._attr_current_option = self._reverse_preset_mode_map.get(
                 device.get("state", {}).get("targetMode"), STATE_UNKNOWN
             )
@@ -98,7 +100,7 @@ class MyNeoSelect(SelectEntity):
             self._type = "UFH"
             self._preset_mode_map = PRESET_MODE_MAP_UFH
             self._reverse_preset_mode_map = REVERSE_PRESET_MODE_MAP_UFH
-            self._attr_options = PRESET_OPTIONS.get(self._type)
+            self._attr_options = PRESET_OPTIONS.get(self._type, [])
             self._attr_current_option = self._reverse_preset_mode_map.get(
                 device.get("state", {}).get("changeOverUser"), STATE_UNKNOWN
             )
@@ -151,7 +153,7 @@ class MyNeoSelect(SelectEntity):
                 self._attr_current_option = self._reverse_preset_mode_map.get(
                     mode, STATE_UNKNOWN
                 )
-                log_ws_update_ufh(self._attr_name, state)
+                log_ws_update_ufh(str(self._attr_name), state)
 
         if "targetMode" in state:
             mode = state.get("targetMode")
@@ -159,7 +161,7 @@ class MyNeoSelect(SelectEntity):
                 self._attr_current_option = self._reverse_preset_mode_map.get(
                     mode, STATE_UNKNOWN
                 )
-                log_ws_update_switch(self._attr_name, state)
+                log_ws_update_switch(str(self._attr_name), state)
 
         self.async_write_ha_state()
 
@@ -223,14 +225,15 @@ class MyNeoSelect(SelectEntity):
                 self._device["rfid"],
                 self._preset_mode_map[mode],
             )
-
         return await self._api.set_device_mode(
             self._device["_id"], self._preset_mode_map[mode]
         )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: Any, async_add_entities: Any
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Select entities from a config entry.
 
@@ -243,7 +246,6 @@ async def async_setup_entry(
     entry_data = hass.data[DOMAIN][config_entry.entry_id]
     api = entry_data["api"]
     devices = entry_data["devices"]
-
     added_ids = set()
     entities_by_id: dict[str, MyNeoSelect] = {}
 
