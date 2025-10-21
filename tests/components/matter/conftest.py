@@ -86,6 +86,7 @@ async def integration_fixture(
         "dimmable_plugin_unit",
         "door_lock",
         "door_lock_with_unbolt",
+        "eberle-ute3000",
         "eve_contact_sensor",
         "eve_energy_20ecn4101",
         "eve_energy_plug",

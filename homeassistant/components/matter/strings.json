@@ -441,6 +441,9 @@
       "evse_soc": {
         "name": "State of charge"
       },
+      "pi_heating_demand": {
+        "name": "Heating Demand"
+      },
       "nitrogen_dioxide": {
         "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
       },
