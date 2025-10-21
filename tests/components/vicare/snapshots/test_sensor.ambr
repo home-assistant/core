@@ -2928,7 +2928,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'model6 Battery',
+      'friendly_name': 'model5 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -3037,7 +3037,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'model6 Temperature',
+      'friendly_name': 'model5 Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -3199,7 +3199,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'model7 Battery',
+      'friendly_name': 'model9 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -3251,7 +3251,7 @@
 # name: test_all_entities[sensor.model7_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model7 Signal strength',
+      'friendly_name': 'model9 Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -3307,7 +3307,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'model7 Temperature',
+      'friendly_name': 'model9 Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -3359,7 +3359,7 @@
 # name: test_all_entities[sensor.model7_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model7 Valve position',
+      'friendly_name': 'model9 Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -3411,7 +3411,7 @@
 # name: test_all_entities[sensor.model8_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model8 Signal strength',
+      'friendly_name': 'model9 Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
