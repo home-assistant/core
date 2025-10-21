@@ -22,8 +22,10 @@ from homeassistant.components.analytics.analytics import (
 from homeassistant.components.analytics.const import (
     ANALYTICS_ENDPOINT_URL,
     ANALYTICS_ENDPOINT_URL_DEV,
+    ANALYTICS_SNAPSHOT_ENDPOINT_URL,
     ATTR_BASE,
     ATTR_DIAGNOSTICS,
+    ATTR_SNAPSHOTS,
     ATTR_STATISTICS,
     ATTR_USAGE,
 )
@@ -97,7 +99,6 @@ async def test_no_send(
 
         await analytics.send_analytics()
 
-    assert "Nothing to submit" in caplog.text
     assert len(aioclient_mock.mock_calls) == 0
 
 
@@ -1426,3 +1427,285 @@ async def test_analytics_platforms(
             },
         },
     }
+
+
+async def test_send_snapshot_disabled(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test no snapshots are sent."""
+    analytics = Analytics(hass)
+
+    await analytics.send_snapshot()
+
+    await analytics.save_preferences({ATTR_BASE: False, ATTR_SNAPSHOTS: True})
+    await analytics.send_snapshot()
+
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: False})
+    await analytics.send_snapshot()
+
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+async def test_send_snapshot_success(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test successful snapshot submission."""
+    snapshot_endpoint = ANALYTICS_SNAPSHOT_ENDPOINT_URL
+    aioclient_mock.post(
+        snapshot_endpoint,
+        status=200,
+        json={"submission_identifier": "test-identifier-123"},
+    )
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+
+    await analytics.send_snapshot()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert analytics._data.submission_identifier == "test-identifier-123"
+    assert "Submitted snapshot analytics to Home Assistant servers" in caplog.text
+
+
+async def test_send_snapshot_with_existing_identifier(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test snapshot submission with existing identifier."""
+    snapshot_endpoint = ANALYTICS_SNAPSHOT_ENDPOINT_URL
+    aioclient_mock.post(
+        snapshot_endpoint,
+        status=200,
+        json={"submission_identifier": "test-identifier-123"},
+    )
+    analytics = Analytics(hass)
+    analytics._data.submission_identifier = "old-identifier"
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+
+    await analytics.send_snapshot()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call_headers = aioclient_mock.mock_calls[0][3]
+    assert call_headers["x-device-database-submission-identifier"] == "old-identifier"
+    assert analytics._data.submission_identifier == "test-identifier-123"
+    assert "Submitted snapshot analytics to Home Assistant servers" in caplog.text
+
+
+async def test_send_snapshot_invalid_identifier(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test snapshot submission with invalid identifier."""
+    snapshot_endpoint = ANALYTICS_SNAPSHOT_ENDPOINT_URL
+    aioclient_mock.post(
+        snapshot_endpoint,
+        status=400,
+        json={
+            "kind": "invalid-submission-identifier",
+            "message": "The identifier is invalid",
+        },
+    )
+    analytics = Analytics(hass)
+    analytics._data.submission_identifier = "invalid-identifier"
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+
+    await analytics.send_snapshot()
+
+    assert analytics._data.submission_identifier is None
+    assert "Invalid submission identifier" in caplog.text
+
+
+async def test_send_snapshot_bad_request(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test snapshot submission with bad request."""
+    snapshot_endpoint = ANALYTICS_SNAPSHOT_ENDPOINT_URL
+    aioclient_mock.post(
+        snapshot_endpoint,
+        status=400,
+        json={"kind": "malformed-payload", "message": "Invalid payload format"},
+    )
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+
+    await analytics.send_snapshot()
+
+    assert "Malformed snapshot analytics submission" in caplog.text
+
+
+async def test_send_snapshot_service_unavailable(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test snapshot submission when service is unavailable."""
+    snapshot_endpoint = ANALYTICS_SNAPSHOT_ENDPOINT_URL
+    aioclient_mock.post(snapshot_endpoint, status=503, text="Service Unavailable")
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+
+    await analytics.send_snapshot()
+
+    assert f"Snapshot analytics service {snapshot_endpoint} unavailable" in caplog.text
+
+
+async def test_send_snapshot_unexpected_status(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test snapshot submission with unexpected status code."""
+    snapshot_endpoint = ANALYTICS_SNAPSHOT_ENDPOINT_URL
+    aioclient_mock.post(snapshot_endpoint, status=500)
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+
+    await analytics.send_snapshot()
+
+    assert (
+        "Unexpected status code 500 when submitting snapshot analytics" in caplog.text
+    )
+
+
+async def test_send_snapshot_timeout(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test snapshot submission timeout."""
+    snapshot_endpoint = ANALYTICS_SNAPSHOT_ENDPOINT_URL
+    aioclient_mock.post(snapshot_endpoint, exc=TimeoutError())
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+
+    await analytics.send_snapshot()
+
+    assert "Timeout sending snapshot analytics" in caplog.text
+
+
+async def test_send_snapshot_client_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test snapshot submission with client error."""
+    snapshot_endpoint = ANALYTICS_SNAPSHOT_ENDPOINT_URL
+    aioclient_mock.post(snapshot_endpoint, exc=aiohttp.ClientError())
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+
+    await analytics.send_snapshot()
+
+    assert "Error sending snapshot analytics" in caplog.text
+
+
+async def test_async_schedule_not_onboarded(
+    hass: HomeAssistant,
+) -> None:
+    """Test scheduling when not onboarded."""
+    analytics = Analytics(hass)
+
+    await analytics.async_schedule()
+
+    assert analytics._basic_scheduled is None
+    assert analytics._snapshot_scheduled is None
+
+
+async def test_async_schedule_base_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test scheduling when base is disabled."""
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: False})
+
+    await analytics.async_schedule()
+
+    assert analytics._basic_scheduled is None
+    assert analytics._snapshot_scheduled is None
+
+
+async def test_async_schedule_basic_only(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test scheduling basic analytics only."""
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: False})
+
+    await analytics.async_schedule()
+
+    assert analytics._basic_scheduled is not None
+    assert analytics._snapshot_scheduled is None
+
+
+async def test_async_schedule_with_snapshots(
+    hass: HomeAssistant,
+) -> None:
+    """Test scheduling with snapshots enabled."""
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+
+    await analytics.async_schedule()
+
+    assert analytics._basic_scheduled is not None
+    assert analytics._snapshot_scheduled is not None
+    assert analytics._data.snapshot_submission_time is not None
+    assert 0 <= analytics._data.snapshot_submission_time <= 86400
+
+
+async def test_async_schedule_snapshots_already_scheduled(
+    hass: HomeAssistant,
+) -> None:
+    """Test that snapshots are not rescheduled if already scheduled."""
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+
+    await analytics.async_schedule()
+    first_scheduled = analytics._snapshot_scheduled
+
+    await analytics.async_schedule()
+    assert analytics._snapshot_scheduled is first_scheduled
+
+
+async def test_async_schedule_cancel_when_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test that scheduled tasks are cancelled when disabled."""
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+
+    await analytics.async_schedule()
+    assert analytics._basic_scheduled is not None
+    assert analytics._snapshot_scheduled is not None
+
+    # Disable analytics
+    await analytics.save_preferences({ATTR_BASE: False})
+    await analytics.async_schedule()
+
+    assert analytics._basic_scheduled is None
+    assert analytics._snapshot_scheduled is None
+
+
+async def test_async_schedule_cancel_snapshots_only(
+    hass: HomeAssistant,
+) -> None:
+    """Test that snapshot tasks are cancelled when snapshots disabled."""
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+
+    await analytics.async_schedule()
+    assert analytics._basic_scheduled is not None
+    assert analytics._snapshot_scheduled is not None
+
+    # Disable only snapshots
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: False})
+    await analytics.async_schedule()
+
+    assert analytics._basic_scheduled is not None
+    assert analytics._snapshot_scheduled is None

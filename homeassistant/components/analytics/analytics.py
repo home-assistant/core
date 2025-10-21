@@ -7,6 +7,8 @@ from asyncio import timeout
 from collections.abc import Awaitable, Callable, Iterable, Mapping
 from dataclasses import asdict as dataclass_asdict, dataclass, field
 from datetime import datetime
+import random
+import time
 from typing import Any, Protocol
 import uuid
 
@@ -31,10 +33,11 @@ from homeassistant.const import (
     BASE_PLATFORMS,
     __version__ as HA_VERSION,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
@@ -51,6 +54,7 @@ from homeassistant.setup import async_get_loaded_integrations
 from .const import (
     ANALYTICS_ENDPOINT_URL,
     ANALYTICS_ENDPOINT_URL_DEV,
+    ANALYTICS_SNAPSHOT_ENDPOINT_URL,
     ATTR_ADDON_COUNT,
     ATTR_ADDONS,
     ATTR_ARCH,
@@ -71,6 +75,7 @@ from .const import (
     ATTR_PROTECTED,
     ATTR_RECORDER,
     ATTR_SLUG,
+    ATTR_SNAPSHOTS,
     ATTR_STATE_COUNT,
     ATTR_STATISTICS,
     ATTR_SUPERVISOR,
@@ -80,8 +85,10 @@ from .const import (
     ATTR_UUID,
     ATTR_VERSION,
     DOMAIN,
+    INTERVAL,
     LOGGER,
     PREFERENCE_SCHEMA,
+    SNAPSHOT_VERSION,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -201,6 +208,8 @@ class AnalyticsData:
     onboarded: bool
     preferences: dict[str, bool]
     uuid: str | None
+    submission_identifier: str | None = None
+    snapshot_submission_time: float | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> AnalyticsData:
@@ -209,6 +218,8 @@ class AnalyticsData:
             data["onboarded"],
             data["preferences"],
             data["uuid"],
+            data.get("submission_identifier"),
+            data.get("next_snapshot_submission"),
         )
 
 
@@ -221,6 +232,8 @@ class Analytics:
         self.session = async_get_clientsession(hass)
         self._data = AnalyticsData(False, {}, None)
         self._store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
+        self._basic_scheduled: CALLBACK_TYPE | None = None
+        self._snapshot_scheduled: CALLBACK_TYPE | None = None
 
     @property
     def preferences(self) -> dict:
@@ -228,6 +241,7 @@ class Analytics:
         preferences = self._data.preferences
         return {
             ATTR_BASE: preferences.get(ATTR_BASE, False),
+            ATTR_SNAPSHOTS: preferences.get(ATTR_SNAPSHOTS, False),
             ATTR_DIAGNOSTICS: preferences.get(ATTR_DIAGNOSTICS, False),
             ATTR_USAGE: preferences.get(ATTR_USAGE, False),
             ATTR_STATISTICS: preferences.get(ATTR_STATISTICS, False),
@@ -277,13 +291,17 @@ class Analytics:
                 ):
                     self._data.preferences[ATTR_DIAGNOSTICS] = False
 
+    async def _save(self) -> None:
+        """Save data."""
+        await self._store.async_save(dataclass_asdict(self._data))
+
     async def save_preferences(self, preferences: dict) -> None:
         """Save preferences."""
         preferences = PREFERENCE_SCHEMA(preferences)
         self._data.preferences.update(preferences)
         self._data.onboarded = True
 
-        await self._store.async_save(dataclass_asdict(self._data))
+        await self._save()
 
         if self.supervisor:
             await hassio.async_update_diagnostics(
@@ -292,17 +310,16 @@ class Analytics:
 
     async def send_analytics(self, _: datetime | None = None) -> None:
         """Send analytics."""
+        if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
+            return
+
         hass = self.hass
         supervisor_info = None
         operating_system_info: dict[str, Any] = {}
 
-        if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
-            LOGGER.debug("Nothing to submit")
-            return
-
         if self._data.uuid is None:
             self._data.uuid = gen_uuid()
-            await self._store.async_save(dataclass_asdict(self._data))
+            await self._save()
 
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(hass)
@@ -487,6 +504,177 @@ class Analytics:
             entry
             for entry in entries
             if entry.source != SOURCE_IGNORE and entry.disabled_by is None
+        )
+
+    async def send_snapshot(self, _: datetime | None = None) -> None:
+        """Send a snapshot."""
+        if (
+            not self.onboarded
+            or not self.preferences.get(ATTR_BASE, False)
+            or not self.preferences.get(ATTR_SNAPSHOTS, False)
+        ):
+            return
+
+        hass = self.hass
+
+        payload = await async_devices_payload(hass)
+
+        headers = {"Content-Type": "application/json"}
+        if self._data.submission_identifier is not None:
+            headers["x-device-database-submission-identifier"] = (
+                self._data.submission_identifier
+            )
+
+        snapshot_endpoint = ANALYTICS_SNAPSHOT_ENDPOINT_URL
+
+        try:
+            async with timeout(30):
+                response = await self.session.post(
+                    snapshot_endpoint, json=payload, headers=headers
+                )
+
+                if response.status == 200:  # OK
+                    response_data = await response.json()
+                    new_identifier = response_data.get("submission_identifier")
+
+                    if (
+                        new_identifier is not None
+                        and new_identifier != self._data.submission_identifier
+                    ):
+                        self._data.submission_identifier = new_identifier
+                        await self._save()
+
+                    LOGGER.info(
+                        "Submitted snapshot analytics to Home Assistant servers"
+                    )
+
+                elif response.status == 400:  # Bad Request
+                    response_data = await response.json()
+                    error_kind = response_data.get("kind", "unknown")
+                    error_message = response_data.get("message", "Unknown error")
+
+                    if error_kind == "invalid-submission-identifier":
+                        # Clear the invalid identifier and retry on next cycle
+                        LOGGER.warning(
+                            "Invalid submission identifier to %s, clearing: %s",
+                            snapshot_endpoint,
+                            error_message,
+                        )
+                        self._data.submission_identifier = None
+                        await self._save()
+                    else:
+                        LOGGER.warning(
+                            "Malformed snapshot analytics submission (%s) to %s: %s",
+                            error_kind,
+                            snapshot_endpoint,
+                            error_message,
+                        )
+
+                elif response.status == 503:  # Service Unavailable
+                    response_text = await response.text()
+                    LOGGER.warning(
+                        "Snapshot analytics service %s unavailable: %s",
+                        snapshot_endpoint,
+                        response_text,
+                    )
+
+                else:
+                    LOGGER.warning(
+                        "Unexpected status code %s when submitting snapshot analytics to %s",
+                        response.status,
+                        snapshot_endpoint,
+                    )
+
+        except TimeoutError:
+            LOGGER.error("Timeout sending snapshot analytics to %s", snapshot_endpoint)
+        except aiohttp.ClientError as err:
+            LOGGER.error(
+                "Error sending snapshot analytics to %s: %r", snapshot_endpoint, err
+            )
+
+    async def async_schedule(self) -> None:
+        """Schedule analytics."""
+        if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
+            LOGGER.debug("Analytics not scheduled")
+            if self._basic_scheduled is not None:
+                self._basic_scheduled()
+                self._basic_scheduled = None
+            if self._snapshot_scheduled:
+                self._snapshot_scheduled()
+                self._snapshot_scheduled = None
+            return
+
+        if self._basic_scheduled is None:
+            # Wait 15 min after started for basic analytics
+            self._basic_scheduled = async_call_later(
+                self.hass,
+                900,
+                HassJob(
+                    self._async_schedule_basic,
+                    name="basic analytics schedule",
+                    cancel_on_shutdown=True,
+                ),
+            )
+
+        if not self.preferences.get(ATTR_SNAPSHOTS, False):
+            LOGGER.debug("Snapshot analytics not scheduled")
+            if self._snapshot_scheduled:
+                self._snapshot_scheduled()
+                self._snapshot_scheduled = None
+            return
+
+        if self._snapshot_scheduled is not None:
+            return
+
+        snapshot_submission_time = self._data.snapshot_submission_time
+
+        if snapshot_submission_time is None:
+            # Randomize the submission time within the 24 hours
+            snapshot_submission_time = random.uniform(0, 86400)
+            self._data.snapshot_submission_time = snapshot_submission_time
+            await self._save()
+            LOGGER.debug(
+                "Initialized snapshot submission time to %s", snapshot_submission_time
+            )
+
+        # Calculate delay until next submission
+        current_time = time.time()
+        delay = (snapshot_submission_time - current_time) % 86400
+
+        self._snapshot_scheduled = async_call_later(
+            self.hass,
+            delay,
+            HassJob(
+                self._async_schedule_snapshots,
+                name="snapshot analytics schedule",
+                cancel_on_shutdown=True,
+            ),
+        )
+
+    async def _async_schedule_basic(self, _: datetime | None = None) -> None:
+        """Schedule basic analytics."""
+        await self.send_analytics()
+
+        # Send basic analytics every day
+        self._basic_scheduled = async_track_time_interval(
+            self.hass,
+            self.send_analytics,
+            INTERVAL,
+            name="basic analytics daily",
+            cancel_on_shutdown=True,
+        )
+
+    async def _async_schedule_snapshots(self, _: datetime | None = None) -> None:
+        """Schedule snapshot analytics."""
+        await self.send_snapshot()
+
+        # Send snapshot analytics every day
+        self._snapshot_scheduled = async_track_time_interval(
+            self.hass,
+            self.send_snapshot,
+            INTERVAL,
+            name="snapshot analytics daily",
+            cancel_on_shutdown=True,
         )
 
 
@@ -712,7 +900,7 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
             entities_info.append(entity_info)
 
     return {
-        "version": "home-assistant:1",
+        "version": f"home-assistant:{SNAPSHOT_VERSION}",
         "home_assistant": HA_VERSION,
         "integrations": integrations_info,
     }
