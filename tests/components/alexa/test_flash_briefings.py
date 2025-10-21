@@ -2,13 +2,16 @@
 
 import datetime
 from http import HTTPStatus
+from unittest.mock import Mock
 
 from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components import alexa
 from homeassistant.components.alexa import const
+from homeassistant.components.alexa.flash_briefings import AlexaFlashBriefingView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import template
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator
@@ -144,3 +147,68 @@ async def test_flash_briefing_valid(alexa_client) -> None:
     json[0].pop(const.ATTR_UPDATE_DATE)
     data[0].pop(const.ATTR_UPDATE_DATE)
     assert json == data
+
+
+# Tests for refactored helper methods to reduce cyclomatic complexity
+
+
+async def test_alexa_flash_briefing_helper_methods(hass: HomeAssistant) -> None:
+    """Test refactored helper methods in AlexaFlashBriefingView."""
+    flash_briefing_config = {
+        "password": "test_password",
+        "weather": [{"title": "Test", "text": "Test content"}],
+    }
+    view = AlexaFlashBriefingView(hass, flash_briefing_config)
+
+    # Test _has_valid_password with valid password
+    mock_request = Mock()
+    mock_request.query = {"password": "test_password"}
+    result = view._has_valid_password(mock_request, "weather")
+    assert result is True
+
+    # Test _has_valid_password with no password
+    mock_request.query = {}
+    result = view._has_valid_password(mock_request, "weather")
+    assert result is False
+
+    # Test _has_valid_password with wrong password
+    mock_request.query = {"password": "wrong_password"}
+    result = view._has_valid_password(mock_request, "weather")
+    assert result is False
+
+    # Test _render_value with template
+    mock_template = Mock(spec=template.Template)
+    mock_template.async_render.return_value = "rendered_value"
+    result = view._render_value(mock_template)
+    assert result == "rendered_value"
+    mock_template.async_render.assert_called_once_with(parse_result=False)
+
+    # Test _render_value with regular string
+    result = view._render_value("simple_string")
+    assert result == "simple_string"
+
+    # Test _build_briefing_output with full item
+    item = {
+        "title": "Test Title",
+        "text": "Test Text",
+        "uid": "test-uid",
+        "audio": "https://example.com/audio.mp3",
+        "display_url": "https://example.com",
+    }
+    output = view._build_briefing_output(item)
+
+    assert output["titleText"] == "Test Title"
+    assert output["mainText"] == "Test Text"
+    assert output["uid"] == "test-uid"
+    assert output["streamUrl"] == "https://example.com/audio.mp3"
+    assert output["redirectionURL"] == "https://example.com"
+    assert "updateDate" in output
+
+    # Test _build_briefing_output with minimal item
+    minimal_item = {"title": "Minimal Test"}
+    output = view._build_briefing_output(minimal_item)
+
+    assert output["titleText"] == "Minimal Test"
+    assert "uid" in output  # Should be auto-generated
+    assert "updateDate" in output
+    assert "mainText" not in output  # Should not be present if not in item

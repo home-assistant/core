@@ -13,7 +13,7 @@ from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .test_common import get_new_request
+from test_common import get_new_request
 
 from tests.typing import ClientSessionGenerator
 
