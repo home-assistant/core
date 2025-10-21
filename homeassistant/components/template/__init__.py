@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TRIGGERS,
     CONF_UNIQUE_ID,
+    CONF_VARIABLES,
     SERVICE_RELOAD,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
@@ -28,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_MAX, CONF_MIN, CONF_STEP, CONF_VARIABLES, DOMAIN, PLATFORMS
+from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
 from .helpers import async_get_blueprints
 
