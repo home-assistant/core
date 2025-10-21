@@ -109,8 +109,8 @@ def check_deprecated_entity(
     """Check for deprecated entity.
 
     If deprecated entity doesn't exist, don't create it.
-    If deprecated entity is disabled, remove it.
     If deprecated entity is used, raise a repair issue.
+    Otherwise remove it straight away.
     """
     if not getattr(entity.entity_description, "deprecated", False):
         return True
@@ -121,16 +121,7 @@ def check_deprecated_entity(
         f"{entity.xuid}_{entity.entity_description.key}",
     ):
         if (entity_entry := ent_reg.async_get(entity_id)) is not None:
-            if entity_entry.disabled:
-                ent_reg.async_remove(entity_id)
-                async_delete_issue(
-                    hass,
-                    DOMAIN,
-                    f"deprecated_entity_{entity.xuid}_{entity.entity_description.key}",
-                )
-                return False
-
-            if entity_used_in(hass, entity_id):
+            if entity_used_in(hass, entity_id) and not entity_entry.disabled:
                 async_create_issue(
                     hass,
                     DOMAIN,
@@ -144,6 +135,12 @@ def check_deprecated_entity(
                         "entity": entity_id,
                     },
                 )
-            return True
-
+                return True
+            if not entity_used_in(hass, entity_id) or entity_entry.disabled:
+                ent_reg.async_remove(entity_id)
+                async_delete_issue(
+                    hass,
+                    DOMAIN,
+                    f"deprecated_entity_{entity.xuid}_{entity.entity_description.key}",
+                )
     return False

@@ -96,7 +96,7 @@ async def test_sensor_deprecation_issue(
     ],
 )
 @pytest.mark.usefixtures("xbox_live_client", "entity_registry_enabled_by_default")
-async def test_sensor_deprecation_remove_disabled(
+async def test_sensor_deprecation_remove_entity(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
@@ -104,33 +104,22 @@ async def test_sensor_deprecation_remove_disabled(
     entity_id: str,
     key: XboxSensor,
 ) -> None:
-    """Test we remove a deprecated sensor when it is disabled."""
+    """Test we remove a deprecated sensor."""
 
     entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         DOMAIN,
         f"271958441785640_{key}",
         suggested_object_id=entity_id,
-        disabled_by=er.RegistryEntryDisabler.USER,
     )
 
     assert entity_registry is not None
-    with patch(
-        "homeassistant.components.xbox.entity.entity_used_in", return_value=True
-    ):
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
 
-        await hass.async_block_till_done()
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
-        assert config_entry.state is ConfigEntryState.LOADED
+    await hass.async_block_till_done()
 
-        assert (
-            issue_registry.async_get_issue(
-                domain=DOMAIN,
-                issue_id=f"deprecated_entity_271958441785640_{key}",
-            )
-            is None
-        )
+    assert config_entry.state is ConfigEntryState.LOADED
 
-        assert entity_registry.async_get(f"sensor.{entity_id}") is None
+    assert entity_registry.async_get(f"sensor.{entity_id}") is None

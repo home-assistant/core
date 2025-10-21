@@ -81,7 +81,7 @@
   "issues": {
     "deprecated_entity": {
       "title": "The Xbox {name} entity is deprecated",
-      "description": "The Xbox entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
+      "description": "The Xbox entity `{entity}` hasn’t been functioning for a while, so it’s been removed.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
     }
   }
 }
