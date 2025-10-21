@@ -162,3 +162,189 @@ async def test_strip_username(provider: command_line.CommandLineAuthProvider) ->
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"]["username"] == "good-user"
+
+
+async def test_async_run_auth_command_success(
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test _async_run_auth_command executes successfully with valid credentials."""
+    env = {"username": "good-user", "password": "good-pass"}
+    returncode, stdout = await provider._async_run_auth_command(env)
+    
+    assert returncode == 0
+    assert stdout is None or isinstance(stdout, bytes)
+
+
+async def test_async_run_auth_command_failure(
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test _async_run_auth_command returns non-zero exit code with invalid credentials."""
+    env = {"username": "bad-user", "password": "bad-pass"}
+    returncode, _ = await provider._async_run_auth_command(env)
+    
+    assert returncode != 0
+
+
+async def test_async_run_auth_command_with_meta(
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test _async_run_auth_command captures stdout when meta is enabled."""
+    provider.config[command_line.CONF_ARGS] = ["--with-meta"]
+    provider.config[command_line.CONF_META] = True
+    
+    env = {"username": "good-user", "password": "good-pass"}
+    returncode, stdout = await provider._async_run_auth_command(env)
+    
+    assert returncode == 0
+    assert stdout is not None
+    assert isinstance(stdout, bytes)
+    assert len(stdout) > 0
+
+
+async def test_async_run_auth_command_invalid_command(
+    hass: HomeAssistant, store: auth_store.AuthStore
+) -> None:
+    """Test _async_run_auth_command raises InvalidAuthError for non-existent command."""
+    provider = command_line.CommandLineAuthProvider(
+        hass,
+        store,
+        {
+            CONF_TYPE: "command_line",
+            command_line.CONF_COMMAND: "/nonexistent/command",
+            command_line.CONF_ARGS: [],
+            command_line.CONF_META: False,
+        },
+    )
+    
+    env = {"username": "test", "password": "test"}
+    with pytest.raises(command_line.InvalidAuthError):
+        await provider._async_run_auth_command(env)
+
+
+def test_parse_metadata_basic(
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test _parse_metadata parses valid key-value pairs."""
+    stdout = b"name=Bob\ngroup=system-users\nlocal_only=true\n"
+    meta = provider._parse_metadata(stdout)
+    
+    assert meta == {
+        "name": "Bob",
+        "group": "system-users",
+        "local_only": "true",
+    }
+
+
+def test_parse_metadata_with_comments(
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test _parse_metadata ignores comment lines."""
+    stdout = b"# This is a comment\nname=Alice\n# Another comment\ngroup=admin\n"
+    meta = provider._parse_metadata(stdout)
+    
+    assert meta == {
+        "name": "Alice",
+        "group": "admin",
+    }
+
+
+def test_parse_metadata_with_whitespace(
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test _parse_metadata handles whitespace around keys and values."""
+    stdout = b"  name = Bob Smith  \n  group =  system-users  \n"
+    meta = provider._parse_metadata(stdout)
+    
+    assert meta == {
+        "name": "Bob Smith",
+        "group": "system-users",
+    }
+
+
+def test_parse_metadata_filters_invalid_keys(
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test _parse_metadata only accepts allowed keys."""
+    stdout = b"name=Bob\ninvalid_key=should_be_ignored\ngroup=users\nhacker=attack\n"
+    meta = provider._parse_metadata(stdout)
+    
+    assert meta == {
+        "name": "Bob",
+        "group": "users",
+    }
+    assert "invalid_key" not in meta
+    assert "hacker" not in meta
+
+
+def test_parse_metadata_skips_malformed_lines(
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test _parse_metadata skips lines without equals sign."""
+    stdout = b"name=Bob\nthis line has no equals\ngroup=users\n"
+    meta = provider._parse_metadata(stdout)
+    
+    assert meta == {
+        "name": "Bob",
+        "group": "users",
+    }
+
+
+def test_parse_metadata_handles_empty_values(
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test _parse_metadata handles empty values correctly."""
+    stdout = b"name=\ngroup=users\n"
+    meta = provider._parse_metadata(stdout)
+    
+    assert meta == {
+        "name": "",
+        "group": "users",
+    }
+
+
+def test_parse_metadata_handles_empty_output(
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test _parse_metadata returns empty dict for empty stdout."""
+    stdout = b""
+    meta = provider._parse_metadata(stdout)
+    
+    assert meta == {}
+
+
+def test_parse_metadata_handles_invalid_utf8(
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test _parse_metadata handles invalid UTF-8 sequences gracefully."""
+    stdout = b"name=Bob\n\xff\xfe invalid utf8 \n\ngroup=users\n"
+    meta = provider._parse_metadata(stdout)
+    
+    assert meta == {
+        "name": "Bob",
+        "group": "users",
+    }
+
+
+def test_parse_metadata_with_equals_in_value(
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test _parse_metadata handles equals signs in values."""
+    stdout = b"name=Bob=Smith=Jr\ngroup=users\n"
+    meta = provider._parse_metadata(stdout)
+    
+    assert meta == {
+        "name": "Bob=Smith=Jr",
+        "group": "users",
+    }
+
+
+def test_parse_metadata_only_allowed_keys(
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test _parse_metadata validates against ALLOWED_META_KEYS."""
+    assert provider.ALLOWED_META_KEYS == ("name", "group", "local_only")
+    
+    stdout = b"name=Test\ngroup=admin\nlocal_only=true\n"
+    meta = provider._parse_metadata(stdout)
+    
+    assert all(key in provider.ALLOWED_META_KEYS for key in meta.keys())

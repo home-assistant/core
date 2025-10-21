@@ -7,6 +7,11 @@ import pytest
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.alexa import smart_home
+from homeassistant.components.alexa.capabilities import (
+    AlexaModeController,
+    AlexaRangeController,
+    AlexaThermostatController,
+)
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ClimateEntityFeature,
@@ -29,7 +34,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 
 from .test_common import (
     assert_request_calls_service,
@@ -1565,3 +1570,193 @@ async def test_get_property_blowup(
         properties.assert_not_has_property("Alexa.ThermostatController", "temperature")
 
     assert "Boom Fail" in caplog.text
+
+
+async def test_alexa_mode_controller_helper_methods(hass: HomeAssistant) -> None:
+    """Test refactored helper methods in AlexaModeController."""
+    # Test fan direction mode helper
+    entity_state = State(
+        "fan.test", "on", {"direction": "forward", "supported_features": 4}
+    )
+    controller = AlexaModeController(entity_state, "fan.direction")
+    result = controller._get_fan_direction_mode()
+    assert result == "direction.forward"
+
+    # Test fan preset mode helper
+    entity_state = State(
+        "fan.test",
+        "on",
+        {
+            "preset_mode": "eco",
+            "preset_modes": ["eco", "smart"],
+            "supported_features": 8,
+        },
+    )
+    controller = AlexaModeController(entity_state, "fan.preset_mode")
+    result = controller._get_fan_preset_mode()
+    assert result == "preset_mode.eco"
+
+    # Test humidifier mode helper
+    entity_state = State(
+        "humidifier.test",
+        "on",
+        {"mode": "auto", "available_modes": ["auto", "low"], "supported_features": 1},
+    )
+    controller = AlexaModeController(entity_state, "humidifier.mode")
+    result = controller._get_humidifier_mode()
+    assert result == "mode.auto"
+
+    # Test remote activity mode helper
+    entity_state = State(
+        "remote.test",
+        "on",
+        {
+            "current_activity": "TV",
+            "activity_list": ["TV", "MUSIC"],
+            "supported_features": 4,
+        },
+    )
+    controller = AlexaModeController(entity_state, "remote.activity")
+    result = controller._get_remote_activity_mode()
+    assert result == "activity.TV"
+
+
+async def test_alexa_range_controller_helper_methods(hass: HomeAssistant) -> None:
+    """Test refactored helper methods in AlexaRangeController."""
+    # Test cover position helper
+    entity_state = State(
+        "cover.test", "open", {"current_position": 75, "supported_features": 15}
+    )
+    controller = AlexaRangeController(entity_state, "cover.position")
+    result = controller._get_cover_position()
+    assert result == 75
+
+    # Test cover tilt helper
+    entity_state = State(
+        "cover.test", "open", {"current_tilt_position": 50, "supported_features": 15}
+    )
+    controller = AlexaRangeController(entity_state, "cover.tilt")
+    result = controller._get_cover_tilt()
+    assert result == 50
+
+    # Test fan percentage helper
+    entity_state = State("fan.test", "on", {"percentage": 80, "supported_features": 1})
+    controller = AlexaRangeController(entity_state, "fan.percentage")
+    result = controller._get_fan_percentage()
+    assert result == 80
+
+    # Test humidifier humidity helper
+    entity_state = State(
+        "humidifier.test", "on", {"humidity": 60, "supported_features": 1}
+    )
+    controller = AlexaRangeController(entity_state, "humidifier.humidity")
+    result = controller._get_humidifier_humidity()
+    assert result == 60
+
+    # Test input number value helper
+    entity_state = State(
+        "input_number.test", "25.5", {"min": 0, "max": 100, "step": 0.5}
+    )
+    controller = AlexaRangeController(entity_state, "input_number.value")
+    result = controller._get_input_number_value()
+    assert result == 25.5
+
+    # Test number value helper
+    entity_state = State("number.test", "42.0", {"min": 0, "max": 100, "step": 1})
+    controller = AlexaRangeController(entity_state, "number.value")
+    result = controller._get_number_value()
+    assert result == 42.0
+
+
+async def test_alexa_thermostat_controller_helper_methods(hass: HomeAssistant) -> None:
+    """Test refactored helper methods in AlexaThermostatController."""
+    # Test thermostat mode property helper
+    entity_state = State(
+        "climate.test", "heat", {"preset_mode": None, "supported_features": 91}
+    )
+    controller = AlexaThermostatController(hass, entity_state)
+    result = controller._get_thermostat_mode_property("thermostatMode")
+    assert result == "HEAT"
+
+    # Test setpoint property helper
+    entity_state = State(
+        "climate.test", "heat", {"temperature": 22.5, "supported_features": 91}
+    )
+    controller = AlexaThermostatController(hass, entity_state)
+    result = controller._get_setpoint_property("targetSetpoint")
+    assert result == {"value": 22.5, "scale": "CELSIUS"}
+
+
+async def test_alexa_mode_controller_capability_resources_helpers(
+    hass: HomeAssistant,
+) -> None:
+    """Test capability resources helper methods in AlexaModeController."""
+    # Test fan direction capability resources
+    entity_state = State(
+        "fan.test", "on", {"direction": "forward", "supported_features": 4}
+    )
+    controller = AlexaModeController(entity_state, "fan.direction")
+    result = controller._capability_resources_fan_direction()
+    assert "friendlyNames" in result
+
+    # Test fan preset mode capability resources
+    entity_state = State(
+        "fan.test",
+        "on",
+        {
+            "preset_mode": "eco",
+            "preset_modes": ["eco", "smart"],
+            "supported_features": 8,
+        },
+    )
+    controller = AlexaModeController(entity_state, "fan.preset_mode")
+    result = controller._capability_resources_fan_preset_mode()
+    assert "friendlyNames" in result
+
+    # Test humidifier mode capability resources
+    entity_state = State(
+        "humidifier.test",
+        "on",
+        {"mode": "auto", "available_modes": ["auto", "low"], "supported_features": 1},
+    )
+    controller = AlexaModeController(entity_state, "humidifier.mode")
+    result = controller._capability_resources_humidifier_mode()
+    assert "friendlyNames" in result
+
+
+async def test_alexa_range_controller_capability_resources_helpers(
+    hass: HomeAssistant,
+) -> None:
+    """Test capability resources helper methods in AlexaRangeController."""
+    # Test fan percentage capability resources
+    entity_state = State(
+        "fan.test",
+        "on",
+        {"percentage": 80, "percentage_step": 1, "supported_features": 1},
+    )
+    controller = AlexaRangeController(entity_state, "fan.percentage")
+    result = controller._capability_resources_fan_percentage()
+    assert "friendlyNames" in result
+
+    # Test humidifier humidity capability resources
+    entity_state = State(
+        "humidifier.test",
+        "on",
+        {
+            "humidity": 60,
+            "min_humidity": 20,
+            "max_humidity": 90,
+            "supported_features": 1,
+        },
+    )
+    controller = AlexaRangeController(entity_state, "humidifier.humidity")
+    result = controller._capability_resources_humidifier_humidity()
+    assert "friendlyNames" in result
+
+    # Test cover position capability resources
+    entity_state = State(
+        "cover.test", "open", {"current_position": 75, "supported_features": 15}
+    )
+    controller = AlexaRangeController(entity_state, "cover.position")
+    result = controller._capability_resources_cover_position()
+    assert "friendlyNames" in result

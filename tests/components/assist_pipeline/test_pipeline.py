@@ -1,5 +1,6 @@
 """Websocket tests for Voice Assistant integration."""
 
+import array
 from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
@@ -33,7 +34,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
     async_update_pipeline,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, MATCH_ALL
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers import (
     area_registry as ar,
     chat_session,
@@ -42,6 +43,7 @@ from homeassistant.helpers import (
     intent,
     llm,
 )
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 
 from . import MANY_LANGUAGES, process_events
@@ -1585,9 +1587,8 @@ async def test_pipeline_language_used_instead_of_conversation_language(
                     "!",
                 ],
             ),
-            # We are streamed. First 15 chunks are grouped into 1 chunk
-            # and the rest are streamed
-            3,
+            # We always stream when possible, so 1 chunk via streaming method
+            1,
             "hello, how are you? I'm doing well, thank you. What about you?!",
         ),
         # Stream a bit, then a tool call, then stream some more
@@ -1619,9 +1620,9 @@ async def test_pipeline_language_used_instead_of_conversation_language(
                     ".",
                 ],
             ),
-            # 1 chunk before tool call, then 7 after
-            8,
-            "hello, how are you? I'm doing well, thank you.",
+            # 1 chunk for all content via streaming method
+            1,
+            "I'm doing well, thank you.",
         ),
     ],
 )
@@ -1789,8 +1790,7 @@ async def test_chat_log_tts_streaming(
         [chunk.decode() async for chunk in stream.async_stream_result()]
     )
 
-    streamed_text = "".join(text_deltas)
-    assert tts_result == streamed_text
+    assert tts_result == chunk_text
     assert len(received_tts) == expected_chunks
     assert "".join(received_tts) == chunk_text
 
@@ -2097,3 +2097,584 @@ async def test_acknowledge_other_agents(
         text_to_speech.assert_not_called()
         async_converse.assert_called_once()
         get_all_targets_in_satellite_area.assert_not_called()
+
+
+# Unit tests for utility functions and classes in assist_pipeline.pipeline module
+
+
+def test_validate_language_valid_data():
+    """Test validate_language with valid data."""
+    # Valid case: both engine and language are None
+    data = {
+        "stt_engine": None,
+        "stt_language": None,
+        "tts_engine": None,
+        "tts_language": None,
+    }
+    result = assist_pipeline.pipeline.validate_language(data)
+    assert result == data
+
+    # Valid case: both engine and language are specified
+    data = {
+        "stt_engine": "test_stt",
+        "stt_language": "en",
+        "tts_engine": "test_tts",
+        "tts_language": "en",
+    }
+    result = assist_pipeline.pipeline.validate_language(data)
+    assert result == data
+
+
+def test_validate_language_invalid_data():
+    """Test validate_language with invalid data."""
+    # Invalid case: stt_engine specified but stt_language is None
+    data = {
+        "stt_engine": "test_stt",
+        "stt_language": None,
+        "tts_engine": None,
+        "tts_language": None,
+    }
+    with pytest.raises(
+        vol.Invalid, match="Need language stt_language for stt_engine test_stt"
+    ):
+        assist_pipeline.pipeline.validate_language(data)
+
+    # Invalid case: tts_engine specified but tts_language is None
+    data = {
+        "stt_engine": None,
+        "stt_language": None,
+        "tts_engine": "test_tts",
+        "tts_language": None,
+    }
+    with pytest.raises(
+        vol.Invalid, match="Need language tts_language for tts_engine test_tts"
+    ):
+        assist_pipeline.pipeline.validate_language(data)
+
+
+def test_invalid_pipeline_stages_error():
+    """Test InvalidPipelineStagesError exception."""
+    start_stage = assist_pipeline.PipelineStage.STT
+    end_stage = assist_pipeline.PipelineStage.INTENT
+
+    error = assist_pipeline.pipeline.InvalidPipelineStagesError(start_stage, end_stage)
+    assert str(error) == "Invalid stage combination: start=stt, end=intent"
+
+
+def test_wake_word_settings():
+    """Test WakeWordSettings dataclass."""
+    # Test default values
+    settings = assist_pipeline.WakeWordSettings()
+    assert settings.timeout is None
+    assert settings.audio_seconds_to_buffer == 0
+
+    # Test with custom values
+    settings = assist_pipeline.WakeWordSettings(
+        timeout=5.0, audio_seconds_to_buffer=2.5
+    )
+    assert settings.timeout is not None
+    assert abs(settings.timeout - 5.0) < 1e-6
+    assert abs(settings.audio_seconds_to_buffer - 2.5) < 1e-6
+
+
+def test_audio_settings_valid():
+    """Test AudioSettings with valid values."""
+    # Test default values
+    settings = assist_pipeline.AudioSettings()
+    assert settings.noise_suppression_level == 0
+    assert settings.auto_gain_dbfs == 0
+    assert abs(settings.volume_multiplier - 1.0) < 1e-6
+    assert settings.is_vad_enabled is True
+    assert abs(settings.silence_seconds - 0.7) < 1e-6
+
+    # Test custom valid values
+    settings = assist_pipeline.AudioSettings(
+        noise_suppression_level=2,
+        auto_gain_dbfs=15,
+        volume_multiplier=2.0,
+        is_vad_enabled=False,
+        silence_seconds=1.0,
+    )
+    assert settings.noise_suppression_level == 2
+    assert settings.auto_gain_dbfs == 15
+    assert abs(settings.volume_multiplier - 2.0) < 1e-6
+    assert settings.is_vad_enabled is False
+    assert abs(settings.silence_seconds - 1.0) < 1e-6
+
+
+def test_audio_settings_invalid():
+    """Test AudioSettings with invalid values."""
+    # Invalid noise suppression level - too low
+    with pytest.raises(
+        ValueError, match="noise_suppression_level must be in \\[0, 4\\]"
+    ):
+        assist_pipeline.AudioSettings(noise_suppression_level=-1)
+
+    # Invalid noise suppression level - too high
+    with pytest.raises(
+        ValueError, match="noise_suppression_level must be in \\[0, 4\\]"
+    ):
+        assist_pipeline.AudioSettings(noise_suppression_level=5)
+
+    # Invalid auto gain - too low
+    with pytest.raises(ValueError, match="auto_gain_dbfs must be in \\[0, 31\\]"):
+        assist_pipeline.AudioSettings(auto_gain_dbfs=-1)
+
+    # Invalid auto gain - too high
+    with pytest.raises(ValueError, match="auto_gain_dbfs must be in \\[0, 31\\]"):
+        assist_pipeline.AudioSettings(auto_gain_dbfs=32)
+
+
+def test_audio_settings_needs_processor():
+    """Test AudioSettings.needs_processor property."""
+    # No processing needed
+    settings = assist_pipeline.AudioSettings(
+        noise_suppression_level=0,
+        auto_gain_dbfs=0,
+        is_vad_enabled=False,
+    )
+    assert settings.needs_processor is False
+
+    # VAD enabled
+    settings = assist_pipeline.AudioSettings(is_vad_enabled=True)
+    assert settings.needs_processor is True
+
+    # Noise suppression enabled
+    settings = assist_pipeline.AudioSettings(
+        noise_suppression_level=1, is_vad_enabled=False
+    )
+    assert settings.needs_processor is True
+
+    # Auto gain enabled
+    settings = assist_pipeline.AudioSettings(auto_gain_dbfs=1, is_vad_enabled=False)
+    assert settings.needs_processor is True
+
+
+def test_update_options():
+    """Test UpdateOptions dataclass."""
+    # Test default values (all UNDEFINED)
+    options = assist_pipeline.pipeline.UpdateOptions()
+    assert options.conversation_engine is UNDEFINED
+    assert options.conversation_language is UNDEFINED
+    assert options.language is UNDEFINED
+    assert options.name is UNDEFINED
+    assert options.stt_engine is UNDEFINED
+    assert options.stt_language is UNDEFINED
+    assert options.tts_engine is UNDEFINED
+    assert options.tts_language is UNDEFINED
+    assert options.tts_voice is UNDEFINED
+    assert options.wake_word_entity is UNDEFINED
+    assert options.wake_word_id is UNDEFINED
+    assert options.prefer_local_intents is UNDEFINED
+
+    # Test with specific values
+    options = assist_pipeline.pipeline.UpdateOptions(
+        name="Test Pipeline",
+        language="en",
+        stt_engine="test_stt",
+        prefer_local_intents=True,
+    )
+    assert options.name == "Test Pipeline"
+    assert options.language == "en"
+    assert options.stt_engine == "test_stt"
+    assert options.prefer_local_intents is True
+    # Others should still be UNDEFINED
+    assert options.conversation_engine is UNDEFINED
+
+
+def test_multiply_volume():
+    """Test _multiply_volume function."""
+    # Test with 16-bit PCM audio data
+    # Create a simple audio chunk with known values
+    original_samples = [100, -100, 32767, -32768, 0]
+    chunk = array.array("h", original_samples).tobytes()
+
+    # Test volume multiplier of 1.0 (no change)
+    result = assist_pipeline.pipeline._multiply_volume(chunk, 1.0)
+    result_samples = list(array.array("h", result))
+    assert result_samples == original_samples
+
+    # Test volume multiplier of 2.0 (double volume)
+    result = assist_pipeline.pipeline._multiply_volume(chunk, 2.0)
+    result_samples = list(array.array("h", result))
+    expected = [200, -200, 32767, -32768, 0]  # Last two clamped to limits
+    assert result_samples == expected
+
+    # Test volume multiplier of 0.5 (half volume)
+    result = assist_pipeline.pipeline._multiply_volume(chunk, 0.5)
+    result_samples = list(array.array("h", result))
+    expected = [50, -50, 16383, -16384, 0]
+    assert result_samples == expected
+
+    # Test clamping with very high multiplier
+    small_samples = [16384, -16384]
+    chunk = array.array("h", small_samples).tobytes()
+    result = assist_pipeline.pipeline._multiply_volume(chunk, 3.0)
+    result_samples = list(array.array("h", result))
+    expected = [32767, -32768]  # Clamped to 16-bit limits
+    assert result_samples == expected
+
+
+def test_pipeline_event_type_enum():
+    """Test PipelineEventType enum values."""
+    assert assist_pipeline.PipelineEventType.RUN_START == "run-start"
+    assert assist_pipeline.PipelineEventType.RUN_END == "run-end"
+    assert assist_pipeline.PipelineEventType.WAKE_WORD_START == "wake_word-start"
+    assert assist_pipeline.PipelineEventType.WAKE_WORD_END == "wake_word-end"
+    assert assist_pipeline.PipelineEventType.STT_START == "stt-start"
+    assert assist_pipeline.PipelineEventType.STT_VAD_START == "stt-vad-start"
+    assert assist_pipeline.PipelineEventType.STT_VAD_END == "stt-vad-end"
+    assert assist_pipeline.PipelineEventType.STT_END == "stt-end"
+    assert assist_pipeline.PipelineEventType.INTENT_START == "intent-start"
+    assert assist_pipeline.PipelineEventType.INTENT_PROGRESS == "intent-progress"
+    assert assist_pipeline.PipelineEventType.INTENT_END == "intent-end"
+    assert assist_pipeline.PipelineEventType.TTS_START == "tts-start"
+    assert assist_pipeline.PipelineEventType.TTS_END == "tts-end"
+    assert assist_pipeline.PipelineEventType.ERROR == "error"
+
+
+def test_pipeline_stage_enum():
+    """Test PipelineStage enum values."""
+    assert assist_pipeline.PipelineStage.WAKE_WORD == "wake_word"
+    assert assist_pipeline.PipelineStage.STT == "stt"
+    assert assist_pipeline.PipelineStage.INTENT == "intent"
+    assert assist_pipeline.PipelineStage.TTS == "tts"
+    assert assist_pipeline.PipelineStage.END == "end"
+
+
+def test_pipeline_from_json():
+    """Test Pipeline.from_json method."""
+    data = {
+        "conversation_engine": "conversation.home_assistant",
+        "conversation_language": "en",
+        "id": "test_id",
+        "language": "en",
+        "name": "Test Pipeline",
+        "stt_engine": "test_stt",
+        "stt_language": "en-US",
+        "tts_engine": "test_tts",
+        "tts_language": "en-US",
+        "tts_voice": "test_voice",
+        "wake_word_entity": "wake_word.test",
+        "wake_word_id": "test_wake_word",
+        "prefer_local_intents": True,
+    }
+
+    pipeline = assist_pipeline.pipeline.Pipeline.from_json(data)
+    assert pipeline.conversation_engine == "conversation.home_assistant"
+    assert pipeline.conversation_language == "en"
+    assert pipeline.id == "test_id"
+    assert pipeline.language == "en"
+    assert pipeline.name == "Test Pipeline"
+    assert pipeline.stt_engine == "test_stt"
+    assert pipeline.stt_language == "en-US"
+    assert pipeline.tts_engine == "test_tts"
+    assert pipeline.tts_language == "en-US"
+    assert pipeline.tts_voice == "test_voice"
+    assert pipeline.wake_word_entity == "wake_word.test"
+    assert pipeline.wake_word_id == "test_wake_word"
+    assert pipeline.prefer_local_intents is True
+
+
+def test_pipeline_from_json_default_prefer_local_intents():
+    """Test Pipeline.from_json with missing prefer_local_intents field."""
+    data = {
+        "conversation_engine": "conversation.home_assistant",
+        "conversation_language": "en",
+        "id": "test_id",
+        "language": "en",
+        "name": "Test Pipeline",
+        "stt_engine": None,
+        "stt_language": None,
+        "tts_engine": None,
+        "tts_language": None,
+        "tts_voice": None,
+        "wake_word_entity": None,
+        "wake_word_id": None,
+    }
+
+    pipeline = assist_pipeline.pipeline.Pipeline.from_json(data)
+    assert pipeline.prefer_local_intents is False  # Default value
+
+
+def test_pipeline_to_json():
+    """Test Pipeline.to_json method."""
+    pipeline = assist_pipeline.pipeline.Pipeline(
+        conversation_engine="conversation.home_assistant",
+        conversation_language="en",
+        id="test_id",
+        language="en",
+        name="Test Pipeline",
+        stt_engine="test_stt",
+        stt_language="en-US",
+        tts_engine="test_tts",
+        tts_language="en-US",
+        tts_voice="test_voice",
+        wake_word_entity="wake_word.test",
+        wake_word_id="test_wake_word",
+        prefer_local_intents=True,
+    )
+
+    json_data = pipeline.to_json()
+    expected = {
+        "conversation_engine": "conversation.home_assistant",
+        "conversation_language": "en",
+        "id": "test_id",
+        "language": "en",
+        "name": "Test Pipeline",
+        "stt_engine": "test_stt",
+        "stt_language": "en-US",
+        "tts_engine": "test_tts",
+        "tts_language": "en-US",
+        "tts_voice": "test_voice",
+        "wake_word_entity": "wake_word.test",
+        "wake_word_id": "test_wake_word",
+        "prefer_local_intents": True,
+    }
+    assert json_data == expected
+
+
+# Unit tests for pipeline helper functions and error handling
+
+
+def test_resolve_engine_id_with_valid_engine():
+    """Test _resolve_engine_id with a valid engine."""
+    mock_hass = Mock()
+
+    # Mock the functions
+    mock_get_default = Mock(return_value="default_engine")
+    mock_get_instance = Mock(return_value=Mock())  # Returns a truthy object
+
+    # Test with specific engine_id
+    result = assist_pipeline.pipeline._resolve_engine_id(
+        mock_hass, "specific_engine", mock_get_default, mock_get_instance
+    )
+    assert result == "specific_engine"
+    mock_get_instance.assert_called_once_with(mock_hass, "specific_engine")
+    mock_get_default.assert_not_called()
+
+
+def test_resolve_engine_id_with_default_engine():
+    """Test _resolve_engine_id falls back to default engine."""
+    mock_hass = Mock()
+
+    # Mock the functions
+    mock_get_default = Mock(return_value="default_engine")
+    mock_get_instance = Mock(return_value=Mock())  # Returns a truthy object
+
+    # Test with None engine_id
+    result = assist_pipeline.pipeline._resolve_engine_id(
+        mock_hass, None, mock_get_default, mock_get_instance
+    )
+    assert result == "default_engine"
+    mock_get_default.assert_called_once_with(mock_hass)
+    mock_get_instance.assert_called_once_with(mock_hass, "default_engine")
+
+
+def test_resolve_engine_id_no_default_available():
+    """Test _resolve_engine_id when no default engine is available."""
+    mock_hass = Mock()
+
+    # Mock the functions
+    mock_get_default = Mock(return_value=None)
+    mock_get_instance = Mock()
+
+    # Test with None engine_id and no default
+    result = assist_pipeline.pipeline._resolve_engine_id(
+        mock_hass, None, mock_get_default, mock_get_instance
+    )
+    assert result is None
+    mock_get_default.assert_called_once_with(mock_hass)
+    mock_get_instance.assert_not_called()
+
+
+def test_resolve_engine_id_invalid_engine():
+    """Test _resolve_engine_id with invalid engine."""
+    mock_hass = Mock()
+
+    # Mock the functions
+    mock_get_default = Mock()
+    mock_get_instance = Mock(return_value=None)  # Returns None for invalid engine
+
+    # Test with invalid engine_id
+    result = assist_pipeline.pipeline._resolve_engine_id(
+        mock_hass, "invalid_engine", mock_get_default, mock_get_instance
+    )
+    assert result is None
+    mock_get_instance.assert_called_once_with(mock_hass, "invalid_engine")
+    mock_get_default.assert_not_called()
+
+
+def test_select_supported_language_with_engine():
+    """Test _select_supported_language with valid engine and language."""
+    mock_engine = Mock()
+    mock_engine.supported_languages = ["en", "es", "fr"]
+
+    with patch("homeassistant.util.language.matches") as mock_matches:
+        mock_matches.return_value = ["en-US"]
+
+        result = assist_pipeline.pipeline._select_supported_language(
+            mock_engine, "en", "US", "Test", "test_engine"
+        )
+
+        assert result == "en-US"
+        mock_matches.assert_called_once_with("en", ["en", "es", "fr"], country="US")
+
+
+def test_select_supported_language_no_engine():
+    """Test _select_supported_language with no engine."""
+    result = assist_pipeline.pipeline._select_supported_language(
+        None, "en", "US", "Test", "test_engine"
+    )
+    assert result is None
+
+
+def test_select_supported_language_no_match() -> None:
+    """Test _select_supported_language with no language match."""
+    mock_engine = Mock()
+    mock_engine.supported_languages = ["es", "fr"]
+
+    with patch("homeassistant.util.language.matches") as mock_matches:
+        mock_matches.return_value = []  # No matches
+
+        with patch(
+            "homeassistant.components.assist_pipeline.pipeline._LOGGER"
+        ) as mock_logger:
+            result = assist_pipeline.pipeline._select_supported_language(
+                mock_engine, "en", "US", "Test", "test_engine"
+            )
+
+            assert result is None
+            mock_logger.debug.assert_called_once_with(
+                "%s engine '%s' does not support language '%s'",
+                "Test",
+                "test_engine",
+                "en",
+            )
+
+
+def test_async_get_pipeline_from_conversation_entity():
+    """Test _async_get_pipeline_from_conversation_entity."""
+    mock_hass = Mock(spec=HomeAssistant)
+    mock_hass.states = Mock()
+
+    # Mock entity state
+    mock_state = Mock(spec=State)
+    mock_state.name = "Test Conversation Agent"
+    mock_hass.states.get.return_value = mock_state
+
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline._async_resolve_default_pipeline_settings"
+    ) as mock_resolve:
+        mock_resolve.return_value = {
+            "conversation_engine": "conversation.test_agent",
+            "conversation_language": "en",
+            "language": "en",
+            "name": "Test Conversation Agent",
+            "stt_engine": None,
+            "stt_language": None,
+            "tts_engine": None,
+            "tts_language": None,
+            "tts_voice": None,
+            "wake_word_entity": None,
+            "wake_word_id": None,
+        }
+
+        result = assist_pipeline.pipeline._async_get_pipeline_from_conversation_entity(
+            mock_hass, "conversation.test_agent"
+        )
+
+        assert result.name == "Test Conversation Agent"
+        assert result.id == "conversation.test_agent"
+        assert result.conversation_engine == "conversation.test_agent"
+
+        mock_resolve.assert_called_once_with(
+            mock_hass,
+            pipeline_name="Test Conversation Agent",
+            conversation_engine_id="conversation.test_agent",
+        )
+
+
+def test_async_get_pipeline_from_conversation_entity_no_state():
+    """Test _async_get_pipeline_from_conversation_entity with no entity state."""
+    mock_hass = Mock(spec=HomeAssistant)
+    mock_hass.states = Mock()
+
+    # Mock no entity state
+    mock_hass.states.get.return_value = None
+
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline._async_resolve_default_pipeline_settings"
+    ) as mock_resolve:
+        mock_resolve.return_value = {
+            "conversation_engine": "conversation.test_agent",
+            "conversation_language": "en",
+            "language": "en",
+            "name": "conversation.test_agent",
+            "stt_engine": None,
+            "stt_language": None,
+            "tts_engine": None,
+            "tts_language": None,
+            "tts_voice": None,
+            "wake_word_entity": None,
+            "wake_word_id": None,
+        }
+
+        result = assist_pipeline.pipeline._async_get_pipeline_from_conversation_entity(
+            mock_hass, "conversation.test_agent"
+        )
+
+        assert result.name == "conversation.test_agent"
+        assert result.id == "conversation.test_agent"
+
+        mock_resolve.assert_called_once_with(
+            mock_hass,
+            pipeline_name="conversation.test_agent",
+            conversation_engine_id="conversation.test_agent",
+        )
+
+
+def test_async_get_pipeline_with_conversation_entity():
+    """Test async_get_pipeline with conversation entity ID."""
+    mock_hass = Mock(spec=HomeAssistant)
+    mock_hass.data = {"assist_pipeline": Mock()}
+
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline._async_get_pipeline_from_conversation_entity"
+    ) as mock_get_conversation_pipeline:
+        mock_pipeline = Mock()
+        mock_get_conversation_pipeline.return_value = mock_pipeline
+
+        result = assist_pipeline.async_get_pipeline(
+            mock_hass, "conversation.test_agent"
+        )
+
+        assert result == mock_pipeline
+        mock_get_conversation_pipeline.assert_called_once_with(
+            mock_hass, "conversation.test_agent"
+        )
+
+
+def test_async_get_pipeline_invalid_id():
+    """Test async_get_pipeline with invalid pipeline ID."""
+    mock_hass = Mock(spec=HomeAssistant)
+
+    # Mock pipeline data with empty store
+    mock_pipeline_data = Mock()
+    mock_pipeline_store = Mock()
+    mock_pipeline_store.data = {}
+    mock_pipeline_data.pipeline_store = mock_pipeline_store
+
+    mock_hass.data = {"assist_pipeline": mock_pipeline_data}
+
+    with pytest.raises(
+        assist_pipeline.error.PipelineNotFound, match="Pipeline invalid_id not found"
+    ):
+        assist_pipeline.async_get_pipeline(mock_hass, "invalid_id")
+
+
+def test_pipeline_preferred_error():
+    """Test PipelinePreferred exception."""
+    error = assist_pipeline.pipeline.PipelinePreferred("test_pipeline_id")
+    assert str(error) == "Item test_pipeline_id preferred."
+    assert error.item_id == "test_pipeline_id"

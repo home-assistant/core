@@ -1,4 +1,5 @@
 """Provide an authentication layer for Home Assistant."""
+# Test change by Ylva – verifying Git
 
 from __future__ import annotations
 
@@ -194,7 +195,9 @@ class AuthManager:
         )
 
     async def async_setup(self) -> None:
-        """Set up the auth manager."""
+        """Set up the auth manager.
+        Used as a coruotine in function auth_manager_from_config().
+        """
         hass = self.hass
         hass.async_add_shutdown_job(
             HassJob(
@@ -448,6 +451,40 @@ class AuthManager:
                 modules[module_id] = module.name
         return modules
 
+    
+    # New private helper function to handle validation
+    def _validate_user_for_token_creation(self, user: models.User, client_id: str | None, token_type: str) -> None:
+        """Validate user and token type before creating a refresh token."""
+        if not user.is_active:
+            raise ValueError("User is not active")
+
+        if user.system_generated and client_id is not None:
+            raise ValueError(
+                "System generated users cannot have refresh tokens connected to a client."
+            )
+
+        if user.system_generated != (token_type == models.TOKEN_TYPE_SYSTEM):
+            raise ValueError(
+                "System generated users can only have system type refresh tokens"
+            )
+
+        if token_type == models.TOKEN_TYPE_NORMAL and client_id is None:
+            raise ValueError("Client is required to generate a refresh token.")
+
+    # New private helper function for long-lived tokens
+    def _validate_long_lived_token(self, user: models.User, client_name: str | None) -> None:
+        """Validate conditions for a long-lived access token."""
+        if client_name is None:
+            raise ValueError("Client_name is required for long-lived access token")
+
+        for token in user.refresh_tokens.values():
+            if (
+                token.client_name == client_name
+                and token.token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+            ):
+                raise ValueError(f"{client_name} already exists")
+
+    # This is the REFACTORED main function
     async def async_create_refresh_token(
         self,
         user: models.User,
@@ -459,56 +496,32 @@ class AuthManager:
         credential: models.Credentials | None = None,
     ) -> models.RefreshToken:
         """Create a new refresh token for a user."""
-        if not user.is_active:
-            raise ValueError("User is not active")
-
-        if user.system_generated and client_id is not None:
-            raise ValueError(
-                "System generated users cannot have refresh tokens connected "
-                "to a client."
+        final_token_type = token_type
+        if final_token_type is None:
+            final_token_type = (
+                models.TOKEN_TYPE_SYSTEM
+                if user.system_generated
+                else models.TOKEN_TYPE_NORMAL
             )
 
-        if token_type is None:
-            if user.system_generated:
-                token_type = models.TOKEN_TYPE_SYSTEM
-            else:
-                token_type = models.TOKEN_TYPE_NORMAL
+        # All the complex checks are now hidden in these simple calls
+        self._validate_user_for_token_creation(user, client_id, final_token_type)
 
-        if token_type is models.TOKEN_TYPE_NORMAL:
-            expire_at = time.time() + REFRESH_TOKEN_EXPIRATION
-        else:
-            expire_at = None
+        if final_token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
+            self._validate_long_lived_token(user, client_name)
 
-        if user.system_generated != (token_type == models.TOKEN_TYPE_SYSTEM):
-            raise ValueError(
-                "System generated users can only have system type refresh tokens"
-            )
-
-        if token_type == models.TOKEN_TYPE_NORMAL and client_id is None:
-            raise ValueError("Client is required to generate a refresh token.")
-
-        if (
-            token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
-            and client_name is None
-        ):
-            raise ValueError("Client_name is required for long-lived access token")
-
-        if token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
-            for token in user.refresh_tokens.values():
-                if (
-                    token.client_name == client_name
-                    and token.token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
-                ):
-                    # Each client_name can only have one
-                    # long_lived_access_token type of refresh token
-                    raise ValueError(f"{client_name} already exists")
+        expire_at = (
+            time.time() + REFRESH_TOKEN_EXPIRATION
+            if final_token_type is models.TOKEN_TYPE_NORMAL
+            else None
+        )
 
         return await self._store.async_create_refresh_token(
             user,
             client_id,
             client_name,
             client_icon,
-            token_type,
+            final_token_type,
             access_token_expiration,
             expire_at,
             credential,
