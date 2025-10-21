@@ -9,7 +9,7 @@ rules:
   config-flow-test-coverage: done
   config-flow:
     status: done
-    comment: Future enhancements, 1) separate manual and discovery flows, 2) allow for discovery of multiple LMS and selection of one.
+    comment: Future enhancements, 1) separate manual and discovery flows, 2) allow for discovery of multiple LMS and selection of one. PR 153958
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
@@ -26,7 +26,7 @@ rules:
   # Silver
   action-exceptions:
     status: todo
-    comment: Requires entity_action exceptions for several actions where exceptions aren't trapped.
+    comment: Requires entity_action exceptions for several actions where exceptions aren't trapped. PR 154946
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
