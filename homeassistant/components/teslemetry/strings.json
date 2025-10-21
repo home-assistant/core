@@ -1237,7 +1237,7 @@
           "name": "Energy Site"
         },
         "tou_settings": {
-          "description": "See https://developer.tesla.com/docs/fleet-api#time_of_use_settings for details.",
+          "description": "See the [documentation]({time_of_use_url}) for details.",
           "name": "Settings"
         }
       },

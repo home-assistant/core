@@ -5,6 +5,8 @@ from __future__ import annotations
 from enum import StrEnum
 import logging
 
+TIME_OF_USE_URL = "https://developer.tesla.com/docs/fleet-api#time_of_use_settings"
+
 DOMAIN = "teslemetry"
 
 LOGGER = logging.getLogger(__package__)
