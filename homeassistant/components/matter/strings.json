@@ -447,7 +447,7 @@
           "no_error": "No error",
           "unable_to_start_or_resume": "Unable to start or resume",
           "unable_to_complete_operation": "Unable to complete operation",
-          "command_invalid_in_state": "Command invalid in state",
+          "command_invalid_in_state": "Command invalid in current state",
           "failed_to_find_charging_dock": "Failed to find charging dock",
           "stuck": "Stuck",
           "dust_bin_missing": "Dust bin missing",
