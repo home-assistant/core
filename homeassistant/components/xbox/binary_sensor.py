@@ -59,9 +59,13 @@ def profile_pic(person: Person) -> str | None:
 def in_game(person: Person) -> bool:
     """True if person is in a game."""
 
-    active_app = next(
-        (presence for presence in person.presence_details if presence.is_primary),
-        None,
+    active_app = (
+        next(
+            (presence for presence in person.presence_details if presence.is_primary),
+            None,
+        )
+        if person.presence_details
+        else None
     )
     return (
         active_app is not None and active_app.is_game and active_app.state == "Active"
@@ -79,7 +83,11 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_PARTY,
         translation_key=XboxBinarySensor.IN_PARTY,
-        is_on_fn=lambda x: bool(x.multiplayer_summary.in_party),
+        is_on_fn=(
+            lambda x: bool(x.multiplayer_summary.in_party)
+            if x.multiplayer_summary
+            else None
+        ),
         entity_registry_enabled_default=False,
     ),
     XboxBinarySensorEntityDescription(
@@ -90,13 +98,17 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_MULTIPLAYER,
         translation_key=XboxBinarySensor.IN_MULTIPLAYER,
-        is_on_fn=lambda x: bool(x.multiplayer_summary.in_multiplayer_session),
+        is_on_fn=(
+            lambda x: bool(x.multiplayer_summary.in_multiplayer_session)
+            if x.multiplayer_summary
+            else None
+        ),
         entity_registry_enabled_default=False,
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.HAS_GAME_PASS,
         translation_key=XboxBinarySensor.HAS_GAME_PASS,
-        is_on_fn=lambda x: x.has_game_pass,
+        is_on_fn=lambda x: x.detail.has_game_pass if x.detail else None,
     ),
 )
 

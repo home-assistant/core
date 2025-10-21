@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 import logging
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
@@ -82,7 +82,6 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="request_exception",
-                translation_placeholders={"error": str(e)},
             ) from e
 
         session = config_entry_oauth2_flow.OAuth2Session(
@@ -104,7 +103,6 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="request_exception",
-                translation_placeholders={"error": str(e)},
             ) from e
 
         _LOGGER.debug(

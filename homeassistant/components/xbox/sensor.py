@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from functools import partial
 
@@ -57,45 +57,33 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         key=XboxSensor.ACCOUNT_TIER,
         translation_key=XboxSensor.ACCOUNT_TIER,
         entity_registry_enabled_default=False,
-        value_fn=lambda x: x.detail.account_tier,
+        value_fn=lambda x: x.detail.account_tier if x.detail else None,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.GOLD_TENURE,
         translation_key=XboxSensor.GOLD_TENURE,
         entity_registry_enabled_default=False,
-        value_fn=lambda x: x.detail.tenure,
+        value_fn=lambda x: x.detail.tenure if x.detail else None,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.LAST_ONLINE,
         translation_key=XboxSensor.LAST_ONLINE,
-        value_fn=(lambda x: x.last_seen),
+        value_fn=(
+            lambda x: x.last_seen_date_time_utc.replace(tzinfo=UTC)
+            if x.last_seen_date_time_utc
+            else None
+        ),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.FOLLOWING,
         translation_key=XboxSensor.FOLLOWING,
-        value_fn=lambda x: x.detail.following_count,
+        value_fn=lambda x: x.detail.following_count if x.detail else None,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.FOLLOWER,
         translation_key=XboxSensor.FOLLOWER,
-        value_fn=lambda x: x.detail.follower_count,
-    ),
-    XboxSensorEntityDescription(
-        key=XboxSensor.LAST_ONLINE,
-        translation_key=XboxSensor.LAST_ONLINE,
-        value_fn=(lambda x: x.last_seen),
-        device_class=SensorDeviceClass.TIMESTAMP,
-    ),
-    XboxSensorEntityDescription(
-        key=XboxSensor.FOLLOWING,
-        translation_key=XboxSensor.FOLLOWING,
-        value_fn=lambda x: x.following_count,
-    ),
-    XboxSensorEntityDescription(
-        key=XboxSensor.FOLLOWER,
-        translation_key=XboxSensor.FOLLOWER,
-        value_fn=lambda x: x.follower_count,
+        value_fn=lambda x: x.detail.follower_count if x.detail else None,
     ),
 )
 
