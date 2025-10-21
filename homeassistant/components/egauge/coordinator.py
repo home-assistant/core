@@ -40,8 +40,8 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
         )
         self.client = client
         # Populated on first refresh
-        self.serial_number: str | None = None
-        self.hostname: str | None = None
+        self.serial_number: str
+        self.hostname: str
         self._register_info: dict[str, RegisterInfo] | None = None
 
     async def _async_update_data(self) -> EgaugeData:
