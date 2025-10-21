@@ -123,7 +123,7 @@
         },
         "transitions": {
           "name": "Transitions",
-          "description": "Array of transitions, for desired effect. See the Yeelight flow transitions documentation for examples."
+          "description": "Array of transitions, for desired effect. [Examples]({flow_transitions_url})."
         }
       }
     },
@@ -143,7 +143,7 @@
     },
     "start_flow": {
       "name": "Start flow",
-      "description": "Starts a custom flow, using transitions from the Yeelight flow objects documentation.",
+      "description": "Starts a custom flow, using transitions from [{flow_objects_url}]({flow_objects_url}).",
       "fields": {
         "count": {
           "name": "Count",

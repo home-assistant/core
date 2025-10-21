@@ -36,6 +36,8 @@ from .const import (
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
     DOMAIN,
+    FLOW_OBJECTS_URL,
+    FLOW_TRANSITIONS_URL,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
 from .device import (
@@ -344,6 +346,10 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema_dict),
+            description_placeholders={
+                "flow_transitions_url": FLOW_TRANSITIONS_URL,
+                "flow_objects_url": FLOW_OBJECTS_URL,
+            },
         )
 
 
