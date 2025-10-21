@@ -1068,7 +1068,15 @@ class TelegramNotificationService:
 
             await self.hass.async_add_executor_job(mkdir)
         _LOGGER.debug("Download file %s to %s", file_id, custom_path)
-        await file.download_to_drive(custom_path=custom_path)
+        try:
+            await file.download_to_drive(custom_path=custom_path)
+        except Exception as exc:
+            _LOGGER.error("Error downloading file to %s: %s", custom_path, exc)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_failed",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
         return {ATTR_FILE_PATH: custom_path}
 
 
