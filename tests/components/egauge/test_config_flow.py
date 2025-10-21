@@ -1,6 +1,6 @@
 """Tests for the eGauge config flow."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from egauge_async.json.client import EgaugeAuthenticationError
 from httpx import ConnectError
@@ -20,9 +20,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 @pytest.fixture
 def mock_setup_entry():
     """Mock setting up a config entry."""
-    with pytest.mock.patch(
-        "homeassistant.components.egauge.async_setup_entry", return_value=True
-    ):
+    with patch("homeassistant.components.egauge.async_setup_entry", return_value=True):
         yield
 
 
@@ -60,8 +58,8 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     ("side_effect", "expected_error"),
     [
         (EgaugeAuthenticationError, "invalid_auth"),
-        (ConnectError, "cannot_connect"),
-        (Exception, "unknown"),
+        (ConnectError("Connection error"), "cannot_connect"),
+        (Exception("Unexpected error"), "unknown"),
     ],
 )
 async def test_user_flow_errors(
@@ -154,8 +152,8 @@ async def test_reauth_flow(
     ("side_effect", "expected_error"),
     [
         (EgaugeAuthenticationError, "invalid_auth"),
-        (ConnectError, "cannot_connect"),
-        (Exception, "unknown"),
+        (ConnectError("Connection error"), "cannot_connect"),
+        (Exception("Unexpected error"), "unknown"),
     ],
 )
 async def test_reauth_flow_errors(
