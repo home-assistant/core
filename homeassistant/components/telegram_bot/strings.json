@@ -293,10 +293,6 @@
           "name": "Verify SSL",
           "description": "Enable or disable SSL certificate verification. Disable if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server."
         },
-        "timeout": {
-          "name": "Read timeout",
-          "description": "Timeout for sending the photo in seconds."
-        },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
           "description": "List of rows of commands, comma-separated, to make a custom keyboard."
@@ -316,6 +312,19 @@
         "message_thread_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
+        },
+        "timeout": {
+          "name": "Read timeout",
+          "description": "Timeout in seconds for receiving a response."
+        },
+        "write_timeout": {
+          "name": "Write timeout",
+          "description": "Timeout in seconds for sending the photo."
+        }
+      },
+      "sections": {
+        "timeouts": {
+          "name": "Timeouts"
         }
       }
     },
