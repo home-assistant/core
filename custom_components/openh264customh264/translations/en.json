@@ -1,0 +1,36 @@
+{
+  "title": "OpenH264 Nedis Camera",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure OpenH264 Nedis Camera",
+        "description": "Create a camera that proxies an existing entity or uses explicit URLs, with optional OpenH264 processing.",
+        "data": {
+          "name": "Name",
+          "mode": "Source Type",
+          "entity_id": "Camera entity_id",
+          "stream_url": "RTSP/Stream URL",
+          "snapshot_url": "Snapshot URL (JPEG)",
+          "lib_path": "Path to libopenh264",
+          "accept_cisco_license": "I accept the Cisco OpenH264 license (for optional download logic)"
+        }
+      }
+    },
+    "error": {
+      "camera_required": "Camera entity_id is required for 'camera entity' mode.",
+      "url_required": "Provide at least one of Stream URL or Snapshot URL for 'stream url' mode."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "OpenH264 Nedis Camera Options",
+        "description": "Configure advanced options for OpenH264 processing.",
+        "data": {
+          "lib_path": "Path to libopenh264 library",
+          "accept_cisco_license": "I accept the Cisco OpenH264 license"
+        }
+      }
+    }
+  }
+}

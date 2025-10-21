@@ -1,0 +1,12 @@
+{
+  "domain": "openh264customh264",
+  "name": "OpenH264 Nedis Camera",
+  "version": "0.1.0",
+  "documentation": "https://github.com/martinpark/openh264customh264-ha",
+  "issue_tracker": "https://github.com/martinpark/openh264customh264-ha/issues",
+  "codeowners": ["@martinpark"],
+  "config_flow": true,
+  "iot_class": "local_push",
+  "dependencies": ["stream"],
+  "requirements": []
+}
