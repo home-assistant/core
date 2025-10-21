@@ -1615,6 +1615,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "egauge": {
+      "name": "eGauge",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "eheimdigital": {
       "name": "EHEIM Digital",
       "integration_type": "hub",
