@@ -91,9 +91,7 @@ class AbstractConfig(ABC):
             )
 
     async def async_disable_proactive_mode(self) -> None:
-        """Disable proactive mode.
-        Used as a coroutine in function set_authorized().
-                """
+        """Disable proactive mode."""
         _LOGGER.debug("Disable proactive mode")
         if unsub_func := self._unsub_proactive_report:
             unsub_func()

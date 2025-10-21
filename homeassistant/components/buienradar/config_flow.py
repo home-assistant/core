@@ -58,10 +58,6 @@ OPTIONS_SCHEMA = vol.Schema(
 
 
 async def _options_suggested_values(handler: SchemaCommonFlowHandler) -> dict[str, Any]:
-    """
-    Home Assistant schema flow system requires suggested_values() to be async,
-    therefore this is a coroutine.
-    """
     parent_handler = cast(SchemaOptionsFlowHandler, handler.parent_handler)
     suggested_values = copy.deepcopy(dict(parent_handler.config_entry.data))
     suggested_values.update(parent_handler.options)
