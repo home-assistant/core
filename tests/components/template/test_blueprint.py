@@ -525,16 +525,33 @@ async def test_variables_for_entity(
     assert state is not None
     assert state.state == expected
 
+"""Tests for blueprint variable loading in the template integration."""
+tmark = pytest.mark.asyncio
 
-@pytest.mark.asyncio
-async def test_blueprint_variables_loaded(hass):
-    """Test that blueprint variables are available on HA start/reload."""
-    conf_section = type(
-        "ConfSection", (), {"variables": {"switch": "switch.test_switch"}}
-    )()
-    
-    tpl = Template("{{ switch }}", hass)
-    
-    rendered = tpl.async_render({"switch": conf_section.variables["switch"]})
-    
-    assert rendered == "switch.test_switch"
+async def test_blueprint_variables_load_on_reload(hass: HomeAssistant):
+    """Test that blueprint variables load correctly on reload/start."""
+
+    config = {
+        "template": [
+            {
+                "variables": {"switch": "switch.fake_switch"},
+                "light": [
+                    {
+                        "name": "{{ switch }}",
+                        "state": "{{ is_state(switch, 'on') }}",
+                    }
+                ],
+            }
+        ]
+    }
+
+    assert await async_setup_component(hass, "template", config)
+
+    light_entity = hass.states.get("light.fake_switch")
+    assert light_entity is not None
+
+    await hass.services.async_call("template", "reload", {}, blocking=True)
+
+    light_entity = hass.states.get("light.fake_switch")
+    assert light_entity is not None
+

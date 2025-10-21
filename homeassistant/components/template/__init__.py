@@ -28,7 +28,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN, PLATFORMS
+from .const import CONF_MAX, CONF_MIN, CONF_STEP, CONF_VARIABLES, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
 from .helpers import async_get_blueprints
 
@@ -144,12 +144,12 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
                         DOMAIN,
                         {
                             "unique_id": conf_section.get(CONF_UNIQUE_ID),
+                            "variables": conf_section.get(CONF_VARIABLES),
                             "entities": [
                                 {
                                     **entity_conf,
                                     "raw_blueprint_inputs": conf_section.raw_blueprint_inputs,
                                     "raw_configs": conf_section.raw_config,
-                                    "variables": getattr(conf_section, "variables", {}),
                                 }
                                 for entity_conf in conf_section[platform_domain]
                             ],
