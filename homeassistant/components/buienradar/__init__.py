@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -10,12 +12,12 @@ from .util import BrData
 
 PLATFORMS = [Platform.CAMERA, Platform.SENSOR, Platform.WEATHER]
 
-type BuienRadarConfigEntry = ConfigEntry[dict[Platform, BrData]]
+type BuienRadarConfigEntry = ConfigEntry
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BuienRadarConfigEntry) -> bool:
     """Set up buienradar from a config entry."""
-    entry.runtime_data = {}
+    entry.runtime_data = cast(dict[Platform, BrData], {})
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_update_options))
     return True
