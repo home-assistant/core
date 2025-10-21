@@ -319,6 +319,7 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
+        entity_registry_enabled_default=False,
     ),
     "voltage_l2": SensorEntityDescription(
         key="voltage_l2",
