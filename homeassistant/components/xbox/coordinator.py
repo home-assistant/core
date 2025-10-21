@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
@@ -58,6 +58,10 @@ class PresenceData:
     gamer_score: str
     gold_tenure: str | None
     account_tier: str
+    last_seen: datetime | None
+    following_count: int
+    follower_count: int
+    has_game_pass: bool
 
 
 @dataclass
@@ -246,4 +250,12 @@ def _build_presence_data(person: Person) -> PresenceData:
         gamer_score=person.gamer_score,
         gold_tenure=person.detail.tenure,
         account_tier=person.detail.account_tier,
+        last_seen=(
+            person.last_seen_date_time_utc.replace(tzinfo=UTC)
+            if person.last_seen_date_time_utc
+            else None
+        ),
+        follower_count=person.detail.follower_count,
+        following_count=person.detail.following_count,
+        has_game_pass=person.detail.has_game_pass,
     )

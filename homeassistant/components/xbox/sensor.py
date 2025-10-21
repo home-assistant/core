@@ -4,10 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from functools import partial
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -23,13 +28,16 @@ class XboxSensor(StrEnum):
     GAMER_SCORE = "gamer_score"
     ACCOUNT_TIER = "account_tier"
     GOLD_TENURE = "gold_tenure"
+    LAST_ONLINE = "last_online"
+    FOLLOWING = "following"
+    FOLLOWER = "follower"
 
 
 @dataclass(kw_only=True, frozen=True)
 class XboxSensorEntityDescription(SensorEntityDescription):
     """Xbox sensor description."""
 
-    value_fn: Callable[[PresenceData], StateType]
+    value_fn: Callable[[PresenceData], StateType | datetime]
 
 
 SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
@@ -55,6 +63,22 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda x: x.gold_tenure,
     ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.LAST_ONLINE,
+        translation_key=XboxSensor.LAST_ONLINE,
+        value_fn=(lambda x: x.last_seen),
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.FOLLOWING,
+        translation_key=XboxSensor.FOLLOWING,
+        value_fn=lambda x: x.following_count,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.FOLLOWER,
+        translation_key=XboxSensor.FOLLOWER,
+        value_fn=lambda x: x.follower_count,
+    ),
 )
 
 
@@ -78,7 +102,7 @@ class XboxSensorEntity(XboxBaseEntity, SensorEntity):
     entity_description: XboxSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the requested attribute."""
         return self.entity_description.value_fn(self.data)
 
