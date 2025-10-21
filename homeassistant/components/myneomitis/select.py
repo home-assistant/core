@@ -39,8 +39,8 @@ PRESET_OPTIONS = {
         "boost",
         "auto",
         "comfort",
-        "eco-2",
-        "eco-1",
+        "eco_2",
+        "eco_1",
         "eco",
         "antifrost",
         "standby",
@@ -114,7 +114,7 @@ class MyNeoSelect(SelectEntity):
         """Return the icon to use in the frontend."""
         if self._attr_current_option in {"off", "standby"}:
             return "mdi:toggle-switch-off-outline"
-        if self._attr_current_option in {"eco", "eco-1", "eco-2"}:
+        if self._attr_current_option in {"eco", "eco_1", "eco_2"}:
             return "mdi:leaf"
         if self._attr_current_option in {"comfort", "heating"}:
             return "mdi:fire"
