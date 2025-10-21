@@ -91,9 +91,10 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import json as json_util
 from homeassistant.util.file import write_utf8_file
 
-from tests.common import MockConfigEntry, async_capture_events
+from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
 from tests.typing import ClientSessionGenerator
 
 
@@ -562,6 +563,52 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 
     assert len(events) == 1
     assert events[0].data["data"] == update_callback_query["callback_query"]["data"]
+    assert isinstance(events[0].context, Context)
+
+
+@pytest.mark.parametrize(
+    ("attachment_type"),
+    [
+        ("photo"),
+        ("document"),
+    ],
+)
+async def test_webhook_endpoint_generates_telegram_attachment_event(
+    hass: HomeAssistant,
+    webhook_platform: None,
+    hass_client: ClientSessionGenerator,
+    mock_generate_secret_token: str,
+    attachment_type: str,
+) -> None:
+    """POST to the configured webhook endpoint and assert fired `telegram_attachment` event for photo and document."""
+    client = await hass_client()
+    events = async_capture_events(hass, "telegram_attachment")
+    update_message_attachment = await async_load_fixture(
+        hass, f"update_message_attachment_{attachment_type}.json", DOMAIN
+    )
+
+    response = await client.post(
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
+        data=update_message_attachment,
+        headers={
+            "X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token,
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status == 200
+    assert (await response.read()).decode("utf-8") == ""
+
+    # Make sure event has fired
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    loaded = json_util.json_loads(update_message_attachment)
+    if attachment_type == "photo":
+        expected_file_id = loaded["message"]["photo"][-1]["file_id"]
+    else:
+        expected_file_id = loaded["message"][attachment_type]["file_id"]
+
+    assert events[0].data["file_id"] == expected_file_id
     assert isinstance(events[0].context, Context)
 
 
@@ -1398,3 +1445,31 @@ async def test_set_message_reaction(
         is_big=True,
         read_timeout=None,
     )
+
+
+async def test_send_message_multi_target(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message for entries with multiple chat_ids."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # we have 2 whitelisted chat ids in the config subentries: 123456 and 654321
+    # 123456 is the default target since it is the first in the list
+    # This test checks that the message is sent to the right target
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_TARGET: 654321, ATTR_MESSAGE: "test_message"},
+        blocking=True,
+        return_response=True,
+    )
+
+    await hass.async_block_till_done()
+    assert response["chats"][0]["chat_id"] == 654321
+    assert response["chats"][0]["message_id"] == 12345

@@ -1,6 +1,6 @@
 """Test the sma config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysma.exceptions import (
     SmaAuthenticationException,
@@ -47,7 +47,7 @@ DHCP_DISCOVERY_DUPLICATE_001 = DhcpServiceInfo(
 
 
 async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_sma_client: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_sma_client: MagicMock
 ) -> None:
     """Test we get the form."""
 
@@ -91,7 +91,8 @@ async def test_form_exceptions(
     )
 
     with patch(
-        "homeassistant.components.sma.pysma.SMA.new_session", side_effect=exception
+        "homeassistant.components.sma.config_flow.pysma.SMA.new_session",
+        side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -210,7 +211,7 @@ async def test_dhcp_exceptions(
         data=DHCP_DISCOVERY,
     )
 
-    with patch("homeassistant.components.sma.pysma.SMA") as mock_sma:
+    with patch("homeassistant.components.sma.config_flow.pysma.SMA") as mock_sma:
         mock_sma_instance = mock_sma.return_value
         mock_sma_instance.new_session = AsyncMock(side_effect=exception)
 
@@ -222,7 +223,7 @@ async def test_dhcp_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    with patch("homeassistant.components.sma.pysma.SMA") as mock_sma:
+    with patch("homeassistant.components.sma.config_flow.pysma.SMA") as mock_sma:
         mock_sma_instance = mock_sma.return_value
         mock_sma_instance.new_session = AsyncMock(return_value=True)
         mock_sma_instance.device_info = AsyncMock(return_value=MOCK_DEVICE)
@@ -290,7 +291,7 @@ async def test_reauth_flow_exceptions(
 
     result = await entry.start_reauth_flow(hass)
 
-    with patch("homeassistant.components.sma.pysma.SMA") as mock_sma:
+    with patch("homeassistant.components.sma.config_flow.pysma.SMA") as mock_sma:
         mock_sma_instance = mock_sma.return_value
         mock_sma_instance.new_session = AsyncMock(side_effect=exception)
         result = await hass.config_entries.flow.async_configure(
