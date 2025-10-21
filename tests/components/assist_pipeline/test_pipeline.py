@@ -1587,9 +1587,8 @@ async def test_pipeline_language_used_instead_of_conversation_language(
                     "!",
                 ],
             ),
-            # We are streamed. First 15 chunks are grouped into 1 chunk
-            # and the rest are streamed
-            3,
+            # We always stream when possible, so 1 chunk via streaming method
+            1,
             "hello, how are you? I'm doing well, thank you. What about you?!",
         ),
         # Stream a bit, then a tool call, then stream some more
@@ -1621,9 +1620,9 @@ async def test_pipeline_language_used_instead_of_conversation_language(
                     ".",
                 ],
             ),
-            # 1 chunk before tool call, then 7 after
-            8,
-            "hello, how are you? I'm doing well, thank you.",
+            # 1 chunk for all content via streaming method
+            1,
+            "I'm doing well, thank you.",
         ),
     ],
 )
@@ -1791,8 +1790,7 @@ async def test_chat_log_tts_streaming(
         [chunk.decode() async for chunk in stream.async_stream_result()]
     )
 
-    streamed_text = "".join(text_deltas)
-    assert tts_result == streamed_text
+    assert tts_result == chunk_text
     assert len(received_tts) == expected_chunks
     assert "".join(received_tts) == chunk_text
 
@@ -2548,13 +2546,17 @@ def test_select_supported_language_no_match() -> None:
 
             assert result is None
             mock_logger.debug.assert_called_once_with(
-                "Test engine '%s' does not support language '%s'", "test_engine", "en"
+                "%s engine '%s' does not support language '%s'",
+                "Test",
+                "test_engine",
+                "en",
             )
 
 
 def test_async_get_pipeline_from_conversation_entity():
     """Test _async_get_pipeline_from_conversation_entity."""
     mock_hass = Mock(spec=HomeAssistant)
+    mock_hass.states = Mock()
 
     # Mock entity state
     mock_state = Mock(spec=State)
@@ -2596,6 +2598,7 @@ def test_async_get_pipeline_from_conversation_entity():
 def test_async_get_pipeline_from_conversation_entity_no_state():
     """Test _async_get_pipeline_from_conversation_entity with no entity state."""
     mock_hass = Mock(spec=HomeAssistant)
+    mock_hass.states = Mock()
 
     # Mock no entity state
     mock_hass.states.get.return_value = None
@@ -2634,6 +2637,7 @@ def test_async_get_pipeline_from_conversation_entity_no_state():
 def test_async_get_pipeline_with_conversation_entity():
     """Test async_get_pipeline with conversation entity ID."""
     mock_hass = Mock(spec=HomeAssistant)
+    mock_hass.data = {"assist_pipeline": Mock()}
 
     with patch(
         "homeassistant.components.assist_pipeline.pipeline._async_get_pipeline_from_conversation_entity"
