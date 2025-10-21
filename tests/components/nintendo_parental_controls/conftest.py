@@ -38,6 +38,8 @@ def mock_nintendo_device() -> Device:
     mock.set_bedtime_alarm.return_value = None
     mock.update_max_daily_playtime.return_value = None
     mock.forced_termination_mode = True
+    mock.model = "Test Model"
+    mock.generation = "P00"
     return mock
 
 

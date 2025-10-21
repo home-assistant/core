@@ -103,10 +103,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==8.0;python_version<'3.14'
-
-# homeassistant.components.python_script
-RestrictedPython==8.1a1.dev0;python_version>='3.14'
+RestrictedPython==8.1
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -182,7 +179,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.1
 
 # homeassistant.components.alexa_devices
-aioamazondevices==6.4.4
+aioamazondevices==6.4.6
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -201,7 +198,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.1
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.3.1
+aioautomower==2.5.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -256,7 +253,7 @@ aiogithubapi==24.6.0
 aioguardian==2022.07.0
 
 # homeassistant.components.harmony
-aioharmony==0.5.3;python_version<'3.14'
+aioharmony==0.5.3
 
 # homeassistant.components.hassio
 aiohasupervisor==0.3.3
@@ -1232,7 +1229,7 @@ mbddns==0.1.2
 mcp==1.14.1
 
 # homeassistant.components.minecraft_server
-mcstatus==12.0.1
+mcstatus==12.0.6
 
 # homeassistant.components.meater
 meater-python==0.0.8

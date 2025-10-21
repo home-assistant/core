@@ -323,6 +323,9 @@
         }
       },
       "sections": {
+        "url_options": {
+          "name": "URL options"
+        },
         "timeouts": {
           "name": "Timeouts"
         }
@@ -395,6 +398,11 @@
         "message_thread_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
+        }
+      },
+      "sections": {
+        "url_options": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
         }
       }
     },
@@ -470,6 +478,11 @@
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
+      },
+      "sections": {
+        "url_options": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
+        }
       }
     },
     "send_video": {
@@ -544,6 +557,11 @@
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
+      },
+      "sections": {
+        "url_options": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
+        }
       }
     },
     "send_voice": {
@@ -613,6 +631,11 @@
         "message_thread_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
+        }
+      },
+      "sections": {
+        "url_options": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
         }
       }
     },
@@ -687,6 +710,11 @@
         "message_thread_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
+        }
+      },
+      "sections": {
+        "url_options": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
         }
       }
     },
@@ -887,6 +915,11 @@
         "inline_keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
+        }
+      },
+      "sections": {
+        "url_options": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
         }
       }
     },
