@@ -1755,7 +1755,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "omnilogic",
     "oncue",
     "ondilo_ico",
-    "onewire",
     "onvif",
     "open_meteo",
     "openai_conversation",

@@ -47,7 +47,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_rpc_button[button.test_name_reboot-entry]
+# name: test_rpc_button[button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,7 +60,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.test_name_reboot',
+    'entity_id': 'button.test_name_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,7 +72,7 @@
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': 'Reboot',
+    'original_name': 'Restart',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -82,14 +82,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_rpc_button[button.test_name_reboot-state]
+# name: test_rpc_button[button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
-      'friendly_name': 'Test name Reboot',
+      'friendly_name': 'Test name Restart',
     }),
     'context': <ANY>,
-    'entity_id': 'button.test_name_reboot',
+    'entity_id': 'button.test_name_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
