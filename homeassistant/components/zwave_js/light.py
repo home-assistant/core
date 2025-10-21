@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
     TARGET_VALUE_PROPERTY,
     TRANSITION_DURATION_OPTION,
@@ -38,15 +37,15 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -66,11 +65,11 @@ MAX_MIREDS = 370  # 2700K as a safe default
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZwaveJSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Light from Config Entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_light(info: ZwaveDiscoveryInfo) -> None:
@@ -78,7 +77,11 @@ async def async_setup_entry(
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
 
-        if info.platform_hint == "color_onoff":
+        if info.platform_hint == "zwa2_led_color":
+            async_add_entities([ZWA2LEDColorLight(config_entry, driver, info)])
+        elif info.platform_hint == "zwa2_led_onoff":
+            async_add_entities([ZWA2LEDOnOffLight(config_entry, driver, info)])
+        elif info.platform_hint == "color_onoff":
             async_add_entities([ZwaveColorOnOffLight(config_entry, driver, info)])
         else:
             async_add_entities([ZwaveLight(config_entry, driver, info)])
@@ -109,7 +112,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     _attr_max_color_temp_kelvin = 6500  # 153 mireds as a safe default
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the light."""
         super().__init__(config_entry, driver, info)
@@ -184,7 +187,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if self._supports_color_temp:
             self._supported_color_modes.add(ColorMode.COLOR_TEMP)
         if not self._supported_color_modes:
-            self._supported_color_modes.add(ColorMode.BRIGHTNESS)
+            if self.info.primary_value.command_class == CommandClass.SWITCH_BINARY:
+                self._supported_color_modes.add(ColorMode.ONOFF)
+            else:
+                self._supported_color_modes.add(ColorMode.BRIGHTNESS)
         self._calculate_color_values()
 
         # Entity class attributes
@@ -539,7 +545,7 @@ class ZwaveColorOnOffLight(ZwaveLight):
     """
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the light."""
         super().__init__(config_entry, driver, info)
@@ -606,10 +612,7 @@ class ZwaveColorOnOffLight(ZwaveLight):
             # If brightness gets set, preserve the color and mix it with the new brightness
             if self.color_mode == ColorMode.HS:
                 scale = brightness / 255
-            if (
-                self._last_on_color is not None
-                and None not in self._last_on_color.values()
-            ):
+            if self._last_on_color is not None:
                 # Changed brightness from 0 to >0
                 old_brightness = max(self._last_on_color.values())
                 new_scale = brightness / old_brightness
@@ -628,8 +631,9 @@ class ZwaveColorOnOffLight(ZwaveLight):
             elif current_brightness is not None:
                 scale = current_brightness / 255
 
-        # Reset last color until turning off again
+        # Reset last color and brightness until turning off again
         self._last_on_color = None
+        self._last_brightness = None
 
         if new_colors is None:
             new_colors = self._get_new_colors(
@@ -645,8 +649,10 @@ class ZwaveColorOnOffLight(ZwaveLight):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
 
-        # Remember last color and brightness to restore it when turning on
-        self._last_brightness = self.brightness
+        # Remember last color and brightness to restore it when turning on,
+        # only if we're sure the light is turned on to avoid overwriting good values
+        if self._last_brightness is None:
+            self._last_brightness = self.brightness
         if self._current_color and isinstance(self._current_color.value, dict):
             red = self._current_color.value.get(COLOR_SWITCH_COMBINED_RED)
             green = self._current_color.value.get(COLOR_SWITCH_COMBINED_GREEN)
@@ -660,7 +666,8 @@ class ZwaveColorOnOffLight(ZwaveLight):
             if blue is not None:
                 last_color[ColorComponent.BLUE] = blue
 
-            if last_color:
+            # Only store the last color if we're aware of it, i.e. ignore off light
+            if last_color and max(last_color.values()) > 0:
                 self._last_on_color = last_color
 
         if self._target_brightness:
@@ -678,3 +685,29 @@ class ZwaveColorOnOffLight(ZwaveLight):
                 colors,
                 kwargs.get(ATTR_TRANSITION),
             )
+
+
+class ZWA2LEDColorLight(ZwaveColorOnOffLight):
+    """LED entity specific to the ZWA-2 (legacy firmware)."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize the ZWA-2 LED entity."""
+        super().__init__(config_entry, driver, info)
+        self._attr_name = "LED"
+
+
+class ZWA2LEDOnOffLight(ZwaveLight):
+    """LED entity specific to the ZWA-2."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize the ZWA-2 LED entity."""
+        super().__init__(config_entry, driver, info)
+        self._attr_name = "LED"

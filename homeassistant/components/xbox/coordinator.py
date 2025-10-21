@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
-from dataclasses import dataclass
-from datetime import timedelta
+from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 import logging
 
+from httpx import HTTPStatusError, RequestError, TimeoutException
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.const import SYSTEM_PFN_ID_MAP
 from xbox.webapi.api.provider.catalog.models import AlternateIdType, Product
@@ -19,14 +19,20 @@ from xbox.webapi.api.provider.smartglass.models import (
     SmartglassConsoleList,
     SmartglassConsoleStatus,
 )
+from xbox.webapi.common.signed_session import SignedSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import api
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+type XboxConfigEntry = ConfigEntry[XboxUpdateCoordinator]
 
 
 @dataclass
@@ -52,27 +58,31 @@ class PresenceData:
     gamer_score: str
     gold_tenure: str | None
     account_tier: str
+    last_seen: datetime | None
+    following_count: int
+    follower_count: int
+    has_game_pass: bool
 
 
 @dataclass
 class XboxData:
     """Xbox dataclass for update coordinator."""
 
-    consoles: dict[str, ConsoleData]
-    presence: dict[str, PresenceData]
+    consoles: dict[str, ConsoleData] = field(default_factory=dict)
+    presence: dict[str, PresenceData] = field(default_factory=dict)
 
 
 class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
     """Store Xbox Console Status."""
 
     config_entry: ConfigEntry
+    consoles: SmartglassConsoleList
+    client: XboxLiveClient
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        client: XboxLiveClient,
-        consoles: SmartglassConsoleList,
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -82,9 +92,51 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )
-        self.data = XboxData({}, {})
-        self.client: XboxLiveClient = client
-        self.consoles: SmartglassConsoleList = consoles
+        self.data = XboxData()
+        self.current_friends: set[str] = set()
+
+    async def _async_setup(self) -> None:
+        """Set up coordinator."""
+        try:
+            implementation = (
+                await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                    self.hass, self.config_entry
+                )
+            )
+        except ValueError as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+                translation_placeholders={"error": str(e)},
+            ) from e
+
+        session = config_entry_oauth2_flow.OAuth2Session(
+            self.hass, self.config_entry, implementation
+        )
+        signed_session = await self.hass.async_add_executor_job(SignedSession)
+        auth = api.AsyncConfigEntryAuth(signed_session, session)
+        self.client = XboxLiveClient(auth)
+
+        try:
+            self.consoles = await self.client.smartglass.get_console_list()
+        except TimeoutException as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+                translation_placeholders={"error": str(e)},
+            ) from e
+
+        _LOGGER.debug(
+            "Found %d consoles: %s",
+            len(self.consoles.result),
+            self.consoles.model_dump(),
+        )
 
     async def _async_update_data(self) -> XboxData:
         """Fetch the latest console status."""
@@ -99,7 +151,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             _LOGGER.debug(
                 "%s status: %s",
                 console.name,
-                status.dict(),
+                status.model_dump(),
             )
 
             # Setup focus app
@@ -146,16 +198,45 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
 
             presence_data[friend.xuid] = _build_presence_data(friend)
 
+        if (
+            self.current_friends
+            - (new_friends := {x.xuid for x in presence_data.values()})
+            or not self.current_friends
+        ):
+            self.remove_stale_devices(presence_data)
+        self.current_friends = new_friends
+
         return XboxData(new_console_data, presence_data)
+
+    def remove_stale_devices(self, presence_data: dict[str, PresenceData]) -> None:
+        """Remove stale devices from registry."""
+
+        device_reg = dr.async_get(self.hass)
+        identifiers = {(DOMAIN, person.xuid) for person in presence_data.values()} | {
+            (DOMAIN, console.id) for console in self.consoles.result
+        }
+
+        for device in dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        ):
+            if not set(device.identifiers) & identifiers:
+                _LOGGER.debug("Removing stale device %s", device.name)
+                device_reg.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )
 
 
 def _build_presence_data(person: Person) -> PresenceData:
     """Build presence data from a person."""
     active_app: PresenceDetail | None = None
-    with suppress(StopIteration):
-        active_app = next(
-            presence for presence in person.presence_details if presence.is_primary
-        )
+
+    active_app = next(
+        (presence for presence in person.presence_details if presence.is_primary),
+        None,
+    )
+    in_game = (
+        active_app is not None and active_app.is_game and active_app.state == "Active"
+    )
 
     return PresenceData(
         xuid=person.xuid,
@@ -164,9 +245,17 @@ def _build_presence_data(person: Person) -> PresenceData:
         online=person.presence_state == "Online",
         status=person.presence_text,
         in_party=person.multiplayer_summary.in_party > 0,
-        in_game=active_app is not None and active_app.is_game,
+        in_game=in_game,
         in_multiplayer=person.multiplayer_summary.in_multiplayer_session,
         gamer_score=person.gamer_score,
         gold_tenure=person.detail.tenure,
         account_tier=person.detail.account_tier,
+        last_seen=(
+            person.last_seen_date_time_utc.replace(tzinfo=UTC)
+            if person.last_seen_date_time_utc
+            else None
+        ),
+        follower_count=person.detail.follower_count,
+        following_count=person.detail.following_count,
+        has_game_pass=person.detail.has_game_pass,
     )

@@ -3,8 +3,9 @@
   "name": "LG ThinQ",
   "codeowners": ["@LG-ThinQ-Integration"],
   "config_flow": true,
+  "dhcp": [{ "macaddress": "34E6E6*" }],
   "documentation": "https://www.home-assistant.io/integrations/lg_thinq",
   "iot_class": "cloud_push",
   "loggers": ["thinqconnect"],
-  "requirements": ["thinqconnect==1.0.5"]
+  "requirements": ["thinqconnect==1.0.8"]
 }

@@ -11,6 +11,7 @@ ACTIONS = "actions"
 POWER_ON = "powerOn"
 POWER_OFF = "powerOff"
 PROCESS_ACTION = "processAction"
+PROGRAM_ID = "programId"
 VENTILATION_STEP = "ventilationStep"
 TARGET_TEMPERATURE = "targetTemperature"
 AMBIENT_LIGHT = "ambientLight"
@@ -166,169 +167,263 @@ PROCESS_ACTIONS = {
     "stop_supercooling": MieleActions.STOP_SUPERCOOL,
 }
 
-STATE_PROGRAM_PHASE_WASHING_MACHINE = {
-    0: "not_running",  # Returned by the API when the machine is switched off entirely.
-    256: "not_running",
-    257: "pre_wash",
-    258: "soak",
-    259: "pre_wash",
-    260: "main_wash",
-    261: "rinse",
-    262: "rinse_hold",
-    263: "cleaning",
-    264: "cooling_down",
-    265: "drain",
-    266: "spin",
-    267: "anti_crease",
-    268: "finished",
-    269: "venting",
-    270: "starch_stop",
-    271: "freshen_up_and_moisten",
-    272: "steam_smoothing",
-    279: "hygiene",
-    280: "drying",
-    285: "disinfecting",
-    295: "steam_smoothing",
-    65535: "not_running",  # Seems to be default for some devices.
-}
 
-STATE_PROGRAM_PHASE_TUMBLE_DRYER = {
-    0: "not_running",
-    512: "not_running",
-    513: "program_running",
-    514: "drying",
-    515: "machine_iron",
-    516: "hand_iron_2",
-    517: "normal",
-    518: "normal_plus",
-    519: "cooling_down",
-    520: "hand_iron_1",
-    521: "anti_crease",
-    522: "finished",
-    523: "extra_dry",
-    524: "hand_iron",
-    526: "moisten",
-    527: "thermo_spin",
-    528: "timed_drying",
-    529: "warm_air",
-    530: "steam_smoothing",
-    531: "comfort_cooling",
-    532: "rinse_out_lint",
-    533: "rinses",
-    535: "not_running",
-    534: "smoothing",
-    536: "not_running",
-    537: "not_running",
-    538: "slightly_dry",
-    539: "safety_cooling",
-    65535: "not_running",
-}
+class ProgramPhaseWashingMachine(MieleEnum, missing_to_none=True):
+    """Program phase codes for washing machines."""
 
-STATE_PROGRAM_PHASE_DISHWASHER = {
-    1792: "not_running",
-    1793: "reactivating",
-    1794: "pre_dishwash",
-    1795: "main_dishwash",
-    1796: "rinse",
-    1797: "interim_rinse",
-    1798: "final_rinse",
-    1799: "drying",
-    1800: "finished",
-    1801: "pre_dishwash",
-    65535: "not_running",
-}
-
-STATE_PROGRAM_PHASE_OVEN = {
-    0: "not_running",
-    3073: "heating_up",
-    3074: "process_running",
-    3078: "process_finished",
-    3084: "energy_save",
-    65535: "not_running",
-}
-STATE_PROGRAM_PHASE_WARMING_DRAWER = {
-    0: "not_running",
-    3073: "heating_up",
-    3075: "door_open",
-    3094: "keeping_warm",
-    3088: "cooling_down",
-    65535: "not_running",
-}
-STATE_PROGRAM_PHASE_MICROWAVE = {
-    0: "not_running",
-    3329: "heating",
-    3330: "process_running",
-    3334: "process_finished",
-    3340: "energy_save",
-    65535: "not_running",
-}
-STATE_PROGRAM_PHASE_COFFEE_SYSTEM = {
-    # Coffee system
-    3073: "heating_up",
-    4352: "not_running",
-    4353: "espresso",
-    4355: "milk_foam",
-    4361: "dispensing",
-    4369: "pre_brewing",
-    4377: "grinding",
-    4401: "2nd_grinding",
-    4354: "hot_milk",
-    4393: "2nd_pre_brewing",
-    4385: "2nd_espresso",
-    4404: "dispensing",
-    4405: "rinse",
-    65535: "not_running",
-}
-STATE_PROGRAM_PHASE_ROBOT_VACUUM_CLEANER = {
-    0: "not_running",
-    5889: "vacuum_cleaning",
-    5890: "returning",
-    5891: "vacuum_cleaning_paused",
-    5892: "going_to_target_area",
-    5893: "wheel_lifted",  # F1
-    5894: "dirty_sensors",  # F2
-    5895: "dust_box_missing",  # F3
-    5896: "blocked_drive_wheels",  # F4
-    5897: "blocked_brushes",  # F5
-    5898: "motor_overload",  # F6
-    5899: "internal_fault",  # F7
-    5900: "blocked_front_wheel",  # F8
-    5903: "docked",
-    5904: "docked",
-    5910: "remote_controlled",
-    65535: "not_running",
-}
-STATE_PROGRAM_PHASE_MICROWAVE_OVEN_COMBO = {
-    0: "not_running",
-    3863: "steam_reduction",
-    7938: "process_running",
-    7939: "waiting_for_start",
-    7940: "heating_up_phase",
-    7942: "process_finished",
-    65535: "not_running",
-}
-
-STATE_PROGRAM_PHASE: dict[int, dict[int, str]] = {
-    MieleAppliance.WASHING_MACHINE: STATE_PROGRAM_PHASE_WASHING_MACHINE,
-    MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_WASHING_MACHINE,
-    MieleAppliance.WASHING_MACHINE_PROFESSIONAL: STATE_PROGRAM_PHASE_WASHING_MACHINE,
-    MieleAppliance.TUMBLE_DRYER: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
-    MieleAppliance.DRYER_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
-    MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
-    MieleAppliance.DISHWASHER: STATE_PROGRAM_PHASE_DISHWASHER,
-    MieleAppliance.DISHWASHER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
-    MieleAppliance.DISHWASHER_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
-    MieleAppliance.OVEN: STATE_PROGRAM_PHASE_OVEN,
-    MieleAppliance.OVEN_MICROWAVE: STATE_PROGRAM_PHASE_MICROWAVE_OVEN_COMBO,
-    MieleAppliance.STEAM_OVEN: STATE_PROGRAM_PHASE_OVEN,
-    MieleAppliance.DIALOG_OVEN: STATE_PROGRAM_PHASE_OVEN,
-    MieleAppliance.MICROWAVE: STATE_PROGRAM_PHASE_MICROWAVE,
-    MieleAppliance.COFFEE_SYSTEM: STATE_PROGRAM_PHASE_COFFEE_SYSTEM,
-    MieleAppliance.ROBOT_VACUUM_CLEANER: STATE_PROGRAM_PHASE_ROBOT_VACUUM_CLEANER,
-}
+    not_running = 0, 256, 65535
+    pre_wash = 257, 259
+    soak = 258
+    main_wash = 260
+    rinse = 261
+    rinse_hold = 262
+    cleaning = 263
+    cooling_down = 264
+    drain = 265
+    spin = 266
+    anti_crease = 267
+    finished = 268
+    venting = 269
+    starch_stop = 270
+    freshen_up_and_moisten = 271
+    steam_smoothing = 272, 295
+    hygiene = 279
+    drying = 280
+    disinfecting = 285
 
 
-class StateProgramType(MieleEnum):
+class ProgramPhaseTumbleDryer(MieleEnum, missing_to_none=True):
+    """Program phase codes for tumble dryers."""
+
+    not_running = 0, 512, 535, 536, 537, 65535
+    program_running = 513
+    drying = 514
+    machine_iron = 515
+    hand_iron_2 = 516
+    normal = 517
+    normal_plus = 518
+    cooling_down = 519
+    hand_iron_1 = 520
+    anti_crease = 521
+    finished = 522
+    extra_dry = 523
+    hand_iron = 524
+    moisten = 526
+    thermo_spin = 527
+    timed_drying = 528
+    warm_air = 529
+    steam_smoothing = 530
+    comfort_cooling = 531
+    rinse_out_lint = 532
+    rinses = 533
+    smoothing = 534
+    slightly_dry = 538
+    safety_cooling = 539
+
+
+class ProgramPhaseWasherDryer(MieleEnum, missing_to_none=True):
+    """Program phase codes for washer/dryer machines."""
+
+    not_running = 0, 256, 512, 535, 536, 537, 65535
+    pre_wash = 257, 259
+    soak = 258
+    main_wash = 260
+    rinse = 261
+    rinse_hold = 262
+    cleaning = 263
+    cooling_down = 264, 519
+    drain = 265
+    spin = 266
+    anti_crease = 267, 521
+    finished = 268, 522
+    venting = 269
+    starch_stop = 270
+    freshen_up_and_moisten = 271
+    steam_smoothing = 272, 295, 530
+    hygiene = 279
+    drying = 280, 514
+    disinfecting = 285
+
+    program_running = 513
+    machine_iron = 515
+    hand_iron_2 = 516
+    normal = 517
+    normal_plus = 518
+    hand_iron_1 = 520
+    extra_dry = 523
+    hand_iron = 524
+    moisten = 526
+    thermo_spin = 527
+    timed_drying = 528
+    warm_air = 529
+    comfort_cooling = 531
+    rinse_out_lint = 532
+    rinses = 533
+    smoothing = 534
+    slightly_dry = 538
+    safety_cooling = 539
+
+
+class ProgramPhaseDishwasher(MieleEnum, missing_to_none=True):
+    """Program phase codes for dishwashers."""
+
+    not_running = 0, 1792, 65535
+    reactivating = 1793
+    pre_dishwash = 1794, 1801
+    main_dishwash = 1795
+    rinse = 1796
+    interim_rinse = 1797
+    final_rinse = 1798
+    drying = 1799
+    finished = 1800
+
+
+class ProgramPhaseOven(MieleEnum, missing_to_none=True):
+    """Program phase codes for ovens."""
+
+    not_running = 0, 65535
+    heating_up = 3073
+    process_running = 3074
+    process_finished = 3078
+    energy_save = 3084
+    pre_heating = 3099
+
+
+class ProgramPhaseWarmingDrawer(MieleEnum, missing_to_none=True):
+    """Program phase codes for warming drawers."""
+
+    not_running = 0, 65535
+    heating_up = 3073
+    door_open = 3075
+    keeping_warm = 3094
+    cooling_down = 3088
+
+
+class ProgramPhaseMicrowave(MieleEnum, missing_to_none=True):
+    """Program phase for microwave units."""
+
+    not_running = 0, 65535
+    heating = 3329
+    process_running = 3330
+    process_finished = 3334
+    energy_save = 3340
+
+
+class ProgramPhaseCoffeeSystem(MieleEnum, missing_to_none=True):
+    """Program phase codes for coffee systems."""
+
+    not_running = 0, 4352, 65535
+    heating_up = 3073
+    espresso = 4353
+    hot_milk = 4354
+    milk_foam = 4355
+    dispensing = 4361, 4404
+    pre_brewing = 4369
+    grinding = 4377
+    second_espresso = 4385
+    second_pre_brewing = 4393
+    second_grinding = 4401
+    rinse = 4405
+
+
+class ProgramPhaseRobotVacuumCleaner(MieleEnum, missing_to_none=True):
+    """Program phase codes for robot vacuum cleaner."""
+
+    not_running = 0, 65535
+    vacuum_cleaning = 5889
+    returning = 5890
+    vacuum_cleaning_paused = 5891
+    going_to_target_area = 5892
+    wheel_lifted = 5893  # F1
+    dirty_sensors = 5894  # F2
+    dust_box_missing = 5895  # F3
+    blocked_drive_wheels = 5896  # F4
+    blocked_brushes = 5897  # F5
+    motor_overload = 5898  # F6
+    internal_fault = 5899  # F7
+    blocked_front_wheel = 5900  # F8
+    docked = 5903, 5904
+    remote_controlled = 5910
+
+
+class ProgramPhaseMicrowaveOvenCombo(MieleEnum, missing_to_none=True):
+    """Program phase codes for microwave oven combo."""
+
+    not_running = 0, 65535
+    steam_reduction = 3863
+    process_running = 7938
+    waiting_for_start = 7939
+    heating_up_phase = 7940
+    process_finished = 7942
+
+
+class ProgramPhaseSteamOven(MieleEnum, missing_to_none=True):
+    """Program phase codes for steam ovens."""
+
+    not_running = 0, 65535
+    steam_reduction = 3863
+    process_running = 7938
+    waiting_for_start = 7939
+    heating_up_phase = 7940
+    process_finished = 7942
+
+
+class ProgramPhaseSteamOvenCombi(MieleEnum, missing_to_none=True):
+    """Program phase codes for steam oven combi."""
+
+    not_running = 0, 65535
+    heating_up = 3073
+    process_running = 3074, 7938
+    process_finished = 3078, 7942
+    energy_save = 3084
+    pre_heating = 3099
+
+    steam_reduction = 3863
+    waiting_for_start = 7939
+    heating_up_phase = 7940
+
+
+class ProgramPhaseSteamOvenMicro(MieleEnum, missing_to_none=True):
+    """Program phase codes for steam oven micro."""
+
+    not_running = 0, 65535
+
+    heating = 3329
+    process_running = 3330, 7938, 7942
+    process_finished = 3334
+    energy_save = 3340
+
+    steam_reduction = 3863
+    waiting_for_start = 7939
+    heating_up_phase = 7940
+
+
+PROGRAM_PHASE: dict[int, type[MieleEnum]] = {
+    MieleAppliance.WASHING_MACHINE: ProgramPhaseWashingMachine,
+    MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL: ProgramPhaseWashingMachine,
+    MieleAppliance.WASHING_MACHINE_PROFESSIONAL: ProgramPhaseWashingMachine,
+    MieleAppliance.TUMBLE_DRYER: ProgramPhaseTumbleDryer,
+    MieleAppliance.DRYER_PROFESSIONAL: ProgramPhaseTumbleDryer,
+    MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL: ProgramPhaseTumbleDryer,
+    MieleAppliance.WASHER_DRYER: ProgramPhaseWasherDryer,
+    MieleAppliance.DISHWASHER: ProgramPhaseDishwasher,
+    MieleAppliance.DISHWASHER_SEMI_PROFESSIONAL: ProgramPhaseDishwasher,
+    MieleAppliance.DISHWASHER_PROFESSIONAL: ProgramPhaseDishwasher,
+    MieleAppliance.OVEN: ProgramPhaseOven,
+    MieleAppliance.OVEN_MICROWAVE: ProgramPhaseMicrowaveOvenCombo,
+    MieleAppliance.STEAM_OVEN: ProgramPhaseSteamOven,
+    MieleAppliance.STEAM_OVEN_COMBI: ProgramPhaseSteamOvenCombi,
+    MieleAppliance.STEAM_OVEN_MK2: ProgramPhaseSteamOvenCombi,
+    MieleAppliance.STEAM_OVEN_MICRO: ProgramPhaseSteamOvenMicro,
+    MieleAppliance.DIALOG_OVEN: ProgramPhaseOven,
+    MieleAppliance.MICROWAVE: ProgramPhaseMicrowave,
+    MieleAppliance.COFFEE_SYSTEM: ProgramPhaseCoffeeSystem,
+    MieleAppliance.ROBOT_VACUUM_CLEANER: ProgramPhaseRobotVacuumCleaner,
+    MieleAppliance.DISH_WARMER: ProgramPhaseWarmingDrawer,
+}
+
+
+class StateProgramType(MieleEnum, missing_to_none=True):
     """Defines program types."""
 
     normal_operation_mode = 0
@@ -336,7 +431,19 @@ class StateProgramType(MieleEnum):
     automatic_program = 2
     cleaning_care_program = 3
     maintenance_program = 4
-    unknown = -9999
+
+
+class StateDryingStep(MieleEnum, missing_to_none=True):
+    """Defines drying steps."""
+
+    extra_dry = 0
+    normal_plus = 1
+    normal = 2
+    slightly_dry = 3
+    hand_iron_1 = 4
+    hand_iron_2 = 5
+    machine_iron = 6
+    smoothing = 7
 
 
 WASHING_MACHINE_PROGRAM_ID: dict[int, str] = {
@@ -407,19 +514,41 @@ DISHWASHER_PROGRAM_ID: dict[int, str] = {
     38: "quick_power_wash",
     42: "tall_items",
     44: "power_wash",
+    200: "eco",
+    202: "automatic",
+    203: "comfort_wash",
+    204: "power_wash",
+    205: "intensive",
+    207: "extra_quiet",
+    209: "comfort_wash_plus",
+    210: "gentle",
+    214: "maintenance",
+    215: "rinse_salt",
 }
 TUMBLE_DRYER_PROGRAM_ID: dict[int, str] = {
     -1: "no_program",  # Extrapolated from other device types.
     0: "no_program",  # Extrapolated from other device types
+    1: "automatic_plus",
     2: "cottons",
     3: "minimum_iron",
     4: "woollens_handcare",
     5: "delicates",
     6: "warm_air",
+    7: "cool_air",
     8: "express",
-    10: "automatic_plus",
+    9: "cottons_eco",
+    10: "gentle_smoothing",
+    12: "proofing",
+    13: "denim",
+    14: "shirts",
+    15: "sportswear",
+    16: "outerwear",
+    17: "silks_handcare",
+    19: "standard_pillows",
     20: "cottons",
+    22: "basket_program",
     23: "cottons_hygiene",
+    24: "steam_smoothing",
     30: "minimum_iron",
     31: "bed_linen",
     40: "woollens_handcare",
@@ -469,8 +598,29 @@ OVEN_PROGRAM_ID: dict[int, str] = {
     51: "moisture_plus_conventional_heat",
     74: "moisture_plus_intensive_bake",
     76: "moisture_plus_conventional_heat",
+    97: "custom_program_1",
+    98: "custom_program_2",
+    99: "custom_program_3",
+    100: "custom_program_4",
+    101: "custom_program_5",
+    102: "custom_program_6",
+    103: "custom_program_7",
+    104: "custom_program_8",
+    105: "custom_program_9",
+    106: "custom_program_10",
+    107: "custom_program_11",
+    108: "custom_program_12",
+    109: "custom_program_13",
+    110: "custom_program_14",
+    111: "custom_program_15",
+    112: "custom_program_16",
+    113: "custom_program_17",
+    114: "custom_program_18",
+    115: "custom_program_19",
+    116: "custom_program_20",
     323: "pyrolytic",
     326: "descale",
+    327: "evaporate_water",
     335: "shabbat_program",
     336: "yom_tov",
     356: "defrost",
@@ -479,9 +629,94 @@ OVEN_PROGRAM_ID: dict[int, str] = {
     360: "low_temperature_cooking",
     361: "steam_cooking",
     362: "keeping_warm",
-    512: "1_tray",
-    513: "2_trays",
-    529: "baking_tray",
+    364: "apple_sponge",
+    365: "apple_pie",
+    367: "sponge_base",
+    368: "swiss_roll",
+    369: "butter_cake",
+    373: "marble_cake",
+    374: "fruit_streusel_cake",
+    375: "madeira_cake",
+    378: "blueberry_muffins",
+    379: "walnut_muffins",
+    382: "baguettes",
+    383: "flat_bread",
+    384: "plaited_loaf",
+    385: "seeded_loaf",
+    386: "white_bread_baking_tin",
+    387: "white_bread_on_tray",
+    394: "duck",
+    396: "chicken_whole",
+    397: "chicken_thighs",
+    401: "turkey_whole",
+    402: "turkey_drumsticks",
+    406: "veal_fillet_roast",
+    407: "veal_fillet_low_temperature_cooking",
+    408: "veal_knuckle",
+    409: "saddle_of_veal_roast",
+    410: "saddle_of_veal_low_temperature_cooking",
+    411: "braised_veal",
+    415: "leg_of_lamb",
+    419: "saddle_of_lamb_roast",
+    420: "saddle_of_lamb_low_temperature_cooking",
+    422: "beef_fillet_roast",
+    423: "beef_fillet_low_temperature_cooking",
+    427: "braised_beef",
+    428: "roast_beef_roast",
+    429: "roast_beef_low_temperature_cooking",
+    435: "pork_smoked_ribs_roast",
+    436: "pork_smoked_ribs_low_temperature_cooking",
+    443: "ham_roast",
+    449: "pork_fillet_roast",
+    450: "pork_fillet_low_temperature_cooking",
+    454: "saddle_of_venison",
+    455: "rabbit",
+    456: "saddle_of_roebuck",
+    461: "salmon_fillet",
+    464: "potato_cheese_gratin",
+    486: "trout",
+    491: "carp",
+    492: "salmon_trout",
+    496: "springform_tin_15cm",
+    497: "springform_tin_20cm",
+    498: "springform_tin_25cm",
+    499: "fruit_flan_puff_pastry",
+    500: "fruit_flan_short_crust_pastry",
+    501: "sachertorte",
+    502: "chocolate_hazlenut_cake_one_large",
+    503: "chocolate_hazlenut_cake_several_small",
+    504: "stollen",
+    505: "drop_cookies_1_tray",
+    506: "drop_cookies_2_trays",
+    507: "linzer_augen_1_tray",
+    508: "linzer_augen_2_trays",
+    509: "almond_macaroons_1_tray",
+    510: "almond_macaroons_2_trays",
+    512: "biscuits_short_crust_pastry_1_tray",
+    513: "biscuits_short_crust_pastry_2_trays",
+    514: "vanilla_biscuits_1_tray",
+    515: "vanilla_biscuits_2_trays",
+    516: "choux_buns",
+    518: "spelt_bread",
+    519: "walnut_bread",
+    520: "mixed_rye_bread",
+    522: "dark_mixed_grain_bread",
+    525: "multigrain_rolls",
+    526: "rye_rolls",
+    527: "white_rolls",
+    528: "tart_flambe",
+    529: "pizza_yeast_dough_baking_tray",
+    530: "pizza_yeast_dough_round_baking_tine",
+    531: "pizza_oil_cheese_dough_baking_tray",
+    532: "pizza_oil_cheese_dough_round_baking_tine",
+    533: "quiche_lorraine",
+    534: "savoury_flan_puff_pastry",
+    535: "savoury_flan_short_crust_pastry",
+    536: "osso_buco",
+    539: "beef_hash",
+    543: "pork_with_crackling",
+    550: "potato_gratin",
+    551: "cheese_souffle",
     554: "baiser_one_large",
     555: "baiser_several_small",
     556: "lemon_meringue_pie",
@@ -489,6 +724,19 @@ OVEN_PROGRAM_ID: dict[int, str] = {
     621: "prove_15_min",
     622: "prove_30_min",
     623: "prove_45_min",
+    624: "belgian_sponge_cake",
+    625: "goose_unstuffed",
+    634: "rack_of_lamb_with_vegetables",
+    635: "yorkshire_pudding",
+    636: "meat_loaf",
+    695: "swiss_farmhouse_bread",
+    696: "plaited_swiss_loaf",
+    697: "tiger_bread",
+    698: "ginger_loaf",
+    699: "goose_stuffed",
+    700: "beef_wellington",
+    701: "pork_belly",
+    702: "pikeperch_fillet_with_vegetables",
     99001: "steam_bake",
     17003: "no_program",
 }
@@ -685,6 +933,14 @@ COFFEE_SYSTEM_PROGRAM_ID: dict[int, str] = {
     24813: "appliance_settings",  # modify profile name
 }
 
+COFFEE_SYSTEM_PROFILE: dict[range, str] = {
+    range(24000, 24032): "profile_1",
+    range(24032, 24064): "profile_2",
+    range(24064, 24096): "profile_3",
+    range(24096, 24128): "profile_4",
+    range(24128, 24160): "profile_5",
+}
+
 STEAM_OVEN_MICRO_PROGRAM_ID: dict[int, str] = {
     8: "steam_cooking",
     19: "microwave",
@@ -693,6 +949,26 @@ STEAM_OVEN_MICRO_PROGRAM_ID: dict[int, str] = {
     72: "sous_vide",
     75: "eco_steam_cooking",
     77: "rapid_steam_cooking",
+    97: "custom_program_1",
+    98: "custom_program_2",
+    99: "custom_program_3",
+    100: "custom_program_4",
+    101: "custom_program_5",
+    102: "custom_program_6",
+    103: "custom_program_7",
+    104: "custom_program_8",
+    105: "custom_program_9",
+    106: "custom_program_10",
+    107: "custom_program_11",
+    108: "custom_program_12",
+    109: "custom_program_13",
+    110: "custom_program_14",
+    111: "custom_program_15",
+    112: "custom_program_16",
+    113: "custom_program_17",
+    114: "custom_program_18",
+    115: "custom_program_19",
+    116: "custom_program_20",
     326: "descale",
     330: "menu_cooking",
     2018: "reheating_with_steam",
@@ -934,7 +1210,7 @@ STEAM_OVEN_MICRO_PROGRAM_ID: dict[int, str] = {
     2429: "pumpkin_soup",
     2430: "meat_with_rice",
     2431: "beef_casserole",
-    2450: "risotto",
+    2450: "pumpkin_risotto",
     2451: "risotto",
     2453: "rice_pudding_steam_cooking",
     2454: "rice_pudding_rapid_steam_cooking",
@@ -1110,12 +1386,39 @@ STATE_PROGRAM_ID: dict[int, dict[int, str]] = {
     MieleAppliance.DISHWASHER: DISHWASHER_PROGRAM_ID,
     MieleAppliance.DISH_WARMER: DISH_WARMER_PROGRAM_ID,
     MieleAppliance.OVEN: OVEN_PROGRAM_ID,
-    MieleAppliance.OVEN_MICROWAVE: OVEN_PROGRAM_ID,
-    MieleAppliance.STEAM_OVEN_MK2: OVEN_PROGRAM_ID,
-    MieleAppliance.STEAM_OVEN: OVEN_PROGRAM_ID,
-    MieleAppliance.STEAM_OVEN_COMBI: OVEN_PROGRAM_ID,
+    MieleAppliance.OVEN_MICROWAVE: OVEN_PROGRAM_ID | STEAM_OVEN_MICRO_PROGRAM_ID,
+    MieleAppliance.STEAM_OVEN_MK2: OVEN_PROGRAM_ID | STEAM_OVEN_MICRO_PROGRAM_ID,
+    MieleAppliance.STEAM_OVEN_COMBI: OVEN_PROGRAM_ID | STEAM_OVEN_MICRO_PROGRAM_ID,
+    MieleAppliance.STEAM_OVEN: STEAM_OVEN_MICRO_PROGRAM_ID,
     MieleAppliance.STEAM_OVEN_MICRO: STEAM_OVEN_MICRO_PROGRAM_ID,
     MieleAppliance.WASHER_DRYER: WASHING_MACHINE_PROGRAM_ID,
     MieleAppliance.ROBOT_VACUUM_CLEANER: ROBOT_VACUUM_CLEANER_PROGRAM_ID,
     MieleAppliance.COFFEE_SYSTEM: COFFEE_SYSTEM_PROGRAM_ID,
 }
+
+
+class PlatePowerStep(MieleEnum, missing_to_none=True):
+    """Plate power settings."""
+
+    plate_step_0 = 0
+    plate_step_warming = 110, 220
+    plate_step_1 = 1
+    plate_step_2 = 2
+    plate_step_3 = 3
+    plate_step_4 = 4
+    plate_step_5 = 5
+    plate_step_6 = 6
+    plate_step_7 = 7
+    plate_step_8 = 8
+    plate_step_9 = 9
+    plate_step_10 = 10
+    plate_step_11 = 11
+    plate_step_12 = 12
+    plate_step_13 = 13
+    plate_step_14 = 14
+    plate_step_15 = 15
+    plate_step_16 = 16
+    plate_step_17 = 17
+    plate_step_18 = 18
+    plate_step_boost = 117, 118, 218
+    plate_step_boost_2 = 217

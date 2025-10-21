@@ -12,11 +12,7 @@ from sqlalchemy import text, update
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
-from homeassistant.components.recorder import (
-    DOMAIN as RECORDER_DOMAIN,
-    Recorder,
-    migration,
-)
+from homeassistant.components.recorder import DOMAIN, Recorder, migration
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.purge import purge_old_data
@@ -201,7 +197,7 @@ async def test_purge_old_states_encouters_database_corruption(
             side_effect=sqlite3_exception,
         ),
     ):
-        await hass.services.async_call(RECORDER_DOMAIN, SERVICE_PURGE, {"keep_days": 0})
+        await hass.services.async_call(DOMAIN, SERVICE_PURGE, {"keep_days": 0})
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)
 
@@ -235,7 +231,7 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
         ),
         patch.object(recorder_mock.engine.dialect, "name", "mysql"),
     ):
-        await hass.services.async_call(RECORDER_DOMAIN, SERVICE_PURGE, {"keep_days": 0})
+        await hass.services.async_call(DOMAIN, SERVICE_PURGE, {"keep_days": 0})
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)
@@ -261,7 +257,7 @@ async def test_purge_old_states_encounters_operational_error(
         "homeassistant.components.recorder.purge._purge_old_recorder_runs",
         side_effect=exception,
     ):
-        await hass.services.async_call(RECORDER_DOMAIN, SERVICE_PURGE, {"keep_days": 0})
+        await hass.services.async_call(DOMAIN, SERVICE_PURGE, {"keep_days": 0})
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)
@@ -549,7 +545,7 @@ async def test_purge_edge_case(hass: HomeAssistant, use_sqlite: bool) -> None:
         events = session.query(Events).filter(Events.event_type == "EVENT_TEST_PURGE")
         assert events.count() == 1
 
-    await hass.services.async_call(RECORDER_DOMAIN, SERVICE_PURGE, service_data)
+    await hass.services.async_call(DOMAIN, SERVICE_PURGE, service_data)
     await hass.async_block_till_done()
 
     await async_recorder_block_till_done(hass)
@@ -1378,7 +1374,7 @@ async def test_purge_entities_keep_days(
     assert len(states["sensor.purge"]) == 3
 
     await hass.services.async_call(
-        RECORDER_DOMAIN,
+        DOMAIN,
         SERVICE_PURGE_ENTITIES,
         {
             "entity_id": "sensor.purge",
@@ -1399,7 +1395,7 @@ async def test_purge_entities_keep_days(
     assert len(states["sensor.purge"]) == 1
 
     await hass.services.async_call(
-        RECORDER_DOMAIN,
+        DOMAIN,
         SERVICE_PURGE_ENTITIES,
         {
             "entity_id": "sensor.purge",

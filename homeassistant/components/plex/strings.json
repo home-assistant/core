@@ -3,7 +3,7 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "description": "Continue to [plex.tv](https://plex.tv) to link a Plex server."
+        "description": "Continue to {plex_server_url} to link a Plex server."
       },
       "user_advanced": {
         "data": {
@@ -83,10 +83,6 @@
           "description": "Name of the Plex library to refresh."
         }
       }
-    },
-    "scan_for_clients": {
-      "name": "Scan for clients",
-      "description": "Scans for available clients from the Plex server(s), local network, and plex.tv."
     }
   }
 }

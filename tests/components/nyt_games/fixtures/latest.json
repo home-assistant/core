@@ -25,43 +25,46 @@
       },
       "wordle": {
         "legacyStats": {
-          "gamesPlayed": 70,
-          "gamesWon": 51,
+          "gamesPlayed": 1111,
+          "gamesWon": 1069,
           "guesses": {
             "1": 0,
-            "2": 1,
-            "3": 7,
-            "4": 11,
-            "5": 20,
-            "6": 12,
-            "fail": 19
+            "2": 8,
+            "3": 83,
+            "4": 440,
+            "5": 372,
+            "6": 166,
+            "fail": 42
           },
-          "currentStreak": 1,
-          "maxStreak": 5,
-          "lastWonDayOffset": 1189,
+          "currentStreak": 229,
+          "maxStreak": 229,
+          "lastWonDayOffset": 1472,
           "hasPlayed": true,
-          "autoOptInTimestamp": 1708273168957,
-          "hasMadeStatsChoice": false,
-          "timestamp": 1726831978
+          "autoOptInTimestamp": 1712205417018,
+          "hasMadeStatsChoice": true,
+          "timestamp": 1751255756
         },
         "calculatedStats": {
-          "gamesPlayed": 33,
-          "gamesWon": 26,
+          "currentStreak": 237,
+          "maxStreak": 241,
+          "lastWonPrintDate": "2025-07-08",
+          "lastCompletedPrintDate": "2025-07-08",
+          "hasPlayed": true
+        },
+        "totalStats": {
+          "gamesWon": 1077,
+          "gamesPlayed": 1119,
           "guesses": {
             "1": 0,
-            "2": 1,
-            "3": 4,
-            "4": 7,
-            "5": 10,
-            "6": 4,
-            "fail": 7
+            "2": 8,
+            "3": 83,
+            "4": 444,
+            "5": 376,
+            "6": 166,
+            "fail": 42
           },
-          "currentStreak": 1,
-          "maxStreak": 5,
-          "lastWonPrintDate": "2024-09-20",
-          "lastCompletedPrintDate": "2024-09-20",
           "hasPlayed": true,
-          "generation": 1
+          "hasPlayedArchive": false
         }
       }
     }

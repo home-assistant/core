@@ -7,6 +7,7 @@ import pytest
 from renault_api.kamereon import schemas
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.renault.const import DOMAIN
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -19,13 +20,16 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import MOCK_VEHICLES
 
-from tests.common import load_fixture, snapshot_platform
+from tests.common import async_load_fixture, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
 
 # Captur (fuel version) does not have a charge mode select
-_TEST_VEHICLES = [v for v in MOCK_VEHICLES if v != "captur_fuel"]
+# charge mode is also not available for all vehicles
+_TEST_VEHICLES = [
+    v for v in MOCK_VEHICLES if v not in ("captur_fuel", "captur_phev", "zoe_50")
+]
 
 
 @pytest.fixture(autouse=True)
@@ -126,7 +130,7 @@ async def test_select_charge_mode(
         "renault_api.renault_vehicle.RenaultVehicle.set_charge_mode",
         return_value=(
             schemas.KamereonVehicleHvacStartActionDataSchema.loads(
-                load_fixture("renault/action.set_charge_mode.json")
+                await async_load_fixture(hass, "action.set_charge_mode.json", DOMAIN)
             )
         ),
     ) as mock_action:

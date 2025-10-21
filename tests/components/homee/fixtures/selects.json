@@ -38,6 +38,27 @@
       "based_on": 1,
       "data": "",
       "name": ""
+    },
+    {
+      "id": 2,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 346,
+      "state": 1,
+      "last_changed": 1624806728,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": ""
     }
   ]
 }

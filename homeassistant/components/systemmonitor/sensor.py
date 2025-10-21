@@ -37,7 +37,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from . import SystemMonitorConfigEntry
-from .const import DOMAIN, NET_IO_TYPES
+from .binary_sensor import BINARY_SENSOR_DOMAIN
+from .const import CONF_PROCESS, DOMAIN, NET_IO_TYPES
 from .coordinator import SystemMonitorCoordinator
 from .util import get_all_disk_mounts, get_all_network_interfaces, read_cpu_temperature
 
@@ -53,6 +54,14 @@ SENSOR_TYPE_DEVICE_CLASS = 3
 SENSOR_TYPE_MANDATORY_ARG = 4
 
 SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
+
+SENSORS_NO_ARG = ("load_", "memory_", "processor_use", "swap_", "last_boot")
+SENSORS_WITH_ARG = {
+    "disk_": "disk_arguments",
+    "ipv": "network_arguments",
+    **dict.fromkeys(NET_IO_TYPES, "network_arguments"),
+    "process_num_fds": "processes",
+}
 
 
 @lru_cache
@@ -116,6 +125,12 @@ def get_ip_address(
                     continue
                 return addr.address
     return None
+
+
+def get_process_num_fds(entity: SystemMonitorSensor) -> int | None:
+    """Return the number of file descriptors opened by the process."""
+    process_fds = entity.coordinator.data.process_fds
+    return process_fds.get(entity.argument)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -369,6 +384,16 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         value_fn=lambda entity: entity.coordinator.data.swap.percent,
         add_to_update=lambda entity: ("swap", ""),
     ),
+    "process_num_fds": SysMonitorSensorEntityDescription(
+        key="process_num_fds",
+        translation_key="process_num_fds",
+        placeholder="process",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        mandatory_arg=True,
+        value_fn=get_process_num_fds,
+        add_to_update=lambda entity: ("processes", ""),
+    ),
 }
 
 
@@ -420,107 +445,32 @@ async def async_setup_entry(
 
     startup_arguments = await hass.async_add_executor_job(get_arguments)
     startup_arguments["cpu_temperature"] = cpu_temperature
+    startup_arguments["processes"] = entry.options.get(BINARY_SENSOR_DOMAIN, {}).get(
+        CONF_PROCESS, []
+    )
 
     _LOGGER.debug("Setup from options %s", entry.options)
-
     for _type, sensor_description in SENSOR_TYPES.items():
-        if _type.startswith("disk_"):
-            for argument in startup_arguments["disk_arguments"]:
-                is_enabled = check_legacy_resource(
-                    f"{_type}_{argument}", legacy_resources
-                )
-                if (_add := slugify(f"{_type}_{argument}")) not in loaded_resources:
-                    loaded_resources.add(_add)
-                    entities.append(
-                        SystemMonitorSensor(
-                            coordinator,
-                            sensor_description,
-                            entry.entry_id,
-                            argument,
-                            is_enabled,
+        for sensor_type, sensor_argument in SENSORS_WITH_ARG.items():
+            if _type.startswith(sensor_type):
+                for argument in startup_arguments[sensor_argument]:
+                    is_enabled = check_legacy_resource(
+                        f"{_type}_{argument}", legacy_resources
+                    )
+                    if (_add := slugify(f"{_type}_{argument}")) not in loaded_resources:
+                        loaded_resources.add(_add)
+                        entities.append(
+                            SystemMonitorSensor(
+                                coordinator,
+                                sensor_description,
+                                entry.entry_id,
+                                argument,
+                                is_enabled,
+                            )
                         )
-                    )
-            continue
+                continue
 
-        if _type.startswith("ipv"):
-            for argument in startup_arguments["network_arguments"]:
-                is_enabled = check_legacy_resource(
-                    f"{_type}_{argument}", legacy_resources
-                )
-                loaded_resources.add(slugify(f"{_type}_{argument}"))
-                entities.append(
-                    SystemMonitorSensor(
-                        coordinator,
-                        sensor_description,
-                        entry.entry_id,
-                        argument,
-                        is_enabled,
-                    )
-                )
-            continue
-
-        if _type == "last_boot":
-            argument = ""
-            is_enabled = check_legacy_resource(f"{_type}_{argument}", legacy_resources)
-            loaded_resources.add(slugify(f"{_type}_{argument}"))
-            entities.append(
-                SystemMonitorSensor(
-                    coordinator,
-                    sensor_description,
-                    entry.entry_id,
-                    argument,
-                    is_enabled,
-                )
-            )
-            continue
-
-        if _type.startswith("load_"):
-            argument = ""
-            is_enabled = check_legacy_resource(f"{_type}_{argument}", legacy_resources)
-            loaded_resources.add(slugify(f"{_type}_{argument}"))
-            entities.append(
-                SystemMonitorSensor(
-                    coordinator,
-                    sensor_description,
-                    entry.entry_id,
-                    argument,
-                    is_enabled,
-                )
-            )
-            continue
-
-        if _type.startswith("memory_"):
-            argument = ""
-            is_enabled = check_legacy_resource(f"{_type}_{argument}", legacy_resources)
-            loaded_resources.add(slugify(f"{_type}_{argument}"))
-            entities.append(
-                SystemMonitorSensor(
-                    coordinator,
-                    sensor_description,
-                    entry.entry_id,
-                    argument,
-                    is_enabled,
-                )
-            )
-
-        if _type in NET_IO_TYPES:
-            for argument in startup_arguments["network_arguments"]:
-                is_enabled = check_legacy_resource(
-                    f"{_type}_{argument}", legacy_resources
-                )
-                loaded_resources.add(slugify(f"{_type}_{argument}"))
-                entities.append(
-                    SystemMonitorSensor(
-                        coordinator,
-                        sensor_description,
-                        entry.entry_id,
-                        argument,
-                        is_enabled,
-                    )
-                )
-            continue
-
-        if _type == "processor_use":
+        if _type.startswith(SENSORS_NO_ARG):
             argument = ""
             is_enabled = check_legacy_resource(f"{_type}_{argument}", legacy_resources)
             loaded_resources.add(slugify(f"{_type}_{argument}"))
@@ -552,20 +502,6 @@ async def async_setup_entry(
                 )
             )
             continue
-
-        if _type.startswith("swap_"):
-            argument = ""
-            is_enabled = check_legacy_resource(f"{_type}_{argument}", legacy_resources)
-            loaded_resources.add(slugify(f"{_type}_{argument}"))
-            entities.append(
-                SystemMonitorSensor(
-                    coordinator,
-                    sensor_description,
-                    entry.entry_id,
-                    argument,
-                    is_enabled,
-                )
-            )
 
     # Ensure legacy imported disk_* resources are loaded if they are not part
     # of mount points automatically discovered

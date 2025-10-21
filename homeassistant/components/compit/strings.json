@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Please enter your {compit_url} credentials.",
+        "title": "Connect to Compit iNext",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address of your inext.compit.pl account",
+          "password": "The password of your inext.compit.pl account"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Please update your password for {email}",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::compit::config::step::user::data_description::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  }
+}

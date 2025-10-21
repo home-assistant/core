@@ -3,10 +3,12 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from airgradient import AirGradientError
 from freezegun.api import FrozenDateTimeFactory
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.airgradient.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -54,3 +56,16 @@ async def test_new_firmware_version(
     )
     assert device_entry is not None
     assert device_entry.sw_version == "3.1.2"
+
+
+async def test_setup_retry(
+    hass: HomeAssistant,
+    mock_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test retrying setup."""
+    mock_airgradient_client.get_current_measures.side_effect = AirGradientError()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

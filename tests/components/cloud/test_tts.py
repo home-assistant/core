@@ -1,17 +1,21 @@
 """Tests for cloud tts."""
 
-from collections.abc import AsyncGenerator, Callable, Coroutine
+from collections.abc import AsyncGenerator, AsyncIterable, Callable, Coroutine
 from copy import deepcopy
 from http import HTTPStatus
+import io
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
+import wave
 
 from hass_nabucasa.voice import VoiceError, VoiceTokenError
 from hass_nabucasa.voice_data import TTS_VOICES
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+    STORAGE_KEY,
+)
 from homeassistant.components.cloud.const import DEFAULT_TTS_DEFAULT_VOICE, DOMAIN
 from homeassistant.components.cloud.tts import (
     DEFAULT_VOICES,
@@ -239,6 +243,12 @@ async def test_get_tts_audio(
         side_effect=mock_process_tts_side_effect,
     )
     cloud.voice.process_tts = mock_process_tts
+
+    mock_process_tts_stream = _make_stream_mock("There is someone at the door.")
+    if mock_process_tts_side_effect:
+        mock_process_tts_stream.side_effect = mock_process_tts_side_effect
+    cloud.voice.process_tts_stream = mock_process_tts_stream
+
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -262,13 +272,27 @@ async def test_get_tts_audio(
         }
         await hass.async_block_till_done()
 
-    assert mock_process_tts.call_count == 1
-    assert mock_process_tts.call_args is not None
-    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
-    assert mock_process_tts.call_args.kwargs["language"] == "en-US"
-    assert mock_process_tts.call_args.kwargs["gender"] is None
-    assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+        # Force streaming
+        await client.get(response["path"])
+
+    if data.get("engine_id", "").startswith("tts."):
+        # Streaming
+        assert mock_process_tts_stream.call_count == 1
+        assert mock_process_tts_stream.call_args is not None
+        assert mock_process_tts_stream.call_args.kwargs["language"] == "en-US"
+        assert mock_process_tts_stream.call_args.kwargs["gender"] is None
+        assert mock_process_tts_stream.call_args.kwargs["voice"] == "JennyNeural"
+    else:
+        # Non-streaming
+        assert mock_process_tts.call_count == 1
+        assert mock_process_tts.call_args is not None
+        assert (
+            mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
+        )
+        assert mock_process_tts.call_args.kwargs["language"] == "en-US"
+        assert mock_process_tts.call_args.kwargs["gender"] is None
+        assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
+        assert mock_process_tts.call_args.kwargs["output"] == "mp3"
 
 
 @pytest.mark.parametrize(
@@ -321,10 +345,10 @@ async def test_get_tts_audio_logged_out(
 
 
 @pytest.mark.parametrize(
-    ("mock_process_tts_return_value", "mock_process_tts_side_effect"),
+    ("mock_process_tts_side_effect"),
     [
-        (b"", None),
-        (None, VoiceError("Boom!")),
+        (None,),
+        (VoiceError("Boom!"),),
     ],
 )
 async def test_tts_entity(
@@ -332,15 +356,13 @@ async def test_tts_entity(
     hass_client: ClientSessionGenerator,
     entity_registry: EntityRegistry,
     cloud: MagicMock,
-    mock_process_tts_return_value: bytes | None,
     mock_process_tts_side_effect: Exception | None,
 ) -> None:
     """Test text-to-speech entity."""
-    mock_process_tts = AsyncMock(
-        return_value=mock_process_tts_return_value,
-        side_effect=mock_process_tts_side_effect,
-    )
-    cloud.voice.process_tts = mock_process_tts
+    mock_process_tts_stream = _make_stream_mock("There is someone at the door.")
+    if mock_process_tts_side_effect:
+        mock_process_tts_stream.side_effect = mock_process_tts_side_effect
+    cloud.voice.process_tts_stream = mock_process_tts_stream
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -372,13 +394,14 @@ async def test_tts_entity(
         }
         await hass.async_block_till_done()
 
-    assert mock_process_tts.call_count == 1
-    assert mock_process_tts.call_args is not None
-    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
-    assert mock_process_tts.call_args.kwargs["language"] == "en-US"
-    assert mock_process_tts.call_args.kwargs["gender"] is None
-    assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+        # Force streaming
+        await client.get(response["path"])
+
+    assert mock_process_tts_stream.call_count == 1
+    assert mock_process_tts_stream.call_args is not None
+    assert mock_process_tts_stream.call_args.kwargs["language"] == "en-US"
+    assert mock_process_tts_stream.call_args.kwargs["gender"] is None
+    assert mock_process_tts_stream.call_args.kwargs["voice"] == "JennyNeural"
 
     state = hass.states.get(entity_id)
     assert state
@@ -482,6 +505,8 @@ async def test_deprecated_voice(
         return_value=b"",
     )
     cloud.voice.process_tts = mock_process_tts
+    mock_process_tts_stream = _make_stream_mock("There is someone at the door.")
+    cloud.voice.process_tts_stream = mock_process_tts_stream
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -509,18 +534,34 @@ async def test_deprecated_voice(
         }
         await hass.async_block_till_done()
 
-    assert mock_process_tts.call_count == 1
-    assert mock_process_tts.call_args is not None
-    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
-    assert mock_process_tts.call_args.kwargs["language"] == language
-    assert mock_process_tts.call_args.kwargs["gender"] is None
-    assert mock_process_tts.call_args.kwargs["voice"] == replacement_voice
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+        # Force streaming
+        await client.get(response["path"])
+
+    if data.get("engine_id", "").startswith("tts."):
+        # Streaming
+        assert mock_process_tts_stream.call_count == 1
+        assert mock_process_tts_stream.call_args is not None
+        assert mock_process_tts_stream.call_args.kwargs["language"] == language
+        assert mock_process_tts_stream.call_args.kwargs["gender"] is None
+        assert mock_process_tts_stream.call_args.kwargs["voice"] == replacement_voice
+    else:
+        # Non-streaming
+        assert mock_process_tts.call_count == 1
+        assert mock_process_tts.call_args is not None
+        assert (
+            mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
+        )
+        assert mock_process_tts.call_args.kwargs["language"] == language
+        assert mock_process_tts.call_args.kwargs["gender"] is None
+        assert mock_process_tts.call_args.kwargs["voice"] == replacement_voice
+        assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
     issue = issue_registry.async_get_issue(
         "cloud", f"deprecated_voice_{replacement_voice}"
     )
     assert issue is None
     mock_process_tts.reset_mock()
+    mock_process_tts_stream.reset_mock()
 
     # Test with deprecated voice.
     data["options"] = {"voice": deprecated_voice}
@@ -538,15 +579,30 @@ async def test_deprecated_voice(
         }
         await hass.async_block_till_done()
 
+        # Force streaming
+        await client.get(response["path"])
+
     issue_id = f"deprecated_voice_{deprecated_voice}"
 
-    assert mock_process_tts.call_count == 1
-    assert mock_process_tts.call_args is not None
-    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
-    assert mock_process_tts.call_args.kwargs["language"] == language
-    assert mock_process_tts.call_args.kwargs["gender"] is None
-    assert mock_process_tts.call_args.kwargs["voice"] == replacement_voice
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+    if data.get("engine_id", "").startswith("tts."):
+        # Streaming
+        assert mock_process_tts_stream.call_count == 1
+        assert mock_process_tts_stream.call_args is not None
+        assert mock_process_tts_stream.call_args.kwargs["language"] == language
+        assert mock_process_tts_stream.call_args.kwargs["gender"] is None
+        assert mock_process_tts_stream.call_args.kwargs["voice"] == replacement_voice
+    else:
+        # Non-streaming
+        assert mock_process_tts.call_count == 1
+        assert mock_process_tts.call_args is not None
+        assert (
+            mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
+        )
+        assert mock_process_tts.call_args.kwargs["language"] == language
+        assert mock_process_tts.call_args.kwargs["gender"] is None
+        assert mock_process_tts.call_args.kwargs["voice"] == replacement_voice
+        assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
     issue = issue_registry.async_get_issue("cloud", issue_id)
     assert issue is not None
     assert issue.breaks_in_ha_version == "2024.8.0"
@@ -623,6 +679,8 @@ async def test_deprecated_gender(
         return_value=b"",
     )
     cloud.voice.process_tts = mock_process_tts
+    mock_process_tts_stream = _make_stream_mock("There is someone at the door.")
+    cloud.voice.process_tts_stream = mock_process_tts_stream
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -649,15 +707,30 @@ async def test_deprecated_gender(
         }
         await hass.async_block_till_done()
 
-    assert mock_process_tts.call_count == 1
-    assert mock_process_tts.call_args is not None
-    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
-    assert mock_process_tts.call_args.kwargs["language"] == language
-    assert mock_process_tts.call_args.kwargs["voice"] == "XiaoxiaoNeural"
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+        # Force streaming
+        await client.get(response["path"])
+
+    if data.get("engine_id", "").startswith("tts."):
+        # Streaming
+        assert mock_process_tts_stream.call_count == 1
+        assert mock_process_tts_stream.call_args is not None
+        assert mock_process_tts_stream.call_args.kwargs["language"] == language
+        assert mock_process_tts_stream.call_args.kwargs["voice"] == "XiaoxiaoNeural"
+    else:
+        # Non-streaming
+        assert mock_process_tts.call_count == 1
+        assert mock_process_tts.call_args is not None
+        assert (
+            mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
+        )
+        assert mock_process_tts.call_args.kwargs["language"] == language
+        assert mock_process_tts.call_args.kwargs["voice"] == "XiaoxiaoNeural"
+        assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
     issue = issue_registry.async_get_issue("cloud", "deprecated_gender")
     assert issue is None
     mock_process_tts.reset_mock()
+    mock_process_tts_stream.reset_mock()
 
     # Test with deprecated gender option.
     data["options"] = {"gender": gender_option}
@@ -675,15 +748,30 @@ async def test_deprecated_gender(
         }
         await hass.async_block_till_done()
 
+        # Force streaming
+        await client.get(response["path"])
+
     issue_id = "deprecated_gender"
 
-    assert mock_process_tts.call_count == 1
-    assert mock_process_tts.call_args is not None
-    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
-    assert mock_process_tts.call_args.kwargs["language"] == language
-    assert mock_process_tts.call_args.kwargs["gender"] == gender_option
-    assert mock_process_tts.call_args.kwargs["voice"] == "XiaoxiaoNeural"
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+    if data.get("engine_id", "").startswith("tts."):
+        # Streaming
+        assert mock_process_tts_stream.call_count == 1
+        assert mock_process_tts_stream.call_args is not None
+        assert mock_process_tts_stream.call_args.kwargs["language"] == language
+        assert mock_process_tts_stream.call_args.kwargs["gender"] == gender_option
+        assert mock_process_tts_stream.call_args.kwargs["voice"] == "XiaoxiaoNeural"
+    else:
+        # Non-streaming
+        assert mock_process_tts.call_count == 1
+        assert mock_process_tts.call_args is not None
+        assert (
+            mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
+        )
+        assert mock_process_tts.call_args.kwargs["language"] == language
+        assert mock_process_tts.call_args.kwargs["gender"] == gender_option
+        assert mock_process_tts.call_args.kwargs["voice"] == "XiaoxiaoNeural"
+        assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
     issue = issue_registry.async_get_issue("cloud", issue_id)
     assert issue is not None
     assert issue.breaks_in_ha_version == "2024.10.0"
@@ -772,6 +860,8 @@ async def test_tts_services(
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
     mock_process_tts = AsyncMock(return_value=b"")
     cloud.voice.process_tts = mock_process_tts
+    mock_process_tts_stream = _make_stream_mock("There is someone at the door.")
+    cloud.voice.process_tts_stream = mock_process_tts_stream
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -793,9 +883,51 @@ async def test_tts_services(
     assert response.status == HTTPStatus.OK
     await hass.async_block_till_done()
 
-    assert mock_process_tts.call_count == 1
-    assert mock_process_tts.call_args is not None
-    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
-    assert mock_process_tts.call_args.kwargs["language"] == service_data[ATTR_LANGUAGE]
-    assert mock_process_tts.call_args.kwargs["voice"] == "GadisNeural"
-    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+    if service_data.get("entity_id", "").startswith("tts."):
+        # Streaming
+        assert mock_process_tts_stream.call_count == 1
+        assert mock_process_tts_stream.call_args is not None
+        assert (
+            mock_process_tts_stream.call_args.kwargs["language"]
+            == service_data[ATTR_LANGUAGE]
+        )
+        assert mock_process_tts_stream.call_args.kwargs["voice"] == "GadisNeural"
+    else:
+        # Non-streaming
+        assert mock_process_tts.call_count == 1
+        assert mock_process_tts.call_args is not None
+        assert (
+            mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
+        )
+        assert (
+            mock_process_tts.call_args.kwargs["language"] == service_data[ATTR_LANGUAGE]
+        )
+        assert mock_process_tts.call_args.kwargs["voice"] == "GadisNeural"
+        assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
+
+def _make_stream_mock(expected_text: str) -> MagicMock:
+    """Create a mock TTS stream generator with just a WAV header."""
+    with io.BytesIO() as wav_io:
+        wav_writer: wave.Wave_write = wave.open(wav_io, "wb")
+        with wav_writer:
+            wav_writer.setframerate(24000)
+            wav_writer.setsampwidth(2)
+            wav_writer.setnchannels(1)
+
+        wav_io.seek(0)
+        wav_bytes = wav_io.getvalue()
+
+    process_tts_stream = MagicMock()
+
+    async def fake_process_tts_stream(*, text_stream: AsyncIterable[str], **kwargs):
+        # Verify text
+        actual_text = "".join([text_chunk async for text_chunk in text_stream])
+        assert actual_text == expected_text
+
+        # WAV header
+        yield wav_bytes
+
+    process_tts_stream.side_effect = fake_process_tts_stream
+
+    return process_tts_stream

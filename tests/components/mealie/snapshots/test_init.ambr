@@ -17,7 +17,6 @@
         'bf1c62fe-4941-4332-9886-e54e88dbdba0',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -27,8 +26,7 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
-    'sw_version': 'v1.10.2',
+    'sw_version': 'v2.0.0',
     'via_device_id': None,
   })
 # ---

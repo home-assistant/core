@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from xs1_api_client.api_constants import ActuatorType
+from xs1_api_client.device.actuator import XS1Actuator
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -22,7 +23,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the XS1 switch platform."""
-    actuators = hass.data[DOMAIN][ACTUATORS]
+    actuators: list[XS1Actuator] = hass.data[DOMAIN][ACTUATORS]
 
     add_entities(
         XS1SwitchEntity(actuator)
@@ -36,12 +37,12 @@ class XS1SwitchEntity(XS1DeviceEntity, SwitchEntity):
     """Representation of a XS1 switch actuator."""
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device if any."""
         return self.device.name()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.device.value() == 100
 

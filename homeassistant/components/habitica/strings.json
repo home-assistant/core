@@ -4,10 +4,11 @@
     "dailies": "Dailies",
     "config_entry_name": "Select character",
     "task_name": "Task name",
-    "unit_tasks": "tasks",
     "unit_health_points": "HP",
     "unit_mana_points": "MP",
     "unit_experience_points": "XP",
+    "unit_items": "items",
+    "unit_rage": "rage",
     "config_entry_description": "Select the Habitica account to update a task.",
     "task_description": "The name (or task ID) of the task you want to update.",
     "rename_name": "Rename",
@@ -64,7 +65,10 @@
     "repeat_weekly_options_name": "Weekly repeat days",
     "repeat_weekly_options_description": "Options related to weekly repetition, applicable when the repetition interval is set to weekly.",
     "repeat_monthly_options_name": "Monthly repeat day",
-    "repeat_monthly_options_description": "Options related to monthly repetition, applicable when the repetition interval is set to monthly."
+    "repeat_monthly_options_description": "Options related to monthly repetition, applicable when the repetition interval is set to monthly.",
+    "quest_name": "Quest",
+    "collapse_checklist_name": "Collapse/expand checklist",
+    "collapse_checklist_description": "Whether the checklist of a task is displayed as collapsed or expanded in Habitica."
   },
   "config": {
     "abort": {
@@ -170,10 +174,39 @@
       }
     }
   },
+  "config_subentries": {
+    "party_member": {
+      "step": {
+        "user": {
+          "title": "Party members",
+          "description": "Track the stats of the adventurers in your party.",
+          "data": {
+            "party_member": "Party member"
+          },
+          "data_description": {
+            "party_member": "Select an adventurer from your party to track health and other stats."
+          }
+        }
+      },
+      "initiate_flow": {
+        "user": "Add party member"
+      },
+      "entry_type": "Party member",
+      "abort": {
+        "already_configured_as_entry": "Already configured as a user. This adventurer cannot be added as a party member.",
+        "already_configured": "This adventurer is already configured as a party member in this or another account.",
+        "config_entry_disabled": "Cannot add party members when the main account is disabled or not loaded.",
+        "not_in_a_party": "You are currently not in a party. You can only add party members when your character is in a party."
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "pending_quest": {
         "name": "Pending quest invitation"
+      },
+      "quest_running": {
+        "name": "Quest status"
       }
     },
     "button": {
@@ -252,6 +285,17 @@
     "image": {
       "avatar": {
         "name": "Avatar"
+      },
+      "quest_image": {
+        "name": "[%key:component::habitica::common::quest_name%]"
+      }
+    },
+    "notify": {
+      "party_chat": {
+        "name": "Party chat"
+      },
+      "private_message": {
+        "name": "Private message: {name}"
       }
     },
     "sensor": {
@@ -269,15 +313,17 @@
           },
           "total_logins": {
             "name": "Total logins"
+          },
+          "username": {
+            "name": "[%key:common::config_flow::data::username%]"
           }
         }
       },
+      "last_checkin": {
+        "name": "Last check-in"
+      },
       "health": {
         "name": "Health",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
-      },
-      "health_max": {
-        "name": "Max. health",
         "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
       },
       "mana": {
@@ -318,14 +364,6 @@
           "wizard": "Mage",
           "rogue": "Rogue"
         }
-      },
-      "habits": {
-        "name": "Habits",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
-      },
-      "rewards": {
-        "name": "Rewards",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "strength": {
         "name": "Strength",
@@ -426,6 +464,60 @@
       "quest_scrolls": {
         "name": "Quest scrolls",
         "unit_of_measurement": "scrolls"
+      },
+      "pending_damage": {
+        "name": "Pending damage",
+        "unit_of_measurement": "damage"
+      },
+      "pending_quest_items": {
+        "name": "Pending quest items",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_items%]"
+      },
+      "member_count": {
+        "name": "Member count",
+        "unit_of_measurement": "members"
+      },
+      "group_leader": {
+        "name": "Group leader"
+      },
+      "quest": {
+        "name": "[%key:component::habitica::common::quest_name%]",
+        "state_attributes": {
+          "quest_details": {
+            "name": "Quest details"
+          }
+        }
+      },
+      "boss": {
+        "name": "Quest boss"
+      },
+      "boss_hp": {
+        "name": "Boss health",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
+      },
+      "boss_hp_remaining": {
+        "name": "Boss health remaining",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
+      },
+      "collected_items": {
+        "name": "Collected quest items",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_items%]"
+      },
+      "boss_rage_limit": {
+        "name": "Boss rage limit break",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_rage%]",
+        "state_attributes": {
+          "rage_skill": {
+            "name": "Rage skill"
+          },
+          "effect": {
+            "name": "Effect"
+          }
+        }
+      },
+      "boss_rage": {
+        "name": "Boss rage",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_rage%]"
       }
     },
     "switch": {
@@ -520,12 +612,12 @@
     },
     "frequency_not_monthly": {
       "message": "Unable to update task, monthly repeat settings apply only to monthly recurring dailies."
-    }
-  },
-  "issues": {
-    "deprecated_entity": {
-      "title": "The Habitica {name} entity is deprecated",
-      "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
+    },
+    "send_message_forbidden": {
+      "message": "You are not allowed to send messages to {name}. ({reason})"
+    },
+    "send_message_not_found": {
+      "message": "Unable to send message, {name} not found. ({reason})"
     }
   },
   "services": {
@@ -956,6 +1048,10 @@
         "unscore_checklist_item": {
           "name": "[%key:component::habitica::common::unscore_checklist_item_name%]",
           "description": "[%key:component::habitica::common::unscore_checklist_item_description%]"
+        },
+        "collapse_checklist": {
+          "name": "[%key:component::habitica::common::collapse_checklist_name%]",
+          "description": "[%key:component::habitica::common::collapse_checklist_description%]"
         }
       },
       "sections": {
@@ -1020,6 +1116,10 @@
         "add_checklist_item": {
           "name": "[%key:component::habitica::common::checklist_options_name%]",
           "description": "[%key:component::habitica::common::add_checklist_item_description%]"
+        },
+        "collapse_checklist": {
+          "name": "[%key:component::habitica::common::collapse_checklist_name%]",
+          "description": "[%key:component::habitica::common::collapse_checklist_description%]"
         }
       },
       "sections": {
@@ -1100,6 +1200,10 @@
         "unscore_checklist_item": {
           "name": "[%key:component::habitica::common::unscore_checklist_item_name%]",
           "description": "[%key:component::habitica::common::unscore_checklist_item_description%]"
+        },
+        "collapse_checklist": {
+          "name": "[%key:component::habitica::common::collapse_checklist_name%]",
+          "description": "[%key:component::habitica::common::collapse_checklist_description%]"
         },
         "streak": {
           "name": "Adjust streak",
@@ -1197,6 +1301,10 @@
           "name": "[%key:component::habitica::common::checklist_options_name%]",
           "description": "[%key:component::habitica::common::add_checklist_item_description%]"
         },
+        "collapse_checklist": {
+          "name": "[%key:component::habitica::common::collapse_checklist_name%]",
+          "description": "[%key:component::habitica::common::collapse_checklist_description%]"
+        },
         "reminder": {
           "name": "[%key:component::habitica::common::reminder_options_name%]",
           "description": "[%key:component::habitica::common::reminder_description%]"
@@ -1274,6 +1382,12 @@
       "options": {
         "day_of_month": "Day of the month",
         "day_of_week": "Day of the week"
+      }
+    },
+    "collapse_checklist": {
+      "options": {
+        "collapsed": "Collapsed",
+        "expanded": "Expanded"
       }
     }
   }

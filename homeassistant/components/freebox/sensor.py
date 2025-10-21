@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, UnitOfDataRate, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
@@ -28,6 +29,7 @@ CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="rate_down",
         name="Freebox download speed",
         device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         icon="mdi:download-network",
     ),
@@ -35,6 +37,7 @@ CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="rate_up",
         name="Freebox upload speed",
         device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         icon="mdi:upload-network",
     ),
@@ -65,7 +68,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensors."""
     router = entry.runtime_data
-    entities: list[SensorEntity] = []
 
     _LOGGER.debug(
         "%s - %s - %s temperature sensors",
@@ -73,7 +75,7 @@ async def async_setup_entry(
         router.mac,
         len(router.sensors_temperature),
     )
-    entities = [
+    entities: list[SensorEntity] = [
         FreeboxSensor(
             router,
             SensorEntityDescription(
@@ -81,6 +83,7 @@ async def async_setup_entry(
                 name=f"Freebox {sensor_name}",
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=SensorStateClass.MEASUREMENT,
             ),
         )
         for sensor_name in router.sensors_temperature
@@ -101,14 +104,16 @@ async def async_setup_entry(
         for description in DISK_PARTITION_SENSORS
     )
 
-    for node in router.home_devices.values():
-        for endpoint in node["show_endpoints"]:
-            if (
-                endpoint["name"] == "battery"
-                and endpoint["ep_type"] == "signal"
-                and endpoint.get("value") is not None
-            ):
-                entities.append(FreeboxBatterySensor(hass, router, node, endpoint))
+    entities.extend(
+        FreeboxBatterySensor(router, node, endpoint)
+        for node in router.home_devices.values()
+        for endpoint in node["show_endpoints"]
+        if (
+            endpoint["name"] == "battery"
+            and endpoint["ep_type"] == "signal"
+            and endpoint.get("value") is not None
+        )
+    )
 
     if entities:
         async_add_entities(entities, True)

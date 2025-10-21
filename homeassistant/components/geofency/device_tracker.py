@@ -1,7 +1,6 @@
 """Support for the Geofency device tracker platform."""
 
 from homeassistant.components.device_tracker import TrackerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -10,12 +9,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DOMAIN, TRACKER_UPDATE
+from . import TRACKER_UPDATE, GeofencyConfigEntry
+from .const import DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GeofencyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Geofency config entry."""
@@ -23,14 +23,16 @@ async def async_setup_entry(
     @callback
     def _receive_data(device, gps, location_name, attributes):
         """Fire HA event to set location."""
-        if device in hass.data[DOMAIN]["devices"]:
+        if device in config_entry.runtime_data:
             return
 
-        hass.data[DOMAIN]["devices"].add(device)
+        config_entry.runtime_data.add(device)
 
-        async_add_entities([GeofencyEntity(device, gps, location_name, attributes)])
+        async_add_entities(
+            [GeofencyEntity(config_entry, device, gps, location_name, attributes)]
+        )
 
-    hass.data[DOMAIN]["unsub_device_tracker"][config_entry.entry_id] = (
+    config_entry.async_on_unload(
         async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
     )
 
@@ -45,8 +47,8 @@ async def async_setup_entry(
     }
 
     if dev_ids:
-        hass.data[DOMAIN]["devices"].update(dev_ids)
-        async_add_entities(GeofencyEntity(dev_id) for dev_id in dev_ids)
+        config_entry.runtime_data.update(dev_ids)
+        async_add_entities(GeofencyEntity(config_entry, dev_id) for dev_id in dev_ids)
 
 
 class GeofencyEntity(TrackerEntity, RestoreEntity):
@@ -55,8 +57,9 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, device, gps=None, location_name=None, attributes=None):
+    def __init__(self, entry, device, gps=None, location_name=None, attributes=None):
         """Set up Geofency entity."""
+        self._entry = entry
         self._attr_extra_state_attributes = attributes or {}
         self._name = device
         self._attr_location_name = location_name
@@ -93,7 +96,7 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
         """Clean up after entity before removal."""
         await super().async_will_remove_from_hass()
         self._unsub_dispatcher()
-        self.hass.data[DOMAIN]["devices"].remove(self.unique_id)
+        self._entry.runtime_data.remove(self.unique_id)
 
     @callback
     def _async_receive_data(self, device, gps, location_name, attributes):

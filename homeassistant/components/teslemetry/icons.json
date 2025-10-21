@@ -415,6 +415,9 @@
       "brick_voltage_min": {
         "default": "mdi:battery-low"
       },
+      "credit_balance": {
+        "default": "mdi:credit-card"
+      },
       "cruise_follow_distance": {
         "default": "mdi:car-cruise-control"
       },
@@ -583,6 +586,12 @@
       "hvac_fan_status": {
         "default": "mdi:fan"
       },
+      "hvac_left_temperature_request": {
+        "default": "mdi:thermometer"
+      },
+      "hvac_right_temperature_request": {
+        "default": "mdi:thermometer"
+      },
       "isolation_resistance": {
         "default": "mdi:resistor"
       },
@@ -743,6 +752,9 @@
       },
       "vehicle_state_valet_mode": {
         "default": "mdi:speedometer-slow"
+      },
+      "guest_mode_enabled": {
+        "default": "mdi:account-group"
       }
     }
   },
@@ -764,6 +776,18 @@
     },
     "time_of_use": {
       "service": "mdi:clock-time-eight-outline"
+    },
+    "add_charge_schedule": {
+      "service": "mdi:calendar-plus"
+    },
+    "remove_charge_schedule": {
+      "service": "mdi:calendar-minus"
+    },
+    "add_precondition_schedule": {
+      "service": "mdi:hvac-outline"
+    },
+    "remove_precondition_schedule": {
+      "service": "mdi:hvac-off-outline"
     }
   }
 }

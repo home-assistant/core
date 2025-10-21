@@ -29,13 +29,13 @@
     },
     "step": {
       "init": {
-        "title": "Configure MyLink Options",
+        "title": "Configure MyLink options",
         "data": {
           "target_id": "Configure options for a cover."
         }
       },
       "target_config": {
-        "title": "Configure MyLink Cover",
+        "title": "Configure MyLink cover",
         "description": "Configure options for `{target_name}`",
         "data": {
           "reverse": "Cover is reversed"

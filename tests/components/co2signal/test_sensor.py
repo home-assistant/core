@@ -11,7 +11,7 @@ from aioelectricitymaps import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -62,8 +62,7 @@ async def test_sensor_update_fail(
     assert state.state == "45.9862319009581"
     assert len(electricity_maps.mock_calls) == 1
 
-    electricity_maps.latest_carbon_intensity_by_coordinates.side_effect = error
-    electricity_maps.latest_carbon_intensity_by_country_code.side_effect = error
+    electricity_maps.carbon_intensity_for_home_assistant.side_effect = error
 
     freezer.tick(timedelta(minutes=20))
     async_fire_time_changed(hass)
@@ -74,8 +73,7 @@ async def test_sensor_update_fail(
     assert len(electricity_maps.mock_calls) == 2
 
     # reset mock and test if entity is available again
-    electricity_maps.latest_carbon_intensity_by_coordinates.side_effect = None
-    electricity_maps.latest_carbon_intensity_by_country_code.side_effect = None
+    electricity_maps.carbon_intensity_for_home_assistant.side_effect = None
 
     freezer.tick(timedelta(minutes=20))
     async_fire_time_changed(hass)
@@ -96,10 +94,7 @@ async def test_sensor_reauth_triggered(
     assert (state := hass.states.get("sensor.electricity_maps_co2_intensity"))
     assert state.state == "45.9862319009581"
 
-    electricity_maps.latest_carbon_intensity_by_coordinates.side_effect = (
-        ElectricityMapsInvalidTokenError
-    )
-    electricity_maps.latest_carbon_intensity_by_country_code.side_effect = (
+    electricity_maps.carbon_intensity_for_home_assistant.side_effect = (
         ElectricityMapsInvalidTokenError
     )
 

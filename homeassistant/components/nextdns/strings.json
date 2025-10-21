@@ -4,16 +4,25 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The API key for your NextDNS account"
         }
       },
       "profiles": {
         "data": {
-          "profile": "Profile"
+          "profile_name": "Profile"
+        },
+        "data_description": {
+          "profile_name": "The NextDNS configuration profile you want to integrate"
         }
       },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::nextdns::config::step::user::data_description::api_key%]"
         }
       }
     },
@@ -311,13 +320,16 @@
         "name": "Block WhatsApp"
       },
       "block_xboxlive": {
-        "name": "Block Xbox Live"
+        "name": "Block Xbox Network"
       },
       "block_youtube": {
         "name": "Block YouTube"
       },
       "block_zoom": {
         "name": "Block Zoom"
+      },
+      "bypass_age_verification": {
+        "name": "Bypass age verification"
       },
       "cache_boost": {
         "name": "Cache boost"

@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 TEST_USER_INPUT = {
     CONF_HOST: "192.168.1.1",
@@ -46,7 +46,8 @@ async def async_init_integration(
 
     with patch(
         "homeassistant.components.webmin.helpers.WebminInstance.update",
-        return_value=load_json_object_fixture(
+        return_value=await async_load_json_object_fixture(
+            hass,
             "webmin_update.json"
             if with_mac_address
             else "webmin_update_without_mac.json",

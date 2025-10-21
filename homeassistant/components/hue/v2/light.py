@@ -26,13 +26,12 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import color as color_util
 
-from ..bridge import HueBridge
+from ..bridge import HueBridge, HueConfigEntry
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 from .helpers import (
@@ -41,8 +40,8 @@ from .helpers import (
     normalize_hue_transition,
 )
 
-FALLBACK_MIN_KELVIN = 6500
-FALLBACK_MAX_KELVIN = 2000
+FALLBACK_MIN_MIREDS = 153  # hue default for most lights
+FALLBACK_MAX_MIREDS = 500  # hue default for most lights
 FALLBACK_KELVIN = 5800  # halfway
 
 # HA 2025.4 replaced the deprecated effect "None" with HA default "off"
@@ -51,11 +50,11 @@ DEPRECATED_EFFECT_NONE = "None"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HueConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hue Light from Config Entry."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
     controller: LightsController = api.lights
     make_light_entity = partial(HueLight, bridge, controller)
@@ -179,24 +178,30 @@ class HueLight(HueBaseEntity, LightEntity):
         return FALLBACK_KELVIN
 
     @property
+    def max_color_temp_mireds(self) -> int:
+        """Return the warmest color_temp in mireds (so highest number) that this light supports."""
+        if color_temp := self.resource.color_temperature:
+            return color_temp.mirek_schema.mirek_maximum
+        # return a fallback value if the light doesn't provide limits
+        return FALLBACK_MAX_MIREDS
+
+    @property
+    def min_color_temp_mireds(self) -> int:
+        """Return the coldest color_temp in mireds (so lowest number) that this light supports."""
+        if color_temp := self.resource.color_temperature:
+            return color_temp.mirek_schema.mirek_minimum
+        # return a fallback value if the light doesn't provide limits
+        return FALLBACK_MIN_MIREDS
+
+    @property
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
-        if color_temp := self.resource.color_temperature:
-            return color_util.color_temperature_mired_to_kelvin(
-                color_temp.mirek_schema.mirek_minimum
-            )
-        # return a fallback value to prevent issues with mired->kelvin conversions
-        return FALLBACK_MAX_KELVIN
+        return color_util.color_temperature_mired_to_kelvin(self.min_color_temp_mireds)
 
     @property
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
-        if color_temp := self.resource.color_temperature:
-            return color_util.color_temperature_mired_to_kelvin(
-                color_temp.mirek_schema.mirek_maximum
-            )
-        # return a fallback value to prevent issues with mired->kelvin conversions
-        return FALLBACK_MIN_KELVIN
+        return color_util.color_temperature_mired_to_kelvin(self.max_color_temp_mireds)
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
@@ -221,7 +226,11 @@ class HueLight(HueBaseEntity, LightEntity):
         """Turn the device on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
-        color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP_KELVIN))
+        color_temp = normalize_hue_colortemp(
+            kwargs.get(ATTR_COLOR_TEMP_KELVIN),
+            self.min_color_temp_mireds,
+            self.max_color_temp_mireds,
+        )
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         if self._last_brightness and brightness is None:
             # The Hue bridge sets the brightness to 1% when turning on a bulb

@@ -31,6 +31,7 @@
     'original_name': None,
     'platform': 'niko_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01JFN93M7KRA38V5AMPCJ2JYYV-2',
@@ -40,7 +41,7 @@
 # name: test_entities[light.dimmable_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
+      'brightness': 100,
       'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'dimmable light',
       'supported_color_modes': list([
@@ -88,6 +89,7 @@
     'original_name': None,
     'platform': 'niko_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01JFN93M7KRA38V5AMPCJ2JYYV-1',

@@ -27,6 +27,7 @@
     'original_name': 'Charging',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1zoe40vin_charging',
@@ -75,6 +76,7 @@
     'original_name': 'HVAC',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_status',
     'unique_id': 'vf1zoe40vin_hvac_status',
@@ -122,6 +124,7 @@
     'original_name': 'Plug',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1zoe40vin_plugged_in',
@@ -170,6 +173,7 @@
     'original_name': 'Charging',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1zoe40vin_charging',
@@ -218,6 +222,7 @@
     'original_name': 'HVAC',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_status',
     'unique_id': 'vf1zoe40vin_hvac_status',
@@ -265,6 +270,7 @@
     'original_name': 'Plug',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1zoe40vin_plugged_in',
@@ -285,7 +291,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_driver_door-entry]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -298,7 +304,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_captur_fuel_driver_door',
+    'entity_id': 'binary_sensor.reg_captur_fuel_hvac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -308,269 +314,29 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Driver door',
+    'original_name': 'HVAC',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'driver_door_status',
-    'unique_id': 'vf1capturfuelvin_driver_door_status',
+    'translation_key': 'hvac_status',
+    'unique_id': 'vf1capturfuelvin_hvac_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_driver_door-state]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'REG-CAPTUR-FUEL Driver door',
+      'friendly_name': 'REG-CAPTUR-FUEL HVAC',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_captur_fuel_driver_door',
+    'entity_id': 'binary_sensor.reg_captur_fuel_hvac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_hatch-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.reg_captur_fuel_hatch',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Hatch',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'hatch_status',
-    'unique_id': 'vf1capturfuelvin_hatch_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_hatch-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'REG-CAPTUR-FUEL Hatch',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_captur_fuel_hatch',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_lock-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.reg_captur_fuel_lock',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
-    'original_icon': None,
-    'original_name': 'Lock',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'vf1capturfuelvin_lock_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_lock-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'lock',
-      'friendly_name': 'REG-CAPTUR-FUEL Lock',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_captur_fuel_lock',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_passenger_door-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.reg_captur_fuel_passenger_door',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Passenger door',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'passenger_door_status',
-    'unique_id': 'vf1capturfuelvin_passenger_door_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_passenger_door-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'REG-CAPTUR-FUEL Passenger door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_captur_fuel_passenger_door',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_rear_left_door-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.reg_captur_fuel_rear_left_door',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Rear left door',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rear_left_door_status',
-    'unique_id': 'vf1capturfuelvin_rear_left_door_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_rear_left_door-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'REG-CAPTUR-FUEL Rear left door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_captur_fuel_rear_left_door',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_rear_right_door-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.reg_captur_fuel_rear_right_door',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Rear right door',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rear_right_door_status',
-    'unique_id': 'vf1capturfuelvin_rear_right_door_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_rear_right_door-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'REG-CAPTUR-FUEL Rear right door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_captur_fuel_rear_right_door',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'unknown',
   })
 # ---
 # name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_charging-entry]
@@ -601,6 +367,7 @@
     'original_name': 'Charging',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1capturphevvin_charging',
@@ -621,7 +388,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_driver_door-entry]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -634,7 +401,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_captur_phev_driver_door',
+    'entity_id': 'binary_sensor.reg_captur_phev_hvac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -644,173 +411,29 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Driver door',
+    'original_name': 'HVAC',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'driver_door_status',
-    'unique_id': 'vf1capturphevvin_driver_door_status',
+    'translation_key': 'hvac_status',
+    'unique_id': 'vf1capturphevvin_hvac_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_driver_door-state]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'REG-CAPTUR_PHEV Driver door',
+      'friendly_name': 'REG-CAPTUR_PHEV HVAC',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_captur_phev_driver_door',
+    'entity_id': 'binary_sensor.reg_captur_phev_hvac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_hatch-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.reg_captur_phev_hatch',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Hatch',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'hatch_status',
-    'unique_id': 'vf1capturphevvin_hatch_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_hatch-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'REG-CAPTUR_PHEV Hatch',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_captur_phev_hatch',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_lock-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.reg_captur_phev_lock',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
-    'original_icon': None,
-    'original_name': 'Lock',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'vf1capturphevvin_lock_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_lock-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'lock',
-      'friendly_name': 'REG-CAPTUR_PHEV Lock',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_captur_phev_lock',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_passenger_door-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.reg_captur_phev_passenger_door',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Passenger door',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'passenger_door_status',
-    'unique_id': 'vf1capturphevvin_passenger_door_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_passenger_door-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'REG-CAPTUR_PHEV Passenger door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_captur_phev_passenger_door',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'unknown',
   })
 # ---
 # name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_plug-entry]
@@ -841,6 +464,7 @@
     'original_name': 'Plug',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1capturphevvin_plugged_in',
@@ -859,102 +483,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
-  })
-# ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_rear_left_door-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.reg_captur_phev_rear_left_door',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Rear left door',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rear_left_door_status',
-    'unique_id': 'vf1capturphevvin_rear_left_door_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_rear_left_door-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'REG-CAPTUR_PHEV Rear left door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_captur_phev_rear_left_door',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_rear_right_door-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.reg_captur_phev_rear_right_door',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Rear right door',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rear_right_door_status',
-    'unique_id': 'vf1capturphevvin_rear_right_door_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_rear_right_door-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'REG-CAPTUR_PHEV Rear right door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_captur_phev_rear_right_door',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
   })
 # ---
 # name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_charging-entry]
@@ -985,6 +513,7 @@
     'original_name': 'Charging',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1twingoiiivin_charging',
@@ -1033,6 +562,7 @@
     'original_name': 'HVAC',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_status',
     'unique_id': 'vf1twingoiiivin_hvac_status',
@@ -1080,6 +610,7 @@
     'original_name': 'Plug',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1twingoiiivin_plugged_in',
@@ -1128,6 +659,7 @@
     'original_name': 'Charging',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1zoe40vin_charging',
@@ -1176,6 +708,7 @@
     'original_name': 'HVAC',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_status',
     'unique_id': 'vf1zoe40vin_hvac_status',
@@ -1223,6 +756,7 @@
     'original_name': 'Plug',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1zoe40vin_plugged_in',
@@ -1271,6 +805,7 @@
     'original_name': 'Charging',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1zoe50vin_charging',
@@ -1319,6 +854,7 @@
     'original_name': 'HVAC',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_status',
     'unique_id': 'vf1zoe50vin_hvac_status',
@@ -1366,6 +902,7 @@
     'original_name': 'Plug',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1zoe50vin_plugged_in',

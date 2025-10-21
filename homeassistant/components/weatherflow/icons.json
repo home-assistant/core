@@ -11,10 +11,40 @@
         "default": "mdi:weather-rainy"
       },
       "wind_direction": {
-        "default": "mdi:compass-outline"
+        "default": "mdi:compass-outline",
+        "range": {
+          "0": "mdi:arrow-up",
+          "22.5": "mdi:arrow-top-right",
+          "67.5": "mdi:arrow-right",
+          "112.5": "mdi:arrow-bottom-right",
+          "157.5": "mdi:arrow-down",
+          "202.5": "mdi:arrow-bottom-left",
+          "247.5": "mdi:arrow-left",
+          "292.5": "mdi:arrow-top-left",
+          "337.5": "mdi:arrow-up"
+        }
       },
       "wind_direction_average": {
-        "default": "mdi:compass-outline"
+        "default": "mdi:compass-outline",
+        "range": {
+          "0": "mdi:arrow-up",
+          "22.5": "mdi:arrow-top-right",
+          "67.5": "mdi:arrow-right",
+          "112.5": "mdi:arrow-bottom-right",
+          "157.5": "mdi:arrow-down",
+          "202.5": "mdi:arrow-bottom-left",
+          "247.5": "mdi:arrow-left",
+          "292.5": "mdi:arrow-top-left",
+          "337.5": "mdi:arrow-up"
+        }
+      }
+    },
+    "event": {
+      "lightning_strike_event": {
+        "default": "mdi:weather-lightning"
+      },
+      "precip_start_event": {
+        "default": "mdi:weather-rainy"
       }
     }
   }

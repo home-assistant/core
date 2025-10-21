@@ -35,17 +35,23 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")
-async def test_switch_setup(hass: HomeAssistant) -> None:
+async def test_switch_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test default setup of the switch component."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
 
-    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_guest_wi_fi") is not None
-    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_leds") is not None
-
-    await hass.config_entries.async_unload(entry.entry_id)
+    assert not entity_registry.async_get(
+        f"{PLATFORM}.{device_name}_enable_guest_wi_fi"
+    ).disabled
+    assert not entity_registry.async_get(
+        f"{PLATFORM}.{device_name}_enable_leds"
+    ).disabled
 
 
 async def test_update_guest_wifi_status_auth_failed(
@@ -69,8 +75,6 @@ async def test_update_guest_wifi_status_auth_failed(
     assert "context" in flow
     assert flow["context"]["source"] == SOURCE_REAUTH
     assert flow["context"]["entry_id"] == entry.entry_id
-
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_update_enable_guest_wifi(
@@ -153,8 +157,6 @@ async def test_update_enable_guest_wifi(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    await hass.config_entries.async_unload(entry.entry_id)
-
 
 async def test_update_enable_leds(
     hass: HomeAssistant,
@@ -229,8 +231,6 @@ async def test_update_enable_leds(
     state = hass.states.get(state_key)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -325,5 +325,3 @@ async def test_auth_failed(
     assert "context" in flow
     assert flow["context"]["source"] == SOURCE_REAUTH
     assert flow["context"]["entry_id"] == entry.entry_id
-
-    await hass.config_entries.async_unload(entry.entry_id)
