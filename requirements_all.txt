@@ -1891,7 +1891,7 @@ pyatv==0.16.1;python_version<'3.14'
 pyaussiebb==0.1.5
 
 # homeassistant.components.myneomitis
-pyaxencoapi==1.0.2
+pyaxencoapi==1.0.4
 
 # homeassistant.components.balboa
 pybalboa==1.1.3
