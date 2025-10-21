@@ -54,7 +54,9 @@ rules:
   dynamic-devices: done
   entity-category: todo
   entity-device-class: done
-  entity-disabled-by-default: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: There aren't any entities that should be disabled by default.
   entity-translations: done
   exception-translations: todo
   icon-translations: todo
