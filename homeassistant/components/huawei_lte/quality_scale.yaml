@@ -41,7 +41,7 @@ rules:
   reauthentication-flow: done
   test-coverage:
     status: todo
-    comment: Get percentage up there, add missing actual action press invocations in button tests' suspended state tests, make test functions receive hass as first parameter where applicable.
+    comment: Get percentage up there, add missing actual action press invocations in button tests' suspended state tests.
 
   # Gold
   devices: done
