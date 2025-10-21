@@ -1,4 +1,4 @@
-"""Coordinator and API client for Level Lock devices."""
+"""Coordinator and device mapping for Level Lock devices."""
 
 from __future__ import annotations
 
@@ -6,21 +6,11 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from aiohttp import ClientError
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import api
-from .const import (
-    API_LOCK_COMMAND_LOCK_PATH,
-    API_LOCK_COMMAND_UNLOCK_PATH,
-    API_LOCK_STATUS_PATH,
-    API_LOCKS_LIST_PATH,
-)
-from .ws import LevelWebsocketManager
+from .level_ha import ApiError, Client, WebsocketManager as LevelWebsocketManager
 
 LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = None  # Use push updates; no periodic polling
@@ -36,42 +26,16 @@ class LevelLockDevice:
     state: str | None = None  # Raw state from API for transitional states
 
 
-class LevelApiClient:
-    """Thin API client using the OAuth2 session for auth."""
+class _ClientAdapter:
+    """Adapter around the library client to map raw payloads to devices."""
 
-    def __init__(
-        self, hass: HomeAssistant, auth: api.AsyncConfigEntryAuth, base_url: str
-    ) -> None:
-        self._hass = hass
-        self._auth = auth
-        self._base_url = base_url.rstrip("/")
-        self._session = aiohttp_client.async_get_clientsession(hass)
-
-    async def _request(
-        self, method: str, path: str, *, json: dict[str, Any] | None = None
-    ) -> Any:
-        token = await self._auth.async_get_access_token()
-        url = f"{self._base_url}{path}"
-        headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
-        try:
-            async with self._session.request(
-                method, url, headers=headers, json=json
-            ) as resp:
-                if resp.status >= 400:
-                    text = await resp.text()
-                    raise UpdateFailed(
-                        f"HTTP {resp.status} for {method} {path}: {text}"
-                    )
-                if resp.content_type == "application/json":
-                    return await resp.json()
-                return await resp.text()
-        except ClientError as err:  # aiohttp error
-            raise UpdateFailed(f"API error: {err}") from err
+    def __init__(self, client: Client) -> None:
+        self._client = client
 
     async def async_list_locks(self) -> list[LevelLockDevice]:
-        data = await self._request("GET", API_LOCKS_LIST_PATH)
+        data = await self._client.async_list_locks()
         devices: list[LevelLockDevice] = []
-        for item in data.get("locks", []):
+        for item in data:
             state = item.get("state")
             devices.append(
                 LevelLockDevice(
@@ -84,16 +48,14 @@ class LevelApiClient:
         return devices
 
     async def async_get_lock_status(self, lock_id: str) -> bool | None:
-        data = await self._request("GET", API_LOCK_STATUS_PATH.format(lock_id=lock_id))
+        data = await self._client.async_get_lock_status(lock_id)
         return _coerce_is_locked(data.get("state"))
 
     async def async_lock(self, lock_id: str) -> None:
-        await self._request("POST", API_LOCK_COMMAND_LOCK_PATH.format(lock_id=lock_id))
+        await self._client.async_lock(lock_id)
 
     async def async_unlock(self, lock_id: str) -> None:
-        await self._request(
-            "POST", API_LOCK_COMMAND_UNLOCK_PATH.format(lock_id=lock_id)
-        )
+        await self._client.async_unlock(lock_id)
 
 
 def _coerce_is_locked(state: Any) -> bool | None:
@@ -117,7 +79,7 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
     """Coordinator to fetch all locks for the account."""
 
     def __init__(
-        self, hass: HomeAssistant, client: LevelApiClient, *, config_entry: ConfigEntry
+        self, hass: HomeAssistant, client: Client, *, config_entry: ConfigEntry
     ) -> None:
         super().__init__(
             hass,
@@ -126,18 +88,24 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
             update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )
-        self._client = client
+        self._client = _ClientAdapter(client)
         self._ws_manager: LevelWebsocketManager | None = None
 
     async def _async_update_data(self) -> dict[str, LevelLockDevice]:
-        devices = await self._client.async_list_locks()
+        try:
+            devices = await self._client.async_list_locks()
+        except ApiError as err:
+            raise UpdateFailed(str(err)) from err
         result: dict[str, LevelLockDevice] = {d.lock_id: d for d in devices}
         missing_status = [d for d in result.values() if d.is_locked is None]
         if missing_status:
             for device in missing_status:
-                device.is_locked = await self._client.async_get_lock_status(
-                    device.lock_id
-                )
+                try:
+                    device.is_locked = await self._client.async_get_lock_status(
+                        device.lock_id
+                    )
+                except ApiError as err:
+                    raise UpdateFailed(str(err)) from err
         return result
 
     def attach_ws_manager(self, ws_manager: LevelWebsocketManager) -> None:
@@ -166,7 +134,11 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
         if device is None:
             # Unknown lock; fetch list once to incorporate
             try:
-                devices = await self._client.async_list_locks()
+                try:
+                    devices = await self._client.async_list_locks()
+                except ApiError:
+                    LOGGER.debug("Push update for unknown lock %s", lock_id)
+                    return
                 current = {d.lock_id: d for d in devices}
                 device = current.get(lock_id)
             except Exception:  # noqa: BLE001
@@ -190,7 +162,10 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
                 return
             except Exception as err:  # noqa: BLE001
                 LOGGER.debug("WS command failed; falling back to HTTP: %s", err)
-        if command == "lock":
-            await self._client.async_lock(lock_id)
-        elif command == "unlock":
-            await self._client.async_unlock(lock_id)
+        try:
+            if command == "lock":
+                await self._client.async_lock(lock_id)
+            elif command == "unlock":
+                await self._client.async_unlock(lock_id)
+        except ApiError as err:
+            raise UpdateFailed(str(err)) from err

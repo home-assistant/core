@@ -15,8 +15,8 @@ from .const import (
     DEFAULT_PARTNER_BASE_URL,
     DOMAIN,
 )
-from .coordinator import LevelApiClient, LevelLocksCoordinator
-from .ws import LevelWebsocketManager
+from .coordinator import LevelLocksCoordinator
+from .level_ha import Client as LibClient, WebsocketManager as LevelWebsocketManager
 
 # For your initial PR, limit it to 1 platform.
 _PLATFORMS: list[Platform] = [Platform.LOCK]
@@ -55,7 +55,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> 
     base_url = (hass.data.get(DOMAIN) or {}).get(
         CONF_PARTNER_BASE_URL
     ) or DEFAULT_PARTNER_BASE_URL
-    client = LevelApiClient(hass, auth, base_url)
+    session = aiohttp_client.async_get_clientsession(hass)
+
+    async def _get_token() -> str:
+        return await auth.async_get_access_token()
+
+    client = LibClient(session, base_url, _get_token)
     coordinator = LevelLocksCoordinator(hass, client, config_entry=entry)
     # First refresh: if it fails due to network/auth, raise ConfigEntryNotReady here
     await coordinator.async_config_entry_first_refresh()
@@ -66,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> 
     ) -> None:
         await coordinator.async_handle_push_update(lock_id, is_locked, payload)
 
-    ws_manager = LevelWebsocketManager(hass, auth, base_url, _on_state)
+    ws_manager = LevelWebsocketManager(session, base_url, _get_token, _on_state)
     coordinator.attach_ws_manager(ws_manager)
     await coordinator.async_start_push()
 

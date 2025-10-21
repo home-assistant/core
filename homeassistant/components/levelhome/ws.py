@@ -14,16 +14,14 @@ from dataclasses import dataclass
 import json
 import logging
 import random
-from typing import Any, Literal
+from typing import Any, Awaitable, Callable, Literal
 
 from aiohttp import ClientError, ClientSession, ClientWebSocketResponse, WSMsgType
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
-
-from . import api
-
 LOGGER = logging.getLogger(__name__)
+
+# Token provider callable type (async)
+TokenProvider = Callable[[], Awaitable[str]]
 
 
 # =========================
@@ -122,18 +120,17 @@ class LevelWebsocketManager:
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        auth: api.AsyncConfigEntryAuth,
+        session: ClientSession,
         base_url: str,
+        get_token: TokenProvider,
         on_state_update: Callable[
             [str, bool | None, dict[str, Any] | None], Awaitable[None]
         ],
     ) -> None:
-        self._hass = hass
-        self._auth = auth
+        self._get_token = get_token
         self._base_url = base_url.rstrip("/")
         self._on_state_update = on_state_update
-        self._session: ClientSession = aiohttp_client.async_get_clientsession(hass)
+        self._session: ClientSession = session
 
         # Runtime state
         self._stop_event = asyncio.Event()
@@ -147,7 +144,7 @@ class LevelWebsocketManager:
             if lock_id in self._tasks:
                 continue
             self._send_locks[lock_id] = asyncio.Lock()
-            task = self._hass.loop.create_task(self._run_connection(lock_id))
+            task = asyncio.create_task(self._run_connection(lock_id))
             self._tasks[lock_id] = task
 
     async def async_stop(self) -> None:
@@ -201,9 +198,8 @@ class LevelWebsocketManager:
         url = f"{self._base_url}/v1/locks/{lock_id}/ws"
 
         while not self._stop_event.is_set():
-            token = None
             try:
-                token = await self._auth.async_get_access_token()
+                token = await self._get_token()
                 headers = {
                     "Authorization": f"Bearer {token}",
                     "Accept": "application/json",
