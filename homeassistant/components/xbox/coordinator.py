@@ -131,7 +131,6 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="request_exception",
-                    translation_placeholders={"error": str(e)},
                 ) from e
             _LOGGER.debug(
                 "%s status: %s",
