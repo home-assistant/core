@@ -7,7 +7,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import PresenceData, XboxUpdateCoordinator
+from .coordinator import Person, XboxUpdateCoordinator
 
 
 class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
@@ -37,6 +37,6 @@ class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
         )
 
     @property
-    def data(self) -> PresenceData:
+    def data(self) -> Person:
         """Return coordinator data for this console."""
         return self.coordinator.data.presence[self.xuid]

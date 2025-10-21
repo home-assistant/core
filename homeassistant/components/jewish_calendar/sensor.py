@@ -65,7 +65,7 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
         attr_fn=lambda info: {
             "hebrew_year": str(info.hdate.year),
             "hebrew_month_name": str(info.hdate.month),
-            "hebrew_month_order": str(info.hdate.month.value),
+            "hebrew_month_standard_order": str(info.hdate.month.value),
             "hebrew_month_biblical_order": str(info.hdate.month.biblical_order),
             "hebrew_day": str(info.hdate.day),
         },

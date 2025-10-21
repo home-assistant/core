@@ -253,7 +253,7 @@ aiogithubapi==24.6.0
 aioguardian==2022.07.0
 
 # homeassistant.components.harmony
-aioharmony==0.5.3;python_version<'3.14'
+aioharmony==0.5.3
 
 # homeassistant.components.hassio
 aiohasupervisor==0.3.3
@@ -1229,7 +1229,7 @@ mbddns==0.1.2
 mcp==1.14.1
 
 # homeassistant.components.minecraft_server
-mcstatus==12.0.1
+mcstatus==12.0.6
 
 # homeassistant.components.meater
 meater-python==0.0.8
