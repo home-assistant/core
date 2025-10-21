@@ -154,6 +154,7 @@ async def test_reauth_successful(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
 
 
 @pytest.mark.parametrize(
@@ -199,3 +200,70 @@ async def test_reauth_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
+) -> None:
+    """Test starting a reconfigure flow."""
+    await init_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_KEY: "new_api_key"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+
+
+@pytest.mark.parametrize(
+    ("exc", "base_error"),
+    [
+        (ApiError("API Error"), "cannot_connect"),
+        (InvalidApiKeyError, "invalid_api_key"),
+        (RetryError("Retry Error"), "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
+        (ValueError, "unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    exc: Exception,
+    base_error: str,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
+) -> None:
+    """Test reconfigure flow with errors."""
+    await init_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch("homeassistant.components.nextdns.NextDns.create", side_effect=exc):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "new_api_key"},
+        )
+
+    assert result["errors"] == {"base": base_error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_KEY: "new_api_key"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
