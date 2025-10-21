@@ -37,9 +37,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: Patch NextDns object instead of functions.
+  test-coverage: done
 
   # Gold
   devices: done
