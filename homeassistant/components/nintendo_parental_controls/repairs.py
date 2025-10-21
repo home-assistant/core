@@ -17,5 +17,8 @@ def raise_no_devices_found(hass: HomeAssistant, config_entry: ConfigEntry) -> No
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="no_devices_found",
-        translation_placeholders={"account_id": config_entry.title},
+        translation_placeholders={
+            "account_id": config_entry.title,
+            "placeholder": "Nintendo Switch Parental Controls",
+        },
     )

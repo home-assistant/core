@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from pynintendoparental import Authenticator, NintendoParental
 from pynintendoparental.exceptions import (
@@ -28,6 +27,8 @@ UPDATE_INTERVAL = timedelta(seconds=60)
 
 class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Nintendo data update coordinator."""
+
+    config_entry: NintendoParentalControlsConfigEntry
 
     def __init__(
         self,
@@ -56,8 +57,6 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
                 err, translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except NoDevicesFoundException as err:
-            if TYPE_CHECKING:
-                assert self.config_entry is not None
             raise_no_devices_found(self.hass, self.config_entry)
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
