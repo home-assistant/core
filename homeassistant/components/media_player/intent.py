@@ -30,22 +30,21 @@ from .const import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
+    INTENT_MEDIA_NEXT,
+    INTENT_MEDIA_PAUSE,
+    INTENT_MEDIA_PREVIOUS,
+    INTENT_MEDIA_SEARCH_AND_PLAY,
+    INTENT_MEDIA_UNPAUSE,
+    INTENT_PLAYER_MUTE,
+    INTENT_PLAYER_UNMUTE,
+    INTENT_SET_VOLUME,
+    INTENT_SET_VOLUME_RELATIVE,
     SERVICE_PLAY_MEDIA,
     SERVICE_SEARCH_MEDIA,
     MediaClass,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-
-INTENT_MEDIA_PAUSE = "HassMediaPause"
-INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"
-INTENT_MEDIA_NEXT = "HassMediaNext"
-INTENT_MEDIA_PREVIOUS = "HassMediaPrevious"
-INTENT_PLAYER_MUTE = "HassMediaPlayerMute"
-INTENT_PLAYER_UNMUTE = "HassMediaPlayerUnmute"
-INTENT_SET_VOLUME = "HassSetVolume"
-INTENT_SET_VOLUME_RELATIVE = "HassSetVolumeRelative"
-INTENT_MEDIA_SEARCH_AND_PLAY = "HassMediaSearchAndPlay"
 
 _LOGGER = logging.getLogger(__name__)
 
