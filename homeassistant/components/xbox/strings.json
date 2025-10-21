@@ -68,7 +68,7 @@
   },
   "exceptions": {
     "request_exception": {
-      "message": "Failed to connect to Xbox Network: {error}"
+      "message": "Failed to connect to Xbox Network"
     },
     "timeout_exception": {
       "message": "Failed to connect to Xbox Network due to a connection timeout"
