@@ -319,7 +319,6 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
-        entity_registry_enabled_default=False,
     ),
     "voltage_l2": SensorEntityDescription(
         key="voltage_l2",
@@ -873,6 +872,7 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
         url = f"{protocol}://{entry.data[CONF_HOST]}"
 
         self._sensor = pysma_sensor
+        self._serial = coordinator.data.sma_device_info["serial"]
         assert entry.unique_id
 
         self._attr_device_info = DeviceInfo(
@@ -901,6 +901,14 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
             name_prefix = "SMA"
 
         return f"{name_prefix} {super().name}"
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return (
+            super().available
+            and self._serial == self.coordinator.data.sma_device_info["serial"]
+        )
 
     @property
     def native_value(self) -> StateType:
