@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant
 
-from .test_common import get_default_config
+from test_common import get_default_config
 
 
 async def test_enable_proactive_mode_in_parallel(hass: HomeAssistant) -> None:

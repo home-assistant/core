@@ -194,6 +194,9 @@ class AlexaGlobalCatalog:
     # Quick Wash, Fast Wash, Wash Quickly, Speed Wash
     VALUE_QUICK_WASH = "Alexa.Value.QuickWash"
 
+#Further constants:
+AT_TYPE = "@type"
+
 
 class AlexaCapabilityResource:
     """Base class for Alexa capabilityResources, modeResources, and presetResources.
@@ -235,10 +238,10 @@ class AlexaCapabilityResource:
         label_dict: dict[str, Any]
         for label in resources:
             if label in AlexaGlobalCatalog.__dict__.values():
-                label_dict = {"@type": "asset", "value": {"assetId": label}}
+                label_dict = {AT_TYPE: "asset", "value": {"assetId": label}}
             else:
                 label_dict = {
-                    "@type": "text",
+                    AT_TYPE: "text",
                     "value": {"text": label, "locale": "en-US"},
                 }
 
@@ -401,7 +404,7 @@ class AlexaSemantics:
     def add_states_to_value(self, states: list[str], value: Any) -> None:
         """Add StatesToValue stateMappings."""
         self._add_state_mapping(
-            {"@type": self.STATES_TO_VALUE, "states": states, "value": value}
+            {AT_TYPE: self.STATES_TO_VALUE, "states": states, "value": value}
         )
 
     def add_states_to_range(
@@ -410,7 +413,7 @@ class AlexaSemantics:
         """Add StatesToRange stateMappings."""
         self._add_state_mapping(
             {
-                "@type": self.STATES_TO_RANGE,
+                AT_TYPE: self.STATES_TO_RANGE,
                 "states": states,
                 "range": {"minimumValue": min_value, "maximumValue": max_value},
             }
@@ -422,7 +425,7 @@ class AlexaSemantics:
         """Add ActionsToDirective actionMappings."""
         self._add_action_mapping(
             {
-                "@type": self.ACTIONS_TO_DIRECTIVE,
+                AT_TYPE: self.ACTIONS_TO_DIRECTIVE,
                 "actions": actions,
                 "directive": {"name": directive, "payload": payload},
             }

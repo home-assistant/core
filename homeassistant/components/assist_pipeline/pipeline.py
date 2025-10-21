@@ -812,7 +812,9 @@ class PipelineRun:
         pipeline_data.pipeline_runs.remove_run(self)
 
     async def prepare_wake_word_detection(self) -> None:
-        """Prepare wake-word-detection."""
+        """Prepare wake-word-detection. 
+        Used as coroutine in the prepare_tasks in validate().
+        """
         entity_id = self.pipeline.wake_word_entity or wake_word.async_default_entity(
             self.hass
         )
@@ -1041,7 +1043,9 @@ class PipelineRun:
                     )
 
     async def prepare_speech_to_text(self, metadata: stt.SpeechMetadata) -> None:
-        """Prepare speech-to-text."""
+        """Prepare speech-to-text.
+        Used as coroutine in the prepare_tasks in validate().
+        """
         # pipeline.stt_engine can't be None or this function is not called
         stt_provider = stt.async_get_speech_to_text_engine(
             self.hass,
@@ -1191,7 +1195,9 @@ class PipelineRun:
             yield chunk.audio
 
     async def prepare_recognize_intent(self, session: chat_session.ChatSession) -> None:
-        """Prepare recognizing an intent."""
+        """Prepare recognizing an intent.
+        Used as coroutine in the prepare_tasks in validate().
+        """
         self._conversation_data = async_get_pipeline_conversation_data(
             self.hass, session
         )
@@ -1623,7 +1629,9 @@ class PipelineRun:
         return target_device_entry.area_id
 
     async def prepare_text_to_speech(self) -> None:
-        """Prepare text-to-speech."""
+        """Prepare text-to-speech.
+        Used as coroutine in the prepare_tasks in validate().
+        """
         # pipeline.tts_engine can't be None or this function is not called
         engine = cast(str, self.pipeline.tts_engine)
 
@@ -1661,7 +1669,9 @@ class PipelineRun:
     async def text_to_speech(
         self, tts_input: str, override_media_path: Path | None = None
     ) -> None:
-        """Run text-to-speech portion of pipeline."""
+        """Run text-to-speech portion of pipeline.
+        The TTS stream operations are non blocking, therefore used correctly as async function.
+        """
         assert self.tts_stream is not None
 
         self.process_event(
@@ -2345,7 +2355,9 @@ class PipelineRuns:
     async def _change_listener(
         self, change_type: str, item_id: str, change: dict
     ) -> None:
-        """Handle pipeline store changes."""
+        """Handle pipeline store changes.
+        Used in PiplineRuns init as coroutine.
+        """
         if change_type != CHANGE_UPDATED:
             return
         if pipeline_runs := self._pipeline_runs.get(item_id):
