@@ -36,6 +36,11 @@ class EnOceanGateway:
         self.__chip_version: int = 0
         self.__sw_version: str = "n/a"
 
+        # self.__binary_sensors: dict[str, object] = {}
+        # self.__sensors: dict[str, object] = {}
+        # self.__switches: dict[str, object] = {}
+        # self.__covers: dict[str, object] = {}
+
     async def async_setup(self) -> None:
         """Finish the setup of the gateway and supported platforms."""
         self.__communicator.start()

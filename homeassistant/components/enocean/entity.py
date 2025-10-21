@@ -75,10 +75,6 @@ class EnOceanEntity(Entity):
     def unique_id(self) -> str:
         """Return a unique ID for this entity."""
         uid = f"{self.enocean_id.to_string()}.{self.platform.domain}"
-        if self.device_class:
-            uid += f".{self.device_class}"
-        else:
-            uid += ".generic"
 
         if self.name:
             uid += f".{self.name}"

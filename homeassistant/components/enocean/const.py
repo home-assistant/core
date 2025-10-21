@@ -50,6 +50,7 @@ LOGGER = logging.getLogger(__package__)
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
