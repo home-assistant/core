@@ -10,7 +10,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .level_ha import ApiError, Client, WebsocketManager as LevelWebsocketManager
+from .level_ha import (
+    ApiError,
+    Client,
+    WebsocketManager as LevelWebsocketManager,
+)
 
 LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = None  # Use push updates; no periodic polling
@@ -33,7 +37,7 @@ class _ClientAdapter:
         self._client = client
 
     async def async_list_locks(self) -> list[LevelLockDevice]:
-        data = await self._client.async_list_locks()
+        data = await self._client.async_list_locks_normalized()
         devices: list[LevelLockDevice] = []
         for item in data:
             state = item.get("state")
@@ -41,15 +45,14 @@ class _ClientAdapter:
                 LevelLockDevice(
                     lock_id=str(item.get("id")),
                     name=str(item.get("name") or item.get("id") or "Level Lock"),
-                    is_locked=_coerce_is_locked(state),
+                    is_locked=item.get("is_locked"),
                     state=str(state) if state is not None else None,
                 )
             )
         return devices
 
     async def async_get_lock_status(self, lock_id: str) -> bool | None:
-        data = await self._client.async_get_lock_status(lock_id)
-        return _coerce_is_locked(data.get("state"))
+        return await self._client.async_get_lock_status_bool(lock_id)
 
     async def async_lock(self, lock_id: str) -> None:
         await self._client.async_lock(lock_id)
@@ -58,21 +61,7 @@ class _ClientAdapter:
         await self._client.async_unlock(lock_id)
 
 
-def _coerce_is_locked(state: Any) -> bool | None:
-    if state is None:
-        return None
-    if isinstance(state, str):
-        lowered = state.lower()
-        if lowered in ("locked", "lock", "secure"):
-            return True
-        if lowered in ("unlocked", "unlock", "unsecure"):
-            return False
-        # Transitional states should return None for is_locked
-        if lowered in ("locking", "unlocking"):
-            return None
-    if isinstance(state, bool):
-        return state
-    return None
+ 
 
 
 class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):

@@ -19,6 +19,7 @@ from typing import Any, Awaitable, Callable, Literal
 from aiohttp import ClientError, ClientSession, ClientWebSocketResponse, WSMsgType
 
 LOGGER = logging.getLogger(__name__)
+from .protocol import coerce_is_locked
 
 # Token provider callable type (async)
 TokenProvider = Callable[[], Awaitable[str]]
@@ -258,7 +259,7 @@ class LevelWebsocketManager:
         msg_type: str | None = payload.get("type")
         if msg_type == "state":
             state = payload.get("state")
-            is_locked = _coerce_is_locked(state)
+            is_locked = coerce_is_locked(state)
             # Pass through entire payload as metadata for future use
             await self._on_state_update(lock_id, is_locked, payload)
             return

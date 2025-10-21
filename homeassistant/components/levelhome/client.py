@@ -1,88 +1,85 @@
-"""HTTP and auth client for Level Lock."""
+"""Library HTTP client for Level Lock (no Home Assistant dependencies)."""
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Awaitable, Callable
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientSession
+from .protocol import coerce_is_locked
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import UpdateFailed
-
-from . import api
-from .const import (
-    API_LOCKS_LIST_PATH,
-    API_LOCK_STATUS_PATH,
-    API_LOCK_COMMAND_LOCK_PATH,
-    API_LOCK_COMMAND_UNLOCK_PATH,
-)
-from .models import LevelLockDevice
+# Async token provider callable type
+TokenProvider = Callable[[], Awaitable[str]]
 
 
-class LevelApiClient:
-    """Thin HTTP client using OAuth2 for Level Lock cloud API."""
+class ApiError(Exception):
+    """Raised when a Level HTTP API call fails."""
 
-    def __init__(self, hass: HomeAssistant, auth: api.AsyncConfigEntryAuth, base_url: str) -> None:
-        self._hass = hass
-        self._auth = auth
+
+class Client:
+    """Minimal async HTTP client for Level endpoints (library-style).
+
+    This class is intentionally HA-agnostic. It relies on an injected
+    aiohttp ClientSession and an async token provider callable.
+    """
+
+    def __init__(
+        self, session: ClientSession, base_url: str, get_token: TokenProvider
+    ) -> None:
+        self._session = session
         self._base_url = base_url.rstrip("/")
-        self._session = aiohttp_client.async_get_clientsession(hass)
+        self._get_token = get_token
 
-    async def _request(self, method: str, path: str, *, json: dict[str, Any] | None = None) -> Any:
-        token = await self._auth.async_get_access_token()
+    async def _request(
+        self, method: str, path: str, *, json: dict[str, Any] | None = None
+    ) -> Any:
+        token = await self._get_token()
         url = f"{self._base_url}{path}"
         headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
         try:
-            async with self._session.request(method, url, headers=headers, json=json) as resp:
+            async with self._session.request(
+                method, url, headers=headers, json=json
+            ) as resp:
                 if resp.status >= 400:
                     text = await resp.text()
-                    raise UpdateFailed(f"HTTP {resp.status} for {method} {path}: {text}")
+                    raise ApiError(f"HTTP {resp.status} for {method} {path}: {text}")
                 if resp.content_type == "application/json":
                     return await resp.json()
                 return await resp.text()
         except ClientError as err:  # aiohttp error
-            raise UpdateFailed(f"API error: {err}") from err
+            raise ApiError(f"API error: {err}") from err
 
-    async def async_list_locks(self) -> list[LevelLockDevice]:
-        data = await self._request("GET", API_LOCKS_LIST_PATH)
-        devices: list[LevelLockDevice] = []
-        for item in data.get("locks", []):
-            state = item.get("state")
-            devices.append(
-                LevelLockDevice(
-                    lock_id=str(item.get("id")),
-                    name=str(item.get("name") or item.get("id") or "Level Lock"),
-                    is_locked=_coerce_is_locked(state),
-                    state=str(state) if state is not None else None,
-                )
-            )
-        return devices
+    async def async_list_locks(self) -> list[dict[str, Any]]:
+        """Return a list of locks as raw dictionaries from the API."""
+        data = await self._request("GET", "/v1/locks")
+        return list(data.get("locks", []))
 
-    async def async_get_lock_status(self, lock_id: str) -> bool | None:
-        data = await self._request("GET", API_LOCK_STATUS_PATH.format(lock_id=lock_id))
-        return _coerce_is_locked(data.get("state"))
+    async def async_get_lock_status(self, lock_id: str) -> dict[str, Any]:
+        """Return the raw status payload for a lock."""
+        return await self._request("GET", f"/v1/locks/{lock_id}")
 
     async def async_lock(self, lock_id: str) -> None:
-        await self._request("POST", API_LOCK_COMMAND_LOCK_PATH.format(lock_id=lock_id))
+        await self._request("POST", f"/v1/locks/{lock_id}/lock")
 
     async def async_unlock(self, lock_id: str) -> None:
-        await self._request("POST", API_LOCK_COMMAND_UNLOCK_PATH.format(lock_id=lock_id))
+        await self._request("POST", f"/v1/locks/{lock_id}/unlock")
+
+    async def async_list_locks_normalized(self) -> list[dict[str, Any]]:
+        """Return locks with derived boolean is_locked alongside raw state."""
+        locks = await self.async_list_locks()
+        normalized: list[dict[str, Any]] = []
+        for item in locks:
+            state = item.get("state")
+            normalized.append({
+                **item,
+                "is_locked": coerce_is_locked(state),
+            })
+        return normalized
+
+    async def async_get_lock_status_bool(self, lock_id: str) -> bool | None:
+        """Return boolean locked status derived from the raw status payload."""
+        data = await self.async_get_lock_status(lock_id)
+        return coerce_is_locked(data.get("state"))
 
 
-def _coerce_is_locked(state: Any) -> bool | None:
-    if state is None:
-        return None
-    if isinstance(state, str):
-        lowered = state.lower()
-        if lowered in ("locked", "lock", "secure"):
-            return True
-        if lowered in ("unlocked", "unlock", "unsecure"):
-            return False
-        if lowered in ("locking", "unlocking"):
-            return None
-    if isinstance(state, bool):
-        return state
-    return None
-
+ 
 

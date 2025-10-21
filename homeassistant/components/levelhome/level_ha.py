@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from aiohttp import ClientSession  # re-exported for type checkers in consumers
 
-from .api import ApiError, Client  # re-export
+from .client import ApiError, Client  # re-export from library client
 from .ws import LevelWebsocketManager as WebsocketManager  # re-export
 
 __all__ = [
