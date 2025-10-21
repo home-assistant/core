@@ -11,7 +11,7 @@ from homeassistant.const import EntityCategory, UnitOfTemperature, __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from test_common import get_default_config, get_new_request
+from .test_common import get_default_config, get_new_request
 
 
 async def test_unsupported_domain(hass: HomeAssistant) -> None:

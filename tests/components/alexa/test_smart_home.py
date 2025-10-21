@@ -24,7 +24,7 @@ from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from test_common import (
+from .test_common import (
     MockConfig,
     ReportedProperties,
     assert_power_controller_works,
