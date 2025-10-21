@@ -16,7 +16,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import LevelLocksCoordinator
-from .level_ha import Client as LibClient, WebsocketManager as LevelWebsocketManager
+from ._lib.level_ha import Client as LibClient, WebsocketManager as LevelWebsocketManager
 
 # For your initial PR, limit it to 1 platform.
 _PLATFORMS: list[Platform] = [Platform.LOCK]

@@ -14,7 +14,7 @@ from dataclasses import dataclass
 import json
 import logging
 import random
-from typing import Any, Awaitable, Callable, Literal
+from typing import Any, Literal
 
 from aiohttp import ClientError, ClientSession, ClientWebSocketResponse, WSMsgType
 

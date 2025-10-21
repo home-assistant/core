@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from aiohttp import ClientError, ClientSession
+
 from .protocol import coerce_is_locked
 
 # Async token provider callable type
@@ -69,17 +71,15 @@ class Client:
         normalized: list[dict[str, Any]] = []
         for item in locks:
             state = item.get("state")
-            normalized.append({
-                **item,
-                "is_locked": coerce_is_locked(state),
-            })
+            normalized.append(
+                {
+                    **item,
+                    "is_locked": coerce_is_locked(state),
+                }
+            )
         return normalized
 
     async def async_get_lock_status_bool(self, lock_id: str) -> bool | None:
         """Return boolean locked status derived from the raw status payload."""
         data = await self.async_get_lock_status(lock_id)
         return coerce_is_locked(data.get("state"))
-
-
- 
-

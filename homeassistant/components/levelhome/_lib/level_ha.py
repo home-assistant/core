@@ -13,8 +13,6 @@ from .ws import LevelWebsocketManager as WebsocketManager  # re-export
 __all__ = [
     "ApiError",
     "Client",
-    "WebsocketManager",
     "ClientSession",
+    "WebsocketManager",
 ]
-
-

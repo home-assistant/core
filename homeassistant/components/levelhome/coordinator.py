@@ -10,11 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .level_ha import (
-    ApiError,
-    Client,
-    WebsocketManager as LevelWebsocketManager,
-)
+from ._lib.level_ha import ApiError, Client, WebsocketManager as LevelWebsocketManager
 
 LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = None  # Use push updates; no periodic polling
@@ -59,9 +55,6 @@ class _ClientAdapter:
 
     async def async_unlock(self, lock_id: str) -> None:
         await self._client.async_unlock(lock_id)
-
-
- 
 
 
 class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):

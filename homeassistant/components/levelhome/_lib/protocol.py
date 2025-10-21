@@ -27,5 +27,3 @@ def coerce_is_locked(state: Any) -> bool | None:
     if isinstance(state, bool):
         return state
     return None
-
-
