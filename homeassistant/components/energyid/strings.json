@@ -39,6 +39,9 @@
     "abort": {
       "already_configured": "This EnergyID site is already configured.",
       "reauth_successful": "Reauthentication was successful! Your EnergyID integration is now reconnected."
+    },
+    "create_entry": {
+      "add_sensor_mapping_hint": "You can now add mappings from any sensor in your Home Assistant to EID using the '+ add sensor mapping' button."
     }
   },
   "config_subentries": {
