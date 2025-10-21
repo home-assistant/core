@@ -64,6 +64,9 @@ def _setup_entities(
 class VeSyncDeviceUpdate(VeSyncBaseEntity, UpdateEntity):
     """Representation of a VeSync device update entity."""
 
+    _attr_name = None
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
+
     @property
     def installed_version(self) -> str | None:
         """Return installed_version."""

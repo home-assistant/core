@@ -3,7 +3,7 @@
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sensor import DOMAIN as UPDATE_DOMAIN
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -27,6 +27,8 @@ async def test_update_state(
 
     # Configure the API devices call for device_name
     mock_devices_response(aioclient_mock, device_name)
+    # Configure the mock firmware update info endpoint
+    # mock_firmware(aioclient_mock)
 
     # setup platform - only including the named device
     await hass.config_entries.async_setup(config_entry.entry_id)
