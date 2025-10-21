@@ -95,31 +95,6 @@
     'state': 'on',
   })
 # ---
-# name: test_update_state[Air Purifier 131s][update.air_purifier_131s_none]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Air Purifier 131s None',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.air_purifier_131s_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_update_state[Air Purifier 200s][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -210,31 +185,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'update.air_purifier_200s',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_update_state[Air Purifier 200s][update.air_purifier_200s_none]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Air Purifier 200s None',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.air_purifier_200s_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -337,31 +287,6 @@
     'state': 'on',
   })
 # ---
-# name: test_update_state[Air Purifier 400s][update.air_purifier_400s_none]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Air Purifier 400s None',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.air_purifier_400s_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_update_state[Air Purifier 600s][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -458,31 +383,6 @@
     'state': 'on',
   })
 # ---
-# name: test_update_state[Air Purifier 600s][update.air_purifier_600s_none]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Air Purifier 600s None',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.air_purifier_600s_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_update_state[Dimmable Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -563,21 +463,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'update.dimmable_light',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_update_state[Dimmable Light][update.dimmable_light_none]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Dimmable Light None',
-      'supported_features': <UpdateEntityFeature: 0>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.dimmable_light_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -680,31 +565,6 @@
     'state': 'on',
   })
 # ---
-# name: test_update_state[Dimmer Switch][update.dimmer_switch_none]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Dimmer Switch None',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.dimmer_switch_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_update_state[Humidifier 200s][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -795,31 +655,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'update.humidifier_200s',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_update_state[Humidifier 200s][update.humidifier_200s_none]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Humidifier 200s None',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.humidifier_200s_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -922,31 +757,6 @@
     'state': 'on',
   })
 # ---
-# name: test_update_state[Humidifier 600S][update.humidifier_600s_none]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Humidifier 600S None',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.humidifier_600s_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_update_state[Outlet][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -1037,31 +847,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'update.outlet',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_update_state[Outlet][update.outlet_none]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Outlet None',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.outlet_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1164,31 +949,6 @@
     'state': 'on',
   })
 # ---
-# name: test_update_state[SmartTowerFan][update.smarttowerfan_none]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'SmartTowerFan None',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.smarttowerfan_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_update_state[Temperature Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -1285,31 +1045,6 @@
     'state': 'on',
   })
 # ---
-# name: test_update_state[Temperature Light][update.temperature_light_none]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Temperature Light None',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.temperature_light_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_update_state[Wall Switch][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -1400,31 +1135,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'update.wall_switch',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_update_state[Wall Switch][update.wall_switch_none]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
-      'friendly_name': 'Wall Switch None',
-      'in_progress': False,
-      'installed_version': '1.0.0',
-      'latest_version': '1.0.1',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.wall_switch_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
