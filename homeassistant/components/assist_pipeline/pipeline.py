@@ -134,6 +134,109 @@ def _async_local_fallback_intent_filter(result: RecognizeResult) -> bool:
 
 
 @callback
+# def _async_resolve_default_pipeline_settings(
+#     hass: HomeAssistant,
+#     *,
+#     conversation_engine_id: str | None = None,
+#     stt_engine_id: str | None = None,
+#     tts_engine_id: str | None = None,
+#     pipeline_name: str,
+# ) -> dict[str, str | None]:
+#     """Resolve settings for a default pipeline.
+
+#     The default pipeline will use the homeassistant conversation agent and the
+#     default stt / tts engines if none are specified.
+#     """
+#     conversation_language = "en"
+#     pipeline_language = "en"
+#     stt_engine = None
+#     stt_language = None
+#     tts_engine = None
+#     tts_language = None
+#     tts_voice = None
+#     wake_word_entity = None
+#     wake_word_id = None
+
+#     if conversation_engine_id is None:
+#         conversation_engine_id = conversation.HOME_ASSISTANT_AGENT
+
+#     # Find a matching language supported by the Home Assistant conversation agent
+#     conversation_languages = language_util.matches(
+#         hass.config.language,
+#         conversation.async_get_conversation_languages(hass, conversation_engine_id),
+#         country=hass.config.country,
+#     )
+#     if conversation_languages:
+#         pipeline_language = hass.config.language
+#         conversation_language = conversation_languages[0]
+
+#     if stt_engine_id is None:
+#         stt_engine_id = stt.async_default_engine(hass)
+
+#     if stt_engine_id is not None:
+#         stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_id)
+#         if stt_engine is None:
+#             stt_engine_id = None
+
+#     if stt_engine:
+#         stt_languages = language_util.matches(
+#             pipeline_language,
+#             stt_engine.supported_languages,
+#             country=hass.config.country,
+#         )
+#         if stt_languages:
+#             stt_language = stt_languages[0]
+#         else:
+#             _LOGGER.debug(
+#                 "Speech-to-text engine '%s' does not support language '%s'",
+#                 stt_engine_id,
+#                 pipeline_language,
+#             )
+#             stt_engine_id = None
+
+#     if tts_engine_id is None:
+#         tts_engine_id = tts.async_default_engine(hass)
+
+#     if tts_engine_id is not None:
+#         tts_engine = tts.get_engine_instance(hass, tts_engine_id)
+#         if tts_engine is None:
+#             tts_engine_id = None
+
+#     if tts_engine:
+#         tts_languages = language_util.matches(
+#             pipeline_language,
+#             tts_engine.supported_languages,
+#             country=hass.config.country,
+#         )
+#         if tts_languages:
+#             tts_language = tts_languages[0]
+#             tts_voices = tts_engine.async_get_supported_voices(tts_language)
+#             if tts_voices:
+#                 tts_voice = tts_voices[0].voice_id
+#         else:
+#             _LOGGER.debug(
+#                 "Text-to-speech engine '%s' does not support language '%s'",
+#                 tts_engine_id,
+#                 pipeline_language,
+#             )
+#             tts_engine_id = None
+
+#     return {
+#         "conversation_engine": conversation_engine_id,
+#         "conversation_language": conversation_language,
+#         "language": hass.config.language,
+#         "name": pipeline_name,
+#         "stt_engine": stt_engine_id,
+#         "stt_language": stt_language,
+#         "tts_engine": tts_engine_id,
+#         "tts_language": tts_language,
+#         "tts_voice": tts_voice,
+#         "wake_word_entity": wake_word_entity,
+#         "wake_word_id": wake_word_id,
+#     }
+
+#Refactor
+
 def _async_resolve_default_pipeline_settings(
     hass: HomeAssistant,
     *,
@@ -144,96 +247,80 @@ def _async_resolve_default_pipeline_settings(
 ) -> dict[str, str | None]:
     """Resolve settings for a default pipeline.
 
-    The default pipeline will use the homeassistant conversation agent and the
-    default stt / tts engines if none are specified.
+    The default pipeline will use the Home Assistant conversation agent
+    and the default STT/TTS engines if none are specified.
     """
-    conversation_language = "en"
-    pipeline_language = "en"
-    stt_engine = None
-    stt_language = None
-    tts_engine = None
-    tts_language = None
-    tts_voice = None
-    wake_word_entity = None
-    wake_word_id = None
+    pipeline_language = hass.config.language or "en"
+    conversation_language = pipeline_language
 
-    if conversation_engine_id is None:
-        conversation_engine_id = conversation.HOME_ASSISTANT_AGENT
+    # --- Resolve conversation engine ---
+    conversation_engine_id = conversation_engine_id or conversation.HOME_ASSISTANT_AGENT
+    conversation_language = _resolve_conversation_language(hass, conversation_engine_id, pipeline_language)
 
-    # Find a matching language supported by the Home Assistant conversation agent
-    conversation_languages = language_util.matches(
-        hass.config.language,
-        conversation.async_get_conversation_languages(hass, conversation_engine_id),
-        country=hass.config.country,
-    )
-    if conversation_languages:
-        pipeline_language = hass.config.language
-        conversation_language = conversation_languages[0]
+    # --- Resolve STT and TTS engines ---
+    stt_engine_id, stt_engine, stt_language = _resolve_stt_engine(hass, stt_engine_id, pipeline_language)
+    tts_engine_id, tts_engine, tts_language, tts_voice = _resolve_tts_engine(hass, tts_engine_id, pipeline_language)
 
-    if stt_engine_id is None:
-        stt_engine_id = stt.async_default_engine(hass)
-
-    if stt_engine_id is not None:
-        stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_id)
-        if stt_engine is None:
-            stt_engine_id = None
-
-    if stt_engine:
-        stt_languages = language_util.matches(
-            pipeline_language,
-            stt_engine.supported_languages,
-            country=hass.config.country,
-        )
-        if stt_languages:
-            stt_language = stt_languages[0]
-        else:
-            _LOGGER.debug(
-                "Speech-to-text engine '%s' does not support language '%s'",
-                stt_engine_id,
-                pipeline_language,
-            )
-            stt_engine_id = None
-
-    if tts_engine_id is None:
-        tts_engine_id = tts.async_default_engine(hass)
-
-    if tts_engine_id is not None:
-        tts_engine = tts.get_engine_instance(hass, tts_engine_id)
-        if tts_engine is None:
-            tts_engine_id = None
-
-    if tts_engine:
-        tts_languages = language_util.matches(
-            pipeline_language,
-            tts_engine.supported_languages,
-            country=hass.config.country,
-        )
-        if tts_languages:
-            tts_language = tts_languages[0]
-            tts_voices = tts_engine.async_get_supported_voices(tts_language)
-            if tts_voices:
-                tts_voice = tts_voices[0].voice_id
-        else:
-            _LOGGER.debug(
-                "Text-to-speech engine '%s' does not support language '%s'",
-                tts_engine_id,
-                pipeline_language,
-            )
-            tts_engine_id = None
-
+    # --- Return merged settings ---
     return {
         "conversation_engine": conversation_engine_id,
         "conversation_language": conversation_language,
-        "language": hass.config.language,
-        "name": pipeline_name,
+        "pipeline_language": pipeline_language,
         "stt_engine": stt_engine_id,
         "stt_language": stt_language,
         "tts_engine": tts_engine_id,
         "tts_language": tts_language,
         "tts_voice": tts_voice,
-        "wake_word_entity": wake_word_entity,
-        "wake_word_id": wake_word_id,
+        "wake_word_entity": None,
+        "wake_word_id": None,
+        "name": pipeline_name,
     }
+
+def _resolve_conversation_language(hass: HomeAssistant, engine_id: str, pipeline_language: str) -> str:
+    """Find best matching language for the conversation engine."""
+    supported = conversation.async_get_conversation_languages(hass, engine_id)
+    matched = language_util.matches(hass.config.language, supported, country=hass.config.country)
+    return matched[0] if matched else pipeline_language
+
+def _resolve_stt_engine(hass: HomeAssistant, engine_id: str | None, pipeline_language: str):
+    """Resolve speech-to-text engine and matching language."""
+    engine_id = engine_id or stt.async_default_engine(hass)
+    engine = stt.async_get_speech_to_text_engine(hass, engine_id) if engine_id else None
+    if not engine:
+        return None, None, None
+
+    matched = language_util.matches(pipeline_language, engine.supported_languages, country=hass.config.country)
+    if not matched:
+        _LOGGER.debug(
+            "Speech-to-text engine '%s' does not support language '%s'",
+            engine_id,
+            pipeline_language,
+        )
+        return None, None, None
+
+    return engine_id, engine, matched[0]
+
+def _resolve_tts_engine(hass: HomeAssistant, engine_id: str | None, pipeline_language: str):
+    """Resolve text-to-speech engine, language, and voice."""
+    engine_id = engine_id or tts.async_default_engine(hass)
+    engine = tts.get_engine_instance(hass, engine_id) if engine_id else None
+    if not engine:
+        return None, None, None, None
+
+    matched = language_util.matches(pipeline_language, engine.supported_languages, country=hass.config.country)
+    if not matched:
+        _LOGGER.debug(
+            "Text-to-speech engine '%s' does not support language '%s'",
+            engine_id,
+            pipeline_language,
+        )
+        return None, None, None, None
+
+    language = matched[0]
+    voices = engine.async_get_supported_voices(language)
+    voice_id = voices[0].voice_id if voices else None
+
+    return engine_id, engine, language, voice_id
 
 
 async def _async_create_default_pipeline(
