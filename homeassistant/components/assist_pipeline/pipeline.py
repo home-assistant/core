@@ -147,6 +147,80 @@ def _async_resolve_default_pipeline_settings(
     The default pipeline will use the homeassistant conversation agent and the
     default stt / tts engines if none are specified.
     """
+    # Setup conversation engine
+    conversation_engine_id = conversation_engine_id or conversation.HOME_ASSISTANT_AGENT
+    matches = language_util.matches(
+        hass.config.language,
+        conversation.async_get_conversation_languages(hass, conversation_engine_id),
+        country=hass.config.country,
+    )
+    pipeline_language = hass.config.language if matches else None
+    conversation_language = matches[0] if matches else None
+
+    # Setup STT engine
+    stt_engine_resolved = stt_engine_id or stt.async_default_engine(hass)
+    if stt_engine_resolved and stt.async_get_speech_to_text_engine(
+        hass, stt_engine_resolved
+    ):
+        stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_resolved)
+        if stt_engine and pipeline_language:
+            stt_matches = language_util.matches(
+                pipeline_language,
+                stt_engine.supported_languages,
+                country=hass.config.country,
+            )
+            stt_language = stt_matches[0] if stt_matches else None
+        else:
+            stt_language = None
+        if not stt_language:
+            stt_engine_resolved = None
+    else:
+        stt_engine_resolved = None
+        stt_language = None
+
+    # Setup TTS engine
+    tts_engine_resolved = tts_engine_id or tts.async_default_engine(hass)
+    if tts_engine_resolved and tts.get_engine_instance(hass, tts_engine_resolved):
+        tts_engine = tts.get_engine_instance(hass, tts_engine_resolved)
+        if tts_engine and pipeline_language:
+            tts_matches = language_util.matches(
+                pipeline_language,
+                tts_engine.supported_languages,
+                country=hass.config.country,
+            )
+            tts_language = tts_matches[0] if tts_matches else None
+
+            # Get voice if available
+            tts_voice = None
+            if tts_language:
+                voices = tts_engine.async_get_supported_voices(tts_language)
+                if voices:
+                    tts_voice = voices[0].voice_id
+        else:
+            tts_language = None
+            tts_voice = None
+        if not tts_language:
+            tts_engine_resolved = None
+            tts_voice = None
+    else:
+        tts_engine_resolved = None
+        tts_language = None
+        tts_voice = None
+
+    return {
+        "conversation_engine": conversation_engine_id,
+        "conversation_language": conversation_language,
+        "language": hass.config.language,
+        "name": pipeline_name,
+        "stt_engine": stt_engine_resolved,
+        "stt_language": stt_language,
+        "tts_engine": tts_engine_resolved,
+        "tts_language": tts_language,
+        "tts_voice": tts_voice,
+        "wake_word_entity": None,
+        "wake_word_id": None,
+    }
+
 
 def _resolve_engine_id(hass, engine_id, get_default, get_instance):
     """Return a valid engine ID or None if not available."""
@@ -161,11 +235,15 @@ def _select_supported_language(engine, target_lang, country, label, engine_id):
     if not engine:
         return None
 
-    matches = language_util.matches(target_lang, engine.supported_languages, country=country)
+    matches = language_util.matches(
+        target_lang, engine.supported_languages, country=country
+    )
     if matches:
         return matches[0]
 
-    _LOGGER.debug("%s engine '%s' does not support language '%s'", label, engine_id, target_lang)
+    _LOGGER.debug(
+        "%s engine '%s' does not support language '%s'", label, engine_id, target_lang
+    )
     return None
 
 
@@ -184,9 +262,13 @@ def _setup_conversation_engine(hass, engine_id):
 
 def _setup_stt_engine(hass, engine_id, pipeline_language):
     """Setup speech-to-text engine."""
-    engine_id = _resolve_engine_id(hass, engine_id, stt.async_default_engine, stt.async_get_speech_to_text_engine)
+    engine_id = _resolve_engine_id(
+        hass, engine_id, stt.async_default_engine, stt.async_get_speech_to_text_engine
+    )
     engine = stt.async_get_speech_to_text_engine(hass, engine_id) if engine_id else None
-    language = _select_supported_language(engine, pipeline_language, hass.config.country, "Speech-to-text", engine_id)
+    language = _select_supported_language(
+        engine, pipeline_language, hass.config.country, "Speech-to-text", engine_id
+    )
     if not language:
         engine_id = None
     return engine_id, language
@@ -194,9 +276,13 @@ def _setup_stt_engine(hass, engine_id, pipeline_language):
 
 def _setup_tts_engine(hass, engine_id, pipeline_language):
     """Setup text-to-speech engine and voice."""
-    engine_id = _resolve_engine_id(hass, engine_id, tts.async_default_engine, tts.get_engine_instance)
+    engine_id = _resolve_engine_id(
+        hass, engine_id, tts.async_default_engine, tts.get_engine_instance
+    )
     engine = tts.get_engine_instance(hass, engine_id) if engine_id else None
-    language = _select_supported_language(engine, pipeline_language, hass.config.country, "Text-to-speech", engine_id)
+    language = _select_supported_language(
+        engine, pipeline_language, hass.config.country, "Text-to-speech", engine_id
+    )
 
     voice = None
     if engine and language:
@@ -207,14 +293,26 @@ def _setup_tts_engine(hass, engine_id, pipeline_language):
     return engine_id, language, voice
 
 
-def setup_pipeline(hass, pipeline_name, conversation_engine_id, stt_engine_id, tts_engine_id, wake_word_entity, wake_word_id):
+def setup_pipeline(
+    hass,
+    pipeline_name,
+    conversation_engine_id,
+    stt_engine_id,
+    tts_engine_id,
+    wake_word_entity,
+    wake_word_id,
+):
     """Main pipeline setup — optimized for low cognitive complexity."""
-    conversation_engine_id, pipeline_language, conversation_language = _setup_conversation_engine(
-        hass, conversation_engine_id
+    conversation_engine_id, pipeline_language, conversation_language = (
+        _setup_conversation_engine(hass, conversation_engine_id)
     )
 
-    stt_engine_id, stt_language = _setup_stt_engine(hass, stt_engine_id, pipeline_language)
-    tts_engine_id, tts_language, tts_voice = _setup_tts_engine(hass, tts_engine_id, pipeline_language)
+    stt_engine_id, stt_language = _setup_stt_engine(
+        hass, stt_engine_id, pipeline_language
+    )
+    tts_engine_id, tts_language, tts_voice = _setup_tts_engine(
+        hass, tts_engine_id, pipeline_language
+    )
 
     return {
         "conversation_engine": conversation_engine_id,
@@ -229,6 +327,17 @@ def setup_pipeline(hass, pipeline_name, conversation_engine_id, stt_engine_id, t
         "wake_word_entity": wake_word_entity,
         "wake_word_id": wake_word_id,
     }
+
+    # Call the nested setup_pipeline function to get the pipeline settings
+    return setup_pipeline(
+        hass,
+        pipeline_name,
+        conversation_engine_id,
+        stt_engine_id,
+        tts_engine_id,
+        wake_word_entity=None,
+        wake_word_id=None,
+    )
 
 
 async def _async_create_default_pipeline(
@@ -746,7 +855,9 @@ class PipelineRun:
         )
 
         wake_word_settings = self.wake_word_settings or WakeWordSettings()
-        metadata_dict.pop("language", None)  # Remove language since it doesn’t apply to wake words yet
+        metadata_dict.pop(
+            "language", None
+        )  # Remove language since it doesn’t apply to wake words yet
 
         self.process_event(
             PipelineEvent(
@@ -820,12 +931,19 @@ class PipelineRun:
             return None
         return VoiceActivityTimeout(wake_word_settings.timeout)
 
-    def _create_stt_audio_buffer(self, wake_word_settings) -> deque[EnhancedAudioChunk] | None:
+    def _create_stt_audio_buffer(
+        self, wake_word_settings
+    ) -> deque[EnhancedAudioChunk] | None:
         """Create a bounded deque to buffer STT audio."""
         num_audio_chunks_to_buffer = int(
-            (wake_word_settings.audio_seconds_to_buffer * SAMPLE_RATE) / SAMPLES_PER_CHUNK
+            (wake_word_settings.audio_seconds_to_buffer * SAMPLE_RATE)
+            / SAMPLES_PER_CHUNK
         )
-        return deque(maxlen=num_audio_chunks_to_buffer) if num_audio_chunks_to_buffer > 0 else None
+        return (
+            deque(maxlen=num_audio_chunks_to_buffer)
+            if num_audio_chunks_to_buffer > 0
+            else None
+        )
 
     async def _process_wake_word_audio(
         self,
@@ -860,7 +978,9 @@ class PipelineRun:
         self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = time.monotonic()
 
     def _append_queued_audio(
-        self, result: wake_word.DetectionResult, audio_chunks_for_stt: list[EnhancedAudioChunk]
+        self,
+        result: wake_word.DetectionResult,
+        audio_chunks_for_stt: list[EnhancedAudioChunk],
     ):
         """Forward queued audio to STT input."""
         if not result.queued_audio:
@@ -879,7 +999,9 @@ class PipelineRun:
             for chunk_ts in result.queued_audio
         )
 
-    def _prepare_wake_word_output(self, result: wake_word.DetectionResult) -> dict[str, Any]:
+    def _prepare_wake_word_output(
+        self, result: wake_word.DetectionResult
+    ) -> dict[str, Any]:
         """Convert detection result to serializable dict."""
         wake_word_output = asdict(result)
         wake_word_output.pop("queued_audio", None)  # Remove non-JSON fields
@@ -1135,19 +1257,36 @@ class PipelineRun:
 
         try:
             user_input = self._create_conversation_input(
-                intent_input, conversation_id, conversation_extra_system_prompt, input_language
+                intent_input,
+                conversation_id,
+                conversation_extra_system_prompt,
+                input_language,
             )
 
             # Handle sentence triggers and local intents
-            agent_id, processed_locally, intent_response = await self._handle_sentence_triggers_and_local_intents(user_input)
+            (
+                agent_id,
+                processed_locally,
+                intent_response,
+            ) = await self._handle_sentence_triggers_and_local_intents(user_input)
 
             # Prepare chat log and streaming
             tts_input_stream = self._maybe_make_tts_input_stream()
-            chat_log_delta_listener = self._make_chat_log_delta_listener(tts_input_stream)
+            chat_log_delta_listener = self._make_chat_log_delta_listener(
+                tts_input_stream
+            )
 
             # Process conversation and generate result
-            conversation_result, speech, all_targets_in_satellite_area = await self._process_conversation(
-                user_input, agent_id, intent_response, chat_log_delta_listener, tts_input_stream
+            (
+                conversation_result,
+                speech,
+                all_targets_in_satellite_area,
+            ) = await self._process_conversation(
+                user_input,
+                agent_id,
+                intent_response,
+                chat_log_delta_listener,
+                tts_input_stream,
             )
 
         except Exception as src_error:
@@ -1233,7 +1372,10 @@ class PipelineRun:
         intent_agent_state = self.hass.states.get(self.intent_agent.id)
         if not intent_agent_state:
             return None
-        if intent_agent_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & conversation.ConversationEntityFeature.CONTROL:
+        if (
+            intent_agent_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            & conversation.ConversationEntityFeature.CONTROL
+        ):
             return _async_local_fallback_intent_filter
         return None
 
@@ -1247,8 +1389,10 @@ class PipelineRun:
         self, tts_input_stream: asyncio.Queue[str | None] | None
     ):
         """Return a callback for chat log deltas."""
+
         def chat_log_delta_listener(chat_log, delta):
             self._handle_chat_log_delta(tts_input_stream, chat_log, delta)
+
         return chat_log_delta_listener
 
     def _handle_chat_log_delta(self, tts_input_stream, _chat_log, delta):
@@ -1277,9 +1421,7 @@ class PipelineRun:
         if not hasattr(self, "_delta_character_count"):
             self._delta_character_count = 0
 
-        start_streaming = (
-            self._delta_character_count > 0 and delta.get("tool_calls")
-        )
+        start_streaming = self._delta_character_count > 0 and delta.get("tool_calls")
 
         if not start_streaming and content:
             self._delta_character_count += len(content)
@@ -1290,7 +1432,9 @@ class PipelineRun:
 
         self._streamed_response_text = True
         self.process_event(
-            PipelineEvent(PipelineEventType.INTENT_PROGRESS, {"tts_start_streaming": True})
+            PipelineEvent(
+                PipelineEventType.INTENT_PROGRESS, {"tts_start_streaming": True}
+            )
         )
 
         async def tts_input_stream_generator():
@@ -1321,7 +1465,10 @@ class PipelineRun:
                 self.hass, user_input.conversation_id
             ) as session,
             conversation.async_get_chat_log(
-                self.hass, session, user_input, chat_log_delta_listener=chat_log_delta_listener
+                self.hass,
+                session,
+                user_input,
+                chat_log_delta_listener=chat_log_delta_listener,
             ) as chat_log,
         ):
             if intent_response is not None:
@@ -1374,6 +1521,7 @@ class PipelineRun:
                 },
             )
         )
+
     def _get_all_targets_in_satellite_area(
         self,
         intent_response: intent.IntentResponse,
@@ -1388,12 +1536,16 @@ class PipelineRun:
         entity_registry = er.async_get(self.hass)
         device_registry = dr.async_get(self.hass)
 
-        area_id = self._resolve_area_id(entity_registry, device_registry, satellite_id, device_id)
+        area_id = self._resolve_area_id(
+            entity_registry, device_registry, satellite_id, device_id
+        )
         if area_id is None:
             return False
 
         for state in intent_response.matched_states:
-            if not self._is_entity_in_area(entity_registry, device_registry, state.entity_id, area_id):
+            if not self._is_entity_in_area(
+                entity_registry, device_registry, state.entity_id, area_id
+            ):
                 return False
 
         return True
@@ -1428,7 +1580,9 @@ class PipelineRun:
 
         return area_id
 
-    def _resolve_area_from_device(self, device_registry, device_id: str | None) -> str | None:
+    def _resolve_area_from_device(
+        self, device_registry, device_id: str | None
+    ) -> str | None:
         """Resolve area from a given device ID."""
         if device_id is None:
             return None
@@ -1449,7 +1603,9 @@ class PipelineRun:
 
         target_area_id = target_entity_entry.area_id
         if target_area_id is None:
-            target_area_id = self._get_area_from_device_entry(device_registry, target_entity_entry)
+            target_area_id = self._get_area_from_device_entry(
+                device_registry, target_entity_entry
+            )
             if target_area_id is None:
                 return False
 
@@ -1617,7 +1773,9 @@ class PipelineRun:
         timestamp_ms = 0
         async for chunk in audio_stream:
             # Refactor: Use math.isclose to safely compare floating point values
-            if not math.isclose(self.audio_settings.volume_multiplier, 1.0, rel_tol=1e-6):
+            if not math.isclose(
+                self.audio_settings.volume_multiplier, 1.0, rel_tol=1e-6
+            ):
                 chunk = _multiply_volume(chunk, self.audio_settings.volume_multiplier)
 
             for sub_chunk in chunk_samples(
@@ -1773,9 +1931,7 @@ class PipelineInput:
                 current_stage = PipelineStage.INTENT
 
             if self.run.end_stage != PipelineStage.STT:
-                await self._run_intent_and_tts_stages(
-                    current_stage, intent_input
-                )
+                await self._run_intent_and_tts_stages(current_stage, intent_input)
 
         except PipelineError as err:
             self.run.process_event(
@@ -1838,9 +1994,7 @@ class PipelineInput:
 
     def _check_wake_word_cooldown(self) -> None:
         """Prevent duplicate wake-word activations."""
-        last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(
-            self.wake_word_phrase
-        )
+        last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(self.wake_word_phrase)
         if last_wake_up is not None:
             sec_since_last_wake_up = time.monotonic() - last_wake_up
             if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
@@ -1851,9 +2005,7 @@ class PipelineInput:
                 raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
 
         # Record last wake up time
-        self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = (
-            time.monotonic()
-        )
+        self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = time.monotonic()
 
     def _buffer_then_audio_stream(
         self,
@@ -1861,11 +2013,13 @@ class PipelineInput:
         stt_audio_buffer: list[EnhancedAudioChunk],
     ) -> AsyncGenerator[EnhancedAudioChunk, None]:
         """Yield buffered audio first, then live stream."""
+
         async def generator() -> AsyncGenerator[EnhancedAudioChunk, None]:
             for chunk in stt_audio_buffer:
                 yield chunk
             async for chunk in stt_processed_stream:
                 yield chunk
+
         return generator()
 
     async def _run_intent_and_tts_stages(
@@ -1976,6 +2130,7 @@ class PipelineInput:
 
         return prepare_tasks
 
+
 class PipelinePreferred(CollectionError):
     """Raised when attempting to delete the preferred pipelen."""
 
@@ -2003,8 +2158,10 @@ class PipelineStorageCollection(
         if not (data := await super()._async_load_data()):
             pipeline = await _async_create_default_pipeline(self.hass, self)
             self._preferred_item = pipeline.id
-            # Refactor: instead of returning data here (which would be None in this case), we create a default pipeline and return a dictionary containing it.
-            return {"preferred_item": pipeline.id, "pipeline": pipeline}
+            return {
+                "items": [self._serialize_item(pipeline.id, pipeline)],
+                "preferred_item": pipeline.id,
+            }
 
         self._preferred_item = data["preferred_item"]
 
