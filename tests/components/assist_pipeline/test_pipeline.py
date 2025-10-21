@@ -28,6 +28,9 @@ from homeassistant.components.assist_pipeline.pipeline import (
     PipelineStorageCollection,
     PipelineStore,
     _async_local_fallback_intent_filter,
+    _setup_conversation_engine,
+    _setup_stt_engine,
+    _setup_tts_engine,
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
@@ -2678,3 +2681,248 @@ def test_pipeline_preferred_error():
     error = assist_pipeline.pipeline.PipelinePreferred("test_pipeline_id")
     assert str(error) == "Item test_pipeline_id preferred."
     assert error.item_id == "test_pipeline_id"
+
+
+def test_setup_conversation_engine():
+    """Test _setup_conversation_engine helper function."""
+    mock_hass = Mock()
+    mock_hass.config.language = "en"
+    mock_hass.config.country = "US"
+
+    # Test with default agent (no engine_id provided)
+    with (
+        patch(
+            "homeassistant.components.conversation.async_get_conversation_languages",
+            return_value=["en", "en-US"],
+        ),
+        patch(
+            "homeassistant.util.language.matches",
+            return_value=["en-US"],
+        ),
+    ):
+        engine_id, language, conv_language = _setup_conversation_engine(mock_hass, None)
+        assert engine_id == conversation.HOME_ASSISTANT_AGENT
+        assert language == "en"
+        assert conv_language == "en-US"
+
+    # Test with specific engine_id
+    with (
+        patch(
+            "homeassistant.components.conversation.async_get_conversation_languages",
+            return_value=["en", "fr"],
+        ),
+        patch(
+            "homeassistant.util.language.matches",
+            return_value=["en"],
+        ),
+    ):
+        engine_id, language, conv_language = _setup_conversation_engine(
+            mock_hass, "custom_agent"
+        )
+        assert engine_id == "custom_agent"
+        assert language == "en"
+        assert conv_language == "en"
+
+    # Test with no language matches
+    with (
+        patch(
+            "homeassistant.components.conversation.async_get_conversation_languages",
+            return_value=["fr", "de"],
+        ),
+        patch(
+            "homeassistant.util.language.matches",
+            return_value=[],
+        ),
+    ):
+        engine_id, language, conv_language = _setup_conversation_engine(
+            mock_hass, "custom_agent"
+        )
+        assert engine_id == "custom_agent"
+        assert language is None
+        assert conv_language is None
+
+
+def test_setup_stt_engine():
+    """Test _setup_stt_engine helper function."""
+    mock_hass = Mock()
+    mock_engine = Mock()
+
+    # Test successful engine setup
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._resolve_engine_id",
+            return_value="test_stt_engine",
+        ),
+        patch(
+            "homeassistant.components.stt.async_get_speech_to_text_engine",
+            return_value=mock_engine,
+        ),
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._select_supported_language",
+            return_value="en-US",
+        ) as mock_select_lang,
+    ):
+        engine_id, language = _setup_stt_engine(mock_hass, "test_stt_engine", "en")
+        assert engine_id == "test_stt_engine"
+        assert language == "en-US"
+        mock_select_lang.assert_called_once_with(
+            mock_engine,
+            "en",
+            mock_hass.config.country,
+            "Speech-to-text",
+            "test_stt_engine",
+        )
+
+    # Test with no engine_id resolved
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._resolve_engine_id",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._select_supported_language",
+            return_value=None,
+        ),
+    ):
+        engine_id, language = _setup_stt_engine(mock_hass, None, "en")
+        assert engine_id is None
+        assert language is None
+
+    # Test when language selection fails
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._resolve_engine_id",
+            return_value="test_stt_engine",
+        ),
+        patch(
+            "homeassistant.components.stt.async_get_speech_to_text_engine",
+            return_value=mock_engine,
+        ),
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._select_supported_language",
+            return_value=None,
+        ),
+    ):
+        engine_id, language = _setup_stt_engine(
+            mock_hass, "test_stt_engine", "unsupported_lang"
+        )
+        assert engine_id is None
+        assert language is None
+
+
+def test_setup_tts_engine():
+    """Test _setup_tts_engine helper function."""
+    mock_hass = Mock()
+    mock_engine = Mock()
+    mock_voice = Mock()
+    mock_voice.voice_id = "voice_1"
+
+    # Test successful engine setup with voice
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._resolve_engine_id",
+            return_value="test_tts_engine",
+        ),
+        patch(
+            "homeassistant.components.tts.get_engine_instance", return_value=mock_engine
+        ),
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._select_supported_language",
+            return_value="en-US",
+        ) as mock_select_lang,
+    ):
+        mock_engine.async_get_supported_voices.return_value = [mock_voice]
+
+        engine_id, language, voice = _setup_tts_engine(
+            mock_hass, "test_tts_engine", "en"
+        )
+        assert engine_id == "test_tts_engine"
+        assert language == "en-US"
+        assert voice == "voice_1"
+        mock_select_lang.assert_called_once_with(
+            mock_engine,
+            "en",
+            mock_hass.config.country,
+            "Text-to-speech",
+            "test_tts_engine",
+        )
+        mock_engine.async_get_supported_voices.assert_called_once_with("en-US")
+
+    # Test with no voices available
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._resolve_engine_id",
+            return_value="test_tts_engine",
+        ),
+        patch(
+            "homeassistant.components.tts.get_engine_instance", return_value=mock_engine
+        ),
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._select_supported_language",
+            return_value="en-US",
+        ),
+    ):
+        mock_engine.async_get_supported_voices.return_value = []
+
+        engine_id, language, voice = _setup_tts_engine(
+            mock_hass, "test_tts_engine", "en"
+        )
+        assert engine_id == "test_tts_engine"
+        assert language == "en-US"
+        assert voice is None
+
+    # Test with no engine_id resolved
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._resolve_engine_id",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._select_supported_language",
+            return_value=None,
+        ),
+    ):
+        engine_id, language, voice = _setup_tts_engine(mock_hass, None, "en")
+        assert engine_id is None
+        assert language is None
+        assert voice is None
+
+    # Test when language selection fails
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._resolve_engine_id",
+            return_value="test_tts_engine",
+        ),
+        patch(
+            "homeassistant.components.tts.get_engine_instance", return_value=mock_engine
+        ),
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._select_supported_language",
+            return_value=None,
+        ),
+    ):
+        engine_id, language, voice = _setup_tts_engine(
+            mock_hass, "test_tts_engine", "unsupported_lang"
+        )
+        assert engine_id is None
+        assert language is None
+        assert voice is None
+
+    # Test with no engine instance
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._resolve_engine_id",
+            return_value="test_tts_engine",
+        ),
+        patch("homeassistant.components.tts.get_engine_instance", return_value=None),
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline._select_supported_language",
+            return_value=None,
+        ),
+    ):
+        engine_id, language, voice = _setup_tts_engine(
+            mock_hass, "test_tts_engine", "en"
+        )
+        assert engine_id is None
+        assert language is None
+        assert voice is None

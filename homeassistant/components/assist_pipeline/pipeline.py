@@ -1,7 +1,7 @@
 """Classes for voice assistant pipelines."""
 
 from __future__ import annotations
-import math
+
 import array
 import asyncio
 from collections import defaultdict, deque
@@ -9,6 +9,7 @@ from collections.abc import AsyncGenerator, AsyncIterable, Callable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
+import math
 from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
@@ -148,64 +149,19 @@ def _async_resolve_default_pipeline_settings(
     default stt / tts engines if none are specified.
     """
     # Setup conversation engine
-    conversation_engine_id = conversation_engine_id or conversation.HOME_ASSISTANT_AGENT
-    matches = language_util.matches(
-        hass.config.language,
-        conversation.async_get_conversation_languages(hass, conversation_engine_id),
-        country=hass.config.country,
+    conversation_engine_id, pipeline_language, conversation_language = (
+        _setup_conversation_engine(hass, conversation_engine_id)
     )
-    pipeline_language = hass.config.language if matches else None
-    conversation_language = matches[0] if matches else None
 
     # Setup STT engine
-    stt_engine_resolved = stt_engine_id or stt.async_default_engine(hass)
-    if stt_engine_resolved and stt.async_get_speech_to_text_engine(
-        hass, stt_engine_resolved
-    ):
-        stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_resolved)
-        if stt_engine and pipeline_language:
-            stt_matches = language_util.matches(
-                pipeline_language,
-                stt_engine.supported_languages,
-                country=hass.config.country,
-            )
-            stt_language = stt_matches[0] if stt_matches else None
-        else:
-            stt_language = None
-        if not stt_language:
-            stt_engine_resolved = None
-    else:
-        stt_engine_resolved = None
-        stt_language = None
+    stt_engine_resolved, stt_language = _setup_stt_engine(
+        hass, stt_engine_id, pipeline_language
+    )
 
     # Setup TTS engine
-    tts_engine_resolved = tts_engine_id or tts.async_default_engine(hass)
-    if tts_engine_resolved and tts.get_engine_instance(hass, tts_engine_resolved):
-        tts_engine = tts.get_engine_instance(hass, tts_engine_resolved)
-        if tts_engine and pipeline_language:
-            tts_matches = language_util.matches(
-                pipeline_language,
-                tts_engine.supported_languages,
-                country=hass.config.country,
-            )
-            tts_language = tts_matches[0] if tts_matches else None
-
-            # Get voice if available
-            tts_voice = None
-            if tts_language:
-                voices = tts_engine.async_get_supported_voices(tts_language)
-                if voices:
-                    tts_voice = voices[0].voice_id
-        else:
-            tts_language = None
-            tts_voice = None
-        if not tts_language:
-            tts_engine_resolved = None
-            tts_voice = None
-    else:
-        tts_engine_resolved = None
-        tts_language = None
-        tts_voice = None
+    tts_engine_resolved, tts_language, tts_voice = _setup_tts_engine(
+        hass, tts_engine_id, pipeline_language
+    )
 
     return {
         "conversation_engine": conversation_engine_id,
@@ -289,55 +245,52 @@ def _setup_tts_engine(hass, engine_id, pipeline_language):
         voices = engine.async_get_supported_voices(language)
         if voices:
             voice = voices[0].voice_id
+    elif not language:
+        engine_id = None
 
     return engine_id, language, voice
 
 
+@dataclass
+class PipelineConfig:
+    """Configuration parameters for pipeline setup."""
+
+    pipeline_name: str
+    conversation_engine_id: str | None = None
+    stt_engine_id: str | None = None
+    tts_engine_id: str | None = None
+    wake_word_entity: str | None = None
+    wake_word_id: str | None = None
+
+
 def setup_pipeline(
-    hass,
-    pipeline_name,
-    conversation_engine_id,
-    stt_engine_id,
-    tts_engine_id,
-    wake_word_entity,
-    wake_word_id,
-):
+    hass: HomeAssistant, config: PipelineConfig
+) -> dict[str, str | None]:
     """Main pipeline setup — optimized for low cognitive complexity."""
     conversation_engine_id, pipeline_language, conversation_language = (
-        _setup_conversation_engine(hass, conversation_engine_id)
+        _setup_conversation_engine(hass, config.conversation_engine_id)
     )
 
     stt_engine_id, stt_language = _setup_stt_engine(
-        hass, stt_engine_id, pipeline_language
+        hass, config.stt_engine_id, pipeline_language
     )
     tts_engine_id, tts_language, tts_voice = _setup_tts_engine(
-        hass, tts_engine_id, pipeline_language
+        hass, config.tts_engine_id, pipeline_language
     )
 
     return {
         "conversation_engine": conversation_engine_id,
         "conversation_language": conversation_language,
         "language": hass.config.language,
-        "name": pipeline_name,
+        "name": config.pipeline_name,
         "stt_engine": stt_engine_id,
         "stt_language": stt_language,
         "tts_engine": tts_engine_id,
         "tts_language": tts_language,
         "tts_voice": tts_voice,
-        "wake_word_entity": wake_word_entity,
-        "wake_word_id": wake_word_id,
+        "wake_word_entity": config.wake_word_entity,
+        "wake_word_id": config.wake_word_id,
     }
-
-    # Call the nested setup_pipeline function to get the pipeline settings
-    return setup_pipeline(
-        hass,
-        pipeline_name,
-        conversation_engine_id,
-        stt_engine_id,
-        tts_engine_id,
-        wake_word_entity=None,
-        wake_word_id=None,
-    )
 
 
 async def _async_create_default_pipeline(
@@ -812,7 +765,7 @@ class PipelineRun:
         pipeline_data.pipeline_runs.remove_run(self)
 
     async def prepare_wake_word_detection(self) -> None:
-        """Prepare wake-word-detection. 
+        """Prepare wake-word-detection.
         Used as coroutine in the prepare_tasks in validate().
         """
         entity_id = self.pipeline.wake_word_entity or wake_word.async_default_entity(
@@ -2021,10 +1974,10 @@ class PipelineInput:
         self,
         stt_processed_stream: AsyncIterable[EnhancedAudioChunk],
         stt_audio_buffer: list[EnhancedAudioChunk],
-    ) -> AsyncGenerator[EnhancedAudioChunk, None]:
+    ) -> AsyncGenerator[EnhancedAudioChunk]:
         """Yield buffered audio first, then live stream."""
 
-        async def generator() -> AsyncGenerator[EnhancedAudioChunk, None]:
+        async def generator() -> AsyncGenerator[EnhancedAudioChunk]:
             for chunk in stt_audio_buffer:
                 yield chunk
             async for chunk in stt_processed_stream:
