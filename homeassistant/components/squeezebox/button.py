@@ -162,6 +162,6 @@ class SqueezeboxButtonEntity(SqueezeboxEntity, ButtonEntity):
             self._player.async_query,
             "button",
             self.entity_description.press_action,
-            translation_key="exceptions.press_failed",
+            translation_key="press_failed",
             translation_placeholders={"action": self.entity_description.press_action},
         )
