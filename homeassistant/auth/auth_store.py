@@ -50,6 +50,8 @@ class AuthStore:
 
     The auth store is lazy. It won't load the data from disk until a method is
     called that needs it.
+
+    The async functions are used as coroutines, and are correctly awaited when they are used in __init__.py .
     """
 
     def __init__(self, hass: HomeAssistant) -> None:

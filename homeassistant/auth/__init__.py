@@ -195,7 +195,9 @@ class AuthManager:
         )
 
     async def async_setup(self) -> None:
-        """Set up the auth manager."""
+        """Set up the auth manager.
+        Used as a coruotine in function auth_manager_from_config().
+        """
         hass = self.hass
         hass.async_add_shutdown_job(
             HassJob(
