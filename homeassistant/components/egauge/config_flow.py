@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN, LOGGER
 
@@ -32,7 +32,7 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
                 base_url=user_input[CONF_HOST],
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
-                client=async_get_clientsession(self.hass),
+                client=get_async_client(self.hass),
             )
             try:
                 serial_number = await client.get_device_serial_number()
@@ -82,7 +82,7 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
                 base_url=reauth_entry.data[CONF_HOST],
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
-                client=async_get_clientsession(self.hass),
+                client=get_async_client(self.hass),
             )
             try:
                 await client.get_device_serial_number()

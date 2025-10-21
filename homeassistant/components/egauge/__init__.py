@@ -6,7 +6,7 @@ from egauge_async.json.client import EgaugeJsonClient
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .coordinator import EgaugeConfigEntry, EgaugeDataCoordinator
 
@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EgaugeConfigEntry) -> bo
         base_url=entry.data[CONF_HOST],
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        client=async_get_clientsession(hass),
+        client=get_async_client(hass),
     )
 
     # Create coordinator (it fetches its own data)
