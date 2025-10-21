@@ -13,9 +13,8 @@ from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import EgaugeDataCoordinator
+from .coordinator import EgaugeConfigEntry, EgaugeDataCoordinator
 from .entity import EgaugeEntity
-from .models import EgaugeConfigEntry
 
 
 class EgaugePowerSensor(EgaugeEntity, SensorEntity):

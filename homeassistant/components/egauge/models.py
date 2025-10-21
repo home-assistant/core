@@ -6,10 +6,6 @@ from dataclasses import dataclass
 
 from egauge_async.json.models import RegisterInfo
 
-from homeassistant.config_entries import ConfigEntry
-
-from .coordinator import EgaugeDataCoordinator
-
 
 @dataclass
 class EgaugeData:
@@ -18,6 +14,3 @@ class EgaugeData:
     measurements: dict[str, float]  # Instantaneous values (W, V, A, etc.)
     counters: dict[str, float]  # Cumulative values (Ws)
     register_info: dict[str, RegisterInfo]  # Metadata for all registers
-
-
-type EgaugeConfigEntry = ConfigEntry[EgaugeDataCoordinator]
