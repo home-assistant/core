@@ -184,10 +184,6 @@ async def load_auth_provider_module(
         return module
 
     reqs = module.REQUIREMENTS
-    if not reqs:
-        _LOGGER.warning("Auth provider '%s' has no requirements", provider)
-        return None
-
     await requirements.async_process_requirements(
         hass, f"auth provider {provider}", reqs
     )

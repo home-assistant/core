@@ -33,9 +33,7 @@ async def async_setup_entry(
     entry: BuienRadarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up buienradar radar-loop camera component.
-    Home Assistant integration APi requires setup function to be async.
-    """
+    """Set up buienradar radar-loop camera component."""
     config = entry.data
     options = entry.options
 

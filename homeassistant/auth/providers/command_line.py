@@ -65,9 +65,9 @@ class CommandLineAuthProvider(AuthProvider):
         """Return a flow to login."""
         return CommandLineLoginFlow(self)
 
-    # NEW private helper to run the external command
-    async def _async_run_auth_command(self, env: dict[str, str]) -> tuple[int, bytes]:
-        """Execute the external authentication command and return the exit code and stdout."""
+    async def async_validate_login(self, username: str, password: str) -> None:
+        """Validate a username and password."""
+        env = {"username": username, "password": password}
         try:
             process = await asyncio.create_subprocess_exec(
                 self.config[CONF_COMMAND],
@@ -77,47 +77,36 @@ class CommandLineAuthProvider(AuthProvider):
                 close_fds=False,  # required for posix_spawn
             )
             stdout, _ = await process.communicate()
-            return process.returncode, stdout
         except OSError as err:
             # happens when command doesn't exist or permission is denied
-            _LOGGER.error("Error executing authentication command: %s", err)
+            _LOGGER.error("Error while authenticating %r: %s", username, err)
             raise InvalidAuthError from err
 
-    # NEW private helper to parse metadata
-    def _parse_metadata(self, stdout: bytes) -> dict[str, str]:
-        """Parse key-value metadata from the command's stdout."""
-        meta: dict[str, str] = {}
-        for _line in stdout.splitlines():
-            try:
-                line = _line.decode().lstrip()
-            except ValueError:
-                # malformed line
-                continue
-            if line.startswith("#") or "=" not in line:
-                continue
-            key, _, value = line.partition("=")
-            key = key.strip()
-            value = value.strip()
-            if key in self.ALLOWED_META_KEYS:
-                meta[key] = value
-        return meta
-
-    # This is the REFACTORED main function
-    async def async_validate_login(self, username: str, password: str) -> None:
-        """Validate a username and password."""
-        env = {"username": username, "password": password}
-        returncode, stdout = await self._async_run_auth_command(env)
-
-        if returncode != 0:
+        if process.returncode != 0:
             _LOGGER.error(
                 "User %r failed to authenticate, command exited with code %d",
                 username,
-                returncode,
+                process.returncode,
             )
             raise InvalidAuthError
 
         if self.config[CONF_META]:
-            self._user_meta[username] = self._parse_metadata(stdout)
+            meta: dict[str, str] = {}
+            for _line in stdout.splitlines():
+                try:
+                    line = _line.decode().lstrip()
+                except ValueError:
+                    # malformed line
+                    continue
+                if line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                key = key.strip()
+                value = value.strip()
+                if key in self.ALLOWED_META_KEYS:
+                    meta[key] = value
+            self._user_meta[username] = meta
+
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
     ) -> Credentials:
