@@ -2348,7 +2348,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Heating Demand',
+    'original_name': 'Heating demand',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2361,7 +2361,7 @@
 # name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_heating_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Connected Thermostat UTE 3000 Heating Demand',
+      'friendly_name': 'Connected Thermostat UTE 3000 Heating demand',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
