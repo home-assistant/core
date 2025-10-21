@@ -11,5 +11,15 @@
   ],
   "documentation": "https://www.home-assistant.io/integrations/xbox",
   "iot_class": "cloud_polling",
-  "requirements": ["xbox-webapi==2.1.0"]
+  "requirements": ["xbox-webapi==2.1.0"],
+  "ssdp": [
+    {
+      "modelName": "Xbox 360",
+      "manufacturer": "Microsoft Corporation"
+    },
+    {
+      "modelName": "Xbox One",
+      "manufacturer": "Microsoft Corporation"
+    }
+  ]
 }
