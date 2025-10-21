@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
 from .entity import Device, NintendoDevice
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 
 class NintendoParentalSwitch(StrEnum):
