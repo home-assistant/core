@@ -167,7 +167,6 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
                         raise UpdateFailed(
                             translation_domain=DOMAIN,
                             translation_key="request_exception",
-                            translation_placeholders={"error": str(e)},
                         ) from e
                     else:
                         if catalog_result.products:
@@ -193,7 +192,6 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="request_exception",
-                translation_placeholders={"error": str(e)},
             ) from e
         else:
             presence_data = {self.client.xuid: batch.people[0]}
