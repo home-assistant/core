@@ -128,3 +128,31 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=AUTH_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                await async_init_nextdns(self.hass, user_input[CONF_API_KEY])
+            except InvalidApiKeyError:
+                errors["base"] = "invalid_api_key"
+            except (ApiError, ClientConnectorError, RetryError, TimeoutError):
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=AUTH_SCHEMA,
+            errors=errors,
+        )
