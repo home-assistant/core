@@ -3933,7 +3933,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_fancy_button-entry]
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3948,7 +3948,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_generic_switch_current_switch_position_fancy_button',
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3960,7 +3960,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Fancy Button)',
+    'original_name': 'Current switch position (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3970,14 +3970,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_fancy_button-state]
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Generic Switch Current switch position (Fancy Button)',
+      'friendly_name': 'Mock Generic Switch Current switch position (2)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_generic_switch_current_switch_position_fancy_button',
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
