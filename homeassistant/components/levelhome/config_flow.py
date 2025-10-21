@@ -12,7 +12,7 @@ from aiohttp import ClientError, ClientResponseError
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .const import (
@@ -302,11 +302,14 @@ class OAuth2FlowHandler(
         return await self.async_step_user()
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:  # type: ignore[override]
-        """Create an entry for the flow and store base URLs in options."""
+        """Create or update an entry and store base URLs in options."""
         options = {
             CONF_OAUTH2_BASE_URL: self._oauth2_base_url,
             CONF_PARTNER_BASE_URL: self._partner_base_url,
         }
-        return self.async_create_entry(
-            title=self.flow_impl.name, data=data, options=options
-        )
+        if self.source == SOURCE_REAUTH:
+            # Update existing entry on reauth
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data, options=options
+            )
+        return self.async_create_entry(title=self.flow_impl.name, data=data, options=options)

@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
-from . import api
+from . import auth as auth_mod
 from .const import (
     CONF_OAUTH2_BASE_URL,
     CONF_PARTNER_BASE_URL,
@@ -23,7 +23,7 @@ _PLATFORMS: list[Platform] = [Platform.LOCK]
 
 # TODO Create ConfigEntry type alias with ConfigEntryAuth or AsyncConfigEntryAuth object
 # TODO Rename type alias and update all entry annotations
-type New_NameConfigEntry = ConfigEntry[api.AsyncConfigEntryAuth]
+type New_NameConfigEntry = ConfigEntry[auth_mod.AsyncConfigEntryAuth]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> bool:
@@ -45,10 +45,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
     # Use an aiohttp-based auth helper for async calls
-    auth = api.AsyncConfigEntryAuth(
+    config_auth = auth_mod.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass), session
     )
-    entry.runtime_data = auth
+    entry.runtime_data = config_auth
 
     # Build resource API client and coordinator here (bind config_entry to coordinator)
     # Use the partner base URL for device APIs
@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> 
     session = aiohttp_client.async_get_clientsession(hass)
 
     async def _get_token() -> str:
-        return await auth.async_get_access_token()
+        return await config_auth.async_get_access_token()
 
     client = LibClient(session, base_url, _get_token)
     coordinator = LevelLocksCoordinator(hass, client, config_entry=entry)
