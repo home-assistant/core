@@ -11,7 +11,7 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import TestCase, TestSequence
+from . import TimeValue, TimeValueSequence
 
 from tests.common import MockConfigEntry
 
@@ -546,12 +546,12 @@ async def test_dafyomi_sensor(hass: HomeAssistant, results: str) -> None:
 @pytest.mark.parametrize(
     "test_sequence",
     [
-        TestSequence(
+        TimeValueSequence(
             [
-                TestCase(dt(2025, 6, 10, 17), "14 Sivan 5785"),  # Initial time
-                TestCase(dt(2025, 6, 10, 23, 0), "15 Sivan 5785"),  # Later in the day
-                TestCase(dt(2025, 6, 11, 9, 0), "15 Sivan 5785"),  # Next morning
-                TestCase(dt(2025, 6, 11, 22, 0), "16 Sivan 5785"),  # Next evening
+                TimeValue(dt(2025, 6, 10, 17), "14 Sivan 5785"),  # Initial time
+                TimeValue(dt(2025, 6, 10, 23, 0), "15 Sivan 5785"),  # Later in the day
+                TimeValue(dt(2025, 6, 11, 9, 0), "15 Sivan 5785"),  # Next morning
+                TimeValue(dt(2025, 6, 11, 22, 0), "16 Sivan 5785"),  # Next evening
             ]
         )
     ],

@@ -23,7 +23,7 @@ from homeassistant.const import CONF_LANGUAGE, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import TestCase
+from . import TimeValue
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -189,7 +189,7 @@ async def test_sequence(
     if not hasattr(request, "param") or not request.param:
         raise ValueError("time_sequence fixture requires parameters")
 
-    sequence: list[TestCase] = request.param.cases
+    sequence: list[TimeValue] = request.param.cases
 
     async def _time_sequence() -> AsyncGenerator[Any]:
         # Setup at the initial time

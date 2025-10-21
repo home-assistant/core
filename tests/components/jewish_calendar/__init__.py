@@ -5,7 +5,7 @@ import datetime as dt
 
 
 @dataclass(frozen=True)
-class TestCase:
+class TimeValue:
     """Single test case."""
 
     time: dt.datetime
@@ -13,7 +13,7 @@ class TestCase:
 
 
 @dataclass(frozen=True)
-class TestSequence:
+class TimeValueSequence:
     """Sequence of test cases."""
 
-    cases: list[TestCase]
+    cases: list[TimeValue]
