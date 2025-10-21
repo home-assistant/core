@@ -63,7 +63,7 @@
     'state': 'off',
   })
 # ---
-# name: test_climates[eberle-ute3000][climate.connected_thermostat_ute_3000-entry]
+# name: test_climates[eberle_ute3000][climate.connected_thermostat_ute_3000-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -105,7 +105,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[eberle-ute3000][climate.connected_thermostat_ute_3000-state]
+# name: test_climates[eberle_ute3000][climate.connected_thermostat_ute_3000-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 22.5,

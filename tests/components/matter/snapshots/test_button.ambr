@@ -389,7 +389,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[eberle-ute3000][button.connected_thermostat_ute_3000_identify-entry]
+# name: test_buttons[eberle_ute3000][button.connected_thermostat_ute_3000_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -424,7 +424,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[eberle-ute3000][button.connected_thermostat_ute_3000_identify-state]
+# name: test_buttons[eberle_ute3000][button.connected_thermostat_ute_3000_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',

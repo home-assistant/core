@@ -2323,7 +2323,7 @@
     'state': '180.0',
   })
 # ---
-# name: test_sensors[eberle-ute3000][sensor.connected_thermostat_ute_3000_heating_demand-entry]
+# name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_heating_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2358,7 +2358,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eberle-ute3000][sensor.connected_thermostat_ute_3000_heating_demand-state]
+# name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_heating_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Connected Thermostat UTE 3000 Heating Demand',
@@ -2372,7 +2372,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[eberle-ute3000][sensor.connected_thermostat_ute_3000_temperature-entry]
+# name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2412,7 +2412,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[eberle-ute3000][sensor.connected_thermostat_ute_3000_temperature-state]
+# name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
