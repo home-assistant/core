@@ -143,7 +143,7 @@
               "long": "[%key:component::shelly::entity::event::input::state_attributes::event_type::state::long_push%]",
               "single_long": "Short push and then long push",
               "single_push": "Single push",
-              "single": "[%component::shelly::entity::event::input::state_attributes::event_type::state::single_push%]",
+              "single": "[%key:component::shelly::entity::event::input::state_attributes::event_type::state::single_push%]",
               "triple_push": "Triple push",
               "triple": "[%key:component::shelly::entity::event::input::state_attributes::event_type::state::triple_push%]"
             }
