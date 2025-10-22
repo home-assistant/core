@@ -6,7 +6,13 @@ import pytest
 
 from homeassistant.components.srp_energy.const import CONF_IS_TOU, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_SOURCE, CONF_USERNAME
+from homeassistant.const import (
+    CONF_ID,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_SOURCE,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -172,3 +178,35 @@ async def test_flow_multiple_configs(
     entries = hass.config_entries.async_entries()
     domain_entries = [entry for entry in entries if entry.domain == DOMAIN]
     assert len(domain_entries) == 2
+
+
+async def test_reconfigure(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Test reconfiguring an existing entry."""
+
+    result = await init_integration.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ID: ACCNT_ID,
+            CONF_NAME: ACCNT_NAME + "reconf",
+            CONF_USERNAME: ACCNT_USERNAME + "reconf",
+            CONF_PASSWORD: ACCNT_PASSWORD + "reconf",
+            CONF_IS_TOU: not ACCNT_IS_TOU,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert init_integration.data == {
+        CONF_ID: ACCNT_ID,
+        CONF_NAME: ACCNT_NAME + "reconf",
+        CONF_USERNAME: ACCNT_USERNAME + "reconf",
+        CONF_PASSWORD: ACCNT_PASSWORD + "reconf",
+        CONF_IS_TOU: not ACCNT_IS_TOU,
+    }
