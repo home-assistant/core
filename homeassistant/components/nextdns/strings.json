@@ -41,6 +41,7 @@
     },
     "abort": {
       "already_configured": "This NextDNS profile is already configured.",
+      "profile_not_available": "The configured NextDNS profile is no longer available in your account. Remove the configuration and configure the integration again.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }

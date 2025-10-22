@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from nextdns import ApiError, InvalidApiKeyError
+from nextdns import ApiError, InvalidApiKeyError, ProfileInfo
 import pytest
 from tenacity import RetryError
 
@@ -157,6 +157,31 @@ async def test_reauth_successful(
     assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
 
 
+async def test_reauth_no_profile(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
+) -> None:
+    """Test reauthentication flow when the profile is no longer available."""
+    await init_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_nextdns_client.profiles = [
+        ProfileInfo(id="abcd098", fingerprint="abcd098", name="New Profile")
+    ]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_KEY: "new_api_key"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "profile_not_available"
+
+
 @pytest.mark.parametrize(
     ("exc", "base_error"),
     [
@@ -267,3 +292,29 @@ async def test_reconfiguration_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+
+
+async def test_reconfigure_flow_no_profile(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
+) -> None:
+    """Test reconfigure flow when the profile is no longer available."""
+    await init_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_nextdns_client.profiles = [
+        ProfileInfo(id="abcd098", fingerprint="abcd098", name="New Profile")
+    ]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_KEY: "new_api_key"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "profile_not_available"
