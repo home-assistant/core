@@ -4,7 +4,6 @@ from copy import deepcopy
 import logging
 from typing import Any
 
-from aiohttp import ClientError
 from blinkpy.auth import Auth
 from blinkpy.blinkpy import Blink
 import voluptuous as vol
@@ -18,7 +17,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -81,14 +79,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> boo
     )
     blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     coordinator = BlinkUpdateCoordinator(hass, entry, blink)
-
-    try:
-        await blink.start()
-    except (ClientError, TimeoutError) as ex:
-        raise ConfigEntryNotReady("Can not connect to host") from ex
-
-    if not blink.available:
-        raise ConfigEntryNotReady
 
     await coordinator.async_config_entry_first_refresh()
 

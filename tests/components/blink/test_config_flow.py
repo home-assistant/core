@@ -218,4 +218,4 @@ async def test_reauth_shows_user_step(hass: HomeAssistant) -> None:
     mock_entry.add_to_hass(hass)
     result = await mock_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "reauth_confirm"

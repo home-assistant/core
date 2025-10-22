@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -34,9 +34,7 @@ async def validate_input(blink: Blink) -> None:
         raise InvalidAuth from err
 
 
-async def _send_blink_2fa_pin(
-    hass: HomeAssistant, blink: Blink, pin: str | None
-) -> bool:
+async def _send_blink_2fa_pin(blink: Blink, pin: str | None) -> bool:
     """Send 2FA pin to blink servers."""
     await blink.send_2fa_code(pin)
     return True
@@ -102,9 +100,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                await _send_blink_2fa_pin(
-                    self.hass, self.blink, user_input.get(CONF_PIN)
-                )
+                await _send_blink_2fa_pin(self.blink, user_input.get(CONF_PIN))
                 return self._async_finish_flow()
             except BlinkSetupError:
                 errors["base"] = "cannot_connect"
@@ -125,8 +121,41 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
-        """Perform reauth upon migration of old entries."""
-        return await self.async_step_user(dict(entry_data))
+        """Perform reauth after an authentication error."""
+        return await self.async_step_reauth_confirm(None)
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth confirmation."""
+        errors = {}
+        if user_input is not None:
+            try:
+                return await self._handle_user_input(user_input)
+            except BlinkTwoFARequiredError:
+                return await self.async_step_2fa()
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+        config_entry = self._get_reauth_entry()
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=config_entry.data[CONF_USERNAME]
+                    ): str,
+                    vol.Required(
+                        CONF_PASSWORD, default=config_entry.data[CONF_PASSWORD]
+                    ): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders={"username": config_entry.data[CONF_USERNAME]},
+        )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -144,12 +173,17 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
+        config_entry = self._get_reconfigure_entry()
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    vol.Required(
+                        CONF_USERNAME, default=config_entry.data[CONF_USERNAME]
+                    ): str,
+                    vol.Required(
+                        CONF_PASSWORD, default=config_entry.data[CONF_PASSWORD]
+                    ): str,
                 }
             ),
             errors=errors,
@@ -159,6 +193,15 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     def _async_finish_flow(self) -> ConfigFlowResult:
         """Finish with setup."""
         assert self.auth
+
+        if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry()
+                if self.source == SOURCE_REAUTH
+                else self._get_reconfigure_entry(),
+                data_updates=self.auth.login_attributes,
+            )
+
         return self.async_create_entry(title=DOMAIN, data=self.auth.login_attributes)
 
 

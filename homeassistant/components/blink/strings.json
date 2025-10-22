@@ -14,6 +14,14 @@
           "pin": "Two-factor code"
         },
         "description": "Enter the PIN sent via email or SMS"
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate Blink",
+        "description": "The credentials for {username} need to be updated",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
       }
     },
     "error": {
@@ -23,7 +31,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {

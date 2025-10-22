@@ -582,7 +582,7 @@ bleak==1.0.1
 blebox-uniapi==2.5.0
 
 # homeassistant.components.blink
-blinkpy==0.24.0
+blinkpy==0.24.1
 
 # homeassistant.components.blue_current
 bluecurrent-api==1.3.1
