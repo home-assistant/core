@@ -698,7 +698,13 @@ class _ScriptRun:
                             if cond(hass, variables) is False:
                                 return False
             except exceptions.ConditionError as ex:
-                _LOGGER.warning("Error in '%s[%s]' evaluation: %s", name, idx, ex)
+                self._log(
+                    "Error in '%s[%s]' evaluation: %s",
+                    name,
+                    idx,
+                    ex,
+                    level=logging.WARNING,
+                )
                 return None
 
             return True
@@ -719,7 +725,11 @@ class _ScriptRun:
                                 await self._async_run_script(script)
                                 return
                     except exceptions.ConditionError as ex:
-                        _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
+                        self._log(
+                            "Error in 'choose' evaluation:\n%s",
+                            ex,
+                            level=logging.WARNING,
+                        )
 
         if choose_data["default"] is not None:
             trace_set_result(choice="default")
@@ -738,7 +748,7 @@ class _ScriptRun:
                 trace_element.reuse_by_child = True
             check = cond(self._hass, self._variables)
         except exceptions.ConditionError as ex:
-            _LOGGER.warning("Error in 'condition' evaluation:\n%s", ex)
+            self._log("Error in 'condition' evaluation:\n%s", ex, level=logging.WARNING)
             check = False
 
         self._log("Test condition %s: %s", self._script.last_action, check)
@@ -757,7 +767,7 @@ class _ScriptRun:
                     if_data["if_conditions"], "if", "condition"
                 )
         except exceptions.ConditionError as ex:
-            _LOGGER.warning("Error in 'if' evaluation:\n%s", ex)
+            self._log("Error in 'if' evaluation:\n%s", ex, level=logging.WARNING)
 
         if test_conditions:
             trace_set_result(choice="then")
@@ -854,7 +864,9 @@ class _ScriptRun:
                     if not self._test_conditions(conditions, "while"):
                         break
                 except exceptions.ConditionError as ex:
-                    _LOGGER.warning("Error in 'while' evaluation:\n%s", ex)
+                    self._log(
+                        "Error in 'while' evaluation:\n%s", ex, level=logging.WARNING
+                    )
                     break
 
                 if iteration > 1:
@@ -902,7 +914,9 @@ class _ScriptRun:
                     if self._test_conditions(conditions, "until") in [True, None]:
                         break
                 except exceptions.ConditionError as ex:
-                    _LOGGER.warning("Error in 'until' evaluation:\n%s", ex)
+                    self._log(
+                        "Error in 'until' evaluation:\n%s", ex, level=logging.WARNING
+                    )
                     break
 
                 if iteration >= REPEAT_WARN_ITERATIONS:
