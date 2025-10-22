@@ -87,7 +87,7 @@ async def test_form_exceptions(
     )
 
     with patch(
-        "homeassistant.components.sma.config_flow.pysma.SMA.new_session",
+        "homeassistant.components.sma.config_flow.SMAWebConnect.new_session",
         side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -207,7 +207,7 @@ async def test_dhcp_exceptions(
         data=DHCP_DISCOVERY,
     )
 
-    with patch("homeassistant.components.sma.config_flow.pysma.SMA") as mock_sma:
+    with patch("homeassistant.components.sma.config_flow.SMAWebConnect") as mock_sma:
         mock_sma_instance = mock_sma.return_value
         mock_sma_instance.new_session = AsyncMock(side_effect=exception)
 
@@ -219,7 +219,7 @@ async def test_dhcp_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    with patch("homeassistant.components.sma.config_flow.pysma.SMA") as mock_sma:
+    with patch("homeassistant.components.sma.config_flow.SMAWebConnect") as mock_sma:
         mock_sma_instance = mock_sma.return_value
         mock_sma_instance.new_session = AsyncMock(return_value=True)
         mock_sma_instance.device_info = AsyncMock(return_value=MOCK_DEVICE)
@@ -287,7 +287,7 @@ async def test_reauth_flow_exceptions(
 
     result = await entry.start_reauth_flow(hass)
 
-    with patch("homeassistant.components.sma.config_flow.pysma.SMA") as mock_sma:
+    with patch("homeassistant.components.sma.config_flow.SMAWebConnect") as mock_sma:
         mock_sma_instance = mock_sma.return_value
         mock_sma_instance.new_session = AsyncMock(side_effect=exception)
         result = await hass.config_entries.flow.async_configure(
