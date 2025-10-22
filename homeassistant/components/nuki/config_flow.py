@@ -109,8 +109,7 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is None:
             return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=REAUTH_SCHEMA,
+                step_id="reauth_confirm", data_schema=REAUTH_SCHEMA
             )
 
         conf = {
