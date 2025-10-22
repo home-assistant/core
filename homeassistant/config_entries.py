@@ -300,7 +300,7 @@ class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
     """Typed result dict for config flow."""
 
     # Extra keys, only present if type is CREATE_ENTRY
-    next_flow: tuple[FlowType, str]  # (flow type, flow id)
+    next_flow: tuple[FlowType, str, str]  # (flow type, flow id, subentry_type)
     minor_version: int
     options: Mapping[str, Any]
     result: ConfigEntry
@@ -314,6 +314,7 @@ class FlowType(StrEnum):
     CONFIG_FLOW = "config_flow"
     # Add other flow types here as needed in the future,
     # if we want to support them in the `next_flow` parameter.
+    CONFIG_SUBENTRIES_FLOW = "config_subentries_flow"
 
 
 def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
@@ -1706,6 +1707,21 @@ class ConfigEntriesFlowManager(
             self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
+
+        if (
+            result.get("next_flow")
+            and result["next_flow"][0] == FlowType.CONFIG_SUBENTRIES_FLOW
+        ):
+            subentry_result = await self.hass.config_entries.subentries.async_init(
+                (entry.entry_id, result["next_flow"][2]),
+                context=SubentryFlowContext(source=SOURCE_USER),
+            )
+            result["next_flow"] = (
+                result["next_flow"][0],
+                subentry_result["flow_id"],
+                result["next_flow"][2],
+            )
+
         return result
 
     async def async_create_flow(
@@ -3172,16 +3188,22 @@ class ConfigFlow(ConfigEntryBaseFlow):
     def _async_set_next_flow_if_valid(
         self,
         result: ConfigFlowResult,
-        next_flow: tuple[FlowType, str] | None,
+        next_flow: tuple[FlowType, str, str] | None,
     ) -> None:
         """Validate and set next_flow in result if provided."""
         if next_flow is None:
             return
-        flow_type, flow_id = next_flow
-        if flow_type != FlowType.CONFIG_FLOW:
+        flow_type, flow_id, subentry_type = next_flow
+        if flow_type not in {FlowType.CONFIG_FLOW, FlowType.CONFIG_SUBENTRIES_FLOW}:
             raise HomeAssistantError("Invalid next_flow type")
-        # Raises UnknownFlow if the flow does not exist.
-        self.hass.config_entries.flow.async_get(flow_id)
+        if flow_type == FlowType.CONFIG_FLOW:
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.flow.async_get(flow_id)
+        if flow_type == FlowType.CONFIG_SUBENTRIES_FLOW and not subentry_type:
+            raise HomeAssistantError(
+                "subentry_type must be provided for subentry flows"
+            )
+
         result["next_flow"] = next_flow
 
     @callback
@@ -3190,7 +3212,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         *,
         reason: str,
         description_placeholders: Mapping[str, str] | None = None,
-        next_flow: tuple[FlowType, str] | None = None,
+        next_flow: tuple[FlowType, str, str] | None = None,
     ) -> ConfigFlowResult:
         """Abort the config flow."""
         result = super().async_abort(
@@ -3208,7 +3230,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
-        next_flow: tuple[FlowType, str] | None = None,
+        next_flow: tuple[FlowType, str, str] | None = None,
         options: Mapping[str, Any] | None = None,
         subentries: Iterable[ConfigSubentryData] | None = None,
     ) -> ConfigFlowResult:
