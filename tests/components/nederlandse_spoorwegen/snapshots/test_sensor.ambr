@@ -22,7 +22,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': None,
     'original_icon': 'mdi:train',
     'original_name': 'To home',
     'platform': 'nederlandse_spoorwegen',
@@ -38,7 +38,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
       'friendly_name': 'To home',
       'icon': 'mdi:train',
     }),
@@ -73,7 +72,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': None,
     'original_icon': 'mdi:train',
     'original_name': 'To work',
     'platform': 'nederlandse_spoorwegen',
@@ -89,7 +88,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
       'friendly_name': 'To work',
       'icon': 'mdi:train',
     }),
@@ -266,7 +264,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': None,
     'original_icon': 'mdi:train',
     'original_name': 'To home',
     'platform': 'nederlandse_spoorwegen',
@@ -292,7 +290,6 @@
       'departure_platform_planned': '4',
       'departure_time_actual': '16:35',
       'departure_time_planned': '16:34',
-      'device_class': 'timestamp',
       'friendly_name': 'To home',
       'going': True,
       'icon': 'mdi:train',
@@ -312,7 +309,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-09-15T14:35:00+00:00',
+    'state': '2025-09-15 16:35:00+02:00',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_work-entry]
@@ -338,7 +335,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': None,
     'original_icon': 'mdi:train',
     'original_name': 'To work',
     'platform': 'nederlandse_spoorwegen',
@@ -364,7 +361,6 @@
       'departure_platform_planned': '4',
       'departure_time_actual': '16:35',
       'departure_time_planned': '16:34',
-      'device_class': 'timestamp',
       'friendly_name': 'To work',
       'going': True,
       'icon': 'mdi:train',
@@ -384,6 +380,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-09-15T14:35:00+00:00',
+    'state': '2025-09-15 16:35:00+02:00',
   })
 # ---
