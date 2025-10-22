@@ -57,6 +57,54 @@ def mock_nsapi() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_single_trip_nsapi() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with (
+        patch(
+            "homeassistant.components.nederlandse_spoorwegen.config_flow.NSAPI",
+            autospec=True,
+        ) as mock_nsapi,
+        patch(
+            "homeassistant.components.nederlandse_spoorwegen.coordinator.NSAPI",
+            new=mock_nsapi,
+        ),
+    ):
+        client = mock_nsapi.return_value
+        stations = load_json_object_fixture("stations.json", DOMAIN)
+        client.get_stations.return_value = [
+            Station(station) for station in stations["payload"]
+        ]
+        # Always return only one trip, so there is no 'next' trip
+        trips_data = load_json_object_fixture("trip_single.json", DOMAIN)
+        trips = [Trip(trip) for trip in trips_data["trips"]]
+        client.get_trips.return_value = trips
+        yield client
+
+
+@pytest.fixture
+def mock_no_trips_nsapi() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with (
+        patch(
+            "homeassistant.components.nederlandse_spoorwegen.config_flow.NSAPI",
+            autospec=True,
+        ) as mock_nsapi,
+        patch(
+            "homeassistant.components.nederlandse_spoorwegen.coordinator.NSAPI",
+            new=mock_nsapi,
+        ),
+    ):
+        client = mock_nsapi.return_value
+        stations = load_json_object_fixture("stations.json", DOMAIN)
+        client.get_stations.return_value = [
+            Station(station) for station in stations["payload"]
+        ]
+
+        client.get_trips.return_value = []
+        yield client
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock config entry."""
     return MockConfigEntry(
