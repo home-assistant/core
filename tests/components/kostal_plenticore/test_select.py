@@ -13,6 +13,7 @@ async def test_select_battery_charging_usage_available(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_get_settings: dict[str, list[SettingsData]],
+    mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test that the battery charging usage select entity is added if the settings are available."""
 
@@ -115,6 +116,7 @@ async def test_select_battery_charging_usage_not_available(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_get_settings: dict[str, list[SettingsData]],
+    mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test that the battery charging usage select entity is not added if the settings are unavailable."""
 

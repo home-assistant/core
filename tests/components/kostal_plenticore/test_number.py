@@ -47,11 +47,27 @@ async def test_setup_no_entries(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_get_settings: dict[str, list[SettingsData]],
+    mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test that no entries are setup if Plenticore does not provide data."""
 
     # remove all settings except hostname which is used during setup
-    mock_get_settings["devices:local"].clear()
+    mock_get_settings.clear()
+    mock_get_settings.update(
+        {
+            "scb:network": [
+                SettingsData(
+                    min="1",
+                    max="63",
+                    default=None,
+                    access="readwrite",
+                    unit=None,
+                    id="Hostname",
+                    type="string",
+                )
+            ]
+        }
+    )
 
     mock_config_entry.add_to_hass(hass)
 
