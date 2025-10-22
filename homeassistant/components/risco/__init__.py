@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass, field
 import logging
-from typing import Any
 
 from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError
 from pyrisco.common import Partition, System, Zone
@@ -22,8 +19,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CONCURRENCY,
@@ -35,6 +34,10 @@ from .const import (
     TYPE_LOCAL,
 )
 from .coordinator import RiscoDataUpdateCoordinator, RiscoEventsDataUpdateCoordinator
+from .models import LocalData
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
@@ -43,14 +46,6 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class LocalData:
-    """A data class for local data passed to the platforms."""
-
-    system: RiscoLocal
-    partition_updates: dict[int, Callable[[], Any]] = field(default_factory=dict)
 
 
 def is_local(entry: ConfigEntry) -> bool:
@@ -176,3 +171,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Risco integration services."""
+
+    await async_setup_services(hass)
+
+    return True
