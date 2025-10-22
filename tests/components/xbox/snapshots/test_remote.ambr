@@ -1,0 +1,99 @@
+# serializer version: 1
+# name: test_remotes[remote.xone_remote-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'remote',
+    'entity_category': None,
+    'entity_id': 'remote.xone_remote',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'XONE Remote',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'HIJKLMN',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_remotes[remote.xone_remote-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'XONE Remote',
+      'supported_features': <RemoteEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'remote.xone_remote',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_remotes[remote.xonex_remote-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'remote',
+    'entity_category': None,
+    'entity_id': 'remote.xonex_remote',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'XONEX Remote',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ABCDEFG',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_remotes[remote.xonex_remote-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'XONEX Remote',
+      'supported_features': <RemoteEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'remote.xonex_remote',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
