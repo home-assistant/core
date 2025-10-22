@@ -7,16 +7,18 @@
 
 -c homeassistant/package_constraints.txt
 -r requirements_test_pre_commit.txt
-astroid==3.3.11
+astroid==4.0.1
 coverage==7.10.6
 freezegun==1.5.2
 go2rtc-client==0.2.1
+# librt is an internal mypy dependency
+librt==0.2.1
 license-expression==30.4.3
 mock-open==1.4.0
-mypy-dev==1.19.0a2
+mypy-dev==1.19.0a4
 pre-commit==4.2.0
-pydantic==2.12.0
-pylint==3.3.8
+pydantic==2.12.2
+pylint==4.0.1
 pylint-per-file-ignores==1.4.0
 pipdeptree==2.26.1
 pytest-asyncio==1.2.0
@@ -33,7 +35,7 @@ pytest-xdist==3.8.0
 pytest==8.4.2
 requests-mock==1.12.1
 respx==0.22.0
-syrupy==4.9.1
+syrupy==5.0.0
 tqdm==4.67.1
 types-aiofiles==24.1.0.20250822
 types-atomicwrites==1.4.5.1

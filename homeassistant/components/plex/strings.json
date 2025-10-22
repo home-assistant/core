@@ -3,7 +3,7 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "description": "Continue to [plex.tv](https://plex.tv) to link a Plex server."
+        "description": "Continue to {plex_server_url} to link a Plex server."
       },
       "user_advanced": {
         "data": {
