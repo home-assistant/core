@@ -1,0 +1,4 @@
+=== JSON Validation ===
+manifest.json: ✓ OK
+strings.json: ✓ OK
+translations/en.json: ✓ OK

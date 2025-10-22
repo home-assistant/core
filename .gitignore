@@ -141,7 +141,3 @@ pytest_buckets.txt
 # AI tooling
 .claude/settings.local.json
 
-custom_components/openh264customh264/bin/
-*.dylib
-*.so
-*.dll

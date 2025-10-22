@@ -1,0 +1,32 @@
+homeassistant/components/openh264customh264/__init__.py:46:12: BLE001 Do not catch blind exception: `Exception`
+homeassistant/components/openh264customh264/__init__.py:93:11: C901 `_async_register_services` is too complex (63 > 25)
+homeassistant/components/openh264customh264/__init__.py:141:17: TRY301 Abstract `raise` to an inner function
+homeassistant/components/openh264customh264/__init__.py:143:17: TRY301 Abstract `raise` to an inner function
+homeassistant/components/openh264customh264/__init__.py:144:16: BLE001 Do not catch blind exception: `Exception`
+homeassistant/components/openh264customh264/__init__.py:146:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+homeassistant/components/openh264customh264/__init__.py:168:16: BLE001 Do not catch blind exception: `Exception`
+homeassistant/components/openh264customh264/__init__.py:170:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+homeassistant/components/openh264customh264/__init__.py:258:13: TRY300 Consider moving this statement to an `else` block
+homeassistant/components/openh264customh264/__init__.py:260:16: BLE001 Do not catch blind exception: `Exception`
+homeassistant/components/openh264customh264/__init__.py:288:9: RUF059 Unpacked variable `stdout` is never used
+homeassistant/components/openh264customh264/__init__.py:330:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+homeassistant/components/openh264customh264/__init__.py:390:18: ASYNC230 Async functions should not open files with blocking methods like `open`
+homeassistant/components/openh264customh264/__init__.py:436:28: BLE001 Do not catch blind exception: `Exception`
+homeassistant/components/openh264customh264/__init__.py:438:25: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+homeassistant/components/openh264customh264/__init__.py:488:9: RUF059 Unpacked variable `stdout` is never used
+homeassistant/components/openh264customh264/__init__.py:522:17: TRY301 Abstract `raise` to an inner function
+homeassistant/components/openh264customh264/__init__.py:558:16: BLE001 Do not catch blind exception: `Exception`
+homeassistant/components/openh264customh264/__init__.py:560:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+homeassistant/components/openh264customh264/__init__.py:607:21: TRY301 Abstract `raise` to an inner function
+homeassistant/components/openh264customh264/__init__.py:647:17: TRY301 Abstract `raise` to an inner function
+homeassistant/components/openh264customh264/__init__.py:651:17: TRY301 Abstract `raise` to an inner function
+homeassistant/components/openh264customh264/__init__.py:657:16: BLE001 Do not catch blind exception: `Exception`
+homeassistant/components/openh264customh264/__init__.py:659:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+homeassistant/components/openh264customh264/camera.py:105:16: BLE001 Do not catch blind exception: `Exception`
+homeassistant/components/openh264customh264/camera.py:121:16: BLE001 Do not catch blind exception: `Exception`
+homeassistant/components/openh264customh264/encoder.py:107:13: PLC0415 `import` should be at the top-level of a file
+homeassistant/components/openh264customh264/encoder.py:136:21: TRY300 Consider moving this statement to an `else` block
+homeassistant/components/openh264customh264/encoder.py:224:16: BLE001 Do not catch blind exception: `Exception`
+homeassistant/components/openh264customh264/lib.py:41:12: BLE001 Do not catch blind exception: `Exception`
+Found 30 errors.
+No fixes available (2 hidden fixes can be enabled with the `--unsafe-fixes` option).

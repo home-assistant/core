@@ -1,0 +1,53 @@
+************* Module homeassistant.components.openh264customh264
+homeassistant/components/openh264customh264/__init__.py:47: [W7401(hass-logger-period), async_setup_entry] User visible logger messages must not end with a period
+homeassistant/components/openh264customh264/__init__.py:47: [W7401(hass-logger-period), async_setup_entry] User visible logger messages must not end with a period
+homeassistant/components/openh264customh264/__init__.py:87: [W7471(hass-async-callback-decorator), _async_update_listener] A coroutine function should not be decorated with @callback
+homeassistant/components/openh264customh264/__init__.py:87: [W7471(hass-async-callback-decorator), _async_update_listener] A coroutine function should not be decorated with @callback
+homeassistant/components/openh264customh264/__init__.py:106: [W7402(hass-logger-capital), _async_register_services.handle_encode_file] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:106: [W7402(hass-logger-capital), _async_register_services.handle_encode_file] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:160: [W7402(hass-logger-capital), _async_register_services.handle_encode_file] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:160: [W7402(hass-logger-capital), _async_register_services.handle_encode_file] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:180: [W7402(hass-logger-capital), _async_register_services._encode_with_ffmpeg_openh264] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:180: [W7402(hass-logger-capital), _async_register_services._encode_with_ffmpeg_openh264] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:191: [W7402(hass-logger-capital), _async_register_services._encode_with_ffmpeg_openh264] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:191: [W7402(hass-logger-capital), _async_register_services._encode_with_ffmpeg_openh264] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:243: [W7402(hass-logger-capital), _async_register_services._encode_with_ffmpeg_openh264] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:243: [W7402(hass-logger-capital), _async_register_services._encode_with_ffmpeg_openh264] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:247: [W7402(hass-logger-capital), _async_register_services._encode_with_ffmpeg_openh264] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:247: [W7402(hass-logger-capital), _async_register_services._encode_with_ffmpeg_openh264] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:257: [W7402(hass-logger-capital), _async_register_services._encode_with_ffmpeg_openh264] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:257: [W7402(hass-logger-capital), _async_register_services._encode_with_ffmpeg_openh264] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:261: [W7402(hass-logger-capital), _async_register_services._encode_with_ffmpeg_openh264] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:261: [W7402(hass-logger-capital), _async_register_services._encode_with_ffmpeg_openh264] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:265: [W7431(hass-argument-type), _async_register_services._encode_with_shim] Argument hass should be of type ['HomeAssistant', 'HomeAssistant | None'] in _encode_with_shim
+homeassistant/components/openh264customh264/__init__.py:265: [W7431(hass-argument-type), _async_register_services._encode_with_shim] Argument hass should be of type ['HomeAssistant', 'HomeAssistant | None'] in _encode_with_shim
+homeassistant/components/openh264customh264/__init__.py:505: [W7402(hass-logger-capital), _async_register_services.handle_capture_snapshot] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:505: [W7402(hass-logger-capital), _async_register_services.handle_capture_snapshot] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:570: [W7402(hass-logger-capital), _async_register_services.handle_record_clip] User visible logger messages must start with a capital letter or downgrade to debug
+homeassistant/components/openh264customh264/__init__.py:570: [W7402(hass-logger-capital), _async_register_services.handle_record_clip] User visible logger messages must start with a capital letter or downgrade to debug
+************* Module homeassistant.components.openh264customh264.diagnostics
+homeassistant/components/openh264customh264/diagnostics.py:11: [W7432(hass-return-type), async_get_config_entry_diagnostics] Return type should be Mapping[str, Any] in async_get_config_entry_diagnostics
+homeassistant/components/openh264customh264/diagnostics.py:11: [W7432(hass-return-type), async_get_config_entry_diagnostics] Return type should be Mapping[str, Any] in async_get_config_entry_diagnostics
+homeassistant/components/openh264customh264/diagnostics.py:17: [R6102(consider-using-tuple), async_get_config_entry_diagnostics] Consider using an in-place tuple instead of list
+homeassistant/components/openh264customh264/diagnostics.py:17: [R6102(consider-using-tuple), async_get_config_entry_diagnostics] Consider using an in-place tuple instead of list
+************* Module homeassistant.components.openh264customh264.encoder
+homeassistant/components/openh264customh264/encoder.py:53: [W7432(hass-return-type), OpenH264Encoder.__init__] Return type should be None in __init__
+homeassistant/components/openh264customh264/encoder.py:53: [W7432(hass-return-type), OpenH264Encoder.__init__] Return type should be None in __init__
+************* Module homeassistant.components.openh264customh264.camera
+homeassistant/components/openh264customh264/camera.py:31: [W7431(hass-argument-type), async_setup_entry] Argument 3 should be of type AddConfigEntryEntitiesCallback in async_setup_entry
+homeassistant/components/openh264customh264/camera.py:31: [W7431(hass-argument-type), async_setup_entry] Argument 3 should be of type AddConfigEntryEntitiesCallback in async_setup_entry
+homeassistant/components/openh264customh264/camera.py:127: [W7432(hass-return-type), OpenH264NedisCamera.device_info] Return type should be ['DeviceInfo', None] in device_info
+homeassistant/components/openh264customh264/camera.py:127: [W7432(hass-return-type), OpenH264NedisCamera.device_info] Return type should be ['DeviceInfo', None] in device_info
+homeassistant/components/openh264customh264/camera.py:54: [W7432(hass-return-type), OpenH264NedisCamera.__init__] Return type should be None in __init__
+homeassistant/components/openh264customh264/camera.py:54: [W7432(hass-return-type), OpenH264NedisCamera.__init__] Return type should be None in __init__
+************* Module homeassistant.components.openh264customh264.config_flow
+homeassistant/components/openh264customh264/config_flow.py:92: [W7431(hass-argument-type), OpenH264CustomH264ConfigFlow.async_get_options_flow] Argument 1 should be of type ConfigEntry in async_get_options_flow
+homeassistant/components/openh264customh264/config_flow.py:92: [W7432(hass-return-type), OpenH264CustomH264ConfigFlow.async_get_options_flow] Return type should be OptionsFlow in async_get_options_flow
+homeassistant/components/openh264customh264/config_flow.py:57: [W7432(hass-return-type), OpenH264CustomH264ConfigFlow.async_step_user] Return type should be ConfigFlowResult in async_step_user
+homeassistant/components/openh264customh264/config_flow.py:92: [W7431(hass-argument-type), OpenH264CustomH264ConfigFlow.async_get_options_flow] Argument 1 should be of type ConfigEntry in async_get_options_flow
+homeassistant/components/openh264customh264/config_flow.py:92: [W7432(hass-return-type), OpenH264CustomH264ConfigFlow.async_get_options_flow] Return type should be OptionsFlow in async_get_options_flow
+homeassistant/components/openh264customh264/config_flow.py:57: [W7432(hass-return-type), OpenH264CustomH264ConfigFlow.async_step_user] Return type should be ConfigFlowResult in async_step_user
+homeassistant/components/openh264customh264/config_flow.py:104: [W7432(hass-return-type), OpenH264CustomH264OptionsFlow.async_step_init] Return type should be ConfigFlowResult in async_step_init
+homeassistant/components/openh264customh264/config_flow.py:104: [W7432(hass-return-type), OpenH264CustomH264OptionsFlow.async_step_init] Return type should be ConfigFlowResult in async_step_init
+homeassistant/components/openh264customh264/config_flow.py:100: [W7432(hass-return-type), OpenH264CustomH264OptionsFlow.__init__] Return type should be None in __init__
+homeassistant/components/openh264customh264/config_flow.py:100: [W7432(hass-return-type), OpenH264CustomH264OptionsFlow.__init__] Return type should be None in __init__

@@ -1,7 +1,5 @@
 """Constants for the OpenH264 Nedis Camera integration."""
-
 from __future__ import annotations
-
 import logging
 
 DOMAIN = "openh264customh264"

@@ -1,0 +1,7 @@
+homeassistant/components/openh264customh264/__init__.py:256:1: W293 Blank line contains whitespace
+homeassistant/components/openh264customh264/__init__.py:493:1: invalid-syntax: Unexpected indentation
+homeassistant/components/openh264customh264/__init__.py:670:1: invalid-syntax: Expected a statement
+homeassistant/components/openh264customh264/camera.py:111:16: UP041 [*] Replace aliased errors with `TimeoutError`
+homeassistant/components/openh264customh264/camera.py:127:16: UP041 [*] Replace aliased errors with `TimeoutError`
+Found 5 errors.
+[*] 2 fixable with the `--fix` option.
