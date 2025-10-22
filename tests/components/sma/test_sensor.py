@@ -1,14 +1,10 @@
 """Test the SMA sensor platform."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pysma.exceptions import (
-    SmaAuthenticationException,
-    SmaConnectionException,
-    SmaReadException,
-)
+from pysma import SmaAuthenticationException, SmaConnectionException, SmaReadException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -56,7 +52,7 @@ async def test_all_entities(
 async def test_refresh_exceptions(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_sma_client: Generator,
+    mock_sma_client: MagicMock,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
@@ -71,4 +67,5 @@ async def test_refresh_exceptions(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.sma_device_name_battery_capacity_a")
+    assert state
     assert state.state == STATE_UNAVAILABLE
