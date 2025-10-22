@@ -12,6 +12,7 @@ from pysma import (
     SmaReadException,
     SMAWebConnect,
 )
+from pysma.helpers import DeviceInfo
 from pysma.sensor import Sensors
 
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 class SMACoordinatorData:
     """Data class for SMA sensors."""
 
-    sma_device_info: dict[str, str]
+    sma_device_info: DeviceInfo
     sensors: Sensors
 
 
@@ -57,7 +58,7 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
             ),
         )
         self.sma = sma
-        self._sma_device_info: dict[str, str] = {}
+        self._sma_device_info = DeviceInfo()
         self._sensors = Sensors()
 
     async def _async_setup(self) -> None:

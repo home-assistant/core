@@ -2387,7 +2387,7 @@ pysignalclirestapi==0.3.24
 pyskyqhub==0.1.4
 
 # homeassistant.components.sma
-pysma==1.0.1
+pysma==1.0.2
 
 # homeassistant.components.smappee
 pysmappee==0.2.29

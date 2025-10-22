@@ -6,6 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+import attrs
 from pysma import (
     SmaAuthenticationException,
     SmaConnectionException,
@@ -56,7 +57,7 @@ async def validate_input(
     device_info = await sma.device_info()
     await sma.close_session()
 
-    return device_info
+    return attrs.asdict(device_info)
 
 
 class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
