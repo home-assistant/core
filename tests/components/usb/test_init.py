@@ -1,7 +1,6 @@
 """Tests for the USB Discovery integration."""
 
 import asyncio
-import dataclasses
 from datetime import timedelta
 import logging
 import os
@@ -1407,31 +1406,37 @@ def test_usb_device_from_path_with_symlinks() -> None:
         }
         return realpath_map.get(path, path)
 
-    usb_device = USBDevice(
-        device="/dev/ttyUSB0",
-        vid="1234",
-        pid="5678",
-        serial_number="ABC123",
-        manufacturer="Test Manufacturer",
-        description="Test Device",
-    )
+    # Mock a serial port from comports()
+    mock_port = MagicMock()
+    mock_port.device = "/dev/ttyUSB0"
+    mock_port.vid = 0x1234
+    mock_port.pid = 0x5678
+    mock_port.serial_number = "ABC123"
+    mock_port.manufacturer = "Test Manufacturer"
+    mock_port.description = "Test Device"
 
     with (
         patch("os.path.isdir", return_value=True),
         patch("os.scandir", return_value=[entry1, entry2]),
         patch("os.path.realpath", side_effect=mock_realpath),
         patch(
-            "homeassistant.components.usb.utils.scan_serial_ports",
-            return_value=[usb_device],
+            "homeassistant.components.usb.utils.comports",
+            return_value=[mock_port],
         ),
     ):
+        # scan_serial_ports should resolve the symlink
         dev_from_path = usb_device_from_path("/dev/serial/by-id/usb-device1")
 
-    # The USB device for the given path differs from the `scan_serial_ports` only by its
-    # `device` pointing to a symlink
-    assert dev_from_path == dataclasses.replace(
-        usb_device, device="/dev/serial/by-id/usb-device1"
+    # Should find the device with the unique symlink path
+    expected = USBDevice(
+        device="/dev/serial/by-id/usb-device1",
+        vid="1234",
+        pid="5678",
+        serial_number="ABC123",
+        manufacturer="Test Manufacturer",
+        description="Test Device",
     )
+    assert dev_from_path == expected
 
 
 def test_usb_device_from_path_with_realpath_match() -> None:
