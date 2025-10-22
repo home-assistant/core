@@ -314,8 +314,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "lyric": {"homeassistant": {"aiolyric"}},
     # https://github.com/microBeesTech/pythonSDK/
     "microbees": {"homeassistant": {"microbeespy"}},
-    # https://github.com/tiagocoutinho/async_modbus
-    "nibe_heatpump": {"nibe": {"async-modbus"}},
     # https://github.com/ejpenney/pyobihai
     "obihai": {"homeassistant": {"pyobihai"}},
     # https://github.com/iamkubi/pydactyl
