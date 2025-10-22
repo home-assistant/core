@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import Any
 
 from enocean.protocol.packet import Packet
+from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
+from home_assistant_enocean.enocean_id import EnOceanID
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -18,8 +20,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_entry import EnOceanConfigEntry
 from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
-from .enocean_device_type import EnOceanDeviceType
-from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 
 CONF_CHANNEL = "channel"

@@ -9,6 +9,8 @@ from typing import Any
 
 from enocean.protocol.constants import RORG
 from enocean.protocol.packet import Packet, RadioPacket
+from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
+from home_assistant_enocean.enocean_id import EnOceanID
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -34,8 +36,6 @@ from .config_flow import (
     CONF_ENOCEAN_SENDER_ID,
 )
 from .const import SIGNAL_SEND_MESSAGE
-from .enocean_device_type import EnOceanDeviceType
-from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 
 _LOGGER = logging.getLogger(__name__)

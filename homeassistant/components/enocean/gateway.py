@@ -7,6 +7,7 @@ import logging
 from enocean.communicators import SerialCommunicator
 from enocean.protocol.packet import Packet, RadioPacket
 from enocean.utils import to_hex_string
+from home_assistant_enocean.enocean_id import EnOceanID
 import serial
 
 from homeassistant.core import HomeAssistant
@@ -14,7 +15,6 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 
 from .const import SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
-from .enocean_id import EnOceanID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +48,7 @@ class EnOceanGateway:
         self.__base_id = EnOceanID(to_hex_string(self.__communicator.base_id))
 
         self.__chip_version = self.__communicator.version_info.chip_version
+        # _LOGGER.warning("Version_info: %s", self.__communicator.version_info.__dict__)
 
         self.__sw_version = (
             self.__communicator.version_info.app_version.versionString()

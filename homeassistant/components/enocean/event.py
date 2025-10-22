@@ -5,6 +5,8 @@ from collections.abc import Coroutine
 from typing import Any
 
 from enocean.protocol.packet import Packet
+from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
+from home_assistant_enocean.enocean_id import EnOceanID
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import _LOGGER, HomeAssistant, callback
@@ -20,8 +22,6 @@ from .const import (
     ENOCEAN_BINARY_SENSOR_EEPS,
     SIGNAL_RECEIVE_MESSAGE,
 )
-from .enocean_device_type import EnOceanDeviceType
-from .enocean_id import EnOceanID
 
 ACTION_RELEASED = 0x00
 ACTION_A0_ON = 0x70

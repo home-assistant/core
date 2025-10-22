@@ -4,6 +4,8 @@ from abc import abstractmethod
 
 from enocean.protocol.constants import PACKET
 from enocean.protocol.packet import Packet
+from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
+from home_assistant_enocean.enocean_id import EnOceanID
 
 from homeassistant.config_entries import _LOGGER
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -11,8 +13,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatche
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
-from .enocean_device_type import EnOceanDeviceType
-from .enocean_id import EnOceanID
 
 
 class EnOceanEntity(Entity):

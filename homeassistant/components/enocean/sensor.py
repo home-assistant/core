@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from enocean.protocol.packet import Packet
+from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
+from home_assistant_enocean.enocean_id import EnOceanID
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -34,8 +36,6 @@ from .config_flow import (
     CONF_ENOCEAN_DEVICES,
 )
 from .const import LOGGER
-from .enocean_device_type import EnOceanDeviceType
-from .enocean_id import EnOceanID
 from .entity import EnOceanEntity
 
 CONF_MAX_TEMP = "max_temp"

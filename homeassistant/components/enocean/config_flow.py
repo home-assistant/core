@@ -3,6 +3,8 @@
 from copy import deepcopy
 from typing import Any
 
+from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
+from home_assistant_enocean.enocean_id import EnOceanID
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
@@ -35,8 +37,6 @@ from .const import (
     ENOCEAN_STEP_ID_SELECT_DEVICE,
     ERROR_INVALID_DONGLE_PATH,
 )
-from .enocean_device_type import EnOceanDeviceType
-from .enocean_id import EnOceanID
 
 
 class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -226,7 +226,7 @@ class OptionsFlowHandler(OptionsFlow):
             default_sender_id = sender_id.to_string() if sender_id else ""
 
         supported_devices = [
-            esd.select_option_dict
+            selector.SelectOptionDict(value=esd.unique_id, label=esd.label)
             for esd in list(EnOceanDeviceType.get_supported_device_types().values())
         ]
         supported_devices.sort(key=lambda entry: entry["label"].upper())
@@ -369,7 +369,7 @@ class OptionsFlowHandler(OptionsFlow):
                 )
 
         supported_devices = [
-            esd.select_option_dict
+            selector.SelectOptionDict(value=esd.unique_id, label=esd.label)
             for esd in list(EnOceanDeviceType.get_supported_device_types().values())
         ]
         supported_devices.sort(key=lambda entry: entry["label"].upper())
