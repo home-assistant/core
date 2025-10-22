@@ -298,7 +298,11 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         if not model.startswith(tuple(NON_THINKING_MODELS)):
             step_schema[
                 vol.Optional(CONF_THINKING_BUDGET, default=RECOMMENDED_THINKING_BUDGET)
-            ] = int
+            ] = NumberSelector(
+                NumberSelectorConfig(
+                    min=0, max=self.options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS)
+                )
+            )
         else:
             self.options.pop(CONF_THINKING_BUDGET, None)
 
@@ -333,10 +337,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             user_input = {}
 
         if user_input is not None:
-            if user_input.get(
-                CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET
-            ) >= self.options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS):
-                errors[CONF_THINKING_BUDGET] = "thinking_budget_too_large"
             if user_input.get(CONF_WEB_SEARCH, RECOMMENDED_WEB_SEARCH) and not errors:
                 if user_input.get(
                     CONF_WEB_SEARCH_USER_LOCATION, RECOMMENDED_WEB_SEARCH_USER_LOCATION

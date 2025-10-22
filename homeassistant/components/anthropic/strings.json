@@ -64,9 +64,6 @@
       "abort": {
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
         "entry_not_loaded": "Cannot add things while the configuration is disabled."
-      },
-      "error": {
-        "thinking_budget_too_large": "Maximum tokens must be greater than the thinking budget."
       }
     }
   }

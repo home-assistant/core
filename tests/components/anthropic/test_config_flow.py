@@ -168,49 +168,6 @@ async def test_creating_conversation_subentry_not_loaded(
     assert result["reason"] == "entry_not_loaded"
 
 
-async def test_subentry_options_thinking_budget_more_than_max(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
-) -> None:
-    """Test error about thinking budget being more than max tokens."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
-    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_id
-    )
-
-    # Configure initial step
-    options = await hass.config_entries.subentries.async_configure(
-        options_flow["flow_id"],
-        {
-            "prompt": "Speak like a pirate",
-            "recommended": False,
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "advanced"
-
-    # Configure advanced step
-    options = await hass.config_entries.subentries.async_configure(
-        options["flow_id"],
-        {
-            "max_tokens": 8192,
-            "chat_model": "claude-3-7-sonnet-latest",
-            "temperature": 1,
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "model"
-
-    # Configure model step
-    options = await hass.config_entries.subentries.async_configure(
-        options["flow_id"],
-        {
-            "thinking_budget": 16384,
-        },
-    )
-    assert options["type"] is FlowResultType.FORM
-    assert options["errors"] == {"thinking_budget": "thinking_budget_too_large"}
-
-
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
