@@ -13,8 +13,11 @@
     "access_point": true,
     "mac": "01:23:45:67:89:AB",
     "mac_interface": "br0",
+    "mode": "point_to_point",
     "ptmp": false,
     "ptp": true,
+    "role": "access_point",
+    "sku": "Loco5AC",
     "station": false
   },
   "firewall": {
@@ -25,9 +28,14 @@
   },
   "genuine": "/images/genuine.png",
   "gps": {
+    "alt": null,
+    "dim": null,
+    "dop": null,
     "fix": 0,
     "lat": 52.379894,
-    "lon": 4.901608
+    "lon": 4.901608,
+    "sats": null,
+    "time_synced": null
   },
   "host": {
     "cpuload": 10.10101,

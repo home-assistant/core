@@ -31,6 +31,28 @@
         "default": "mdi:stop"
       }
     },
+    "climate": {
+      "air_conditioner": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "wind_free": "mdi:weather-dust",
+              "wind_free_sleep": "mdi:sleep",
+              "quiet": "mdi:volume-off",
+              "long_wind": "mdi:weather-windy",
+              "smart": "mdi:leaf",
+              "motion_direct": "mdi:account-arrow-left",
+              "motion_indirect": "mdi:account-arrow-right"
+            }
+          },
+          "fan_mode": {
+            "state": {
+              "turbo": "mdi:wind-power"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "washer_rinse_cycles": {
         "default": "mdi:waves-arrow-up"
@@ -104,6 +126,13 @@
         "default": "mdi:water-off",
         "state": {
           "on": "mdi:water"
+        }
+      },
+      "display_lighting": {
+        "default": "mdi:lightbulb",
+        "state": {
+          "on": "mdi:lightbulb-on",
+          "off": "mdi:lightbulb-off"
         }
       },
       "wrinkle_prevent": {

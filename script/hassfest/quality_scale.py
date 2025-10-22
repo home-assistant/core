@@ -139,7 +139,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "airvisual_pro",
     "airzone",
     "airzone_cloud",
-    "aladdin_connect",
     "alarmdecoder",
     "alert",
     "alexa",
@@ -153,7 +152,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "analytics",
     "android_ip_webcam",
     "androidtv",
-    "androidtv_remote",
     "anel_pwrctrl",
     "anova",
     "anthemav",
@@ -251,7 +249,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "cloud",
     "cloudflare",
     "cmus",
-    "co2signal",
     "coinbase",
     "color_extractor",
     "comed_hourly_pricing",
@@ -488,7 +485,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hp_ilo",
     "html5",
     "http",
-    "huawei_lte",
     "hue",
     "huisbaasje",
     "hunterdouglas_powerview",
@@ -532,7 +528,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "itunes",
     "izone",
     "jellyfin",
-    "jewish_calendar",
     "joaoapps_join",
     "juicenet",
     "justnimbus",
@@ -691,7 +686,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nexia",
     "nextbus",
     "nextcloud",
-    "nextdns",
     "nfandroidtv",
     "nibe_heatpump",
     "nice_go",
@@ -741,7 +735,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "openuv",
     "openweathermap",
     "opnsense",
-    "opower",
     "opple",
     "oralb",
     "oru",
@@ -860,7 +853,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "rympro",
     "saj",
     "sanix",
-    "satel_integra",
     "schlage",
     "schluter",
     "scrape",
@@ -1070,14 +1062,11 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "volkszaehler",
     "volumio",
     "volvooncall",
-    "vulcan",
-    "vultr",
     "w800rf32",
     "wake_on_lan",
     "wallbox",
     "waqi",
     "waterfurnace",
-    "watson_iot",
     "watson_tts",
     "watttime",
     "waze_travel_time",
@@ -1181,7 +1170,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "analytics_insights",
     "android_ip_webcam",
     "androidtv",
-    "androidtv_remote",
     "anel_pwrctrl",
     "anova",
     "anthemav",
@@ -1651,7 +1639,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "manual",
     "manual_mqtt",
     "map",
-    "mastodon",
     "marytts",
     "matrix",
     "matter",
@@ -1733,7 +1720,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "nexia",
     "nextbus",
     "nextcloud",
-    "nextdns",
     "nyt_games",
     "nfandroidtv",
     "nibe_heatpump",
@@ -1769,7 +1755,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "omnilogic",
     "oncue",
     "ondilo_ico",
-    "onewire",
     "onvif",
     "open_meteo",
     "openai_conversation",
@@ -1786,7 +1771,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "openuv",
     "openweathermap",
     "opnsense",
-    "opower",
     "opple",
     "oralb",
     "oru",
@@ -1970,7 +1954,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "somfy_mylink",
     "sonarr",
     "songpal",
-    "sonos",
     "sony_projector",
     "soundtouch",
     "spaceapi",
@@ -2126,14 +2109,11 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "volkszaehler",
     "volumio",
     "volvooncall",
-    "vulcan",
-    "vultr",
     "w800rf32",
     "wake_on_lan",
     "wallbox",
     "waqi",
     "waterfurnace",
-    "watson_iot",
     "watson_tts",
     "watttime",
     "waze_travel_time",
@@ -2255,6 +2235,7 @@ NO_QUALITY_SCALE = [
     "tag",
     "timer",
     "trace",
+    "usage_prediction",
     "webhook",
     "websocket_api",
     "zone",
@@ -2303,7 +2284,11 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
         ):
             integration.add_error(
                 "quality_scale",
-                "Quality scale definition not found. New integrations are required to at least reach the Bronze tier.",
+                (
+                    "New integrations marked as internal should be added to INTEGRATIONS_WITHOUT_SCALE in script/hassfest/quality_scale.py."
+                    if integration.quality_scale == "internal"
+                    else "Quality scale definition not found. New integrations are required to at least reach the Bronze tier."
+                ),
             )
             return
         if declared_quality_scale is not None:
@@ -2348,7 +2333,11 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     ):
         integration.add_error(
             "quality_scale",
-            "New integrations are required to at least reach the Bronze tier.",
+            (
+                "New integrations marked as internal should be added to INTEGRATIONS_WITHOUT_SCALE in script/hassfest/quality_scale.py."
+                if integration.quality_scale == "internal"
+                else "New integrations are required to at least reach the Bronze tier."
+            ),
         )
         return
     name = str(iqs_file)

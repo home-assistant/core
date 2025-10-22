@@ -8,6 +8,7 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
+from lru import LRU
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
@@ -43,7 +44,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_start
 from homeassistant.util.dt import utcnow
+from homeassistant.util.ulid import ulid_now
 
+from . import SQUEEZEBOX_HASS_DATA
 from .browse_media import (
     BrowseData,
     build_item_response,
@@ -58,7 +61,6 @@ from .const import (
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
     DEFAULT_VOLUME_STEP,
-    DISCOVERY_TASK,
     DOMAIN,
     SERVER_MANUFACTURER,
     SERVER_MODEL,
@@ -110,12 +112,10 @@ async def start_server_discovery(hass: HomeAssistant) -> None:
             },
         )
 
-    hass.data.setdefault(DOMAIN, {})
-    if DISCOVERY_TASK not in hass.data[DOMAIN]:
+    if not hass.data.get(SQUEEZEBOX_HASS_DATA):
         _LOGGER.debug("Adding server discovery task for squeezebox")
-        hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_background_task(
-            async_discover(_discovered_server),
-            name="squeezebox server discovery",
+        hass.data[SQUEEZEBOX_HASS_DATA] = hass.async_create_background_task(
+            async_discover(_discovered_server), name="squeezebox server discovery"
         )
 
 
@@ -175,7 +175,9 @@ async def async_setup_entry(
         async_add_entities([SqueezeBoxMediaPlayerEntity(coordinator)])
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, _player_discovered)
+        async_dispatcher_connect(
+            hass, SIGNAL_PLAYER_DISCOVERED + entry.entry_id, _player_discovered
+        )
     )
 
     # Register entity services
@@ -262,6 +264,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         self._previous_media_position = 0
         self._attr_unique_id = format_mac(self._player.player_id)
         self._browse_data = BrowseData()
+        self._synthetic_media_browser_thumbnail_items: LRU[str, str] = LRU(5000)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -326,7 +329,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if self._player.volume is not None:
-            return int(float(self._player.volume)) / 100.0
+            return float(self._player.volume) / 100.0
 
         return None
 
@@ -435,7 +438,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        volume_percent = str(int(volume * 100))
+        volume_percent = str(round(volume * 100))
         await self._player.async_set_volume(volume_percent)
         await self.coordinator.async_refresh()
 
@@ -607,7 +610,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         _media_content_type_list = (
             query.media_content_type.lower().replace(", ", ",").split(",")
             if query.media_content_type
-            else ["albums", "tracks", "artists", "genres"]
+            else ["albums", "tracks", "artists", "genres", "playlists"]
         )
 
         if query.media_content_type and set(_media_content_type_list).difference(
@@ -744,6 +747,17 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await self._player.async_unsync()
         await self.coordinator.async_refresh()
 
+    def get_synthetic_id_and_cache_url(self, url: str) -> str:
+        """Cache a thumbnail URL and return a synthetic ID.
+
+        This enables us to proxy thumbnails for apps and favorites, as those do not have IDs.
+        """
+        synthetic_id = f"s_{ulid_now()}"
+
+        self._synthetic_media_browser_thumbnail_items[synthetic_id] = url
+
+        return synthetic_id
+
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -787,11 +801,21 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:
         """Get album art from Squeezebox server."""
-        if media_image_id:
-            image_url = self._player.generate_image_url_from_track_id(media_image_id)
-            result = await self._async_fetch_image(image_url)
-            if result == (None, None):
-                _LOGGER.debug("Error retrieving proxied album art from %s", image_url)
-            return result
+        if not media_image_id:
+            return (None, None)
 
-        return (None, None)
+        if media_content_id == "synthetic":
+            image_url = self._synthetic_media_browser_thumbnail_items.get(
+                media_image_id
+            )
+
+            if image_url is None:
+                _LOGGER.debug("Synthetic ID %s not found in cache", media_image_id)
+                return (None, None)
+        else:
+            image_url = self._player.generate_image_url_from_track_id(media_image_id)
+
+        result = await self._async_fetch_image(image_url)
+        if result == (None, None):
+            _LOGGER.debug("Error retrieving proxied album art from %s", image_url)
+        return result

@@ -1,6 +1,6 @@
 {
   "common": {
-    "data_description_host": "The URL of your Mealie instance, for example, http://192.168.1.123:1234",
+    "data_description_host": "The URL of your Mealie instance, for example, {example_url}.",
     "data_description_api_token": "The API token of your Mealie instance from your user profile within Mealie.",
     "data_description_verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates."
   },
@@ -39,6 +39,16 @@
           "api_token": "[%key:component::mealie::common::data_description_api_token%]",
           "verify_ssl": "[%key:component::mealie::common::data_description_verify_ssl%]"
         }
+      },
+      "hassio_confirm": {
+        "title": "Mealie via Home Assistant add-on",
+        "description": "Do you want to configure Home Assistant to connect to the Mealie instance provided by the add-on: {addon}?",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "[%key:component::mealie::common::data_description_api_token%]"
+        }
       }
     },
     "error": {
@@ -50,6 +60,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_account": "You have to use the same account that was used to configure the integration."

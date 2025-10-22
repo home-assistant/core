@@ -95,6 +95,202 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[aqara_door_window_p2][button.aqara_door_and_window_sensor_p2_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.aqara_door_and_window_sensor_p2_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000005B-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[aqara_door_window_p2][button.aqara_door_and_window_sensor_p2_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Aqara Door and Window Sensor P2 Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.aqara_door_and_window_sensor_p2_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[aqara_motion_p2][button.aqara_motion_and_light_sensor_p2_identify_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.aqara_motion_and_light_sensor_p2_identify_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[aqara_motion_p2][button.aqara_motion_and_light_sensor_p2_identify_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Aqara Motion and Light Sensor P2 Identify (1)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.aqara_motion_and_light_sensor_p2_identify_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[aqara_motion_p2][button.aqara_motion_and_light_sensor_p2_identify_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.aqara_motion_and_light_sensor_p2_identify_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-2-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[aqara_motion_p2][button.aqara_motion_and_light_sensor_p2_identify_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Aqara Motion and Light Sensor P2 Identify (2)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.aqara_motion_and_light_sensor_p2_identify_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[aqara_u200][button.aqara_smart_lock_u200_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.aqara_smart_lock_u200_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[aqara_u200][button.aqara_smart_lock_u200_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Aqara Smart Lock U200 Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.aqara_smart_lock_u200_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[color_temperature_light][button.mock_color_temperature_light_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -236,6 +432,104 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.eve_door_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.eve_energy_20ecn4101_identify_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Eve Energy 20ECN4101 Identify (1)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.eve_energy_20ecn4101_identify_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.eve_energy_20ecn4101_identify_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-2-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[eve_energy_20ecn4101][button.eve_energy_20ecn4101_identify_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Eve Energy 20ECN4101 Identify (2)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.eve_energy_20ecn4101_identify_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -675,6 +969,104 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.mocked_fan_switch_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[haijai_switch][button.hjmt_6b_identify_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.hjmt_6b_identify_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[haijai_switch][button.hjmt_6b_identify_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'HJMT-6B Identify (1)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.hjmt_6b_identify_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[inovelli_vtm30][button.white_series_onoff_switch_load_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.white_series_onoff_switch_load_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Load Control',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[inovelli_vtm30][button.white_series_onoff_switch_load_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'White Series OnOff Switch Load Control',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.white_series_onoff_switch_load_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1940,6 +2332,55 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[silabs_light_switch][button.light_switch_example_identify_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.light_switch_example_identify_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008E-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[silabs_light_switch][button.light_switch_example_identify_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Light switch example Identify (1)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.light_switch_example_identify_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[silabs_refrigerator][button.refrigerator_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2129,6 +2570,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_switchunit_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[tado_smart_radiator_thermostat_x][button.smart_radiator_thermostat_x_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.smart_radiator_thermostat_x_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[tado_smart_radiator_thermostat_x][button.smart_radiator_thermostat_x_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Smart Radiator Thermostat X Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.smart_radiator_thermostat_x_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

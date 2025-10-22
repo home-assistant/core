@@ -26,7 +26,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import ATTR_LORA_INFO, DOMAIN, YOLINK_EVENT
+from .const import ATTR_LORA_INFO, DOMAIN, SUPPORTED_REMOTERS, YOLINK_EVENT
 from .coordinator import YoLinkCoordinator
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
 from .services import async_setup_services
@@ -43,6 +43,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
@@ -150,6 +151,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device_pairing_mapping[parent_id] = device.device_id
 
     for device in yolink_home.get_devices():
+        if (
+            device.device_type == ATTR_DEVICE_SMART_REMOTER
+            and device.device_model_name not in SUPPORTED_REMOTERS
+        ):
+            continue
         paried_device: YoLinkDevice | None = None
         if (
             paried_device_id := device_pairing_mapping.get(device.device_id)

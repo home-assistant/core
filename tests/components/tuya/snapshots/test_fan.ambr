@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_platform_setup_and_discovery[fan.arida_stavern-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.arida_stavern',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 48>,
+    'translation_key': None,
+    'unique_id': 'tuya.8u5ftxkt52smougesc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[fan.arida_stavern-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Arida Stavern ',
+      'supported_features': <FanEntityFeature: 48>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.arida_stavern',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_platform_setup_and_discovery[fan.bree-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -54,6 +104,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[fan.ceiling_fan_light_v2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.ceiling_fan_light_v2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 53>,
+    'translation_key': None,
+    'unique_id': 'tuya.6wxksqu35c61sce9dsf',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[fan.ceiling_fan_light_v2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'direction': 'forward',
+      'friendly_name': 'ceiling fan/Light v2',
+      'percentage': 20,
+      'percentage_step': 1.0,
+      'preset_mode': None,
+      'preset_modes': list([
+      ]),
+      'supported_features': <FanEntityFeature: 53>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.ceiling_fan_light_v2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_platform_setup_and_discovery[fan.ceiling_fan_with_light-entry]
@@ -386,6 +494,63 @@
     }),
     'context': <ANY>,
     'entity_id': 'fan.kalado_air_purifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[fan.living_room_dehumidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.living_room_dehumidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 49>,
+    'translation_key': None,
+    'unique_id': 'tuya.g1qorlffoy2iyo9bsc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[fan.living_room_dehumidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living room dehumidifier',
+      'percentage': 100,
+      'percentage_step': 50.0,
+      'preset_mode': None,
+      'preset_modes': list([
+      ]),
+      'supported_features': <FanEntityFeature: 49>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.living_room_dehumidifier',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

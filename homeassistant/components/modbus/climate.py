@@ -101,7 +101,7 @@ from .const import (
     CONF_WRITE_REGISTERS,
     DataType,
 )
-from .entity import BaseStructPlatform
+from .entity import ModbusStructEntity
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -131,7 +131,7 @@ async def async_setup_platform(
     async_add_entities(ModbusThermostat(hass, hub, config) for config in climates)
 
 
-class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
+class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
     _attr_supported_features = (
@@ -315,7 +315,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             # register, or self._hvac_on_value otherwise.
             if self._hvac_onoff_write_registers:
                 await self._hub.async_pb_call(
-                    self._slave,
+                    self._device_address,
                     self._hvac_onoff_register,
                     [
                         self._hvac_off_value
@@ -326,7 +326,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 )
             else:
                 await self._hub.async_pb_call(
-                    self._slave,
+                    self._device_address,
                     self._hvac_onoff_register,
                     self._hvac_off_value
                     if hvac_mode == HVACMode.OFF
@@ -337,7 +337,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         if self._hvac_onoff_coil is not None:
             # Turn HVAC Off by writing 0 to the On/Off coil, or 1 otherwise.
             await self._hub.async_pb_call(
-                self._slave,
+                self._device_address,
                 self._hvac_onoff_coil,
                 0 if hvac_mode == HVACMode.OFF else 1,
                 CALL_TYPE_WRITE_COIL,
@@ -349,21 +349,21 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 if mode == hvac_mode:
                     if self._hvac_mode_write_registers:
                         await self._hub.async_pb_call(
-                            self._slave,
+                            self._device_address,
                             self._hvac_mode_register,
                             [value],
                             CALL_TYPE_WRITE_REGISTERS,
                         )
                     else:
                         await self._hub.async_pb_call(
-                            self._slave,
+                            self._device_address,
                             self._hvac_mode_register,
                             value,
                             CALL_TYPE_WRITE_REGISTER,
                         )
                     break
 
-        await self._async_update_write_state()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -372,20 +372,20 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             value = self._fan_mode_mapping_to_modbus[fan_mode]
             if isinstance(self._fan_mode_register, list):
                 await self._hub.async_pb_call(
-                    self._slave,
+                    self._device_address,
                     self._fan_mode_register[0],
                     [value],
                     CALL_TYPE_WRITE_REGISTERS,
                 )
             else:
                 await self._hub.async_pb_call(
-                    self._slave,
+                    self._device_address,
                     self._fan_mode_register,
                     value,
                     CALL_TYPE_WRITE_REGISTER,
                 )
 
-        await self._async_update_write_state()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing mode."""
@@ -395,20 +395,20 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 if swing_mode == smode:
                     if isinstance(self._swing_mode_register, list):
                         await self._hub.async_pb_call(
-                            self._slave,
+                            self._device_address,
                             self._swing_mode_register[0],
                             [value],
                             CALL_TYPE_WRITE_REGISTERS,
                         )
                     else:
                         await self._hub.async_pb_call(
-                            self._slave,
+                            self._device_address,
                             self._swing_mode_register,
                             value,
                             CALL_TYPE_WRITE_REGISTER,
                         )
                     break
-        await self._async_update_write_state()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -437,7 +437,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         ):
             if self._target_temperature_write_registers:
                 result = await self._hub.async_pb_call(
-                    self._slave,
+                    self._device_address,
                     self._target_temperature_register[
                         HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
                     ],
@@ -446,7 +446,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 )
             else:
                 result = await self._hub.async_pb_call(
-                    self._slave,
+                    self._device_address,
                     self._target_temperature_register[
                         HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
                     ],
@@ -455,7 +455,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 )
         else:
             result = await self._hub.async_pb_call(
-                self._slave,
+                self._device_address,
                 self._target_temperature_register[
                     HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
                 ],
@@ -463,7 +463,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 CALL_TYPE_WRITE_REGISTERS,
             )
         self._attr_available = result is not None
-        await self._async_update_write_state()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def _async_update(self) -> None:
         """Update Target & Current Temperature."""
@@ -490,6 +490,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     if hvac_mode == value:
                         self._attr_hvac_mode = mode
                         break
+        else:
+            # since there are no hvac_mode_register, this
+            # integration should not touch the attr.
+            # However it lacks in the climate component.
+            self._attr_hvac_mode = HVACMode.AUTO
 
         # Read the HVAC action register if defined
         if self._hvac_action_register is not None:
@@ -561,7 +566,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     ) -> float | None:
         """Read register using the Modbus hub slave."""
         result = await self._hub.async_pb_call(
-            self._slave, register, self._count, register_type
+            self._device_address, register, self._count, register_type
         )
         if result is None:
             self._attr_available = False
@@ -582,7 +587,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         return float(self._value)
 
     async def _async_read_coil(self, address: int) -> int | None:
-        result = await self._hub.async_pb_call(self._slave, address, 1, CALL_TYPE_COIL)
+        result = await self._hub.async_pb_call(
+            self._device_address, address, 1, CALL_TYPE_COIL
+        )
         if result is not None and result.bits is not None:
             self._attr_available = True
             return int(result.bits[0])

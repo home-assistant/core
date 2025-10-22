@@ -8,6 +8,8 @@
     "PYTHONASYNCIODEBUG": "1"
   },
   "features": {
+    // Node feature required for Claude Code until fixed https://github.com/anthropics/devcontainer-features/issues/28
+    "ghcr.io/devcontainers/features/node:1": {},
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
@@ -39,6 +41,7 @@
         "python.terminal.activateEnvInCurrentTerminal": true,
         "python.testing.pytestArgs": ["--no-cov"],
         "pylint.importStrategy": "fromEnvironment",
+        "python.analysis.typeCheckingMode": "basic",
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
