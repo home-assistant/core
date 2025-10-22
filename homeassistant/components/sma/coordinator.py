@@ -6,13 +6,13 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from pysma import SMA
-from pysma.exceptions import (
+from pysma import (
     SmaAuthenticationException,
     SmaConnectionException,
     SmaReadException,
+    SMAWebConnect,
 )
-from pysma.sensor import Sensor
+from pysma.sensor import Sensors
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -30,7 +30,7 @@ class SMACoordinatorData:
     """Data class for SMA sensors."""
 
     sma_device_info: dict[str, str]
-    sensors: list[Sensor]
+    sensors: Sensors
 
 
 class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
@@ -42,7 +42,7 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        sma: SMA,
+        sma: SMAWebConnect,
     ) -> None:
         """Initialize the SMA Data Update Coordinator."""
         super().__init__(
@@ -58,7 +58,7 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
         )
         self.sma = sma
         self._sma_device_info: dict[str, str] = {}
-        self._sensors: list[Sensor] = []
+        self._sensors = Sensors()
 
     async def _async_setup(self) -> None:
         """Setup the SMA Data Update Coordinator."""

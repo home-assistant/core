@@ -8,7 +8,7 @@ from pysma.const import (
     GENERIC_SENSORS,
     OPTIMIZERS_VIA_INVERTER,
 )
-from pysma.definitions import sensor_map
+from pysma.definitions.webconnect import sensor_map
 from pysma.sensor import Sensors
 import pytest
 

@@ -2,11 +2,7 @@
 
 from collections.abc import AsyncGenerator, Generator
 
-from pysma.exceptions import (
-    SmaAuthenticationException,
-    SmaConnectionException,
-    SmaReadException,
-)
+from pysma import SmaAuthenticationException, SmaConnectionException, SmaReadException
 import pytest
 
 from homeassistant.components.sma.const import DOMAIN

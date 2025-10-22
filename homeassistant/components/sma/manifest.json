@@ -13,5 +13,5 @@
   "documentation": "https://www.home-assistant.io/integrations/sma",
   "iot_class": "local_polling",
   "loggers": ["pysma"],
-  "requirements": ["pysma==0.7.5"]
+  "requirements": ["pysma==1.0.1"]
 }

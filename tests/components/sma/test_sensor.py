@@ -4,11 +4,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pysma.exceptions import (
-    SmaAuthenticationException,
-    SmaConnectionException,
-    SmaReadException,
-)
+from pysma import SmaAuthenticationException, SmaConnectionException, SmaReadException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
