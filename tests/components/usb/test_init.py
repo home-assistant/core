@@ -11,7 +11,7 @@ import pytest
 
 from homeassistant.components import usb
 from homeassistant.components.usb.models import USBDevice
-from homeassistant.components.usb.utils import usb_device_from_path
+from homeassistant.components.usb.utils import scan_serial_ports, usb_device_from_path
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -1386,9 +1386,8 @@ async def test_register_port_event_callback_failure(
     assert "Failure 2" in caplog.text
 
 
-def test_usb_device_from_path_with_symlinks() -> None:
-    """Test usb_device_from_path resolves devices using symlink mapping."""
-    # Mock /dev/serial/by-id exists and contains symlinks
+def test_scan_serial_ports_with_unique_symlinks() -> None:
+    """Test scan_serial_ports returns devices with unique /dev/serial/by-id paths."""
     entry1 = MagicMock(spec_set=os.DirEntry)
     entry1.is_symlink.return_value = True
     entry1.path = "/dev/serial/by-id/usb-device1"
@@ -1397,16 +1396,49 @@ def test_usb_device_from_path_with_symlinks() -> None:
     entry2.is_symlink.return_value = True
     entry2.path = "/dev/serial/by-id/usb-device2"
 
+    mock_port1 = MagicMock()
+    mock_port1.device = "/dev/ttyUSB0"
+    mock_port1.vid = 0x1234
+    mock_port1.pid = 0x5678
+    mock_port1.serial_number = "ABC123"
+    mock_port1.manufacturer = "Test Manufacturer"
+    mock_port1.description = "Test Device"
+
+    mock_port2 = MagicMock()
+    mock_port2.device = "/dev/ttyUSB1"
+    mock_port2.vid = 0xABCD
+    mock_port2.pid = 0xEF01
+    mock_port2.serial_number = "XYZ789"
+    mock_port2.manufacturer = "Another Manufacturer"
+    mock_port2.description = "Another Device"
+
     def mock_realpath(path: str) -> str:
         realpath_map = {
             "/dev/serial/by-id/usb-device1": "/dev/ttyUSB0",
             "/dev/serial/by-id/usb-device2": "/dev/ttyUSB1",
-            "/dev/ttyUSB0": "/dev/ttyUSB0",
-            "/dev/ttyUSB1": "/dev/ttyUSB1",
         }
         return realpath_map.get(path, path)
 
-    # Mock a serial port from comports()
+    with (
+        patch("os.path.isdir", return_value=True),
+        patch("os.scandir", return_value=[entry1, entry2]),
+        patch("os.path.realpath", side_effect=mock_realpath),
+        patch(
+            "homeassistant.components.usb.utils.comports",
+            return_value=[mock_port1, mock_port2],
+        ),
+    ):
+        devices = scan_serial_ports()
+
+    assert len(devices) == 2
+    assert devices[0].device == "/dev/serial/by-id/usb-device1"
+    assert devices[0].vid == "1234"
+    assert devices[1].device == "/dev/serial/by-id/usb-device2"
+    assert devices[1].vid == "ABCD"
+
+
+def test_scan_serial_ports_without_unique_symlinks() -> None:
+    """Test scan_serial_ports returns devices with original paths when no symlinks exist."""
     mock_port = MagicMock()
     mock_port.device = "/dev/ttyUSB0"
     mock_port.vid = 0x1234
@@ -1416,19 +1448,23 @@ def test_usb_device_from_path_with_symlinks() -> None:
     mock_port.description = "Test Device"
 
     with (
-        patch("os.path.isdir", return_value=True),
-        patch("os.scandir", return_value=[entry1, entry2]),
-        patch("os.path.realpath", side_effect=mock_realpath),
+        patch("os.path.isdir", return_value=False),
+        patch("os.path.realpath", side_effect=lambda x: x),
         patch(
             "homeassistant.components.usb.utils.comports",
             return_value=[mock_port],
         ),
     ):
-        # scan_serial_ports should resolve the symlink
-        dev_from_path = usb_device_from_path("/dev/serial/by-id/usb-device1")
+        devices = scan_serial_ports()
 
-    # Should find the device with the unique symlink path
-    expected = USBDevice(
+    assert len(devices) == 1
+    assert devices[0].device == "/dev/ttyUSB0"
+    assert devices[0].vid == "1234"
+
+
+def test_usb_device_from_path_finds_by_symlink() -> None:
+    """Test usb_device_from_path finds device by symlink path."""
+    scanned_device = USBDevice(
         device="/dev/serial/by-id/usb-device1",
         vid="1234",
         pid="5678",
@@ -1436,12 +1472,28 @@ def test_usb_device_from_path_with_symlinks() -> None:
         manufacturer="Test Manufacturer",
         description="Test Device",
     )
-    assert dev_from_path == expected
+
+    def mock_realpath(path: str) -> str:
+        realpath_map = {
+            "/dev/serial/by-id/usb-device1": "/dev/ttyUSB0",
+        }
+        return realpath_map.get(path, path)
+
+    with (
+        patch(
+            "homeassistant.components.usb.utils.scan_serial_ports",
+            return_value=[scanned_device],
+        ),
+        patch("os.path.realpath", side_effect=mock_realpath),
+    ):
+        result = usb_device_from_path("/dev/serial/by-id/usb-device1")
+
+    assert result == scanned_device
 
 
-def test_usb_device_from_path_with_realpath_match() -> None:
-    """Test usb_device_from_path falls back to the original path without a symlink."""
-    usb_device = USBDevice(
+def test_usb_device_from_path_finds_by_realpath() -> None:
+    """Test usb_device_from_path finds device by original device path."""
+    scanned_device = USBDevice(
         device="/dev/ttyUSB0",
         vid="1234",
         pid="5678",
@@ -1451,23 +1503,20 @@ def test_usb_device_from_path_with_realpath_match() -> None:
     )
 
     with (
-        patch("os.path.isdir", return_value=True),
-        patch("os.scandir", return_value=[]),
-        patch("os.path.realpath", side_effect=lambda x: x),
         patch(
             "homeassistant.components.usb.utils.scan_serial_ports",
-            return_value=[usb_device],
+            return_value=[scanned_device],
         ),
+        patch("os.path.realpath", side_effect=lambda x: x),
     ):
-        dev_from_path = usb_device_from_path("/dev/ttyUSB0")
+        result = usb_device_from_path("/dev/ttyUSB0")
 
-    # There is no symlink for the device so we must keep using the base `/dev/` path
-    assert dev_from_path == usb_device
+    assert result == scanned_device
 
 
-def test_usb_device_from_path_no_match() -> None:
+def test_usb_device_from_path_returns_none_when_not_found() -> None:
     """Test usb_device_from_path returns None when device not found."""
-    usb_device = USBDevice(
+    scanned_device = USBDevice(
         device="/dev/ttyUSB0",
         vid="1234",
         pid="5678",
@@ -1477,39 +1526,12 @@ def test_usb_device_from_path_no_match() -> None:
     )
 
     with (
-        patch("os.path.isdir", return_value=True),
-        patch("os.scandir", return_value=[]),
-        patch("os.path.realpath", side_effect=lambda x: x),
         patch(
             "homeassistant.components.usb.utils.scan_serial_ports",
-            return_value=[usb_device],
+            return_value=[scanned_device],
         ),
-    ):
-        dev_from_path = usb_device_from_path("/dev/ttyUSB99")
-
-    assert dev_from_path is None
-
-
-def test_usb_device_from_path_no_by_id_dir() -> None:
-    """Test usb_device_from_path when /dev/serial/by-id doesn't exist."""
-    usb_device = USBDevice(
-        device="/dev/ttyUSB0",
-        vid="1234",
-        pid="5678",
-        serial_number="ABC123",
-        manufacturer="Test Manufacturer",
-        description="Test Device",
-    )
-
-    with (
-        patch("os.path.isdir", return_value=False),
         patch("os.path.realpath", side_effect=lambda x: x),
-        patch(
-            "homeassistant.components.usb.utils.scan_serial_ports",
-            return_value=[usb_device],
-        ),
     ):
-        dev_from_path = usb_device_from_path("/dev/ttyUSB0")
+        result = usb_device_from_path("/dev/ttyUSB99")
 
-    # We have no symlinks so we use the base path
-    assert dev_from_path == usb_device
+    assert result is None
