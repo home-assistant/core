@@ -302,6 +302,22 @@
           }
         }
       }
+    },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "schedule": "Schedule",
+              "manual": "[%key:common::state::manual%]",
+              "off": "[%key:common::state::off%]",
+              "economic": "Economic",
+              "comfort": "Comfort",
+              "fast_heating": "Fast Heating"
+            }
+          }
+        }
+      }
     }
   },
   "exceptions": {

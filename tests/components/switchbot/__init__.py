@@ -1200,3 +1200,26 @@ CLIMATE_PANEL_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+
+SMART_THERMOSTAT_RADIATOR_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Smart Thermostat Radiator",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xa2T|6\xe4\x00\x9c\xa3A\x00"},
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00 d\x00\x116@",
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Smart Thermostat Radiator",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\xa2T|6\xe4\x00\x9c\xa3A\x00"},
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00 d\x00\x116@"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Smart Thermostat Radiator"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
