@@ -16,7 +16,9 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import reset_detected
+from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+    reset_detected,
+)
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import (
     HomeAssistant,
