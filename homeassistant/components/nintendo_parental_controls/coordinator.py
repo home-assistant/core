@@ -14,10 +14,10 @@ from pynintendoparental.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-from .repairs import raise_no_devices_found
 
 type NintendoParentalControlsConfigEntry = ConfigEntry[NintendoUpdateCoordinator]
 
@@ -57,7 +57,19 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
                 err, translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except NoDevicesFoundException as err:
-            raise_no_devices_found(self.hass, self.config_entry)
+            ir.async_create_issue(
+                hass=self.hass,
+                domain=DOMAIN,
+                issue_id="no_devices_found",
+                is_persistent=False,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="no_devices_found",
+                translation_placeholders={
+                    "account_id": self.config_entry.title,
+                    "placeholder": "Nintendo Switch Parental Controls",
+                },
+            )
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="no_devices_found",
