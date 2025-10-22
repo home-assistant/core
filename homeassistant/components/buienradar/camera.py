@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-
 import asyncio
 from datetime import datetime, timedelta
 import logging
 
-
 import aiohttp
 import voluptuous as vol
-
 
 from homeassistant.components.camera import Camera
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
@@ -19,18 +16,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-
 from . import BuienRadarConfigEntry
 from .const import CONF_DELTA, DEFAULT_COUNTRY, DEFAULT_DELTA, DEFAULT_DIMENSION
 from .util import resolve_coordinates
 
-
 _LOGGER = logging.getLogger(__name__)
-
 
 # Maximum range according to docs
 DIM_RANGE = vol.All(vol.Coerce(int), vol.Range(min=120, max=700))
-
 
 # Multiple choice for available Radar Map URL
 SUPPORTED_COUNTRY_CODES = ["NL", "BE"]
@@ -70,9 +63,7 @@ async def async_setup_entry(
 class BuienradarCam(Camera):
     """A camera component producing animated buienradar radar-imagery GIFs.
 
-
     Rain radar imagery camera based on image URL taken from [0].
-
 
     [0]: https://www.buienradar.nl/overbuienradar/gratis-weerdata
     """
@@ -84,7 +75,6 @@ class BuienradarCam(Camera):
         self, latitude: float, longitude: float, delta: float, country: str
     ) -> None:
         """Initialize the component.
-
 
         This constructor must be run in the event loop.
         """
@@ -168,19 +158,15 @@ class BuienradarCam(Camera):
     ) -> bytes | None:
         """Return a still image response from the camera.
 
-
         Uses asyncio conditions to make sure only one task enters the critical
         section at the same time. Otherwise, two http requests would start
         when two tabs with Home Assistant are open.
 
-
         The condition is entered in two sections because otherwise the lock
         would be held while doing the http request.
 
-
         A boolean (_loading) is used to indicate the loading status instead of
         _last_image since that is initialized to None.
-
 
         For reference:
           * :func:`asyncio.Condition.wait` releases the lock and acquires it

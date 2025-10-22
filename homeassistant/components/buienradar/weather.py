@@ -2,7 +2,6 @@
 
 import logging
 
-
 from buienradar.constants import (
     CONDCODE,
     CONDITION,
@@ -14,7 +13,6 @@ from buienradar.constants import (
     WINDAZIMUTH,
     WINDSPEED,
 )
-
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
@@ -57,20 +55,15 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-
 from . import BuienRadarConfigEntry
 from .const import DEFAULT_TIMEFRAME
 from .util import BrData, resolve_coordinates
 
-
 _LOGGER = logging.getLogger(__name__)
-
 
 CONF_FORECAST = "forecast"
 
-
 DATA_CONDITION = "buienradar_condition"
-
 
 CONDITION_CLASSES = {
     ATTR_CONDITION_CLOUDY: ("c", "p"),

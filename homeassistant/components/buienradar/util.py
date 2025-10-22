@@ -5,7 +5,6 @@ from http import HTTPStatus
 import logging
 from typing import Any, Callable, Mapping, TypeVar
 
-
 import aiohttp
 from buienradar.buienradar import parse_data
 from buienradar.constants import (
@@ -29,16 +28,13 @@ from buienradar.constants import (
 )
 from buienradar.urls import JSON_FEED_URL, json_precipitation_forecast_url
 
-
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
-
 from .const import DEFAULT_TIMEOUT, SCHEDULE_NOK, SCHEDULE_OK
-
 
 """
 Log at WARN level after WARN_THRESHOLD failures, otherwise log at
@@ -90,12 +86,11 @@ class BrData:
         self.timeframe = timeframe
         self.unsub_schedule_update: CALLBACK_TYPE | None = None
 
-    async def update_devices(self):
+    def update_devices(self):
         """Update all devices/sensors."""
         if not self.devices:
             return
 
-        # Update all devices
         for dev in self.devices:
             dev.data_updated(self)
 
@@ -196,7 +191,7 @@ class BrData:
             return
 
         self.data = data
-        await self.update_devices()
+        self.update_devices()
         self.async_schedule_update(SCHEDULE_OK)
 
     def _get_cast_value(self, key: str, caster: Callable[[Any], T]) -> T | None:
