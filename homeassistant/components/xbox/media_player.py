@@ -2,31 +2,28 @@
 
 from __future__ import annotations
 
-import re
 from typing import Any
 
 from xbox.webapi.api.provider.catalog.models import Image
 from xbox.webapi.api.provider.smartglass.models import (
     PlaybackState,
     PowerState,
-    SmartglassConsole,
     VolumeDirection,
 )
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .browse_media import build_item_response
-from .const import DOMAIN
-from .coordinator import ConsoleData, XboxConfigEntry, XboxUpdateCoordinator
+from .coordinator import XboxConfigEntry
+from .entity import XboxConsoleBaseEntity
 
 SUPPORT_XBOX = (
     MediaPlayerEntityFeature.TURN_ON
@@ -69,33 +66,10 @@ async def async_setup_entry(
     )
 
 
-class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntity):
+class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     """Representation of an Xbox Media Player."""
 
-    def __init__(
-        self,
-        console: SmartglassConsole,
-        coordinator: XboxUpdateCoordinator,
-    ) -> None:
-        """Initialize the Xbox Media Player."""
-        super().__init__(coordinator)
-        self.client = coordinator.client
-        self._console = console
-
-    @property
-    def name(self):
-        """Return the device name."""
-        return self._console.name
-
-    @property
-    def unique_id(self):
-        """Console device ID."""
-        return self._console.id
-
-    @property
-    def data(self) -> ConsoleData:
-        """Return coordinator data for this console."""
-        return self.coordinator.data.consoles[self._console.id]
+    _attr_media_image_remotely_accessible = True
 
     @property
     def state(self) -> MediaPlayerState | None:
@@ -117,7 +91,7 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         return SUPPORT_XBOX
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType:
         """Media content type."""
         app_details = self.data.app_details
         if app_details and app_details.product_family == "Games":
@@ -125,7 +99,7 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         return MediaType.APP
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
         if not (app_details := self.data.app_details):
             return None
@@ -135,24 +109,17 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         )
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        if not (app_details := self.data.app_details):
-            return None
-        image = _find_media_image(app_details.localized_properties[0].images)
-
-        if not image:
+        if not (app_details := self.data.app_details) or not (
+            image := _find_media_image(app_details.localized_properties[0].images)
+        ):
             return None
 
         url = image.uri
         if url[0] == "/":
             url = f"http:{url}"
         return url
-
-    @property
-    def media_image_remotely_accessible(self) -> bool:
-        """If the image url is remotely accessible."""
-        return True
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
@@ -193,15 +160,20 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         """Send next track command."""
         await self.client.smartglass.next(self._console.id)
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
+
         return await build_item_response(
             self.client,
             self._console.id,
             self.data.status.is_tv_configured,
-            media_content_type,
-            media_content_id,
-        )
+            media_content_type or "",
+            media_content_id or "",
+        )  # type: ignore[return-value]
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -213,22 +185,6 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
             await self.client.smartglass.show_tv_guide(self._console.id)
         else:
             await self.client.smartglass.launch_app(self._console.id, media_id)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        # Turns "XboxOneX" into "Xbox One X" for display
-        matches = re.finditer(
-            ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)",
-            self._console.console_type,
-        )
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._console.id)},
-            manufacturer="Microsoft",
-            model=" ".join([m.group(0) for m in matches]),
-            name=self._console.name,
-        )
 
 
 def _find_media_image(images: list[Image]) -> Image | None:
