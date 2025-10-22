@@ -27,7 +27,6 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     PS4_DOCS_URL,
-    PSN_TOKEN_URL,
 )
 
 CONF_MODE = "Config Mode"
@@ -93,7 +92,7 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="creds",
             errors=errors,
-            description_placeholders={"psn_token_url": PSN_TOKEN_URL},
+            description_placeholders={"ps4_docs_url": PS4_DOCS_URL},
         )
 
     async def async_step_mode(

@@ -4,10 +4,10 @@
       "creds": {
         "description": "Credentials needed. Select **Submit** and then in the PS4 2nd Screen App, refresh devices and select the **Home-Assistant** device to continue.",
         "data": {
-          "token": "PSN npsso Token"
+          "token": "PSN Token"
         },
         "data_description": {
-          "token": "To get your PSN npsso token, please follow these [instructions]({psn_token_url})."
+          "token": "To get your PSN token, please follow these [instructions]({ps4_docs_url})."
         }
       },
       "mode": {
