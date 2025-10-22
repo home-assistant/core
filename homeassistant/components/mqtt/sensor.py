@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
+    AMBIGUOUS_UNITS,
     CONF_STATE_CLASS,
     DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
@@ -98,6 +99,12 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
             f"together with state class `{state_class}`"
         )
 
+    unit_of_measurement: str | None
+    if (
+        unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)
+    ) is not None and not unit_of_measurement.strip():
+        config.pop(CONF_UNIT_OF_MEASUREMENT)
+
     # Only allow `options` to be set for `enum` sensors
     # to limit the possible sensor values
     if (options := config.get(CONF_OPTIONS)) is not None:
@@ -127,9 +134,14 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
             f"together with state class '{state_class}'"
         )
 
-    if (device_class := config.get(CONF_DEVICE_CLASS)) is None or (
-        unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)
-    ) is None:
+    if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None:
+        return config
+
+    unit_of_measurement = config[CONF_UNIT_OF_MEASUREMENT] = AMBIGUOUS_UNITS.get(
+        unit_of_measurement, unit_of_measurement
+    )
+
+    if (device_class := config.get(CONF_DEVICE_CLASS)) is None:
         return config
 
     if (

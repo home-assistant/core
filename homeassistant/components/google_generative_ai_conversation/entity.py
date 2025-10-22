@@ -3,18 +3,20 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import codecs
-from collections.abc import AsyncGenerator, Callable
-from dataclasses import replace
+from collections.abc import AsyncGenerator, AsyncIterator, Callable
+from dataclasses import dataclass, replace
 import mimetypes
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from google.genai import Client
 from google.genai.errors import APIError, ClientError
 from google.genai.types import (
     AutomaticFunctionCallingConfig,
     Content,
+    ContentDict,
     File,
     FileState,
     FunctionDeclaration,
@@ -23,15 +25,18 @@ from google.genai.types import (
     GoogleSearch,
     HarmCategory,
     Part,
+    PartUnionDict,
     SafetySetting,
     Schema,
+    ThinkingConfig,
     Tool,
+    ToolListUnion,
 )
 import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
@@ -59,6 +64,9 @@ from .const import (
     RECOMMENDED_TOP_P,
     TIMEOUT_MILLIS,
 )
+
+if TYPE_CHECKING:
+    from . import GoogleGenerativeAIConfigEntry
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -195,6 +203,30 @@ def _create_google_tool_response_content(
     )
 
 
+@dataclass(slots=True)
+class PartDetails:
+    """Additional data for a content part."""
+
+    part_type: Literal["text", "thought", "function_call"]
+    """The part type for which this data is relevant for."""
+
+    index: int
+    """Start position or number of the tool."""
+
+    length: int = 0
+    """Length of the relevant data."""
+
+    thought_signature: str | None = None
+    """Base64 encoded thought signature, if available."""
+
+
+@dataclass(slots=True)
+class ContentDetails:
+    """Native data for AssistantContent."""
+
+    part_details: list[PartDetails]
+
+
 def _convert_content(
     content: (
         conversation.UserContent
@@ -203,48 +235,113 @@ def _convert_content(
     ),
 ) -> Content:
     """Convert HA content to Google content."""
-    if content.role != "assistant" or not content.tool_calls:
-        role = "model" if content.role == "assistant" else content.role
+    if content.role != "assistant":
         return Content(
-            role=role,
-            parts=[
-                Part.from_text(text=content.content if content.content else ""),
-            ],
+            role=content.role,
+            parts=[Part.from_text(text=content.content if content.content else "")],
         )
 
     # Handle the Assistant content with tool calls.
     assert type(content) is conversation.AssistantContent
     parts: list[Part] = []
+    part_details: list[PartDetails] = (
+        content.native.part_details
+        if isinstance(content.native, ContentDetails)
+        else []
+    )
+    details: PartDetails | None = None
 
     if content.content:
-        parts.append(Part.from_text(text=content.content))
+        index = 0
+        for details in part_details:
+            if details.part_type == "text":
+                if index < details.index:
+                    parts.append(
+                        Part.from_text(text=content.content[index : details.index])
+                    )
+                    index = details.index
+                parts.append(
+                    Part.from_text(
+                        text=content.content[index : index + details.length],
+                    )
+                )
+                if details.thought_signature:
+                    parts[-1].thought_signature = base64.b64decode(
+                        details.thought_signature
+                    )
+                index += details.length
+        if index < len(content.content):
+            parts.append(Part.from_text(text=content.content[index:]))
+
+    if content.thinking_content:
+        index = 0
+        for details in part_details:
+            if details.part_type == "thought":
+                if index < details.index:
+                    parts.append(
+                        Part.from_text(
+                            text=content.thinking_content[index : details.index]
+                        )
+                    )
+                    parts[-1].thought = True
+                    index = details.index
+                parts.append(
+                    Part.from_text(
+                        text=content.thinking_content[index : index + details.length],
+                    )
+                )
+                parts[-1].thought = True
+                if details.thought_signature:
+                    parts[-1].thought_signature = base64.b64decode(
+                        details.thought_signature
+                    )
+                index += details.length
+        if index < len(content.thinking_content):
+            parts.append(Part.from_text(text=content.thinking_content[index:]))
+            parts[-1].thought = True
 
     if content.tool_calls:
-        parts.extend(
-            [
+        for index, tool_call in enumerate(content.tool_calls):
+            parts.append(
                 Part.from_function_call(
                     name=tool_call.tool_name,
                     args=_escape_decode(tool_call.tool_args),
                 )
-                for tool_call in content.tool_calls
-            ]
-        )
+            )
+            if details := next(
+                (
+                    d
+                    for d in part_details
+                    if d.part_type == "function_call" and d.index == index
+                ),
+                None,
+            ):
+                if details.thought_signature:
+                    parts[-1].thought_signature = base64.b64decode(
+                        details.thought_signature
+                    )
 
     return Content(role="model", parts=parts)
 
 
 async def _transform_stream(
-    result: AsyncGenerator[GenerateContentResponse],
+    result: AsyncIterator[GenerateContentResponse],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     new_message = True
+    part_details: list[PartDetails] = []
     try:
         async for response in result:
             LOGGER.debug("Received response chunk: %s", response)
-            chunk: conversation.AssistantContentDeltaDict = {}
 
             if new_message:
-                chunk["role"] = "assistant"
+                if part_details:
+                    yield {"native": ContentDetails(part_details=part_details)}
+                    part_details = []
+                yield {"role": "assistant"}
                 new_message = False
+                content_index = 0
+                thinking_content_index = 0
+                tool_call_index = 0
 
             # According to the API docs, this would mean no candidate is returned, so we can safely throw an error here.
             if response.prompt_feedback or not response.candidates:
@@ -278,23 +375,62 @@ async def _transform_stream(
                 else []
             )
 
-            content = "".join([part.text for part in response_parts if part.text])
-            tool_calls = []
             for part in response_parts:
-                if not part.function_call:
-                    continue
-                tool_call = part.function_call
-                tool_name = tool_call.name if tool_call.name else ""
-                tool_args = _escape_decode(tool_call.args)
-                tool_calls.append(
-                    llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
-                )
+                chunk: conversation.AssistantContentDeltaDict = {}
 
-            if tool_calls:
-                chunk["tool_calls"] = tool_calls
+                if part.text:
+                    if part.thought:
+                        chunk["thinking_content"] = part.text
+                        if part.thought_signature:
+                            part_details.append(
+                                PartDetails(
+                                    part_type="thought",
+                                    index=thinking_content_index,
+                                    length=len(part.text),
+                                    thought_signature=base64.b64encode(
+                                        part.thought_signature
+                                    ).decode("utf-8"),
+                                )
+                            )
+                        thinking_content_index += len(part.text)
+                    else:
+                        chunk["content"] = part.text
+                        if part.thought_signature:
+                            part_details.append(
+                                PartDetails(
+                                    part_type="text",
+                                    index=content_index,
+                                    length=len(part.text),
+                                    thought_signature=base64.b64encode(
+                                        part.thought_signature
+                                    ).decode("utf-8"),
+                                )
+                            )
+                        content_index += len(part.text)
 
-            chunk["content"] = content
-            yield chunk
+                if part.function_call:
+                    tool_call = part.function_call
+                    tool_name = tool_call.name if tool_call.name else ""
+                    tool_args = _escape_decode(tool_call.args)
+                    chunk["tool_calls"] = [
+                        llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
+                    ]
+                    if part.thought_signature:
+                        part_details.append(
+                            PartDetails(
+                                part_type="function_call",
+                                index=tool_call_index,
+                                thought_signature=base64.b64encode(
+                                    part.thought_signature
+                                ).decode("utf-8"),
+                            )
+                        )
+
+                yield chunk
+
+        if part_details:
+            yield {"native": ContentDetails(part_details=part_details)}
+
     except (
         APIError,
         ValueError,
@@ -313,13 +449,14 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: GoogleGenerativeAIConfigEntry,
         subentry: ConfigSubentry,
         default_model: str = RECOMMENDED_CHAT_MODEL,
     ) -> None:
         """Initialize the agent."""
         self.entry = entry
         self.subentry = subentry
+        self.default_model = default_model
         self._attr_name = subentry.title
         self._genai_client = entry.runtime_data
         self._attr_unique_id = subentry.subentry_id
@@ -339,7 +476,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         """Generate an answer for the chat log."""
         options = self.subentry.data
 
-        tools: list[Tool | Callable[..., Any]] | None = None
+        tools: ToolListUnion | None = None
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
@@ -353,7 +490,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             tools = tools or []
             tools.append(Tool(google_search=GoogleSearch()))
 
-        model_name = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        model_name = options.get(CONF_CHAT_MODEL, self.default_model)
         # Avoid INVALID_ARGUMENT Developer instruction is not enabled for <model>
         supports_system_instruction = (
             "gemma" not in model_name
@@ -370,7 +507,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         else:
             raise HomeAssistantError("Invalid prompt content")
 
-        messages: list[Content] = []
+        messages: list[Content | ContentDict] = []
 
         # Google groups tool results, we do not. Group them before sending.
         tool_results: list[conversation.ToolResultContent] = []
@@ -397,7 +534,10 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         # The SDK requires the first message to be a user message
         # This is not the case if user used `start_conversation`
         # Workaround from https://github.com/googleapis/python-genai/issues/529#issuecomment-2740964537
-        if messages and messages[0].role != "user":
+        if messages and (
+            (isinstance(messages[0], Content) and messages[0].role != "user")
+            or (isinstance(messages[0], dict) and messages[0]["role"] != "user")
+        ):
             messages.insert(
                 0,
                 Content(role="user", parts=[Part.from_text(text=" ")]),
@@ -437,7 +577,16 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         )
         user_message = chat_log.content[-1]
         assert isinstance(user_message, conversation.UserContent)
-        chat_request: str | list[Part] = user_message.content
+        chat_request: list[PartUnionDict] = [user_message.content]
+        if user_message.attachments:
+            chat_request.extend(
+                await async_prepare_files_for_prompt(
+                    self.hass,
+                    self._genai_client,
+                    [(a.path, a.mime_type) for a in user_message.attachments],
+                )
+            )
+
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
@@ -453,15 +602,17 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 error = ERROR_GETTING_RESPONSE
                 raise HomeAssistantError(error) from err
 
-            chat_request = _create_google_tool_response_parts(
-                [
-                    content
-                    async for content in chat_log.async_add_delta_content_stream(
-                        self.entity_id,
-                        _transform_stream(chat_response_generator),
-                    )
-                    if isinstance(content, conversation.ToolResultContent)
-                ]
+            chat_request = list(
+                _create_google_tool_response_parts(
+                    [
+                        content
+                        async for content in chat_log.async_add_delta_content_stream(
+                            self.entity_id,
+                            _transform_stream(chat_response_generator),
+                        )
+                        if isinstance(content, conversation.ToolResultContent)
+                    ]
+                )
             )
 
             if not chat_log.unresponded_tool_results:
@@ -470,6 +621,13 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
     def create_generate_content_config(self) -> GenerateContentConfig:
         """Create the GenerateContentConfig for the LLM."""
         options = self.subentry.data
+        model = options.get(CONF_CHAT_MODEL, self.default_model)
+        thinking_config: ThinkingConfig | None = None
+        if model.startswith("models/gemini-2.5") and not model.endswith(
+            ("tts", "image", "image-preview")
+        ):
+            thinking_config = ThinkingConfig(include_thoughts=True)
+
         return GenerateContentConfig(
             temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
             top_k=options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
@@ -502,23 +660,25 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                     ),
                 ),
             ],
+            thinking_config=thinking_config,
         )
 
 
 async def async_prepare_files_for_prompt(
-    hass: HomeAssistant, client: Client, files: list[Path]
+    hass: HomeAssistant, client: Client, files: list[tuple[Path, str | None]]
 ) -> list[File]:
-    """Append files to a prompt.
+    """Upload files so they can be attached to a prompt.
 
     Caller needs to ensure that the files are allowed.
     """
 
     def upload_files() -> list[File]:
         prompt_parts: list[File] = []
-        for filename in files:
+        for filename, mimetype in files:
             if not filename.exists():
                 raise HomeAssistantError(f"`{filename}` does not exist")
-            mimetype = mimetypes.guess_type(filename)[0]
+            if mimetype is None:
+                mimetype = mimetypes.guess_type(filename)[0]
             prompt_parts.append(
                 client.files.upload(
                     file=filename,
@@ -548,13 +708,13 @@ async def async_prepare_files_for_prompt(
                 await asyncio.sleep(FILE_POLLING_INTERVAL_SECONDS)
 
             uploaded_file = await client.aio.files.get(
-                name=uploaded_file.name,
+                name=uploaded_file.name or "",
                 config={"http_options": {"timeout": TIMEOUT_MILLIS}},
             )
 
         if uploaded_file.state == FileState.FAILED:
             raise HomeAssistantError(
-                f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message}"
+                f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message if uploaded_file.error else 'unknown'}"
             )
 
     prompt_parts = await hass.async_add_executor_job(upload_files)

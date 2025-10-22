@@ -8,6 +8,7 @@ from types import ModuleType
 from typing import Any
 
 from telegram import Bot
+from telegram.constants import InputMediaType
 from telegram.error import InvalidToken, TelegramError
 import voluptuous as vol
 
@@ -19,6 +20,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_SOURCE,
     CONF_URL,
+    Platform,
 )
 from homeassistant.core import (
     HomeAssistant,
@@ -42,6 +44,7 @@ from .const import (
     ATTR_AUTHENTICATION,
     ATTR_CALLBACK_QUERY_ID,
     ATTR_CAPTION,
+    ATTR_CHAT_ACTION,
     ATTR_CHAT_ID,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
@@ -50,6 +53,7 @@ from .const import (
     ATTR_IS_BIG,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
@@ -70,6 +74,17 @@ from .const import (
     ATTR_URL,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    CHAT_ACTION_CHOOSE_STICKER,
+    CHAT_ACTION_FIND_LOCATION,
+    CHAT_ACTION_RECORD_VIDEO,
+    CHAT_ACTION_RECORD_VIDEO_NOTE,
+    CHAT_ACTION_RECORD_VOICE,
+    CHAT_ACTION_TYPING,
+    CHAT_ACTION_UPLOAD_DOCUMENT,
+    CHAT_ACTION_UPLOAD_PHOTO,
+    CHAT_ACTION_UPLOAD_VIDEO,
+    CHAT_ACTION_UPLOAD_VIDEO_NOTE,
+    CHAT_ACTION_UPLOAD_VOICE,
     CONF_ALLOWED_CHAT_IDS,
     CONF_BOT_COUNT,
     CONF_CONFIG_ENTRY_ID,
@@ -85,9 +100,11 @@ from .const import (
     SERVICE_DELETE_MESSAGE,
     SERVICE_EDIT_CAPTION,
     SERVICE_EDIT_MESSAGE,
+    SERVICE_EDIT_MESSAGE_MEDIA,
     SERVICE_EDIT_REPLYMARKUP,
     SERVICE_LEAVE_CHAT,
     SERVICE_SEND_ANIMATION,
+    SERVICE_SEND_CHAT_ACTION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_LOCATION,
     SERVICE_SEND_MESSAGE,
@@ -152,6 +169,26 @@ SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_MESSAGE): cv.string, vol.Optional(ATTR_TITLE): cv.string}
 )
 
+SERVICE_SCHEMA_SEND_CHAT_ACTION = BASE_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_CHAT_ACTION): vol.In(
+            (
+                CHAT_ACTION_TYPING,
+                CHAT_ACTION_UPLOAD_PHOTO,
+                CHAT_ACTION_RECORD_VIDEO,
+                CHAT_ACTION_UPLOAD_VIDEO,
+                CHAT_ACTION_RECORD_VOICE,
+                CHAT_ACTION_UPLOAD_VOICE,
+                CHAT_ACTION_UPLOAD_DOCUMENT,
+                CHAT_ACTION_CHOOSE_STICKER,
+                CHAT_ACTION_FIND_LOCATION,
+                CHAT_ACTION_RECORD_VIDEO_NOTE,
+                CHAT_ACTION_UPLOAD_VIDEO_NOTE,
+            )
+        ),
+    }
+)
+
 SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
     {
         vol.Optional(ATTR_URL): cv.string,
@@ -197,6 +234,35 @@ SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend(
         ),
         vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
     }
+)
+
+SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.Schema(
+    {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Required(ATTR_MESSAGEID): vol.Any(
+            cv.positive_int, vol.All(cv.string, "last")
+        ),
+        vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+        vol.Optional(ATTR_CAPTION): cv.string,
+        vol.Required(ATTR_MEDIA_TYPE): vol.In(
+            (
+                str(InputMediaType.ANIMATION),
+                str(InputMediaType.AUDIO),
+                str(InputMediaType.VIDEO),
+                str(InputMediaType.DOCUMENT),
+                str(InputMediaType.PHOTO),
+            )
+        ),
+        vol.Optional(ATTR_URL): cv.string,
+        vol.Optional(ATTR_FILE): cv.string,
+        vol.Optional(ATTR_USERNAME): cv.string,
+        vol.Optional(ATTR_PASSWORD): cv.string,
+        vol.Optional(ATTR_AUTHENTICATION): cv.string,
+        vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
+        vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
@@ -267,6 +333,7 @@ SERVICE_SCHEMA_SET_MESSAGE_REACTION = vol.Schema(
 
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
+    SERVICE_SEND_CHAT_ACTION: SERVICE_SCHEMA_SEND_CHAT_ACTION,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_STICKER,
     SERVICE_SEND_ANIMATION: SERVICE_SCHEMA_SEND_FILE,
@@ -276,6 +343,7 @@ SERVICE_MAP = {
     SERVICE_SEND_LOCATION: SERVICE_SCHEMA_SEND_LOCATION,
     SERVICE_SEND_POLL: SERVICE_SCHEMA_SEND_POLL,
     SERVICE_EDIT_MESSAGE: SERVICE_SCHEMA_EDIT_MESSAGE,
+    SERVICE_EDIT_MESSAGE_MEDIA: SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA,
     SERVICE_EDIT_CAPTION: SERVICE_SCHEMA_EDIT_CAPTION,
     SERVICE_EDIT_REPLYMARKUP: SERVICE_SCHEMA_EDIT_REPLYMARKUP,
     SERVICE_ANSWER_CALLBACK_QUERY: SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY,
@@ -290,6 +358,8 @@ MODULES: dict[str, ModuleType] = {
     PLATFORM_POLLING: polling,
     PLATFORM_WEBHOOKS: webhooks,
 }
+
+PLATFORMS: list[Platform] = [Platform.NOTIFY]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -364,6 +434,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             messages = await notify_service.send_message(
                 context=service.context, **kwargs
             )
+        elif msgtype == SERVICE_SEND_CHAT_ACTION:
+            messages = await notify_service.send_chat_action(
+                context=service.context, **kwargs
+            )
         elif msgtype in [
             SERVICE_SEND_PHOTO,
             SERVICE_SEND_ANIMATION,
@@ -394,6 +468,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await notify_service.leave_chat(context=service.context, **kwargs)
         elif msgtype == SERVICE_SET_MESSAGE_REACTION:
             await notify_service.set_message_reaction(context=service.context, **kwargs)
+        elif msgtype == SERVICE_EDIT_MESSAGE_MEDIA:
+            await notify_service.edit_message_media(context=service.context, **kwargs)
         else:
             await notify_service.edit_message(
                 msgtype, context=service.context, **kwargs
@@ -430,6 +506,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if service_notif in [
             SERVICE_SEND_MESSAGE,
+            SERVICE_SEND_CHAT_ACTION,
             SERVICE_SEND_PHOTO,
             SERVICE_SEND_ANIMATION,
             SERVICE_SEND_VIDEO,
@@ -477,14 +554,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     )
     entry.runtime_data = notify_service
 
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
-    """Handle options update."""
+    """Handle config changes."""
     entry.runtime_data.parse_mode = entry.options[ATTR_PARSER]
+
+    # reload entities
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
 async def async_unload_entry(
@@ -494,4 +577,5 @@ async def async_unload_entry(
     # broadcast platform has no app
     if entry.runtime_data.app:
         await entry.runtime_data.app.shutdown()
-    return True
+
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

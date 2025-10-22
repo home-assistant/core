@@ -38,7 +38,7 @@ from propcache.api import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -626,52 +626,36 @@ class HomeConnectCoordinator(
         """Check if the appliance data hasn't been refreshed too often recently."""
 
         now = self.hass.loop.time()
-        if len(self._execution_tracker[appliance_ha_id]) >= MAX_EXECUTIONS:
-            return True
+
+        execution_tracker = self._execution_tracker[appliance_ha_id]
+        initial_len = len(execution_tracker)
 
         execution_tracker = self._execution_tracker[appliance_ha_id] = [
             timestamp
-            for timestamp in self._execution_tracker[appliance_ha_id]
+            for timestamp in execution_tracker
             if now - timestamp < MAX_EXECUTIONS_TIME_WINDOW
         ]
 
         execution_tracker.append(now)
 
         if len(execution_tracker) >= MAX_EXECUTIONS:
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"home_connect_too_many_connected_paired_events_{appliance_ha_id}",
-                is_fixable=True,
-                is_persistent=True,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="home_connect_too_many_connected_paired_events",
-                data={
-                    "entry_id": self.config_entry.entry_id,
-                    "appliance_ha_id": appliance_ha_id,
-                },
-                translation_placeholders={
-                    "appliance_name": self.data[appliance_ha_id].info.name,
-                    "times": str(MAX_EXECUTIONS),
-                    "time_window": str(MAX_EXECUTIONS_TIME_WINDOW // 60),
-                    "home_connect_resource_url": "https://www.home-connect.com/global/help-support/error-codes#/Togglebox=15362315-13320636-1/",
-                    "home_assistant_core_issue_url": "https://github.com/home-assistant/core/issues/147299",
-                },
-            )
+            if initial_len < MAX_EXECUTIONS:
+                _LOGGER.warning(
+                    'Too many connected/paired events for appliance "%s" '
+                    "(%s times in less than %s minutes), updates have been disabled "
+                    "and they will be enabled again whenever the connection stabilizes. "
+                    "Consider trying to unplug the appliance "
+                    "for a while to perform a soft reset",
+                    self.data[appliance_ha_id].info.name,
+                    MAX_EXECUTIONS,
+                    MAX_EXECUTIONS_TIME_WINDOW // 60,
+                )
             return True
+        if initial_len >= MAX_EXECUTIONS:
+            _LOGGER.info(
+                'Connected/paired events from the appliance "%s" have stabilized,'
+                " updates have been re-enabled",
+                self.data[appliance_ha_id].info.name,
+            )
 
         return False
-
-    async def reset_execution_tracker(self, appliance_ha_id: str) -> None:
-        """Reset the execution tracker for a specific appliance."""
-        self._execution_tracker.pop(appliance_ha_id, None)
-        appliance_info = await self.client.get_specific_appliance(appliance_ha_id)
-
-        appliance_data = await self._get_appliance_data(
-            appliance_info, self.data.get(appliance_info.ha_id)
-        )
-        self.data[appliance_ha_id].update(appliance_data)
-        for listener, context in self._special_listeners.values():
-            if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED not in context:
-                listener()
-        self._call_all_event_listeners_for_appliance(appliance_ha_id)

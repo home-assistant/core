@@ -124,17 +124,6 @@
     }
   },
   "issues": {
-    "home_connect_too_many_connected_paired_events": {
-      "title": "{appliance_name} sent too many connected or paired events",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::home_connect::issues::home_connect_too_many_connected_paired_events::title%]",
-            "description": "The appliance \"{appliance_name}\" has been reported as connected or paired {times} times in less than {time_window} minutes, so refreshes on connected or paired events has been disabled to avoid exceeding the API rate limit.\n\nPlease refer to the [Home Connect Wi-Fi requirements and recommendations]({home_connect_resource_url}). If everything seems right with your network configuration, restart the appliance.\n\nClick \"submit\" to re-enable the updates.\nIf the issue persists, please see the following issue in the [Home Assistant core repository]({home_assistant_core_issue_url})."
-          }
-        }
-      }
-    },
     "deprecated_time_alarm_clock_in_automations_scripts": {
       "title": "Deprecated alarm clock entity detected in some automations or scripts",
       "fix_flow": {
@@ -153,28 +142,6 @@
           "confirm": {
             "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock::title%]",
             "description": "The alarm clock entity `{entity_id}` is deprecated because it's being moved to the `number` platform.\n\nPlease use the new `number` entity."
-          }
-        }
-      }
-    },
-    "deprecated_command_actions": {
-      "title": "The command related actions are deprecated in favor of the new buttons",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::home_connect::issues::deprecated_command_actions::title%]",
-            "description": "The `pause_program` and `resume_program` actions have been deprecated in favor of new button entities, if the command is available for your appliance. Please update your automations, scripts and panels that use this action to use the button entities instead, and press on submit to fix the issue."
-          }
-        }
-      }
-    },
-    "deprecated_set_program_and_option_actions": {
-      "title": "The executed action is deprecated",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::home_connect::issues::deprecated_set_program_and_option_actions::title%]",
-            "description": "`start_program`, `select_program`, `set_option_active`, and `set_option_selected` actions are deprecated and will be removed in the {remove_release} release, please use the `{new_action_key}` action instead. For the executed action:\n{deprecated_action_yaml}\nyou can do the following transformation using the recognized options:\n  {new_action_yaml}\nIf the option is not in the recognized options, please submit an issue or a pull request requesting the addition of the option at {repo_link}."
           }
         }
       }
@@ -204,11 +171,11 @@
         "consumer_products_coffee_maker_program_beverage_caffe_latte": "Caffe latte",
         "consumer_products_coffee_maker_program_beverage_milk_froth": "Milk froth",
         "consumer_products_coffee_maker_program_beverage_warm_milk": "Warm milk",
-        "consumer_products_coffee_maker_program_coffee_world_kleiner_brauner": "Kleiner brauner",
-        "consumer_products_coffee_maker_program_coffee_world_grosser_brauner": "Grosser brauner",
+        "consumer_products_coffee_maker_program_coffee_world_kleiner_brauner": "Kleiner Brauner",
+        "consumer_products_coffee_maker_program_coffee_world_grosser_brauner": "Grosser Brauner",
         "consumer_products_coffee_maker_program_coffee_world_verlaengerter": "Verlaengerter",
         "consumer_products_coffee_maker_program_coffee_world_verlaengerter_braun": "Verlaengerter braun",
-        "consumer_products_coffee_maker_program_coffee_world_wiener_melange": "Wiener melange",
+        "consumer_products_coffee_maker_program_coffee_world_wiener_melange": "Wiener Melange",
         "consumer_products_coffee_maker_program_coffee_world_flat_white": "Flat white",
         "consumer_products_coffee_maker_program_coffee_world_cortado": "Cortado",
         "consumer_products_coffee_maker_program_coffee_world_cafe_cortado": "Cafe cortado",
@@ -290,7 +257,7 @@
         "cooking_oven_program_heating_mode_intensive_heat": "Intensive heat",
         "cooking_oven_program_heating_mode_keep_warm": "Keep warm",
         "cooking_oven_program_heating_mode_preheat_ovenware": "Preheat ovenware",
-        "cooking_oven_program_heating_mode_frozen_heatup_special": "Special Heat-Up for frozen products",
+        "cooking_oven_program_heating_mode_frozen_heatup_special": "Special heat-up for frozen products",
         "cooking_oven_program_heating_mode_desiccation": "Desiccation",
         "cooking_oven_program_heating_mode_defrost": "Defrost",
         "cooking_oven_program_heating_mode_proof": "Proof",
@@ -327,8 +294,8 @@
         "laundry_care_washer_program_monsoon": "Monsoon",
         "laundry_care_washer_program_outdoor": "Outdoor",
         "laundry_care_washer_program_plush_toy": "Plush toy",
-        "laundry_care_washer_program_shirts_blouses": "Shirts blouses",
-        "laundry_care_washer_program_sport_fitness": "Sport fitness",
+        "laundry_care_washer_program_shirts_blouses": "Shirts/blouses",
+        "laundry_care_washer_program_sport_fitness": "Sport/fitness",
         "laundry_care_washer_program_towels": "Towels",
         "laundry_care_washer_program_water_proof": "Water proof",
         "laundry_care_washer_program_power_speed_59": "Power speed <59 min",
@@ -357,7 +324,19 @@
       "options": {
         "consumer_products_cleaning_robot_enum_type_cleaning_modes_silent": "Silent",
         "consumer_products_cleaning_robot_enum_type_cleaning_modes_standard": "Standard",
-        "consumer_products_cleaning_robot_enum_type_cleaning_modes_power": "Power"
+        "consumer_products_cleaning_robot_enum_type_cleaning_modes_power": "Power",
+        "consumer_products_cleaning_robot_enum_type_cleaning_mode_intelligent_mode": "Intelligent mode",
+        "consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_only": "Vacuum only",
+        "consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_only": "Mop only",
+        "consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_and_mop": "Vacuum and mop",
+        "consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_after_vacuum": "Mop after vacuum"
+      }
+    },
+    "suction_power": {
+      "options": {
+        "consumer_products_cleaning_robot_enum_type_suction_power_silent": "Silent",
+        "consumer_products_cleaning_robot_enum_type_suction_power_standard": "Standard",
+        "consumer_products_cleaning_robot_enum_type_suction_power_max": "Max"
       }
     },
     "bean_amount": {
@@ -528,49 +507,6 @@
     }
   },
   "services": {
-    "start_program": {
-      "name": "Start program",
-      "description": "Selects a program and starts it.",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
-          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
-        },
-        "program": { "name": "Program", "description": "Program to select." },
-        "key": { "name": "Option key", "description": "Key of the option." },
-        "value": {
-          "name": "Option value",
-          "description": "Value of the option."
-        },
-        "unit": { "name": "Option unit", "description": "Unit for the option." }
-      }
-    },
-    "select_program": {
-      "name": "Select program",
-      "description": "Selects a program without starting it.",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
-          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
-        },
-        "program": {
-          "name": "[%key:component::home_connect::services::start_program::fields::program::name%]",
-          "description": "[%key:component::home_connect::services::start_program::fields::program::description%]"
-        },
-        "key": {
-          "name": "[%key:component::home_connect::services::start_program::fields::key::name%]",
-          "description": "[%key:component::home_connect::services::start_program::fields::key::description%]"
-        },
-        "value": {
-          "name": "[%key:component::home_connect::services::start_program::fields::value::name%]",
-          "description": "[%key:component::home_connect::services::start_program::fields::value::description%]"
-        },
-        "unit": {
-          "name": "[%key:component::home_connect::services::start_program::fields::unit::name%]",
-          "description": "[%key:component::home_connect::services::start_program::fields::unit::description%]"
-        }
-      }
-    },
     "set_program_and_options": {
       "name": "Set program and options",
       "description": "Starts or selects a program with options or sets the options for the active or the selected program.",
@@ -593,7 +529,11 @@
         },
         "consumer_products_cleaning_robot_option_cleaning_mode": {
           "name": "Cleaning mode",
-          "description": "Defines the favoured cleaning mode."
+          "description": "Defines the favored cleaning mode."
+        },
+        "consumer_products_cleaning_robot_option_suction_power": {
+          "name": "Suction power",
+          "description": "Defines the suction power."
         },
         "consumer_products_coffee_maker_option_bean_amount": {
           "name": "Bean amount",
@@ -681,7 +621,7 @@
         },
         "cooking_oven_option_setpoint_temperature": {
           "name": "Setpoint temperature",
-          "description": "Defines the target cavity temperature, which will be hold by the oven."
+          "description": "Defines the target cavity temperature, which will be held by the oven."
         },
         "b_s_h_common_option_duration": {
           "name": "Duration",
@@ -752,62 +692,6 @@
         "washer_options": {
           "name": "Washer options",
           "description": "Options for washers (and washer dryers)."
-        }
-      }
-    },
-    "pause_program": {
-      "name": "Pause program",
-      "description": "Pauses the current running program.",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
-          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
-        }
-      }
-    },
-    "resume_program": {
-      "name": "Resume program",
-      "description": "Resumes a paused program.",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
-          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
-        }
-      }
-    },
-    "set_option_active": {
-      "name": "Set active program option",
-      "description": "Sets an option for the active program.",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
-          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
-        },
-        "key": {
-          "name": "Key",
-          "description": "[%key:component::home_connect::services::start_program::fields::key::description%]"
-        },
-        "value": {
-          "name": "Value",
-          "description": "[%key:component::home_connect::services::start_program::fields::value::description%]"
-        }
-      }
-    },
-    "set_option_selected": {
-      "name": "Set selected program option",
-      "description": "Sets options for the selected program.",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
-          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
-        },
-        "key": {
-          "name": "[%key:component::home_connect::services::start_program::fields::key::name%]",
-          "description": "[%key:component::home_connect::services::start_program::fields::key::description%]"
-        },
-        "value": {
-          "name": "[%key:component::home_connect::services::start_program::fields::value::name%]",
-          "description": "[%key:component::home_connect::services::start_program::fields::value::description%]"
         }
       }
     },
@@ -1302,9 +1186,9 @@
         "state": {
           "cooking_hood_enum_type_color_temperature_custom": "Custom",
           "cooking_hood_enum_type_color_temperature_warm": "Warm",
-          "cooking_hood_enum_type_color_temperature_warm_to_neutral": "Warm to Neutral",
+          "cooking_hood_enum_type_color_temperature_warm_to_neutral": "Warm to neutral",
           "cooking_hood_enum_type_color_temperature_neutral": "Neutral",
-          "cooking_hood_enum_type_color_temperature_neutral_to_cold": "Neutral to Cold",
+          "cooking_hood_enum_type_color_temperature_neutral_to_cold": "Neutral to cold",
           "cooking_hood_enum_type_color_temperature_cold": "Cold"
         }
       },
@@ -1328,7 +1212,20 @@
         "state": {
           "consumer_products_cleaning_robot_enum_type_cleaning_modes_silent": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_modes_silent%]",
           "consumer_products_cleaning_robot_enum_type_cleaning_modes_standard": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_modes_standard%]",
-          "consumer_products_cleaning_robot_enum_type_cleaning_modes_power": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_modes_power%]"
+          "consumer_products_cleaning_robot_enum_type_cleaning_modes_power": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_modes_power%]",
+          "consumer_products_cleaning_robot_enum_type_cleaning_mode_intelligent_mode": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_mode_intelligent_mode%]",
+          "consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_only": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_only%]",
+          "consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_only": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_only%]",
+          "consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_and_mop": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_and_mop%]",
+          "consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_after_vacuum": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_after_vacuum%]"
+        }
+      },
+      "suction_power": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_cleaning_robot_option_suction_power::name%]",
+        "state": {
+          "consumer_products_cleaning_robot_enum_type_suction_power_silent": "[%key:component::home_connect::selector::suction_power::options::consumer_products_cleaning_robot_enum_type_suction_power_silent%]",
+          "consumer_products_cleaning_robot_enum_type_suction_power_standard": "[%key:component::home_connect::selector::suction_power::options::consumer_products_cleaning_robot_enum_type_suction_power_standard%]",
+          "consumer_products_cleaning_robot_enum_type_suction_power_max": "[%key:component::home_connect::selector::suction_power::options::consumer_products_cleaning_robot_enum_type_suction_power_max%]"
         }
       },
       "bean_amount": {
@@ -1983,11 +1880,6 @@
       },
       "i_dos2_active": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos2_active::name%]"
-      }
-    },
-    "time": {
-      "alarm_clock": {
-        "name": "Alarm clock"
       }
     }
   }

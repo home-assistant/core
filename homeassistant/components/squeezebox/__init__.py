@@ -1,7 +1,8 @@
 """The Squeezebox integration."""
 
+import asyncio
 from asyncio import timeout
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from http import HTTPStatus
 import logging
@@ -31,14 +32,12 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     CONF_HTTPS,
     DISCOVERY_INTERVAL,
-    DISCOVERY_TASK,
     DOMAIN,
-    KNOWN_PLAYERS,
-    KNOWN_SERVERS,
     SERVER_MANUFACTURER,
     SERVER_MODEL,
     SERVER_MODEL_ID,
@@ -66,6 +65,8 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
+SQUEEZEBOX_HASS_DATA: HassKey[asyncio.Task] = HassKey(DOMAIN)
+
 
 @dataclass
 class SqueezeboxData:
@@ -73,6 +74,7 @@ class SqueezeboxData:
 
     coordinator: LMSStatusDataUpdateCoordinator
     server: Server
+    known_player_ids: set[str] = field(default_factory=set)
 
 
 type SqueezeboxConfigEntry = ConfigEntry[SqueezeboxData]
@@ -113,9 +115,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     if not status:
         # pysqueezebox's async_query returns None on various issues,
         # including HTTP errors where it sets lms.http_status.
-        http_status = getattr(lms, "http_status", "N/A")
 
-        if http_status == HTTPStatus.UNAUTHORIZED:
+        if lms.http_status == HTTPStatus.UNAUTHORIZED:
             _LOGGER.warning("Authentication failed for Squeezebox server %s", host)
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -129,14 +130,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         _LOGGER.warning(
             "LMS %s returned no status or an error (HTTP status: %s). Retrying setup",
             host,
-            http_status,
+            lms.http_status,
         )
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="init_get_status_failed",
             translation_placeholders={
                 "host": str(host),
-                "http_status": str(http_status),
+                "http_status": str(lms.http_status),
             },
         )
 
@@ -187,19 +188,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
 
     entry.runtime_data = SqueezeboxData(coordinator=server_coordinator, server=lms)
 
-    # set up player discovery
-    known_servers = hass.data.setdefault(DOMAIN, {}).setdefault(KNOWN_SERVERS, {})
-    known_players = known_servers.setdefault(lms.uuid, {}).setdefault(KNOWN_PLAYERS, [])
-
     async def _player_discovery(now: datetime | None = None) -> None:
         """Discover squeezebox players by polling server."""
 
         async def _discovered_player(player: Player) -> None:
             """Handle a (re)discovered player."""
-            if player.player_id in known_players:
+            if player.player_id in entry.runtime_data.known_player_ids:
                 await player.async_update()
                 async_dispatcher_send(
-                    hass, SIGNAL_PLAYER_REDISCOVERED, player.player_id, player.connected
+                    hass,
+                    SIGNAL_PLAYER_REDISCOVERED + entry.entry_id,
+                    player.player_id,
+                    player.connected,
                 )
             else:
                 _LOGGER.debug("Adding new entity: %s", player)
@@ -207,9 +207,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
                     hass, entry, player, lms.uuid
                 )
                 await player_coordinator.async_refresh()
-                known_players.append(player.player_id)
+                entry.runtime_data.known_player_ids.add(player.player_id)
                 async_dispatcher_send(
-                    hass, SIGNAL_PLAYER_DISCOVERED, player_coordinator
+                    hass, SIGNAL_PLAYER_DISCOVERED + entry.entry_id, player_coordinator
                 )
 
         if players := await lms.async_get_players():
@@ -246,7 +246,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) 
     current_entries = hass.config_entries.async_entries(DOMAIN)
     if len(current_entries) == 1 and current_entries[0] == entry:
         _LOGGER.debug("Stopping server discovery task")
-        hass.data[DOMAIN][DISCOVERY_TASK].cancel()
-        hass.data[DOMAIN].pop(DISCOVERY_TASK)
+        hass.data[SQUEEZEBOX_HASS_DATA].cancel()
+        hass.data.pop(SQUEEZEBOX_HASS_DATA)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

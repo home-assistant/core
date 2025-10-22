@@ -30,8 +30,10 @@ from homeassistant.components.camera import (
     WebRTCMessage,
     WebRTCSendMessage,
     async_register_webrtc_provider,
+    get_dynamic_camera_stream_settings,
 )
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
+from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -57,12 +59,13 @@ from .server import Server
 
 _LOGGER = logging.getLogger(__name__)
 
+_FFMPEG = "ffmpeg"
 _SUPPORTED_STREAMS = frozenset(
     (
         "bubble",
         "dvrip",
         "expr",
-        "ffmpeg",
+        _FFMPEG,
         "gopro",
         "homekit",
         "http",
@@ -306,9 +309,40 @@ class WebRTCProvider(CameraWebRTCProvider):
             await self.teardown()
             raise HomeAssistantError("Camera has no stream source")
 
+        if camera.platform.platform_name == "generic":
+            # This is a workaround to use ffmpeg for generic cameras
+            # A proper fix will be added in the future together with supporting multiple streams per camera
+            stream_source = "ffmpeg:" + stream_source
+
         if not self.async_is_supported(stream_source):
             await self.teardown()
             raise HomeAssistantError("Stream source is not supported by go2rtc")
+
+        camera_prefs = await get_dynamic_camera_stream_settings(
+            self._hass, camera.entity_id
+        )
+        if camera_prefs.orientation is not Orientation.NO_TRANSFORM:
+            # Camera orientation manually set by user
+            if not stream_source.startswith(_FFMPEG):
+                stream_source = _FFMPEG + ":" + stream_source
+            stream_source += "#video=h264#audio=copy"
+            match camera_prefs.orientation:
+                case Orientation.MIRROR:
+                    stream_source += "#raw=-vf hflip"
+                case Orientation.ROTATE_180:
+                    stream_source += "#rotate=180"
+                case Orientation.FLIP:
+                    stream_source += "#raw=-vf vflip"
+                case Orientation.ROTATE_LEFT_AND_FLIP:
+                    # Cannot use any filter when using raw one
+                    stream_source += "#raw=-vf transpose=2,vflip"
+                case Orientation.ROTATE_LEFT:
+                    stream_source += "#rotate=-90"
+                case Orientation.ROTATE_RIGHT_AND_FLIP:
+                    # Cannot use any filter when using raw one
+                    stream_source += "#raw=-vf transpose=1,vflip"
+                case Orientation.ROTATE_RIGHT:
+                    stream_source += "#rotate=90"
 
         streams = await self._rest_client.streams.list()
 
@@ -323,7 +357,6 @@ class WebRTCProvider(CameraWebRTCProvider):
                     # Connection problems to the camera will be logged by the first stream
                     # Therefore setting it to debug will not hide any important logs
                     f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
-                    f"ffmpeg:{camera.entity_id}#video=mjpeg",
                 ],
             )
 

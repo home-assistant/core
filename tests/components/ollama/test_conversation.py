@@ -95,7 +95,10 @@ async def test_chat(
     ]
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
-    assert "Current time is" in detail_event["data"]["messages"][0]["content"]
+    assert (
+        "You are a voice assistant for Home Assistant."
+        in detail_event["data"]["messages"][0]["content"]
+    )
 
 
 async def test_chat_stream(
@@ -143,6 +146,70 @@ async def test_chat_stream(
             result
         )
         assert result.response.speech["plain"]["speech"] == "test response"
+
+
+async def test_thinking_content(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that thinking content is retained in multi-turn conversation."""
+
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
+            ollama.CONF_THINK: True,
+        },
+    )
+
+    conversation_id = "conversation_id_1234"
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        return_value=stream_generator(
+            {
+                "message": {
+                    "role": "assistant",
+                    "content": "test response",
+                    "thinking": "test thinking",
+                },
+                "done": True,
+                "done_reason": "stop",
+            },
+        ),
+    ) as mock_chat:
+        await conversation.async_converse(
+            hass,
+            "test message",
+            conversation_id,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+        await conversation.async_converse(
+            hass,
+            "test message 2",
+            conversation_id,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+        assert mock_chat.call_count == 2
+        assert mock_chat.call_args.kwargs["messages"][1:] == [
+            Message(role="user", content="test message"),
+            Message(
+                role="assistant",
+                content="test response",
+                thinking="test thinking",
+            ),
+            Message(role="user", content="test message 2"),
+        ]
 
 
 async def test_template_variables(
@@ -619,7 +686,6 @@ async def test_conversation_agent(
     assert entity_entry
     subentry = mock_config_entry.subentries.get(entity_entry.unique_id)
     assert subentry
-    assert entity_entry.original_name == subentry.title
 
     device_entry = device_registry.async_get(entity_entry.device_id)
     assert device_entry

@@ -58,7 +58,7 @@ ACTION_PARAMETERS_CACHE: HassKey[
 
 LLM_API_ASSIST = "assist"
 
-BASE_PROMPT = (
+DATE_TIME_PROMPT = (
     'Current time is {{ now().strftime("%H:%M:%S") }}. '
     'Today\'s date is {{ now().strftime("%Y-%m-%d") }}.\n'
 )
@@ -183,6 +183,7 @@ class ToolInput:
     tool_args: dict[str, Any]
     # Using lambda for default to allow patching in tests
     id: str = dc_field(default_factory=lambda: ulid_now())  # pylint: disable=unnecessary-lambda
+    external: bool = False
 
 
 class Tool:
@@ -315,10 +316,23 @@ class IntentTool(Tool):
             assistant=llm_context.assistant,
             device_id=llm_context.device_id,
         )
-        response = intent_response.as_dict()
-        del response["language"]
-        del response["card"]
-        return response
+        return IntentResponseDict(intent_response)
+
+
+class IntentResponseDict(dict):
+    """Dictionary to represent an intent response resulting from a tool call."""
+
+    def __init__(self, intent_response: Any) -> None:
+        """Initialize the dictionary."""
+        if not isinstance(intent_response, intent.IntentResponse):
+            super().__init__(intent_response)
+            return
+
+        result = intent_response.as_dict()
+        del result["language"]
+        del result["card"]
+        super().__init__(result)
+        self.original = intent_response
 
 
 class NamespacedTool(Tool):
@@ -578,6 +592,8 @@ class AssistAPI(API):
             for intent_handler in intent_handlers
         ]
 
+        tools.append(GetDateTimeTool())
+
         if exposed_entities:
             if exposed_entities[CALENDAR_DOMAIN]:
                 names = []
@@ -642,7 +658,6 @@ def _get_exposed_entities(
         if not async_should_expose(hass, assistant, state.entity_id):
             continue
 
-        description: str | None = None
         entity_entry = entity_registry.async_get(state.entity_id)
         names = [state.name]
         area_names = []
@@ -673,8 +688,10 @@ def _get_exposed_entities(
         if include_state:
             info["state"] = state.state
 
-        if description:
-            info["description"] = description
+            # Convert timestamp device_class states from UTC to local time
+            if state.attributes.get("device_class") == "timestamp" and state.state:
+                if (parsed_utc := dt_util.parse_datetime(state.state)) is not None:
+                    info["state"] = dt_util.as_local(parsed_utc).isoformat()
 
         if area_names:
             info["areas"] = ", ".join(area_names)
@@ -779,13 +796,19 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
     if isinstance(schema, selector.ObjectSelector):
         result = {"type": "object"}
         if fields := schema.config.get("fields"):
-            result["properties"] = {
-                field: convert(
+            properties = {}
+            required = []
+            for field, field_schema in fields.items():
+                properties[field] = convert(
                     selector.selector(field_schema["selector"]),
                     custom_serializer=selector_serializer,
                 )
-                for field, field_schema in fields.items()
-            }
+                if field_schema.get("required"):
+                    required.append(field)
+            result["properties"] = properties
+
+            if required:
+                result["required"] = required
         else:
             result["additionalProperties"] = True
         if schema.config.get("multiple"):
@@ -808,7 +831,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "enum": options}
 
     if isinstance(schema, selector.TargetSelector):
-        return convert(cv.TARGET_SERVICE_FIELDS)
+        return convert(cv.TARGET_FIELDS)
 
     if isinstance(schema, selector.TemplateSelector):
         return {"type": "string", "format": "jinja2"}
@@ -1159,4 +1182,30 @@ class GetLiveContextTool(Tool):
         return {
             "success": True,
             "result": "\n".join(prompt),
+        }
+
+
+class GetDateTimeTool(Tool):
+    """Tool for getting the current date and time."""
+
+    name = "GetDateTime"
+    description = "Provides the current date and time."
+
+    async def async_call(
+        self,
+        hass: HomeAssistant,
+        tool_input: ToolInput,
+        llm_context: LLMContext,
+    ) -> JsonObjectType:
+        """Get the current date and time."""
+        now = dt_util.now()
+
+        return {
+            "success": True,
+            "result": {
+                "date": now.strftime("%Y-%m-%d"),
+                "time": now.strftime("%H:%M:%S"),
+                "timezone": now.strftime("%Z"),
+                "weekday": now.strftime("%A"),
+            },
         }

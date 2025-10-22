@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 from aiohttp import ClientError
 from habiticalib import (
@@ -17,7 +18,14 @@ from habiticalib import (
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_NAME,
@@ -26,15 +34,21 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
+from . import HABITICA_KEY
 from .const import (
     CONF_API_USER,
+    CONF_PARTY_MEMBER,
     DEFAULT_URL,
     DOMAIN,
     FORGOT_PASSWORD_URL,
@@ -164,7 +178,6 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_API_USER: str(login.id),
                         CONF_API_KEY: login.apiToken,
-                        CONF_NAME: user.profile.name,  # needed for api_call action
                         CONF_URL: DEFAULT_URL,
                         CONF_VERIFY_SSL: True,
                     },
@@ -200,7 +213,6 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         **user_input,
                         CONF_URL: user_input.get(CONF_URL, DEFAULT_URL),
-                        CONF_NAME: user.profile.name,  # needed for api_call action
                     },
                 )
 
@@ -376,3 +388,66 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
             return errors, user.data
 
         return errors, None
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {"party_member": PartyMembersSubentryFlowHandler}
+
+
+class PartyMembersSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding party members."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Subentry user flow."""
+
+        entry: HabiticaConfigEntry = self._get_entry()
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="config_entry_disabled")
+        if (party := entry.runtime_data.data.user.party.id) is None:
+            return self.async_abort(reason="not_in_a_party")
+
+        party_members = self.hass.data[HABITICA_KEY][party].data.members
+
+        if user_input is not None:
+            config_entries = self.hass.config_entries.async_entries(DOMAIN)
+
+            for entry in config_entries:
+                if user_input[CONF_PARTY_MEMBER] == entry.unique_id:
+                    return self.async_abort(reason="already_configured_as_entry")
+                if user_input[CONF_PARTY_MEMBER] in {
+                    subentry.unique_id for subentry in entry.subentries.values()
+                }:
+                    return self.async_abort(reason="already_configured")
+
+            return self.async_create_entry(
+                title=party_members[UUID(user_input[CONF_PARTY_MEMBER])].profile.name,
+                data={},
+                unique_id=user_input[CONF_PARTY_MEMBER],
+            )
+
+        options = [
+            SelectOptionDict(
+                value=str(member_id),
+                label=f"{member.profile.name} (@{member.auth.local.username})",
+            )
+            for member_id, member in party_members.items()
+            if member_id != str(entry.runtime_data.data.user.id)
+            and member.profile.name
+            and member.auth.local.username
+        ]
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PARTY_MEMBER): SelectSelector(
+                        SelectSelectorConfig(options=options)
+                    )
+                }
+            ),
+        )

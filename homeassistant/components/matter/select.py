@@ -62,7 +62,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.SELECT, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterSelectEntityDescription(SelectEntityDescription, MatterEntityDescription):
     """Describe Matter select entities."""
 
@@ -197,10 +197,14 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        list_values = cast(
-            list[str],
-            self.get_matter_attribute_value(self.entity_description.list_attribute),
+        list_values_raw = self.get_matter_attribute_value(
+            self.entity_description.list_attribute
         )
+        if TYPE_CHECKING:
+            assert list_values_raw is not None
+
+        # Accept both list[str] and list[int], convert to str
+        list_values = [str(v) for v in list_values_raw]
         self._attr_options = list_values
         current_option_idx: int = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
@@ -445,6 +449,24 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
+        entity_description=MatterListSelectEntityDescription(
+            key="MicrowaveOvenControlSelectedWattIndex",
+            translation_key="power_level",
+            command=lambda selected_index: clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
+                wattSettingIndex=selected_index
+            ),
+            list_attribute=clusters.MicrowaveOvenControl.Attributes.SupportedWatts,
+        ),
+        entity_class=MatterListSelectEntity,
+        required_attributes=(
+            clusters.MicrowaveOvenControl.Attributes.SelectedWattIndex,
+            clusters.MicrowaveOvenControl.Attributes.SupportedWatts,
+        ),
+        # don't discover this entry if the supported state list is empty
+        secondary_value_is_not=[],
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="DoorLockSoundVolume",
             entity_category=EntityCategory.CONFIG,
@@ -479,5 +501,30 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.PumpConfigurationAndControl.Attributes.OperationMode,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="AqaraBooleanStateConfigurationCurrentSensitivityLevel",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="sensitivity_level",
+            options=["10 mm", "20 mm", "30 mm"],
+            device_to_ha={
+                0: "10 mm",  # 10 mm => CurrentSensitivityLevel=0 / highest sensitivity level
+                1: "20 mm",  # 20 mm => CurrentSensitivityLevel=1 / medium sensitivity level
+                2: "30 mm",  # 30 mm => CurrentSensitivityLevel=2 / lowest sensitivity level
+            }.get,
+            ha_to_device={
+                "10 mm": 0,
+                "20 mm": 1,
+                "30 mm": 2,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
+        ),
+        vendor_id=(4447,),
+        product_id=(8194,),
     ),
 ]

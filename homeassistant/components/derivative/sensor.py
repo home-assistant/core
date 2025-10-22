@@ -34,8 +34,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -64,7 +63,7 @@ ATTR_SOURCE_ID = "source"
 UNIT_PREFIXES = {
     None: 1,
     "n": 1e-9,
-    "µ": 1e-6,
+    "μ": 1e-6,
     "m": 1e-3,
     "k": 1e3,
     "M": 1e6,
@@ -118,30 +117,21 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE]
     )
 
-    device_info = async_device_info_to_link_from_entity(
-        hass,
-        source_entity_id,
-    )
-
-    if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
-        # Before we had support for optional selectors, "none" was used for selecting nothing
-        unit_prefix = None
-
     if max_sub_interval_dict := config_entry.options.get(CONF_MAX_SUB_INTERVAL, None):
         max_sub_interval = cv.time_period(max_sub_interval_dict)
     else:
         max_sub_interval = None
 
     derivative_sensor = DerivativeSensor(
+        hass,
         name=config_entry.title,
         round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
         source_entity=source_entity_id,
         time_window=cv.time_period_dict(config_entry.options[CONF_TIME_WINDOW]),
         unique_id=config_entry.entry_id,
         unit_of_measurement=None,
-        unit_prefix=unit_prefix,
+        unit_prefix=config_entry.options.get(CONF_UNIT_PREFIX),
         unit_time=config_entry.options[CONF_UNIT_TIME],
-        device_info=device_info,
         max_sub_interval=max_sub_interval,
     )
 
@@ -156,6 +146,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the derivative sensor."""
     derivative = DerivativeSensor(
+        hass,
         name=config.get(CONF_NAME),
         round_digits=config[CONF_ROUND_DIGITS],
         source_entity=config[CONF_SOURCE],
@@ -178,6 +169,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         *,
         name: str | None,
         round_digits: int,
@@ -188,11 +180,13 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         unit_time: UnitOfTime,
         max_sub_interval: timedelta | None,
         unique_id: str | None,
-        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the derivative sensor."""
         self._attr_unique_id = unique_id
-        self._attr_device_info = device_info
+        self.device_entry = async_entity_id_to_device(
+            hass,
+            source_entity,
+        )
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._attr_native_value = round(Decimal(0), round_digits)
@@ -202,7 +196,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
         self._attr_name = name if name is not None else f"{source_entity} derivative"
         self._attr_extra_state_attributes = {ATTR_SOURCE_ID: source_entity}
-
+        self._unit_template: str | None = None
         if unit_of_measurement is None:
             final_unit_prefix = "" if unit_prefix is None else unit_prefix
             self._unit_template = f"{final_unit_prefix}{{}}/{unit_time}"
@@ -223,6 +217,23 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             lambda *args: None
         )
 
+    def _derive_and_set_attributes_from_state(self, source_state: State | None) -> None:
+        if self._unit_template and source_state:
+            original_unit = self._attr_native_unit_of_measurement
+            source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            self._attr_native_unit_of_measurement = self._unit_template.format(
+                "" if source_unit is None else source_unit
+            )
+            if original_unit != self._attr_native_unit_of_measurement:
+                _LOGGER.debug(
+                    "%s: Derivative sensor switched UoM from %s to %s, resetting state to 0",
+                    self.entity_id,
+                    original_unit,
+                    self._attr_native_unit_of_measurement,
+                )
+                self._state_list = []
+                self._attr_native_value = round(Decimal(0), self._round_digits)
+
     def _calc_derivative_from_state_list(self, current_time: datetime) -> Decimal:
         def calculate_weight(start: datetime, end: datetime, now: datetime) -> float:
             window_start = now - timedelta(seconds=self._time_window)
@@ -233,15 +244,28 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             weight = calculate_weight(start, end, current_time)
             derivative = derivative + (value * Decimal(weight))
 
+        _LOGGER.debug(
+            "%s: Calculated new derivative as %f from %d segments",
+            self.entity_id,
+            derivative,
+            len(self._state_list),
+        )
+
         return derivative
 
     def _prune_state_list(self, current_time: datetime) -> None:
         # filter out all derivatives older than `time_window` from our window list
+        old_len = len(self._state_list)
         self._state_list = [
             (time_start, time_end, state)
             for time_start, time_end, state in self._state_list
             if (current_time - time_end).total_seconds() < self._time_window
         ]
+        _LOGGER.debug(
+            "%s: Pruned %d elements from state list",
+            self.entity_id,
+            old_len - len(self._state_list),
+        )
 
     def _handle_invalid_source_state(self, state: State | None) -> bool:
         # Check the source state for unknown/unavailable condition. If unusable, write unknown/unavailable state and return false.
@@ -278,6 +302,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             except (InvalidOperation, TypeError):
                 self._attr_native_value = None
 
+        source_state = self.hass.states.get(self._sensor_source_id)
+        self._derive_and_set_attributes_from_state(source_state)
+
         def schedule_max_sub_interval_exceeded(source_state: State | None) -> None:
             """Schedule calculation using the source state and max_sub_interval.
 
@@ -298,6 +325,10 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 ) -> None:
                     """Calculate derivative based on time and reschedule."""
 
+                    _LOGGER.debug(
+                        "%s: Recalculating derivative due to max_sub_interval time elapsed",
+                        self.entity_id,
+                    )
                     self._prune_state_list(now)
                     derivative = self._calc_derivative_from_state_list(now)
                     self._write_native_value(derivative)
@@ -306,6 +337,11 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     if derivative != 0:
                         schedule_max_sub_interval_exceeded(source_state)
 
+                _LOGGER.debug(
+                    "%s: Scheduling max_sub_interval_callback in %s",
+                    self.entity_id,
+                    self._max_sub_interval,
+                )
                 self._cancel_max_sub_interval_exceeded_callback = async_call_later(
                     self.hass,
                     self._max_sub_interval,
@@ -315,6 +351,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         @callback
         def on_state_reported(event: Event[EventStateReportedData]) -> None:
             """Handle constant sensor state."""
+            _LOGGER.debug(
+                "%s: New state reported event: %s", self.entity_id, event.data
+            )
             self._cancel_max_sub_interval_exceeded_callback()
             new_state = event.data["new_state"]
             if not self._handle_invalid_source_state(new_state):
@@ -326,50 +365,64 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 # changed state, then we know it will still be zero.
                 return
             schedule_max_sub_interval_exceeded(new_state)
-            calc_derivative(new_state, new_state.state, event.data["old_last_reported"])
+            calc_derivative(
+                new_state,
+                new_state.state,
+                event.data["last_reported"],
+                event.data["old_last_reported"],
+            )
 
         @callback
         def on_state_changed(event: Event[EventStateChangedData]) -> None:
             """Handle changed sensor state."""
+            _LOGGER.debug("%s: New state changed event: %s", self.entity_id, event.data)
             self._cancel_max_sub_interval_exceeded_callback()
             new_state = event.data["new_state"]
+
             if not self._handle_invalid_source_state(new_state):
                 return
 
             assert new_state
+
+            original_unit = self._attr_native_unit_of_measurement
+            self._derive_and_set_attributes_from_state(new_state)
+            if original_unit != self._attr_native_unit_of_measurement:
+                self.async_write_ha_state()
+                return
+
             schedule_max_sub_interval_exceeded(new_state)
             old_state = event.data["old_state"]
             if old_state is not None:
-                calc_derivative(new_state, old_state.state, old_state.last_reported)
+                calc_derivative(
+                    new_state,
+                    old_state.state,
+                    new_state.last_updated,
+                    old_state.last_reported,
+                )
             else:
                 # On first state change from none, update availability
                 self.async_write_ha_state()
 
         def calc_derivative(
-            new_state: State, old_value: str, old_last_reported: datetime
+            new_state: State,
+            old_value: str,
+            new_timestamp: datetime,
+            old_timestamp: datetime,
         ) -> None:
             """Handle the sensor state changes."""
             if not _is_decimal_state(old_value):
                 if self._last_valid_state_time:
                     old_value = self._last_valid_state_time[0]
-                    old_last_reported = self._last_valid_state_time[1]
+                    old_timestamp = self._last_valid_state_time[1]
                 else:
                     # Sensor becomes valid for the first time, just keep the restored value
                     self.async_write_ha_state()
                     return
 
-            if self.native_unit_of_measurement is None:
-                unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                self._attr_native_unit_of_measurement = self._unit_template.format(
-                    "" if unit is None else unit
-                )
-
-            self._prune_state_list(new_state.last_reported)
+            self._prune_state_list(new_timestamp)
 
             try:
-                elapsed_time = (
-                    new_state.last_reported - old_last_reported
-                ).total_seconds()
+                elapsed_time = (new_timestamp - old_timestamp).total_seconds()
                 delta_value = Decimal(new_state.state) - Decimal(old_value)
                 new_derivative = (
                     delta_value
@@ -377,15 +430,32 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     / Decimal(self._unit_prefix)
                     * Decimal(self._unit_time)
                 )
+                _LOGGER.debug(
+                    "%s: Calculated new derivative segment as %f / %f / %f * %f = %f",
+                    self.entity_id,
+                    delta_value,
+                    elapsed_time,
+                    self._unit_prefix,
+                    self._unit_time,
+                    new_derivative,
+                )
 
             except ValueError as err:
-                _LOGGER.warning("While calculating derivative: %s", err)
+                _LOGGER.warning(
+                    "%s: While calculating derivative: %s", self.entity_id, err
+                )
             except DecimalException as err:
                 _LOGGER.warning(
-                    "Invalid state (%s > %s): %s", old_value, new_state.state, err
+                    "%s: Invalid state (%s > %s): %s",
+                    self.entity_id,
+                    old_value,
+                    new_state.state,
+                    err,
                 )
             except AssertionError as err:
-                _LOGGER.error("Could not calculate derivative: %s", err)
+                _LOGGER.error(
+                    "%s: Could not calculate derivative: %s", self.entity_id, err
+                )
 
             # For total inreasing sensors, the value is expected to continuously increase.
             # A negative derivative for a total increasing sensor likely indicates the
@@ -395,15 +465,17 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 == SensorStateClass.TOTAL_INCREASING
                 and new_derivative < 0
             ):
+                _LOGGER.debug(
+                    "%s: Dropping sample as source total_increasing sensor decreased",
+                    self.entity_id,
+                )
                 return
 
             # add latest derivative to the window list
-            self._state_list.append(
-                (old_last_reported, new_state.last_reported, new_derivative)
-            )
+            self._state_list.append((old_timestamp, new_timestamp, new_derivative))
             self._last_valid_state_time = (
                 new_state.state,
-                new_state.last_reported,
+                new_timestamp,
             )
 
             # If outside of time window just report derivative (is the same as modeling it in the window),
@@ -411,9 +483,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             if elapsed_time > self._time_window:
                 derivative = new_derivative
             else:
-                derivative = self._calc_derivative_from_state_list(
-                    new_state.last_reported
-                )
+                derivative = self._calc_derivative_from_state_list(new_timestamp)
             self._write_native_value(derivative)
 
         source_state = self.hass.states.get(self._sensor_source_id)

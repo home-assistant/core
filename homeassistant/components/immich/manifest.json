@@ -5,8 +5,9 @@
   "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/immich",
+  "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["aioimmich"],
   "quality_scale": "silver",
-  "requirements": ["aioimmich==0.10.2"]
+  "requirements": ["aioimmich==0.11.1"]
 }

@@ -18,7 +18,6 @@
           'air-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -28,7 +27,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -80,6 +78,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'active_time': 0,
+      'child_lock': False,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 131s',
       'mode': 'sleep',
       'percentage': None,
@@ -89,7 +89,6 @@
         'auto',
         'sleep',
       ]),
-      'screen_status': 'on',
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -119,7 +118,6 @@
           'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -129,7 +127,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -179,7 +176,9 @@
 # name: test_fan_state[Air Purifier 200s][fan.air_purifier_200s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': None,
       'child_lock': False,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 200s',
       'mode': 'manual',
       'night_light': 'off',
@@ -189,7 +188,6 @@
       'preset_modes': list([
         'sleep',
       ]),
-      'screen_status': True,
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -219,7 +217,6 @@
           '400s-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -229,7 +226,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -280,7 +276,9 @@
 # name: test_fan_state[Air Purifier 400s][fan.air_purifier_400s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': None,
       'child_lock': False,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 400s',
       'mode': 'manual',
       'night_light': 'off',
@@ -291,7 +289,6 @@
         'auto',
         'sleep',
       ]),
-      'screen_status': True,
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -321,7 +318,6 @@
           '600s-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -331,7 +327,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -382,7 +377,9 @@
 # name: test_fan_state[Air Purifier 600s][fan.air_purifier_600s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': None,
       'child_lock': False,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 600s',
       'mode': 'manual',
       'night_light': 'off',
@@ -393,7 +390,6 @@
         'auto',
         'sleep',
       ]),
-      'screen_status': True,
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -423,7 +419,6 @@
           'dimmable-bulb',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -433,7 +428,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -462,7 +456,6 @@
           'dimmable-switch',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -472,7 +465,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -501,7 +493,6 @@
           '200s-humidifier4321',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -511,7 +502,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -540,7 +530,6 @@
           '600s-humidifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -550,7 +539,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -579,7 +567,6 @@
           'outlet',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -589,7 +576,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -618,7 +604,6 @@
           'smarttowerfan',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -628,7 +613,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -671,7 +655,7 @@
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
-      'supported_features': <FanEntityFeature: 57>,
+      'supported_features': <FanEntityFeature: 59>,
       'translation_key': 'vesync',
       'unique_id': 'smarttowerfan',
       'unit_of_measurement': None,
@@ -681,12 +665,13 @@
 # name: test_fan_state[SmartTowerFan][fan.smarttowerfan]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'child_lock': False,
+      'active_time': None,
+      'display_status': 'off',
       'friendly_name': 'SmartTowerFan',
       'mode': 'normal',
-      'night_light': 'off',
-      'percentage': None,
-      'percentage_step': 7.6923076923076925,
+      'oscillating': True,
+      'percentage': 0,
+      'percentage_step': 8.333333333333334,
       'preset_mode': 'normal',
       'preset_modes': list([
         'advancedSleep',
@@ -694,8 +679,7 @@
         'normal',
         'turbo',
       ]),
-      'screen_status': False,
-      'supported_features': <FanEntityFeature: 57>,
+      'supported_features': <FanEntityFeature: 59>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.smarttowerfan',
@@ -724,7 +708,6 @@
           'tunable-bulb',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -734,7 +717,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -763,7 +745,6 @@
           'switch',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -773,7 +754,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),

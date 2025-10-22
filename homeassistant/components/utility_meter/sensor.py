@@ -20,7 +20,9 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import _suggest_report_issue
+from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+    _suggest_report_issue,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -39,7 +41,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import entity_platform, entity_registry as er
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
+from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -129,11 +131,6 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
-    device_info = async_device_info_to_link_from_entity(
-        hass,
-        source_entity_id,
-    )
-
     cron_pattern = None
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = timedelta(days=config_entry.options[CONF_METER_OFFSET])
@@ -154,6 +151,7 @@ async def async_setup_entry(
     if not tariffs:
         # Add single sensor, not gated by a tariff selector
         meter_sensor = UtilityMeterSensor(
+            hass,
             cron_pattern=cron_pattern,
             delta_values=delta_values,
             meter_offset=meter_offset,
@@ -166,7 +164,6 @@ async def async_setup_entry(
             tariff_entity=tariff_entity,
             tariff=None,
             unique_id=entry_id,
-            device_info=device_info,
             sensor_always_available=sensor_always_available,
         )
         meters.append(meter_sensor)
@@ -175,6 +172,7 @@ async def async_setup_entry(
         # Add sensors for each tariff
         for tariff in tariffs:
             meter_sensor = UtilityMeterSensor(
+                hass,
                 cron_pattern=cron_pattern,
                 delta_values=delta_values,
                 meter_offset=meter_offset,
@@ -187,7 +185,6 @@ async def async_setup_entry(
                 tariff_entity=tariff_entity,
                 tariff=tariff,
                 unique_id=f"{entry_id}_{tariff}",
-                device_info=device_info,
                 sensor_always_available=sensor_always_available,
             )
             meters.append(meter_sensor)
@@ -259,6 +256,7 @@ async def async_setup_platform(
             CONF_SENSOR_ALWAYS_AVAILABLE
         ]
         meter_sensor = UtilityMeterSensor(
+            hass,
             cron_pattern=conf_cron_pattern,
             delta_values=conf_meter_delta_values,
             meter_offset=conf_meter_offset,
@@ -359,6 +357,7 @@ class UtilityMeterSensor(RestoreSensor):
 
     def __init__(
         self,
+        hass,
         *,
         cron_pattern,
         delta_values,
@@ -374,11 +373,13 @@ class UtilityMeterSensor(RestoreSensor):
         unique_id,
         sensor_always_available,
         suggested_entity_id=None,
-        device_info=None,
     ):
         """Initialize the Utility Meter sensor."""
         self._attr_unique_id = unique_id
-        self._attr_device_info = device_info
+        self.device_entry = async_entity_id_to_device(
+            hass,
+            source_entity,
+        )
         self.entity_id = suggested_entity_id
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity

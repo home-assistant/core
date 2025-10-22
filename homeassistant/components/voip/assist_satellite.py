@@ -119,6 +119,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         AssistSatelliteEntity.__init__(self)
         RtpDatagramProtocol.__init__(self)
 
+        _LOGGER.debug("Assist satellite with device: %s", voip_device)
+
         self.config_entry = config_entry
 
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
@@ -254,7 +256,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         )
 
         try:
-            # VoIP ID is SIP header
+            # VoIP ID is SIP header - This represents what is set as the To header
             destination_endpoint = SipEndpoint(self.voip_device.voip_id)
         except ValueError:
             # VoIP ID is IP address
@@ -269,10 +271,12 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
         # Make the call
         sip_protocol: SipDatagramProtocol = self.hass.data[DOMAIN].protocol
+        _LOGGER.debug("Outgoing call to contact %s", self.voip_device.contact)
         call_info = sip_protocol.outgoing_call(
             source=source_endpoint,
             destination=destination_endpoint,
             rtp_port=self._rtp_port,
+            contact=self.voip_device.contact,
         )
 
         # Check if caller didn't pick up
@@ -364,6 +368,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         if self._check_hangup_task is not None:
             self._check_hangup_task.cancel()
             self._check_hangup_task = None
+        self._rtp_port = None
 
     def connection_made(self, transport):
         """Server is ready."""

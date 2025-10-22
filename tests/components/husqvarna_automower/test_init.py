@@ -3,7 +3,7 @@
 from asyncio import Event
 from collections.abc import Callable
 from copy import deepcopy
-from datetime import datetime, timedelta
+from datetime import datetime, time as dt_time, timedelta
 import http
 import time
 from unittest.mock import AsyncMock, patch
@@ -14,7 +14,7 @@ from aioautomower.exceptions import (
     HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
 )
-from aioautomower.model import MowerAttributes, WorkArea
+from aioautomower.model import Calendar, MowerAttributes, MowerStates, WorkArea
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -192,17 +192,11 @@ async def test_websocket_not_available(
     await hass.async_block_till_done()
     assert f"{error_msg} Trying to reconnect: Boom" in caplog.text
 
-    # Simulate a successful connection
     caplog.clear()
-    await mock_called.wait()
-    mock_called.clear()
-    await hass.async_block_till_done()
-    assert mock.call_count == 2
-    assert "Trying to reconnect: Boom" not in caplog.text
 
     # Simulate hass shutting down
     await hass.async_stop()
-    assert mock.call_count == 2
+    assert mock.call_count == 1
 
 
 async def test_device_info(
@@ -312,8 +306,9 @@ async def test_coordinator_automatic_registry_cleanup(
         dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     )
     # Remove mower 2 and check if it worked
-    mower2 = values.pop("1234")
-    mock_automower_client.get_status.return_value = values
+    values_copy = deepcopy(values)
+    mower2 = values_copy.pop("1234")
+    mock_automower_client.get_status.return_value = values_copy
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -327,8 +322,9 @@ async def test_coordinator_automatic_registry_cleanup(
         == current_devices - 1
     )
     # Add mower 2 and check if it worked
-    values["1234"] = mower2
-    mock_automower_client.get_status.return_value = values
+    values_copy = deepcopy(values)
+    values_copy["1234"] = mower2
+    mock_automower_client.get_status.return_value = values_copy
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -342,8 +338,9 @@ async def test_coordinator_automatic_registry_cleanup(
     )
 
     # Remove mower 1 and check if it worked
-    mower1 = values.pop(TEST_MOWER_ID)
-    mock_automower_client.get_status.return_value = values
+    values_copy = deepcopy(values)
+    mower1 = values_copy.pop(TEST_MOWER_ID)
+    mock_automower_client.get_status.return_value = values_copy
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -357,11 +354,9 @@ async def test_coordinator_automatic_registry_cleanup(
         == current_devices - 1
     )
     # Add mower 1 and check if it worked
-    values[TEST_MOWER_ID] = mower1
-    mock_automower_client.get_status.return_value = values
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    values_copy = deepcopy(values)
+    values_copy[TEST_MOWER_ID] = mower1
+    mock_automower_client.get_status.return_value = values_copy
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -384,14 +379,45 @@ async def test_add_and_remove_work_area(
     values: dict[str, MowerAttributes],
 ) -> None:
     """Test adding a work area in runtime."""
+    websocket_values = deepcopy(values)
+    callback_holder: dict[str, Callable] = {}
+
+    @callback
+    def fake_register_websocket_response(
+        cb: Callable[[dict[str, MowerAttributes]], None],
+    ) -> None:
+        callback_holder["cb"] = cb
+
+    mock_automower_client.register_data_callback.side_effect = (
+        fake_register_websocket_response
+    )
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     current_entites_start = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
-    values[TEST_MOWER_ID].work_area_names.append("new work area")
-    values[TEST_MOWER_ID].work_area_dict.update({1: "new work area"})
-    values[TEST_MOWER_ID].work_areas.update(
+    await hass.async_block_till_done()
+
+    assert mock_automower_client.register_data_callback.called
+    assert "cb" in callback_holder
+
+    new_task = Calendar(
+        start=dt_time(hour=11),
+        duration=timedelta(60),
+        monday=True,
+        tuesday=True,
+        wednesday=True,
+        thursday=True,
+        friday=True,
+        saturday=True,
+        sunday=True,
+        work_area_id=1,
+    )
+    websocket_values[TEST_MOWER_ID].calendar.tasks.append(new_task)
+    poll_values = deepcopy(websocket_values)
+    poll_values[TEST_MOWER_ID].work_area_names.append("new work area")
+    poll_values[TEST_MOWER_ID].work_area_dict.update({1: "new work area"})
+    poll_values[TEST_MOWER_ID].work_areas.update(
         {
             1: WorkArea(
                 name="new work area",
@@ -404,10 +430,15 @@ async def test_add_and_remove_work_area(
             )
         }
     )
-    mock_automower_client.get_status.return_value = values
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
+    mock_automower_client.get_status.return_value = poll_values
+
+    callback_holder["cb"](websocket_values)
     await hass.async_block_till_done()
+    assert mock_automower_client.get_status.called
+
+    state = hass.states.get("sensor.test_mower_1_new_work_area_progress")
+    assert state is not None
+    assert state.state == "12"
     current_entites_after_addition = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
@@ -419,15 +450,21 @@ async def test_add_and_remove_work_area(
         + ADDITIONAL_SWITCH_ENTITIES
     )
 
-    values[TEST_MOWER_ID].work_area_names.remove("new work area")
-    del values[TEST_MOWER_ID].work_area_dict[1]
-    del values[TEST_MOWER_ID].work_areas[1]
-    values[TEST_MOWER_ID].work_area_names.remove("Front lawn")
-    del values[TEST_MOWER_ID].work_area_dict[123456]
-    del values[TEST_MOWER_ID].work_areas[123456]
-    del values[TEST_MOWER_ID].calendar.tasks[:2]
-    values[TEST_MOWER_ID].mower.work_area_id = 654321
-    mock_automower_client.get_status.return_value = values
+    poll_values[TEST_MOWER_ID].work_area_names.remove("new work area")
+    del poll_values[TEST_MOWER_ID].work_area_dict[1]
+    del poll_values[TEST_MOWER_ID].work_areas[1]
+    poll_values[TEST_MOWER_ID].work_area_names.remove("Front lawn")
+    del poll_values[TEST_MOWER_ID].work_area_dict[123456]
+    del poll_values[TEST_MOWER_ID].work_areas[123456]
+
+    poll_values[TEST_MOWER_ID].calendar.tasks = [
+        task
+        for task in poll_values[TEST_MOWER_ID].calendar.tasks
+        if task.work_area_id not in [1, 123456]
+    ]
+
+    poll_values[TEST_MOWER_ID].mower.work_area_id = 654321
+    mock_automower_client.get_status.return_value = poll_values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -441,3 +478,214 @@ async def test_add_and_remove_work_area(
         - ADDITIONAL_NUMBER_ENTITIES
         - ADDITIONAL_SENSOR_ENTITIES
     )
+
+
+@pytest.mark.parametrize(
+    ("mower1_connected", "mower1_state", "mower2_connected", "mower2_state"),
+    [
+        (True, MowerStates.OFF, False, MowerStates.OFF),  # False
+        (False, MowerStates.PAUSED, False, MowerStates.OFF),  # False
+        (False, MowerStates.OFF, True, MowerStates.OFF),  # False
+        (False, MowerStates.OFF, False, MowerStates.PAUSED),  # False
+        (True, MowerStates.OFF, True, MowerStates.OFF),  # False
+        (False, MowerStates.OFF, False, MowerStates.OFF),  # False
+    ],
+)
+async def test_dynamic_polling(
+    hass: HomeAssistant,
+    mock_automower_client,
+    mock_config_entry,
+    freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
+    mower1_connected: bool,
+    mower1_state: MowerStates,
+    mower2_connected: bool,
+    mower2_state: MowerStates,
+) -> None:
+    """Test that the ws_ready_callback triggers an attempt to start the Watchdog task.
+
+    and that the pong callback stops polling when all mowers are inactive.
+    """
+    websocket_values = deepcopy(values)
+    poll_values = deepcopy(values)
+    callback_holder: dict[str, Callable] = {}
+
+    @callback
+    def fake_register_websocket_response(
+        cb: Callable[[dict[str, MowerAttributes]], None],
+    ) -> None:
+        callback_holder["data_cb"] = cb
+
+    mock_automower_client.register_data_callback.side_effect = (
+        fake_register_websocket_response
+    )
+    ws_ready_callbacks: list[Callable[[], None]] = []
+
+    @callback
+    def fake_register_ws_ready_callback(cb: Callable[[], None]) -> None:
+        ws_ready_callbacks.append(cb)
+
+    mock_automower_client.register_ws_ready_callback.side_effect = (
+        fake_register_ws_ready_callback
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    for cb in ws_ready_callbacks:
+        cb()
+
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 1
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 2
+
+    # websocket is still active, but mowers are inactive -> no polling required
+    poll_values[TEST_MOWER_ID].metadata.connected = mower1_connected
+    poll_values[TEST_MOWER_ID].mower.state = mower1_state
+    poll_values["1234"].metadata.connected = mower2_connected
+    poll_values["1234"].mower.state = mower2_state
+
+    mock_automower_client.get_status.return_value = poll_values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 3
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 4
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 4
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 4
+
+    # websocket is still active, and mowers are active -> polling required
+    mock_automower_client.get_status.reset_mock()
+    assert mock_automower_client.get_status.call_count == 0
+    poll_values[TEST_MOWER_ID].metadata.connected = True
+    poll_values[TEST_MOWER_ID].mower.state = MowerStates.PAUSED
+    poll_values["1234"].metadata.connected = False
+    poll_values["1234"].mower.state = MowerStates.OFF
+    websocket_values = deepcopy(poll_values)
+    callback_holder["data_cb"](websocket_values)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 1
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("mower1_connected", "mower1_state", "mower2_connected", "mower2_state"),
+    [
+        (True, MowerStates.OFF, False, MowerStates.OFF),  # False
+        (False, MowerStates.PAUSED, False, MowerStates.OFF),  # False
+        (False, MowerStates.OFF, True, MowerStates.OFF),  # False
+        (False, MowerStates.OFF, False, MowerStates.PAUSED),  # False
+        (True, MowerStates.OFF, True, MowerStates.OFF),  # False
+        (False, MowerStates.OFF, False, MowerStates.OFF),  # False
+    ],
+)
+async def test_websocket_watchdog(
+    hass: HomeAssistant,
+    mock_automower_client,
+    mock_config_entry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    values: dict[str, MowerAttributes],
+    mower1_connected: bool,
+    mower1_state: MowerStates,
+    mower2_connected: bool,
+    mower2_state: MowerStates,
+) -> None:
+    """Test that the ws_ready_callback triggers an attempt to start the Watchdog task.
+
+    and that the pong callback stops polling when all mowers are inactive.
+    """
+    poll_values = deepcopy(values)
+    callback_holder: dict[str, Callable] = {}
+
+    @callback
+    def fake_register_websocket_response(
+        cb: Callable[[dict[str, MowerAttributes]], None],
+    ) -> None:
+        callback_holder["data_cb"] = cb
+
+    mock_automower_client.register_data_callback.side_effect = (
+        fake_register_websocket_response
+    )
+    ws_ready_callbacks: list[Callable[[], None]] = []
+
+    @callback
+    def fake_register_ws_ready_callback(cb: Callable[[], None]) -> None:
+        ws_ready_callbacks.append(cb)
+
+    mock_automower_client.register_ws_ready_callback.side_effect = (
+        fake_register_ws_ready_callback
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    for cb in ws_ready_callbacks:
+        cb()
+
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 1
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 2
+
+    # websocket is still active, but mowers are inactive -> no polling required
+    poll_values[TEST_MOWER_ID].metadata.connected = mower1_connected
+    poll_values[TEST_MOWER_ID].mower.state = mower1_state
+    poll_values["1234"].metadata.connected = mower2_connected
+    poll_values["1234"].mower.state = mower2_state
+
+    mock_automower_client.get_status.return_value = poll_values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 3
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 4
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 4
+
+    # Simulate Pong loss and reset mock -> polling required
+    mock_automower_client.send_empty_message.return_value = False
+    mock_automower_client.get_status.reset_mock()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 0
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 1
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 2

@@ -3,6 +3,7 @@
   dict({
     'battery': dict({
       'battery_percent': 100,
+      'remaining_charging_time': 309.0,
     }),
     'calendar': dict({
       'tasks': list([
@@ -63,8 +64,6 @@
       'stay_out_zones': True,
       'work_areas': True,
     }),
-    'messages': list([
-    ]),
     'metadata': dict({
       'connected': True,
       'status_dateteime': '2023-06-05T00:00:00+00:00',

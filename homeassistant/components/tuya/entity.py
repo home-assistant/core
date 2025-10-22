@@ -13,16 +13,6 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .models import EnumTypeData, IntegerTypeData
 
-_DPTYPE_MAPPING: dict[str, DPType] = {
-    "bitmap": DPType.BITMAP,
-    "bool": DPType.BOOLEAN,
-    "enum": DPType.ENUM,
-    "json": DPType.JSON,
-    "raw": DPType.RAW,
-    "string": DPType.STRING,
-    "value": DPType.INTEGER,
-}
-
 
 class TuyaEntity(Entity):
     """Tuya base device."""
@@ -72,22 +62,17 @@ class TuyaEntity(Entity):
         dptype: Literal[DPType.INTEGER],
     ) -> IntegerTypeData | None: ...
 
-    @overload
     def find_dpcode(
         self,
         dpcodes: str | DPCode | tuple[DPCode, ...] | None,
         *,
         prefer_function: bool = False,
-    ) -> DPCode | None: ...
+        dptype: DPType,
+    ) -> EnumTypeData | IntegerTypeData | None:
+        """Find type information for a matching DP code available for this device."""
+        if dptype not in (DPType.ENUM, DPType.INTEGER):
+            raise NotImplementedError("Only ENUM and INTEGER types are supported")
 
-    def find_dpcode(
-        self,
-        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
-        *,
-        prefer_function: bool = False,
-        dptype: DPType | None = None,
-    ) -> DPCode | EnumTypeData | IntegerTypeData | None:
-        """Find a matching DP code available on for this device."""
         if dpcodes is None:
             return None
 
@@ -99,11 +84,6 @@ class TuyaEntity(Entity):
         order = ["status_range", "function"]
         if prefer_function:
             order = ["function", "status_range"]
-
-        # When we are not looking for a specific datatype, we can append status for
-        # searching
-        if not dptype:
-            order.append("status")
 
         for dpcode in dpcodes:
             for key in order:
@@ -133,31 +113,6 @@ class TuyaEntity(Entity):
                         continue
                     return integer_type
 
-                if dptype not in (DPType.ENUM, DPType.INTEGER):
-                    return dpcode
-
-        return None
-
-    def get_dptype(
-        self, dpcode: DPCode | None, prefer_function: bool = False
-    ) -> DPType | None:
-        """Find a matching DPCode data type available on for this device."""
-        if dpcode is None:
-            return None
-
-        order = ["status_range", "function"]
-        if prefer_function:
-            order = ["function", "status_range"]
-        for key in order:
-            if dpcode in getattr(self.device, key):
-                current_type = getattr(self.device, key)[dpcode].type
-                try:
-                    return DPType(current_type)
-                except ValueError:
-                    # Sometimes, we get ill-formed DPTypes from the cloud,
-                    # this fixes them and maps them to the correct DPType.
-                    return _DPTYPE_MAPPING.get(current_type)
-
         return None
 
     async def async_added_to_hass(self) -> None:
@@ -171,7 +126,9 @@ class TuyaEntity(Entity):
         )
 
     async def _handle_state_update(
-        self, updated_status_properties: list[str] | None
+        self,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict | None = None,
     ) -> None:
         self.async_write_ha_state()
 
