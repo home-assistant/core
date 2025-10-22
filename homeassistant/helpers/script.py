@@ -761,13 +761,10 @@ class _ScriptRun:
         if_data = await self._script._async_get_if_data(self._step)  # noqa: SLF001
 
         test_conditions: bool | None = False
-        try:
-            with trace_path("if"):
-                test_conditions = self._test_conditions(
-                    if_data["if_conditions"], "if", "condition"
-                )
-        except exceptions.ConditionError as ex:
-            self._log("Error in 'if' evaluation:\n%s", ex, level=logging.WARNING)
+        with trace_path("if"):
+            test_conditions = self._test_conditions(
+                if_data["if_conditions"], "if", "condition"
+            )
 
         if test_conditions:
             trace_set_result(choice="then")
@@ -858,15 +855,9 @@ class _ScriptRun:
             ]
             for iteration in itertools.count(1):
                 set_repeat_var(iteration)
-                try:
-                    if self._stop.done():
-                        break
-                    if not self._test_conditions(conditions, "while"):
-                        break
-                except exceptions.ConditionError as ex:
-                    self._log(
-                        "Error in 'while' evaluation:\n%s", ex, level=logging.WARNING
-                    )
+                if self._stop.done():
+                    break
+                if not self._test_conditions(conditions, "while"):
                     break
 
                 if iteration > 1:
@@ -908,15 +899,9 @@ class _ScriptRun:
             for iteration in itertools.count(1):
                 set_repeat_var(iteration)
                 await async_run_sequence(iteration)
-                try:
-                    if self._stop.done():
-                        break
-                    if self._test_conditions(conditions, "until") in [True, None]:
-                        break
-                except exceptions.ConditionError as ex:
-                    self._log(
-                        "Error in 'until' evaluation:\n%s", ex, level=logging.WARNING
-                    )
+                if self._stop.done():
+                    break
+                if self._test_conditions(conditions, "until") in [True, None]:
                     break
 
                 if iteration >= REPEAT_WARN_ITERATIONS:
