@@ -74,7 +74,7 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, console.id)},
-            manufacturer="Microsoft Corporation",
+            manufacturer="Microsoft",
             model=MAP_MODEL.get(self._console.console_type, "Unknown"),
             name=console.name,
         )
