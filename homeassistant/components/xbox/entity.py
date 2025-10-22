@@ -42,7 +42,7 @@ class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, xuid)},
-            manufacturer="Microsoft",
+            manufacturer="Microsoft Corporation",
             model="Xbox Network",
             name=self.data.gamertag,
         )
