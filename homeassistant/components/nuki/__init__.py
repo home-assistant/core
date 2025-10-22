@@ -110,6 +110,7 @@ async def _create_webhook(
             translation_placeholders={
                 "base_url": hass_url,
                 "network_link": "https://my.home-assistant.io/redirect/network/",
+                "sample_ip": "http://192.168.1.10:8123",
             },
         )
     else:
