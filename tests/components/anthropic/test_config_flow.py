@@ -24,7 +24,11 @@ from homeassistant.components.anthropic.const import (
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_CITY,
+    CONF_WEB_SEARCH_COUNTRY,
     CONF_WEB_SEARCH_MAX_USES,
+    CONF_WEB_SEARCH_REGION,
+    CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
@@ -126,7 +130,7 @@ async def test_creating_conversation_subentry(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "set_options"
+    assert result["step_id"] == "init"
     assert not result["errors"]
 
     result2 = await hass.config_entries.subentries.async_configure(
@@ -172,18 +176,37 @@ async def test_subentry_options_thinking_budget_more_than_max(
     options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
+
+    # Configure initial step
     options = await hass.config_entries.subentries.async_configure(
         options_flow["flow_id"],
         {
             "prompt": "Speak like a pirate",
-            "max_tokens": 8192,
-            "chat_model": "claude-3-7-sonnet-latest",
-            "temperature": 1,
-            "thinking_budget": 16384,
             "recommended": False,
         },
     )
-    await hass.async_block_till_done()
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+
+    # Configure advanced step
+    options = await hass.config_entries.subentries.async_configure(
+        options["flow_id"],
+        {
+            "max_tokens": 8192,
+            "chat_model": "claude-3-7-sonnet-latest",
+            "temperature": 1,
+        },
+    )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "model"
+
+    # Configure model step
+    options = await hass.config_entries.subentries.async_configure(
+        options["flow_id"],
+        {
+            "thinking_budget": 16384,
+        },
+    )
     assert options["type"] is FlowResultType.FORM
     assert options["errors"] == {"thinking_budget": "thinking_budget_too_large"}
 
@@ -260,30 +283,6 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
     assert result2["errors"] == {"base": error}
 
 
-async def test_subentry_web_search_unsupported_model(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
-) -> None:
-    """Test error when enabling web search with unsupported model."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
-    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_id
-    )
-    options = await hass.config_entries.subentries.async_configure(
-        options_flow["flow_id"],
-        {
-            "prompt": "You are a helpful assistant",
-            "max_tokens": 8192,
-            "chat_model": "claude-3-haiku-20240307",
-            "recommended": False,
-            "web_search": True,
-            "web_search_max_uses": 5,
-        },
-    )
-    await hass.async_block_till_done()
-    assert options["type"] is FlowResultType.FORM
-    assert options["errors"] == {"web_search": "web_search_unsupported_model"}
-
-
 async def test_subentry_web_search_user_location(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
@@ -292,6 +291,28 @@ async def test_subentry_web_search_user_location(
     options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
+
+    # Configure initial step
+    options = await hass.config_entries.subentries.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "You are a helpful assistant",
+            "recommended": False,
+        },
+    )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+
+    # Configure advanced step
+    options = await hass.config_entries.subentries.async_configure(
+        options["flow_id"],
+        {
+            "max_tokens": 8192,
+            "chat_model": "claude-sonnet-4-5",
+        },
+    )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "model"
 
     hass.config.country = "US"
     hass.config.time_zone = "America/Los_Angeles"
@@ -315,13 +336,10 @@ async def test_subentry_web_search_user_location(
             ],
         ),
     ) as mock_create:
+        # Configure model step
         options = await hass.config_entries.subentries.async_configure(
-            options_flow["flow_id"],
+            options["flow_id"],
             {
-                "prompt": "You are a helpful assistant",
-                "max_tokens": 8192,
-                "chat_model": "claude-sonnet-4-5",
-                "recommended": False,
                 "web_search": True,
                 "web_search_max_uses": 5,
                 "user_location": True,
@@ -360,67 +378,178 @@ async def test_subentry_web_search_user_location(
 @pytest.mark.parametrize(
     ("current_options", "new_options", "expected_options"),
     [
-        (
-            {
-                CONF_RECOMMENDED: True,
-                CONF_PROMPT: "bla",
-            },
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.3,
-                CONF_LLM_HASS_API: [],
-            },
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
-                CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_MAX_USES: 5,
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-            },
-        ),
-        (
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
-                CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_MAX_USES: 5,
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-            },
-            {
-                CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: ["assist"],
-                CONF_PROMPT: "",
-            },
-            {
-                CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: ["assist"],
-                CONF_PROMPT: "",
-            },
-        ),
-        (
+        (  # Test converting single llm api format to list
             {
                 CONF_RECOMMENDED: True,
                 CONF_PROMPT: "",
                 CONF_LLM_HASS_API: "assist",
             },
+            (
+                {
+                    CONF_RECOMMENDED: True,
+                    CONF_PROMPT: "",
+                    CONF_LLM_HASS_API: ["assist"],
+                },
+            ),
             {
                 CONF_RECOMMENDED: True,
                 CONF_PROMPT: "",
                 CONF_LLM_HASS_API: ["assist"],
             },
+        ),
+        (  # Model with no model-specific options
             {
                 CONF_RECOMMENDED: True,
-                CONF_PROMPT: "",
+                CONF_PROMPT: "bla",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pirate",
+                    CONF_LLM_HASS_API: [],
+                },
+                {
+                    CONF_CHAT_MODEL: "claude-3-opus",
+                    CONF_TEMPERATURE: 1.0,
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 1.0,
+                CONF_CHAT_MODEL: "claude-3-opus",
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+            },
+        ),
+        (  # Model with web search options
+            {
+                CONF_RECOMMENDED: False,
+                CONF_CHAT_MODEL: "claude-sonnet-4-5",
+                CONF_PROMPT: "bla",
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_MAX_USES: 4,
+                CONF_WEB_SEARCH_USER_LOCATION: True,
+                CONF_WEB_SEARCH_CITY: "San Francisco",
+                CONF_WEB_SEARCH_REGION: "California",
+                CONF_WEB_SEARCH_COUNTRY: "US",
+                CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pirate",
+                    CONF_LLM_HASS_API: [],
+                },
+                {
+                    CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
+                    CONF_TEMPERATURE: 1.0,
+                },
+                {
+                    CONF_WEB_SEARCH: False,
+                    CONF_WEB_SEARCH_MAX_USES: 10,
+                    CONF_WEB_SEARCH_USER_LOCATION: False,
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 1.0,
+                CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 10,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+            },
+        ),
+        (  # Model with thinking budget options
+            {
+                CONF_RECOMMENDED: False,
+                CONF_CHAT_MODEL: "claude-sonnet-4-5",
+                CONF_PROMPT: "bla",
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 5,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_THINKING_BUDGET: 4096,
+            },
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pirate",
+                    CONF_LLM_HASS_API: [],
+                },
+                {
+                    CONF_CHAT_MODEL: "claude-sonnet-4-5",
+                    CONF_TEMPERATURE: 1.0,
+                },
+                {
+                    CONF_WEB_SEARCH: False,
+                    CONF_WEB_SEARCH_MAX_USES: 10,
+                    CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_THINKING_BUDGET: 2048,
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 1.0,
+                CONF_CHAT_MODEL: "claude-sonnet-4-5",
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: 2048,
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 10,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+            },
+        ),
+        (  # Test switching from recommended to custom options
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "bla",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pirate",
+                    CONF_LLM_HASS_API: [],
+                },
+                {
+                    CONF_TEMPERATURE: 0.3,
+                },
+                {},
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 5,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+            },
+        ),
+        (  # Test switching from custom to recommended options
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 5,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+            },
+            (
+                {
+                    CONF_RECOMMENDED: True,
+                    CONF_LLM_HASS_API: ["assist"],
+                    CONF_PROMPT: "",
+                },
+            ),
+            {
+                CONF_RECOMMENDED: True,
                 CONF_LLM_HASS_API: ["assist"],
+                CONF_PROMPT: "",
             },
         ),
     ],
@@ -440,22 +569,34 @@ async def test_subentry_options_switching(
     )
     await hass.async_block_till_done()
 
-    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    if current_options.get(CONF_RECOMMENDED) != new_options.get(CONF_RECOMMENDED):
-        options_flow = await hass.config_entries.subentries.async_configure(
-            options_flow["flow_id"],
-            {
-                **current_options,
-                CONF_RECOMMENDED: new_options[CONF_RECOMMENDED],
-            },
+    assert subentry_flow["step_id"] == "init"
+
+    for step_options in new_options:
+        assert subentry_flow["type"] == FlowResultType.FORM
+        assert not subentry_flow["errors"]
+
+        # Test that current options are showed as suggested values:
+        for key in subentry_flow["data_schema"].schema:
+            if (
+                isinstance(key.description, dict)
+                and "suggested_value" in key.description
+                and key in current_options
+            ):
+                current_option = current_options[key]
+                if key == CONF_LLM_HASS_API and isinstance(current_option, str):
+                    current_option = [current_option]
+                assert key.description["suggested_value"] == current_option
+
+        # Configure current step
+        subentry_flow = await hass.config_entries.subentries.async_configure(
+            subentry_flow["flow_id"],
+            step_options,
         )
-    options = await hass.config_entries.subentries.async_configure(
-        options_flow["flow_id"],
-        new_options,
-    )
-    await hass.async_block_till_done()
-    assert options["type"] is FlowResultType.ABORT
-    assert options["reason"] == "reconfigure_successful"
+
+    assert "errors" not in subentry_flow
+    assert subentry_flow["type"] is FlowResultType.ABORT
+    assert subentry_flow["reason"] == "reconfigure_successful"
     assert subentry.data == expected_options
