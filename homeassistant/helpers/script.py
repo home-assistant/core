@@ -864,20 +864,19 @@ class _ScriptRun:
                     if iteration > REPEAT_WARN_ITERATIONS:
                         if not warned_too_many_loops:
                             warned_too_many_loops = True
-                            _LOGGER.warning(
-                                "While condition %s in script `%s` looped %s times",
+                            self._log(
+                                "While condition %s looped %s times",
                                 repeat[CONF_WHILE],
-                                self._script.name,
                                 REPEAT_WARN_ITERATIONS,
+                                level=logging.WARNING,
                             )
 
                         if iteration > REPEAT_TERMINATE_ITERATIONS:
-                            _LOGGER.critical(
-                                "While condition %s in script `%s` "
-                                "terminated because it looped %s times",
+                            self._log(
+                                "While condition %s terminated because it looped %s times",
                                 repeat[CONF_WHILE],
-                                self._script.name,
                                 REPEAT_TERMINATE_ITERATIONS,
+                                level=logging.CRITICAL,
                             )
                             raise _AbortScript(
                                 f"While condition {repeat[CONF_WHILE]} "
@@ -907,20 +906,19 @@ class _ScriptRun:
                 if iteration >= REPEAT_WARN_ITERATIONS:
                     if not warned_too_many_loops:
                         warned_too_many_loops = True
-                        _LOGGER.warning(
-                            "Until condition %s in script `%s` looped %s times",
+                        self._log(
+                            "Until condition %s looped %s times",
                             repeat[CONF_UNTIL],
-                            self._script.name,
                             REPEAT_WARN_ITERATIONS,
+                            level=logging.WARNING,
                         )
 
                     if iteration >= REPEAT_TERMINATE_ITERATIONS:
-                        _LOGGER.critical(
-                            "Until condition %s in script `%s` "
-                            "terminated because it looped %s times",
+                        self._log(
+                            "Until condition %s terminated because it looped %s times",
                             repeat[CONF_UNTIL],
-                            self._script.name,
                             REPEAT_TERMINATE_ITERATIONS,
+                            level=logging.CRITICAL,
                         )
                         raise _AbortScript(
                             f"Until condition {repeat[CONF_UNTIL]} "
