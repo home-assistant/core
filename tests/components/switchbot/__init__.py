@@ -859,3 +859,315 @@ AIR_PURIFIER_TABLE_VOC_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+EVAPORATIVE_HUMIDIFIER_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Evaporative Humidifier",
+    manufacturer_data={
+        2409: b"\xa0\xa3\xb3,\x9c\xe68\x86\x88\xb5\x99\x12\x10\x1b\x00\x85]",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"#\x00\x00\x15\x1c\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Evaporative Humidifier",
+        manufacturer_data={
+            2409: b"\xa0\xa3\xb3,\x9c\xe68\x86\x88\xb5\x99\x12\x10\x1b\x00\x85]",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"#\x00\x00\x15\x1c\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Evaporative Humidifier"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+BULB_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Bulb",
+    manufacturer_data={
+        2409: b"@L\xca\xa7_\x12\x02\x81\x12\x00\x00",
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"u\x00d",
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Bulb",
+        manufacturer_data={
+            2409: b"@L\xca\xa7_\x12\x02\x81\x12\x00\x00",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"u\x00d",
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Bulb"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+CEILING_LIGHT_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Ceiling Light",
+    manufacturer_data={
+        2409: b"\xef\xfe\xfb\x9d\x10\xfe\n\x01\x18\xf3\xa4",
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"q\x00",
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Ceiling Light",
+        manufacturer_data={
+            2409: b"\xef\xfe\xfb\x9d\x10\xfe\n\x01\x18\xf3$",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"q\x00",
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Ceiling Light"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+STRIP_LIGHT_3_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Strip Light 3",
+    manufacturer_data={
+        2409: b'\xc0N0\xe0U\x9a\x85\x9e"\xd0\x00\x00\x00\x00\x00\x00\x12\x91\x00',
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb1"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Strip Light 3",
+        manufacturer_data={
+            2409: b'\xc0N0\xe0U\x9a\x85\x9e"\xd0\x00\x00\x00\x00\x00\x00\x12\x91\x00',
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb1"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Strip Light 3"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+FLOOR_LAMP_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Floor Lamp",
+    manufacturer_data={
+        2409: b'\xa0\x85\xe3e,\x06P\xaa"\xd4\x00\x00\x00\x00\x00\x00\r\x93\x00',
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb0"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Floor Lamp",
+        manufacturer_data={
+            2409: b'\xa0\x85\xe3e,\x06P\xaa"\xd4\x00\x00\x00\x00\x00\x00\r\x93\x00',
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb0"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Floor Lamp"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+RGBICWW_STRIP_LIGHT_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="RGBICWW Strip Light",
+    manufacturer_data={
+        2409: b'(7/L\x94\xb2\x0c\x9e"\x00\x11:\x00',
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb3"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="RGBICWW Strip Light",
+        manufacturer_data={
+            2409: b'(7/L\x94\xb2\x0c\x9e"\x00\x11:\x00',
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb3"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "RGBICWW Strip Light"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+RGBICWW_FLOOR_LAMP_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="RGBICWW Floor Lamp",
+    manufacturer_data={
+        2409: b'\xdc\x06u\xa6\xfb\xb2y\x9e"\x00\x11\xb8\x00',
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb4"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="RGBICWW Floor Lamp",
+        manufacturer_data={
+            2409: b'\xdc\x06u\xa6\xfb\xb2y\x9e"\x00\x11\xb8\x00',
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb4"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "RGBICWW Floor Lamp"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+PLUG_MINI_EU_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Plug Mini (EU)",
+    manufacturer_data={
+        2409: b"\x94\xa9\x90T\x85^?\xa1\x00\x00\x04\xe6\x00\x00\x00\x00",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"?\x00\x00\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Plug Mini (EU)",
+        manufacturer_data={
+            2409: b"\x94\xa9\x90T\x85^?\xa1\x00\x00\x04\xe6\x00\x00\x00\x00",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"?\x00\x00\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Plug Mini (EU)"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+RELAY_SWITCH_2PM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Relay Switch 2PM",
+    manufacturer_data={
+        2409: b"\xc0N0\xdd\xb9\xf2\x8a\xc1\x00\x00\x00\x00\x00F\x00\x00"
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"=\x00\x00\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Relay Switch 2PM",
+        manufacturer_data={
+            2409: b"\xc0N0\xdd\xb9\xf2\x8a\xc1\x00\x00\x00\x00\x00F\x00\x00"
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"=\x00\x00\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Relay Switch 2PM"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+K11_PLUS_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="K11+ Vacuum",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xe4\xbf\xd8\x0b\x01\x11f\x00\x16M\x15"},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00M\x00\x10\xfb\xa8"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="K11+ Vacuum",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\xe4\xbf\xd8\x0b\x01\x11f\x00\x16M\x15"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00M\x00\x10\xfb\xa8"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "K11+ Vacuum"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+RELAY_SWITCH_1_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Relay Switch 1",
+    manufacturer_data={2409: b"$X|\x0866G\x81\x00\x00\x001\x00\x00\x00\x00"},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b";\x00\x00\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Relay Switch 1",
+        manufacturer_data={2409: b"$X|\x0866G\x81\x00\x00\x001\x00\x00\x00\x00"},
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"=\x00\x00\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Relay Switch 1"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+GARAGE_DOOR_OPENER_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Garage Door Opener",
+    manufacturer_data={2409: b"$X|\x05BN\x0f\x00\x00\x03\x00\x00\x00\x00\x00\x00"},
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b">\x00\x00\x00",
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Garage Door Opener",
+        manufacturer_data={2409: b"$X|\x05BN\x0f\x00\x00\x03\x00\x00\x00\x00\x00\x00"},
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b">\x00\x00\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Garage Door Opener"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)

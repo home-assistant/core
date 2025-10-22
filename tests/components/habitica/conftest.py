@@ -10,6 +10,7 @@ from habiticalib import (
     HabiticaContentResponse,
     HabiticaErrorResponse,
     HabiticaGroupMembersResponse,
+    HabiticaGroupsResponse,
     HabiticaLoginResponse,
     HabiticaQuestResponse,
     HabiticaResponse,
@@ -29,6 +30,7 @@ from habiticalib import (
 import pytest
 
 from homeassistant.components.habitica.const import CONF_API_USER, DEFAULT_URL, DOMAIN
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 
@@ -55,6 +57,30 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_API_KEY: "cd0e5985-17de-4b4f-849e-5d506c5e4382",
         },
         unique_id="a380546a-94be-4b8e-8a0b-23e0d5c03303",
+    )
+
+
+@pytest.fixture(name="config_entry_with_subentry")
+def mock_config_entry_with_subentry() -> MockConfigEntry:
+    """Mock Habitica configuration entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="test-user",
+        data={
+            CONF_URL: DEFAULT_URL,
+            CONF_API_USER: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+            CONF_API_KEY: "cd0e5985-17de-4b4f-849e-5d506c5e4382",
+        },
+        unique_id="a380546a-94be-4b8e-8a0b-23e0d5c03303",
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_id="ABCDEF",
+                subentry_type="party_member",
+                title="test-partymember-displayname",
+                unique_id="ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+            )
+        ],
     )
 
 
@@ -154,6 +180,9 @@ async def mock_habiticalib(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
         )
         client.create_task.return_value = HabiticaTaskResponse.from_json(
             await async_load_fixture(hass, "task.json", DOMAIN)
+        )
+        client.get_group.return_value = HabiticaGroupsResponse.from_json(
+            await async_load_fixture(hass, "party.json", DOMAIN)
         )
         yield client
 

@@ -54,13 +54,13 @@ def catch_matter_error[_R, **P](
     return wrapper
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterEntityDescription(EntityDescription):
     """Describe the Matter entity."""
 
     # convert the value from the primary attribute to the value used by HA
-    measurement_to_ha: Callable[[Any], Any] | None = None
-    ha_to_native_value: Callable[[Any], Any] | None = None
+    device_to_ha: Callable[[Any], Any] | None = None
+    ha_to_device: Callable[[Any], Any] | None = None
     command_timeout: int | None = None
 
 

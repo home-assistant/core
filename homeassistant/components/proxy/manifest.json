@@ -4,5 +4,5 @@
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/proxy",
   "quality_scale": "legacy",
-  "requirements": ["Pillow==11.2.1"]
+  "requirements": ["Pillow==12.0.0"]
 }

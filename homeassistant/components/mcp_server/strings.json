@@ -11,6 +11,9 @@
         }
       }
     },
+    "error": {
+      "llm_api_required": "At least one LLM API must be configured."
+    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }

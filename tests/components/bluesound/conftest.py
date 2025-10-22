@@ -1,9 +1,11 @@
 """Common fixtures for the Bluesound tests."""
 
+from __future__ import annotations
+
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 import ipaddress
-from typing import Any
+from typing import Any, Self
 from unittest.mock import AsyncMock, patch
 
 from pyblu import Input, Player, Preset, Status, SyncStatus
@@ -27,8 +29,8 @@ class PlayerMockData:
     status_long_polling_mock: LongPollingMock[Status]
     sync_status_long_polling_mock: LongPollingMock[SyncStatus]
 
-    @staticmethod
-    async def generate(host: str) -> "PlayerMockData":
+    @classmethod
+    async def generate(cls, host: str) -> Self:
         """Generate player mock data."""
         host_ip = ipaddress.ip_address(host)
         assert host_ip.version == 4
@@ -98,6 +100,9 @@ class PlayerMockData:
             return_value=[
                 Input("1", "input1", "image1", "url1"),
                 Input("2", "input2", "image2", "url2"),
+                Input(None, "input3", "image3", "url3"),
+                Input("4", None, "image4", "url4"),
+                Input(None, None, "image5", "url5"),
             ]
         )
         player.presets = AsyncMock(
@@ -107,7 +112,7 @@ class PlayerMockData:
             ]
         )
 
-        return PlayerMockData(
+        return cls(
             host, player, status_long_polling_mock, sync_status_long_polling_mock
         )
 

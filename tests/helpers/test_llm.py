@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components import calendar, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
-from homeassistant.components.script.config import ScriptConfig
+from homeassistant.components.script import ScriptConfig
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -183,19 +183,23 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["GetLiveContext"]
+    assert [tool.name for tool in api.tools] == ["GetDateTime", "GetLiveContext"]
 
     # Match all
     intent_handler.platforms = None
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["test_intent", "GetLiveContext"]
+    assert [tool.name for tool in api.tools] == [
+        "test_intent",
+        "GetDateTime",
+        "GetLiveContext",
+    ]
 
     # Match specific domain
     intent_handler.platforms = {"light"}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 2
+    assert len(api.tools) == 3
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
@@ -374,6 +378,7 @@ async def test_assist_api_tools(
         "HassUnpauseTimer",
         "HassTimerStatus",
         "Super_crazy_intent_with_unique_name",
+        "GetDateTime",
     ]
 
 
@@ -390,7 +395,7 @@ async def test_assist_api_description(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 1
+    assert len(api.tools) == 2
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "my intent handler"
@@ -1125,7 +1130,7 @@ async def test_selector_serializer(
             "media_content_type": {"type": "string"},
             "metadata": {"type": "object", "additionalProperties": True},
         },
-        "required": ["entity_id", "media_content_id", "media_content_type"],
+        "required": ["media_content_id", "media_content_type"],
     }
     assert selector_serializer(selector.NumberSelector({"mode": "box"})) == {
         "type": "number"
@@ -1138,6 +1143,61 @@ async def test_selector_serializer(
     assert selector_serializer(selector.ObjectSelector()) == {
         "type": "object",
         "additionalProperties": True,
+    }
+    assert selector_serializer(
+        selector.ObjectSelector(
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {"min": 30, "max": 100}},
+                    },
+                },
+                "multiple": False,
+                "label_field": "name",
+            },
+        )
+    ) == {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "percentage": {"type": "number", "minimum": 30, "maximum": 100},
+        },
+        "required": ["name"],
+    }
+    assert selector_serializer(
+        selector.ObjectSelector(
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {"min": 30, "max": 100}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+            },
+        )
+    ) == {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "percentage": {
+                    "type": "number",
+                    "minimum": 30,
+                    "maximum": 100,
+                },
+            },
+            "required": ["name"],
+        },
     }
     assert selector_serializer(
         selector.SelectSelector(
@@ -1161,43 +1221,14 @@ async def test_selector_serializer(
         selector.StateSelector({"entity_id": "sensor.test"})
     ) == {"type": "string"}
     target_schema = selector_serializer(selector.TargetSelector())
-    target_schema["properties"]["entity_id"]["anyOf"][0][
-        "enum"
-    ].sort()  # Order is not deterministic
     assert target_schema == {
         "type": "object",
         "properties": {
-            "area_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["none"]},
-                    {"type": "array", "items": {"type": "string", "nullable": True}},
-                ]
-            },
-            "device_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["none"]},
-                    {"type": "array", "items": {"type": "string", "nullable": True}},
-                ]
-            },
-            "entity_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["all", "none"], "format": "lower"},
-                    {"type": "string", "nullable": True},
-                    {"type": "array", "items": {"type": "string"}},
-                ]
-            },
-            "floor_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["none"]},
-                    {"type": "array", "items": {"type": "string", "nullable": True}},
-                ]
-            },
-            "label_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["none"]},
-                    {"type": "array", "items": {"type": "string", "nullable": True}},
-                ]
-            },
+            "area_id": {"items": {"type": "string"}, "type": "array"},
+            "device_id": {"items": {"type": "string"}, "type": "array"},
+            "entity_id": {"items": {"type": "string"}, "type": "array"},
+            "floor_id": {"items": {"type": "string"}, "type": "array"},
+            "label_id": {"items": {"type": "string"}, "type": "array"},
         },
         "required": [],
     }
@@ -1437,6 +1468,41 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     }
 
 
+async def test_get_date_time_tool(hass: HomeAssistant) -> None:
+    """Test the GetDateTime tool."""
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tool = next((tool for tool in api.tools if tool.name == "GetDateTime"), None)
+    assert tool is not None
+
+    now = dt_util.parse_datetime("2025-09-22 12:30:45Z")
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        result = await tool.async_call(
+            hass,
+            llm.ToolInput("GetDateTime", {}),
+            llm_context,
+        )
+        assert result == {
+            "success": True,
+            "result": {
+                "date": "2025-09-22",
+                "time": "12:30:45",
+                "timezone": "UTC",
+                "weekday": "Monday",
+            },
+        }
+
+
 async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     """Test that tools are not exposed when no entities are exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1449,7 +1515,7 @@ async def test_no_tools_exposed(hass: HomeAssistant) -> None:
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert api.tools == []
+    assert [tool.name for tool in api.tools] == ["GetDateTime"]
 
 
 async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
@@ -1489,18 +1555,85 @@ This is prompt 2
 """
     )
     assert [(tool.name, tool.description) for tool in instance.tools] == [
-        ("api-1.Tool_1", "Description 1"),
-        ("api-2.Tool_2", "Description 2"),
+        ("api-1__Tool_1", "Description 1"),
+        ("api-2__Tool_2", "Description 2"),
     ]
 
     # The test tool returns back the provided arguments so we can verify
     # the original tool is invoked with the correct tool name and args.
     result = await instance.async_call_tool(
-        llm.ToolInput(tool_name="api-1.Tool_1", tool_args={"arg1": "value1"})
+        llm.ToolInput(tool_name="api-1__Tool_1", tool_args={"arg1": "value1"})
     )
     assert result == {"result": {"Tool_1": {"arg1": "value1"}}}
 
     result = await instance.async_call_tool(
-        llm.ToolInput(tool_name="api-2.Tool_2", tool_args={"arg2": "value2"})
+        llm.ToolInput(tool_name="api-2__Tool_2", tool_args={"arg2": "value2"})
     )
     assert result == {"result": {"Tool_2": {"arg2": "value2"}}}
+
+
+async def test_get_exposed_entities_timestamp_conversion(hass: HomeAssistant) -> None:
+    """Test that _get_exposed_entities converts timestamp states to local time."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    # Set the timezone to something other than UTC to ensure conversion is tested
+    await hass.config.async_set_time_zone("America/New_York")
+
+    # Set up a timestamp sensor with UTC time
+    utc_timestamp = "2024-01-15T10:30:00+00:00"
+    hass.states.async_set(
+        "sensor.test_timestamp",
+        utc_timestamp,
+        {"device_class": "timestamp", "friendly_name": "Test Timestamp"},
+    )
+
+    # Also test with a non-timestamp sensor to ensure it's not affected
+    hass.states.async_set(
+        "sensor.regular_sensor",
+        "2024-01-15T10:30:00+00:00",
+        {"friendly_name": "Regular Sensor"},  # No device_class
+    )
+
+    # And test with invalid/empty timestamp
+    hass.states.async_set(
+        "sensor.invalid_timestamp",
+        "not-a-timestamp",
+        {"device_class": "timestamp", "friendly_name": "Invalid Timestamp"},
+    )
+
+    hass.states.async_set(
+        "sensor.empty_timestamp",
+        "",
+        {"device_class": "timestamp", "friendly_name": "Empty Timestamp"},
+    )
+
+    # Expose the entities
+    async_expose_entity(hass, "conversation", "sensor.test_timestamp", True)
+    async_expose_entity(hass, "conversation", "sensor.regular_sensor", True)
+    async_expose_entity(hass, "conversation", "sensor.invalid_timestamp", True)
+    async_expose_entity(hass, "conversation", "sensor.empty_timestamp", True)
+
+    # Call _get_exposed_entities
+    exposed = llm._get_exposed_entities(hass, "conversation", include_state=True)
+
+    # Check the converted timestamp
+    sensor_info = exposed["entities"]["sensor.test_timestamp"]
+
+    assert sensor_info["state"] == "2024-01-15T05:30:00-05:00"
+    # Regular sensor without device_class should keep original value
+    regular_info = exposed["entities"]["sensor.regular_sensor"]
+    assert regular_info["state"] == "2024-01-15T10:30:00+00:00"  # Unchanged
+
+    # Invalid timestamp should remain as-is
+    invalid_info = exposed["entities"]["sensor.invalid_timestamp"]
+    assert invalid_info["state"] == "not-a-timestamp"
+
+    # Empty timestamp should remain empty
+    empty_info = exposed["entities"]["sensor.empty_timestamp"]
+    assert empty_info["state"] == ""
+
+    # Test with include_state=False to ensure no conversion happens
+    exposed_no_state = llm._get_exposed_entities(
+        hass, "conversation", include_state=False
+    )
+    assert "state" not in exposed_no_state["entities"]["sensor.test_timestamp"]

@@ -9,7 +9,7 @@
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
         "data_description": {
-          "base_url": "The URL of your Mastodon instance e.g. https://mastodon.social.",
+          "base_url": "The URL of your Mastodon instance e.g. {example_url}.",
           "client_id": "The client key for the application created within your Mastodon account.",
           "client_secret": "The client secret for the application created within your Mastodon account.",
           "access_token": "The access token for the application created within your Mastodon account."
@@ -40,12 +40,6 @@
     },
     "not_whitelisted_directory": {
       "message": "{media} is not a whitelisted directory."
-    }
-  },
-  "issues": {
-    "deprecated_notify_action": {
-      "title": "Deprecated Notify action used for Mastodon",
-      "description": "The Notify action for Mastodon is deprecated.\n\nUse the `mastodon.post` action instead."
     }
   },
   "entity": {
@@ -84,6 +78,10 @@
         "content_warning": {
           "name": "Content warning",
           "description": "A content warning will be shown before the status text is shown (default: no content warning)."
+        },
+        "language": {
+          "name": "Language",
+          "description": "The language of the post (default: Mastodon account preference)."
         },
         "media": {
           "name": "Media",

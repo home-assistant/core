@@ -144,6 +144,39 @@
           'ventilationStep': list([
           ]),
         }),
+        '**REDACTED_e7bc6793e305bf53': dict({
+          'ambientLight': list([
+          ]),
+          'colors': list([
+          ]),
+          'deviceName': True,
+          'light': list([
+          ]),
+          'modes': list([
+          ]),
+          'powerOff': False,
+          'powerOn': True,
+          'processAction': list([
+            1,
+            2,
+            3,
+          ]),
+          'programId': list([
+          ]),
+          'runOnTime': list([
+          ]),
+          'startTime': list([
+          ]),
+          'targetTemperature': list([
+            dict({
+              'max': 28,
+              'min': -28,
+              'zone': 1,
+            }),
+          ]),
+          'ventilationStep': list([
+          ]),
+        }),
       }),
       'devices': dict({
         '**REDACTED_019aa577ad1c330d': dict({
@@ -661,6 +694,141 @@
             }),
           }),
         }),
+        '**REDACTED_e7bc6793e305bf53': dict({
+          'ident': dict({
+            'deviceIdentLabel': dict({
+              'fabIndex': '16',
+              'fabNumber': '**REDACTED**',
+              'matNumber': '11120960',
+              'swids': list([
+              ]),
+              'techType': 'H7660BP',
+            }),
+            'deviceName': '',
+            'protocolVersion': 4,
+            'type': dict({
+              'key_localized': 'Device type',
+              'value_localized': 'Oven',
+              'value_raw': 12,
+            }),
+            'xkmIdentLabel': dict({
+              'releaseVersion': '08.32',
+              'techType': 'EK057',
+            }),
+          }),
+          'state': dict({
+            'ProgramID': dict({
+              'key_localized': 'Program name',
+              'value_localized': 'Defrost',
+              'value_raw': 356,
+            }),
+            'ambientLight': None,
+            'batteryLevel': None,
+            'coreTargetTemperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+            ]),
+            'coreTemperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': 22.0,
+                'value_raw': 2200,
+              }),
+            ]),
+            'dryingStep': dict({
+              'key_localized': 'Drying level',
+              'value_localized': '',
+              'value_raw': None,
+            }),
+            'ecoFeedback': None,
+            'elapsedTime': list([
+              0,
+              0,
+            ]),
+            'light': 1,
+            'plateStep': list([
+            ]),
+            'programPhase': dict({
+              'key_localized': 'Program phase',
+              'value_localized': 'Heating-up phase',
+              'value_raw': 3073,
+            }),
+            'programType': dict({
+              'key_localized': 'Program type',
+              'value_localized': 'Program',
+              'value_raw': 1,
+            }),
+            'remainingTime': list([
+              0,
+              5,
+            ]),
+            'remoteEnable': dict({
+              'fullRemoteControl': True,
+              'mobileStart': True,
+              'smartGrid': False,
+            }),
+            'signalDoor': False,
+            'signalFailure': False,
+            'signalInfo': False,
+            'spinningSpeed': dict({
+              'key_localized': 'Spin speed',
+              'unit': 'rpm',
+              'value_localized': None,
+              'value_raw': None,
+            }),
+            'startTime': list([
+              0,
+              0,
+            ]),
+            'status': dict({
+              'key_localized': 'status',
+              'value_localized': 'In use',
+              'value_raw': 5,
+            }),
+            'targetTemperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': 25.0,
+                'value_raw': 2500,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+            ]),
+            'temperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': 19.54,
+                'value_raw': 1954,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+            ]),
+            'ventilationStep': dict({
+              'key_localized': 'Fan level',
+              'value_localized': '',
+              'value_raw': None,
+            }),
+          }),
+        }),
       }),
       'missing_code_warnings': list([
         'None',
@@ -681,7 +849,8 @@
     }),
     'info': dict({
       'manufacturer': 'Miele',
-      'model': 'FNS 28463 E ed/',
+      'model': 'Freezer',
+      'model_id': 'FNS 28463 E ed/',
     }),
     'miele_data': dict({
       'actions': dict({

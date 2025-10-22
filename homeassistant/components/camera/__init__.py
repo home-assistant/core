@@ -51,12 +51,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
@@ -80,8 +74,15 @@ from .const import (
     StreamType,
 )
 from .helper import get_camera_from_entity_id
-from .img_util import scale_jpeg_camera_image
-from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
+from .img_util import (
+    TurboJPEGSingleton,  # noqa: F401
+    scale_jpeg_camera_image,
+)
+from .prefs import (
+    CameraPreferences,
+    DynamicStreamSettings,  # noqa: F401
+    get_dynamic_camera_stream_settings,
+)
 from .webrtc import (
     DATA_ICE_SERVERS,
     CameraWebRTCProvider,
@@ -113,12 +114,6 @@ SERVICE_PLAY_STREAM: Final = "play_stream"
 ATTR_FILENAME: Final = "filename"
 ATTR_MEDIA_PLAYER: Final = "media_player"
 ATTR_FORMAT: Final = "format"
-
-# These constants are deprecated as of Home Assistant 2024.10
-# Please use the StreamType enum instead.
-_DEPRECATED_STATE_RECORDING = DeprecatedConstantEnum(CameraState.RECORDING, "2025.10")
-_DEPRECATED_STATE_STREAMING = DeprecatedConstantEnum(CameraState.STREAMING, "2025.10")
-_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(CameraState.IDLE, "2025.10")
 
 
 class CameraEntityFeature(IntFlag):
@@ -240,6 +235,10 @@ async def _async_get_stream_image(
     height: int | None = None,
     wait_for_next_keyframe: bool = False,
 ) -> bytes | None:
+    if (provider := camera._webrtc_provider) and (  # noqa: SLF001
+        image := await provider.async_get_image(camera, width=width, height=height)
+    ) is not None:
+        return image
     if not camera.stream and CameraEntityFeature.STREAM in camera.supported_features:
         camera.stream = await camera.async_create_stream()
     if camera.stream:
@@ -494,19 +493,6 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Flag supported features."""
         return self._attr_supported_features
 
-    @property
-    def supported_features_compat(self) -> CameraEntityFeature:
-        """Return the supported features as CameraEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:
-            new_features = CameraEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
-
     @cached_property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
@@ -559,9 +545,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                     self.hass,
                     source,
                     options=self.stream_options,
-                    dynamic_stream_settings=await self.hass.data[
-                        DATA_CAMERA_PREFS
-                    ].get_dynamic_stream_settings(self.entity_id),
+                    dynamic_stream_settings=await get_dynamic_camera_stream_settings(
+                        self.hass, self.entity_id
+                    ),
                     stream_label=self.entity_id,
                 )
                 self.stream.set_update_callback(self.async_write_ha_state)
@@ -700,9 +686,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
-        self.__supports_stream = (
-            self.supported_features_compat & CameraEntityFeature.STREAM
-        )
+        self.__supports_stream = self.supported_features & CameraEntityFeature.STREAM
         await self.async_refresh_providers(write_state=False)
 
     async def async_refresh_providers(self, *, write_state: bool = True) -> None:
@@ -731,7 +715,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self, fn: Callable[[HomeAssistant, Camera], Coroutine[None, None, _T | None]]
     ) -> _T | None:
         """Get first provider that supports this camera."""
-        if CameraEntityFeature.STREAM not in self.supported_features_compat:
+        if CameraEntityFeature.STREAM not in self.supported_features:
             return None
 
         return await fn(self.hass, self)
@@ -781,7 +765,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def camera_capabilities(self) -> CameraCapabilities:
         """Return the camera capabilities."""
         frontend_stream_types = set()
-        if CameraEntityFeature.STREAM in self.supported_features_compat:
+        if CameraEntityFeature.STREAM in self.supported_features:
             if self._supports_native_async_webrtc:
                 # The camera has a native WebRTC implementation
                 frontend_stream_types.add(StreamType.WEB_RTC)
@@ -801,8 +785,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         super().async_write_ha_state()
         if self.__supports_stream != (
-            supports_stream := self.supported_features_compat
-            & CameraEntityFeature.STREAM
+            supports_stream := self.supported_features & CameraEntityFeature.STREAM
         ):
             self.__supports_stream = supports_stream
             self._invalidate_camera_capabilities_cache()
@@ -954,9 +937,7 @@ async def websocket_get_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle request for account info."""
-    stream_prefs = await hass.data[DATA_CAMERA_PREFS].get_dynamic_stream_settings(
-        msg["entity_id"]
-    )
+    stream_prefs = await get_dynamic_camera_stream_settings(hass, msg["entity_id"])
     connection.send_result(msg["id"], asdict(stream_prefs))
 
 
@@ -1127,11 +1108,3 @@ async def async_handle_record_service(
         duration=service_call.data[CONF_DURATION],
         lookback=service_call.data[CONF_LOOKBACK],
     )
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

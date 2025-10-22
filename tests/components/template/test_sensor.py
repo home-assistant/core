@@ -30,6 +30,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 from homeassistant.util import dt as dt_util
 
+from .conftest import async_get_flow_preview_state
+
 from tests.common import (
     MockConfigEntry,
     assert_setup_component,
@@ -37,6 +39,7 @@ from tests.common import (
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
 )
+from tests.conftest import WebSocketGenerator
 
 TEST_NAME = "sensor.test_template_sensor"
 
@@ -1138,7 +1141,7 @@ async def test_duplicate_templates(hass: HomeAssistant) -> None:
                     "unique_id": "listening-test-event",
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "sensors": {
-                        "hello": {
+                        "hello_name": {
                             "friendly_name": "Hello Name",
                             "unique_id": "hello_name-id",
                             "device_class": "battery",
@@ -1357,7 +1360,7 @@ async def test_trigger_conditional_entity_invalid_condition(
                 {
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "sensors": {
-                        "hello": {
+                        "hello_name": {
                             "friendly_name": "Hello Name",
                             "value_template": "{{ trigger.event.data.beer }}",
                             "entity_picture_template": "{{ '/local/dogs.png' }}",
@@ -1525,6 +1528,45 @@ async def test_trigger_entity_available(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.maybe_available")
     assert state.state == "unavailable"
+
+
+@pytest.mark.parametrize(("source_event_value"), [None, "None"])
+async def test_numeric_trigger_entity_set_unknown(
+    hass: HomeAssistant, source_event_value: str | None
+) -> None:
+    """Test trigger entity state parsing with numeric sensors."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Source",
+                            "state": "{{ trigger.event.data.value }}",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("test_event", {"value": 1})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.source")
+    assert state is not None
+    assert state.state == "1"
+
+    hass.bus.async_fire("test_event", {"value": source_event_value})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.source")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_trigger_entity_available_skips_state(
@@ -2256,6 +2298,65 @@ async def test_trigger_action(hass: HomeAssistant) -> None:
     assert events[0].context.parent_id == context.id
 
 
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "variables": {"a": "{{ trigger.event.data.a }}"},
+                    "action": [
+                        {
+                            "variables": {"b": "{{ a + 1 }}"},
+                        },
+                        {"event": "test_event2", "event_data": {"hello": "world"}},
+                    ],
+                    "sensor": [
+                        {
+                            "name": "Hello Name",
+                            "state": "{{ a + b + c }}",
+                            "variables": {"c": "{{ b + 1 }}"},
+                            "attributes": {
+                                "a": "{{ a }}",
+                                "b": "{{ b }}",
+                                "c": "{{ c }}",
+                            },
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_action_variables(hass: HomeAssistant) -> None:
+    """Test trigger entity with variables in an action works."""
+    event = "test_event2"
+    context = Context()
+    events = async_capture_events(hass, event)
+
+    state = hass.states.get("sensor.hello_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"a": 1}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.hello_name")
+    assert state.state == str(1 + 2 + 3)
+    assert state.context is context
+    assert state.attributes["a"] == 1
+    assert state.attributes["b"] == 2
+    assert state.attributes["c"] == 3
+
+    assert len(events) == 1
+    assert events[0].context.parent_id == context.id
+
+
 @pytest.mark.parametrize(("count", "domain"), [(1, template.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
@@ -2395,3 +2496,19 @@ async def test_device_id(
     template_entity = entity_registry.async_get("sensor.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        sensor.DOMAIN,
+        {"name": "My template", "state": "{{ 0.0 }}"},
+    )
+
+    assert state["state"] == "0.0"

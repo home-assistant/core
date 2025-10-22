@@ -27,6 +27,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         "dev": info.get("dev"),
         "hassio": info.get("hassio"),
         "docker": info.get("docker"),
+        "container_arch": info.get("container_arch"),
         "user": info.get("user"),
         "virtualenv": info.get("virtualenv"),
         "python_version": info.get("python_version"),

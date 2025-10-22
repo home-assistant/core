@@ -320,13 +320,16 @@
         "name": "Block WhatsApp"
       },
       "block_xboxlive": {
-        "name": "Block Xbox Live"
+        "name": "Block Xbox Network"
       },
       "block_youtube": {
         "name": "Block YouTube"
       },
       "block_zoom": {
         "name": "Block Zoom"
+      },
+      "bypass_age_verification": {
+        "name": "Bypass age verification"
       },
       "cache_boost": {
         "name": "Cache boost"

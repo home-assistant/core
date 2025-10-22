@@ -83,8 +83,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not gateway:
         raise ConfigEntryNotReady(f"Cannot find device {device}")
 
-    signal_coordinator = SignalCoordinator(hass, gateway)
-    network_coordinator = NetworkCoordinator(hass, gateway)
+    signal_coordinator = SignalCoordinator(hass, entry, gateway)
+    network_coordinator = NetworkCoordinator(hass, entry, gateway)
 
     # Fetch initial data so we have data when entities subscribe
     await signal_coordinator.async_config_entry_first_refresh()

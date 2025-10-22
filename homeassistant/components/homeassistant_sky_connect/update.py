@@ -124,6 +124,7 @@ def _async_create_update_entity(
         config_entry=config_entry,
         update_coordinator=FirmwareUpdateCoordinator(
             hass,
+            config_entry,
             session,
             NABU_CASA_FIRMWARE_RELEASES_URL,
         ),
@@ -167,7 +168,8 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """SkyConnect firmware update entity."""
 
-    bootloader_reset_type = None
+    # The ZBT-1 does not have a hardware bootloader trigger
+    bootloader_reset_methods = []
 
     def __init__(
         self,
