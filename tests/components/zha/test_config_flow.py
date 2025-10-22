@@ -952,6 +952,33 @@ async def test_zeroconf_discovery_via_socket_already_setup_with_ip_match(
     assert result["reason"] == "single_instance_allowed"
 
 
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_zeroconf_not_onboarded(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery needing confirmation when not onboarded."""
+    service_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100")],
+        hostname="tube-zigbee-gw.local.",
+        name="mock_name",
+        port=6638,
+        properties={"name": "tube_123456"},
+        type="mock_type",
+    )
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ):
+        result_create = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=service_info,
+        )
+        await hass.async_block_till_done()
+
+    # not automatically confirmed
+    assert result_create["type"] is FlowResultType.FORM
+    assert result_create["step_id"] == "confirm"
+
+
 @patch(
     "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
     mock_detect_radio_type(radio_type=RadioType.deconz),

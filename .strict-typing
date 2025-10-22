@@ -182,7 +182,6 @@ homeassistant.components.efergy.*
 homeassistant.components.eheimdigital.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
-homeassistant.components.elevenlabs.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
@@ -221,6 +220,7 @@ homeassistant.components.generic_thermostat.*
 homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*
+homeassistant.components.github.*
 homeassistant.components.glances.*
 homeassistant.components.go2rtc.*
 homeassistant.components.goalzero.*
