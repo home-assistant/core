@@ -65,7 +65,16 @@ async def async_setup_entry(
                         dev_type=device_type,
                         name=channel,
                     )
-                    for channel in ("A0", "A1", "B0", "B1", "AB0", "AB1")
+                    for channel in (
+                        "A0",
+                        "A1",
+                        "B0",
+                        "B1",
+                        "AB0",
+                        "AB1",
+                        "A0B1",
+                        "A1B0",
+                    )
                 ]
             )
 
@@ -148,16 +157,16 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
             if self._channel == "B1":
                 self._attr_on = True
         elif action == 0x37:
-            if self._channel in ("A0", "B0", "AB0"):
+            if self._channel == "AB0":
                 self._attr_on = True
         elif action == 0x15:
-            if self._channel in ("A1", "B1", "AB1"):
+            if self._channel == "AB1":
                 self._attr_on = True
         elif action == 0x17:
-            if self._channel in ("A0", "B1"):
+            if self._channel == "A0B1":
                 self._attr_on = True
         elif action == 0x35:
-            if self._channel in ("A1", "B0"):
+            if self._channel == "A1B0":
                 self._attr_on = True
 
         elif action == 0x00:

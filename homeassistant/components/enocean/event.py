@@ -23,6 +23,16 @@ from .const import (
 from .enocean_device_type import EnOceanDeviceType
 from .enocean_id import EnOceanID
 
+ACTION_RELEASED = 0x00
+ACTION_A0_ON = 0x70
+ACTION_A1_ON = 0x50
+ACTION_B0_ON = 0x30
+ACTION_B1_ON = 0x10
+ACTION_AB0_ON = 0x37
+ACTION_AB1_ON = 0x15
+ACTION_A0_B1_ON = 0x17
+ACTION_A1_B0_ON = 0x35
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -174,6 +184,9 @@ class EnOceanButtonEvent(EnOceanEventEntity):
             device_type=device_type,
         )
 
+        # self.__past_events: list[tuple(str, int)] = []
+        self.__previous_event: str | None = None
+
     @callback
     def _async_handle_event(self, event: str) -> None:
         """Handle the demo button event."""
@@ -191,17 +204,8 @@ class EnOceanButtonEvent(EnOceanEventEntity):
         return super().async_will_remove_from_hass()
 
     def value_changed(self, packet: Packet) -> None:
-        """Fire an event with the data that have changed.
+        """Fire an event with the data that have changed."""
 
-        This method is called when there is an incoming packet associated
-        with this platform.
-
-        Example packet data:
-        - 2nd button pressed
-            ['0xf6', '0x10', '0x00', '0x2d', '0xcf', '0x45', '0x30']
-        - button released
-            ['0xf6', '0x00', '0x00', '0x2d', '0xcf', '0x45', '0x20']
-        """
         # Energy Bow
         # pushed = None
 
@@ -211,6 +215,50 @@ class EnOceanButtonEvent(EnOceanEventEntity):
         #     pushed = 0
 
         action = packet.data[1]
+
+        match self.name:
+            case "A0":
+                if action == ACTION_A0_ON:
+                    self._trigger_event("pushed", {"button": "A0"})
+                    self.__previous_event = "pushed"
+                elif action == ACTION_RELEASED and self.__previous_event == "pushed":
+                    self._trigger_event("released", {"button": "A0"})
+                    self.__previous_event = "released"
+            case "A1":
+                if action == ACTION_A1_ON:
+                    self._trigger_event("pushed", {"button": "A1"})
+                    self.__previous_event = "pushed"
+                elif action == ACTION_RELEASED and self.__previous_event == "pushed":
+                    self._trigger_event("released", {"button": "A1"})
+                    self.__previous_event = "released"
+            case "B0":
+                if action == ACTION_B0_ON:
+                    self._trigger_event("pushed", {"button": "B0"})
+                    self.__previous_event = "pushed"
+                elif action == ACTION_RELEASED and self.__previous_event == "pushed":
+                    self._trigger_event("released", {"button": "B0"})
+                    self.__previous_event = "released"
+            case "B1":
+                if action == ACTION_B1_ON:
+                    self._trigger_event("pushed", {"button": "B1"})
+                    self.__previous_event = "pushed"
+                elif action == ACTION_RELEASED and self.__previous_event == "pushed":
+                    self._trigger_event("released", {"button": "B1"})
+                    self.__previous_event = "released"
+            case "AB0":
+                if action == ACTION_AB0_ON:
+                    self._trigger_event("pushed", {"button": "AB0"})
+                    self.__previous_event = "pushed"
+                elif action == ACTION_RELEASED and self.__previous_event == "pushed":
+                    self._trigger_event("released", {"button": "AB0"})
+                    self.__previous_event = "released"
+            case "AB1":
+                if action == ACTION_AB1_ON:
+                    self._trigger_event("pushed", {"button": "AB1"})
+                    self.__previous_event = "pushed"
+                elif action == ACTION_RELEASED and self.__previous_event == "pushed":
+                    self._trigger_event("released", {"button": "AB1"})
+                    self.__previous_event = "released"
 
         # if action == 0x70:
         #     if self.name == "A0":
@@ -242,8 +290,6 @@ class EnOceanButtonEvent(EnOceanEventEntity):
         # else:
         #     _LOGGER.warning("Unknown action: %s", action)
         #     self._attr_on = False
-
-        self._trigger_event("single_click", {"action": action})
 
         # self.async_write_ha_state()
         self.schedule_update_ha_state()
