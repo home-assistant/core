@@ -1,4 +1,19 @@
 # serializer version: 1
+# name: test_no_trips_sensor
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work',
+      'icon': 'mdi:train',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -17,6 +32,42 @@
       'going': True,
       'icon': 'mdi:train',
       'next': '16:46',
+      'remarks': None,
+      'route': list([
+        'Amsterdam Centraal',
+        "'s-Hertogenbosch",
+        'Breda',
+        'Rotterdam Centraal',
+      ]),
+      'status': 'normal',
+      'transfers': 2,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16:35',
+  })
+# ---
+# name: test_single_trip_sensor
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'arrival_delay': False,
+      'arrival_platform_actual': '13',
+      'arrival_platform_planned': '13',
+      'arrival_time_actual': '18:45',
+      'arrival_time_planned': '18:45',
+      'attribution': 'Data provided by NS',
+      'departure_delay': True,
+      'departure_platform_actual': '4',
+      'departure_platform_planned': '4',
+      'departure_time_actual': '16:35',
+      'departure_time_planned': '16:34',
+      'friendly_name': 'To work',
+      'going': True,
+      'icon': 'mdi:train',
+      'next': None,
       'remarks': None,
       'route': list([
         'Amsterdam Centraal',

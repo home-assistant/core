@@ -247,14 +247,18 @@ class NSDepartureSensor(SensorEntity):
         ):
             attributes["arrival_delay"] = True
 
-        assert self._next_trip is not None
         # Next attributes
-        if self._next_trip.departure_time_actual is not None:
-            attributes["next"] = self._next_trip.departure_time_actual.strftime("%H:%M")
-        elif self._next_trip.departure_time_planned is not None:
-            attributes["next"] = self._next_trip.departure_time_planned.strftime(
-                "%H:%M"
-            )
+        if self._next_trip is not None:
+            if self._next_trip.departure_time_actual is not None:
+                attributes["next"] = self._next_trip.departure_time_actual.strftime(
+                    "%H:%M"
+                )
+            elif self._next_trip.departure_time_planned is not None:
+                attributes["next"] = self._next_trip.departure_time_planned.strftime(
+                    "%H:%M"
+                )
+            else:
+                attributes["next"] = None
         else:
             attributes["next"] = None
 

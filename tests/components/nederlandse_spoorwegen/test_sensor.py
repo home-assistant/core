@@ -70,3 +70,33 @@ async def test_sensor(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.to_work") == snapshot
+
+
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+async def test_single_trip_sensor(
+    hass: HomeAssistant,
+    mock_single_trip_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test sensor initialization."""
+    # Patch get_trips to only return one trip for single_trip
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.to_work") == snapshot
+
+
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+async def test_no_trips_sensor(
+    hass: HomeAssistant,
+    mock_no_trips_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test sensor initialization."""
+    # Patch get_trips to only return one trip for single_trip
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.to_work") == snapshot
