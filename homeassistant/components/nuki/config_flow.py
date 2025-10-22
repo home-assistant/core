@@ -111,7 +111,6 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
-                description_placeholders={"sample_ip": SAMPLE_IP},
             )
 
         conf = {
@@ -147,7 +146,6 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
             errors=errors,
-            description_placeholders={"sample_ip": SAMPLE_IP},
         )
 
     async def async_step_validate(

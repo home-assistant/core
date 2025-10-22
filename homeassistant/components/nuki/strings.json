@@ -18,9 +18,6 @@
         "data": {
           "token": "[%key:common::config_flow::data::access_token%]",
           "encrypt_token": "[%key:component::nuki::config::step::user::data::encrypt_token%]"
-        },
-        "data_description": {
-          "sample_ip": "For example: {sample_ip}"
         }
       }
     },
