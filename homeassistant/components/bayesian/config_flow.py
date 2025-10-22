@@ -38,6 +38,7 @@ from homeassistant.config_entries import (
     ConfigSubentry,
     ConfigSubentryData,
     ConfigSubentryFlow,
+    FlowType,
     SubentryFlowResult,
 )
 from homeassistant.const import (
@@ -517,7 +518,12 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         ]
 
         self.async_config_flow_finished(data)
-        return super().async_create_entry(data=data, subentries=subentries, **kwargs)
+        return super().async_create_entry(
+            data=data,
+            subentries=subentries,
+            next_flow=(FlowType.CONFIG_SUBENTRIES_FLOW, None, "observation"),
+            **kwargs,
+        )
 
 
 class ObservationSubentryFlowHandler(ConfigSubentryFlow):
