@@ -1,0 +1,82 @@
+encode_file:
+  target:
+  fields:
+    input_path:
+      required: true
+      example: "/config/media/input_video.mp4"
+      selector:
+        text:
+    output_path:
+      required: false
+      example: "encoded_video_{timestamp}.mp4"
+      selector:
+        text:
+    bitrate:
+      default: "2M"
+      example: "2M"
+      selector:
+        text:
+    fps:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 60
+          mode: box
+          unit_of_measurement: "fps"
+    gop:
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 300
+          mode: box
+    prefer_ffmpeg:
+      default: true
+      selector:
+        boolean:
+
+capture_snapshot:
+  target:
+    entity:
+      domain: camera
+  fields:
+    filename:
+      required: true
+      example: "front_door_{timestamp}.jpg"
+      selector:
+        text:
+    format:
+      default: "jpg"
+      selector:
+        select:
+          options:
+            - "jpg"
+            - "png"
+
+record_clip:
+  target:
+    entity:
+      domain: camera
+  fields:
+    filename:
+      required: false
+      example: "front_door_{timestamp}.mp4"
+      selector:
+        text:
+    duration:
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 300
+          mode: box
+          unit_of_measurement: "s"
+    lookback:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+          mode: box
+          unit_of_measurement: "s"

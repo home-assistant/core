@@ -470,6 +470,7 @@ FLOWS = {
         "openai_conversation",
         "openexchangerates",
         "opengarage",
+        "openh264customh264",
         "openhome",
         "openrgb",
         "opensky",

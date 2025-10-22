@@ -1,0 +1,114 @@
+{
+  "title": "OpenH264 Enhanced Camera Integration",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure OpenH264 Enhanced Camera",
+        "description": "Create a camera that proxies an existing entity or uses explicit URLs, with OpenH264 video encoding capabilities.",
+        "data": {
+          "name": "Name",
+          "mode": "Source Type",
+          "entity_id": "Camera entity_id",
+          "stream_url": "RTSP/Stream URL",
+          "snapshot_url": "Snapshot URL (JPEG)",
+          "lib_path": "Path to libopenh264",
+          "accept_cisco_license": "I accept the Cisco OpenH264 license (for optional download logic)"
+        }
+      }
+    },
+    "error": {
+      "camera_required": "Camera entity_id is required for 'camera entity' mode.",
+      "url_required": "Provide at least one of Stream URL or Snapshot URL for 'stream url' mode.",
+      "openh264_not_found": "OpenH264 library not found. Install with: brew install openh264",
+      "encoder_init_failed": "Failed to initialize OpenH264 encoder"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "OpenH264 Options",
+        "description": "Configure OpenH264 encoding parameters",
+        "data": {
+          "lib_path": "Custom OpenH264 library path",
+          "default_bitrate": "Default video bitrate",
+          "default_gop": "Default GOP size",
+          "default_fps": "Default frame rate"
+        }
+      }
+    }
+  },
+  "services": {
+    "capture_snapshot": {
+      "name": "Capture camera snapshot",
+      "description": "Save a snapshot from a camera to a file with OpenH264 integration features.",
+      "fields": {
+        "filename": {
+          "name": "Output filename",
+          "description": "Path and filename where the snapshot should be saved. Supports templates like {entity_id} and {timestamp}."
+        },
+        "format": {
+          "name": "Image format",
+          "description": "Output image format."
+        }
+      }
+    },
+    "record_clip": {
+      "name": "Record video clip",
+      "description": "Record a video clip using Home Assistant's stream integration with enhanced OpenH264 support.",
+      "fields": {
+        "filename": {
+          "name": "Output filename",
+          "description": "Path and filename where the video clip should be saved. Supports templates like {entity_id} and {timestamp}. If not specified, auto-generates a filename."
+        },
+        "duration": {
+          "name": "Duration (seconds)",
+          "description": "Length of the video clip in seconds."
+        },
+        "lookback": {
+          "name": "Lookback (seconds)",
+          "description": "Include video from this many seconds before the recording started."
+        }
+      }
+    },
+    "encode_file": {
+      "name": "Encode video file",
+      "description": "Re-encode a video file using OpenH264 with two-path strategy (ffmpeg+libopenh264 or custom shim fallback).",
+      "fields": {
+        "input_path": {
+          "name": "Input file path",
+          "description": "Path to the input video file to encode."
+        },
+        "output_path": {
+          "name": "Output file path",
+          "description": "Path where the encoded H.264 file should be saved. If not specified, auto-generates filename in /config/www/openh264/."
+        },
+        "bitrate": {
+          "name": "Target bitrate",
+          "description": "Target video bitrate (e.g., '2M', '1500k', '500000')."
+        },
+        "fps": {
+          "name": "Frame rate",
+          "description": "Target frame rate in frames per second. If not specified, uses source video fps."
+        },
+        "gop": {
+          "name": "GOP size",
+          "description": "Group of Pictures size (keyframe interval)."
+        },
+        "prefer_ffmpeg": {
+          "name": "Prefer ffmpeg",
+          "description": "Try ffmpeg with libopenh264 encoder first before falling back to custom shim."
+        }
+      }
+    }
+  },
+  "entity": {
+    "camera": {
+      "openh264_camera": {
+        "name": "OpenH264 Enhanced Camera"
+      }
+    }
+  }
+}

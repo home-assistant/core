@@ -1,0 +1,13 @@
+{
+  "services": {
+    "capture_snapshot": {
+      "service": "mdi:camera"
+    },
+    "encode_file": {
+      "service": "mdi:file-video"
+    },
+    "record_clip": {
+      "service": "mdi:record-rec"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "domain": "openh264customh264",
+  "name": "OpenH264 Enhanced Camera Integration",
+  "after_dependencies": ["camera"],
+  "codeowners": ["@martinpark"],
+  "config_flow": true,
+  "dependencies": ["stream", "ffmpeg"],
+  "documentation": "https://www.home-assistant.io/integrations/openh264customh264",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "quality_scale": "internal",
+  "requirements": []
+}

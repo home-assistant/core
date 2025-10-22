@@ -1137,6 +1137,7 @@ build.json @home-assistant/supervisor
 /tests/components/openexchangerates/ @MartinHjelmare
 /homeassistant/components/opengarage/ @danielhiversen
 /tests/components/opengarage/ @danielhiversen
+/homeassistant/components/openh264customh264/ @martinpark
 /homeassistant/components/openhome/ @bazwilliams
 /tests/components/openhome/ @bazwilliams
 /homeassistant/components/openrgb/ @felipecrs
