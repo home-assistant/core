@@ -31,7 +31,7 @@ RUN \
     && go2rtc --version
 
 # Install uv
-RUN pip3 install uv==0.8.9
+RUN pip3 install uv==0.9.5
 
 WORKDIR /usr/src
 
