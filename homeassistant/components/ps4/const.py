@@ -9,6 +9,9 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from . import PS4Data
 
+PS4_DOCS_URL = "https://www.home-assistant.io/components/ps4/"
+PSN_TOKEN_URL = "https://andshref.github.io/PS-4-Waker-REST/psn_token.html"
+
 ATTR_MEDIA_IMAGE_URL = "media_image_url"
 CONFIG_ENTRY_VERSION = 3
 DEFAULT_NAME = "PlayStation 4"
