@@ -2,6 +2,7 @@
 
 import logging
 
+
 from buienradar.constants import (
     CONDCODE,
     CONDITION,
@@ -13,6 +14,7 @@ from buienradar.constants import (
     WINDAZIMUTH,
     WINDSPEED,
 )
+
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
@@ -55,15 +57,20 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+
 from . import BuienRadarConfigEntry
 from .const import DEFAULT_TIMEFRAME
-from .util import BrData
+from .util import BrData, resolve_coordinates
+
 
 _LOGGER = logging.getLogger(__name__)
 
+
 CONF_FORECAST = "forecast"
 
+
 DATA_CONDITION = "buienradar_condition"
+
 
 CONDITION_CLASSES = {
     ATTR_CONDITION_CLOUDY: ("c", "p"),
@@ -101,14 +108,9 @@ async def async_setup_entry(
     """Set up the buienradar platform."""
     config = entry.data
 
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-
-    if None in (latitude, longitude):
+    if not (coordinates := resolve_coordinates(hass, config)):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return
-
-    coordinates = {CONF_LATITUDE: float(latitude), CONF_LONGITUDE: float(longitude)}
 
     # create weather entity:
     _LOGGER.debug("Initializing buienradar weather: coordinates %s", coordinates)
