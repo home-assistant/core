@@ -16,6 +16,7 @@ from homeassistant.components.homeassistant_hardware.helpers import (
     async_is_firmware_update_in_progress,
     async_register_firmware_update_in_progress,
 )
+from homeassistant.components.usb import USBDevice
 from homeassistant.components.zha.const import (
     CONF_BAUDRATE,
     CONF_FLOW_CONTROL,
@@ -381,3 +382,91 @@ async def test_setup_firmware_update_in_progress_prevents_silabs_warning(
 
     # But it did not try to check if the wrong firmware is installed
     assert mock_check_firmware.call_count == 0
+
+
+async def test_device_path_migration_to_unique_path(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test that device path is migrated to unique path when available."""
+    config_entry.add_to_hass(hass)
+
+    # Update config entry to use a non-unique path
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            CONF_DEVICE: {
+                **config_entry.data[CONF_DEVICE],
+                CONF_DEVICE_PATH: "/dev/ttyACM1",
+            },
+        },
+    )
+
+    # Mock usb_device_from_path to return a device with a unique path
+    mock_usb_device = USBDevice(
+        device="/dev/serial/by-id/coordinator-symlink",
+        vid="1234",
+        pid="5678",
+        serial_number="12345678",
+        manufacturer="Test",
+        description="Test Device",
+    )
+
+    with patch(
+        "homeassistant.components.zha.usb_device_from_path",
+        return_value=mock_usb_device,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify the config entry was updated with the unique path
+    assert (
+        config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+        == "/dev/serial/by-id/coordinator-symlink"
+    )
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_device_path_not_changed_when_already_unique(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test that device path is not changed when already using unique path."""
+    config_entry.add_to_hass(hass)
+
+    # Config entry already uses unique path
+    unique_path = "/dev/serial/by-id/coordinator-symlink"
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            CONF_DEVICE: {
+                **config_entry.data[CONF_DEVICE],
+                CONF_DEVICE_PATH: unique_path,
+            },
+        },
+    )
+
+    # Mock usb_device_from_path to return the same unique path
+    mock_usb_device = USBDevice(
+        device=unique_path,
+        vid="1234",
+        pid="5678",
+        serial_number="12345678",
+        manufacturer="Test",
+        description="Test Device",
+    )
+
+    with patch(
+        "homeassistant.components.zha.usb_device_from_path",
+        return_value=mock_usb_device,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify the config entry was NOT updated (path remains the same)
+    assert config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == unique_path
+    assert config_entry.state is ConfigEntryState.LOADED
