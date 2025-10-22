@@ -335,7 +335,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             if user_input.get(
                 CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET
-            ) >= user_input.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS):
+            ) >= self.options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS):
                 errors[CONF_THINKING_BUDGET] = "thinking_budget_too_large"
             if user_input.get(CONF_WEB_SEARCH, RECOMMENDED_WEB_SEARCH) and not errors:
                 if user_input.get(
