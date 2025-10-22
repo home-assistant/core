@@ -35,12 +35,6 @@ send_message:
     disable_web_page_preview:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -65,6 +59,15 @@ send_message:
       selector:
         number:
           mode: box
+    timeouts:
+      collapsed: true
+      fields:
+        timeout:
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
 
 send_chat_action:
   fields:
@@ -181,6 +184,7 @@ send_photo:
         number:
           mode: box
     timeouts:
+      collapsed: true
       fields:
         timeout:
           selector:
@@ -246,12 +250,6 @@ send_sticker:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -275,6 +273,22 @@ send_sticker:
       selector:
         number:
           mode: box
+    timeouts:
+      collapsed: true
+      fields:
+        timeout:
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
+        write_timeout:
+          default: 20
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
 
 send_animation:
   fields:
@@ -335,12 +349,6 @@ send_animation:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -364,6 +372,22 @@ send_animation:
       selector:
         number:
           mode: box
+    timeouts:
+      collapsed: true
+      fields:
+        timeout:
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
+        write_timeout:
+          default: 20
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
 
 send_video:
   fields:
@@ -424,12 +448,6 @@ send_video:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -453,6 +471,22 @@ send_video:
       selector:
         number:
           mode: box
+    timeouts:
+      collapsed: true
+      fields:
+        timeout:
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
+        write_timeout:
+          default: 20
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
 
 send_voice:
   fields:
@@ -504,12 +538,6 @@ send_voice:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -533,6 +561,22 @@ send_voice:
       selector:
         number:
           mode: box
+    timeouts:
+      collapsed: true
+      fields:
+        timeout:
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
+        write_timeout:
+          default: 20
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
 
 send_document:
   fields:
@@ -593,12 +637,6 @@ send_document:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -622,6 +660,22 @@ send_document:
       selector:
         number:
           mode: box
+    timeouts:
+      collapsed: true
+      fields:
+        timeout:
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
+        write_timeout:
+          default: 20
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
 
 send_location:
   fields:
@@ -653,12 +707,6 @@ send_location:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -682,6 +730,15 @@ send_location:
       selector:
         number:
           mode: box
+    timeouts:
+      collapsed: true
+      fields:
+        timeout:
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
 
 send_poll:
   fields:
@@ -717,12 +774,6 @@ send_poll:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     message_tag:
       example: "msg_to_edit"
       selector:
@@ -735,6 +786,22 @@ send_poll:
       selector:
         number:
           mode: box
+    timeouts:
+      collapsed: true
+      fields:
+        timeout:
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
+        write_timeout:
+          default: 20
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
 
 edit_message:
   fields:
@@ -795,12 +862,6 @@ edit_message_media:
       example: 12345
       selector:
         text:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     media_type:
       selector:
         select:
@@ -853,6 +914,22 @@ edit_message_media:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
+    timeouts:
+      collapsed: true
+      fields:
+        timeout:
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
+        write_timeout:
+          default: 20
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
 
 edit_caption:
   fields:
@@ -926,12 +1003,15 @@ answer_callback_query:
       required: true
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
+    timeouts:
+      collapsed: true
+      fields:
+        timeout:
+          selector:
+            number:
+              min: 1
+              max: 3600
+              unit_of_measurement: seconds
 
 delete_message:
   fields:

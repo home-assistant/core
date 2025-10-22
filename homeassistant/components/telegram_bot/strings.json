@@ -221,6 +221,11 @@
           "name": "Message thread ID",
           "description": "Unique identifier for the target message thread (topic) of the forum; for forum supergroups only."
         }
+      },
+      "sections": {
+        "timeouts": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::timeouts::name%]"
+        }
       }
     },
     "send_chat_action": {
@@ -377,7 +382,11 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Timeout for sending the sticker in seconds."
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::timeout::description%]"
+        },
+        "write_timeout": {
+          "name": "Write timeout",
+          "description": "Timeout in seconds for sending the sticker."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -403,6 +412,9 @@
       "sections": {
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
+        },
+        "timeouts": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::timeouts::name%]"
         }
       }
     },
@@ -456,7 +468,11 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "[%key:component::telegram_bot::services::send_sticker::fields::timeout::description%]"
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::timeout::description%]"
+        },
+        "write_timeout": {
+          "name": "Write timeout",
+          "description": "Timeout in seconds for sending the animation."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -482,6 +498,9 @@
       "sections": {
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
+        },
+        "timeouts": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::timeouts::name%]"
         }
       }
     },
@@ -535,7 +554,11 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Timeout for sending the video in seconds."
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::timeout::description%]"
+        },
+        "write_timeout": {
+          "name": "Write timeout",
+          "description": "Timeout in seconds for sending the video."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -561,6 +584,9 @@
       "sections": {
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
+        },
+        "timeouts": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::timeouts::name%]"
         }
       }
     },
@@ -610,7 +636,11 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Timeout for sending the voice in seconds."
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::timeout::description%]"
+        },
+        "write_timeout": {
+          "name": "Write timeout",
+          "description": "Timeout in seconds for sending the voice."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -636,6 +666,9 @@
       "sections": {
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
+        },
+        "timeouts": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::timeouts::name%]"
         }
       }
     },
@@ -689,7 +722,11 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Timeout for sending the document in seconds."
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::timeout::description%]"
+        },
+        "write_timeout": {
+          "name": "Write timeout",
+          "description": "Timeout in seconds for sending the document."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -715,6 +752,9 @@
       "sections": {
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
+        },
+        "timeouts": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::timeouts::name%]"
         }
       }
     },
@@ -766,6 +806,11 @@
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
+      },
+      "sections": {
+        "timeouts": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::timeouts::name%]"
+        }
       }
     },
     "send_poll": {
@@ -806,7 +851,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Timeout for sending the poll in seconds."
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::timeout::description%]"
         },
         "message_tag": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
@@ -819,6 +864,11 @@
         "message_thread_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
+        }
+      },
+      "sections": {
+        "timeouts": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::timeouts::name%]"
         }
       }
     },
@@ -909,8 +959,12 @@
           "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
         },
         "timeout": {
-          "name": "[%key:component::telegram_bot::services::send_photo::fields::timeout::name%]",
-          "description": "Timeout for sending the media in seconds."
+          "name": "Read timeout",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::timeout::description%]"
+        },
+        "write_timeout": {
+          "name": "Write timeout",
+          "description": "Timeout in seconds for sending the media."
         },
         "inline_keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
@@ -920,6 +974,9 @@
       "sections": {
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
+        },
+        "timeouts": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::timeouts::name%]"
         }
       }
     },
@@ -993,7 +1050,12 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Timeout for sending the answer in seconds."
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::timeout::description%]"
+        }
+      },
+      "sections": {
+        "timeouts": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::timeouts::name%]"
         }
       }
     },
