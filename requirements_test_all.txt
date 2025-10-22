@@ -198,7 +198,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.1
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.3.1
+aioautomower==2.5.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -253,7 +253,7 @@ aiogithubapi==24.6.0
 aioguardian==2022.07.0
 
 # homeassistant.components.harmony
-aioharmony==0.5.3;python_version<'3.14'
+aioharmony==0.5.3
 
 # homeassistant.components.hassio
 aiohasupervisor==0.3.3
@@ -630,7 +630,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.14.2
+bthome-ble==3.15.0
 
 # homeassistant.components.buienradar
 buienradar==1.0.6
@@ -1229,7 +1229,7 @@ mbddns==0.1.2
 mcp==1.14.1
 
 # homeassistant.components.minecraft_server
-mcstatus==12.0.1
+mcstatus==12.0.6
 
 # homeassistant.components.meater
 meater-python==0.0.8
@@ -1810,7 +1810,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2024.2.4
+pylitterbot==2024.2.6
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.25.0

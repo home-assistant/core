@@ -24,7 +24,7 @@
         },
         "data_description": {
           "host": "The IP address or hostname of your LaMetric TIME on your network.",
-          "api_key": "You can find this API key in the [devices page in your LaMetric developer account](https://developer.lametric.com/user/devices)."
+          "api_key": "You can find this API key in the [devices page in your LaMetric developer account]({devices_url})."
         }
       },
       "cloud_select_device": {
