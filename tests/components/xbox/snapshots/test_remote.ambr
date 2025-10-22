@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_remotes[remote.xone_remote-entry]
+# name: test_remotes[remote.xone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,8 +12,8 @@
     'disabled_by': None,
     'domain': 'remote',
     'entity_category': None,
-    'entity_id': 'remote.xone_remote',
-    'has_entity_name': False,
+    'entity_id': 'remote.xone',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'XONE Remote',
+    'original_name': None,
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -34,21 +34,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_remotes[remote.xone_remote-state]
+# name: test_remotes[remote.xone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'XONE Remote',
+      'friendly_name': 'XONE',
       'supported_features': <RemoteEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'remote.xone_remote',
+    'entity_id': 'remote.xone',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_remotes[remote.xonex_remote-entry]
+# name: test_remotes[remote.xonex-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,8 +61,8 @@
     'disabled_by': None,
     'domain': 'remote',
     'entity_category': None,
-    'entity_id': 'remote.xonex_remote',
-    'has_entity_name': False,
+    'entity_id': 'remote.xonex',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -73,7 +73,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'XONEX Remote',
+    'original_name': None,
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -83,14 +83,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_remotes[remote.xonex_remote-state]
+# name: test_remotes[remote.xonex-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'XONEX Remote',
+      'friendly_name': 'XONEX',
       'supported_features': <RemoteEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'remote.xonex_remote',
+    'entity_id': 'remote.xonex',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
