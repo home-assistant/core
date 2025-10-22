@@ -50,6 +50,7 @@ from .const import DOMAIN, LOGGER
 
 DEVICES_URL = "https://developer.lametric.com/user/devices"
 
+
 class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle a LaMetric config flow."""
 
