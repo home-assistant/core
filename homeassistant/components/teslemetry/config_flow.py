@@ -18,13 +18,13 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, TIME_OF_USE_URL
 
 TESLEMETRY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 DESCRIPTION_PLACEHOLDERS = {
     "name": "Teslemetry",
-    "short_url": "teslemetry.com/console",
-    "url": "[teslemetry.com/console](https://teslemetry.com/console)",
+    "short_url": TIME_OF_USE_URL.replace("https://", ""),
+    "url": f"[Time of Use Settings]({TIME_OF_USE_URL})",
 }
 
 
