@@ -48,6 +48,7 @@ from homeassistant.util.network import is_link_local
 
 from .const import DOMAIN, LOGGER
 
+DEVICES_URL = "https://developer.lametric.com/user/devices"
 
 class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle a LaMetric config flow."""
@@ -164,6 +165,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return self.async_show_form(
             step_id="manual_entry",
             data_schema=vol.Schema(schema),
+            description_placeholders={
+                "devices_url": DEVICES_URL,
+            },
             errors=errors,
         )
 
