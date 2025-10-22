@@ -358,12 +358,12 @@ async def test_subentry_web_search_user_location(
             {
                 CONF_RECOMMENDED: True,
                 CONF_PROMPT: "bla",
+                CONF_LLM_HASS_API: ["assist"],
             },
             (
                 {
                     CONF_RECOMMENDED: False,
                     CONF_PROMPT: "Speak like a pirate",
-                    CONF_LLM_HASS_API: [],
                 },
                 {
                     CONF_CHAT_MODEL: "claude-3-opus",
