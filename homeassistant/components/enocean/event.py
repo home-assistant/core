@@ -135,6 +135,9 @@ class EnOceanEventEntity(EventEntity):
                 "manufacturer": self.__device_type.manufacturer,
                 "model": self.__device_type.model,
                 "serial_number": self.__enocean_id.to_string(),
+                "sw_version": None,
+                "hw_version": None,
+                "model_id": None,
             }
         )
 

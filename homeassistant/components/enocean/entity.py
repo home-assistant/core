@@ -37,8 +37,8 @@ class EnOceanEntity(Entity):
         # define EnOcean-specific attributes
         self.__enocean_id: EnOceanID = enocean_id
         self.__device_name: str = device_name
-        self.__device_type = device_type
-        self.__gateway_id = gateway_id
+        self.__device_type: EnOceanDeviceType = device_type
+        self.__gateway_id: EnOceanID = gateway_id
 
     async def async_added_to_hass(self) -> None:
         """Get gateway ID and register callback."""
@@ -101,6 +101,9 @@ class EnOceanEntity(Entity):
                 "manufacturer": self.__device_type.manufacturer,
                 "model": self.__device_type.model,
                 "serial_number": self.__enocean_id.to_string(),
+                "sw_version": None,
+                "hw_version": None,
+                "model_id": None,
             }
         )
 

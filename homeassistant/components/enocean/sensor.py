@@ -116,7 +116,7 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     EnOceanTemperatureSensor(
-                        dev_id=device_id,
+                        enocean_id=device_id,
                         dev_name=device_name,
                         gateway_id=config_entry.runtime_data.gateway.chip_id,
                         description=SENSOR_DESC_TEMPERATURE,
@@ -151,7 +151,7 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     EnOceanTemperatureSensor(
-                        dev_id=device_id,
+                        enocean_id=device_id,
                         dev_name=device_name,
                         gateway_id=config_entry.runtime_data.gateway.chip_id,
                         description=SENSOR_DESC_TEMPERATURE,
@@ -163,7 +163,7 @@ async def async_setup_entry(
                         name="Temperature",
                     ),
                     EnOceanHumiditySensor(
-                        dev_id=device_id,
+                        enocean_id=device_id,
                         dev_name=device_name,
                         gateway_id=config_entry.runtime_data.gateway.chip_id,
                         description=SENSOR_DESC_HUMIDITY,
@@ -188,7 +188,7 @@ async def async_setup_entry(
                 async_add_entities(
                     [
                         EnOceanTemperatureSensor(
-                            dev_id=device_id,
+                            enocean_id=device_id,
                             dev_name=device_name,
                             gateway_id=config_entry.runtime_data.gateway.chip_id,
                             description=SENSOR_DESC_TEMPERATURE,
@@ -205,7 +205,7 @@ async def async_setup_entry(
                 async_add_entities(
                     [
                         EnOceanTemperatureSensor(
-                            dev_id=device_id,
+                            enocean_id=device_id,
                             dev_name=device_name,
                             gateway_id=config_entry.runtime_data.gateway.chip_id,
                             description=SENSOR_DESC_TEMPERATURE,
@@ -217,7 +217,7 @@ async def async_setup_entry(
                             name="Temperature",
                         ),
                         EnOceanHumiditySensor(
-                            dev_id=device_id,
+                            enocean_id=device_id,
                             dev_name=device_name,
                             gateway_id=config_entry.runtime_data.gateway.chip_id,
                             description=SENSOR_DESC_HUMIDITY,
@@ -238,7 +238,7 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     EnOceanPowerSensor(
-                        dev_id=device_id,
+                        enocean_id=device_id,
                         dev_name=device_name,
                         gateway_id=config_entry.runtime_data.gateway.chip_id,
                         description=SENSOR_DESC_POWER,
@@ -254,7 +254,7 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     EnOceanTemperatureSensor(
-                        dev_id=device_id,
+                        enocean_id=device_id,
                         dev_name=device_name,
                         gateway_id=config_entry.runtime_data.gateway.chip_id,
                         description=SENSOR_DESC_TEMPERATURE,
@@ -274,7 +274,7 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     EnOceanWindowHandle(
-                        dev_id=device_id,
+                        enocean_id=device_id,
                         dev_name=device_name,
                         gateway_id=config_entry.runtime_data.gateway.chip_id,
                         description=SENSOR_DESC_WINDOWHANDLE,
@@ -290,7 +290,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
 
     def __init__(
         self,
-        dev_id: EnOceanID,
+        enocean_id: EnOceanID,
         dev_name: str,
         description: SensorEntityDescription,
         gateway_id: EnOceanID,
@@ -299,7 +299,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
     ) -> None:
         """Initialize the EnOcean sensor device."""
         super().__init__(
-            enocean_id=dev_id,
+            enocean_id=enocean_id,
             device_name=dev_name,
             name=name,
             device_type=dev_type,
@@ -361,7 +361,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
 
     def __init__(
         self,
-        dev_id: EnOceanID,
+        enocean_id: EnOceanID,
         gateway_id: EnOceanID,
         dev_name: str,
         description: SensorEntityDescription,
@@ -375,7 +375,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
     ) -> None:
         """Initialize the EnOcean temperature sensor device."""
         super().__init__(
-            dev_id=dev_id,
+            enocean_id=enocean_id,
             dev_name=dev_name,
             name=name,
             description=description,
