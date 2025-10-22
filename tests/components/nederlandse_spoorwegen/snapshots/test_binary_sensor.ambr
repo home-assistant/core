@@ -299,3 +299,603 @@
     'state': 'on',
   })
 # ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_home_arrival_delayed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.to_home_arrival_delayed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-alert-outline',
+    'original_name': 'Arrival delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_arrival_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_arrival_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_home_arrival_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Arrival delayed',
+      'icon': 'mdi:bell-alert-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_home_arrival_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_home_departure_delayed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.to_home_departure_delayed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-alert-outline',
+    'original_name': 'Departure delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_departure_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_departure_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_home_departure_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Departure delayed',
+      'icon': 'mdi:bell-alert-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_home_departure_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_home_going-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.to_home_going',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-cancel-outline',
+    'original_name': 'Going',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_going',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_going',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_home_going-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Going',
+      'icon': 'mdi:bell-cancel-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_home_going',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_work_arrival_delayed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.to_work_arrival_delayed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-alert-outline',
+    'original_name': 'Arrival delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_arrival_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_arrival_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_work_arrival_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Arrival delayed',
+      'icon': 'mdi:bell-alert-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_work_arrival_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_work_departure_delayed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.to_work_departure_delayed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-alert-outline',
+    'original_name': 'Departure delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_departure_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_departure_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_work_departure_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Departure delayed',
+      'icon': 'mdi:bell-alert-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_work_departure_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_work_going-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.to_work_going',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-cancel-outline',
+    'original_name': 'Going',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_going',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_going',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_work_going-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Going',
+      'icon': 'mdi:bell-cancel-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_work_going',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_home_arrival_delayed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.to_home_arrival_delayed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-alert-outline',
+    'original_name': 'Arrival delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_arrival_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_arrival_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_home_arrival_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Arrival delayed',
+      'icon': 'mdi:bell-alert-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_home_arrival_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_home_departure_delayed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.to_home_departure_delayed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-alert-outline',
+    'original_name': 'Departure delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_departure_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_departure_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_home_departure_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Departure delayed',
+      'icon': 'mdi:bell-alert-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_home_departure_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_home_going-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.to_home_going',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-cancel-outline',
+    'original_name': 'Going',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_going',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_going',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_home_going-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Going',
+      'icon': 'mdi:bell-cancel-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_home_going',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_work_arrival_delayed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.to_work_arrival_delayed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-alert-outline',
+    'original_name': 'Arrival delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_arrival_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_arrival_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_work_arrival_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Arrival delayed',
+      'icon': 'mdi:bell-alert-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_work_arrival_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_work_departure_delayed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.to_work_departure_delayed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-alert-outline',
+    'original_name': 'Departure delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_departure_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_departure_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_work_departure_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Departure delayed',
+      'icon': 'mdi:bell-alert-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_work_departure_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_work_going-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.to_work_going',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-cancel-outline',
+    'original_name': 'Going',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_going',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_going',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_work_going-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Going',
+      'icon': 'mdi:bell-cancel-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_work_going',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

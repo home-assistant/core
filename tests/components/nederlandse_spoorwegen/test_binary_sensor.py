@@ -29,6 +29,36 @@ async def test_binary_sensor(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+async def test_single_trip_binary_sensor(
+    hass: HomeAssistant,
+    mock_single_trip_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_binary_sensor_platform,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor initialization."""
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+async def test_no_trips_binary_sensor(
+    hass: HomeAssistant,
+    mock_no_trips_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_binary_sensor_platform,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor initialization."""
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
 async def test_sensor_with_api_connection_error(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
