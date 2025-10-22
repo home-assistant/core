@@ -1,11 +1,18 @@
 """Test the Kostal Plenticore Solar Inverter switch platform."""
 
-from pykoplenti import SettingsData
+from datetime import timedelta
+from unittest.mock import patch
 
+from pykoplenti import SettingsData
+import pytest
+
+from homeassistant.components.switch import SwitchEntityDescription
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_installer_setting_not_available(
@@ -70,3 +77,75 @@ async def test_installer_setting_available(
     await hass.async_block_till_done()
 
     assert entity_registry.async_is_registered("switch.scb_battery_manual_charge")
+
+
+async def test_invalid_string_count_value(
+    hass: HomeAssistant,
+    mock_get_settings: dict[str, list[SettingsData]],
+    mock_get_setting_values: dict[str, dict[str, str]],
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that an invalid string count value is handled correctly."""
+    mock_get_setting_values["devices:local"].update({"Properties:StringCnt": "invalid"})
+
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # ensure no shadow management switch entities were registered
+    assert [
+        name
+        for name, _ in entity_registry.entities.items()
+        if name.startswith("switch.scb_shadow_management_dc_string_")
+    ] == []
+
+
+def _enabled_switch_entity_instance(*args, **kwargs):
+    """Return a SwitchEntityDescription which is enabled by default."""
+    kwargs["entity_registry_enabled_default"] = True
+    return SwitchEntityDescription(*args, **kwargs)
+
+
+@pytest.mark.parametrize(
+    ("shadow_mgmt", "string"),
+    [
+        ("0", (STATE_OFF, STATE_OFF)),
+        ("1", (STATE_ON, STATE_OFF)),
+        ("2", (STATE_OFF, STATE_ON)),
+        ("3", (STATE_ON, STATE_ON)),
+    ],
+)
+async def test_shadow_management_switch_state(
+    hass: HomeAssistant,
+    mock_get_settings: dict[str, list[SettingsData]],
+    mock_get_setting_values: dict[str, dict[str, str]],
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    shadow_mgmt: str,
+    string: tuple[str, str],
+) -> None:
+    """Test that the state of the shadow management switch is correct."""
+
+    with patch(
+        "homeassistant.components.kostal_plenticore.switch.SwitchEntityDescription",
+        side_effect=_enabled_switch_entity_instance,
+    ):
+        mock_get_setting_values["devices:local"].update(
+            {"Properties:StringCnt": "2", "Generator:ShadowMgmt:Enable": shadow_mgmt}
+        )
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=300))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        state = hass.states.get("switch.scb_shadow_management_dc_string_1")
+        assert state is not None
+        assert state.state == string[0]
+
+        state = hass.states.get("switch.scb_shadow_management_dc_string_2")
+        assert state is not None
+        assert state.state == string[1]
