@@ -4,15 +4,22 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from enum import StrEnum
 from functools import partial
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from xbox.webapi.api.provider.people.models import Person
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import PresenceData, XboxConfigEntry, XboxUpdateCoordinator
+from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
 from .entity import XboxBaseEntity
 
 
@@ -23,20 +30,23 @@ class XboxSensor(StrEnum):
     GAMER_SCORE = "gamer_score"
     ACCOUNT_TIER = "account_tier"
     GOLD_TENURE = "gold_tenure"
+    LAST_ONLINE = "last_online"
+    FOLLOWING = "following"
+    FOLLOWER = "follower"
 
 
 @dataclass(kw_only=True, frozen=True)
 class XboxSensorEntityDescription(SensorEntityDescription):
     """Xbox sensor description."""
 
-    value_fn: Callable[[PresenceData], StateType]
+    value_fn: Callable[[Person], StateType | datetime]
 
 
 SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
     XboxSensorEntityDescription(
         key=XboxSensor.STATUS,
         translation_key=XboxSensor.STATUS,
-        value_fn=lambda x: x.status,
+        value_fn=lambda x: x.presence_text,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.GAMER_SCORE,
@@ -47,13 +57,33 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         key=XboxSensor.ACCOUNT_TIER,
         translation_key=XboxSensor.ACCOUNT_TIER,
         entity_registry_enabled_default=False,
-        value_fn=lambda x: x.account_tier,
+        value_fn=lambda x: x.detail.account_tier if x.detail else None,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.GOLD_TENURE,
         translation_key=XboxSensor.GOLD_TENURE,
         entity_registry_enabled_default=False,
-        value_fn=lambda x: x.gold_tenure,
+        value_fn=lambda x: x.detail.tenure if x.detail else None,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.LAST_ONLINE,
+        translation_key=XboxSensor.LAST_ONLINE,
+        value_fn=(
+            lambda x: x.last_seen_date_time_utc.replace(tzinfo=UTC)
+            if x.last_seen_date_time_utc
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.FOLLOWING,
+        translation_key=XboxSensor.FOLLOWING,
+        value_fn=lambda x: x.detail.following_count if x.detail else None,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.FOLLOWER,
+        translation_key=XboxSensor.FOLLOWER,
+        value_fn=lambda x: x.detail.follower_count if x.detail else None,
     ),
 )
 
@@ -78,7 +108,7 @@ class XboxSensorEntity(XboxBaseEntity, SensorEntity):
     entity_description: XboxSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the requested attribute."""
         return self.entity_description.value_fn(self.data)
 
