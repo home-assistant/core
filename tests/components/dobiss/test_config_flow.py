@@ -1,11 +1,10 @@
 """Test the Dobiss config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.dobiss.config_flow import CannotConnect
 from homeassistant.components.dobiss.const import CONF_SECRET, CONF_SECURE, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -16,7 +15,7 @@ pytestmark = pytest.mark.asyncio
 
 
 async def test_user_form(hass: HomeAssistant) -> None:
-    """Test we get the user form."""
+    """Test we get the user form and create entry after valid input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -24,9 +23,11 @@ async def test_user_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.dobiss.config_flow.DobissConnection.authenticate",
-        return_value=True,
-    ):
+        "homeassistant.components.dobiss.config_flow.dobissapi.DobissAPI"
+    ) as mock_dobiss:
+        # auth_check is async
+        mock_dobiss.return_value.auth_check = AsyncMock(return_value=True)
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -53,9 +54,10 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.dobiss.config_flow.DobissConnection.authenticate",
-        return_value=False,
-    ):
+        "homeassistant.components.dobiss.config_flow.dobissapi.DobissAPI"
+    ) as mock_dobiss:
+        mock_dobiss.return_value.auth_check = AsyncMock(return_value=False)
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -76,9 +78,10 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.dobiss.config_flow.DobissConnection.authenticate",
-        side_effect=CannotConnect,
-    ):
+        "homeassistant.components.dobiss.config_flow.dobissapi.DobissAPI"
+    ) as mock_dobiss:
+        mock_dobiss.return_value.auth_check = AsyncMock(side_effect=ConnectionError)
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

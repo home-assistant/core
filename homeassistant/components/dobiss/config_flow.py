@@ -8,8 +8,9 @@ import dobissapi
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, __version__ as HAVERSION
+from homeassistant.core import callback
 
 from .const import CONF_SECRET, CONF_SECURE, DOMAIN
 
@@ -31,6 +32,25 @@ async def validate_input(
         raise CannotConnect from err
 
     return {"title": f"NXT server {data[CONF_HOST]}"}
+
+
+class DobissOptionsFlowHandler(OptionsFlow):
+    """Handle a option flow."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        if HA_VERSION < "2024.12":
+            self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema({})
+        return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -74,6 +94,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(fields), errors=errors
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> DobissOptionsFlowHandler:
+        """Get the options flow for AlarmDecoder."""
+        return DobissOptionsFlowHandler(config_entry)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
