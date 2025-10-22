@@ -7,6 +7,7 @@ import pathlib
 from unittest.mock import MagicMock, patch
 
 import pytest
+pytestmark = pytest.mark.asyncio
 
 from homeassistant.components import template
 from homeassistant.components.blueprint import (
@@ -525,36 +526,35 @@ async def test_variables_for_entity(
     assert state is not None
     assert state.state == expected
 
-"""Test blueprint variable loading for template integration."""
+async def test_blueprint_variables_load_on_reload(hass):
+    """Test that blueprint variables are correctly loaded on reload."""
 
-import pytest
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-
-pytestmark = pytest.mark.asyncio
-async def test_blueprint_variables_load_on_reload(hass: HomeAssistant):
-    """Test that blueprint variables load correctly on reload/start."""
-
+    # S-1: mock a template blueprint config with a variable
     config = {
-        "template": [
-            {
-                "variables": {"switch": "switch.fake_switch"},
-                "light": [
-                    {
-                        "name": "{{ switch }}",
-                        "state": "{{ is_state(switch, 'on') }}",
-                    }
-                ],
-            }
-        ]
+        "template": {
+            "trigger": {"platform": "state", "entity_id": "sensor.test"},
+            "sensor": {
+                "name": "Test Sensor",
+                "state": "{{ my_var }}",
+                "variables": {"my_var": "loaded"},
+            },
+        }
     }
 
+    # S-2: setup template component
     assert await async_setup_component(hass, "template", config)
+    await hass.async_block_till_done()
 
-    light_entity = hass.states.get("light.fake_switch")
-    assert light_entity is not None
+    # S-3: verify that the variable was loaded
+    state = hass.states.get("sensor.test_sensor")
+    assert state is not None
+    assert state.state == "loaded"
 
-    await hass.services.async_call("template", "reload", {}, blocking=True)
+    # S-4: simulate reload
+    await hass.services.async_call("homeassistant", "reload", blocking=True)
+    await hass.async_block_till_done()
 
-    light_entity = hass.states.get("light.fake_switch")
-    assert light_entity is not None
+    # S-5: verify variable still loaded after reload
+    state = hass.states.get("sensor.test_sensor")
+    assert state.state == "loaded"
+
