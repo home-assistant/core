@@ -142,9 +142,7 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=REAUTH_SCHEMA,
-            errors=errors,
+            step_id="reauth_confirm", data_schema=REAUTH_SCHEMA, errors=errors
         )
 
     async def async_step_validate(
