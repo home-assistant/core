@@ -215,13 +215,13 @@
       "message": "Failed to turn off the player: {error}"
     },
     "set_shuffle_failed": {
-      "message": "Failed to set shuffle mode to {mode}."
+      "message": "Failed to set shuffle mode: {error}"
     },
     "set_volume_failed": {
-      "message": "Failed to set volume to {volume}%."
+      "message": "Failed to set volume to {volume}%: {error}"
     },
     "set_mute_failed": {
-      "message": "Failed to {state} the player."
+      "message": "Failed to mute/unmute the player: {error}"
     },
     "stop_failed": {
       "message": "Failed to stop playback: {error}"
@@ -242,34 +242,34 @@
       "message": "Failed to return to the previous track: {error}"
     },
     "seek_failed": {
-      "message": "Failed to seek to position {position} seconds."
+      "message": "Failed to seek to position {position} seconds: {error}"
     },
     "set_repeat_failed": {
-      "message": "Failed to set repeat mode to {mode}."
+      "message": "Failed to set repeat mode: {error}"
     },
     "clear_playlist_failed": {
       "message": "Failed to clear the playlist: {error}"
     },
     "call_method_failed": {
-      "message": "Failed to call method {command}."
+      "message": "Failed to call method {command}: {error}"
     },
     "call_query_failed": {
-      "message": "Failed to query method {command}."
+      "message": "Failed to query method {command}: {error}"
     },
     "unjoin_failed": {
       "message": "Failed to unsync the player: {error}"
     },
     "press_failed": {
-      "message": "Failed to execute button action {action}."
+      "message": "Failed to execute button action {action}: {error}"
     },
     "load_url_failed": {
-      "message": "Failed to load media URL {media_id} with command {cmd}."
+      "message": "Failed to load media URL {media_id} with command {cmd}: {error}"
     },
     "load_playlist_failed": {
-      "message": "Failed to load playlist with command {cmd}."
+      "message": "Failed to load playlist with command {cmd}: {error}"
     },
     "generate_image_url_failed": {
-      "message": "Failed to generate image URL for track ID {track_id}."
+      "message": "Failed to generate image URL for track ID {track_id}: {error}"
     }
   }
 }

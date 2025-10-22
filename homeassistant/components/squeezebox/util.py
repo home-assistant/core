@@ -36,7 +36,7 @@ async def safe_library_call(
             translation_key=translation_key,
             translation_placeholders={
                 **(translation_placeholders or {}),
-                "error": "unknown failure",
+                "error": "",
             },
         )
 

@@ -435,10 +435,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await safe_library_call(
-            self._player.async_set_power,
-            False,
-            translation_key="turn_off_failed",
-            translation_placeholders={"error": "command rejected"},
+            self._player.async_set_power, False, translation_key="turn_off_failed"
         )
         await self.coordinator.async_refresh()
 
@@ -459,7 +456,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             self._player.async_set_muting,
             mute,
             translation_key="set_mute_failed",
-            translation_placeholders={"state": "mute" if mute else "unmute"},
         )
         await self.coordinator.async_refresh()
 
@@ -468,7 +464,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_stop,
             translation_key="stop_failed",
-            translation_placeholders={"error": "command rejected"},
         )
         await self.coordinator.async_refresh()
 
@@ -477,7 +472,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_toggle_pause,
             translation_key="play_pause_failed",
-            translation_placeholders={"error": "command rejected"},
         )
         await self.coordinator.async_refresh()
 
@@ -486,7 +480,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_play,
             translation_key="play_failed",
-            translation_placeholders={"error": "command rejected"},
         )
         await self.coordinator.async_refresh()
 
@@ -495,7 +488,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_pause,
             translation_key="pause_failed",
-            translation_placeholders={"error": "command rejected"},
         )
         await self.coordinator.async_refresh()
 
@@ -505,7 +497,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             self._player.async_index,
             "+1",
             translation_key="next_track_failed",
-            translation_placeholders={"error": "command rejected"},
         )
         await self.coordinator.async_refresh()
 
@@ -515,7 +506,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             self._player.async_index,
             "-1",
             translation_key="previous_track_failed",
-            translation_placeholders={"error": "command rejected"},
         )
         await self.coordinator.async_refresh()
 
@@ -535,7 +525,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             self._player.async_set_power,
             True,
             translation_key="turn_on_failed",
-            translation_placeholders={"error": "command rejected"},
         )
         await self.coordinator.async_refresh()
 
@@ -734,7 +723,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             self._player.async_set_repeat,
             repeat_mode,
             translation_key="set_repeat_failed",
-            translation_placeholders={"mode": repeat_mode},
         )
         await self.coordinator.async_refresh()
 
@@ -745,7 +733,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             self._player.async_set_shuffle,
             shuffle_mode,
             translation_key="set_shuffle_failed",
-            translation_placeholders={"error": f"shuffle={shuffle_mode}"},
         )
         await self.coordinator.async_refresh()
 
@@ -754,7 +741,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_clear_playlist,
             translation_key="clear_playlist_failed",
-            translation_placeholders={"error": "command rejected"},
         )
         await self.coordinator.async_refresh()
 
@@ -831,7 +817,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_unsync,
             translation_key="unjoin_failed",
-            translation_placeholders={"error": "command rejected"},
         )
         await self.coordinator.async_refresh()
 
