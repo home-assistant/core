@@ -43,7 +43,7 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.session import SnapshotSession
 
 # Setup patching of JSON functions before any other Home Assistant imports
-# from . import patch_json  # isort:skip
+from . import patch_json  # isort:skip
 
 from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
