@@ -639,6 +639,7 @@ bleak-esphome==3.4.0
 bleak-retry-connector==4.4.3
 
 # homeassistant.components.bluetooth
+# homeassistant.components.ryse
 bleak==1.0.1
 
 # homeassistant.components.blebox
@@ -2762,6 +2763,9 @@ ruuvitag-ble==0.2.1
 
 # homeassistant.components.yamaha
 rxv==0.7.0
+
+# homeassistant.components.ryse
+ryseble==1.5.0
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1

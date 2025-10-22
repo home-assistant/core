@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pairing RYSE device",
+        "description": "Please press the PAIR button on the RYSE device and then click OK.",
+        "data": {
+          "device_address": "RYSE devices"
+        },
+        "submit": "OK"
+      },
+      "scan": {
+        "title": "Pairing RYSE device",
+        "data": {
+          "device_address": "RYSE devices:"
+        },
+        "submit": "PAIR"
+      }
+    },
+    "error": {
+      "no_devices_found": "No RYSE BLE gear found."
+    }
+  }
+}
