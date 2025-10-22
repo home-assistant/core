@@ -1281,16 +1281,14 @@ class PipelineRun:
                 chat_log_delta_listener,
             )
 
-                if agent_id == conversation.HOME_ASSISTANT_AGENT:
-                    # Check if all targeted entities were in the same area as
-                    # the satellite device.
-                    # If so, the satellite should respond with an acknowledge beep
-                    # instead of a full response.
-                    all_targets_in_satellite_area = (
-                        self._get_all_targets_in_satellite_area(
-                            conversation_result.response, self._device_id
-                        )
-                    )
+            if agent_id == conversation.HOME_ASSISTANT_AGENT:
+                # Check if all targeted entities were in the same area as
+                # the satellite device.
+                # If so, the satellite should respond with an acknowledge beep
+                # instead of a full response.
+                all_targets_in_satellite_area = self._get_all_targets_in_satellite_area(
+                    conversation_result.response, self._device_id
+                )
 
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during intent recognition")
