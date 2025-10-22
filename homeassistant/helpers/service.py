@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Callable, Coroutine, Iterable, Mapping
+from contextlib import suppress
 import dataclasses
 from enum import Enum
 from functools import cache, partial
@@ -534,6 +535,16 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
+
+    def _substitute_description_placeholders(
+        description: str | None, description_placeholders: Mapping[str, str] | None
+    ) -> str | None:
+        if not description or not description_placeholders:
+            return description
+        with suppress(KeyError):
+            description = description.format(**description_placeholders)
+        return description
+
     descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     # We don't mutate services here so we avoid calling
@@ -594,6 +605,7 @@ async def async_get_all_descriptions(
         for service_name, service in services_map.items():
             cache_key = (domain, service_name)
             description = descriptions_cache.get(cache_key)
+            description_placeholders = service.description_placeholders
             if description is not None:
                 domain_descriptions[service_name] = description
                 continue
@@ -955,6 +967,7 @@ def async_register_admin_service(
     ],
     schema: VolSchemaType = vol.Schema({}, extra=vol.PREVENT_EXTRA),
     supports_response: SupportsResponse = SupportsResponse.NONE,
+    description_placeholders: Mapping[str, str] | None = None,
 ) -> None:
     """Register a service that requires admin access."""
     hass.services.async_register(
@@ -967,6 +980,7 @@ def async_register_admin_service(
         ),
         schema,
         supports_response,
+        description_placeholders=description_placeholders,
     )
 
 

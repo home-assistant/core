@@ -1393,6 +1393,123 @@ async def test_async_get_all_descriptions_new_service_added_while_loading(
     assert descriptions[logger_domain]["new_service"]["description"] == "new service"
 
 
+async def test_async_get_descriptions_with_placeholders(hass: HomeAssistant) -> None:
+    """Test descriptions async_get_all_descriptions with placeholders.
+
+    Placeholders supplied with a service registration should be substituted
+    from the YAML services.yaml or strings.json.
+    """
+    service_descriptions = """
+    happy_time:
+      fields:
+        topic:
+          name: "Topic {placeholder}"
+          example: "Beer {placeholder}"
+          selector:
+            text:
+        duration:
+          default: 5
+          selector:
+            number:
+              min: 1
+              max: 300
+              unit_of_measurement: "seconds"
+    """
+
+    service_schema = vol.Schema(
+        {
+            "topic": cv.string,
+            "duration": cv.positive_int,
+        }
+    )
+
+    domain = "test_domain"
+
+    hass.services.async_register(
+        domain,
+        "happy_time",
+        lambda call: None,
+        schema=service_schema,
+        description_placeholders={"placeholder": "beer"},
+    )
+    mock_integration(hass, MockModule(domain), top_level_files={"services.yaml"})
+    assert await async_setup_component(hass, domain, {})
+
+    def load_yaml(fname, secrets=None):
+        with io.StringIO(service_descriptions) as file:
+            return parse_yaml(file)
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        translation_key_prefix = f"component.{domain}.services.happy_time"
+        return {
+            f"{translation_key_prefix}.name": "Translated name {placeholder}",
+            f"{translation_key_prefix}.description": "Translated description {placeholder}",
+            f"{translation_key_prefix}.fields.topic.name": "Field name {placeholder}",
+            f"{translation_key_prefix}.fields.topic.description": "Topic field description {placeholder}",
+            f"{translation_key_prefix}.fields.duration.example": "Duration field example {placeholder}",
+        }
+
+    with (
+        patch(
+            "homeassistant.helpers.service.translation.async_get_translations",
+            side_effect=async_get_translations,
+        ),
+        patch(
+            "homeassistant.helpers.service._load_services_files",
+            side_effect=service._load_services_files,
+        ) as proxy_load_services_files,
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=load_yaml,
+        ) as mock_load_yaml,
+    ):
+        descriptions = await service.async_get_all_descriptions(hass)
+
+    mock_load_yaml.assert_called_once_with("services.yaml", None)
+    assert proxy_load_services_files.mock_calls[0][1][0] == unordered(
+        [
+            await async_get_integration(hass, domain),
+        ]
+    )
+
+    assert descriptions == {
+        "test_domain": {
+            "happy_time": {
+                "name": "Translated name beer",
+                "description": "Translated description beer",
+                "fields": {
+                    "topic": {
+                        "name": "Field name beer",
+                        "example": "Beer {placeholder}",
+                        "selector": {"text": {"multiple": False, "multiline": False}},
+                        "description": "Topic field description beer",
+                    },
+                    "duration": {
+                        "default": 5,
+                        "selector": {
+                            "number": {
+                                "min": 1.0,
+                                "max": 300.0,
+                                "unit_of_measurement": "seconds",
+                                "step": 1.0,
+                                "mode": "slider",
+                            }
+                        },
+                        "example": "Duration field example beer",
+                    },
+                },
+            }
+        }
+    }
+
+
 async def test_register_with_mixed_case(hass: HomeAssistant) -> None:
     """Test registering a service with mixed case.
 
