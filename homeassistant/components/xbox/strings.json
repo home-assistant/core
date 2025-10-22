@@ -9,6 +9,10 @@
         "data_description": {
           "implementation": "[%key:common::config_flow::description::implementation%]"
         }
+      },
+      "oauth_discovery": {
+        "description": "Home Assistant has found an Xbox device on your network. Press **Submit** to continue setting up the Xbox integration.",
+        "title": "Discovered Xbox device"
       }
     },
     "abort": {
@@ -68,7 +72,7 @@
   },
   "exceptions": {
     "request_exception": {
-      "message": "Failed to connect to Xbox Network: {error}"
+      "message": "Failed to connect to Xbox Network"
     },
     "timeout_exception": {
       "message": "Failed to connect to Xbox Network due to a connection timeout"
