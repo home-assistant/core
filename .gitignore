@@ -142,3 +142,5 @@ pytest_buckets.txt
 # AI tooling
 .claude
 
+refactoring-changes.patch
+sonar-project.properties

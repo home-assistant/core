@@ -1435,70 +1435,92 @@ class AlexaModeController(AlexaCapability):
         if name != "mode":
             raise UnsupportedProperty(name)
 
-        # Fan Direction
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
-            mode = self.entity.attributes.get(fan.ATTR_DIRECTION, None)
-            if mode in (fan.DIRECTION_FORWARD, fan.DIRECTION_REVERSE, STATE_UNKNOWN):
-                return f"{fan.ATTR_DIRECTION}.{mode}"
+        # Define property getters in a lookup table
+        property_getters = {
+            f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}": lambda: self._get_mode_property(
+                fan.ATTR_DIRECTION,
+                valid_modes=(
+                    fan.DIRECTION_FORWARD,
+                    fan.DIRECTION_REVERSE,
+                    STATE_UNKNOWN,
+                ),
+            ),
+            f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}": lambda: self._get_mode_property(
+                fan.ATTR_PRESET_MODE, valid_modes_attr=fan.ATTR_PRESET_MODES
+            ),
+            f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}": lambda: self._get_mode_property(
+                humidifier.ATTR_MODE, valid_modes_attr=humidifier.ATTR_AVAILABLE_MODES
+            ),
+            f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}": lambda: self._get_mode_property(
+                remote.ATTR_CURRENT_ACTIVITY,
+                valid_modes_attr=remote.ATTR_ACTIVITY_LIST,
+                prefix=remote.ATTR_ACTIVITY,
+            ),
+            f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}": lambda: self._get_mode_property(
+                water_heater.ATTR_OPERATION_MODE,
+                valid_modes_attr=water_heater.ATTR_OPERATION_LIST,
+            ),
+            f"{cover.DOMAIN}.{cover.ATTR_POSITION}": self._get_cover_position_property,
+            f"{valve.DOMAIN}.state": self._get_valve_state_property,
+        }
 
-        # Fan preset_mode
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
-            mode = self.entity.attributes.get(fan.ATTR_PRESET_MODE, None)
-            if mode in self.entity.attributes.get(fan.ATTR_PRESET_MODES, ()):
-                return f"{fan.ATTR_PRESET_MODE}.{mode}"
+        # Check if we have a property getter for this instance
+        if self.instance in property_getters:
+            return property_getters[self.instance]()
 
-        # Humidifier mode
-        if self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
-            mode = self.entity.attributes.get(humidifier.ATTR_MODE)
-            modes: list[str] = (
-                self.entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES) or []
-            )
-            if mode in modes:
-                return f"{humidifier.ATTR_MODE}.{mode}"
+        return None
 
-        # Remote Activity
-        if self.instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
-            activity = self.entity.attributes.get(remote.ATTR_CURRENT_ACTIVITY, None)
-            if activity in self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST, []):
-                return f"{remote.ATTR_ACTIVITY}.{activity}"
+    def _get_mode_property(
+        self,
+        mode_attr: str,
+        valid_modes_attr: str | None = None,
+        valid_modes: tuple | None = None,
+        prefix: str | None = None,
+    ) -> str | None:
+        """Get mode property for any domain with flexible validation."""
+        current_mode = self.entity.attributes.get(mode_attr, None)
 
-        # Water heater operation mode
-        if self.instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
-            operation_mode = self.entity.attributes.get(
-                water_heater.ATTR_OPERATION_MODE
-            )
-            operation_modes: list[str] = (
-                self.entity.attributes.get(water_heater.ATTR_OPERATION_LIST) or []
-            )
-            if operation_mode in operation_modes:
-                return f"{water_heater.ATTR_OPERATION_MODE}.{operation_mode}"
+        # Determine valid modes from either attribute or static tuple
+        if valid_modes_attr:
+            valid_modes_list = self.entity.attributes.get(valid_modes_attr, [])
+        elif valid_modes:
+            valid_modes_list = valid_modes
+        else:
+            valid_modes_list = []
 
-        # Cover Position
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-            # Return state instead of position when using ModeController.
-            mode = self.entity.state
-            if mode in (
-                cover.STATE_OPEN,
-                cover.STATE_OPENING,
-                cover.STATE_CLOSED,
-                cover.STATE_CLOSING,
-                STATE_UNKNOWN,
-            ):
-                return f"{cover.ATTR_POSITION}.{mode}"
+        # Check if current mode is valid
+        if current_mode in valid_modes_list:
+            property_prefix = prefix or mode_attr
+            return f"{property_prefix}.{current_mode}"
 
-        # Valve position state
-        if self.instance == f"{valve.DOMAIN}.state":
-            # Return state instead of position when using ModeController.
-            state = self.entity.state
-            if state in (
-                valve.STATE_OPEN,
-                valve.STATE_OPENING,
-                valve.STATE_CLOSED,
-                valve.STATE_CLOSING,
-                STATE_UNKNOWN,
-            ):
-                return f"state.{state}"
+        return None
 
+    def _get_cover_position_property(self) -> str | None:
+        """Get cover position property."""
+        # Return state instead of position when using ModeController.
+        mode = self.entity.state
+        if mode in (
+            cover.STATE_OPEN,
+            cover.STATE_OPENING,
+            cover.STATE_CLOSED,
+            cover.STATE_CLOSING,
+            STATE_UNKNOWN,
+        ):
+            return f"{cover.ATTR_POSITION}.{mode}"
+        return None
+
+    def _get_valve_state_property(self) -> str | None:
+        """Get valve state property."""
+        # Return state instead of position when using ModeController.
+        state = self.entity.state
+        if state in (
+            valve.STATE_OPEN,
+            valve.STATE_OPENING,
+            valve.STATE_CLOSED,
+            valve.STATE_CLOSING,
+            STATE_UNKNOWN,
+        ):
+            return f"state.{state}"
         return None
 
     def configuration(self) -> dict[str, Any] | None:
@@ -1521,7 +1543,7 @@ class AlexaModeController(AlexaCapability):
         for mode in modes:
             self._resource.add_mode(f"{instance_prefix}.{mode}", [mode])
 
-        # Add fake mode if only one mode exists to prevent Alexa discovery issues
+        # Alexa requires at least 2 modes for ModeController discovery
         if add_fake_mode_if_single and len(modes) == 1:
             self._resource.add_mode(
                 f"{instance_prefix}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
