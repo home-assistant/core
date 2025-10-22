@@ -9,7 +9,7 @@ from PyViCare.PyViCareHeatingDevice import (
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, VIESSMANN_DEVELOPER_PORTAL
 
 
 class ViCareEntity(Entity):
@@ -29,12 +29,18 @@ class ViCareEntity(Entity):
         gateway_serial = device_config.getConfig().serial
         device_id = device_config.getId()
         model = device_config.getModel().replace("_", " ")
+        via_device_identifier: tuple[str, str] = ("", "")
 
         identifier = (
-            f"{gateway_serial}_{device_serial.replace('zigbee-', 'zigbee_')}"
+            f"{gateway_serial}_{device_serial.replace('-', '_')}"
             if device_serial is not None
             else f"{gateway_serial}_{device_id}"
         )
+
+        if device_serial is not None and device_serial.startswith("zigbee-"):
+            parts = device_serial.split("-")
+            if len(parts) == 3:  # expect format zigbee-<zigbee-ieee>-<channel-id>
+                via_device_identifier = (DOMAIN, f"{gateway_serial}_zigbee_{parts[1]}")
 
         self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = (
             component if component else device
@@ -49,5 +55,6 @@ class ViCareEntity(Entity):
             name=model,
             manufacturer="Viessmann",
             model=model,
-            configuration_url="https://developer.viessmann.com/",
+            configuration_url=VIESSMANN_DEVELOPER_PORTAL,
+            via_device=via_device_identifier,
         )
