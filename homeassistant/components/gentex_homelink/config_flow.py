@@ -54,7 +54,6 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 _LOGGER.exception("An unexpected error occurred")
                 errors["base"] = "unknown"
             else:
-                _LOGGER.info("Got tokens, passing to creation")
                 self.external_data = {"tokens": tokens}
                 return await self.async_step_creation()
 

@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import BaseCoordinatorEntity
 
 from .const import DOMAIN, EVENT_PRESSED
 from .coordinator import HomeLinkCoordinator
@@ -33,7 +33,11 @@ async def async_setup_entry(
     async_add_entities(coordinator.buttons)
 
 
-class HomeLinkEventEntity(CoordinatorEntity[HomeLinkCoordinator], EventEntity):
+# Updates are centralized by the coordinator.
+PARALLEL_UPDATES = 0
+
+
+class HomeLinkEventEntity(BaseCoordinatorEntity[HomeLinkCoordinator], EventEntity):
     """Event Entity."""
 
     _attr_has_entity_name = True
@@ -58,16 +62,15 @@ class HomeLinkEventEntity(CoordinatorEntity[HomeLinkCoordinator], EventEntity):
             identifiers={(DOMAIN, device_id)},
             name=device_name,
         )
-
-        self.name: str = param_name
-        self.unique_id: str = id
+        self.coordinator = coordinator
         self.last_request_id: str | None = None
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update this button."""
-        if self.id not in self.coordinator.data:
-            # Not for us
+
+        if not self.coordinator.data or self.id not in self.coordinator.data:
+            # Not for us, or no data from the update
             return
 
         data: Mapping[str, Any] = self.coordinator.data
@@ -77,3 +80,7 @@ class HomeLinkEventEntity(CoordinatorEntity[HomeLinkCoordinator], EventEntity):
             self.last_request_id = latest_update["requestId"]
 
         self.async_write_ha_state()
+
+    async def async_update(self):
+        """Manually update the entity."""
+        self._handle_coordinator_update()
