@@ -34,12 +34,7 @@ class NswFuelStationConfigFlow(ConfigFlow, domain=DOMAIN):
     selected_station: nsw_fuel.Station
     data: StationPriceData | None
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Display the initial UI form."""
-        errors: dict[str, str] = {}
-
+    async def _fetch_fuel_data(self) -> None:
         client = nsw_fuel.FuelCheckClient()
         self.data = None
         try:
@@ -48,6 +43,14 @@ class NswFuelStationConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except UpdateFailed as e:
             _LOGGER.error("Error fetching data from NSW Fuel API: %s", e)
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Display the initial UI form."""
+        errors: dict[str, str] = {}
+
+        await self._fetch_fuel_data()
         if self.data is None:
             return self.async_abort(reason="fetch_failed")
 

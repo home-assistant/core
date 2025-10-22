@@ -5,26 +5,39 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CURRENCY_CENT, UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
 from . import StationPriceData
-from .const import (
-    ATTR_FUEL_TYPE,
-    ATTR_STATION_ADDRESS,
-    ATTR_STATION_ID,
-    ATTR_STATION_NAME,
-    CONF_STATION_ID,
-    DOMAIN,
-)
+from .const import ATTR_STATION_ID, ATTR_STATION_NAME, CONF_STATION_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Setup the NSWFuelStation sensor."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=dict(config),  # Convert to dict
+        )
+    )
 
 
 async def async_setup_entry(
@@ -38,10 +51,6 @@ async def async_setup_entry(
 
     coordinator = hass.data[DOMAIN]
     await coordinator.async_refresh()
-
-    if coordinator.data is None:
-        _LOGGER.error("Initial fuel station price data not available")
-        return
 
     station_data = coordinator.data.stations.get(station_id)
 
@@ -108,8 +117,6 @@ class StationPriceSensor(
     def extra_state_attributes(self) -> dict[str, int | str]:
         """Return the state attributes of the device."""
         return {
-            ATTR_FUEL_TYPE: self._get_fuel_type(),
-            ATTR_STATION_ADDRESS: self._get_station_address(),
             ATTR_STATION_ID: self._station_id,
             ATTR_STATION_NAME: self._get_station_name(),
         }

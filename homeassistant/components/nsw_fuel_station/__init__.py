@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import nsw_fuel
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -18,7 +18,6 @@ from .const import DOMAIN
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,24 +30,6 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the NSW Fuel Station platform."""
-    if "sensor" not in config:
-        return True
-
-    for platform_config in config["sensor"]:
-        if platform_config["platform"] == DOMAIN:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data=dict(platform_config),  # Convert to dict
-                )
-            )
-
-    return True
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -59,17 +40,18 @@ async def async_setup_entry(
     async def async_update_data():
         return await hass.async_add_executor_job(fetch_station_price_data, client)
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=None,
-        name="sensor",
-        update_interval=SCAN_INTERVAL,
-        update_method=async_update_data,
-    )
-    hass.data[DOMAIN] = coordinator
+    if hass.data.get(DOMAIN) is None:
+        coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name="sensor",
+            update_interval=SCAN_INTERVAL,
+            update_method=async_update_data,
+        )
+        hass.data[DOMAIN] = coordinator
 
-    await coordinator.async_config_entry_first_refresh()
+        await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
