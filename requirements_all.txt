@@ -1646,7 +1646,7 @@ openevsewifi==1.1.2
 openhomedevice==2.2.0
 
 # homeassistant.components.openrgb
-openrgb-python==0.3.5
+openrgb-python==0.3.6
 
 # homeassistant.components.opensensemap
 opensensemap-api==0.2.0
@@ -2162,7 +2162,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2024.2.4
+pylitterbot==2024.2.7
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.25.0
@@ -2387,7 +2387,7 @@ pysignalclirestapi==0.3.24
 pyskyqhub==0.1.4
 
 # homeassistant.components.sma
-pysma==0.7.5
+pysma==1.0.2
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
