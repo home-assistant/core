@@ -42,11 +42,7 @@ from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
 
 def _get_departure_time(trip: Trip | None) -> datetime | None:
     """Get next departure time from trip data."""
-    if not trip:
-        return None
-    actual = trip.departure_time_actual
-    planned = trip.departure_time_planned
-    return actual or planned
+    return trip.departure_time_actual or trip.departure_time_planned if trip else None
 
 
 def _get_time_str(time: datetime | None) -> str | None:
