@@ -876,6 +876,9 @@ eliqonline==1.2.2
 # homeassistant.components.elkm1
 elkm1-lib==2.2.11
 
+# homeassistant.components.inels
+elkoep-aio-mqtt==0.1.0b4
+
 # homeassistant.components.elmax
 elmax-api==0.0.6.4rc0
 
@@ -1572,7 +1575,7 @@ notifications-android-tv==0.1.5
 notify-events==1.0.4
 
 # homeassistant.components.nederlandse_spoorwegen
-nsapi==3.1.2
+nsapi==3.1.3
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.1.0
@@ -1646,7 +1649,7 @@ openevsewifi==1.1.2
 openhomedevice==2.2.0
 
 # homeassistant.components.openrgb
-openrgb-python==0.3.5
+openrgb-python==0.3.6
 
 # homeassistant.components.opensensemap
 opensensemap-api==0.2.0
@@ -2162,7 +2165,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2024.2.6
+pylitterbot==2024.2.7
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.25.0
@@ -2387,7 +2390,7 @@ pysignalclirestapi==0.3.24
 pyskyqhub==0.1.4
 
 # homeassistant.components.sma
-pysma==0.7.5
+pysma==1.0.2
 
 # homeassistant.components.smappee
 pysmappee==0.2.29

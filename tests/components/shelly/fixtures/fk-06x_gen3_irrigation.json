@@ -201,7 +201,7 @@
       "id": 0,
       "limit_zones": 2,
       "seq_rev": 11,
-      "weather_api": false,
+      "weather_api": true,
       "zones": [
         {
           "duration": 10,
