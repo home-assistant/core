@@ -182,7 +182,6 @@ homeassistant.components.efergy.*
 homeassistant.components.eheimdigital.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
-homeassistant.components.elevenlabs.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
@@ -479,6 +478,7 @@ homeassistant.components.skybell.*
 homeassistant.components.slack.*
 homeassistant.components.sleep_as_android.*
 homeassistant.components.sleepiq.*
+homeassistant.components.sma.*
 homeassistant.components.smhi.*
 homeassistant.components.smlight.*
 homeassistant.components.smtp.*

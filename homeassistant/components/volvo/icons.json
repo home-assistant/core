@@ -267,6 +267,12 @@
       "climatization_stop": {
         "default": "mdi:air-conditioner"
       },
+      "engine_start": {
+        "default": "mdi:engine"
+      },
+      "engine_stop": {
+        "default": "mdi:engine-off"
+      },
       "flash": {
         "default": "mdi:alarm-light-outline"
       },
@@ -347,6 +353,12 @@
       },
       "odometer": {
         "default": "mdi:counter"
+      },
+      "service_warning": {
+        "default": "mdi:wrench-clock",
+        "state": {
+          "no_warning": "mdi:car-wrench"
+        }
       },
       "target_battery_charge_level": {
         "default": "mdi:battery-medium"

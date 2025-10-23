@@ -418,14 +418,36 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             # If we don't have a cur map(shouldn't happen) just
             # return as we can't do anything.
             return
-        map_flags = sorted(self.maps, key=lambda data: data == cur_map, reverse=True)
+        if self.data.status.in_cleaning:
+            # If the vacuum is cleaning, we cannot change maps
+            # as it will interrupt the cleaning.
+            _LOGGER.info(
+                "Vacuum is cleaning, not switching to other maps to fetch rooms"
+            )
+            # Since this is hitting the cloud api, we want to be careful and will just
+            # stop here rather than retrying in the future.
+            map_flags = [cur_map]
+        else:
+            map_flags = sorted(
+                self.maps, key=lambda data: data == cur_map, reverse=True
+            )
         for map_flag in map_flags:
             if map_flag != cur_map:
                 # Only change the map and sleep if we have multiple maps.
-                await self.cloud_api.load_multi_map(map_flag)
-                self.current_map = map_flag
+                try:
+                    await self.cloud_api.load_multi_map(map_flag)
+                except RoborockException as ex:
+                    _LOGGER.debug(
+                        "Failed to change to map %s when refreshing maps: %s",
+                        map_flag,
+                        ex,
+                    )
+                    continue
+                else:
+                    self.current_map = map_flag
                 # We cannot get the map until the roborock servers fully process the
-                # map change.
+                # map change. If the above command fails, we should still sleep, just
+                # in case it executes delayed.
                 await asyncio.sleep(MAP_SLEEP)
             tasks = [self.set_current_map_rooms()]
             # The image is set within async_setup, so if it exists, we have it here.
@@ -436,11 +458,18 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             # If either of these fail, we don't care, and we want to continue.
             await asyncio.gather(*tasks, return_exceptions=True)
 
-        if len(self.maps) > 1:
+        if len(self.maps) > 1 and not self.data.status.in_cleaning:
             # Set the map back to the map the user previously had selected so that it
             # does not change the end user's app.
             # Only needs to happen when we changed maps above.
-            await self.cloud_api.load_multi_map(cur_map)
+            try:
+                await self.cloud_api.load_multi_map(cur_map)
+            except RoborockException as ex:
+                _LOGGER.warning(
+                    "Failed to change back to map %s when refreshing maps: %s",
+                    cur_map,
+                    ex,
+                )
             self.current_map = cur_map
 
 
