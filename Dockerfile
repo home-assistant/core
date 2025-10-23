@@ -15,20 +15,7 @@ ARG QEMU_CPU
 # Home Assistant S6-Overlay
 COPY rootfs /
 
-# Needs to be redefined inside the FROM statement to be set for RUN commands
-ARG BUILD_ARCH
-# Get go2rtc binary
-RUN \
-    case "${BUILD_ARCH}" in \
-        "aarch64") go2rtc_suffix='arm64' ;; \
-        "armhf") go2rtc_suffix='armv6' ;; \
-        "armv7") go2rtc_suffix='arm' ;; \
-        *) go2rtc_suffix=${BUILD_ARCH} ;; \
-    esac \
-    && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.11/go2rtc_linux_${go2rtc_suffix} --output /bin/go2rtc \
-    && chmod +x /bin/go2rtc \
-    # Verify go2rtc can be executed
-    && go2rtc --version
+COPY --from=ghcr.io/alexxit/go2rtc:1.9.11 /usr/local/bin/go2rtc /bin/go2rtc
 
 # Install uv
 RUN pip3 install uv==0.9.5
