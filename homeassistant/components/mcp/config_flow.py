@@ -29,7 +29,12 @@ from .const import (
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
     CONF_TOKEN_URL,
+    CONF_TRANSPORT,
     DOMAIN,
+    MCP_PROTOCOL_VERSION,
+    MCP_PROTOCOL_VERSION_HEADER,
+    TRANSPORT_SSE,
+    TRANSPORT_STREAMABLE_HTTP,
 )
 from .coordinator import TokenManager, mcp_client
 
@@ -38,16 +43,22 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): str,
+        vol.Optional(CONF_TRANSPORT, default=TRANSPORT_SSE): vol.In(
+            {
+                TRANSPORT_SSE: "SSE",
+                TRANSPORT_STREAMABLE_HTTP: "Streamable HTTP",
+            }
+        ),
     }
 )
 
 # OAuth server discovery endpoint for rfc8414
 OAUTH_DISCOVERY_ENDPOINT = ".well-known/oauth-authorization-server"
 MCP_DISCOVERY_HEADERS = {
-    "MCP-Protocol-Version": "2025-03-26",
+    MCP_PROTOCOL_VERSION_HEADER: MCP_PROTOCOL_VERSION,
 }
 
-EXAMPLE_URL = "http://example/sse"
+EXAMPLE_URL = "http://example/mcp"
 
 
 @dataclass
@@ -117,12 +128,21 @@ async def validate_input(
 ) -> dict[str, Any]:
     """Validate the user input and connect to the MCP server."""
     url = data[CONF_URL]
+    transport = data.get(CONF_TRANSPORT, TRANSPORT_SSE)
+    protocol_version = (
+        MCP_PROTOCOL_VERSION if transport == TRANSPORT_STREAMABLE_HTTP else None
+    )
     try:
         cv.url(url)  # Cannot be added to schema directly
     except vol.Invalid as error:
         raise InvalidUrl from error
     try:
-        async with mcp_client(url, token_manager=token_manager) as session:
+        async with mcp_client(
+            url,
+            token_manager=token_manager,
+            transport=transport,
+            protocol_version=protocol_version,
+        ) as session:
             response = await session.initialize()
     except httpx.TimeoutException as error:
         _LOGGER.info("Timeout connecting to MCP server: %s", error)
@@ -163,6 +183,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            user_input = {**user_input}
+            transport = user_input.setdefault(CONF_TRANSPORT, TRANSPORT_SSE)
             try:
                 info = await validate_input(self.hass, user_input)
             except InvalidUrl:
@@ -172,7 +194,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
-                self.data[CONF_URL] = user_input[CONF_URL]
+                self.data = {CONF_URL: user_input[CONF_URL]}
+                if transport != TRANSPORT_SSE:
+                    self.data[CONF_TRANSPORT] = transport
                 return await self.async_step_auth_discovery()
             except MissingCapabilities:
                 return self.async_abort(reason="missing_capabilities")
@@ -181,6 +205,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+                if transport == TRANSPORT_SSE:
+                    user_input.pop(CONF_TRANSPORT, None)
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
@@ -279,12 +305,23 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             **self.data,
             **data,
         }
+        transport = config_entry_data.get(CONF_TRANSPORT, TRANSPORT_SSE)
+        validation_data = {**config_entry_data}
+        if transport == TRANSPORT_SSE:
+            validation_data.pop(CONF_TRANSPORT, None)
+        else:
+            validation_data[CONF_TRANSPORT] = transport
+
+        if transport == TRANSPORT_SSE:
+            config_entry_data.pop(CONF_TRANSPORT, None)
+        else:
+            config_entry_data[CONF_TRANSPORT] = transport
 
         async def token_manager() -> str:
             return cast(str, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
 
         try:
-            info = await validate_input(self.hass, config_entry_data, token_manager)
+            info = await validate_input(self.hass, validation_data, token_manager)
         except TimeoutConnectError:
             return self.async_abort(reason="timeout_connect")
         except CannotConnect:
@@ -320,6 +357,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_show_form(step_id="reauth_confirm")
         config_entry = self._get_reauth_entry()
         self.data = {**config_entry.data}
+        self.data.setdefault(CONF_TRANSPORT, TRANSPORT_SSE)
         self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]
             self.hass, config_entry
         )

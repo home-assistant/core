@@ -3,10 +3,12 @@
     "step": {
       "user": {
         "data": {
-          "url": "[%key:common::config_flow::data::url%]"
+          "url": "[%key:common::config_flow::data::url%]",
+          "transport": "Transport protocol"
         },
         "data_description": {
-          "url": "The remote MCP server URL for the SSE endpoint, for example {example_url}"
+          "url": "The remote MCP server URL for the selected transport, for example {example_url}.",
+          "transport": "Choose the MCP transport. SSE is the legacy format. Streamable HTTP is available for MCP protocol version 2025-03-26."
         }
       },
       "credentials_choice": {

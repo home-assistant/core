@@ -1,14 +1,16 @@
-"""Types for the Model Context Protocol integration."""
+"""Coordinator and helpers for the Model Context Protocol integration."""
 
 import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import datetime
 import logging
+from typing import cast
 
 import httpx
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
+from mcp.client.streamable_http import streamablehttp_client
 import voluptuous as vol
 from voluptuous_openapi import convert_to_voluptuous
 
@@ -20,7 +22,14 @@ from homeassistant.helpers import llm
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.json import JsonObjectType
 
-from .const import DOMAIN
+from .const import (
+    CONF_TRANSPORT,
+    DOMAIN,
+    MCP_PROTOCOL_VERSION,
+    MCP_PROTOCOL_VERSION_HEADER,
+    TRANSPORT_SSE,
+    TRANSPORT_STREAMABLE_HTTP,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,23 +43,37 @@ type TokenManager = Callable[[], Awaitable[str]]
 async def mcp_client(
     url: str,
     token_manager: TokenManager | None = None,
+    *,
+    transport: str = TRANSPORT_SSE,
+    protocol_version: str | None = None,
 ) -> AsyncGenerator[ClientSession]:
-    """Create a server-sent event MCP client.
+    """Create an MCP client using the configured transport."""
 
-    This is an asynccontext manager that exists to wrap other async context managers
-    so that the coordinator has a single object to manage.
-    """
     headers: dict[str, str] = {}
+    if protocol_version is not None:
+        headers[MCP_PROTOCOL_VERSION_HEADER] = protocol_version
     if token_manager is not None:
         token = await token_manager()
         headers["Authorization"] = f"Bearer {token}"
     try:
-        async with (
-            sse_client(url=url, headers=headers) as streams,
-            ClientSession(*streams) as session,
-        ):
-            await session.initialize()
-            yield session
+        if transport == TRANSPORT_STREAMABLE_HTTP:
+            async with (
+                streamablehttp_client(
+                    url=url,
+                    headers=headers,
+                    timeout=TIMEOUT,
+                ) as (read_stream, write_stream, _),
+                ClientSession(read_stream, write_stream) as session,
+            ):
+                await session.initialize()
+                yield session
+        else:
+            async with (
+                sse_client(url=url, headers=headers, timeout=TIMEOUT) as streams,
+                ClientSession(*streams) as session,
+            ):
+                await session.initialize()
+                yield session
     except ExceptionGroup as err:
         _LOGGER.debug("Error creating MCP client: %s", err)
         raise err.exceptions[0] from err
@@ -66,6 +89,9 @@ class ModelContextProtocolTool(llm.Tool):
         parameters: vol.Schema,
         server_url: str,
         token_manager: TokenManager | None = None,
+        *,
+        transport: str = TRANSPORT_SSE,
+        protocol_version: str | None = None,
     ) -> None:
         """Initialize the tool."""
         self.name = name
@@ -73,6 +99,8 @@ class ModelContextProtocolTool(llm.Tool):
         self.parameters = parameters
         self.server_url = server_url
         self.token_manager = token_manager
+        self.transport = transport
+        self.protocol_version = protocol_version
 
     async def async_call(
         self,
@@ -83,7 +111,12 @@ class ModelContextProtocolTool(llm.Tool):
         """Call the tool."""
         try:
             async with asyncio.timeout(TIMEOUT):
-                async with mcp_client(self.server_url, self.token_manager) as session:
+                async with mcp_client(
+                    self.server_url,
+                    self.token_manager,
+                    transport=self.transport,
+                    protocol_version=self.protocol_version,
+                ) as session:
                     result = await session.call_tool(
                         tool_input.tool_name, tool_input.tool_args
                     )
@@ -116,6 +149,16 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             update_interval=UPDATE_INTERVAL,
         )
         self.token_manager = token_manager
+        self.transport: str = cast(
+            str, config_entry.data.get(CONF_TRANSPORT, TRANSPORT_SSE)
+        )
+        if self.transport not in (TRANSPORT_SSE, TRANSPORT_STREAMABLE_HTTP):
+            self.transport = TRANSPORT_SSE
+        self.protocol_version: str | None = (
+            MCP_PROTOCOL_VERSION
+            if self.transport == TRANSPORT_STREAMABLE_HTTP
+            else None
+        )
 
     async def _async_update_data(self) -> list[llm.Tool]:
         """Fetch data from API endpoint.
@@ -126,7 +169,10 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         try:
             async with asyncio.timeout(TIMEOUT):
                 async with mcp_client(
-                    self.config_entry.data[CONF_URL], self.token_manager
+                    self.config_entry.data[CONF_URL],
+                    self.token_manager,
+                    transport=self.transport,
+                    protocol_version=self.protocol_version,
                 ) as session:
                     result = await session.list_tools()
         except TimeoutError as error:
@@ -159,6 +205,8 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     parameters,
                     self.config_entry.data[CONF_URL],
                     self.token_manager,
+                    transport=self.transport,
+                    protocol_version=self.protocol_version,
                 )
             )
         return tools
