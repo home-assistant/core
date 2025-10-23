@@ -22,7 +22,6 @@ async def test_binary_sensor(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
-    mock_nextdns: AsyncMock,
 ) -> None:
     """Test states of the binary sensors."""
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.BINARY_SENSOR]):
@@ -37,7 +36,6 @@ async def test_availability(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_nextdns_client: AsyncMock,
-    mock_nextdns: AsyncMock,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.BINARY_SENSOR]):

@@ -27,7 +27,6 @@ async def test_button(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
-    mock_nextdns: AsyncMock,
 ) -> None:
     """Test states of the button."""
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.BUTTON]):
@@ -41,7 +40,6 @@ async def test_button_press(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
-    mock_nextdns: AsyncMock,
 ) -> None:
     """Test button press."""
     await init_integration(hass, mock_config_entry)
@@ -74,7 +72,6 @@ async def test_button_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
-    mock_nextdns: AsyncMock,
     exc: Exception,
 ) -> None:
     """Tests that the press action throws HomeAssistantError."""
@@ -98,7 +95,6 @@ async def test_button_auth_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
-    mock_nextdns: AsyncMock,
 ) -> None:
     """Tests that the press action starts re-auth flow."""
     await init_integration(hass, mock_config_entry)
