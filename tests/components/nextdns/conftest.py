@@ -83,5 +83,7 @@ def mock_nextdns_client() -> Generator[AsyncMock]:
         client.get_settings.return_value = SETTINGS
         client.set_setting.return_value = True
         client.profiles = [ProfileInfo(**PROFILES[0])]
+        # Add the create method to the client so tests can set side_effect
+        client.create = mock_client.create
 
         yield client

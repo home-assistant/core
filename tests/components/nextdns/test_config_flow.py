@@ -1,6 +1,6 @@
 """Define tests for the NextDNS config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from nextdns import ApiError, InvalidApiKeyError
 import pytest
@@ -74,17 +74,17 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.nextdns.NextDns.create",
-        side_effect=exc,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_API_KEY: "fake_api_key"},
-        )
+    mock_nextdns_client.create.side_effect = exc
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "fake_api_key"},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": base_error}
+
+    mock_nextdns_client.create.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -176,13 +176,16 @@ async def test_reauth_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with patch("homeassistant.components.nextdns.NextDns.create", side_effect=exc):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_API_KEY: "new_api_key"},
-        )
+    mock_nextdns_client.create.side_effect = exc
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_KEY: "new_api_key"},
+    )
 
     assert result["errors"] == {"base": base_error}
+
+    mock_nextdns_client.create.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

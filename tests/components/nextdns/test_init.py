@@ -1,6 +1,6 @@
 """Test init of NextDNS integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from nextdns import ApiError, InvalidApiKeyError
 import pytest
@@ -40,11 +40,9 @@ async def test_config_not_ready(
     exc: Exception,
 ) -> None:
     """Test for setup failure if the connection to the service fails."""
-    with patch(
-        "homeassistant.components.nextdns.NextDns.create",
-        side_effect=exc,
-    ):
-        await init_integration(hass, mock_config_entry)
+    mock_nextdns_client.create.side_effect = exc
+
+    await init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -73,11 +71,9 @@ async def test_config_auth_failed(
     mock_nextdns_client: AsyncMock,
 ) -> None:
     """Test for setup failure if the auth fails."""
-    with patch(
-        "homeassistant.components.nextdns.NextDns.create",
-        side_effect=InvalidApiKeyError,
-    ):
-        await init_integration(hass, mock_config_entry)
+    mock_nextdns_client.create.side_effect = InvalidApiKeyError
+
+    await init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
