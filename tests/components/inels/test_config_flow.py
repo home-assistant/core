@@ -87,6 +87,33 @@ async def test_mqtt_abort_empty_payload(
     assert result["reason"] == "invalid_discovery_info"
 
 
+async def test_mqtt_abort_already_in_progress(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test that a second MQTT flow is aborted when one is already in progress."""
+    discovery_info = MqttServiceInfo(
+        topic="inels/status/MAC_ADDRESS/gw",
+        payload='{"CUType":"CU3-08M","Status":"Runfast","FW":"02.97.18"}',
+        qos=0,
+        retain=False,
+        subscribed_topic="inels/status/#",
+        timestamp=None,
+    )
+
+    # Start first MQTT flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_MQTT}, data=discovery_info
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    # Try to start second MQTT flow while first is in progress
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_MQTT}, data=discovery_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
 async def test_user_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test if the user can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
