@@ -45,5 +45,10 @@
         "name": "Relay voltage"
       }
     }
+  },
+  "exceptions": {
+    "no_bleak_scanner": {
+      "message": "No compatible Bluetooth scanner found."
+    }
   }
 }
