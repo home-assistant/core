@@ -35,7 +35,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.BINARY_SENSOR, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterBinarySensorEntityDescription(
     BinarySensorEntityDescription, MatterEntityDescription
 ):
@@ -87,6 +87,17 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.OccupancySensing.Attributes.Occupancy,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="ThermostatOccupancySensor",
+            device_class=BinarySensorDeviceClass.OCCUPANCY,
+            # The first bit = if occupied
+            device_to_ha=lambda x: (x & 1 == 1) if x is not None else None,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.Thermostat.Attributes.Occupancy,),
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -406,6 +417,59 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.DishwasherAlarm.Attributes.State,),
         allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="ValveConfigurationAndControlValveFault_GeneralFault",
+            translation_key="valve_fault_general_fault",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_to_ha=lambda x: (
+                x
+                == clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kGeneralFault
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(
+            clusters.ValveConfigurationAndControl.Attributes.ValveFault,
+        ),
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="ValveConfigurationAndControlValveFault_Blocked",
+            translation_key="valve_fault_blocked",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_to_ha=lambda x: (
+                x
+                == clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kBlocked
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(
+            clusters.ValveConfigurationAndControl.Attributes.ValveFault,
+        ),
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="ValveConfigurationAndControlValveFault_Leaking",
+            translation_key="valve_fault_leaking",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_to_ha=lambda x: (
+                x
+                == clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kLeaking
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(
+            clusters.ValveConfigurationAndControl.Attributes.ValveFault,
+        ),
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,

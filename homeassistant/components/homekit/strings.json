@@ -76,11 +76,23 @@
     },
     "reset_accessory": {
       "name": "Reset accessory",
-      "description": "Resets a HomeKit accessory."
+      "description": "Resets a HomeKit accessory.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Entity to reset."
+        }
+      }
     },
     "unpair": {
       "name": "Unpair an accessory or bridge",
-      "description": "Forcefully removes all pairings from an accessory to allow re-pairing. Use this action if the accessory is no longer responsive, and you want to avoid deleting and re-adding the entry. Room locations, and accessory preferences will be lost."
+      "description": "Forcefully removes all pairings from an accessory to allow re-pairing. Use this action if the accessory is no longer responsive and you want to avoid deleting and re-adding the entry. Room locations and accessory preferences will be lost.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Device to unpair."
+        }
+      }
     }
   }
 }

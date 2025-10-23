@@ -27,6 +27,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
 
+from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.recorder import (  # noqa: F401
@@ -109,9 +110,7 @@ SUNDAY_WEEKDAY = 6
 DAYS_IN_WEEK = 7
 
 
-def execute(
-    qry: Query, to_native: bool = False, validate_entity_ids: bool = True
-) -> list[Row]:
+def execute(qry: Query) -> list[Row]:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -121,33 +120,15 @@ def execute(
         try:
             if debug:
                 timer_start = time.perf_counter()
-
-            if to_native:
-                result = [
-                    row
-                    for row in (
-                        row.to_native(validate_entity_id=validate_entity_ids)
-                        for row in qry
-                    )
-                    if row is not None
-                ]
-            else:
-                result = qry.all()
+            result = qry.all()
 
             if debug:
                 elapsed = time.perf_counter() - timer_start
-                if to_native:
-                    _LOGGER.debug(
-                        "converting %d rows to native objects took %fs",
-                        len(result),
-                        elapsed,
-                    )
-                else:
-                    _LOGGER.debug(
-                        "querying %d rows took %fs",
-                        len(result),
-                        elapsed,
-                    )
+                _LOGGER.debug(
+                    "querying %d rows took %fs",
+                    len(result),
+                    elapsed,
+                )
 
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
@@ -802,6 +783,7 @@ PERIOD_SCHEMA = vol.Schema(
             {
                 vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
                 vol.Optional("offset"): int,
+                vol.Optional("first_weekday"): vol.Any(*WEEKDAYS),
             }
         ),
         vol.Exclusive("fixed_period", "period"): vol.Schema(
@@ -840,7 +822,12 @@ def resolve_period(
             start_time += timedelta(days=cal_offset)
             end_time = start_time + timedelta(days=1)
         elif calendar_period == "week":
-            start_time = start_of_day - timedelta(days=start_of_day.weekday())
+            first_weekday = WEEKDAYS.index(
+                period_def["calendar"].get("first_weekday", WEEKDAYS[0])
+            )
+            start_time = start_of_day - timedelta(
+                days=(start_of_day.weekday() - first_weekday) % 7
+            )
             start_time += timedelta(days=cal_offset * 7)
             end_time = start_time + timedelta(weeks=1)
         elif calendar_period == "month":

@@ -35,8 +35,8 @@ from .const import (
     COFFEE_SYSTEM_PROFILE,
     DISABLED_TEMP_ENTITIES,
     DOMAIN,
+    PROGRAM_PHASE,
     STATE_PROGRAM_ID,
-    STATE_PROGRAM_PHASE,
     STATE_STATUS_TAGS,
     MieleAppliance,
     PlatePowerStep,
@@ -54,6 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PLATE_COUNT = 4
 
 PLATE_COUNT = {
+    "KM7575": 6,
     "KM7678": 6,
     "KM7697": 6,
     "KM7878": 6,
@@ -270,6 +271,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_display_precision=1,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -307,6 +309,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.WATER,
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfVolume.LITERS,
+            suggested_display_precision=0,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -364,6 +367,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_remaining_time",
             translation_key="remaining_time",
             value_fn=lambda value: _convert_duration(value.state_remaining_time),
+            end_value_fn=lambda last_value: 0,
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -417,6 +421,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_start_time",
             translation_key="start_time",
             value_fn=lambda value: _convert_duration(value.state_start_time),
+            end_value_fn=lambda last_value: None,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             device_class=SensorDeviceClass.DURATION,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -614,6 +619,10 @@ async def async_setup_entry(
             "state_program_phase": MielePhaseSensor,
             "state_plate_step": MielePlateSensor,
             "state_elapsed_time": MieleTimeSensor,
+            "state_remaining_time": MieleTimeSensor,
+            "state_start_time": MieleTimeSensor,
+            "current_energy_consumption": MieleConsumptionSensor,
+            "current_water_consumption": MieleConsumptionSensor,
         }.get(definition.description.key, MieleSensor)
 
     def _is_entity_registered(unique_id: str) -> bool:
@@ -769,7 +778,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         """When entity is added to hass."""
         await super().async_added_to_hass()
 
-        # recover last value from cache
+        # recover last value from cache when adding entity
         last_value = await self.async_get_last_state()
         if last_value and last_value.state != STATE_UNKNOWN:
             self._last_value = last_value.state
@@ -778,6 +787,16 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._last_value
+
+    def _update_last_value(self) -> None:
+        """Update the last value of the sensor."""
+        self._last_value = self.entity_description.value_fn(self.device)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_last_value()
+        super()._handle_coordinator_update()
 
 
 class MielePlateSensor(MieleSensor):
@@ -833,29 +852,36 @@ class MieleStatusSensor(MieleSensor):
         return True
 
 
+# Some phases have names that are not valid python identifiers, so we need to translate
+# them in order to avoid breaking changes
+PROGRAM_PHASE_TRANSLATION = {
+    "second_espresso": "2nd_espresso",
+    "second_grinding": "2nd_grinding",
+    "second_pre_brewing": "2nd_pre_brewing",
+}
+
+
 class MielePhaseSensor(MieleSensor):
     """Representation of the program phase sensor."""
 
     @property
     def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        ret_val = STATE_PROGRAM_PHASE.get(self.device.device_type, {}).get(
+        """Return the state of the phase sensor."""
+        program_phase = PROGRAM_PHASE[self.device.device_type](
             self.device.state_program_phase
+        ).name
+
+        return (
+            PROGRAM_PHASE_TRANSLATION.get(program_phase, program_phase)
+            if program_phase is not None
+            else None
         )
-        if ret_val is None:
-            _LOGGER.debug(
-                "Unknown program phase: %s on device type: %s",
-                self.device.state_program_phase,
-                self.device.device_type,
-            )
-        return ret_val
 
     @property
     def options(self) -> list[str]:
         """Return the options list for the actual device type."""
-        return sorted(
-            set(STATE_PROGRAM_PHASE.get(self.device.device_type, {}).values())
-        )
+        phases = PROGRAM_PHASE[self.device.device_type].keys()
+        return sorted([PROGRAM_PHASE_TRANSLATION.get(phase, phase) for phase in phases])
 
 
 class MieleProgramIdSensor(MieleSensor):
@@ -886,9 +912,8 @@ class MieleProgramIdSensor(MieleSensor):
 class MieleTimeSensor(MieleRestorableSensor):
     """Representation of time sensors keeping state from cache."""
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _update_last_value(self) -> None:
+        """Update the last value of the sensor."""
 
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status)
@@ -912,4 +937,57 @@ class MieleTimeSensor(MieleRestorableSensor):
         else:
             self._last_value = current_value
 
-        super()._handle_coordinator_update()
+
+class MieleConsumptionSensor(MieleRestorableSensor):
+    """Representation of consumption sensors keeping state from cache."""
+
+    _is_reporting: bool = False
+
+    def _update_last_value(self) -> None:
+        """Update the last value of the sensor."""
+        current_value = self.entity_description.value_fn(self.device)
+        current_status = StateStatus(self.device.state_status)
+        last_value = (
+            float(cast(str, self._last_value))
+            if self._last_value is not None and self._last_value != STATE_UNKNOWN
+            else 0
+        )
+
+        # force unknown when appliance is not able to report consumption
+        if current_status in (
+            StateStatus.ON,
+            StateStatus.OFF,
+            StateStatus.PROGRAMMED,
+            StateStatus.WAITING_TO_START,
+            StateStatus.IDLE,
+            StateStatus.SERVICE,
+        ):
+            self._is_reporting = False
+            self._last_value = None
+
+        # appliance might report the last value for consumption of previous cycle and it will report 0
+        # only after a while, so it is necessary to force 0 until we see the 0 value coming from API, unless
+        # we already saw a valid value in this cycle from cache
+        elif (
+            current_status in (StateStatus.IN_USE, StateStatus.PAUSE)
+            and not self._is_reporting
+            and last_value > 0
+        ):
+            self._last_value = current_value
+            self._is_reporting = True
+
+        elif (
+            current_status in (StateStatus.IN_USE, StateStatus.PAUSE)
+            and not self._is_reporting
+            and current_value is not None
+            and cast(int, current_value) > 0
+        ):
+            self._last_value = 0
+
+        # keep value when program ends
+        elif current_status == StateStatus.PROGRAM_ENDED:
+            pass
+
+        else:
+            self._last_value = current_value
+            self._is_reporting = True

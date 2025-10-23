@@ -27,7 +27,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.device_automation.trigger import (
+from homeassistant.components.device_automation.trigger import (  # pylint: disable=hass-component-root-import
     async_validate_trigger_config,
 )
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN, EventDeviceClass
@@ -224,9 +224,8 @@ RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-UNPAIR_SERVICE_SCHEMA = vol.All(
-    vol.Schema(cv.ENTITY_SERVICE_FIELDS),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+UNPAIR_SERVICE_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [str])}
 )
 
 

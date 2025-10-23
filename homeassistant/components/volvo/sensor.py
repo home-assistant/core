@@ -5,10 +5,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import cast
 
 from volvocarsapi.models import (
     VolvoCarsApiBaseModel,
+    VolvoCarsLocation,
     VolvoCarsValue,
     VolvoCarsValueField,
     VolvoCarsValueStatusField,
@@ -21,6 +22,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    DEGREE,
     PERCENTAGE,
     EntityCategory,
     UnitOfElectricCurrent,
@@ -34,9 +36,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from .const import DATA_BATTERY_CAPACITY
-from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
+from .const import API_NONE_VALUE, DATA_BATTERY_CAPACITY
+from .coordinator import VolvoConfigEntry
 from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_key
 
 PARALLEL_UPDATES = 0
@@ -47,25 +50,31 @@ _LOGGER = logging.getLogger(__name__)
 class VolvoSensorDescription(VolvoEntityDescription, SensorEntityDescription):
     """Describes a Volvo sensor entity."""
 
-    value_fn: Callable[[VolvoCarsValue], Any] | None = None
+    value_fn: Callable[[VolvoCarsApiBaseModel], StateType] | None = None
 
 
-def _availability_status(field: VolvoCarsValue) -> str:
+def _availability_status(field: VolvoCarsApiBaseModel) -> str:
     reason = field.get("unavailable_reason")
-    return reason if reason else str(field.value)
+
+    if reason:
+        return str(reason)
+
+    if isinstance(field, VolvoCarsValue):
+        return str(field.value)
+
+    return ""
 
 
-def _calculate_time_to_service(field: VolvoCarsValue) -> int:
+def _calculate_time_to_service(field: VolvoCarsApiBaseModel) -> int:
+    if not isinstance(field, VolvoCarsValueField):
+        return 0
+
     value = int(field.value)
-
     # Always express value in days
-    if isinstance(field, VolvoCarsValueField) and field.unit == "months":
-        return value * 30
-
-    return value
+    return value * 30 if field.unit == "months" else value
 
 
-def _charging_power_value(field: VolvoCarsValue) -> int:
+def _charging_power_value(field: VolvoCarsApiBaseModel) -> int:
     return (
         field.value
         if isinstance(field, VolvoCarsValueStatusField) and isinstance(field.value, int)
@@ -73,8 +82,8 @@ def _charging_power_value(field: VolvoCarsValue) -> int:
     )
 
 
-def _charging_power_status_value(field: VolvoCarsValue) -> str | None:
-    status = cast(str, field.value)
+def _charging_power_status_value(field: VolvoCarsApiBaseModel) -> str | None:
+    status = cast(str, field.value) if isinstance(field, VolvoCarsValue) else ""
 
     if status.lower() in _CHARGING_POWER_STATUS_OPTIONS:
         return status
@@ -84,6 +93,10 @@ def _charging_power_status_value(field: VolvoCarsValue) -> str | None:
         status,
     )
     return None
+
+
+def _direction_value(field: VolvoCarsApiBaseModel) -> str | None:
+    return field.properties.heading if isinstance(field, VolvoCarsLocation) else None
 
 
 _CHARGING_POWER_STATUS_OPTIONS = [
@@ -245,10 +258,18 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "none",
         ],
     ),
+    # location endpoint
+    VolvoSensorDescription(
+        key="direction",
+        api_field="location",
+        native_unit_of_measurement=DEGREE,
+        suggested_display_precision=0,
+        value_fn=_direction_value,
+    ),
     # statistics endpoint
     # We're not using `electricRange` from the energy state endpoint because
     # the official app seems to use `distanceToEmptyBattery`.
-    # In issue #150213, a user described to behavior as follows:
+    # In issue #150213, a user described the behavior as follows:
     # - For a `distanceToEmptyBattery` of 250km, the `electricRange` was 150mi
     # - For a `distanceToEmptyBattery` of 260km, the `electricRange` was 160mi
     VolvoSensorDescription(
@@ -311,6 +332,25 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=1,
     ),
+    # diagnostics endpoint
+    VolvoSensorDescription(
+        key="service_warning",
+        api_field="serviceWarning",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "distance_driven_almost_time_for_service",
+            "distance_driven_overdue_for_service",
+            "distance_driven_time_for_service",
+            "engine_hours_almost_time_for_service",
+            "engine_hours_overdue_for_service",
+            "engine_hours_time_for_service",
+            "no_warning",
+            "regular_maintenance_almost_time_for_service",
+            "regular_maintenance_overdue_for_service",
+            "regular_maintenance_time_for_service",
+            "unknown_warning",
+        ],
+    ),
     # energy state endpoint
     VolvoSensorDescription(
         key="target_battery_charge_level",
@@ -355,26 +395,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors."""
 
-    entities: list[VolvoSensor] = []
-    added_keys: set[str] = set()
-
-    def _add_entity(
-        coordinator: VolvoBaseCoordinator, description: VolvoSensorDescription
-    ) -> None:
-        entities.append(VolvoSensor(coordinator, description))
-        added_keys.add(description.key)
-
-    coordinators = entry.runtime_data
+    entities: dict[str, VolvoSensor] = {}
+    coordinators = entry.runtime_data.interval_coordinators
 
     for coordinator in coordinators:
         for description in _DESCRIPTIONS:
-            if description.key in added_keys:
+            if description.key in entities:
                 continue
 
             if description.api_field in coordinator.data:
-                _add_entity(coordinator, description)
+                entities[description.key] = VolvoSensor(coordinator, description)
 
-    async_add_entities(entities)
+    async_add_entities(entities.values())
 
 
 class VolvoSensor(VolvoEntity, SensorEntity):
@@ -388,20 +420,19 @@ class VolvoSensor(VolvoEntity, SensorEntity):
             self._attr_native_value = None
             return
 
-        assert isinstance(api_field, VolvoCarsValue)
+        native_value = None
 
-        native_value = (
-            api_field.value
-            if self.entity_description.value_fn is None
-            else self.entity_description.value_fn(api_field)
-        )
+        if self.entity_description.value_fn:
+            native_value = self.entity_description.value_fn(api_field)
+        elif isinstance(api_field, VolvoCarsValue):
+            native_value = api_field.value
 
         if self.device_class == SensorDeviceClass.ENUM and native_value:
             # Entities having an "unknown" value should report None as the state
             native_value = str(native_value)
             native_value = (
                 value_to_translation_key(native_value)
-                if native_value.upper() != "UNSPECIFIED"
+                if native_value.upper() != API_NONE_VALUE
                 else None
             )
 

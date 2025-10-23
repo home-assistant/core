@@ -21,8 +21,11 @@ from aioesphomeapi import (
     UserService,
     UserServiceArg,
     UserServiceArgType,
+    ZWaveProxyRequest,
+    ZWaveProxyRequestType,
 )
 import pytest
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.esphome.const import (
@@ -322,6 +325,342 @@ async def test_esphome_device_service_calls_allowed(
     assert len(events) == 0
     assert "Can only generate events under esphome domain" in caplog.text
     events.clear()
+
+
+async def test_esphome_device_service_call_with_response(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test service call with response expected."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ALLOW_SERVICE_CALLS: True}
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"esphome_version": "2023.3.0"},
+        entry=mock_config_entry,
+    )
+    await hass.async_block_till_done()
+
+    # Register a service that returns a response
+    async def _mock_service_with_response(call: ServiceCall) -> dict[str, Any]:
+        return {"result": "success", "value": 42}
+
+    hass.services.async_register(
+        DOMAIN,
+        "test_with_response",
+        _mock_service_with_response,
+        supports_response=True,
+    )
+
+    # Mock the send_homeassistant_action_response method
+    mock_client.send_homeassistant_action_response = Mock()
+
+    # Call service with response expected
+    device.mock_service_call(
+        HomeassistantServiceCall(
+            service="esphome.test_with_response",
+            data={"input": "test"},
+            call_id=123,
+            wants_response=True,
+        )
+    )
+    await hass.async_block_till_done()
+
+    # Verify response was sent back to ESPHome
+    mock_client.send_homeassistant_action_response.assert_called_once()
+    call_id, success, error_message, response_data = (
+        mock_client.send_homeassistant_action_response.call_args[0]
+    )
+    assert call_id == 123
+    assert success is True
+    assert error_message == ""
+    assert response_data == b'{"response":{"result":"success","value":42}}'
+
+
+async def test_esphome_device_service_call_with_response_template(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test service call with response template."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ALLOW_SERVICE_CALLS: True}
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"esphome_version": "2023.3.0"},
+        entry=mock_config_entry,
+    )
+    await hass.async_block_till_done()
+
+    # Register a service that returns a response
+    async def _mock_service_with_response(call: ServiceCall) -> dict[str, Any]:
+        return {"temperature": 23.5, "humidity": 65}
+
+    hass.services.async_register(
+        DOMAIN, "get_data", _mock_service_with_response, supports_response=True
+    )
+
+    # Mock the send_homeassistant_action_response method
+    mock_client.send_homeassistant_action_response = Mock()
+
+    # Call service with response template
+    device.mock_service_call(
+        HomeassistantServiceCall(
+            service="esphome.get_data",
+            data={},
+            call_id=456,
+            wants_response=True,
+            response_template="{{ response.temperature }}",
+        )
+    )
+    await hass.async_block_till_done()
+
+    # Verify response was sent back with template applied
+    mock_client.send_homeassistant_action_response.assert_called_once()
+    call_id, success, error_message, response_data = (
+        mock_client.send_homeassistant_action_response.call_args[0]
+    )
+    assert call_id == 456
+    assert success is True
+    assert error_message == ""
+    assert response_data == b'{"response":23.5}'
+
+
+async def test_esphome_device_service_call_with_response_template_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test service call with invalid response template."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ALLOW_SERVICE_CALLS: True}
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"esphome_version": "2023.3.0"},
+        entry=mock_config_entry,
+    )
+    await hass.async_block_till_done()
+
+    # Register a service that returns a response
+    async def _mock_service_with_response(call: ServiceCall) -> dict[str, Any]:
+        return {"temperature": 23.5}
+
+    hass.services.async_register(
+        DOMAIN, "get_data", _mock_service_with_response, supports_response=True
+    )
+
+    # Mock the send_homeassistant_action_response method
+    mock_client.send_homeassistant_action_response = Mock()
+
+    # Call service with invalid response template
+    device.mock_service_call(
+        HomeassistantServiceCall(
+            service="esphome.get_data",
+            data={},
+            call_id=789,
+            wants_response=True,
+            response_template="{{ response.invalid_field }}",
+        )
+    )
+    await hass.async_block_till_done()
+
+    # Verify error response was sent back
+    mock_client.send_homeassistant_action_response.assert_called_once()
+    call_id, success, error_message, response_data = (
+        mock_client.send_homeassistant_action_response.call_args[0]
+    )
+    assert call_id == 789
+    assert success is False
+    assert "Error rendering response template" in error_message
+    assert response_data == b""
+
+
+async def test_esphome_device_service_call_with_notification(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test service call with notification (no response expected)."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ALLOW_SERVICE_CALLS: True}
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"esphome_version": "2023.3.0"},
+        entry=mock_config_entry,
+    )
+    await hass.async_block_till_done()
+
+    # Register a service without response
+    async def _mock_service(call: ServiceCall) -> None:
+        pass
+
+    hass.services.async_register(DOMAIN, "test_notify", _mock_service)
+
+    # Mock the send_homeassistant_action_response method
+    mock_client.send_homeassistant_action_response = Mock()
+
+    # Call service with call_id but no wants_response
+    device.mock_service_call(
+        HomeassistantServiceCall(
+            service="esphome.test_notify",
+            data={"input": "test"},
+            call_id=999,
+            wants_response=False,
+        )
+    )
+    await hass.async_block_till_done()
+
+    # Verify success notification was sent back
+    mock_client.send_homeassistant_action_response.assert_called_once()
+    call_id, success, error_message, response_data = (
+        mock_client.send_homeassistant_action_response.call_args[0]
+    )
+    assert call_id == 999
+    assert success is True
+    assert error_message == ""
+    assert response_data == b""
+
+
+async def test_esphome_device_service_call_with_service_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test service call when service does not exist."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ALLOW_SERVICE_CALLS: True}
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"esphome_version": "2023.3.0"},
+        entry=mock_config_entry,
+    )
+    await hass.async_block_till_done()
+
+    # Mock the send_homeassistant_action_response method
+    mock_client.send_homeassistant_action_response = Mock()
+
+    # Call non-existent service with notification
+    device.mock_service_call(
+        HomeassistantServiceCall(
+            service="esphome.nonexistent",
+            data={},
+            call_id=111,
+            wants_response=False,
+        )
+    )
+    await hass.async_block_till_done()
+
+    # Verify error notification was sent back
+    mock_client.send_homeassistant_action_response.assert_called_once()
+    call_id, success, error_message, response_data = (
+        mock_client.send_homeassistant_action_response.call_args[0]
+    )
+    assert call_id == 111
+    assert success is False
+    assert "not found" in error_message.lower()
+    assert response_data == b""
+
+
+async def test_esphome_device_service_call_with_validation_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test service call with validation error."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ALLOW_SERVICE_CALLS: True}
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"esphome_version": "2023.3.0"},
+        entry=mock_config_entry,
+    )
+    await hass.async_block_till_done()
+
+    # Register a service that validates input
+    async def _mock_service(call: ServiceCall) -> None:
+        raise vol.Invalid("Invalid input provided")
+
+    hass.services.async_register(DOMAIN, "validate_test", _mock_service)
+
+    # Mock the send_homeassistant_action_response method
+    mock_client.send_homeassistant_action_response = Mock()
+
+    # Call service with invalid data
+    device.mock_service_call(
+        HomeassistantServiceCall(
+            service="esphome.validate_test",
+            data={"invalid": "data"},
+            call_id=222,
+            wants_response=False,
+        )
+    )
+    await hass.async_block_till_done()
+
+    # Verify error notification was sent back
+    mock_client.send_homeassistant_action_response.assert_called_once()
+    call_id, success, error_message, response_data = (
+        mock_client.send_homeassistant_action_response.call_args[0]
+    )
+    assert call_id == 222
+    assert success is False
+    assert "Invalid input provided" in error_message
+    assert response_data == b""
+
+
+async def test_esphome_device_service_call_fire_and_forget(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test fire-and-forget service call (no call_id)."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ALLOW_SERVICE_CALLS: True}
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"esphome_version": "2023.3.0"},
+        entry=mock_config_entry,
+    )
+    await hass.async_block_till_done()
+
+    mock_calls: list[ServiceCall] = []
+
+    async def _mock_service(call: ServiceCall) -> None:
+        mock_calls.append(call)
+
+    hass.services.async_register(DOMAIN, "fire_forget", _mock_service)
+
+    # Mock the send_homeassistant_action_response method
+    mock_client.send_homeassistant_action_response = Mock()
+
+    # Call service without call_id (fire-and-forget)
+    device.mock_service_call(
+        HomeassistantServiceCall(
+            service="esphome.fire_forget",
+            data={"test": "data"},
+        )
+    )
+    await hass.async_block_till_done()
+
+    # Verify service was called but no response was sent
+    assert len(mock_calls) == 1
+    assert mock_calls[0].data == {"test": "data"}
+    mock_client.send_homeassistant_action_response.assert_not_called()
 
 
 async def test_esphome_device_with_old_bluetooth(
@@ -1455,6 +1794,37 @@ async def test_no_reauth_wrong_mac(
     )
 
 
+async def test_auth_error_during_on_connect_triggers_reauth(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+) -> None:
+    """Test that InvalidAuthAPIError during on_connect triggers reauth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:aa",
+        data={
+            CONF_HOST: "test.local",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "wrong_password",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.device_info_and_list_entities = AsyncMock(
+        side_effect=InvalidAuthAPIError("Invalid password!")
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+    assert mock_client.disconnect.call_count >= 1
+
+
 async def test_entry_missing_unique_id(
     hass: HomeAssistant,
     mock_client: APIClient,
@@ -2347,3 +2717,98 @@ async def test_manager_handle_dynamic_encryption_key_connection_error(
 
     # Verify key was NOT stored due to connection error
     assert mac_address not in hass_storage[ENCRYPTION_KEY_STORAGE_KEY]["data"]["keys"]
+
+
+async def test_zwave_proxy_request_home_id_change(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test Z-Wave proxy request handler with HOME_ID_CHANGE request."""
+
+    device_info = {
+        "name": "test-zwave-proxy",
+        "mac_address": "11:22:33:44:55:AA",
+        "zwave_proxy_feature_flags": 1,
+    }
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+    await hass.async_block_till_done()
+
+    # Get the manager's _async_zwave_proxy_request callback
+    # It's registered via subscribe_zwave_proxy_request
+    zwave_proxy_callback = None
+    for call_item in mock_client.subscribe_zwave_proxy_request.call_args_list:
+        if call_item[0]:
+            zwave_proxy_callback = call_item[0][0]
+            break
+
+    assert zwave_proxy_callback is not None
+
+    # Create a mock request with a different type (not HOME_ID_CHANGE)
+    # Assuming there are other types, we'll use a placeholder value
+    request = ZWaveProxyRequest(
+        type=0,  # Not HOME_ID_CHANGE
+        data=b"\x00\x00\x00\x01",
+    )
+
+    # Track flow creation
+    with patch(
+        "homeassistant.helpers.discovery_flow.async_create_flow"
+    ) as mock_create_flow:
+        # Call the callback
+        zwave_proxy_callback(request)
+        await hass.async_block_till_done()
+
+        # Verify no flow was created for non-HOME_ID_CHANGE requests
+        mock_create_flow.assert_not_called()
+
+    # Create a mock request with HOME_ID_CHANGE type and zwave_home_id as bytes
+    zwave_home_id = 1234567890
+    request = ZWaveProxyRequest(
+        type=ZWaveProxyRequestType.HOME_ID_CHANGE,
+        data=zwave_home_id.to_bytes(4, byteorder="big")
+        + b"\x00\x00",  # Extra bytes should be ignored
+    )
+
+    # Track flow creation
+    with patch(
+        "homeassistant.helpers.discovery_flow.async_create_flow"
+    ) as mock_create_flow:
+        # Call the callback
+        zwave_proxy_callback(request)
+        await hass.async_block_till_done()
+
+        # Verify async_create_zwave_js_flow was called with correct arguments
+        mock_create_flow.assert_called_once()
+        call_args = mock_create_flow.call_args
+        assert call_args[0][0] == hass
+        assert call_args[0][1] == "zwave_js"
+
+
+async def test_no_zwave_proxy_subscribe_without_feature_flags(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test Z-Wave proxy request subscription is not registered without feature flags."""
+    device_info = {
+        "name": "test-device",
+        "mac_address": "11:22:33:44:55:AA",
+        "zwave_proxy_feature_flags": 0,  # No Z-Wave proxy features
+    }
+
+    # Mock the subscribe_zwave_proxy_request method
+    mock_client.subscribe_zwave_proxy_request = Mock(return_value=lambda: None)
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+    await hass.async_block_till_done()
+
+    # Verify subscribe_zwave_proxy_request was NOT called
+    mock_client.subscribe_zwave_proxy_request.assert_not_called()

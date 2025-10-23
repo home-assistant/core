@@ -127,7 +127,11 @@ MOCK_BLOCKS = [
         ),
     ),
     Mock(
-        sensor_ids={"mode": "color", "effect": 0},
+        sensor_ids={
+            "output": mock_light_set_state()["ison"],
+            "mode": "color",
+            "effect": 0,
+        },
         channel="0",
         output=mock_light_set_state()["ison"],
         colorTemp=mock_light_set_state()["temp"],
@@ -324,6 +328,7 @@ MOCK_BLU_TRV_REMOTE_STATUS = {
         "rssi": -60,
         "battery": 100,
         "errors": [],
+        "fw_ver": "v1.2.10",
     },
     "blutrv:201": {
         "id": 0,
@@ -612,6 +617,13 @@ async def mock_rpc_device():
                 {}, RpcUpdateType.INITIALIZED
             )
 
+        current_pos = iter(range(50, -1, -10))  # from 50 to 0 in steps of 10
+
+        async def update_cover_status(cover_id: int):
+            device.status[f"cover:{cover_id}"]["current_pos"] = next(
+                current_pos, device.status[f"cover:{cover_id}"]["current_pos"]
+            )
+
         device = _mock_rpc_device()
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
@@ -619,6 +631,9 @@ async def mock_rpc_device():
         rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
         rpc_device_mock.return_value.mock_online = Mock(side_effect=online)
         rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
+        rpc_device_mock.return_value.update_cover_status = AsyncMock(
+            side_effect=update_cover_status
+        )
 
         yield rpc_device_mock.return_value
 
@@ -761,3 +776,16 @@ def mock_setup() -> Generator[AsyncMock]:
         "homeassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture
+def disable_async_remove_shelly_rpc_entities() -> Generator[None]:
+    """Patch out async_remove_shelly_rpc_entities.
+
+    This is used by virtual components tests that should not create entities,
+    without it async_remove_shelly_rpc_entities will clean up the entities.
+    """
+    with patch(
+        "homeassistant.components.shelly.utils.async_remove_shelly_rpc_entities"
+    ):
+        yield

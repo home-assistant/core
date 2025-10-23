@@ -13,6 +13,12 @@
           "on": "mdi:car"
         }
       },
+      "non-motor_vehicle": {
+        "default": "mdi:motorbike-off",
+        "state": {
+          "on": "mdi:motorbike"
+        }
+      },
       "pet": {
         "default": "mdi:dog-side-off",
         "state": {
@@ -120,6 +126,12 @@
         "state": {
           "on": "mdi:package-variant-closed-check"
         }
+      },
+      "io_input": {
+        "default": "mdi:electric-switch",
+        "state": {
+          "on": "mdi:electric-switch-closed"
+        }
       }
     },
     "button": {
@@ -172,10 +184,31 @@
       "floodlight_brightness": {
         "default": "mdi:spotlight-beam"
       },
+      "floodlight_event_brightness": {
+        "default": "mdi:spotlight-beam"
+      },
       "ir_brightness": {
         "default": "mdi:led-off"
       },
+      "floodlight_event_on_time": {
+        "default": "mdi:spotlight-beam"
+      },
+      "floodlight_event_flash_time": {
+        "default": "mdi:spotlight-beam"
+      },
       "volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      },
+      "volume_speak": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      },
+      "volume_doorbell": {
         "default": "mdi:volume-high",
         "state": {
           "0": "mdi:volume-off"
@@ -210,6 +243,9 @@
       },
       "ai_vehicle_sensitivity": {
         "default": "mdi:car"
+      },
+      "ai_non_motor_vehicle_sensitivity": {
+        "default": "mdi:bicycle"
       },
       "ai_package_sensitivity": {
         "default": "mdi:gift-outline"
@@ -246,6 +282,9 @@
       },
       "ai_vehicle_delay": {
         "default": "mdi:car"
+      },
+      "ai_non_motor_vehicle_delay": {
+        "default": "mdi:bicycle"
       },
       "ai_package_delay": {
         "default": "mdi:gift-outline"
@@ -306,10 +345,16 @@
       },
       "pre_record_battery_stop": {
         "default": "mdi:history"
+      },
+      "silent_time": {
+        "default": "mdi:volume-off"
       }
     },
     "select": {
       "floodlight_mode": {
+        "default": "mdi:spotlight-beam"
+      },
+      "floodlight_event_mode": {
         "default": "mdi:spotlight-beam"
       },
       "day_night_mode": {
@@ -390,6 +435,12 @@
       "sub_bit_rate": {
         "default": "mdi:play-speed"
       },
+      "main_encoding": {
+        "default": "mdi:video-image"
+      },
+      "sub_encoding": {
+        "default": "mdi:video-image"
+      },
       "scene_mode": {
         "default": "mdi:view-list"
       },
@@ -435,6 +486,15 @@
       },
       "sd_storage": {
         "default": "mdi:micro-sd"
+      },
+      "person_type": {
+        "default": "mdi:account"
+      },
+      "vehicle_type": {
+        "default": "mdi:car"
+      },
+      "animal_type": {
+        "default": "mdi:paw"
       }
     },
     "siren": {
@@ -478,6 +538,12 @@
       },
       "manual_record": {
         "default": "mdi:record-rec"
+      },
+      "rule": {
+        "default": "mdi:cctv",
+        "state": {
+          "off": "mdi:cctv-off"
+        }
       },
       "pre_record": {
         "default": "mdi:history"
