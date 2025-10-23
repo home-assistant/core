@@ -58,7 +58,7 @@ ACTION_PARAMETERS_CACHE: HassKey[
 
 LLM_API_ASSIST = "assist"
 
-BASE_PROMPT = (
+DATE_TIME_PROMPT = (
     'Current time is {{ now().strftime("%H:%M:%S") }}. '
     'Today\'s date is {{ now().strftime("%Y-%m-%d") }}.\n'
 )
@@ -592,6 +592,8 @@ class AssistAPI(API):
             for intent_handler in intent_handlers
         ]
 
+        tools.append(GetDateTimeTool())
+
         if exposed_entities:
             if exposed_entities[CALENDAR_DOMAIN]:
                 names = []
@@ -656,7 +658,6 @@ def _get_exposed_entities(
         if not async_should_expose(hass, assistant, state.entity_id):
             continue
 
-        description: str | None = None
         entity_entry = entity_registry.async_get(state.entity_id)
         names = [state.name]
         area_names = []
@@ -687,8 +688,10 @@ def _get_exposed_entities(
         if include_state:
             info["state"] = state.state
 
-        if description:
-            info["description"] = description
+            # Convert timestamp device_class states from UTC to local time
+            if state.attributes.get("device_class") == "timestamp" and state.state:
+                if (parsed_utc := dt_util.parse_datetime(state.state)) is not None:
+                    info["state"] = dt_util.as_local(parsed_utc).isoformat()
 
         if area_names:
             info["areas"] = ", ".join(area_names)
@@ -828,7 +831,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "enum": options}
 
     if isinstance(schema, selector.TargetSelector):
-        return convert(cv.TARGET_SERVICE_FIELDS)
+        return convert(cv.TARGET_FIELDS)
 
     if isinstance(schema, selector.TemplateSelector):
         return {"type": "string", "format": "jinja2"}
@@ -1179,4 +1182,30 @@ class GetLiveContextTool(Tool):
         return {
             "success": True,
             "result": "\n".join(prompt),
+        }
+
+
+class GetDateTimeTool(Tool):
+    """Tool for getting the current date and time."""
+
+    name = "GetDateTime"
+    description = "Provides the current date and time."
+
+    async def async_call(
+        self,
+        hass: HomeAssistant,
+        tool_input: ToolInput,
+        llm_context: LLMContext,
+    ) -> JsonObjectType:
+        """Get the current date and time."""
+        now = dt_util.now()
+
+        return {
+            "success": True,
+            "result": {
+                "date": now.strftime("%Y-%m-%d"),
+                "time": now.strftime("%H:%M:%S"),
+                "timezone": now.strftime("%Z"),
+                "weekday": now.strftime("%A"),
+            },
         }

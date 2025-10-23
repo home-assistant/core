@@ -8,7 +8,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["brother", "pyasn1", "pysmi", "pysnmp"],
-  "requirements": ["brother==5.0.1"],
+  "requirements": ["brother==5.1.1"],
   "zeroconf": [
     {
       "type": "_printer._tcp.local.",

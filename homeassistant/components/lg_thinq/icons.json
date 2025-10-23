@@ -45,6 +45,9 @@
       },
       "display_light": {
         "default": "mdi:lightbulb-on-outline"
+      },
+      "air_clean_operation_mode": {
+        "default": "mdi:air-filter"
       }
     },
     "binary_sensor": {
@@ -279,7 +282,22 @@
       "filter_lifetime": {
         "default": "mdi:air-filter"
       },
+      "top_filter_remain_percent": {
+        "default": "mdi:air-filter"
+      },
       "used_time": {
+        "default": "mdi:air-filter"
+      },
+      "water_filter_state": {
+        "default": "mdi:air-filter"
+      },
+      "water_filter_1_remain_percent": {
+        "default": "mdi:air-filter"
+      },
+      "water_filter_2_remain_percent": {
+        "default": "mdi:air-filter"
+      },
+      "water_filter_3_remain_percent": {
         "default": "mdi:air-filter"
       },
       "current_job_mode": {
@@ -437,6 +455,15 @@
       },
       "cycle_count_for_location": {
         "default": "mdi:counter"
+      },
+      "energy_usage_yesterday": {
+        "default": "mdi:chart-bar"
+      },
+      "energy_usage_this_month": {
+        "default": "mdi:chart-bar"
+      },
+      "energy_usage_last_month": {
+        "default": "mdi:chart-bar"
       }
     }
   }
