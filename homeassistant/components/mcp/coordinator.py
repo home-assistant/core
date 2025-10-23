@@ -22,14 +22,7 @@ from homeassistant.helpers import llm
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.json import JsonObjectType
 
-from .const import (
-    CONF_TRANSPORT,
-    DOMAIN,
-    MCP_PROTOCOL_VERSION,
-    MCP_PROTOCOL_VERSION_HEADER,
-    TRANSPORT_SSE,
-    TRANSPORT_STREAMABLE_HTTP,
-)
+from .const import CONF_TRANSPORT, DOMAIN, TRANSPORT_SSE, TRANSPORT_STREAMABLE_HTTP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,13 +38,10 @@ async def mcp_client(
     token_manager: TokenManager | None = None,
     *,
     transport: str = TRANSPORT_SSE,
-    protocol_version: str | None = None,
 ) -> AsyncGenerator[ClientSession]:
     """Create an MCP client using the configured transport."""
 
     headers: dict[str, str] = {}
-    if protocol_version is not None:
-        headers[MCP_PROTOCOL_VERSION_HEADER] = protocol_version
     if token_manager is not None:
         token = await token_manager()
         headers["Authorization"] = f"Bearer {token}"
@@ -91,7 +81,6 @@ class ModelContextProtocolTool(llm.Tool):
         token_manager: TokenManager | None = None,
         *,
         transport: str = TRANSPORT_SSE,
-        protocol_version: str | None = None,
     ) -> None:
         """Initialize the tool."""
         self.name = name
@@ -100,7 +89,6 @@ class ModelContextProtocolTool(llm.Tool):
         self.server_url = server_url
         self.token_manager = token_manager
         self.transport = transport
-        self.protocol_version = protocol_version
 
     async def async_call(
         self,
@@ -112,10 +100,7 @@ class ModelContextProtocolTool(llm.Tool):
         try:
             async with asyncio.timeout(TIMEOUT):
                 async with mcp_client(
-                    self.server_url,
-                    self.token_manager,
-                    transport=self.transport,
-                    protocol_version=self.protocol_version,
+                    self.server_url, self.token_manager, transport=self.transport
                 ) as session:
                     result = await session.call_tool(
                         tool_input.tool_name, tool_input.tool_args
@@ -126,7 +111,9 @@ class ModelContextProtocolTool(llm.Tool):
         except httpx.HTTPStatusError as error:
             _LOGGER.debug("Error when calling tool: %s", error)
             raise HomeAssistantError(f"Error when calling tool: {error}") from error
-        return result.model_dump(exclude_unset=True, exclude_none=True)
+        return cast(
+            JsonObjectType, result.model_dump(exclude_unset=True, exclude_none=True)
+        )
 
 
 class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
@@ -154,11 +141,6 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         )
         if self.transport not in (TRANSPORT_SSE, TRANSPORT_STREAMABLE_HTTP):
             self.transport = TRANSPORT_SSE
-        self.protocol_version: str | None = (
-            MCP_PROTOCOL_VERSION
-            if self.transport == TRANSPORT_STREAMABLE_HTTP
-            else None
-        )
 
     async def _async_update_data(self) -> list[llm.Tool]:
         """Fetch data from API endpoint.
@@ -172,7 +154,6 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     self.config_entry.data[CONF_URL],
                     self.token_manager,
                     transport=self.transport,
-                    protocol_version=self.protocol_version,
                 ) as session:
                     result = await session.list_tools()
         except TimeoutError as error:
@@ -206,7 +187,6 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     self.config_entry.data[CONF_URL],
                     self.token_manager,
                     transport=self.transport,
-                    protocol_version=self.protocol_version,
                 )
             )
         return tools

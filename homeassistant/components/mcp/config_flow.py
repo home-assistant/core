@@ -31,8 +31,6 @@ from .const import (
     CONF_TOKEN_URL,
     CONF_TRANSPORT,
     DOMAIN,
-    MCP_PROTOCOL_VERSION,
-    MCP_PROTOCOL_VERSION_HEADER,
     TRANSPORT_SSE,
     TRANSPORT_STREAMABLE_HTTP,
 )
@@ -54,9 +52,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 # OAuth server discovery endpoint for rfc8414
 OAUTH_DISCOVERY_ENDPOINT = ".well-known/oauth-authorization-server"
-MCP_DISCOVERY_HEADERS = {
-    MCP_PROTOCOL_VERSION_HEADER: MCP_PROTOCOL_VERSION,
-}
 
 EXAMPLE_URL = "http://example/mcp"
 
@@ -84,7 +79,7 @@ async def async_discover_oauth_config(
     parsed_url = URL(mcp_server_url)
     discovery_endpoint = str(parsed_url.with_path(OAUTH_DISCOVERY_ENDPOINT))
     try:
-        async with httpx.AsyncClient(headers=MCP_DISCOVERY_HEADERS) as client:
+        async with httpx.AsyncClient() as client:
             response = await client.get(discovery_endpoint)
             response.raise_for_status()
     except httpx.TimeoutException as error:
@@ -129,19 +124,13 @@ async def validate_input(
     """Validate the user input and connect to the MCP server."""
     url = data[CONF_URL]
     transport = data.get(CONF_TRANSPORT, TRANSPORT_SSE)
-    protocol_version = (
-        MCP_PROTOCOL_VERSION if transport == TRANSPORT_STREAMABLE_HTTP else None
-    )
     try:
         cv.url(url)  # Cannot be added to schema directly
     except vol.Invalid as error:
         raise InvalidUrl from error
     try:
         async with mcp_client(
-            url,
-            token_manager=token_manager,
-            transport=transport,
-            protocol_version=protocol_version,
+            url, token_manager=token_manager, transport=transport
         ) as session:
             response = await session.initialize()
     except httpx.TimeoutException as error:
