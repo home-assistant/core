@@ -69,8 +69,10 @@ class PingUpdateCoordinator(DataUpdateCoordinator[PingResult]):
             self._update_task = asyncio.create_task(self.ping.async_update())
 
         with suppress(asyncio.TimeoutError):
+            warning_buffer_time = 1
             await asyncio.wait_for(
-                asyncio.shield(self._update_task), timeout=SLOW_UPDATE_WARNING - 1
+                asyncio.shield(self._update_task),
+                timeout=SLOW_UPDATE_WARNING - warning_buffer_time,
             )
             self._update_task = None
 
