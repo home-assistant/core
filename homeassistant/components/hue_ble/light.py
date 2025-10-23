@@ -49,11 +49,15 @@ class HueBLELight(LightEntity):
         self._light = light
         self._address = light.address
         self._attr_unique_id = light.address
-        self._attr_min_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
-            light.maximum_mireds
+        self._attr_min_color_temp_kelvin = (
+            color_util.color_temperature_mired_to_kelvin(light.maximum_mireds)
+            if light.maximum_mireds
+            else None
         )
-        self._attr_max_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
-            light.minimum_mireds
+        self._attr_max_color_temp_kelvin = (
+            color_util.color_temperature_mired_to_kelvin(light.minimum_mireds)
+            if light.minimum_mireds
+            else None
         )
         self._attr_device_info = DeviceInfo(
             name=light.name,
@@ -92,7 +96,7 @@ class HueBLELight(LightEntity):
         self._attr_brightness = self._light.brightness
         self._attr_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(self._light.colour_temp)
-            if self._light.colour_temp != 0
+            if self._light.colour_temp is not None and self._light.colour_temp != 0
             else -1
         )
         self._attr_xy_color = self._light.colour_xy
