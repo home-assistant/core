@@ -39,3 +39,41 @@ async def test_sensors(
     # Verify only power sensors created (4 total: 2 power + 2 energy)
     # Temperature register should be gracefully ignored
     assert len(entity_entries) == 4
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_power_sensor_values(hass: HomeAssistant) -> None:
+    """Test power sensor values are correct."""
+    # Test Grid power sensor
+    state = hass.states.get("sensor.egauge_home_grid")
+    assert state
+    assert state.state == "1500.0"
+    assert state.attributes["unit_of_measurement"] == "W"
+    assert state.attributes["device_class"] == "power"
+    assert state.attributes["state_class"] == "measurement"
+
+    # Test Solar power sensor (negative indicates generation)
+    state = hass.states.get("sensor.egauge_home_solar")
+    assert state
+    assert state.state == "-2500.0"
+    assert state.attributes["unit_of_measurement"] == "W"
+    assert state.attributes["device_class"] == "power"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_energy_sensor_values(hass: HomeAssistant) -> None:
+    """Test energy sensor values and Ws to kWh conversion."""
+    # Test Grid energy sensor - 450000000 Ws / 3600000 = 125 kWh
+    state = hass.states.get("sensor.egauge_home_grid_energy")
+    assert state
+    assert state.state == "125.0"
+    assert state.attributes["unit_of_measurement"] == "kWh"
+    assert state.attributes["device_class"] == "energy"
+    assert state.attributes["state_class"] == "total_increasing"
+
+    # Test Solar energy sensor - 315000000 Ws / 3600000 = 87.5 kWh
+    state = hass.states.get("sensor.egauge_home_solar_energy")
+    assert state
+    assert state.state == "87.5"
+    assert state.attributes["unit_of_measurement"] == "kWh"
+    assert state.attributes["device_class"] == "energy"
