@@ -27,7 +27,6 @@ async def safe_library_call(
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key=translation_key,
-            # translation_placeholders={**(translation_placeholders or {})},
             translation_placeholders=translation_placeholders,
         )
 
