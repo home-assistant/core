@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from pysma import SMA
+from pysma import SMAWebConnect
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
     protocol = "https" if entry.data[CONF_SSL] else "http"
     url = f"{protocol}://{entry.data[CONF_HOST]}"
 
-    sma = SMA(
+    sma = SMAWebConnect(
         session=async_get_clientsession(
             hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
         ),
