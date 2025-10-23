@@ -20,7 +20,6 @@ async def test_async_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
-    mock_nextdns: AsyncMock,
 ) -> None:
     """Test a successful setup entry."""
     await init_integration(hass, mock_config_entry)

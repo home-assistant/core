@@ -20,7 +20,6 @@ async def test_auth_error(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
-    mock_nextdns: AsyncMock,
 ) -> None:
     """Test authentication error when polling data."""
     await init_integration(hass, mock_config_entry)
