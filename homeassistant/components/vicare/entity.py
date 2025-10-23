@@ -29,18 +29,12 @@ class ViCareEntity(Entity):
         gateway_serial = device_config.getConfig().serial
         device_id = device_config.getId()
         model = device_config.getModel().replace("_", " ")
-        via_device_identifier: tuple[str, str] | None = None
 
         identifier = (
             f"{gateway_serial}_{device_serial.replace('-', '_')}"
             if device_serial is not None
             else f"{gateway_serial}_{device_id}"
         )
-
-        if device_serial is not None and device_serial.startswith("zigbee-"):
-            parts = device_serial.split("-")
-            if len(parts) == 3:  # expect format zigbee-<zigbee-ieee>-<channel-id>
-                via_device_identifier = (DOMAIN, f"{gateway_serial}_zigbee_{parts[1]}")
 
         self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = (
             component if component else device
@@ -56,5 +50,12 @@ class ViCareEntity(Entity):
             manufacturer="Viessmann",
             model=model,
             configuration_url=VIESSMANN_DEVELOPER_PORTAL,
-            via_device=via_device_identifier,
         )
+
+        if device_serial is not None and device_serial.startswith("zigbee-"):
+            parts = device_serial.split("-")
+            if len(parts) == 3:  # expect format zigbee-<zigbee-ieee>-<channel-id>
+                self._attr_device_info["via_device"] = (
+                    DOMAIN,
+                    f"{gateway_serial}_zigbee_{parts[1]}",
+                )
