@@ -34,11 +34,7 @@ from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
 
 def _get_departure_time(trip: Trip | None) -> datetime | None:
     """Get next departure time from trip data."""
-    if not trip:
-        return None
-    actual = trip.departure_time_actual
-    planned = trip.departure_time_planned
-    return actual or planned
+    return trip.departure_time_actual or trip.departure_time_planned if trip else None
 
 
 def _get_time_str(time: datetime | None) -> str | None:
@@ -48,14 +44,10 @@ def _get_time_str(time: datetime | None) -> str | None:
 
 def _get_route(trip: Trip | None) -> list[str]:
     """Get the route as a list of station names from trip data."""
-    if not trip:
-        return []
-    trip_parts = trip.trip_parts or []
-    if not trip_parts:
+    if not trip or not (trip_parts := trip.trip_parts):
         return []
     route = []
-    departure = trip.departure
-    if departure:
+    if departure := trip.departure:
         route.append(departure)
     route.extend(part.destination for part in trip_parts)
     return route
