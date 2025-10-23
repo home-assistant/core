@@ -185,7 +185,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Proxmox component. (deprecated)."""
+    """Import the Proxmox configuration from YAML."""
     if DOMAIN not in config:
         return True
 
