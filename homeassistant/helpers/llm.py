@@ -616,6 +616,8 @@ class AssistAPI(API):
 
         if exposed_domains:
             tools.append(GetLiveContextTool())
+            # Provide a tool to fetch a single entity with full attributes
+            tools.append(GetEntityTool())
 
         return tools
 
@@ -1217,5 +1219,68 @@ class GetDateTimeTool(Tool):
                 "time": now.strftime("%H:%M:%S"),
                 "timezone": now.strftime("%Z"),
                 "weekday": now.strftime("%A"),
+            },
+        }
+
+
+class GetEntityTool(Tool):
+    """Tool to retrieve a specific entity's full state and attributes.
+
+    Unlike :class:`GetLiveContextTool`, this returns *all* attributes for a
+    single entity. The entity must be exposed to the assistant; otherwise an
+    error is returned.
+    """
+
+    name = "GetEntity"
+    description = "Return the current state and all attributes for a specific entity."
+    parameters = vol.Schema({vol.Required("entity_id"): cv.entity_id})
+
+    async def async_call(
+        self,
+        hass: HomeAssistant,
+        tool_input: ToolInput,
+        llm_context: LLMContext,
+    ) -> JsonObjectType:
+        """Return the full state of the requested entity.
+
+        The function first checks that the entity is exposed for the current
+        assistant. If it is, the full state object is fetched from the state
+        machine and all attributes are returned (converting ``Enum``, ``Decimal``
+        and ``int`` values to strings for JSON compatibility).
+        """
+        if llm_context.assistant is None:
+            return {"success": False, "error": "No assistant configured"}
+
+        entity_id: str = tool_input.tool_args.get("entity_id")
+        if not entity_id:
+            return {"success": False, "error": "entity_id is required"}
+
+        # Verify the entity is exposed to the assistant
+        exposed_entities = _get_exposed_entities(
+            hass, llm_context.assistant, include_state=False
+        )
+        if not exposed_entities or entity_id not in exposed_entities["entities"]:
+            return {"success": False, "error": "Entity not exposed"}
+
+        state_obj = hass.states.get(entity_id)
+        if state_obj is None:
+            return {"success": False, "error": "Entity not found"}
+
+        # Convert attributes similar to _get_exposed_entities logic
+        attributes: dict[str, Any] = {
+            attr_name: (
+                str(attr_value)
+                if isinstance(attr_value, (Enum, Decimal, int))
+                else attr_value
+            )
+            for attr_name, attr_value in state_obj.attributes.items()
+        }
+
+        return {
+            "success": True,
+            "result": {
+                "entity_id": entity_id,
+                "state": state_obj.state,
+                "attributes": attributes,
             },
         }
