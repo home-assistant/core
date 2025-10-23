@@ -60,14 +60,14 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             is_claimed = await client.authenticate()
         except ClientResponseError as err:
             if err.status == 401:
-                _LOGGER.error("Invalid provisioning key or secret")
+                _LOGGER.debug("Invalid provisioning key or secret")
                 return "invalid_auth"
-            _LOGGER.error(
+            _LOGGER.debug(
                 "Client response error during EnergyID authentication: %s", err
             )
             return "cannot_connect"
         except ClientError as err:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "Failed to connect to EnergyID during authentication: %s", err
             )
             return "cannot_connect"
