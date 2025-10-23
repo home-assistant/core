@@ -2435,7 +2435,7 @@
     'state': '3.558',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2450,7 +2450,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_current',
+    'entity_id': 'sensor.eve_energy_20ecn4101_current_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2465,7 +2465,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'Current (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2475,23 +2475,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Eve Energy 20ECN4101 Current',
+      'friendly_name': 'Eve Energy 20ECN4101 Current (top)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_current',
+    'entity_id': 'sensor.eve_energy_20ecn4101_current_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.159999996423721',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2506,7 +2506,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_energy',
+    'entity_id': 'sensor.eve_energy_20ecn4101_energy_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2521,7 +2521,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2531,23 +2531,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Eve Energy 20ECN4101 Energy',
+      'friendly_name': 'Eve Energy 20ECN4101 Energy (top)',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_energy',
+    'entity_id': 'sensor.eve_energy_20ecn4101_energy_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '18.7803344726562',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2562,7 +2562,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_power',
+    'entity_id': 'sensor.eve_energy_20ecn4101_power_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2577,7 +2577,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Power (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2587,23 +2587,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Eve Energy 20ECN4101 Power',
+      'friendly_name': 'Eve Energy 20ECN4101 Power (top)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_power',
+    'entity_id': 'sensor.eve_energy_20ecn4101_power_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13.3999996185303',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2618,7 +2618,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_voltage',
+    'entity_id': 'sensor.eve_energy_20ecn4101_voltage_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2633,7 +2633,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'Voltage (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2643,16 +2643,16 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Eve Energy 20ECN4101 Voltage',
+      'friendly_name': 'Eve Energy 20ECN4101 Voltage (top)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_energy_20ecn4101_voltage',
+    'entity_id': 'sensor.eve_energy_20ecn4101_voltage_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3933,7 +3933,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_fancy_button-entry]
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3948,7 +3948,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_generic_switch_fancy_button',
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3960,7 +3960,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fancy Button',
+    'original_name': 'Current switch position (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3970,14 +3970,432 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_fancy_button-state]
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Generic Switch Fancy Button',
+      'friendly_name': 'Mock Generic Switch Current switch position (2)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_generic_switch_fancy_button',
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hjmt_6b_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-0-PowerSource-47-12',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'HJMT-6B Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hjmt_6b_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_battery_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hjmt_6b_battery_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Battery voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_voltage',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-0-PowerSourceBatVoltage-47-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_battery_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'HJMT-6B Battery voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hjmt_6b_battery_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.316',
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hjmt_6b_current_switch_position_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HJMT-6B Current switch position (1)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hjmt_6b_current_switch_position_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hjmt_6b_current_switch_position_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HJMT-6B Current switch position (2)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hjmt_6b_current_switch_position_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hjmt_6b_current_switch_position_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-3-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HJMT-6B Current switch position (3)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hjmt_6b_current_switch_position_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hjmt_6b_current_switch_position_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (4)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-4-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HJMT-6B Current switch position (4)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hjmt_6b_current_switch_position_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hjmt_6b_current_switch_position_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (5)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-5-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HJMT-6B Current switch position (5)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hjmt_6b_current_switch_position_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_6-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hjmt_6b_current_switch_position_6',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (6)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-6-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_6-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HJMT-6B Current switch position (6)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hjmt_6b_current_switch_position_6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4096,7 +4514,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_config-entry]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_config-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4111,7 +4529,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.white_series_onoff_switch_config',
+    'entity_id': 'sensor.white_series_onoff_switch_current_switch_position_config',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4123,7 +4541,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Config',
+    'original_name': 'Current switch position (Config)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4133,21 +4551,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_config-state]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_config-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Config',
+      'friendly_name': 'White Series OnOff Switch Current switch position (Config)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.white_series_onoff_switch_config',
+    'entity_id': 'sensor.white_series_onoff_switch_current_switch_position_config',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_down-entry]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4162,7 +4580,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.white_series_onoff_switch_down',
+    'entity_id': 'sensor.white_series_onoff_switch_current_switch_position_down',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4174,7 +4592,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Down',
+    'original_name': 'Current switch position (Down)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4184,14 +4602,65 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_down-state]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Down',
+      'friendly_name': 'White Series OnOff Switch Current switch position (Down)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.white_series_onoff_switch_down',
+    'entity_id': 'sensor.white_series_onoff_switch_current_switch_position_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.white_series_onoff_switch_current_switch_position_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (Up)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-3-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Current switch position (Up)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.white_series_onoff_switch_current_switch_position_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4423,57 +4892,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.83',
-  })
-# ---
-# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_up-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.white_series_onoff_switch_up',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Up',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-3-SwitchCurrentPosition-59-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_up-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Up',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.white_series_onoff_switch_up',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
   })
 # ---
 # name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_voltage-entry]
@@ -4821,7 +5239,7 @@
     'state': 'stopped',
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_config-entry]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_config-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4836,7 +5254,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inovelli_config',
+    'entity_id': 'sensor.inovelli_current_switch_position_config',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4848,7 +5266,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Config',
+    'original_name': 'Current switch position (Config)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4858,21 +5276,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_config-state]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_config-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Config',
+      'friendly_name': 'Inovelli Current switch position (Config)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inovelli_config',
+    'entity_id': 'sensor.inovelli_current_switch_position_config',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_down-entry]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4887,7 +5305,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inovelli_down',
+    'entity_id': 'sensor.inovelli_current_switch_position_down',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4899,7 +5317,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Down',
+    'original_name': 'Current switch position (Down)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4909,21 +5327,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_down-state]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Down',
+      'friendly_name': 'Inovelli Current switch position (Down)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inovelli_down',
+    'entity_id': 'sensor.inovelli_current_switch_position_down',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_up-entry]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4938,7 +5356,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inovelli_up',
+    'entity_id': 'sensor.inovelli_current_switch_position_up',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4950,7 +5368,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Up',
+    'original_name': 'Current switch position (Up)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4960,14 +5378,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_up-state]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Up',
+      'friendly_name': 'Inovelli Current switch position (Up)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inovelli_up',
+    'entity_id': 'sensor.inovelli_current_switch_position_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6759,6 +7177,57 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensors[silabs_light_switch][sensor.light_switch_example_current_switch_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.light_switch_example_current_switch_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-000000000000008E-MatterNodeDevice-2-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_light_switch][sensor.light_switch_example_current_switch_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Light switch example Current switch position',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.light_switch_example_current_switch_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[silabs_water_heater][sensor.water_heater_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -7623,6 +8092,74 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '234.899',
+  })
+# ---
+# name: test_sensors[switchbot_k11_plus][sensor.k11_operational_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'stopped',
+        'running',
+        'paused',
+        'error',
+        'seeking_charger',
+        'charging',
+        'docked',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.k11_operational_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operational state',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operational_state',
+    'unique_id': '00000000000004D2-0000000000000061-MatterNodeDevice-1-RvcOperationalState-97-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[switchbot_k11_plus][sensor.k11_operational_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'K11+ Operational state',
+      'options': list([
+        'stopped',
+        'running',
+        'paused',
+        'error',
+        'seeking_charger',
+        'charging',
+        'docked',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.k11_operational_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'stopped',
   })
 # ---
 # name: test_sensors[tado_smart_radiator_thermostat_x][sensor.smart_radiator_thermostat_x_humidity-entry]

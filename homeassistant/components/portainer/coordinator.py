@@ -13,6 +13,7 @@ from pyportainer import (
     PortainerTimeoutError,
 )
 from pyportainer.models.docker import DockerContainer
+from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint
 
 from homeassistant.config_entries import ConfigEntry
@@ -38,6 +39,8 @@ class PortainerCoordinatorData:
     name: str | None
     endpoint: Endpoint
     containers: dict[str, DockerContainer]
+    docker_version: DockerVersion
+    docker_info: DockerInfo
 
 
 class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorData]]):
@@ -120,6 +123,8 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
             try:
                 containers = await self.portainer.get_containers(endpoint.id)
+                docker_version = await self.portainer.docker_version(endpoint.id)
+                docker_info = await self.portainer.docker_info(endpoint.id)
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
                 raise UpdateFailed(
@@ -140,6 +145,8 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 name=endpoint.name,
                 endpoint=endpoint,
                 containers={container.id: container for container in containers},
+                docker_version=docker_version,
+                docker_info=docker_info,
             )
 
         return mapped_endpoints

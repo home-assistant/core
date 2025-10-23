@@ -3,14 +3,14 @@
     "step": {
       "user": {
         "title": "OSO Energy auth",
-        "description": "Enter the 'Subscription key' for your account generated at 'https://portal.osoenergy.no/'",
+        "description": "Enter the 'Subscription key' for your account generated at {portal_url}",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "reauth": {
         "title": "OSO Energy auth",
-        "description": "Enter a new 'Subscription key' for your account generated at 'https://portal.osoenergy.no/'.",
+        "description": "Enter a new 'Subscription key' for your account generated at {portal_url}",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
