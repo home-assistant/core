@@ -9,7 +9,13 @@ from egauge_async.json.models import RegisterInfo, RegisterType
 import pytest
 
 from homeassistant.components.egauge.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -25,6 +31,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: "http://192.168.1.100",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "secret",
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
         },
         unique_id="ABC123456",
     )

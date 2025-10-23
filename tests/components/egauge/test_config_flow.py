@@ -8,7 +8,13 @@ import pytest
 
 from homeassistant.components.egauge.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -38,18 +44,22 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: "http://192.168.1.100",
+            CONF_HOST: "192.168.1.100",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "secret",
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "eGauge"
     assert result["data"] == {
-        CONF_HOST: "http://192.168.1.100",
+        CONF_HOST: "192.168.1.100",
         CONF_USERNAME: "admin",
         CONF_PASSWORD: "secret",
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: False,
     }
     assert result["result"].unique_id == "ABC123456"
 
@@ -78,6 +88,8 @@ async def test_user_flow_errors(
             CONF_HOST: "http://192.168.1.100",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "wrong",
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
         },
     )
 
@@ -93,6 +105,8 @@ async def test_user_flow_errors(
             CONF_HOST: "http://192.168.1.100",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "secret",
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -112,6 +126,8 @@ async def test_user_flow_already_configured(
             CONF_HOST: "http://192.168.1.200",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "secret",
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
         },
     )
 
@@ -145,6 +161,8 @@ async def test_reauth_flow(
         CONF_HOST: "http://192.168.1.100",
         CONF_USERNAME: "admin",
         CONF_PASSWORD: "newsecret",
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: False,
     }
 
 
