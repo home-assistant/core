@@ -49,9 +49,17 @@ class ViCareEntity(Entity):
         if component:
             self._attr_unique_id += f"-{component.id}"
 
+        formatted_serial = device_serial
+        if device_serial and device_serial.startswith("zigbee-"):
+            ieee = device_serial.replace("zigbee-", "")
+            if len(ieee) == 16:
+                formatted_serial = "-".join(
+                    ieee.upper()[i : i + 2] for i in range(0, 16, 2)
+                )
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
-            serial_number=device_serial,
+            serial_number=formatted_serial,
             name=model,
             manufacturer="Viessmann",
             model=model,
