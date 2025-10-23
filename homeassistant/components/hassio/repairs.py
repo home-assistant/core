@@ -20,6 +20,7 @@ from .const import (
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DEPRECATED,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
+    ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_DOCUMENTATION,
@@ -229,6 +230,7 @@ async def async_create_fix_flow(
     if issue and issue.key in {
         ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
         ISSUE_KEY_ADDON_BOOT_FAIL,
+        ISSUE_KEY_ADDON_PWNED,
     }:
         return AddonIssueRepairFlow(hass, issue_id)
 
