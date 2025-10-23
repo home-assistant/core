@@ -21,7 +21,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_MULTIPLE_ENTITIES, DOMAIN
+from .const import CONF_NAME_WITH_STATION_ID, DEFAULT_STATION_NAME, DOMAIN
 from .coordinator import TFAmeDataCoordinator
 from .data import TFAmeData, TFAmeException
 
@@ -29,7 +29,7 @@ from .data import TFAmeData, TFAmeException
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(CONF_MULTIPLE_ENTITIES): bool,
+        vol.Required(CONF_NAME_WITH_STATION_ID): bool,
     }
 )
 
@@ -45,7 +45,7 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
-        self.multiple_entities: bool = False
+        self.name_with_station_id: bool = False
 
     _LOGGER.debug("TFA.me config flow")
 
@@ -62,15 +62,15 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         # Get multiple entities option
-        multi_ent = user_input.get(CONF_MULTIPLE_ENTITIES)
+        multi_ent = user_input.get(CONF_NAME_WITH_STATION_ID)
         if not isinstance(multi_ent, bool):
-            self.multiple_entities = False
-            errors[CONF_MULTIPLE_ENTITIES] = "invalid_multiple_entities"
+            self.name_with_station_id = False
+            errors[CONF_NAME_WITH_STATION_ID] = "invalid_name_with_station_id"
             # Error, multiple entities validation failed
             return self.async_show_form(
                 step_id="user", data_schema=DATA_SCHEMA, errors=errors
             )
-        self.multiple_entities = multi_ent
+        self.name_with_station_id = multi_ent
 
         # Get IP or mDNS host name
         ip_host_str = user_input.get("ip_address")
@@ -78,9 +78,9 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
         # If user_input is not None:
         validator = TFAmeValidator()
         if validator.is_valid_ip_or_tfa_me(ip_host_str):
-            title_str: str = "TFA.me Station"
+            title_str: str = DEFAULT_STATION_NAME
             if isinstance(ip_host_str, str):
-                title_str = "TFA.me Station '" + ip_host_str.upper() + "'"
+                title_str = DEFAULT_STATION_NAME + " '" + ip_host_str.upper() + "'"
 
             try:
                 client = TFAmeData(user_input[CONF_IP_ADDRESS])

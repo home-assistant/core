@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_MULTIPLE_ENTITIES, DOMAIN, LOCAL_POLL_INTERVAL
+from .const import CONF_NAME_WITH_STATION_ID, DOMAIN, LOCAL_POLL_INTERVAL
 from .coordinator import TFAmeConfigEntry, TFAmeDataCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -22,11 +22,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TFAmeConfigEntry) -> boo
     delta_interval = timedelta(seconds=LOCAL_POLL_INTERVAL)
 
     # Use multiple entities option
-    multiple_entities = entry.data[CONF_MULTIPLE_ENTITIES]
+    name_with_station_id = entry.data[CONF_NAME_WITH_STATION_ID]
 
     # New DataUpdateCoordinator for cyclic requests
     coordinator = TFAmeDataCoordinator(
-        hass, entry, host, delta_interval, multiple_entities
+        hass, entry, host, delta_interval, name_with_station_id
     )
 
     # Register listener for option changes

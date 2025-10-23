@@ -7,11 +7,11 @@
         "data": {
           "host": "IP or host name",
           "ip_address": "IP address or station ID",
-          "multiple_entities": "Sensors received via different stations are different entities. When you have only one station don't check this box."
+          "name_with_station_id": "Add station ID to device name. When you have only one station don't check this box."
         },
         "data_description": {
           "ip_address": "Enter the IP address or mDNS hostname of your TFA.me station",
-          "multiple_entities": "Whether to split measurements into multiple entities."
+          "name_with_station_id": "Whether adding station ID to device name or not."
         }
       }
     },
@@ -19,7 +19,7 @@
       "invalid_host": "Invalid IP or station ID.",
       "invalid_ip_host": "Invalid IP or station ID.",
       "cannot_connect": "Cannot connect to the station.",
-      "invalid_multiple_entities": "Invalid value for multiple entities",
+      "invalid_name_with_station_id": "Invalid value for name_with_station_id",
       "unknown": "Unexpected error.",
       "host_empty": "Invalid IP or station ID (empty)."
     }

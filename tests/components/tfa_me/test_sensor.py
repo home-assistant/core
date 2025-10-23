@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.tfa_me.const import (
-    CONF_MULTIPLE_ENTITIES,
+    CONF_NAME_WITH_STATION_ID,
     DEVICE_MAPPING,
     DOMAIN,
     ICON_MAPPING,
@@ -37,7 +37,7 @@ def mock_coordinator():
     """Return a mock coordinator with fake data."""
     coordinator = AsyncMock()
     coordinator.host = "192.168.1.10"
-    coordinator.multiple_entities = False
+    coordinator.name_with_station_id = False
     coordinator.sensor_entity_list = []
 
     now = datetime.now().timestamp()
@@ -309,7 +309,7 @@ def tfa_me_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_MULTIPLE_ENTITIES: False,
+            CONF_NAME_WITH_STATION_ID: False,
         },
         unique_id="test-1234",
     )
@@ -336,8 +336,8 @@ async def test_async_setup_entry_adds_entities(
     assert len(added_entities) >= 1
     sensor = added_entities[0]
     assert isinstance(sensor, TFAmeSensorEntity)
-    assert sensor.unique_id == "tfame_sensor.a01234567_temperature"
-    assert sensor.name == "A01234567 Temperature"
+    assert sensor.unique_id == "sensor.a01234567_temperature"
+    assert sensor.name == "Temperature"
 
 
 class FailingEntitiesError(Exception):
@@ -365,10 +365,10 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
     )
 
     # unique_id
-    assert entity.unique_id == "tfame_sensor.a01234567_temperature"
+    assert entity.unique_id == "sensor.a01234567_temperature"
 
     # Name
-    assert entity.name == "A01234567 Temperature"
+    assert entity.name == "Temperature"
 
     # measurement_name
     assert entity.measurement_name == "temperature"
@@ -389,14 +389,8 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
     entity._attr_native_value = 20.0
     assert entity.icon == ICON_MAPPING["temperature"]["default"]
 
-    # Attribute sensor_name = None
-    attrs["sensor_name"] = None
-    assert attrs["sensor_name"] is None
-
-    del mock_coordinator.data[entity.entity_id]["sensor_name"]
-    assert entity.name == "None"
-
     del mock_coordinator.data[entity.entity_id]["measurement"]
+    assert entity.name == "None"
     assert entity.measurement_name is None
 
     # Humidity
@@ -527,7 +521,7 @@ async def test_wind_sensor(mock_coordinator) -> None:
         sensor_id="a2ffffffb",
         entity_id="sensor.a2ffffffb_wind_direction_deg",
     )
-    assert entity.name == "A2FFFFFFB Wind direction deg"
+    assert entity.name == "Wind direction deg"
     assert entity.native_value == 180.0
 
     # Invalid sensor ID  & entity ID
@@ -572,9 +566,13 @@ class DummyEntity:
         """Get wind direction icon."""
         return TFAmeSensorEntity.get_wind_direction_icon(self, value)
 
-    def format_string_tfa_id(self, s: str, gw_id: str, multiple_entities: bool) -> str:
+    def format_string_tfa_id(
+        self, s: str, gw_id: str, name_with_station_id: bool
+    ) -> str:
         """Get sensor names."""
-        return TFAmeSensorEntity.format_string_tfa_id(self, s, gw_id, multiple_entities)
+        return TFAmeSensorEntity.format_string_tfa_id(
+            self, s, gw_id, name_with_station_id
+        )
 
     def format_string_tfa_type(self, s: str):
         """Convert string 'xxxxxxxxx' into 'Sensor/station type XX'."""
@@ -661,13 +659,13 @@ def test_multiple_entity(entity) -> None:
     """Test multiple entity OPTION."""
     assert (
         entity.format_string_tfa_id(
-            s="A01234567", gw_id="017654321", multiple_entities=True
+            s="A01234567", gw_id="017654321", name_with_station_id=True
         )
-        == "TFA.me A01-234-567(017654321)"
+        == "TFA.me A01-234-567 (017654321)"
     )
     assert (
         entity.format_string_tfa_id(
-            s="A01234567", gw_id="017654321", multiple_entities=False
+            s="A01234567", gw_id="017654321", name_with_station_id=False
         )
         == "TFA.me A01-234-567"
     )
@@ -716,7 +714,7 @@ def mock_config_entry(hass: HomeAssistant, tfa_me_mock_entry) -> ConfigEntry:
         config_entry=tfa_me_mock_entry,
         host="192.168.1.46",
         interval=timedelta(30),
-        multiple_entities=False,
+        name_with_station_id=False,
     )
     cordy.sensor_entity_list = []
     cordy.data = {}
@@ -752,7 +750,6 @@ async def test_async_discover_new_entities(
     }
     mock_coordinator.sensor_entity_list = [entity_id_existing]
 
-    # mock_config_entry.runtime_data = mock_coordinator
     mock_config_entry.coordinator = mock_coordinator
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][mock_config_entry.entry_id] = mock_config_entry
@@ -816,6 +813,26 @@ async def test_async_discover_new_entities(
         "sensor.a0f169ad1_humidity",
     ]
 
+    # Add new "received" data entity to coordinator
+    entity_id_new_3 = "sensor.a27654321_wind_direction_txt"
+    mock_coordinator.data[entity_id_new_3] = {
+        "sensor_id": "a27654321",
+        "gateway_id": None,
+        "sensor_name": "a27654321",
+        "measurement": "wind_direction_text",
+        "value": "0",
+        "unit": "",
+        "timestamp": "2025-09-02T09:15:13Z",
+        "ts": int(now),
+        "info": "",
+    }
+
+    # Call service function
+    await hass.data[DOMAIN][mock_config_entry.entry_id].async_discover_new_entities()
+
+    # Assert: async_add_entities was called again
+    assert async_add_entities.call_count == 2
+
 
 @pytest.mark.asyncio
 async def test_handle_coordinator_update_rain_hour(
@@ -829,7 +846,7 @@ async def test_handle_coordinator_update_rain_hour(
         config_entry=tfa_me_mock_entry,
         host="012-345-678",
         interval=timedelta(30),
-        multiple_entities=False,
+        name_with_station_id=False,
     )
 
     now = datetime.now().timestamp()
@@ -887,7 +904,7 @@ async def test_handle_coordinator_update_rain_24hours(
         config_entry=tfa_me_mock_entry,
         host="192.168.1.46",
         interval=timedelta(30),
-        multiple_entities=False,
+        name_with_station_id=False,
     )
 
     now = datetime.now().timestamp()
@@ -972,3 +989,17 @@ async def test_resolve_mdns_failure(hass: HomeAssistant, tfa_me_mock_entry) -> N
 
     # Fallback: hostname not changed
     assert result == "127.0.0.1"
+
+
+@pytest.mark.asyncio
+async def test_async_update_triggers_refresh_err() -> None:
+    """Test async_update()."""
+    # Arrange
+    mock_coordinator = AsyncMock()
+    entity = TFAmeSensorEntity(mock_coordinator, "abc", "sensor.abc_temp")
+
+    # Act
+    await entity.async_update()
+
+    # Assert
+    mock_coordinator.async_request_refresh.assert_awaited_once()

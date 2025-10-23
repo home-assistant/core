@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.tfa_me import async_unload_entry
-from homeassistant.components.tfa_me.const import CONF_MULTIPLE_ENTITIES, DOMAIN
+from homeassistant.components.tfa_me.const import CONF_NAME_WITH_STATION_ID, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
@@ -20,7 +20,7 @@ def mock_config_entryX() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_MULTIPLE_ENTITIES: True,
+            CONF_NAME_WITH_STATION_ID: True,
         },
         entry_id="1234",
         unique_id="unique_1234",

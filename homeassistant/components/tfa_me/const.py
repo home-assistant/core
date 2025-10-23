@@ -1,8 +1,8 @@
 """Constants for the TFA.me station integration."""
 
 DOMAIN = "tfa_me"
-DEFAULT_NAME = "TFA.me Station"
-CONF_MULTIPLE_ENTITIES = "multiple_entities"
+DEFAULT_STATION_NAME = "TFA.me Station"
+CONF_NAME_WITH_STATION_ID = "name_with_station_id"
 LOCAL_POLL_INTERVAL = 60
 
 # Used icons for entities, see also

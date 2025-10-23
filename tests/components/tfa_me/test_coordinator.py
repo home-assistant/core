@@ -16,7 +16,7 @@ from tfa_me_ha_local.client import (
 )
 
 from homeassistant.components.hassio import datetime
-from homeassistant.components.tfa_me.const import CONF_MULTIPLE_ENTITIES, DOMAIN
+from homeassistant.components.tfa_me.const import CONF_NAME_WITH_STATION_ID, DOMAIN
 from homeassistant.components.tfa_me.coordinator import TFAmeDataCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
@@ -35,7 +35,7 @@ def tfa_me_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_MULTIPLE_ENTITIES: False,
+            CONF_NAME_WITH_STATION_ID: False,
         },
         unique_id="test-1234",
     )
@@ -84,7 +84,7 @@ async def test_update_data_with_ip(hass: HomeAssistant, tfa_me_mock_entry) -> No
         tfa_me_mock_entry,
         "127.0.0.1",
         timedelta(seconds=30),
-        multiple_entities=True,
+        name_with_station_id=True,
     )
     coordinator.first_init = 1
 
@@ -154,7 +154,7 @@ async def test_update_data_with_mdns(
         tfa_me_mock_entry,
         "017-654-321",
         timedelta(seconds=30),
-        multiple_entities=False,
+        name_with_station_id=False,
     )
     coordinator.first_init = 1
 
@@ -175,14 +175,14 @@ async def test_update_data_with_mdns(
         result = await coordinator._async_update_data()
 
     # Asserts
-    assert "sensor.a21234567_wind_direction" in result
-    assert "sensor.a21234567_wind_direction_txt" in result
-    assert "sensor.a21234567_wind_direction_deg" in result
-    assert "sensor.a21234567_wind_speed" in result
-    assert "sensor.a21234567_wind_gust" in result
-    assert "sensor.a21234567_rssi" in result
-    assert "sensor.a21234567_lowbatt" in result
-    assert "sensor.a21234567_lowbatt_txt" in result
+    assert "sensor.017654321_a21234567_wind_direction" in result
+    assert "sensor.017654321_a21234567_wind_direction_txt" in result
+    assert "sensor.017654321_a21234567_wind_direction_deg" in result
+    assert "sensor.017654321_a21234567_wind_speed" in result
+    assert "sensor.017654321_a21234567_wind_gust" in result
+    assert "sensor.017654321_a21234567_rssi" in result
+    assert "sensor.017654321_a21234567_lowbatt" in result
+    assert "sensor.017654321_a21234567_lowbatt_txt" in result
 
     assert coordinator.gateway_id == "017654321"
     assert coordinator.first_init == 2
@@ -207,7 +207,7 @@ async def test_update_data_with_mdns_update_failed(
         tfa_me_mock_entry,
         "017-654-321",
         timedelta(seconds=30),
-        multiple_entities=True,
+        name_with_station_id=True,
     )
     coordinator.first_init = 1
     with (
@@ -239,7 +239,7 @@ async def test_update_data_with_mdns_config_entry_not_ready(
         tfa_me_mock_entry,
         "017-654-321",
         timedelta(seconds=30),
-        multiple_entities=True,
+        name_with_station_id=True,
     )
     coordinator.first_init = 0
     with (
@@ -271,7 +271,7 @@ async def test_update_data_with_mdns_http_errory(
         tfa_me_mock_entry,
         "017-654-321",
         timedelta(seconds=30),
-        multiple_entities=True,
+        name_with_station_id=True,
     )
     coordinator.first_init = 0
     with (
@@ -306,7 +306,7 @@ async def test_async_update_data_exceptions_first_init(
         config_entry=tfa_me_mock_entry,
         host="127.0.0.1",
         interval=timedelta(seconds=30),
-        multiple_entities=False,
+        name_with_station_id=False,
     )
 
     # Patch the client so that async_get_sensors raises our test exception
@@ -342,7 +342,7 @@ async def test_async_update_data_exceptions_after_first_init(
         config_entry=tfa_me_mock_entry,
         host="127.0.0.1",
         interval=timedelta(seconds=30),
-        multiple_entities=False,
+        name_with_station_id=False,
     )
     coordinator.first_init = 1  # simulate already initialized
 

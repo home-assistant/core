@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.tfa_me.const import CONF_MULTIPLE_ENTITIES, DOMAIN
+from homeassistant.components.tfa_me.const import CONF_NAME_WITH_STATION_ID, DOMAIN
 from homeassistant.components.tfa_me.data import TFAmeException
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -41,7 +41,7 @@ async def test_create_entry_success_with_ip(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data={
                 CONF_IP_ADDRESS: "192.168.1.10",
-                CONF_MULTIPLE_ENTITIES: False,
+                CONF_NAME_WITH_STATION_ID: False,
             },
         )
 
@@ -63,7 +63,7 @@ async def test_create_entry_with_tfa_exception(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data={
                 CONF_IP_ADDRESS: "192.168.0.10",
-                CONF_MULTIPLE_ENTITIES: True,
+                CONF_NAME_WITH_STATION_ID: True,
             },
         )
 
@@ -79,7 +79,7 @@ async def test_invalid_ip(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_USER},
         data={
             CONF_IP_ADDRESS: "not-an-ip",
-            CONF_MULTIPLE_ENTITIES: False,
+            CONF_NAME_WITH_STATION_ID: False,
         },
     )
 
@@ -88,19 +88,19 @@ async def test_invalid_ip(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.asyncio
-async def test_invalid_multiple_entities(hass: HomeAssistant) -> None:
+async def test_invalid_name_with_station_id(hass: HomeAssistant) -> None:
     """Test: Invalid entity class, not bool."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={
             CONF_IP_ADDRESS: "192.168.1.10",
-            CONF_MULTIPLE_ENTITIES: 123,  # wrong value
+            CONF_NAME_WITH_STATION_ID: 123,  # wrong value
         },
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert "invalid_multiple_entities" in result["errors"].values()
+    assert "invalid_name_with_station_id" in result["errors"].values()
 
 
 @pytest.mark.asyncio
@@ -115,7 +115,7 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data={
                 CONF_IP_ADDRESS: "192.168.1.10",
-                CONF_MULTIPLE_ENTITIES: True,
+                CONF_NAME_WITH_STATION_ID: True,
             },
         )
 
@@ -135,7 +135,7 @@ async def test_cannot_connect_2(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data={
                 CONF_IP_ADDRESS: "192.168.1.10",
-                CONF_MULTIPLE_ENTITIES: True,
+                CONF_NAME_WITH_STATION_ID: True,
             },
         )
 
@@ -156,7 +156,7 @@ async def test_create_entry_success_with_id(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data={
                 CONF_IP_ADDRESS: "012-345-678",
-                CONF_MULTIPLE_ENTITIES: False,
+                CONF_NAME_WITH_STATION_ID: False,
             },
         )
 

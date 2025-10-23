@@ -35,7 +35,7 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
         config_entry: ConfigEntry,
         host: str,
         interval: timedelta,
-        multiple_entities: bool,
+        name_with_station_id: bool,
     ) -> None:
         """Initialize data update coordinator."""
         self.host = host  # from config_entry.data[CONF_IP_ADDRESS]
@@ -44,11 +44,12 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
         self.config_entry = config_entry
         self.sensor_entity_list: list[str] = []  # [Entity ID strings]
         self.reset_rain_sensors = False
-        self.multiple_entities = (
-            multiple_entities  # from config_entry.data[CONF_MULTIPLE_ENTITIES]
+        self.name_with_station_id = (
+            name_with_station_id  # from config_entry.data[CONF_NAME_WITH_STATION_ID]
         )
         self.gateway_id = ""
         self.poll_interval = interval  # former from config_entry.data[CONF_INTERVAL]
+        self.entities_added = 0
 
         super().__init__(
             hass,
@@ -81,7 +82,7 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
             json_data = await tfa_me_client.async_get_sensors()
 
             # New TFA.me data structure
-            tfa_me_data = TFAmeDataForHA(multiple_entities=self.multiple_entities)
+            tfa_me_data = TFAmeDataForHA(multiple_entities=True)
 
             # Convert JSON to TFA.me data for HA
             parsed_data = tfa_me_data.json_to_entities(json_data=json_data)

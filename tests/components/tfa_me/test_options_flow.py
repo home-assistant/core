@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.tfa_me.config_flow import OptionsFlowHandler
-from homeassistant.components.tfa_me.const import CONF_MULTIPLE_ENTITIES, DOMAIN
+from homeassistant.components.tfa_me.const import CONF_NAME_WITH_STATION_ID, DOMAIN
 from homeassistant.components.tfa_me.coordinator import TFAmeDataCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
@@ -37,7 +37,7 @@ def mock_coordinator():
     coordinator = AsyncMock()
     coordinator.host = "192.168.1.10"
     coordinator.interval = 120
-    coordinator.multiple_entities = False
+    coordinator.name_with_station_id = False
     coordinator.first_init = 0
     coordinator.reset_rain_sensors = False
     coordinator.gateway_id = "017654321"
@@ -67,7 +67,7 @@ def tfa_me_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_MULTIPLE_ENTITIES: False,
+            CONF_NAME_WITH_STATION_ID: False,
         },
         unique_id="test-1234",
     )
@@ -90,7 +90,7 @@ async def test_setup_entry_bad_ip(
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: 1234,  # Bad IP, no valid MDNS
-            CONF_MULTIPLE_ENTITIES: True,
+            CONF_NAME_WITH_STATION_ID: True,
         },
         unique_id="test-1234",
     )
@@ -134,7 +134,7 @@ async def test_options_flow_action_rain(
         config_entry=tfa_me_mock_entry,
         host="127.0.0.1",
         interval=timedelta(30),
-        multiple_entities=False,
+        name_with_station_id=False,
     )
     # Add dummy entities
     coordinator.sensor_entity_list = ["sensor.rain1", "sensor.rain2"]
@@ -226,7 +226,7 @@ def create_default_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_MULTIPLE_ENTITIES: True,
+            CONF_NAME_WITH_STATION_ID: True,
         },
         unique_id="test-1234",
     )
