@@ -142,5 +142,5 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(
-            self.coordinator.data[self.endpoint_id].containers[self.device_id]
+            self.coordinator.data[self.endpoint_id].containers[self.device_name]
         )
