@@ -16,6 +16,7 @@ from homeassistant.components.tfa_me.const import (
     ICON_MAPPING_WIND_DIR,
 )
 from homeassistant.components.tfa_me.coordinator import (
+    DataUpdateCoordinator,
     TFAmeConfigEntry,
     TFAmeDataCoordinator,
 )
@@ -28,14 +29,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import Mock, MockConfigEntry
 
 
 @pytest.fixture
-def mock_coordinator():
+def tfa_me_mock_coordinator():
     """Return a mock coordinator with fake data."""
-    coordinator = AsyncMock()
+    coordinator = MagicMock(spec=DataUpdateCoordinator)
+    coordinator.async_add_listener = Mock(return_value=lambda: None)
+    coordinator.async_request_refresh = AsyncMock()
+    coordinator.async_update = AsyncMock()
+
     coordinator.host = "192.168.1.10"
     coordinator.name_with_station_id = False
     coordinator.sensor_entity_list = []
@@ -294,11 +300,11 @@ def mock_coordinator():
 
 
 @pytest.fixture
-def mock_entry(mock_coordinator):
+def mock_entry(tfa_me_mock_coordinator):
     """Return a mock ConfigEntry."""
     entry = AsyncMock()
     entry.entry_id = "1234"
-    entry.runtime_data = mock_coordinator
+    entry.runtime_data = tfa_me_mock_coordinator
     return entry
 
 
@@ -318,9 +324,7 @@ def tfa_me_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry_adds_entities(
-    hass: HomeAssistant, mock_entry, mock_coordinator
-) -> None:
+async def test_async_setup_entry_adds_entities(hass: HomeAssistant, mock_entry) -> None:
     """Test that async_setup_entry correctly adds entities."""
     added_entities = []
 
@@ -356,10 +360,10 @@ async def test_async_setup_entry_raises_config_entry_not_ready(
         await async_setup_entry(hass, mock_entry, failing_entities)
 
 
-async def test_sensor_entity_properties(mock_coordinator) -> None:
+async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
     """Test properties of TFAmeSensorEntity."""
     entity = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="a01234567",
         entity_id="sensor.a01234567_temperature",
     )
@@ -389,22 +393,22 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
     entity._attr_native_value = 20.0
     assert entity.icon == ICON_MAPPING["temperature"]["default"]
 
-    del mock_coordinator.data[entity.entity_id]["measurement"]
+    del tfa_me_mock_coordinator.data[entity.entity_id]["measurement"]
     assert entity.name == "None"
     assert entity.measurement_name is None
 
     # Humidity
     entity2 = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="a6f169ad1",
         entity_id="sensor.a6f169ad1_humidity",
     )
     assert float(entity2.native_value) == 50.0
 
     # Rain value
-    mock_coordinator.reset_rain_sensors = True
+    tfa_me_mock_coordinator.reset_rain_sensors = True
     entity3 = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="a1fffffea",
         entity_id="sensor.a1fffffea_rain_rel",
     )
@@ -414,7 +418,7 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
     # Test rain 1 hour
     now = datetime.now().timestamp()
     entity4 = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="a1fffffea",
         entity_id="sensor.a1fffffea_rain_hour",
     )
@@ -434,13 +438,13 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
     await entity4.async_update()
     assert float(entity4.native_value) == 1.6
     # remove value
-    del mock_coordinator.data[entity.entity_id]["value"]
+    del tfa_me_mock_coordinator.data[entity.entity_id]["value"]
     assert float(entity4.native_value) == 1.6
 
     # Test rain 24 hour
     now = datetime.now().timestamp()
     entity_24 = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="a1fffffec",
         entity_id="sensor.a1fffffec_rain_24hours",
     )
@@ -462,16 +466,16 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
 
     # Test rain 1 hour (value missing) part 2 : 270...280
     entity4b = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="a1fffffeb",
         entity_id="sensor.a1fffffeb_rain_hour",
     )
     assert entity4b.measure_name == "rain_1_hour"
     assert entity4b.native_value is None
 
-    mock_coordinator.reset_rain_sensors = True
+    tfa_me_mock_coordinator.reset_rain_sensors = True
     entity5 = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="a1fffffea",
         entity_id="sensor.a1fffffea_rain_24hours",
     )
@@ -480,21 +484,21 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
 
     # Station barometric pressure
     entity6 = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="057654321",
         entity_id="sensor.057654321_barometric_pressure",
     )
     assert float(entity6.native_value) == 1000.1
     # unit None
-    mock_coordinator.data[entity.entity_id]["unit"] = None
+    tfa_me_mock_coordinator.data[entity.entity_id]["unit"] = None
     assert entity.native_unit_of_measurement is None
     # Remove unit
-    del mock_coordinator.data[entity.entity_id]["unit"]
+    del tfa_me_mock_coordinator.data[entity.entity_id]["unit"]
     assert entity.native_unit_of_measurement == ""
 
     # Station barometric pressure without "measurement"
     entity7 = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="057654322",
         entity_id="sensor.057654322_barometric_pressure",
     )
@@ -505,19 +509,17 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
 
     # Station barometric pressure without "unit"
     entity8 = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="057654323",
         entity_id="sensor.057654323_barometric_pressure",
     )
     assert entity8.native_unit_of_measurement == ""
 
-    await mock_coordinator._handle_coordinator_update()
 
-
-async def test_wind_sensor(mock_coordinator) -> None:
+async def test_wind_sensor(tfa_me_mock_coordinator) -> None:
     """Test wind sensor."""
     entity = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="a2ffffffb",
         entity_id="sensor.a2ffffffb_wind_direction_deg",
     )
@@ -526,7 +528,7 @@ async def test_wind_sensor(mock_coordinator) -> None:
 
     # Invalid sensor ID  & entity ID
     entity_2 = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="a2ffffffa",
         entity_id="sensor.a2ffffffa_wind_direction_deg",
     )
@@ -534,7 +536,7 @@ async def test_wind_sensor(mock_coordinator) -> None:
 
     # Invalid value: 306-319
     entity_3 = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="a2ffffffc",
         entity_id="sensor.a2ffffffc_wind_direction_deg",
     )
@@ -542,7 +544,7 @@ async def test_wind_sensor(mock_coordinator) -> None:
 
     # Old
     entity_4 = TFAmeSensorEntity(
-        coordinator=mock_coordinator,
+        coordinator=tfa_me_mock_coordinator,
         sensor_id="a2ffffffc",
         entity_id="sensor.a2ffffffc_rssi",
     )
@@ -725,7 +727,7 @@ def mock_config_entry(hass: HomeAssistant, tfa_me_mock_entry) -> ConfigEntry:
 
 @pytest.mark.asyncio
 async def test_async_discover_new_entities(
-    hass: HomeAssistant, mock_coordinator, mock_config_entry: ConfigEntry
+    hass: HomeAssistant, tfa_me_mock_coordinator, mock_config_entry: ConfigEntry
 ) -> None:
     """Test that async_discover_new_entities adds new entities."""
     now = datetime.now().timestamp()
@@ -735,7 +737,7 @@ async def test_async_discover_new_entities(
 
     # Initial coordinator data, one entity
     entity_id_existing = "sensor.a0f169ad1_temperature"
-    mock_coordinator.data = {
+    tfa_me_mock_coordinator.data = {
         entity_id_existing: {
             "sensor_id": "a0f169ad1",
             "gateway_id": "017654321",
@@ -748,18 +750,18 @@ async def test_async_discover_new_entities(
             "info": "",
         },
     }
-    mock_coordinator.sensor_entity_list = [entity_id_existing]
+    tfa_me_mock_coordinator.sensor_entity_list = [entity_id_existing]
 
-    mock_config_entry.coordinator = mock_coordinator
+    mock_config_entry.coordinator = tfa_me_mock_coordinator
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][mock_config_entry.entry_id] = mock_config_entry
 
-    # Act: Setup Entry -> async_discover_new_entities registers itself
+    # Setup Entry -> async_discover_new_entities registers itself
     await async_setup_entry(hass, mock_config_entry, async_add_entities)
 
     # Add new "received" data entity to coordinator
     entity_id_new = "sensor.a0f169ad1_humidity"
-    mock_coordinator.data[entity_id_new] = {
+    tfa_me_mock_coordinator.data[entity_id_new] = {
         "sensor_id": "a0f169ad1",
         "gateway_id": "017654321",
         "sensor_name": "A0F169AD1",
@@ -771,7 +773,7 @@ async def test_async_discover_new_entities(
         "info": "",
     }
 
-    # Act: Call service function
+    # Call service function
     await hass.data[DOMAIN][mock_config_entry.entry_id].async_discover_new_entities()
 
     # Assert: async_add_entities was called again
@@ -787,7 +789,7 @@ async def test_async_discover_new_entities(
 
     # Add new "received" data entity to coordinator
     entity_id_new_2 = "sensor.a27654321_wind_direction_txt"
-    mock_coordinator.data[entity_id_new_2] = {
+    tfa_me_mock_coordinator.data[entity_id_new_2] = {
         "sensor_id": "a27654321",
         "gateway_id": "017654321",
         "sensor_name": "a27654321",
@@ -815,7 +817,7 @@ async def test_async_discover_new_entities(
 
     # Add new "received" data entity to coordinator
     entity_id_new_3 = "sensor.a27654321_wind_direction_txt"
-    mock_coordinator.data[entity_id_new_3] = {
+    tfa_me_mock_coordinator.data[entity_id_new_3] = {
         "sensor_id": "a27654321",
         "gateway_id": None,
         "sensor_name": "a27654321",
@@ -840,7 +842,7 @@ async def test_handle_coordinator_update_rain_hour(
 ) -> None:
     """Test whether rain history is updated for rain_hour."""
 
-    # --- Arrange ---
+    # Arrange
     coordinator = TFAmeDataCoordinator(
         hass=hass,
         config_entry=tfa_me_mock_entry,
@@ -898,7 +900,7 @@ async def test_handle_coordinator_update_rain_24hours(
 ) -> None:
     """Test whether rain history is updated for rain_24hours."""
 
-    # --- Arrange ---
+    # Arrange
     coordinator = TFAmeDataCoordinator(
         hass=hass,
         config_entry=tfa_me_mock_entry,
@@ -934,18 +936,18 @@ async def test_handle_coordinator_update_rain_24hours(
     entity.hass = hass
     await entity.async_added_to_hass()
 
-    # rain_history mocken
+    # mock rain_history
     entity.rain_history = MagicMock()
     entity.rain_history_24 = MagicMock()
 
-    # --- Act ---
+    # Act
     entity._handle_coordinator_update()
     entity.rain_history_24.add_measurement.assert_called_once_with(str(7.4), int(now))
 
     del coordinator.data[entity.entity_id]["value"]
     entity._handle_coordinator_update()
 
-    # --- Assert ---
+    # Assert
     # entity.rain_history.add_measurement.assert_called_once_with(7.4, int(now))
     entity.rain_history_24.add_measurement.assert_called_once()
 
@@ -998,8 +1000,112 @@ async def test_async_update_triggers_refresh_err() -> None:
     mock_coordinator = AsyncMock()
     entity = TFAmeSensorEntity(mock_coordinator, "abc", "sensor.abc_temp")
 
-    # Act
+    # Action
     await entity.async_update()
 
     # Assert
     mock_coordinator.async_request_refresh.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_async_added_sets_initialized_and_writes_labels_if_missing(
+    hass: HomeAssistant, tfa_me_mock_coordinator
+) -> None:
+    """Test that labels are set once if they do not exist."""
+    ent_reg = er.async_get(hass)
+
+    # Create registry entry without labels
+    unique_id = "a0f169ad1_temperature"
+    reg_entry = ent_reg.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=unique_id,
+        suggested_object_id=unique_id,
+    )
+    entity_id = reg_entry.entity_id
+
+    # Create entity
+    tfa_me_mock_coordinator.name_with_station_id = True
+    ent = TFAmeSensorEntity(
+        tfa_me_mock_coordinator, sensor_id="a0f169ad1", entity_id=unique_id
+    )
+    ent.hass = hass
+    ent.entity_id = entity_id
+    ent._attr_labels = ["TFA.me", "Temperature"]
+
+    # Asserts
+    assert not getattr(ent, "_initialized_once", False)
+    await ent.async_added_to_hass()
+    assert ent._initialized_once is True
+
+    # Read registry again and verify labels
+    updated = ent_reg.async_get(entity_id)
+    assert updated is not None
+    # Labels are set and stored
+    assert set(updated.labels or []) == {"TFA.me", "Temperature"}
+
+
+@pytest.mark.asyncio
+async def test_async_added_does_not_overwrite_existing_labels(
+    hass: HomeAssistant, tfa_me_mock_coordinator
+) -> None:
+    """Test that labels are overwritten if they were set before."""
+    ent_reg = er.async_get(hass)
+
+    unique_id = "a0f169ad1_humidity"
+    # Create registry entry with labels
+    reg_entry = ent_reg.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=unique_id,
+        suggested_object_id=unique_id,
+    )
+    entity_id = reg_entry.entity_id
+    ent_reg.async_update_entity(entity_id, labels={"Existing", "Fix"})
+
+    # Cereate entity
+    tfa_me_mock_coordinator.name_with_station_id = True
+    ent = TFAmeSensorEntity(
+        tfa_me_mock_coordinator, sensor_id="a0f169ad1", entity_id=unique_id
+    )
+    ent.hass = hass
+    ent.entity_id = entity_id
+    ent._attr_labels = ["New", "Do_not_overwrite"]
+
+    # Action
+    await ent.async_added_to_hass()
+
+    # Labels in registry are not changed
+    updated = ent_reg.async_get(entity_id)
+    assert updated is not None
+    assert set(updated.labels or []) == {"Existing", "Fix"}
+
+
+@pytest.mark.asyncio
+async def test_async_added_returns_if_no_registry_entry(
+    hass: HomeAssistant, tfa_me_mock_coordinator
+) -> None:
+    """Test if ent_reg.async_get(...) returns None."""
+    entity = TFAmeSensorEntity(tfa_me_mock_coordinator, "sensor1", "sensor1")
+    entity.hass = hass
+    entity.entity_id = "sensor.tfa_me_1"
+    entity._attr_labels = ["LabelA"]
+    entity.name_with_station_id = True
+
+    mock_reg = MagicMock()
+    mock_reg.async_get.return_value = None  # Simulate: No registry entry
+
+    with patch.object(er, "async_get", return_value=mock_reg) as mock_er_get:
+        await entity.async_added_to_hass()
+
+    # Assert: Registry function called
+    assert mock_er_get.call_count == 1
+
+    # Assert: The registry object was asked whether Entity exists
+    mock_reg.async_get.assert_called_once_with(entity.entity_id)
+
+    # Assert: No opdate (return)
+    mock_reg.async_update_entity.assert_not_called()
+
+    # Entity initialized
+    assert entity._initialized_once is True
