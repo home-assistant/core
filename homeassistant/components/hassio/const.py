@@ -159,6 +159,7 @@ EXTRA_PLACEHOLDERS = {
     ISSUE_KEY_ADDON_PWNED: {
         "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
     },
+    ISSUE_KEY_ADDON_DEPRECATED: HELP_URLS,
 }
 
 
