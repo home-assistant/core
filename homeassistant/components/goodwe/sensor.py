@@ -186,6 +186,7 @@ async def async_setup_entry(
 class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
     """Entity representing individual inverter sensor."""
 
+    _attr_has_entity_name = True
     entity_description: GoodweSensorEntityDescription
 
     def __init__(

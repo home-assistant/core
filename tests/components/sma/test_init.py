@@ -1,12 +1,9 @@
 """Test the sma init file."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator
+from unittest.mock import MagicMock
 
-from pysma.exceptions import (
-    SmaAuthenticationException,
-    SmaConnectionException,
-    SmaReadException,
-)
+from pysma import SmaAuthenticationException, SmaConnectionException, SmaReadException
 import pytest
 
 from homeassistant.components.sma.const import DOMAIN
@@ -26,8 +23,8 @@ async def test_migrate_entry_minor_version_1_2(
     """Test migrating a 1.1 config entry to 1.2."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title=MOCK_DEVICE["name"],
-        unique_id=MOCK_DEVICE["serial"],  # Not converted to str
+        title=MOCK_DEVICE.name,
+        unique_id=MOCK_DEVICE.serial,
         data=MOCK_USER_INPUT,
         source=SOURCE_IMPORT,
         minor_version=1,
@@ -36,7 +33,8 @@ async def test_migrate_entry_minor_version_1_2(
     assert await hass.config_entries.async_setup(entry.entry_id)
     assert entry.version == 1
     assert entry.minor_version == 2
-    assert entry.unique_id == str(MOCK_DEVICE["serial"])
+    assert isinstance(MOCK_DEVICE.serial, str)
+    assert entry.unique_id == MOCK_DEVICE.serial
 
 
 @pytest.mark.parametrize(
@@ -49,7 +47,7 @@ async def test_migrate_entry_minor_version_1_2(
 )
 async def test_setup_exceptions(
     hass: HomeAssistant,
-    mock_sma_client: Generator,
+    mock_sma_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     expected_state: ConfigEntryState,
