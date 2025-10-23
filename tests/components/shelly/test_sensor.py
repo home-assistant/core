@@ -53,7 +53,11 @@ from . import (
     register_entity,
 )
 
-from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_data
+from tests.common import (
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    mock_restore_cache_with_extra_data,
+)
 
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
@@ -1994,3 +1998,39 @@ async def test_cury_sensor_entity(
 
         entry = entity_registry.async_get(entity_id)
         assert entry == snapshot(name=f"{entity_id}-entry")
+
+
+async def test_shelly_irrigation_weather_sensors(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test Shelly Irrigation controller FK-06X weather sensors."""
+    device_fixture = await async_load_json_object_fixture(
+        hass, "fk-06x_gen3_irrigation.json", DOMAIN
+    )
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
+    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
+    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+
+    config_entry = await init_integration(hass, gen=3)
+
+    for entity in ("average_temperature", "rainfall_last_24h"):
+        entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
+
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")
+
+    # weather api disabled
+    monkeypatch.setitem(mock_rpc_device.config["service:0"], "weather_api", False)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for entity in ("average_temperature", "rainfall_last_24h"):
+        entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
+        assert hass.states.get(entity_id) is None
