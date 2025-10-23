@@ -1,0 +1,109 @@
+# serializer version: 1
+# name: test_media_players[media_player.xone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.xone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 149385>,
+    'translation_key': None,
+    'unique_id': 'HIJKLMN',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_players[media_player.xone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'http://store-images.s-microsoft.com/image/apps.9815.9007199266246365.7dc5d343-fe4a-40c3-93dd-c78e77f97331.45eebdef-f725-4799-bbf8-9ad8391a8279',
+      'entity_picture_local': '/api/media_player_proxy/media_player.xone?token=mock_token&cache=739260d7bff66329',
+      'friendly_name': 'XONE',
+      'media_content_type': <MediaType.APP: 'app'>,
+      'media_title': 'Netflix',
+      'supported_features': <MediaPlayerEntityFeature: 149385>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.xone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_media_players[media_player.xonex-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.xonex',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 149385>,
+    'translation_key': None,
+    'unique_id': 'ABCDEFG',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_players[media_player.xonex-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'http://store-images.s-microsoft.com/image/apps.9815.9007199266246365.7dc5d343-fe4a-40c3-93dd-c78e77f97331.45eebdef-f725-4799-bbf8-9ad8391a8279',
+      'entity_picture_local': '/api/media_player_proxy/media_player.xonex?token=mock_token&cache=739260d7bff66329',
+      'friendly_name': 'XONEX',
+      'media_content_type': <MediaType.APP: 'app'>,
+      'media_title': 'Netflix',
+      'supported_features': <MediaPlayerEntityFeature: 149385>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.xonex',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
