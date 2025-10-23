@@ -59,11 +59,9 @@ class ViCareEntity(Entity):
                     DOMAIN,
                     f"{gateway_serial}_zigbee_{zigbee_ieee}",
                 )
-            elif len(parts) == 2:
-                ieee = device_serial.replace("zigbee-", "")
-                if len(ieee) == 16:
-                    self._attr_device_info["serial_number"] = "-".join(
-                        ieee.upper()[i : i + 2] for i in range(0, 16, 2)
-                    )
+            elif len(parts) == 2 and len((ieee := device_serial.removeprefix("zigbee-"))) == 16:
+			    self._attr_device_info["serial_number"] = "-".join(
+			        ieee.upper()[i:i + 2] for i in range(0, 16, 2)
+			    )
         else:
             self._attr_device_info["serial_number"] = device_serial
