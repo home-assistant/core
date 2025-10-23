@@ -72,7 +72,7 @@ rules:
   # Gold
   devices:
     status: exempt
-    comment: The integration represents a service connection as a single device entry, created automatically by Home Assistant when the config entry is set up. This service device groups the mapped sensor entities but does not create individual device entries for each sensor as the sensors belong to their original integrations.
+    comment: The integration does not create any entities, nor does it create devices.
   diagnostics:
     status: todo
     comment: Diagnostics will be added in a follow-up PR to help with debugging.
