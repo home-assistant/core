@@ -154,6 +154,7 @@ async def test_save_preferences(
                 "type": "battery",
                 "stat_energy_from": "my_battery_draining",
                 "stat_energy_to": "my_battery_charging",
+                "stat_power": "my_battery_power",
             },
         ],
         "device_consumption": [
