@@ -31,7 +31,10 @@
       "message": "Authentication failed. Please check your credentials."
     },
     "connection_error": {
-      "message": "Connection error"
+      "message": "Connection error with Redgtech API"
+    },
+    "switch_auth_error": {
+      "message": "Authentication failed when controlling Redgtech switch"
     }
   }
 }
