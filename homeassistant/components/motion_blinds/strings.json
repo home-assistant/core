@@ -9,7 +9,7 @@
         }
       },
       "connect": {
-        "description": "You will need the 16 character API key, see https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-api-key for instructions",
+        "description": "You will need the 16 character API key, see {documentation_url} for instructions",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }

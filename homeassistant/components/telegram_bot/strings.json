@@ -317,6 +317,11 @@
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
+      },
+      "sections": {
+        "url_options": {
+          "name": "URL options"
+        }
       }
     },
     "send_sticker": {
@@ -386,6 +391,11 @@
         "message_thread_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
+        }
+      },
+      "sections": {
+        "url_options": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
         }
       }
     },
@@ -461,6 +471,11 @@
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
+      },
+      "sections": {
+        "url_options": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
+        }
       }
     },
     "send_video": {
@@ -535,6 +550,11 @@
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
+      },
+      "sections": {
+        "url_options": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
+        }
       }
     },
     "send_voice": {
@@ -604,6 +624,11 @@
         "message_thread_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
+        }
+      },
+      "sections": {
+        "url_options": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
         }
       }
     },
@@ -678,6 +703,11 @@
         "message_thread_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
+        }
+      },
+      "sections": {
+        "url_options": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
         }
       }
     },
@@ -879,6 +909,11 @@
           "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
         }
+      },
+      "sections": {
+        "url_options": {
+          "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
+        }
       }
     },
     "edit_caption": {
@@ -1027,6 +1062,9 @@
     "invalid_chat_ids": {
       "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."
     },
+    "invalid_inline_keyboard": {
+      "message": "Invalid value for inline keyboard. Only strings or lists are accepted."
+    },
     "failed_chat_ids": {
       "message": "Failed targets: {chat_ids}. Please verify that the chat IDs for {bot_name} have been configured."
     },
@@ -1041,6 +1079,9 @@
     },
     "failed_to_load_file": {
       "message": "Failed to load file: {error}"
+    },
+    "action_failed": {
+      "message": "Action failed. {error}"
     }
   },
   "issues": {

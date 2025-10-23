@@ -66,6 +66,18 @@
       },
       "one_time_charge": {
         "name": "One-time charge"
+      },
+      "identification_mode": {
+        "name": "Identification mode"
+      },
+      "mounting_mode": {
+        "name": "Mounting mode"
+      },
+      "child_safety_lock_mode": {
+        "name": "Child safety lock"
+      },
+      "valve": {
+        "name": "Valve"
       }
     },
     "button": {
@@ -508,6 +520,12 @@
       },
       "fuel_need": {
         "name": "Fuel need"
+      },
+      "zigbee_signal_strength": {
+        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
+      },
+      "valve_position": {
+        "name": "Valve position"
       }
     },
     "water_heater": {

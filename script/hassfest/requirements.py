@@ -137,11 +137,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "emulated_kasa": {"sense-energy": {"async-timeout"}},
     "entur_public_transport": {"enturclient": {"async-timeout"}},
-    "epson": {
-        # https://github.com/pszafer/epson_projector/pull/22
-        # epson-projector > pyserial-asyncio
-        "epson-projector": {"pyserial-asyncio", "async-timeout"}
-    },
     "escea": {"pescea": {"async-timeout"}},
     "evil_genius_labs": {"pyevilgenius": {"async-timeout"}},
     "familyhub": {"python-family-hub-local": {"async-timeout"}},
@@ -229,11 +224,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pymochad > pbr > setuptools
         "pbr": {"setuptools"}
     },
-    "monoprice": {
-        # https://github.com/etsinko/pymonoprice/issues/9
-        # pymonoprice > pyserial-asyncio
-        "pymonoprice": {"pyserial-asyncio"}
-    },
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
@@ -243,11 +233,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/mtreinish/pyopnsense/issues/27
         # pyopnsense > pbr > setuptools
         "pbr": {"setuptools"}
-    },
-    "opower": {
-        # https://github.com/arrow-py/arrow/issues/1169 (fixed not yet released)
-        # opower > arrow > types-python-dateutil
-        "arrow": {"types-python-dateutil"}
     },
     "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
     "remote_rpi_gpio": {
@@ -329,8 +314,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "lyric": {"homeassistant": {"aiolyric"}},
     # https://github.com/microBeesTech/pythonSDK/
     "microbees": {"homeassistant": {"microbeespy"}},
-    # https://github.com/tiagocoutinho/async_modbus
-    "nibe_heatpump": {"nibe": {"async-modbus"}},
     # https://github.com/ejpenney/pyobihai
     "obihai": {"homeassistant": {"pyobihai"}},
     # https://github.com/iamkubi/pydactyl
