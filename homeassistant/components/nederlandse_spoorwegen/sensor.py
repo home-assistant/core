@@ -59,8 +59,7 @@ def _get_route(trip: Trip | None) -> list[str]:
     if not trip or not (trip_parts := trip.trip_parts):
         return []
     route = []
-    departure = trip.departure
-    if departure:
+    if departure := trip.departure:
         route.append(departure)
     route.extend(part.destination for part in trip_parts)
     return route
