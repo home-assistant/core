@@ -115,7 +115,9 @@ async def ws_get_blueprint(
     domain_blueprints: dict[str, models.DomainBlueprints] = hass.data.get(DOMAIN, {})
 
     if msg["domain"] not in domain_blueprints:
-        connection.send_result(msg["id"], {})
+        connection.send_error(
+            msg["id"], websocket_api.ERR_INVALID_FORMAT, "Unsupported domain"
+        )
         return
 
     result = await domain_blueprints[msg["domain"]].async_get_blueprint(msg["path"])
