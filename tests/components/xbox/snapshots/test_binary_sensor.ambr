@@ -96,6 +96,54 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[binary_sensor.erics273_in_party-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.erics273_in_party',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'In party',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxBinarySensor.IN_PARTY: 'in_party'>,
+    'unique_id': '2533274913657542_in_party',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.erics273_in_party-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'erics273 In party',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.erics273_in_party',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.erics273_subscribed_to_xbox_game_pass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -241,6 +289,54 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[binary_sensor.gsr_ae_in_party-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gsr_ae_in_party',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'In party',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxBinarySensor.IN_PARTY: 'in_party'>,
+    'unique_id': '271958441785640_in_party',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.gsr_ae_in_party-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GSR Ae In party',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gsr_ae_in_party',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.gsr_ae_subscribed_to_xbox_game_pass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -380,6 +476,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ikken_hissatsuu_in_game',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.ikken_hissatsuu_in_party-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ikken_hissatsuu_in_party',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'In party',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxBinarySensor.IN_PARTY: 'in_party'>,
+    'unique_id': '2533274838782903_in_party',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.ikken_hissatsuu_in_party-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ikken Hissatsuu In party',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ikken_hissatsuu_in_party',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

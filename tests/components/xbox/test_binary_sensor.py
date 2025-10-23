@@ -49,7 +49,6 @@ async def test_binary_sensors(
     ("entity_id", "key"),
     [
         ("gsr_ae_in_multiplayer", XboxBinarySensor.IN_MULTIPLAYER),
-        ("gsr_ae_in_party", XboxBinarySensor.IN_PARTY),
     ],
 )
 @pytest.mark.usefixtures("xbox_live_client", "entity_registry_enabled_by_default")
@@ -92,7 +91,6 @@ async def test_binary_sensor_deprecation_issue(
     ("entity_id", "key"),
     [
         ("gsr_ae_in_multiplayer", XboxBinarySensor.IN_MULTIPLAYER),
-        ("gsr_ae_in_party", XboxBinarySensor.IN_PARTY),
     ],
 )
 @pytest.mark.usefixtures("xbox_live_client", "entity_registry_enabled_by_default")
