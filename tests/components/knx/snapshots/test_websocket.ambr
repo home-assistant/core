@@ -78,7 +78,7 @@
         'type': 'ha_selector',
       }),
       dict({
-        'allow_false': False,
+        'allow_false': True,
         'default': True,
         'name': 'sync_state',
         'required': True,
