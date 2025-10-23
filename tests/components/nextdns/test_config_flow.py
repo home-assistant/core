@@ -76,12 +76,23 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
+<<<<<<< HEAD
     mock_nextdns.create.side_effect = exc
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_API_KEY: "fake_api_key"},
     )
+=======
+    with patch(
+        "homeassistant.components.nextdns.config_flow.NextDns.create",
+        side_effect=exc,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "fake_api_key"},
+        )
+>>>>>>> df26a20febd (Fix path for patch)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": base_error}
@@ -267,6 +278,7 @@ async def test_reconfiguration_errors(
     base_error: str,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
+    mock_nextdns: AsyncMock,
 ) -> None:
     """Test reconfigure flow with errors."""
     await init_integration(hass, mock_config_entry)
@@ -276,13 +288,16 @@ async def test_reconfiguration_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    with patch("homeassistant.components.nextdns.NextDns.create", side_effect=exc):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_API_KEY: "new_api_key"},
-        )
+    mock_nextdns.create.side_effect = exc
+    
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_KEY: "new_api_key"},
+    )
 
     assert result["errors"] == {"base": base_error}
+
+    mock_nextdns.create.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
