@@ -645,6 +645,7 @@ async def test_get_panels(
     assert msg["result"]["map"]["icon"] == "mdi:tooltip-account"
     assert msg["result"]["map"]["title"] == "Map"
     assert msg["result"]["map"]["require_admin"] is True
+    assert msg["result"]["map"]["show_in_sidebar"] is True
 
     async_remove_panel(hass, "map")
 

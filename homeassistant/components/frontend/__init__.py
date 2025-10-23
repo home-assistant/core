@@ -36,6 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.hass_dict import HassKey
 
+from .panel_preferences import async_setup_panel_preferences
 from .storage import async_setup_frontend_storage
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,6 +52,7 @@ CONF_EXTRA_MODULE_URL = "extra_module_url"
 CONF_EXTRA_JS_URL_ES5 = "extra_js_url_es5"
 CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
+CONF_SHOW_IN_SIDEBAR = "show_in_sidebar"
 
 DEFAULT_THEME_COLOR = "#2980b9"
 
@@ -272,6 +274,9 @@ class Panel:
     # If the panel should only be visible to admins
     require_admin = False
 
+    # If the panel should be shown in the sidebar by default
+    show_in_sidebar: bool = True
+
     # If the panel is a configuration panel for a integration
     config_panel_domain: str | None = None
 
@@ -284,6 +289,7 @@ class Panel:
         config: dict[str, Any] | None,
         require_admin: bool,
         config_panel_domain: str | None,
+        show_in_sidebar: bool | None = None,
     ) -> None:
         """Initialize a built-in panel."""
         self.component_name = component_name
@@ -293,6 +299,11 @@ class Panel:
         self.config = config
         self.require_admin = require_admin
         self.config_panel_domain = config_panel_domain
+        # Default to True if title is provided, False otherwise
+        if show_in_sidebar is None:
+            self.show_in_sidebar = sidebar_title is not None
+        else:
+            self.show_in_sidebar = show_in_sidebar
 
     @callback
     def to_response(self) -> PanelResponse:
@@ -305,6 +316,7 @@ class Panel:
             "url_path": self.frontend_url_path,
             "require_admin": self.require_admin,
             "config_panel_domain": self.config_panel_domain,
+            "show_in_sidebar": self.show_in_sidebar,
         }
 
 
@@ -321,6 +333,7 @@ def async_register_built_in_panel(
     *,
     update: bool = False,
     config_panel_domain: str | None = None,
+    show_in_sidebar: bool | None = None,
 ) -> None:
     """Register a built-in panel."""
     panel = Panel(
@@ -331,6 +344,7 @@ def async_register_built_in_panel(
         config,
         require_admin,
         config_panel_domain,
+        show_in_sidebar,
     )
 
     panels = hass.data.setdefault(DATA_PANELS, {})
@@ -395,6 +409,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the serving of the frontend."""
     await async_setup_frontend_storage(hass)
+    await async_setup_panel_preferences(hass)
     websocket_api.async_register_command(hass, websocket_get_icons)
     websocket_api.async_register_command(hass, websocket_get_panels)
     websocket_api.async_register_command(hass, websocket_get_themes)
@@ -769,12 +784,27 @@ def websocket_get_panels(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get panels command."""
+    from .panel_preferences import async_get_panel_preferences  # noqa: PLC0415
+
     user_is_admin = connection.user.is_admin
-    panels = {
-        panel_key: panel.to_response()
-        for panel_key, panel in connection.hass.data[DATA_PANELS].items()
-        if user_is_admin or not panel.require_admin
-    }
+    panel_prefs = async_get_panel_preferences(hass)
+
+    panels = {}
+    for panel_key, panel in connection.hass.data[DATA_PANELS].items():
+        if not user_is_admin and panel.require_admin:
+            continue
+
+        panel_response = panel.to_response()
+
+        # Check if user has set a preference for this panel
+        if panel_key in panel_prefs and CONF_SHOW_IN_SIDEBAR in panel_prefs[panel_key]:
+            show_in_sidebar = panel_prefs[panel_key][CONF_SHOW_IN_SIDEBAR]
+        else:
+            # Use integration-defined default
+            show_in_sidebar = panel.show_in_sidebar
+
+        panel_response["show_in_sidebar"] = show_in_sidebar
+        panels[panel_key] = panel_response
 
     connection.send_message(websocket_api.result_message(msg["id"], panels))
 
@@ -883,3 +913,4 @@ class PanelResponse(TypedDict):
     url_path: str
     require_admin: bool
     config_panel_domain: str | None
+    show_in_sidebar: bool
