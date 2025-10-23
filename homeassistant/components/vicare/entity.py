@@ -52,10 +52,11 @@ class ViCareEntity(Entity):
             configuration_url=VIESSMANN_DEVELOPER_PORTAL,
         )
 
-        if device_serial is not None and device_serial.startswith("zigbee-"):
-            parts = device_serial.split("-")
-            if len(parts) == 3:  # expect format zigbee-<zigbee-ieee>-<channel-id>
+        if device_serial and device_serial.startswith("zigbee-"):
+            parts = device_serial.split("-", 2)
+            if len(parts) == 3:
+                _, zigbee_ieee, _ = parts
                 self._attr_device_info["via_device"] = (
                     DOMAIN,
-                    f"{gateway_serial}_zigbee_{parts[1]}",
+                    f"{gateway_serial}_zigbee_{zigbee_ieee}",
                 )
