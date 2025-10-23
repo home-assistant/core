@@ -88,6 +88,7 @@ from .const import (
     ATTR_USER_ID,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    ATTR_WRITE_TIMEOUT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     DOMAIN,
@@ -425,6 +426,7 @@ class TelegramNotificationService:
             ATTR_REPLY_TO_MSGID: None,
             ATTR_REPLYMARKUP: None,
             ATTR_TIMEOUT: None,
+            ATTR_WRITE_TIMEOUT: None,
             ATTR_MESSAGE_TAG: None,
             ATTR_MESSAGE_THREAD_ID: None,
         }
@@ -433,6 +435,8 @@ class TelegramNotificationService:
                 params[ATTR_PARSER] = data[ATTR_PARSER]
             if ATTR_TIMEOUT in data:
                 params[ATTR_TIMEOUT] = data[ATTR_TIMEOUT]
+            if ATTR_WRITE_TIMEOUT in data:
+                params[ATTR_WRITE_TIMEOUT] = data[ATTR_WRITE_TIMEOUT]
             if ATTR_DISABLE_NOTIF in data:
                 params[ATTR_DISABLE_NOTIF] = data[ATTR_DISABLE_NOTIF]
             if ATTR_DISABLE_WEB_PREV in data:
@@ -667,6 +671,7 @@ class TelegramNotificationService:
             inline_message_id=inline_message_id,
             reply_markup=params[ATTR_REPLYMARKUP],
             read_timeout=params[ATTR_TIMEOUT],
+            write_timeout=params[ATTR_WRITE_TIMEOUT],
             context=context,
         )
 
@@ -816,6 +821,7 @@ class TelegramNotificationService:
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
                 read_timeout=params[ATTR_TIMEOUT],
+                write_timeout=params[ATTR_WRITE_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
@@ -832,6 +838,7 @@ class TelegramNotificationService:
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
                 read_timeout=params[ATTR_TIMEOUT],
+                write_timeout=params[ATTR_WRITE_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
@@ -848,6 +855,7 @@ class TelegramNotificationService:
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
                 read_timeout=params[ATTR_TIMEOUT],
+                write_timeout=params[ATTR_WRITE_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
@@ -865,6 +873,7 @@ class TelegramNotificationService:
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
                 read_timeout=params[ATTR_TIMEOUT],
+                write_timeout=params[ATTR_WRITE_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
@@ -882,6 +891,7 @@ class TelegramNotificationService:
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
                 read_timeout=params[ATTR_TIMEOUT],
+                write_timeout=params[ATTR_WRITE_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
@@ -898,6 +908,7 @@ class TelegramNotificationService:
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
             reply_markup=params[ATTR_REPLYMARKUP],
             read_timeout=params[ATTR_TIMEOUT],
+            write_timeout=params[ATTR_WRITE_TIMEOUT],
             parse_mode=params[ATTR_PARSER],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
@@ -922,6 +933,7 @@ class TelegramNotificationService:
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
                 read_timeout=params[ATTR_TIMEOUT],
+                write_timeout=params[ATTR_WRITE_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
