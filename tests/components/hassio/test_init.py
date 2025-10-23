@@ -252,6 +252,7 @@ async def test_setup_api_panel(
         "component_name": "custom",
         "icon": None,
         "title": None,
+        "show_in_sidebar": False,
         "url_path": "hassio",
         "require_admin": True,
         "config_panel_domain": None,
