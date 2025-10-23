@@ -334,6 +334,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         value_fn=_get_remaining_charging_time,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
     ),
 )
 

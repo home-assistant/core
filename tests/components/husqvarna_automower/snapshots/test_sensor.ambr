@@ -986,7 +986,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -2044,7 +2044,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
