@@ -42,5 +42,10 @@
         "default": "mdi:lock"
       }
     }
+  },
+  "services": {
+    "start_charge_session": {
+      "service": "mdi:play"
+    }
   }
 }

@@ -651,14 +651,14 @@ async def test_shared_context(hass: HomeAssistant) -> None:
     assert event_mock.call_count == 1
     assert run_mock.call_count == 1
 
-    args, kwargs = run_mock.call_args
+    args, _kwargs = run_mock.call_args
     assert args[0].context == context
     # Ensure event data has all attributes set
     assert args[0].data.get(ATTR_NAME) == "test"
     assert args[0].data.get(ATTR_ENTITY_ID) == "script.test"
 
     # Ensure context carries through the event
-    args, kwargs = event_mock.call_args
+    args, _kwargs = event_mock.call_args
     assert args[0].context == context
 
     # Ensure the script state shares the same context

@@ -157,8 +157,8 @@ async def test_trophy_title_coordinator_auth_failed(
 
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -194,8 +194,8 @@ async def test_trophy_title_coordinator_update_data_failed(
 
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     runtime_data: PlaystationNetworkRuntimeData = config_entry.runtime_data
     assert runtime_data.trophy_titles.last_update_success is False
@@ -247,15 +247,24 @@ async def test_trophy_title_coordinator_play_new_game(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
+    assert len(mock_psnawpapi.user.return_value.trophy_titles.mock_calls) == 1
+
     assert (state := hass.states.get("media_player.playstation_vita"))
     assert state.attributes.get("entity_picture") is None
 
     mock_psnawpapi.user.return_value.trophy_titles.return_value = _tmp
 
+    # Wait one day to trigger PlaystationNetworkTrophyTitlesCoordinator refresh
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Wait another 30 seconds in case the PlaystationNetworkUserDataCoordinator,
+    # which has a 30 second update interval, updated before the
+    # PlaystationNetworkTrophyTitlesCoordinator.
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_psnawpapi.user.return_value.trophy_titles.mock_calls) == 2
 
@@ -278,10 +287,9 @@ async def test_friends_coordinator_update_data_failed(
 ) -> None:
     """Test friends coordinator setup fails in _update_data."""
 
-    mock_psnawpapi.user.return_value.get_presence.side_effect = [
-        mock_psnawpapi.user.return_value.get_presence.return_value,
-        exception,
-    ]
+    mock = mock_psnawpapi.user.return_value.friends_list.return_value[0]
+    mock.get_presence.side_effect = exception
+
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -306,11 +314,9 @@ async def test_friends_coordinator_setup_failed(
     state: ConfigEntryState,
 ) -> None:
     """Test friends coordinator setup fails in _async_setup."""
+    mock = mock_psnawpapi.user.return_value.friends_list.return_value[0]
+    mock.profile.side_effect = exception
 
-    mock_psnawpapi.user.side_effect = [
-        mock_psnawpapi.user.return_value,
-        exception,
-    ]
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -324,10 +330,10 @@ async def test_friends_coordinator_auth_failed(
     mock_psnawpapi: MagicMock,
 ) -> None:
     """Test friends coordinator starts reauth on authentication error."""
-    mock_psnawpapi.user.side_effect = [
-        mock_psnawpapi.user.return_value,
-        PSNAWPAuthenticationError,
-    ]
+
+    mock = mock_psnawpapi.user.return_value.friends_list.return_value[0]
+    mock.profile.side_effect = PSNAWPAuthenticationError
+
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

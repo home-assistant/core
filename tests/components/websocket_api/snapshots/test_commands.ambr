@@ -12,6 +12,7 @@
           'required': True,
           'selector': dict({
             'object': dict({
+              'multiple': False,
             }),
           }),
         }),
@@ -54,6 +55,8 @@
           'example': 'My test group',
           'selector': dict({
             'text': dict({
+              'multiline': False,
+              'multiple': False,
             }),
           }),
         }),
@@ -62,6 +65,8 @@
           'required': True,
           'selector': dict({
             'text': dict({
+              'multiline': False,
+              'multiple': False,
             }),
           }),
         }),

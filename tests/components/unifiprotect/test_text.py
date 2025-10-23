@@ -74,7 +74,7 @@ async def test_text_camera_set(
     assert_entity_counts(hass, Platform.TEXT, 1, 1)
 
     description = CAMERA[0]
-    unique_id, entity_id = await ids_from_device_description(
+    _unique_id, entity_id = await ids_from_device_description(
         hass, Platform.TEXT, doorbell, description
     )
 
