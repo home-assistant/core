@@ -180,7 +180,7 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
         tracked_entity_ids.append(ha_entity_id)
 
         if not hass.states.get(ha_entity_id):
-            # Entity exists in registry but not yet in state machine (common during boot)
+            # Entity exists in registry but is not present in the state machine
             _LOGGER.debug(
                 "Entity %s does not exist in state machine yet, will track when available (mapping to %s)",
                 ha_entity_id,
