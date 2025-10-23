@@ -35,8 +35,8 @@ def _get_departure_time(trip: Trip | None) -> datetime | None:
     """Get next departure time from trip data."""
     if not trip:
         return None
-    actual = getattr(trip, "departure_time_actual", None)
-    planned = getattr(trip, "departure_time_planned", None)
+    actual = trip.departure_time_actual
+    planned = trip.departure_time_planned
     return actual or planned
 
 
@@ -184,46 +184,30 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
             return None
 
         route = _get_route(first_trip)
-        status = getattr(first_trip, "status", None)
+        status = first_trip.status
 
         # Static attributes
         return {
-            "going": getattr(first_trip, "going", None),
-            "departure_time_planned": _get_time_str(
-                getattr(first_trip, "departure_time_planned", None)
-            ),
-            "departure_time_actual": _get_time_str(
-                getattr(first_trip, "departure_time_actual", None)
-            ),
+            "going": first_trip.going,
+            "departure_time_planned": _get_time_str(first_trip.departure_time_planned),
+            "departure_time_actual": _get_time_str(first_trip.departure_time_actual),
             "departure_delay": get_delay(
-                getattr(first_trip, "departure_time_planned", None),
-                getattr(first_trip, "departure_time_actual", None),
+                first_trip.departure_time_planned,
+                first_trip.departure_time_actual,
             ),
-            "departure_platform_planned": getattr(
-                first_trip, "departure_platform_planned", None
-            ),
-            "departure_platform_actual": getattr(
-                first_trip, "departure_platform_actual", None
-            ),
-            "arrival_time_planned": _get_time_str(
-                getattr(first_trip, "arrival_time_planned", None)
-            ),
-            "arrival_time_actual": _get_time_str(
-                getattr(first_trip, "arrival_time_actual", None)
-            ),
+            "departure_platform_planned": first_trip.departure_platform_planned,
+            "departure_platform_actual": first_trip.departure_platform_actual,
+            "arrival_time_planned": _get_time_str(first_trip.arrival_time_planned),
+            "arrival_time_actual": _get_time_str(first_trip.arrival_time_actual),
             "arrival_delay": get_delay(
-                getattr(first_trip, "arrival_time_planned", None),
-                getattr(first_trip, "arrival_time_actual", None),
+                first_trip.arrival_time_planned,
+                first_trip.arrival_time_actual,
             ),
-            "arrival_platform_planned": getattr(
-                first_trip, "arrival_platform_planned", None
-            ),
-            "arrival_platform_actual": getattr(
-                first_trip, "arrival_platform_actual", None
-            ),
+            "arrival_platform_planned": first_trip.arrival_platform_planned,
+            "arrival_platform_actual": first_trip.arrival_platform_actual,
             "next": _get_time_str(_get_departure_time(next_trip)),
             "status": status.lower() if status else None,
-            "transfers": getattr(first_trip, "nr_transfers", 0),
+            "transfers": first_trip.nr_transfers,
             "route": route,
             "remarks": None,
         }
