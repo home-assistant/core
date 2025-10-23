@@ -305,6 +305,15 @@ SERVICE_GET_EVENTS_SCHEMA: Final = vol.All(
     _has_positive_interval(EVENT_START_DATETIME, EVENT_END_DATETIME, EVENT_DURATION),
 )
 
+SERVICE_DELETE_EVENT: Final = "delete_event"
+SERVICE_DELETE_EVENT_SCHEMA: Final = vol.All(
+    cv.make_entity_service_schema(
+        {
+            vol.Required(EVENT_UID): vol.Any(cv.string),
+        }
+    )
+)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
@@ -332,6 +341,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_GET_EVENTS_SCHEMA,
         async_get_events_service,
         supports_response=SupportsResponse.ONLY,
+    )
+    component.async_register_entity_service(
+        SERVICE_DELETE_EVENT,
+        SERVICE_DELETE_EVENT_SCHEMA,
+        async_delete_event_service,
+        required_features=[CalendarEntityFeature.DELETE_EVENT],
     )
     await component.async_setup(config)
     return True
@@ -900,3 +915,11 @@ async def async_get_events_service(
             for event in calendar_event_list
         ]
     }
+
+
+async def async_delete_event_service(
+    calendar: CalendarEntity, service_call: ServiceCall
+) -> None:
+    """Deletes an event on a calendar by event uid."""
+    uid = service_call.data.get(EVENT_UID)
+    await calendar.async_delete_event(str(uid))

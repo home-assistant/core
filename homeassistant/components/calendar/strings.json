@@ -29,6 +29,9 @@
         },
         "start_time": {
           "name": "Start time"
+        },
+        "uid": {
+          "name": "Event Uid"
         }
       }
     }
@@ -87,6 +90,16 @@
         "duration": {
           "name": "Duration",
           "description": "Returns active events from Start time for the specified duration."
+        }
+      }
+    },
+    "delete_event": {
+      "name": "Delete event",
+      "description": "Deletes an event on a calendar by event uid.",
+      "fields": {
+        "uid": {
+          "name": "Event uid",
+          "description": "Uid of event to delete."
         }
       }
     }

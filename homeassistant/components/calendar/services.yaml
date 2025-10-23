@@ -36,6 +36,14 @@ create_event:
       example: "Conference Room - F123, Bldg. 002"
       selector:
         text:
+delete_event:
+  target:
+    entity:
+      domain: calendar
+  fields:
+    uid:
+      selector:
+        text:
 get_events:
   target:
     entity:

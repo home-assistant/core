@@ -59,6 +59,7 @@ EVENT_DURATION = "duration"
 LIST_EVENT_FIELDS = {
     "start",
     "end",
+    EVENT_UID,
     EVENT_SUMMARY,
     EVENT_DESCRIPTION,
     EVENT_LOCATION,

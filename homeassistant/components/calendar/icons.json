@@ -14,6 +14,9 @@
     },
     "get_events": {
       "service": "mdi:calendar-month"
+    },
+    "delete_event": {
+      "service": "mdi:calendar-minus"
     }
   }
 }
