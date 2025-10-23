@@ -2,9 +2,18 @@
   "selector": {
     "send_message_data": {
       "fields": {
-        "images": "Images",
-        "format": "Message format",
-        "thread_id": "Thread ID"
+        "images": {
+          "name": "Images",
+          "description": "One or more image paths to attach to the message."
+        },
+        "format": {
+          "name": "Message format",
+          "description": "Format of the message, either 'text' or 'html'."
+        },
+        "thread_id": {
+          "name": "Thread ID",
+          "description": "An optional parent message ID to thread this message under."
+        }
       }
     },
     "send_message_data_format": {
@@ -29,7 +38,7 @@
         },
         "data": {
           "name": "Data",
-          "description": "Extended information of notification. Supports the following keys: images -- a list of image paths to attach to the message, format -- either text or html, and thread_id -- an optional parent message to thread this message under. Optional."
+          "description": "Extended information of notification."
         }
       }
     },
