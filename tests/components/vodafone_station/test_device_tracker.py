@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vodafone_station.const import SCAN_INTERVAL
 from homeassistant.components.vodafone_station.coordinator import CONSIDER_HOME_SECONDS

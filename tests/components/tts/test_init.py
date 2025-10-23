@@ -2,9 +2,12 @@
 
 import asyncio
 from http import HTTPStatus
+import io
 from pathlib import Path
+import tempfile
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
+import wave
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -921,6 +924,29 @@ async def test_web_view_wrong_file(
     [("mock_setup", "test"), ("mock_config_entry_setup", "tts.test")],
     indirect=["setup"],
 )
+async def test_web_view_wrong_file_with_head_request(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup: str,
+    expected_url_suffix: str,
+) -> None:
+    """Set up a TTS platform and receive wrong file from web."""
+    client = await hass_client()
+
+    url = (
+        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
+        f"_en-us_-_{expected_url_suffix}.mp3"
+    )
+
+    req = await client.head(url)
+    assert req.status == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.parametrize(
+    ("setup", "expected_url_suffix"),
+    [("mock_setup", "test"), ("mock_config_entry_setup", "tts.test")],
+    indirect=["setup"],
+)
 async def test_web_view_wrong_filename(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -1812,7 +1838,7 @@ async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
     async def bad_data_gen():
         yield bytes(0)
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(HomeAssistantError):
         # Simulate a bad WAV file
         async for _chunk in tts._async_convert_audio(
             hass, "wav", bad_data_gen(), "mp3"
@@ -1885,6 +1911,7 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
     assert stream.language == mock_tts_entity.default_language
     assert stream.options == (mock_tts_entity.default_options or {})
+    assert stream.supports_streaming_input is False
     assert tts.async_get_stream(hass, stream.token) is stream
     stream.async_set_message("beer")
     result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
@@ -1905,6 +1932,7 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
         )
 
     mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
 
     async def stream_message():
         """Mock stream message."""
@@ -1913,6 +1941,7 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
         yield "o"
 
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    assert stream.supports_streaming_input is True
     stream.async_set_message_stream(stream_message())
     result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
     assert result_data == b"hello"
@@ -2006,3 +2035,105 @@ async def test_tts_cache() -> None:
         assert await consume_mid_data_task == b"012"
     with pytest.raises(ValueError):
         assert await consume_pre_data_loaded_task == b"012"
+
+
+async def test_async_internal_get_tts_audio_called(
+    hass: HomeAssistant,
+    mock_tts_entity: MockTTSEntity,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that non-streaming entity has its async_internal_get_tts_audio method called."""
+
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    # Non-streaming
+    assert mock_tts_entity.async_supports_streaming_input() is False
+
+    with patch(
+        "homeassistant.components.tts.entity.TextToSpeechEntity.async_internal_get_tts_audio"
+    ) as internal_get_tts_audio:
+        media_source_id = tts.generate_media_source_id(
+            hass,
+            "test message",
+            "tts.test",
+            "en_US",
+            cache=None,
+        )
+
+        url = await get_media_source_url(hass, media_source_id)
+        client = await hass_client()
+        await client.get(url)
+
+        # async_internal_get_tts_audio is called
+        internal_get_tts_audio.assert_called_once_with("test message", "en_US", {})
+
+
+async def test_stream_override(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Test overriding streams with a media path."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream.async_set_message("beer")
+
+    with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as wav_file:
+        with wave.open(wav_file, "wb") as wav_writer:
+            wav_writer.setframerate(16000)
+            wav_writer.setsampwidth(2)
+            wav_writer.setnchannels(1)
+            wav_writer.writeframes(bytes(16000 * 2))  # 1 second @ 16Khz/mono
+
+        wav_file.seek(0)
+
+        stream.async_override_result(wav_file.name)
+        result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
+
+    # Verify the result
+    with io.BytesIO(result_data) as wav_io, wave.open(wav_io, "rb") as wav_reader:
+        assert wav_reader.getframerate() == 16000
+        assert wav_reader.getsampwidth() == 2
+        assert wav_reader.getnchannels() == 1
+        assert wav_reader.readframes(wav_reader.getnframes()) == bytes(
+            16000 * 2
+        )  # 1 second @ 16Khz/mono
+
+
+async def test_stream_override_with_conversion(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Test overriding streams with a media path that requires conversion."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    stream = tts.async_create_stream(
+        hass,
+        mock_tts_entity.entity_id,
+        options={
+            tts.ATTR_PREFERRED_FORMAT: "wav",
+            tts.ATTR_PREFERRED_SAMPLE_RATE: 22050,
+            tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 2,
+        },
+    )
+    stream.async_set_message("beer")
+
+    # Use a temp file here since ffmpeg will read it directly
+    with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as wav_file:
+        with wave.open(wav_file, "wb") as wav_writer:
+            wav_writer.setframerate(16000)
+            wav_writer.setsampwidth(2)
+            wav_writer.setnchannels(1)
+            wav_writer.writeframes(bytes(16000 * 2))  # 1 second @ 16Khz/mono
+
+        wav_file.seek(0)
+        stream.async_override_result(wav_file.name)
+        result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
+
+    # Verify the result has the preferred format
+    with io.BytesIO(result_data) as wav_io, wave.open(wav_io, "rb") as wav_reader:
+        assert wav_reader.getframerate() == 22050
+        assert wav_reader.getsampwidth() == 2
+        assert wav_reader.getnchannels() == 2
+        assert wav_reader.readframes(wav_reader.getnframes()) == bytes(
+            22050 * 2 * 2
+        )  # 1 second @ 22.5Khz/stereo

@@ -17,7 +17,7 @@ DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS = False
 
 DEFAULT_PORT: Final = 6053
 
-STABLE_BLE_VERSION_STR = "2025.2.2"
+STABLE_BLE_VERSION_STR = "2025.8.0"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
@@ -25,3 +25,5 @@ PROJECT_URLS = {
 # ESPHome always uses .0 for the changelog URL
 STABLE_BLE_URL_VERSION = f"{STABLE_BLE_VERSION.major}.{STABLE_BLE_VERSION.minor}.0"
 DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_URL_VERSION}.html"
+
+NO_WAKE_WORD: Final[str] = "no_wake_word"

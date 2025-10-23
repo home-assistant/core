@@ -7,6 +7,17 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"
+        },
+        "data_description": {
+          "api_key": "API key generated in the AccuWeather APIs portal."
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::accuweather::config::step::user::data_description::api_key%]"
         }
       }
     },
@@ -17,6 +28,10 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "requests_exceeded": "The allowed number of requests to the AccuWeather API has been exceeded. You have to wait or change the API key."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {
@@ -72,6 +87,7 @@
           "level": {
             "name": "Level",
             "state": {
+              "extreme": "Extreme",
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "moderate": "Moderate",
@@ -89,6 +105,7 @@
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]",
             "state": {
+              "extreme": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::extreme%]",
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
@@ -123,6 +140,7 @@
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]",
             "state": {
+              "extreme": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::extreme%]",
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
@@ -167,6 +185,7 @@
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]",
             "state": {
+              "extreme": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::extreme%]",
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
@@ -181,6 +200,7 @@
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]",
             "state": {
+              "extreme": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::extreme%]",
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
@@ -195,6 +215,7 @@
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]",
             "state": {
+              "extreme": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::extreme%]",
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
@@ -230,6 +251,9 @@
     }
   },
   "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed for {entry}, please update your API key"
+    },
     "current_conditions_update_error": {
       "message": "An error occurred while retrieving weather current conditions data from the AccuWeather API: {error}"
     },

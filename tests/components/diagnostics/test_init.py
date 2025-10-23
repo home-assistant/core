@@ -1,13 +1,15 @@
 """Test the Diagnostics integration."""
 
+from datetime import datetime
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
@@ -81,10 +83,20 @@ async def test_websocket(
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.fake_integration.issues.test_issue.title",
+            "component.fake_integration.issues.test_issue.description",
+        ]
+    ],
+)
 async def test_download_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test download diagnostics."""
     config_entry = MockConfigEntry(domain="fake_integration")
@@ -95,6 +107,18 @@ async def test_download_diagnostics(
     integration = await async_get_integration(hass, "fake_integration")
     original_manifest = integration.manifest.copy()
     original_manifest["codeowners"] = ["@test"]
+
+    with freeze_time(datetime(2025, 7, 9, 14, 00, 00)):
+        issue_registry.async_get_or_create(
+            domain="fake_integration",
+            issue_id="test_issue",
+            breaks_in_ha_version="2023.10.0",
+            severity=ir.IssueSeverity.WARNING,
+            is_fixable=False,
+            is_persistent=True,
+            translation_key="test_issue",
+        )
+
     with patch.object(integration, "manifest", original_manifest):
         response = await _get_diagnostics_for_config_entry(
             hass, hass_client, config_entry
@@ -173,12 +197,30 @@ async def test_download_diagnostics(
             "codeowners": ["test"],
             "dependencies": [],
             "domain": "fake_integration",
+            "integration_type": "hub",
             "is_built_in": True,
             "overwrites_built_in": False,
             "name": "fake_integration",
             "requirements": [],
         },
         "data": {"config_entry": "info"},
+        "issues": [
+            {
+                "breaks_in_ha_version": "2023.10.0",
+                "created": "2025-07-09T14:00:00+00:00",
+                "data": None,
+                "dismissed_version": None,
+                "domain": "fake_integration",
+                "is_fixable": False,
+                "is_persistent": True,
+                "issue_domain": None,
+                "issue_id": "test_issue",
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "test_issue",
+                "translation_placeholders": None,
+            },
+        ],
     }
 
     device = device_registry.async_get_or_create(
@@ -260,12 +302,30 @@ async def test_download_diagnostics(
             "codeowners": [],
             "dependencies": [],
             "domain": "fake_integration",
+            "integration_type": "hub",
             "is_built_in": True,
             "overwrites_built_in": False,
             "name": "fake_integration",
             "requirements": [],
         },
         "data": {"device": "info"},
+        "issues": [
+            {
+                "breaks_in_ha_version": "2023.10.0",
+                "created": "2025-07-09T14:00:00+00:00",
+                "data": None,
+                "dismissed_version": None,
+                "domain": "fake_integration",
+                "is_fixable": False,
+                "is_persistent": True,
+                "issue_domain": None,
+                "issue_id": "test_issue",
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "test_issue",
+                "translation_placeholders": None,
+            },
+        ],
         "setup_times": {},
     }
 

@@ -27,12 +27,12 @@ jobs:
       publish: ${{ steps.version.outputs.publish }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -69,7 +69,7 @@ jobs:
         run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
 
       - name: Upload translations
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: translations
           path: translations.tar.gz
@@ -90,11 +90,11 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Download nightly wheels of frontend
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@ac66b43f0e6a346234dd65d4d0c8fbb31cb316e5 # v11
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/frontend
@@ -105,10 +105,10 @@ jobs:
 
       - name: Download nightly wheels of intents
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@ac66b43f0e6a346234dd65d4d0c8fbb31cb316e5 # v11
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
-          repo: home-assistant/intents-package
+          repo: OHF-Voice/intents-package
           branch: main
           workflow: nightly.yaml
           workflow_conclusion: success
@@ -116,7 +116,7 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -175,7 +175,7 @@ jobs:
           sed -i "s|pykrakenapi|# pykrakenapi|g" requirements_all.txt
 
       - name: Download translations
-        uses: actions/download-artifact@v4.3.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: translations
 
@@ -190,14 +190,15 @@ jobs:
           echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.4.0
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # home-assistant/builder doesn't support sha pinning
       - name: Build base image
-        uses: home-assistant/builder@2025.03.0
+        uses: home-assistant/builder@2025.09.0
         with:
           args: |
             $BUILD_ARGS \
@@ -242,7 +243,7 @@ jobs:
           - green
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Set build additional args
         run: |
@@ -256,14 +257,15 @@ jobs:
           fi
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.4.0
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # home-assistant/builder doesn't support sha pinning
       - name: Build base image
-        uses: home-assistant/builder@2025.03.0
+        uses: home-assistant/builder@2025.09.0
         with:
           args: |
             $BUILD_ARGS \
@@ -279,7 +281,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Initialize git
         uses: home-assistant/actions/helpers/git-init@master
@@ -321,23 +323,23 @@ jobs:
         registry: ["ghcr.io/home-assistant", "docker.io/homeassistant"]
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.8.2
+        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
         with:
           cosign-release: "v2.2.3"
 
       - name: Login to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
-        uses: docker/login-action@v3.4.0
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
         if: matrix.registry == 'ghcr.io/home-assistant'
-        uses: docker/login-action@v3.4.0
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -454,15 +456,15 @@ jobs:
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
       - name: Download translations
-        uses: actions/download-artifact@v4.3.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: translations
 
@@ -480,7 +482,7 @@ jobs:
           python -m build
 
       - name: Upload package to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.12.4
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
         with:
           skip-existing: true
 
@@ -499,17 +501,17 @@ jobs:
       HASSFEST_IMAGE_TAG: ghcr.io/home-assistant/hassfest:${{ needs.init.outputs.version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: . # So action will not pull the repository again
           file: ./script/hassfest/docker/Dockerfile
@@ -522,7 +524,7 @@ jobs:
       - name: Push Docker image
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
         id: push
-        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: . # So action will not pull the repository again
           file: ./script/hassfest/docker/Dockerfile
@@ -531,7 +533,7 @@ jobs:
 
       - name: Generate artifact attestation
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
-        uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2.3.0
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
         with:
           subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
           subject-digest: ${{ steps.push.outputs.digest }}

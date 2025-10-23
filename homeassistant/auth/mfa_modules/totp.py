@@ -20,7 +20,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.8.0", "PyQRCode==1.2.1"]
+REQUIREMENTS = ["pyotp==2.9.0", "PyQRCode==1.2.1"]
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({}, extra=vol.PREVENT_EXTRA)
 
@@ -34,10 +34,13 @@ INPUT_FIELD_CODE = "code"
 
 DUMMY_SECRET = "FPPTH34D4E3MI2HG"
 
+GOOGLE_AUTHENTICATOR_URL = "https://support.google.com/accounts/answer/1066447"
+AUTHY_URL = "https://authy.com/"
+
 
 def _generate_qr_code(data: str) -> str:
     """Generate a base64 PNG string represent QR Code image of data."""
-    import pyqrcode  # pylint: disable=import-outside-toplevel
+    import pyqrcode  # noqa: PLC0415
 
     qr_code = pyqrcode.create(data)
 
@@ -59,7 +62,7 @@ def _generate_qr_code(data: str) -> str:
 
 def _generate_secret_and_qr_code(username: str) -> tuple[str, str, str]:
     """Generate a secret, url, and QR code."""
-    import pyotp  # pylint: disable=import-outside-toplevel
+    import pyotp  # noqa: PLC0415
 
     ota_secret = pyotp.random_base32()
     url = pyotp.totp.TOTP(ota_secret).provisioning_uri(
@@ -107,7 +110,7 @@ class TotpAuthModule(MultiFactorAuthModule):
 
     def _add_ota_secret(self, user_id: str, secret: str | None = None) -> str:
         """Create a ota_secret for user."""
-        import pyotp  # pylint: disable=import-outside-toplevel
+        import pyotp  # noqa: PLC0415
 
         ota_secret: str = secret or pyotp.random_base32()
 
@@ -163,7 +166,7 @@ class TotpAuthModule(MultiFactorAuthModule):
 
     def _validate_2fa(self, user_id: str, code: str) -> bool:
         """Validate two factor authentication code."""
-        import pyotp  # pylint: disable=import-outside-toplevel
+        import pyotp  # noqa: PLC0415
 
         if (ota_secret := self._users.get(user_id)) is None:  # type: ignore[union-attr]
             # even we cannot find user, we still do verify
@@ -196,7 +199,7 @@ class TotpSetupFlow(SetupFlow[TotpAuthModule]):
         Return self.async_show_form(step_id='init') if user_input is None.
         Return self.async_create_entry(data={'result': result}) if finish.
         """
-        import pyotp  # pylint: disable=import-outside-toplevel
+        import pyotp  # noqa: PLC0415
 
         errors: dict[str, str] = {}
 
@@ -229,6 +232,8 @@ class TotpSetupFlow(SetupFlow[TotpAuthModule]):
                 "code": self._ota_secret,
                 "url": self._url,
                 "qr_code": self._image,
+                "google_authenticator_url": GOOGLE_AUTHENTICATOR_URL,
+                "authy_url": AUTHY_URL,
             },
             errors=errors,
         )

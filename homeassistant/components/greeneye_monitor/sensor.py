@@ -109,7 +109,7 @@ async def async_setup_platform(
         if len(monitor_configs) == 0:
             monitors.remove_listener(on_new_monitor)
 
-    monitors: greeneye.Monitors = hass.data[DATA_GREENEYE_MONITOR]
+    monitors = hass.data[DATA_GREENEYE_MONITOR]
     monitors.add_listener(on_new_monitor)
     for monitor in monitors.monitors.values():
         on_new_monitor(monitor)

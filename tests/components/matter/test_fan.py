@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, call
 
 from matter_server.client.models.node import MatterNode
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,

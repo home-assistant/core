@@ -21,7 +21,7 @@
       },
       "link": {
         "title": "Link Hub",
-        "description": "Press the button on the bridge to register Philips Hue with Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)"
+        "description": "Press the button on the bridge to register Philips Hue with Home Assistant."
       }
     },
     "error": {
@@ -68,6 +68,7 @@
       "initial_press": "\"{subtype}\" pressed initially",
       "repeat": "\"{subtype}\" held down",
       "short_release": "\"{subtype}\" released after short press",
+      "long_press": "\"{subtype}\" long pressed",
       "long_release": "[%key:component::hue::device_automation::trigger_type::remote_button_long_release%]",
       "double_short_release": "[%key:component::hue::device_automation::trigger_type::remote_double_button_short_press%]",
       "start": "[%key:component::hue::device_automation::trigger_type::initial_press%]"

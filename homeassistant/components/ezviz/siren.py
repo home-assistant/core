@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any
 
-from pyezviz import HTTPError, PyEzvizError, SupportExt
+from pyezvizapi import HTTPError, PyEzvizError, SupportExt
 
 from homeassistant.components.siren import (
     SirenEntity,

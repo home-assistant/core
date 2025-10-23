@@ -4,13 +4,13 @@
       "user": {
         "description": "Make a choice",
         "menu_options": {
-          "sensor": "Set up a file based sensor",
+          "sensor": "Set up a file-based sensor",
           "notify": "Set up a notification service"
         }
       },
       "sensor": {
         "title": "File sensor",
-        "description": "Set up a file based sensor",
+        "description": "[%key:component::file::config::step::user::menu_options::sensor%]",
         "data": {
           "file_path": "File path",
           "value_template": "Value template",
@@ -64,6 +64,37 @@
     },
     "write_access_failed": {
       "message": "Write access to {filename} failed: {exc}."
+    },
+    "no_access_to_path": {
+      "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+    },
+    "unsupported_file_encoding": {
+      "message": "Cannot read {filename}, unsupported file encoding {encoding}."
+    },
+    "file_decoding": {
+      "message": "Cannot read file {filename} as {encoding}."
+    },
+    "file_not_found": {
+      "message": "File {filename} not found."
+    },
+    "file_read_error": {
+      "message": "Error reading {filename}."
+    }
+  },
+  "services": {
+    "read_file": {
+      "name": "Read file",
+      "description": "Reads a file and returns the contents.",
+      "fields": {
+        "file_name": {
+          "name": "File name",
+          "description": "Name of the file to read."
+        },
+        "file_encoding": {
+          "name": "File encoding",
+          "description": "Encoding of the file (JSON, YAML.)"
+        }
+      }
     }
   }
 }

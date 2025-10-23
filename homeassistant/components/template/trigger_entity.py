@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.const import CONF_STATE
+from homeassistant.const import CONF_STATE, CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import _SENTINEL
 from homeassistant.helpers.trigger_template_entity import TriggerBaseEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -30,8 +31,10 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         """Initialize the entity."""
         CoordinatorEntity.__init__(self, coordinator)
         TriggerBaseEntity.__init__(self, hass, config)
-        AbstractTemplateEntity.__init__(self, hass)
+        AbstractTemplateEntity.__init__(self, hass, config)
 
+        self._entity_variables: ScriptVariables | None = config.get(CONF_VARIABLES)
+        self._rendered_entity_variables: dict | None = None
         self._state_render_error = False
 
     async def async_added_to_hass(self) -> None:
@@ -63,9 +66,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
     @callback
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
-        if self.coordinator.data is None:
-            return {}
-        return self.coordinator.data["run_variables"] or {}
+        return self._rendered_entity_variables or {}
 
     def _render_templates(self, variables: dict[str, Any]) -> None:
         """Render templates."""
@@ -92,7 +93,18 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
     def _process_data(self) -> None:
         """Process new data."""
 
-        variables = self._template_variables(self.coordinator.data["run_variables"])
+        coordinator_variables = self.coordinator.data["run_variables"]
+        if self._entity_variables:
+            entity_variables = self._entity_variables.async_simple_render(
+                coordinator_variables
+            )
+            self._rendered_entity_variables = {
+                **coordinator_variables,
+                **entity_variables,
+            }
+        else:
+            self._rendered_entity_variables = coordinator_variables
+        variables = self._template_variables(self._rendered_entity_variables)
         if self._render_availability_template(variables):
             self._render_templates(variables)
 

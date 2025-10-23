@@ -273,7 +273,6 @@ async def test_climate_noscope(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_metadata: AsyncMock,
-    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the climate entity is correct."""
     mock_metadata.return_value = METADATA_NOSCOPE

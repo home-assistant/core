@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Sign-in with Ring account",
+        "title": "Sign in with Ring account",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"

@@ -14,7 +14,7 @@
       "init": {
         "data": {
           "scan_interval": "Update interval",
-          "tracked_asset_pairs": "Tracked Asset Pairs"
+          "tracked_asset_pairs": "Tracked asset pairs"
         }
       }
     }
@@ -40,10 +40,10 @@
         "name": "Volume last 24h"
       },
       "volume_weighted_average_today": {
-        "name": "Volume weighted average today"
+        "name": "Volume-weighted average today"
       },
       "volume_weighted_average_last_24h": {
-        "name": "Volume weighted average last 24h"
+        "name": "Volume-weighted average last 24h"
       },
       "number_of_trades_today": {
         "name": "Number of trades today"

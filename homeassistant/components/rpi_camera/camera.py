@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 from tempfile import NamedTemporaryFile
+from typing import Any
 
 from homeassistant.components.camera import Camera
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME, EVENT_HOMEASSISTANT_STOP
@@ -87,11 +88,11 @@ def setup_platform(
 class RaspberryCamera(Camera):
     """Representation of a Raspberry Pi camera."""
 
-    def __init__(self, device_info):
+    def __init__(self, device_info: dict[str, Any]) -> None:
         """Initialize Raspberry Pi camera component."""
         super().__init__()
 
-        self._name = device_info[CONF_NAME]
+        self._attr_name = device_info[CONF_NAME]
         self._config = device_info
 
         # Kill if there's raspistill instance
@@ -150,11 +151,6 @@ class RaspberryCamera(Camera):
             return file.read()
 
     @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
-
-    @property
-    def frame_interval(self):
+    def frame_interval(self) -> float:
         """Return the interval between frames of the stream."""
         return self._config[CONF_TIMELAPSE] / 1000

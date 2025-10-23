@@ -32,8 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -
 
     await coordinator.async_config_entry_first_refresh()
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
     return True
 
 
@@ -45,11 +43,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) 
     # if this is the last entry, remove the storage
     if len(entries) == 1:
         hass.data.pop(MY_KEY)
-    return await hass.config_entries.async_unload_platforms(entry, Platform.EVENT)
-
-
-async def _async_update_listener(
-    hass: HomeAssistant, entry: FeedReaderConfigEntry
-) -> None:
-    """Handle reconfiguration."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(entry, [Platform.EVENT])

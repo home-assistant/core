@@ -11,16 +11,17 @@ from aiomealie import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mealie.const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_END_DATE,
     ATTR_ENTRY_TYPE,
     ATTR_INCLUDE_TAGS,
     ATTR_NOTE_TEXT,
     ATTR_NOTE_TITLE,
     ATTR_RECIPE_ID,
+    ATTR_RESULT_LIMIT,
+    ATTR_SEARCH_TERMS,
     ATTR_START_DATE,
     ATTR_URL,
     DOMAIN,
@@ -28,11 +29,12 @@ from homeassistant.components.mealie.const import (
 from homeassistant.components.mealie.services import (
     SERVICE_GET_MEALPLAN,
     SERVICE_GET_RECIPE,
+    SERVICE_GET_RECIPES,
     SERVICE_IMPORT_RECIPE,
     SERVICE_SET_MEALPLAN,
     SERVICE_SET_RANDOM_MEALPLAN,
 )
-from homeassistant.const import ATTR_DATE
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -144,6 +146,42 @@ async def test_service_recipe(
         DOMAIN,
         SERVICE_GET_RECIPE,
         {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, ATTR_RECIPE_ID: "recipe_id"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        # Default call
+        {ATTR_CONFIG_ENTRY_ID: "mock_entry_id"},
+        # With search terms and result limit
+        {
+            ATTR_CONFIG_ENTRY_ID: "mock_entry_id",
+            ATTR_SEARCH_TERMS: "pasta",
+            ATTR_RESULT_LIMIT: 5,
+        },
+    ],
+)
+async def test_service_get_recipes(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    service_data: dict,
+) -> None:
+    """Test the get_recipes service."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Patch entry_id into service_data for each run
+    service_data = {**service_data, ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id}
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_RECIPES,
+        service_data,
         blocking=True,
         return_response=True,
     )
@@ -333,6 +371,22 @@ async def test_service_set_mealplan(
             "Recipe with ID or slug `recipe_id` not found",
         ),
         (
+            SERVICE_GET_RECIPES,
+            {},
+            "get_recipes",
+            MealieConnectionError,
+            HomeAssistantError,
+            "Error connecting to Mealie instance",
+        ),
+        (
+            SERVICE_GET_RECIPES,
+            {ATTR_SEARCH_TERMS: "pasta"},
+            "get_recipes",
+            MealieNotFoundError,
+            ServiceValidationError,
+            "No recipes found matching your search",
+        ),
+        (
             SERVICE_IMPORT_RECIPE,
             {ATTR_URL: "http://example.com"},
             "import_recipe",
@@ -402,6 +456,11 @@ async def test_services_connection_error(
     [
         (SERVICE_GET_MEALPLAN, {}),
         (SERVICE_GET_RECIPE, {ATTR_RECIPE_ID: "recipe_id"}),
+        (SERVICE_GET_RECIPES, {}),
+        (
+            SERVICE_GET_RECIPES,
+            {ATTR_SEARCH_TERMS: "pasta", ATTR_RESULT_LIMIT: 5},
+        ),
         (SERVICE_IMPORT_RECIPE, {ATTR_URL: "http://example.com"}),
         (
             SERVICE_SET_RANDOM_MEALPLAN,

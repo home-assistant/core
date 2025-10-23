@@ -29,7 +29,6 @@ from .const import (
     DEFAULT_RADIUS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    FEED,
     IMPERIAL_UNITS,
     PLATFORMS,
 )
@@ -51,6 +50,8 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+type GeonetnzVolcanoConfigEntry = ConfigEntry[GeonetnzVolcanoFeedEntityManager]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -84,11 +85,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: GeonetnzVolcanoConfigEntry
+) -> bool:
     """Set up the GeoNet NZ Volcano component as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(FEED, {})
-
     radius = config_entry.data[CONF_RADIUS]
     unit_system = config_entry.data[CONF_UNIT_SYSTEM]
     if unit_system == IMPERIAL_UNITS:
@@ -97,16 +97,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
     # Create feed entity manager for all platforms.
     manager = GeonetnzVolcanoFeedEntityManager(hass, config_entry, radius, unit_system)
-    hass.data[DOMAIN][FEED][config_entry.entry_id] = manager
+    config_entry.runtime_data = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: GeonetnzVolcanoConfigEntry
+) -> bool:
     """Unload an GeoNet NZ Volcano component config entry."""
-    manager = hass.data[DOMAIN][FEED].pop(entry.entry_id)
-    await manager.async_stop()
+    await entry.runtime_data.async_stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

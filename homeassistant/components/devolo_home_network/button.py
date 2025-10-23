@@ -18,8 +18,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, IDENTIFY, PAIRING, RESTART, START_WPS
+from .coordinator import DevoloHomeNetworkConfigEntry
 from .entity import DevoloEntity
 
 PARALLEL_UPDATES = 0

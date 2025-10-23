@@ -27,6 +27,7 @@
     'original_name': 'Warnings',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'warnings',
     'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_warnings',

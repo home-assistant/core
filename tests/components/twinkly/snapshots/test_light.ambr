@@ -35,6 +35,7 @@
     'original_name': None,
     'platform': 'twinkly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 4>,
     'translation_key': 'light',
     'unique_id': '00:2d:13:3b:aa:bb',

@@ -5,23 +5,12 @@ from homematicip.base.enums import DoorCommand, DoorState
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
-    DOMAIN as COVER_DOMAIN,
     CoverState,
 )
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
-
-
-async def test_manually_configured_platform(hass: HomeAssistant) -> None:
-    """Test that we do not set up an access point."""
-    assert await async_setup_component(
-        hass, COVER_DOMAIN, {COVER_DOMAIN: {"platform": HMIPC_DOMAIN}}
-    )
-    assert not hass.data.get(HMIPC_DOMAIN)
 
 
 async def test_hmip_cover_shutter(
@@ -376,14 +365,16 @@ async def test_hmip_garage_door_tormatic(
 
     assert ha_state.state == "closed"
     assert ha_state.attributes["current_position"] == 0
-    service_call_counter = len(hmip_device.mock_calls)
+    service_call_counter = len(hmip_device.functionalChannels[1].mock_calls)
 
     await hass.services.async_call(
         "cover", "open_cover", {"entity_id": entity_id}, blocking=True
     )
-    assert len(hmip_device.mock_calls) == service_call_counter + 1
-    assert hmip_device.mock_calls[-1][0] == "send_door_command_async"
-    assert hmip_device.mock_calls[-1][1] == (DoorCommand.OPEN,)
+    assert len(hmip_device.functionalChannels[1].mock_calls) == service_call_counter + 1
+    assert (
+        hmip_device.functionalChannels[1].mock_calls[-1][0] == "async_send_door_command"
+    )
+    assert hmip_device.functionalChannels[1].mock_calls[-1][1] == (DoorCommand.OPEN,)
     await async_manipulate_test_data(hass, hmip_device, "doorState", DoorState.OPEN)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == CoverState.OPEN
@@ -392,9 +383,11 @@ async def test_hmip_garage_door_tormatic(
     await hass.services.async_call(
         "cover", "close_cover", {"entity_id": entity_id}, blocking=True
     )
-    assert len(hmip_device.mock_calls) == service_call_counter + 3
-    assert hmip_device.mock_calls[-1][0] == "send_door_command_async"
-    assert hmip_device.mock_calls[-1][1] == (DoorCommand.CLOSE,)
+    assert len(hmip_device.functionalChannels[1].mock_calls) == service_call_counter + 2
+    assert (
+        hmip_device.functionalChannels[1].mock_calls[-1][0] == "async_send_door_command"
+    )
+    assert hmip_device.functionalChannels[1].mock_calls[-1][1] == (DoorCommand.CLOSE,)
     await async_manipulate_test_data(hass, hmip_device, "doorState", DoorState.CLOSED)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == CoverState.CLOSED
@@ -403,9 +396,11 @@ async def test_hmip_garage_door_tormatic(
     await hass.services.async_call(
         "cover", "stop_cover", {"entity_id": entity_id}, blocking=True
     )
-    assert len(hmip_device.mock_calls) == service_call_counter + 5
-    assert hmip_device.mock_calls[-1][0] == "send_door_command_async"
-    assert hmip_device.mock_calls[-1][1] == (DoorCommand.STOP,)
+    assert len(hmip_device.functionalChannels[1].mock_calls) == service_call_counter + 3
+    assert (
+        hmip_device.functionalChannels[1].mock_calls[-1][0] == "async_send_door_command"
+    )
+    assert hmip_device.functionalChannels[1].mock_calls[-1][1] == (DoorCommand.STOP,)
 
 
 async def test_hmip_garage_door_hoermann(
@@ -425,14 +420,16 @@ async def test_hmip_garage_door_hoermann(
 
     assert ha_state.state == "closed"
     assert ha_state.attributes["current_position"] == 0
-    service_call_counter = len(hmip_device.mock_calls)
+    service_call_counter = len(hmip_device.functionalChannels[1].mock_calls)
 
     await hass.services.async_call(
         "cover", "open_cover", {"entity_id": entity_id}, blocking=True
     )
-    assert len(hmip_device.mock_calls) == service_call_counter + 1
-    assert hmip_device.mock_calls[-1][0] == "send_door_command_async"
-    assert hmip_device.mock_calls[-1][1] == (DoorCommand.OPEN,)
+    assert len(hmip_device.functionalChannels[1].mock_calls) == service_call_counter + 1
+    assert (
+        hmip_device.functionalChannels[1].mock_calls[-1][0] == "async_send_door_command"
+    )
+    assert hmip_device.functionalChannels[1].mock_calls[-1][1] == (DoorCommand.OPEN,)
     await async_manipulate_test_data(hass, hmip_device, "doorState", DoorState.OPEN)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == CoverState.OPEN
@@ -441,9 +438,11 @@ async def test_hmip_garage_door_hoermann(
     await hass.services.async_call(
         "cover", "close_cover", {"entity_id": entity_id}, blocking=True
     )
-    assert len(hmip_device.mock_calls) == service_call_counter + 3
-    assert hmip_device.mock_calls[-1][0] == "send_door_command_async"
-    assert hmip_device.mock_calls[-1][1] == (DoorCommand.CLOSE,)
+    assert len(hmip_device.functionalChannels[1].mock_calls) == service_call_counter + 2
+    assert (
+        hmip_device.functionalChannels[1].mock_calls[-1][0] == "async_send_door_command"
+    )
+    assert hmip_device.functionalChannels[1].mock_calls[-1][1] == (DoorCommand.CLOSE,)
     await async_manipulate_test_data(hass, hmip_device, "doorState", DoorState.CLOSED)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == CoverState.CLOSED
@@ -452,9 +451,11 @@ async def test_hmip_garage_door_hoermann(
     await hass.services.async_call(
         "cover", "stop_cover", {"entity_id": entity_id}, blocking=True
     )
-    assert len(hmip_device.mock_calls) == service_call_counter + 5
-    assert hmip_device.mock_calls[-1][0] == "send_door_command_async"
-    assert hmip_device.mock_calls[-1][1] == (DoorCommand.STOP,)
+    assert len(hmip_device.functionalChannels[1].mock_calls) == service_call_counter + 3
+    assert (
+        hmip_device.functionalChannels[1].mock_calls[-1][0] == "async_send_door_command"
+    )
+    assert hmip_device.functionalChannels[1].mock_calls[-1][1] == (DoorCommand.STOP,)
 
 
 async def test_hmip_cover_shutter_group(

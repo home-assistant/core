@@ -14,6 +14,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_USERS, DOMAIN, LOGGER
 
+type LastFMConfigEntry = ConfigEntry[LastFMDataUpdateCoordinator]
+
 
 def format_track(track: Track | None) -> str | None:
     """Format the track."""

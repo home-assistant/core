@@ -1,11 +1,11 @@
-"""deCONZ service tests."""
+"""UniFi service tests."""
 
 from typing import Any
 from unittest.mock import PropertyMock, patch
 
 import pytest
 
-from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN
+from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
 from homeassistant.components.unifi.services import (
     SERVICE_RECONNECT_CLIENT,
     SERVICE_REMOVE_CLIENTS,
@@ -41,7 +41,7 @@ async def test_reconnect_client(
     )
 
     await hass.services.async_call(
-        UNIFI_DOMAIN,
+        DOMAIN,
         SERVICE_RECONNECT_CLIENT,
         service_data={ATTR_DEVICE_ID: device_entry.id},
         blocking=True,
@@ -57,7 +57,7 @@ async def test_reconnect_non_existant_device(
     aioclient_mock.clear_requests()
 
     await hass.services.async_call(
-        UNIFI_DOMAIN,
+        DOMAIN,
         SERVICE_RECONNECT_CLIENT,
         service_data={ATTR_DEVICE_ID: "device_entry.id"},
         blocking=True,
@@ -80,7 +80,7 @@ async def test_reconnect_device_without_mac(
     )
 
     await hass.services.async_call(
-        UNIFI_DOMAIN,
+        DOMAIN,
         SERVICE_RECONNECT_CLIENT,
         service_data={ATTR_DEVICE_ID: device_entry.id},
         blocking=True,
@@ -115,7 +115,7 @@ async def test_reconnect_client_hub_unavailable(
     ) as ws_mock:
         ws_mock.return_value = False
         await hass.services.async_call(
-            UNIFI_DOMAIN,
+            DOMAIN,
             SERVICE_RECONNECT_CLIENT,
             service_data={ATTR_DEVICE_ID: device_entry.id},
             blocking=True,
@@ -137,7 +137,7 @@ async def test_reconnect_client_unknown_mac(
     )
 
     await hass.services.async_call(
-        UNIFI_DOMAIN,
+        DOMAIN,
         SERVICE_RECONNECT_CLIENT,
         service_data={ATTR_DEVICE_ID: device_entry.id},
         blocking=True,
@@ -163,7 +163,7 @@ async def test_reconnect_wired_client(
     )
 
     await hass.services.async_call(
-        UNIFI_DOMAIN,
+        DOMAIN,
         SERVICE_RECONNECT_CLIENT,
         service_data={ATTR_DEVICE_ID: device_entry.id},
         blocking=True,
@@ -213,7 +213,7 @@ async def test_remove_clients(
         f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
-    await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
+    await hass.services.async_call(DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.mock_calls[0][2] == {
         "cmd": "forget-sta",
         "macs": ["00:00:00:00:00:00", "00:00:00:00:00:01"],
@@ -244,9 +244,7 @@ async def test_remove_clients_hub_unavailable(
         "homeassistant.components.unifi.UnifiHub.available", new_callable=PropertyMock
     ) as ws_mock:
         ws_mock.return_value = False
-        await hass.services.async_call(
-            UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True
-        )
+        await hass.services.async_call(DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.call_count == 0
 
 
@@ -268,7 +266,7 @@ async def test_remove_clients_no_call_on_empty_list(
 ) -> None:
     """Verify no call is made if no fitting client has been added to the list."""
     aioclient_mock.clear_requests()
-    await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
+    await hass.services.async_call(DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.call_count == 0
 
 
@@ -297,7 +295,7 @@ async def test_services_handle_unloaded_config_entry(
 
     aioclient_mock.clear_requests()
 
-    await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
+    await hass.services.async_call(DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.call_count == 0
 
     device_entry = device_registry.async_get_or_create(
@@ -305,7 +303,7 @@ async def test_services_handle_unloaded_config_entry(
         connections={(dr.CONNECTION_NETWORK_MAC, clients_all_payload[0]["mac"])},
     )
     await hass.services.async_call(
-        UNIFI_DOMAIN,
+        DOMAIN,
         SERVICE_RECONNECT_CLIENT,
         service_data={ATTR_DEVICE_ID: device_entry.id},
         blocking=True,

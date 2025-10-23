@@ -6,8 +6,8 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from . import BoschAlarmConfigEntry
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE
+from .types import BoschAlarmConfigEntry
 
 TO_REDACT = [CONF_INSTALLER_CODE, CONF_USER_CODE, CONF_PASSWORD]
 

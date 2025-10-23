@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import OrderedDict
+import math
 from typing import ClassVar, Final
 
 import voluptuous as vol
@@ -56,6 +57,7 @@ from .const import (
     CONF_SYNC_STATE,
     KNX_ADDRESS,
     ColorTempModes,
+    CoverConf,
     FanZeroMode,
 )
 from .validation import (
@@ -85,7 +87,7 @@ def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
         raise vol.Invalid(f"'type: {value_type}' is not a valid numeric sensor type.")
     # Infinity is not supported by Home Assistant frontend so user defined
     # config is required if if xknx DPTNumeric subclass defines it as limit.
-    if min_config is None and dpt_class.value_min == float("-inf"):
+    if min_config is None and dpt_class.value_min == -math.inf:
         raise vol.Invalid(f"'min' key required for value type '{value_type}'")
     if min_config is not None and min_config < dpt_class.value_min:
         raise vol.Invalid(
@@ -93,7 +95,7 @@ def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
             f" of value type '{value_type}': {dpt_class.value_min}"
         )
 
-    if max_config is None and dpt_class.value_max == float("inf"):
+    if max_config is None and dpt_class.value_max == math.inf:
         raise vol.Invalid(f"'max' key required for value type '{value_type}'")
     if max_config is not None and max_config > dpt_class.value_max:
         raise vol.Invalid(
@@ -453,11 +455,6 @@ class CoverSchema(KNXPlatformSchema):
     CONF_POSITION_STATE_ADDRESS = "position_state_address"
     CONF_ANGLE_ADDRESS = "angle_address"
     CONF_ANGLE_STATE_ADDRESS = "angle_state_address"
-    CONF_TRAVELLING_TIME_DOWN = "travelling_time_down"
-    CONF_TRAVELLING_TIME_UP = "travelling_time_up"
-    CONF_INVERT_UPDOWN = "invert_updown"
-    CONF_INVERT_POSITION = "invert_position"
-    CONF_INVERT_ANGLE = "invert_angle"
 
     DEFAULT_TRAVEL_TIME = 25
     DEFAULT_NAME = "KNX Cover"
@@ -474,14 +471,14 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(CONF_ANGLE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_ANGLE_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(
-                    CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
+                    CoverConf.TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
                 ): cv.positive_float,
                 vol.Optional(
-                    CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
+                    CoverConf.TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
                 ): cv.positive_float,
-                vol.Optional(CONF_INVERT_UPDOWN, default=False): cv.boolean,
-                vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
-                vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
+                vol.Optional(CoverConf.INVERT_UPDOWN, default=False): cv.boolean,
+                vol.Optional(CoverConf.INVERT_POSITION, default=False): cv.boolean,
+                vol.Optional(CoverConf.INVERT_ANGLE, default=False): cv.boolean,
                 vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
