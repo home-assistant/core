@@ -9,6 +9,10 @@
         "data_description": {
           "implementation": "[%key:common::config_flow::description::implementation%]"
         }
+      },
+      "oauth_discovery": {
+        "description": "Home Assistant has found an Xbox device on your network. Press **Submit** to continue setting up the Xbox integration.",
+        "title": "Discovered Xbox device"
       }
     },
     "abort": {
@@ -38,6 +42,17 @@
       },
       "gold_tenure": {
         "name": "Gold tenure"
+      },
+      "last_online": {
+        "name": "Last online"
+      },
+      "following": {
+        "name": "Following",
+        "unit_of_measurement": "people"
+      },
+      "follower": {
+        "name": "Follower",
+        "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
       }
     },
     "binary_sensor": {
@@ -49,12 +64,15 @@
       },
       "in_multiplayer": {
         "name": "In multiplayer"
+      },
+      "has_game_pass": {
+        "name": "Subscribed to Xbox Game Pass"
       }
     }
   },
   "exceptions": {
     "request_exception": {
-      "message": "Failed to connect to Xbox Network: {error}"
+      "message": "Failed to connect to Xbox Network"
     },
     "timeout_exception": {
       "message": "Failed to connect to Xbox Network due to a connection timeout"
