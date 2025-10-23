@@ -18,7 +18,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     account = entry.runtime_data.account
     data = {
-        "robots": [robot._data for robot in account.robots],  # noqa: SLF001
-        "pets": [pet._data for pet in account.pets],  # noqa: SLF001
+        "robots": [robot.to_dict() for robot in account.robots],
+        "pets": [pet.to_dict() for pet in account.pets],
     }
     return async_redact_data(data, REDACT_FIELDS)
