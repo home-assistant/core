@@ -1572,7 +1572,7 @@ notifications-android-tv==0.1.5
 notify-events==1.0.4
 
 # homeassistant.components.nederlandse_spoorwegen
-nsapi==3.1.2
+nsapi==3.1.3
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.1.0
