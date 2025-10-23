@@ -26,10 +26,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType, WorkMode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType, WorkMode
 from .entity import TuyaEntity
 from .models import IntegerTypeData
-from .util import get_dpcode, remap_value
+from .util import get_dpcode, get_dptype, remap_value
 
 
 @dataclass
@@ -72,9 +72,8 @@ class TuyaLightEntityDescription(LightEntityDescription):
     )
 
 
-LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
-    # White noise machine
-    "bzyd": (
+LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
+    DeviceCategory.BZYD: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -82,18 +81,14 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
-    # Curtain Switch
-    # https://developer.tuya.com/en/docs/iot/category-clkg?id=Kaiuz0gitil39
-    "clkg": (
+    DeviceCategory.CLKG: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_BACKLIGHT,
             translation_key="backlight",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # String Lights
-    # https://developer.tuya.com/en/docs/iot/dc?id=Kaof7taxmvadu
-    "dc": (
+    DeviceCategory.DC: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -103,9 +98,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
-    # Strip Lights
-    # https://developer.tuya.com/en/docs/iot/dd?id=Kaof804aibg2l
-    "dd": (
+    DeviceCategory.DD: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -116,9 +109,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             default_color_type=DEFAULT_COLOR_TYPE_DATA_V2,
         ),
     ),
-    # Light
-    # https://developer.tuya.com/en/docs/iot/categorydj?id=Kaiuyzy3eheyy
-    "dj": (
+    DeviceCategory.DJ: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -136,11 +127,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE_1,
         ),
     ),
-    # Filament Light
-    # Based on data from https://github.com/home-assistant/core/issues/106703
-    # Product category mentioned in https://developer.tuya.com/en/docs/iot/oemapp-light?id=Kb77kja5woao6
-    # As at 30/12/23 not documented in https://developer.tuya.com/en/docs/iot/lighting?id=Kaiuyzxq30wmc
-    "dsd": (
+    DeviceCategory.DSD: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -148,9 +135,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE,
         ),
     ),
-    # Fan
-    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
-    "fs": (
+    DeviceCategory.FS: (
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
             name=None,
@@ -165,9 +150,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE_1,
         ),
     ),
-    # Ceiling Fan Light
-    # https://developer.tuya.com/en/docs/iot/fsd?id=Kaof8eiei4c2v
-    "fsd": (
+    DeviceCategory.FSD: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -182,9 +165,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             name=None,
         ),
     ),
-    # Ambient Light
-    # https://developer.tuya.com/en/docs/iot/ambient-light?id=Kaiuz06amhe6g
-    "fwd": (
+    DeviceCategory.FWD: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -194,9 +175,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
-    # Motion Sensor Light
-    # https://developer.tuya.com/en/docs/iot/gyd?id=Kaof8a8hycfmy
-    "gyd": (
+    DeviceCategory.GYD: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -206,9 +185,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
-    # Wake Up Light II
-    # Not documented
-    "hxd": (
+    DeviceCategory.HXD: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             translation_key="light",
@@ -217,9 +194,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness_min=DPCode.BRIGHTNESS_MIN_1,
         ),
     ),
-    # Humidifier Light
-    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
-    "jsq": (
+    DeviceCategory.JSQ: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -228,46 +203,35 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA_HSV,
         ),
     ),
-    # Switch
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
-    "kg": (
+    DeviceCategory.KG: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_BACKLIGHT,
             translation_key="backlight",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Air Purifier
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
-    "kj": (
+    DeviceCategory.KJ: (
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
             translation_key="backlight",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Air conditioner
-    # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
-    "kt": (
+    DeviceCategory.KT: (
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
             translation_key="backlight",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Undocumented tower fan
-    # https://github.com/orgs/home-assistant/discussions/329
-    "ks": (
+    DeviceCategory.KS: (
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
             translation_key="backlight",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Unknown light product
-    # Found as VECINO RGBW as provided by diagnostics
-    # Not documented
-    "mbd": (
+    DeviceCategory.MBD: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -276,10 +240,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
-    # Unknown product with light capabilities
-    # Fond in some diffusers, plugs and PIR flood lights
-    # Not documented
-    "qjdcz": (
+    DeviceCategory.QJDCZ: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -288,18 +249,14 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
-    # Heater
-    # https://developer.tuya.com/en/docs/iot/categoryqn?id=Kaiuz18kih0sm
-    "qn": (
+    DeviceCategory.QN: (
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
             translation_key="backlight",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Camera
-    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
-    "sp": (
+    DeviceCategory.SP: (
         TuyaLightEntityDescription(
             key=DPCode.FLOODLIGHT_SWITCH,
             brightness=DPCode.FLOODLIGHT_LIGHTNESS,
@@ -311,18 +268,14 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Gardening system
-    # https://developer.tuya.com/en/docs/iot/categorysz?id=Kaiuz4e6h7up0
-    "sz": (
+    DeviceCategory.SZ: (
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
             brightness=DPCode.BRIGHT_VALUE,
             translation_key="light",
         ),
     ),
-    # Dimmer Switch
-    # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
-    "tgkg": (
+    DeviceCategory.TGKG: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_1,
             translation_key="indexed_light",
@@ -348,9 +301,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness_min=DPCode.BRIGHTNESS_MIN_3,
         ),
     ),
-    # Dimmer
-    # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
-    "tgq": (
+    DeviceCategory.TGQ: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             translation_key="light",
@@ -371,9 +322,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE_2,
         ),
     ),
-    # Outdoor Flood Light
-    # Not documented
-    "tyd": (
+    DeviceCategory.TYD: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -383,9 +332,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
-    # Solar Light
-    # https://developer.tuya.com/en/docs/iot/tynd?id=Kaof8j02e1t98
-    "tyndj": (
+    DeviceCategory.TYNDJ: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -395,9 +342,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
-    # Ceiling Light
-    # https://developer.tuya.com/en/docs/iot/ceiling-light?id=Kaiuz03xxfc4r
-    "xdd": (
+    DeviceCategory.XDD: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
             name=None,
@@ -411,9 +356,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             translation_key="night_light",
         ),
     ),
-    # Remote Control
-    # https://developer.tuya.com/en/docs/iot/ykq?id=Kaof8ljn81aov
-    "ykq": (
+    DeviceCategory.YKQ: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_CONTROLLER,
             name=None,
@@ -426,19 +369,16 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
 
 # Socket (duplicate of `kg`)
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
-LIGHTS["cz"] = LIGHTS["kg"]
+LIGHTS[DeviceCategory.CZ] = LIGHTS[DeviceCategory.KG]
 
 # Power Socket (duplicate of `kg`)
-# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
-LIGHTS["pc"] = LIGHTS["kg"]
+LIGHTS[DeviceCategory.PC] = LIGHTS[DeviceCategory.KG]
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
-# Undocumented, see https://github.com/home-assistant/core/issues/132844
-LIGHTS["dghsxj"] = LIGHTS["sp"]
+LIGHTS[DeviceCategory.DGHSXJ] = LIGHTS[DeviceCategory.SP]
 
 # Dimmer (duplicate of `tgq`)
-# https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
-LIGHTS["tdq"] = LIGHTS["tgq"]
+LIGHTS[DeviceCategory.TDQ] = LIGHTS[DeviceCategory.TGQ]
 
 
 @dataclass
@@ -470,24 +410,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tuya light dynamically through tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]):
         """Discover and add a discovered tuya light."""
         entities: list[TuyaLightEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := LIGHTS.get(device.category):
                 entities.extend(
-                    TuyaLightEntity(device, hass_data.manager, description)
+                    TuyaLightEntity(device, manager, description)
                     for description in descriptions
                     if description.key in device.status
                 )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -538,9 +478,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 description.brightness_min, dptype=DPType.INTEGER
             )
 
-        if (
-            dpcode := get_dpcode(self.device, description.color_data)
-        ) and self.get_dptype(dpcode, prefer_function=True) == DPType.JSON:
+        if (dpcode := get_dpcode(self.device, description.color_data)) and (
+            get_dptype(self.device, dpcode, prefer_function=True) == DPType.JSON
+        ):
             self._color_data_dpcode = dpcode
             color_modes.add(ColorMode.HS)
             if dpcode in self.device.function:

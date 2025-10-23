@@ -85,6 +85,48 @@
         }
       },
       "flat": {
+        "armor_base_0": {
+          "text": "Plain Clothing",
+          "notes": "Ordinary clothing. Confers no benefit.",
+          "value": 0,
+          "type": "armor",
+          "key": "armor_base_0",
+          "set": "base-0",
+          "klass": "base",
+          "index": "0",
+          "str": 0,
+          "int": 0,
+          "per": 0,
+          "con": 0
+        },
+        "head_base_0": {
+          "text": "No Headgear",
+          "notes": "No headgear.",
+          "value": 0,
+          "type": "head",
+          "key": "head_base_0",
+          "set": "base-0",
+          "klass": "base",
+          "index": "0",
+          "str": 0,
+          "int": 0,
+          "per": 0,
+          "con": 0
+        },
+        "shield_base_0": {
+          "text": "No Off-Hand Equipment",
+          "notes": "No shield or other off-hand item.",
+          "value": 0,
+          "type": "shield",
+          "key": "shield_base_0",
+          "set": "base-0",
+          "klass": "base",
+          "index": "0",
+          "str": 0,
+          "int": 0,
+          "per": 0,
+          "con": 0
+        },
         "weapon_warrior_5": {
           "text": "Ruby Sword",
           "notes": "Weapon whose forge-glow never fades. Increases Strength by 15. ",

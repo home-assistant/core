@@ -319,7 +319,7 @@ async def test_roller_shade_features(
             blocking=True,
         )
     mock_send_command.assert_called_once_with(
-        "cover-id-1", RollerShadeCommands.SET_POSITION, "command", "0"
+        "cover-id-1", RollerShadeCommands.SET_POSITION, "command", 0
     )
 
     await configure_integration(hass)
@@ -334,7 +334,7 @@ async def test_roller_shade_features(
             blocking=True,
         )
     mock_send_command.assert_called_once_with(
-        "cover-id-1", RollerShadeCommands.SET_POSITION, "command", "100"
+        "cover-id-1", RollerShadeCommands.SET_POSITION, "command", 100
     )
 
     await configure_integration(hass)
@@ -349,7 +349,7 @@ async def test_roller_shade_features(
             blocking=True,
         )
     mock_send_command.assert_called_once_with(
-        "cover-id-1", RollerShadeCommands.SET_POSITION, "command", "50"
+        "cover-id-1", RollerShadeCommands.SET_POSITION, "command", 50
     )
 
 

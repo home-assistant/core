@@ -78,8 +78,8 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
     climate_entities = []
-    for device_id in coordinator.connector.devices:
-        device = coordinator.connector.devices[device_id]
+    for device_id in coordinator.connector.all_devices:
+        device = coordinator.connector.all_devices[device_id]
 
         if device.definition.device_class == CLIMATE_DEVICE_CLASS:
             climate_entities.append(
@@ -140,7 +140,8 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
     def available(self) -> bool:
         """Return if entity is available."""
         return (
-            super().available and self.device_id in self.coordinator.connector.devices
+            super().available
+            and self.device_id in self.coordinator.connector.all_devices
         )
 
     @property
