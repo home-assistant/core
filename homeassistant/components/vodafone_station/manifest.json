@@ -8,7 +8,5 @@
   "iot_class": "local_polling",
   "loggers": ["aiovodafone"],
   "quality_scale": "platinum",
-  "requirements": [
-    "git+https://github.com/chemelli74/aiovodafone.git@refs/pull/347/head#aiovodafone==3.0.0"
-  ]
+  "requirements": ["aiovodafone==3.0.0"]
 }
