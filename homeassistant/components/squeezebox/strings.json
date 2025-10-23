@@ -209,67 +209,67 @@
       "message": "If specified, Media content type must be one of {media_content_type}"
     },
     "turn_on_failed": {
-      "message": "Failed to turn on the player: {error}"
+      "message": "Failed to turn on the player."
     },
     "turn_off_failed": {
-      "message": "Failed to turn off the player: {error}"
+      "message": "Failed to turn off the player."
     },
     "set_shuffle_failed": {
-      "message": "Failed to set shuffle mode: {error}"
+      "message": "Failed to set shuffle mode."
     },
     "set_volume_failed": {
-      "message": "Failed to set volume to {volume}%: {error}"
+      "message": "Failed to set volume to {volume}%."
     },
     "set_mute_failed": {
-      "message": "Failed to mute/unmute the player: {error}"
+      "message": "Failed to mute/unmute the player."
     },
     "stop_failed": {
-      "message": "Failed to stop playback: {error}"
+      "message": "Failed to stop playback."
     },
     "play_pause_failed": {
-      "message": "Failed to toggle play/pause: {error}"
+      "message": "Failed to toggle play/pause."
     },
     "play_failed": {
-      "message": "Failed to start playback: {error}"
+      "message": "Failed to start playback."
     },
     "pause_failed": {
-      "message": "Failed to pause playback: {error}"
+      "message": "Failed to pause playback."
     },
     "next_track_failed": {
-      "message": "Failed to skip to the next track: {error}"
+      "message": "Failed to skip to the next track."
     },
     "previous_track_failed": {
-      "message": "Failed to return to the previous track: {error}"
+      "message": "Failed to return to the previous track."
     },
     "seek_failed": {
-      "message": "Failed to seek to position {position} seconds: {error}"
+      "message": "Failed to seek to position {position} seconds."
     },
     "set_repeat_failed": {
-      "message": "Failed to set repeat mode: {error}"
+      "message": "Failed to set repeat mode."
     },
     "clear_playlist_failed": {
-      "message": "Failed to clear the playlist: {error}"
+      "message": "Failed to clear the playlist."
     },
     "call_method_failed": {
-      "message": "Failed to call method {command}: {error}"
+      "message": "Failed to call method {command}."
     },
     "call_query_failed": {
-      "message": "Failed to query method {command}: {error}"
+      "message": "Failed to query method {command}."
     },
     "unjoin_failed": {
-      "message": "Failed to unsync the player: {error}"
+      "message": "Failed to unsync the player."
     },
     "press_failed": {
-      "message": "Failed to execute button action {action}: {error}"
+      "message": "Failed to execute button action {action}."
     },
     "load_url_failed": {
-      "message": "Failed to load media URL {media_id} with command {cmd}: {error}"
+      "message": "Failed to load media URL {media_id} with command {cmd}."
     },
     "load_playlist_failed": {
-      "message": "Failed to load playlist with command {cmd}: {error}"
+      "message": "Failed to load playlist with command {cmd}."
     },
     "generate_image_url_failed": {
-      "message": "Failed to generate image URL for track ID {track_id}: {error}"
+      "message": "Failed to generate image URL for track ID {track_id}."
     }
   }
 }

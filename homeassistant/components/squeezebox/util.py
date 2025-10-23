@@ -20,24 +20,15 @@ async def safe_library_call(
     """Call a player method safely and raise HomeAssistantError on failure."""
     try:
         result = await method(*args, **kwargs)
-    except ValueError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key=translation_key,
-            translation_placeholders={
-                **(translation_placeholders or {}),
-                "error": str(err),
-            },
-        ) from err
+    except ValueError:
+        result = None
 
     if result is False or result is None:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key=translation_key,
-            translation_placeholders={
-                **(translation_placeholders or {}),
-                "error": "",
-            },
+            # translation_placeholders={**(translation_placeholders or {})},
+            translation_placeholders=translation_placeholders,
         )
 
     return result
