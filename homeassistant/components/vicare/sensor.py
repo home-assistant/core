@@ -89,6 +89,18 @@ class ViCareSensorEntityDescription(SensorEntityDescription, ViCareRequiredKeysM
     unit_getter: Callable[[PyViCareDevice], str | None] | None = None
 
 
+SUPPLY_TEMPERATURE_SENSOR: ViCareSensorEntityDescription = (
+    ViCareSensorEntityDescription(
+        key="supply_temperature",
+        translation_key="supply_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getSupplyTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    )
+)
+
+
 GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="outside_temperature",
@@ -978,17 +990,11 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_getter=lambda api: api.getHydraulicSeparatorTemperature(),
     ),
+    SUPPLY_TEMPERATURE_SENSOR,
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
-    ViCareSensorEntityDescription(
-        key="supply_temperature",
-        translation_key="supply_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getSupplyTemperature(),
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
+    SUPPLY_TEMPERATURE_SENSOR,
 )
 
 BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
