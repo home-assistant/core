@@ -477,6 +477,7 @@ homeassistant.components.skybell.*
 homeassistant.components.slack.*
 homeassistant.components.sleep_as_android.*
 homeassistant.components.sleepiq.*
+homeassistant.components.sma.*
 homeassistant.components.smhi.*
 homeassistant.components.smlight.*
 homeassistant.components.smtp.*
