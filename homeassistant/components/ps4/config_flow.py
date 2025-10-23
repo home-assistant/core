@@ -26,6 +26,7 @@ from .const import (
     DEFAULT_ALIAS,
     DEFAULT_NAME,
     DOMAIN,
+    PS4_DOCS_URL,
 )
 
 CONF_MODE = "Config Mode"
@@ -66,7 +67,10 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         failed = await self.hass.async_add_executor_job(self.helper.port_bind, ports)
         if failed in ports:
             reason = PORT_MSG[failed]
-            return self.async_abort(reason=reason)
+            return self.async_abort(
+                reason=reason,
+                description_placeholders={"ps4_docs_url": PS4_DOCS_URL},
+            )
         return await self.async_step_creds()
 
     async def async_step_creds(
@@ -85,7 +89,11 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
             except CredentialTimeout:
                 errors["base"] = "credential_timeout"
 
-        return self.async_show_form(step_id="creds", errors=errors)
+        return self.async_show_form(
+            step_id="creds",
+            errors=errors,
+            description_placeholders={"ps4_docs_url": PS4_DOCS_URL},
+        )
 
     async def async_step_mode(
         self, user_input: dict[str, Any] | None = None

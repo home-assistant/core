@@ -39,6 +39,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
+from .services import async_setup_services
 from .util import redact_credentials, validate_sql_select
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,6 +72,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up SQL from yaml config."""
+    async_setup_services(hass)
+
     if (conf := config.get(DOMAIN)) is None:
         return True
 

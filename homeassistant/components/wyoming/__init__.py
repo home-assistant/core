@@ -32,9 +32,6 @@ SATELLITE_PLATFORMS = [
 __all__ = [
     "ATTR_SPEAKER",
     "DOMAIN",
-    "async_setup",
-    "async_setup_entry",
-    "async_unload_entry",
 ]
 
 
