@@ -70,7 +70,7 @@ class ClearTrafficStatisticsButton(BaseButton):
 
     entity_description = ButtonEntityDescription(
         key=BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
-        name="Clear traffic statistics",
+        translation_key="clear_traffic_statistics",
         entity_category=EntityCategory.CONFIG,
     )
 
@@ -87,7 +87,7 @@ class RestartButton(BaseButton):
 
     entity_description = ButtonEntityDescription(
         key=BUTTON_KEY_RESTART,
-        name="Restart",
+        translation_key="restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
     )

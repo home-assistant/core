@@ -86,6 +86,14 @@
         "name": "SMS storage full"
       }
     },
+    "button": {
+      "clear_traffic_statistics": {
+        "name": "Clear traffic statistics"
+      },
+      "restart": {
+        "name": "[%key:common::action::restart%]"
+      }
+    },
     "sensor": {
       "uptime": {
         "name": "Uptime"
