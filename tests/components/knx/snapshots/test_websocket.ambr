@@ -4,12 +4,6 @@
     'id': 1,
     'result': list([
       dict({
-        'collapsible': False,
-        'name': 'section_binary_sensor',
-        'required': False,
-        'type': 'knx_section_flat',
-      }),
-      dict({
         'name': 'ga_sensor',
         'options': dict({
           'passive': True,
@@ -100,17 +94,17 @@
     'id': 1,
     'result': list([
       dict({
-        'collapsible': False,
-        'name': 'section_binary_control',
-        'required': False,
-        'type': 'knx_section_flat',
-      }),
-      dict({
         'name': 'ga_up_down',
         'optional': True,
         'options': dict({
           'passive': True,
           'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
           'write': dict({
             'required': False,
           }),
@@ -129,17 +123,17 @@
         'type': 'ha_selector',
       }),
       dict({
-        'collapsible': False,
-        'name': 'section_stop_control',
-        'required': False,
-        'type': 'knx_section_flat',
-      }),
-      dict({
         'name': 'ga_stop',
         'optional': True,
         'options': dict({
           'passive': True,
           'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
           'write': dict({
             'required': False,
           }),
@@ -153,6 +147,12 @@
         'options': dict({
           'passive': True,
           'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
           'write': dict({
             'required': False,
           }),
@@ -172,6 +172,12 @@
         'options': dict({
           'passive': True,
           'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 5,
+              'sub': 1,
+            }),
+          ]),
           'write': dict({
             'required': False,
           }),
@@ -187,6 +193,12 @@
           'state': dict({
             'required': False,
           }),
+          'validDPTs': list([
+            dict({
+              'main': 5,
+              'sub': 1,
+            }),
+          ]),
           'write': False,
         }),
         'required': False,
@@ -216,6 +228,12 @@
           'state': dict({
             'required': False,
           }),
+          'validDPTs': list([
+            dict({
+              'main': 5,
+              'sub': 1,
+            }),
+          ]),
           'write': dict({
             'required': False,
           }),
@@ -242,8 +260,7 @@
       dict({
         'default': 25,
         'name': 'travelling_time_up',
-        'optional': True,
-        'required': False,
+        'required': True,
         'selector': dict({
           'number': dict({
             'max': 1000.0,
@@ -258,8 +275,7 @@
       dict({
         'default': 25,
         'name': 'travelling_time_down',
-        'optional': True,
-        'required': False,
+        'required': True,
         'selector': dict({
           'number': dict({
             'max': 1000.0,
@@ -289,12 +305,6 @@
     'id': 1,
     'result': list([
       dict({
-        'collapsible': False,
-        'name': 'section_switch',
-        'required': False,
-        'type': 'knx_section_flat',
-      }),
-      dict({
         'name': 'ga_switch',
         'optional': True,
         'options': dict({
@@ -314,12 +324,6 @@
         }),
         'required': False,
         'type': 'knx_group_address',
-      }),
-      dict({
-        'collapsible': False,
-        'name': 'section_brightness',
-        'required': False,
-        'type': 'knx_section_flat',
       }),
       dict({
         'name': 'ga_brightness',
@@ -475,12 +479,6 @@
           dict({
             'schema': list([
               dict({
-                'collapsible': False,
-                'name': 'section_red',
-                'required': False,
-                'type': 'knx_section_flat',
-              }),
-              dict({
                 'name': 'ga_red_switch',
                 'optional': True,
                 'options': dict({
@@ -520,12 +518,6 @@
                 }),
                 'required': True,
                 'type': 'knx_group_address',
-              }),
-              dict({
-                'collapsible': False,
-                'name': 'section_green',
-                'required': False,
-                'type': 'knx_section_flat',
               }),
               dict({
                 'name': 'ga_green_switch',
@@ -569,12 +561,6 @@
                 'type': 'knx_group_address',
               }),
               dict({
-                'collapsible': False,
-                'name': 'section_blue',
-                'required': False,
-                'type': 'knx_section_flat',
-              }),
-              dict({
                 'name': 'ga_blue_switch',
                 'optional': True,
                 'options': dict({
@@ -614,12 +600,6 @@
                 }),
                 'required': True,
                 'type': 'knx_group_address',
-              }),
-              dict({
-                'collapsible': False,
-                'name': 'section_white',
-                'required': False,
-                'type': 'knx_section_flat',
               }),
               dict({
                 'name': 'ga_white_switch',
@@ -734,18 +714,18 @@
     'id': 1,
     'result': list([
       dict({
-        'collapsible': False,
-        'name': 'section_switch',
-        'required': False,
-        'type': 'knx_section_flat',
-      }),
-      dict({
         'name': 'ga_switch',
         'options': dict({
           'passive': True,
           'state': dict({
             'required': False,
           }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
           'write': dict({
             'required': True,
           }),

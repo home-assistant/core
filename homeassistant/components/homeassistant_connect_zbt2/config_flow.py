@@ -7,9 +7,17 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import firmware_config_flow
+from homeassistant.components.homeassistant_hardware.helpers import (
+    HardwareFirmwareDiscoveryInfo,
+)
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    ResetTarget,
+)
+from homeassistant.components.usb import (
+    usb_service_info_from_device,
+    usb_unique_id_from_service_info,
 )
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -66,6 +74,7 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant Connect ZBT-2 firmware methods."""
 
     context: ConfigFlowContext
+    BOOTLOADER_RESET_METHODS = [ResetTarget.RTS_DTR]
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -90,7 +99,7 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
             firmware_name="OpenThread",
             expected_installed_firmware_type=ApplicationType.SPINEL,
             step_id="install_thread_firmware",
-            next_step_id="start_otbr_addon",
+            next_step_id="finish_thread_installation",
         )
 
 
@@ -103,6 +112,7 @@ class HomeAssistantConnectZBT2ConfigFlow(
 
     VERSION = 1
     MINOR_VERSION = 1
+    ZIGBEE_BAUDRATE = 460800
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the config flow."""
@@ -120,22 +130,16 @@ class HomeAssistantConnectZBT2ConfigFlow(
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
-        device = discovery_info.device
-        vid = discovery_info.vid
-        pid = discovery_info.pid
-        serial_number = discovery_info.serial_number
-        manufacturer = discovery_info.manufacturer
-        description = discovery_info.description
-        unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
+        unique_id = usb_unique_id_from_service_info(discovery_info)
 
-        device = discovery_info.device = await self.hass.async_add_executor_job(
+        discovery_info.device = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, discovery_info.device
         )
 
         try:
             await self.async_set_unique_id(unique_id)
         finally:
-            self._abort_if_unique_id_configured(updates={DEVICE: device})
+            self._abort_if_unique_id_configured(updates={DEVICE: discovery_info.device})
 
         self._usb_info = discovery_info
 
@@ -144,6 +148,24 @@ class HomeAssistantConnectZBT2ConfigFlow(
         self._hardware_name = HARDWARE_NAME
 
         return await self.async_step_confirm()
+
+    async def async_step_import(
+        self, fw_discovery_info: HardwareFirmwareDiscoveryInfo
+    ) -> ConfigFlowResult:
+        """Handle import from ZHA/OTBR firmware notification."""
+        assert fw_discovery_info["usb_device"] is not None
+        usb_info = usb_service_info_from_device(fw_discovery_info["usb_device"])
+        unique_id = usb_unique_id_from_service_info(usb_info)
+
+        if await self.async_set_unique_id(unique_id, raise_on_progress=False):
+            self._abort_if_unique_id_configured(updates={DEVICE: usb_info.device})
+
+        self._usb_info = usb_info
+        self._device = usb_info.device
+        self._hardware_name = HARDWARE_NAME
+        self._probed_firmware_info = fw_discovery_info["firmware_info"]
+
+        return self._async_flow_finished()
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""

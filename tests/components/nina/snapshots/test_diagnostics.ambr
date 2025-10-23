@@ -34,8 +34,10 @@
       ]),
     }),
     'entry_data': dict({
-      'area_filter': '.*',
-      'headline_filter': '.*corona.*',
+      'filters': dict({
+        'area_filter': '.*',
+        'headline_filter': '.*corona.*',
+      }),
       'regions': dict({
         '083350000000': 'Aach, Stadt',
       }),

@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components import (
     assist_pipeline,
     conversation,
+    media_player,
     media_source,
     stt,
     tts,
@@ -675,6 +676,17 @@ def test_fallback_intent_filter() -> None:
         _async_local_fallback_intent_filter(
             RecognizeResult(
                 intent=Intent(intent.INTENT_GET_STATE),
+                intent_data=IntentData([]),
+                entities={},
+                entities_list=[],
+            )
+        )
+        is True
+    )
+    assert (
+        _async_local_fallback_intent_filter(
+            RecognizeResult(
+                intent=Intent(media_player.INTENT_MEDIA_SEARCH_AND_PLAY),
                 intent_data=IntentData([]),
                 entities={},
                 entities_list=[],
@@ -1797,6 +1809,7 @@ async def test_chat_log_tts_streaming(
     assert process_events(events) == snapshot
 
 
+@pytest.mark.parametrize(("use_satellite_entity"), [True, False])
 async def test_acknowledge(
     hass: HomeAssistant,
     init_components,
@@ -1805,6 +1818,7 @@ async def test_acknowledge(
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
+    use_satellite_entity: bool,
 ) -> None:
     """Test that acknowledge sound is played when targets are in the same area."""
     area_1 = area_registry.async_get_or_create("area_1")
@@ -1819,12 +1833,16 @@ async def test_acknowledge(
 
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
-    satellite = device_registry.async_get_or_create(
+
+    satellite = entity_registry.async_get_or_create("assist_satellite", "test", "1234")
+    entity_registry.async_update_entity(satellite.entity_id, area_id=area_1.id)
+
+    satellite_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections=set(),
         identifiers={("demo", "id-1234")},
     )
-    device_registry.async_update_device(satellite.id, area_id=area_1.id)
+    device_registry.async_update_device(satellite_device.id, area_id=area_1.id)
 
     events: list[assist_pipeline.PipelineEvent] = []
     turn_on = async_mock_service(hass, "light", "turn_on")
@@ -1837,7 +1855,8 @@ async def test_acknowledge(
         pipeline_input = assist_pipeline.pipeline.PipelineInput(
             intent_input=text,
             session=mock_chat_session,
-            device_id=satellite.id,
+            satellite_id=satellite.entity_id if use_satellite_entity else None,
+            device_id=satellite_device.id if not use_satellite_entity else None,
             run=assist_pipeline.pipeline.PipelineRun(
                 hass,
                 context=Context(),
@@ -1889,7 +1908,8 @@ async def test_acknowledge(
         )
 
         # 3. Remove satellite device area
-        device_registry.async_update_device(satellite.id, area_id=None)
+        entity_registry.async_update_entity(satellite.entity_id, area_id=None)
+        device_registry.async_update_device(satellite_device.id, area_id=None)
 
         _reset()
         await _run("turn on light 1")
@@ -1900,7 +1920,8 @@ async def test_acknowledge(
         assert len(turn_on) == 1
 
         # Restore
-        device_registry.async_update_device(satellite.id, area_id=area_1.id)
+        entity_registry.async_update_entity(satellite.entity_id, area_id=area_1.id)
+        device_registry.async_update_device(satellite_device.id, area_id=area_1.id)
 
         # 4. Check device area instead of entity area
         light_device = device_registry.async_get_or_create(

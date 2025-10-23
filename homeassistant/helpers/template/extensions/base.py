@@ -19,7 +19,7 @@ class TemplateFunction:
     """Definition for a template function, filter, or test."""
 
     name: str
-    func: Callable[..., Any]
+    func: Callable[..., Any] | Any
     as_global: bool = False
     as_filter: bool = False
     as_test: bool = False

@@ -8,7 +8,7 @@
         }
       },
       "authorize": {
-        "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with PIN code:\n\n{pin}\n\nThen, select **Submit**."
+        "description": "Please authorize this app at {auth_url} with PIN code:\n\n{pin}\n\nThen, select **Submit**."
       }
     },
     "error": {
@@ -176,7 +176,7 @@
       "description": "Sets the participating sensors for a climate program.",
       "fields": {
         "preset_mode": {
-          "name": "Climate Name",
+          "name": "Climate program",
           "description": "Name of the climate program to set the sensors active on.\nDefaults to currently active program."
         },
         "device_ids": {
@@ -188,7 +188,7 @@
   },
   "exceptions": {
     "invalid_preset": {
-      "message": "Invalid climate name, available options are: {options}"
+      "message": "Invalid climate program, available options are: {options}"
     },
     "invalid_sensor": {
       "message": "Invalid sensor for thermostat, available options are: {options}"
