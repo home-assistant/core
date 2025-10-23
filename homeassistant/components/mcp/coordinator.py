@@ -59,7 +59,7 @@ async def mcp_client(
                 yield session
         else:
             async with (
-                sse_client(url=url, headers=headers, timeout=TIMEOUT) as streams,
+                sse_client(url=url, headers=headers) as streams,
                 ClientSession(*streams) as session,
             ):
                 await session.initialize()
