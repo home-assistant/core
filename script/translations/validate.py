@@ -46,7 +46,7 @@ def validate_integration_placeholders(
                 )
                 localized_value = substitute_reference(localized_value, localized_flat)
             except InvalidSubstitutionKey as err:
-                errors.append(f"  [{locale}] {key}: {err}")
+                errors.append(f"  [{locale}] {full_key} - {err}")
                 continue
 
             # Extract placeholders from both versions
@@ -54,26 +54,27 @@ def validate_integration_placeholders(
                 english_placeholders = extract_placeholders(english_value)
             except ValueError as err:
                 errors.append(
-                    f"  [{locale}] Invalid format string in strings.json at {key}: {err}"
+                    f"  [{locale}] {full_key} - Invalid format string in strings.json:"
+                    f" {err}"
                 )
                 continue
 
             try:
                 localized_placeholders = extract_placeholders(localized_value)
             except ValueError as err:
-                errors.append(f"  [{locale}] Invalid format string at {key}: {err}")
+                errors.append(f"  [{locale}] {full_key} Invalid format string: {err}")
                 continue
 
             # Compare placeholders
             if english_placeholders != localized_placeholders:
                 if english_placeholders < localized_placeholders:
                     errors.append(
-                        f"  [{locale}] {key}: placeholders were added "
+                        f"  [{locale}] {full_key} - new placeholders were added "
                         f"({localized_placeholders} > {english_placeholders})"
                     )
                 else:
                     errors.append(
-                        f"  [{locale}] {key}: placeholder mismatch "
+                        f"  [{locale}] {full_key} - placeholder mismatch "
                         f"({localized_placeholders} != {english_placeholders})"
                     )
 
