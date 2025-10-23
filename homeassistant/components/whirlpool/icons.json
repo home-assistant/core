@@ -6,6 +6,15 @@
       },
       "dryer_state": {
         "default": "mdi:tumble-dryer"
+      },
+      "oven_state": {
+        "default": "mdi:stove"
+      },
+      "oven_state_upper": {
+        "default": "mdi:stove"
+      },
+      "oven_state_lower": {
+        "default": "mdi:stove"
       }
     }
   }
