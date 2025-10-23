@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except ConnectTimeout as ex:
             raise ConfigEntryNotReady("Connection timed out") from ex
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.warning("Host %s is not reachable: %s", host, ex)
+            raise ConfigEntryNotReady(f"Host {host} is not reachable: {ex}") from ex
         else:
             return client
         return None
