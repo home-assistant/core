@@ -25,8 +25,7 @@ rules:
 
   # Silver
   action-exceptions:
-    status: todo
-    comment: Requires entity_action exceptions for several actions where exceptions aren't trapped. PR 154946
+    status: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
