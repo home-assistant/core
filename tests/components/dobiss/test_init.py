@@ -9,7 +9,7 @@ from homeassistant.setup import async_setup_component
 async def test_setup_and_unload_entry(hass: HomeAssistant, config_entry) -> None:
     """Test setup and unload of entry."""
 
-    # Voeg de mock config_entry toe aan Home Assistant
+    # Add the mock config_entry to Home Assistant
     config_entry.add_to_hass(hass)
 
     with (
@@ -28,6 +28,6 @@ async def test_setup_and_unload_entry(hass: HomeAssistant, config_entry) -> None
 
     assert "dobiss" in hass.data
 
-    # Simuleer unload
+    # Simulate unload
     await hass.config_entries.async_unload(config_entry.entry_id)
     assert "dobiss" not in hass.data
