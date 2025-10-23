@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_SOURCE,
     CONF_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
+    PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfSpeed,
@@ -50,6 +51,7 @@ DEVICE_CLASS_MAPPING = {
     pypck.lcn_defs.VarUnit.VOLT: SensorDeviceClass.VOLTAGE,
     pypck.lcn_defs.VarUnit.AMPERE: SensorDeviceClass.CURRENT,
     pypck.lcn_defs.VarUnit.PPM: SensorDeviceClass.CO2,
+    pypck.lcn_defs.VarUnit.PERCENT: SensorDeviceClass.HUMIDITY,
 }
 
 UNIT_OF_MEASUREMENT_MAPPING = {
@@ -62,6 +64,7 @@ UNIT_OF_MEASUREMENT_MAPPING = {
     pypck.lcn_defs.VarUnit.VOLT: UnitOfElectricPotential.VOLT,
     pypck.lcn_defs.VarUnit.AMPERE: UnitOfElectricCurrent.AMPERE,
     pypck.lcn_defs.VarUnit.PPM: CONCENTRATION_PARTS_PER_MILLION,
+    pypck.lcn_defs.VarUnit.PERCENT: PERCENTAGE,
 }
 
 

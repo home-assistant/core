@@ -83,6 +83,8 @@ async def test_setup_no_appliances(
     mock_appliances_manager_api.return_value.aircons = []
     mock_appliances_manager_api.return_value.washers = []
     mock_appliances_manager_api.return_value.dryers = []
+    mock_appliances_manager_api.return_value.ovens = []
+
     await init_integration(hass)
     assert len(hass.states.async_all()) == 0
 
