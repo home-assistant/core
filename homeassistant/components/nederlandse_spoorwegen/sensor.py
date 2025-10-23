@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -139,6 +140,7 @@ async def async_setup_entry(
 class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
     """Implementation of a NS Departure Sensor (legacy)."""
 
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_attribution = "Data provided by NS"
     _attr_icon = "mdi:train"
 
