@@ -177,7 +177,7 @@
   },
   "issues": {
     "migrate_to_v2_api": {
-      "title": "Update authentication method",
+      "title": "Update authentication method of {title}",
       "fix_flow": {
         "step": {
           "confirm": {

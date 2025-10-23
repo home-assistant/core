@@ -11,6 +11,7 @@ from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -79,6 +80,19 @@ async def async_check_v2_support_and_create_issue(
     if not await has_v2_api(entry.data[CONF_IP_ADDRESS], async_get_clientsession(hass)):
         return
 
+    title = entry.title
+
+    # Try to get the first device name from the device registry
+    # This is to make it clearer which device needs reconfiguration, as the config entry title is kept default most of the time
+    device_name = None
+    device_registry = dr.async_get(hass)
+    for device in device_registry.devices.values():
+        if entry.entry_id in device.config_entries:
+            device_name = device.name_by_user or device.name
+            break
+    if device_name and entry.title != device_name:
+        title = f"{entry.title} ({device_name})"
+
     async_create_issue(
         hass,
         DOMAIN,
@@ -88,7 +102,7 @@ async def async_check_v2_support_and_create_issue(
         learn_more_url="https://home-assistant.io/integrations/homewizard/#which-button-do-i-need-to-press-to-configure-the-device",
         translation_key="migrate_to_v2_api",
         translation_placeholders={
-            "title": entry.title,
+            "title": title,
         },
         severity=IssueSeverity.WARNING,
         data={"entry_id": entry.entry_id},
