@@ -417,10 +417,8 @@ def get_rpc_sub_device_name(
     """Get name based on device and channel name."""
     if key in device.config and key != "em:0":
         # workaround for Pro 3EM, we don't want to get name for em:0
-        role = get_rpc_role_by_key(device.config, key)
-        if role.startswith("zone"):
+        if (zone_id := get_irrigation_zone_id(device.config, key)) is not None:
             # workaround for Irrigation controller, name stored in "service:0"
-            zone_id = int(role[4:])
             if zone_name := device.config["service:0"]["zones"][zone_id]["name"]:
                 return cast(str, zone_name)
 
@@ -794,6 +792,13 @@ async def get_rpc_scripts_event_types(
     return script_events
 
 
+def get_irrigation_zone_id(config: dict[str, Any], key: str) -> int | None:
+    """Return the zone id if the component is an irrigation zone."""
+    if key in config and (zone := get_rpc_role_by_key(config, key)).startswith("zone"):
+        return int(zone[4:])
+    return None
+
+
 def get_rpc_device_info(
     device: RpcDevice,
     mac: str,
@@ -829,15 +834,10 @@ def get_rpc_device_info(
             configuration_url=configuration_url,
         )
 
-    is_zone_component = (
-        get_rpc_role_by_key(device.config, key).startswith("zone")
-        if key in device.config
-        else False
-    )
     if (
         (
             component not in (*All_LIGHT_TYPES, "cover", "em1", "switch")
-            and not is_zone_component
+            and get_irrigation_zone_id(device.config, key) is None
         )
         or idx is None
         or len(get_rpc_key_instances(device.status, component, all_lights=True)) < 2
