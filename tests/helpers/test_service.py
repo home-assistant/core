@@ -6,6 +6,7 @@ from copy import deepcopy
 import dataclasses
 import io
 import threading
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -857,7 +858,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     logger_config = {DOMAIN_LOGGER: {}}
 
     # Test legacy service with translations in services.yaml
-    def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
+    def _load_services_file(integration: Integration) -> JSON_TYPE:
         return {
             "set_default_level": {
                 "description": "Translated description",
@@ -1300,7 +1301,7 @@ async def test_async_get_all_descriptions_new_service_added_while_loading(
     translations_called = threading.Event()
     translations_wait = threading.Event()
 
-    def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
+    def _load_services_file(integration: Integration) -> JSON_TYPE:
         translations_called.set()
         translations_wait.wait()
         return {
