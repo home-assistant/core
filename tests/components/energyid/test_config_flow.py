@@ -60,7 +60,7 @@ async def test_config_flow_user_step_success_claimed(hass: HomeAssistant) -> Non
         assert result2["title"] == TEST_RECORD_NAME
         assert result2["data"][CONF_PROVISIONING_KEY] == TEST_PROVISIONING_KEY
         assert result2["data"][CONF_PROVISIONING_SECRET] == TEST_PROVISIONING_SECRET
-        assert result2["description"] == "configuration_successful"
+        assert result2["description"] == "add_sensor_mapping_hint"
 
 
 @pytest.mark.parametrize("claimed", [False])
@@ -144,7 +144,7 @@ async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> N
 
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
         assert final_result["title"] == TEST_RECORD_NAME
-        assert final_result["description"] == "configuration_successful"
+        assert final_result["description"] == "add_sensor_mapping_hint"
 
 
 async def test_config_flow_claim_timeout(hass: HomeAssistant) -> None:
@@ -214,7 +214,7 @@ async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
         assert result2["title"] == TEST_RECORD_NAME
         assert result2["data"][CONF_PROVISIONING_KEY] == TEST_PROVISIONING_KEY
         assert result2["data"][CONF_PROVISIONING_SECRET] == TEST_PROVISIONING_SECRET
-        assert result2["description"] == "configuration_successful"
+        assert result2["description"] == "add_sensor_mapping_hint"
 
 
 async def test_config_flow_connection_error(hass: HomeAssistant) -> None:

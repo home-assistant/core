@@ -28,18 +28,18 @@ async def test_successful_setup(
     mock_webhook_client.authenticate.assert_called_once()
 
 
-async def test_setup_retries_on_timeout(
+async def test_setup_fails_on_timeout(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test setup retries when there is a connection timeout."""
+    """Test setup fails when there is a connection timeout."""
     mock_webhook_client.authenticate.side_effect = ConfigEntryNotReady
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_fails_on_auth_error(
