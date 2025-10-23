@@ -602,10 +602,11 @@ class ONVIFDevice:
                     return
 
                 req.PresetToken = preset_val
-                req.Speed = {
-                    "PanTilt": {"x": speed_val, "y": speed_val},
-                    "Zoom": {"x": speed_val},
-                }
+                if speed_val is not None:
+                    req.Speed = {
+                        "PanTilt": {"x": speed_val, "y": speed_val},
+                        "Zoom": {"x": speed_val},
+                    }
                 await ptz_service.GotoPreset(req)
             elif move_mode == STOP_MOVE:
                 await ptz_service.Stop(req)

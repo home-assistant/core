@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
@@ -146,8 +147,9 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             raise DeviceNotFound("Unable to connect to device") from exc
 
         try:
-            packet_a0 = await client.read(PacketA0Notify)
-        except (BleakError, DecodeError) as exc:
+            async with asyncio.timeout(10):
+                packet_a0 = await client.read(PacketA0Notify)
+        except (BleakError, DecodeError, TimeoutError) as exc:
             await client.disconnect()
             raise DeviceFailed(f"Device failed {exc}") from exc
 
@@ -197,7 +199,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         if self.client and not self.client.is_connected:
             await self.client.disconnect()
             self.client = None
-            self._async_request_refresh_soon()
+            self._debounced_refresh.async_schedule_call()
             raise DeviceFailed("Device was disconnected")
 
         client = await self._get_connected_client()
@@ -211,15 +213,9 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         return self.data
 
     @callback
-    def _async_request_refresh_soon(self) -> None:
-        self.config_entry.async_create_task(
-            self.hass, self.async_request_refresh(), eager_start=False
-        )
-
-    @callback
     def _disconnected_callback(self) -> None:
         """Handle Bluetooth device being disconnected."""
-        self._async_request_refresh_soon()
+        self._debounced_refresh.async_schedule_call()
 
     @callback
     def _async_handle_bluetooth_event(
@@ -229,4 +225,4 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
     ) -> None:
         """Handle a Bluetooth event."""
         if isinstance(self.last_exception, DeviceNotFound):
-            self._async_request_refresh_soon()
+            self._debounced_refresh.async_schedule_call()
