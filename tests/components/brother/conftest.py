@@ -116,6 +116,9 @@ def mock_brother_client() -> Generator[MagicMock]:
         client.model = "HL-L2340DW"
         client.firmware = "1.2.3"
 
+        # Add the create method to the client so tests can set side_effect
+        client.create = mock_client.create
+
         yield client
 
 
