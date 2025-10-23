@@ -1,13 +1,8 @@
-"""Constants for the DayBetter Services integration."""
+"""Constants for DayBetter Services integration."""
 
 DOMAIN = "daybetter_services"
+PLATFORMS = ["sensor"]
+DEFAULT_SCAN_INTERVAL = 30
 
-# API constants
-API_BASE_URL = "https://a.dbiot.org/daybetter/hass/api/v1.0/"
-
-# Config flow constants
 CONF_USER_CODE = "user_code"
 CONF_TOKEN = "token"
-
-# Platforms supported by this integration
-PLATFORMS = ["sensor"]

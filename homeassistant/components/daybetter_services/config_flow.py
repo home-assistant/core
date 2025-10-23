@@ -1,142 +1,96 @@
-"""Config flow for DayBetter integration."""
+"""Config flow for DayBetter Services integration."""
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
-import aiohttp
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.exceptions import HomeAssistantError
 
-from .const import API_BASE_URL, CONF_TOKEN, CONF_USER_CODE, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USER_CODE): str,
-    }
-)
+from .const import CONF_TOKEN, CONF_USER_CODE, DOMAIN
+from .daybetter_api import DayBetterApi
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for DayBetter."""
+class DayBetterServicesConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for DayBetter Services."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             user_code = user_input[CONF_USER_CODE]
 
-            # Use aiohttp to call the DayBetter authorization interface
-            session = async_get_clientsession(self.hass)
+            api = None
+            api_with_token = None
+
             try:
-                # DayBetter's interface for obtaining tokens
-                resp = await session.post(
-                    API_BASE_URL + "hass/integrate", json={"hassCode": user_code}
-                )
+                api = DayBetterApi()
 
-                if resp.status == 200:
-                    data = await resp.json()
+                try:
+                    integrate_result = await api.integrate(user_code)
+
                     if (
-                        data.get("code") == 1
-                        and data.get("data")
-                        and data["data"].get("hassCodeToken")
+                        not integrate_result
+                        or integrate_result.get("code") != 1
+                        or "data" not in integrate_result
+                        or "hassCodeToken" not in integrate_result["data"]
                     ):
-                        # Save information such as tokens
-                        token = data["data"]["hassCodeToken"]
-                        new_data = user_input.copy()
-                        new_data[CONF_TOKEN] = token
+                        errors["base"] = "invalid_code"
+                    else:
+                        token = integrate_result["data"]["hassCodeToken"]
 
-                        _LOGGER.debug("DayBetter auth OK")
-                        # Save information such as tokens and refresh_token
-                        return self.async_create_entry(
-                            title="DayBetter Services", data=new_data
-                        )
-                    _LOGGER.error("DayBetter auth failed: %s", data)
-                    errors["base"] = "auth_failed"
-                else:
-                    errors["base"] = "auth_failed"
-            except aiohttp.ClientError as ex:
-                _LOGGER.error("Client error during DayBetter auth: %s", ex)
-                errors["base"] = "connection_error"
-            except Exception as ex:
-                _LOGGER.exception("Unexpected error during DayBetter auth: %s", ex)
+                        api_with_token = DayBetterApi(token=token)
+
+                        try:
+                            await api_with_token.fetch_devices()
+                            await api_with_token.fetch_pids()
+
+                            return self.async_create_entry(
+                                title="DayBetter Services",
+                                data={
+                                    CONF_USER_CODE: user_code,
+                                    CONF_TOKEN: token,
+                                },
+                            )
+                        except Exception:  # noqa: BLE001
+                            errors["base"] = "cannot_connect"
+                        finally:
+                            if api_with_token is not None:
+                                await api_with_token.close()
+                finally:
+                    if api is not None:
+                        await api.close()
+
+            except InvalidCode:
+                errors["base"] = "invalid_code"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
-
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Handle reauth flow."""
-        return await self.async_step_reauth_confirm(user_input)
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Handle reauth confirmation."""
-        errors = {}
-
-        if user_input is not None:
-            user_code = user_input[CONF_USER_CODE]
-
-            # Use aiohttp to call the DayBetter authorization interface
-            session = async_get_clientsession(self.hass)
-            try:
-                # DayBetter's interface for obtaining tokens
-                resp = await session.post(
-                    API_BASE_URL + "hass/integrate", json={"hassCode": user_code}
-                )
-
-                if resp.status == 200:
-                    data = await resp.json()
-                    if (
-                        data.get("code") == 1
-                        and data.get("data")
-                        and data["data"].get("hassCodeToken")
-                    ):
-                        # Save information such as tokens
-                        token = data["data"]["hassCodeToken"]
-                        new_data = user_input.copy()
-                        new_data[CONF_TOKEN] = token
-
-                        _LOGGER.info("DayBetter reauth OK")
-                        # Update existing entry
-                        existing_entry = self._reauth_entry
-                        self.hass.config_entries.async_update_entry(
-                            existing_entry, data=new_data
-                        )
-                        await self.hass.config_entries.async_reload(
-                            existing_entry.entry_id
-                        )
-                        return self.async_abort(reason="reauth_successful")
-                    _LOGGER.error("DayBetter reauth failed: %s", data)
-                    errors["base"] = "auth_failed"
-                else:
-                    errors["base"] = "auth_failed"
-            except aiohttp.ClientError as ex:
-                _LOGGER.error("Client error during DayBetter reauth: %s", ex)
-                errors["base"] = "connection_error"
-            except Exception as ex:
-                _LOGGER.exception("Unexpected error during DayBetter reauth: %s", ex)
-                errors["base"] = "unknown"
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=DATA_SCHEMA,
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_USER_CODE): str}),
             errors=errors,
-            description_placeholders={"title": self._reauth_entry.title},
+            description_placeholders={
+                "docs_url": "https://www.home-assistant.io/integrations/daybetter_services"
+            },
         )
 
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidCode(HomeAssistantError):
+    """Error to indicate invalid user code."""

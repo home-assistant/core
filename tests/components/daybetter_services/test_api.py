@@ -1,8 +1,6 @@
 """Test the DayBetter API client."""
 
-from __future__ import annotations
-
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -10,291 +8,152 @@ from homeassistant.components.daybetter_services.daybetter_api import DayBetterA
 
 
 @pytest.fixture
-def mock_hass():
-    """Create a mock Home Assistant instance."""
-    hass = MagicMock()
-    return hass
+def mock_client():
+    """Create a mock DayBetter client."""
+    client = AsyncMock()
+    client.integrate = AsyncMock()
+    client.fetch_devices = AsyncMock()
+    client.fetch_pids = AsyncMock()
+    client.fetch_device_statuses = AsyncMock()
+    client.close = AsyncMock()
+    return client
 
 
 @pytest.fixture
-def api_client(mock_hass):
-    """Create an API client instance."""
-    return DayBetterApi(mock_hass, "test_token_12345")
+def api_client(mock_client):
+    """Create an API client instance with mocked client."""
+    with patch(
+        "homeassistant.components.daybetter_services.daybetter_api.DayBetterClient",
+        return_value=mock_client,
+    ):
+        return DayBetterApi(token="test_token_12345")
 
 
 class TestDayBetterApi:
-    """Test the DayBetter API client."""
+    """Test DayBetter API."""
 
-    @pytest.mark.asyncio
-    async def test_fetch_devices_success(self, api_client, mock_hass):
-        """Test successful device fetching."""
-        mock_devices = [
-            {"id": "device1", "name": "Light 1"},
-            {"id": "device2", "name": "Switch 1"},
-        ]
-
-        with patch(
-            "homeassistant.components.daybetter_services.daybetter_api.async_get_clientsession"
-        ) as mock_get_session:
-            mock_session = AsyncMock()
-            mock_get_session.return_value = mock_session
-
-            # Mock successful response
-            mock_response = AsyncMock()
-            mock_response.status = 200
-            mock_response.json = AsyncMock(return_value={"data": mock_devices})
-            mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-            mock_response.__aexit__ = AsyncMock(return_value=None)
-
-            mock_session.post.return_value = mock_response
-
-            result = await api_client.fetch_devices()
-
-            assert result == mock_devices
-            mock_session.post.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_fetch_devices_failure(self, api_client, mock_hass):
-        """Test device fetching failure."""
-        with patch(
-            "homeassistant.components.daybetter_services.daybetter_api.async_get_clientsession"
-        ) as mock_get_session:
-            mock_session = AsyncMock()
-            mock_get_session.return_value = mock_session
-
-            # Mock failed response
-            mock_response = AsyncMock()
-            mock_response.status = 400
-            mock_response.text = AsyncMock(return_value="Bad Request")
-            mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-            mock_response.__aexit__ = AsyncMock(return_value=None)
-
-            mock_session.post.return_value = mock_response
-
-            result = await api_client.fetch_devices()
-
-            assert result == []
-
-    @pytest.mark.asyncio
-    async def test_fetch_devices_exception(self, api_client, mock_hass):
-        """Test device fetching with exception."""
-        with patch(
-            "homeassistant.components.daybetter_services.daybetter_api.async_get_clientsession"
-        ) as mock_get_session:
-            mock_session = AsyncMock()
-            mock_get_session.return_value = mock_session
-
-            # Mock exception
-            mock_session.post.side_effect = Exception("Network error")
-
-            result = await api_client.fetch_devices()
-
-            assert result == []
-
-    @pytest.mark.asyncio
-    async def test_fetch_pids_success(self, api_client, mock_hass):
-        """Test successful PIDs fetching."""
-        mock_pids = {"light": ["pid1", "pid2"], "switch": ["pid3", "pid4"]}
-
-        with patch(
-            "homeassistant.components.daybetter_services.daybetter_api.async_get_clientsession"
-        ) as mock_get_session:
-            mock_session = AsyncMock()
-            mock_get_session.return_value = mock_session
-
-            # Mock successful response
-            mock_response = AsyncMock()
-            mock_response.status = 200
-            mock_response.json = AsyncMock(return_value={"data": mock_pids})
-            mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-            mock_response.__aexit__ = AsyncMock(return_value=None)
-
-            mock_session.post.return_value = mock_response
-
-            result = await api_client.fetch_pids()
-
-            assert result == mock_pids
-
-    @pytest.mark.asyncio
-    async def test_control_device_switch(self, api_client, mock_hass):
-        """Test device control for switch."""
-        with patch(
-            "homeassistant.components.daybetter_services.daybetter_api.async_get_clientsession"
-        ) as mock_get_session:
-            mock_session = AsyncMock()
-            mock_get_session.return_value = mock_session
-
-            # Mock response
-            mock_response = AsyncMock()
-            mock_response.json = AsyncMock(return_value={"code": 1})
-            mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-            mock_response.__aexit__ = AsyncMock(return_value=None)
-
-            mock_session.post.return_value = mock_response
-
-            result = await api_client.control_device(
-                device_name="test_device",
-                action=True,
-                brightness=None,
-                hs_color=None,
-                color_temp=None,
-            )
-
-            assert result == {"code": 1}
-
-            # Verify correct payload was sent
-            call_args = mock_session.post.call_args
-            assert call_args[1]["json"]["deviceName"] == "test_device"
-            assert call_args[1]["json"]["type"] == 1
-            assert call_args[1]["json"]["on"] is True
-
-    @pytest.mark.asyncio
-    async def test_control_device_brightness(self, api_client, mock_hass):
-        """Test device control for brightness."""
-        with patch(
-            "homeassistant.components.daybetter_services.daybetter_api.async_get_clientsession"
-        ) as mock_get_session:
-            mock_session = AsyncMock()
-            mock_get_session.return_value = mock_session
-
-            # Mock response
-            mock_response = AsyncMock()
-            mock_response.json = AsyncMock(return_value={"code": 1})
-            mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-            mock_response.__aexit__ = AsyncMock(return_value=None)
-
-            mock_session.post.return_value = mock_response
-
-            result = await api_client.control_device(
-                device_name="test_device",
-                action=None,
-                brightness=128,
-                hs_color=None,
-                color_temp=None,
-            )
-
-            assert result == {"code": 1}
-
-            # Verify correct payload was sent
-            call_args = mock_session.post.call_args
-            assert call_args[1]["json"]["deviceName"] == "test_device"
-            assert call_args[1]["json"]["type"] == 2
-            assert call_args[1]["json"]["brightness"] == 128
-
-    @pytest.mark.asyncio
-    async def test_control_device_color(self, api_client, mock_hass):
-        """Test device control for color."""
-        with patch(
-            "homeassistant.components.daybetter_services.daybetter_api.async_get_clientsession"
-        ) as mock_get_session:
-            mock_session = AsyncMock()
-            mock_get_session.return_value = mock_session
-
-            # Mock response
-            mock_response = AsyncMock()
-            mock_response.json = AsyncMock(return_value={"code": 1})
-            mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-            mock_response.__aexit__ = AsyncMock(return_value=None)
-
-            mock_session.post.return_value = mock_response
-
-            result = await api_client.control_device(
-                device_name="test_device",
-                action=None,
-                brightness=255,
-                hs_color=(180.0, 50.0),
-                color_temp=None,
-            )
-
-            assert result == {"code": 1}
-
-            # Verify correct payload was sent
-            call_args = mock_session.post.call_args
-            assert call_args[1]["json"]["deviceName"] == "test_device"
-            assert call_args[1]["json"]["type"] == 3
-            assert call_args[1]["json"]["hue"] == 180.0
-            assert call_args[1]["json"]["saturation"] == 0.5
-            assert call_args[1]["json"]["brightness"] == 1.0
-
-    @pytest.mark.asyncio
-    async def test_control_device_color_temp(self, api_client, mock_hass):
-        """Test device control for color temperature."""
-        with patch(
-            "homeassistant.components.daybetter_services.daybetter_api.async_get_clientsession"
-        ) as mock_get_session:
-            mock_session = AsyncMock()
-            mock_get_session.return_value = mock_session
-
-            # Mock response
-            mock_response = AsyncMock()
-            mock_response.json = AsyncMock(return_value={"code": 1})
-            mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-            mock_response.__aexit__ = AsyncMock(return_value=None)
-
-            mock_session.post.return_value = mock_response
-
-            result = await api_client.control_device(
-                device_name="test_device",
-                action=None,
-                brightness=None,
-                hs_color=None,
-                color_temp=4000,
-            )
-
-            assert result == {"code": 1}
-
-            # Verify correct payload was sent
-            call_args = mock_session.post.call_args
-            assert call_args[1]["json"]["deviceName"] == "test_device"
-            assert call_args[1]["json"]["type"] == 4
-            assert call_args[1]["json"]["kelvin"] == 250  # 1000000 / 4000
-
-    @pytest.mark.asyncio
-    async def test_fetch_mqtt_config_success(self, api_client, mock_hass):
-        """Test successful MQTT config fetching."""
-        mock_config = {
-            "host": "mqtt.example.com",
-            "port": 8883,
-            "username": "test_user",
+    async def test_integrate_success(self, mock_client):
+        """Test successful integration."""
+        mock_client.integrate.return_value = {
+            "code": 1,
+            "data": {"hassCodeToken": "new_token_123"},
         }
 
         with patch(
-            "homeassistant.components.daybetter_services.daybetter_api.async_get_clientsession"
-        ) as mock_get_session:
-            mock_session = AsyncMock()
-            mock_get_session.return_value = mock_session
+            "homeassistant.components.daybetter_services.daybetter_api.DayBetterClient",
+            return_value=mock_client,
+        ):
+            api = DayBetterApi()
+            result = await api.integrate("test_code")
 
-            # Mock successful response
-            mock_response = AsyncMock()
-            mock_response.status = 200
-            mock_response.json = AsyncMock(return_value={"data": mock_config})
-            mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-            mock_response.__aexit__ = AsyncMock(return_value=None)
+            assert result["code"] == 1
+            assert result["data"]["hassCodeToken"] == "new_token_123"
+            mock_client.integrate.assert_called_once_with(hass_code="test_code")
 
-            mock_session.post.return_value = mock_response
+    async def test_fetch_devices_success(self, api_client, mock_client):
+        """Test fetching devices successfully."""
+        mock_client.fetch_devices.return_value = {
+            "code": 1,
+            "data": [{"id": "device1", "deviceName": "Test Device"}],
+        }
 
-            result = await api_client.fetch_mqtt_config()
+        result = await api_client.fetch_devices()
 
-            assert result == mock_config
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert result[0]["id"] == "device1"
+        mock_client.fetch_devices.assert_called_once()
 
-    @pytest.mark.asyncio
-    async def test_fetch_mqtt_config_failure(self, api_client, mock_hass):
-        """Test MQTT config fetching failure."""
+    async def test_fetch_devices_failure(self, api_client, mock_client):
+        """Test fetch devices failure."""
+        mock_client.fetch_devices.return_value = {"code": 0, "msg": "Error"}
+
+        result = await api_client.fetch_devices()
+
+        assert result == []
+        mock_client.fetch_devices.assert_called_once()
+
+    async def test_fetch_devices_exception(self, api_client, mock_client):
+        """Test fetch devices with exception."""
+        mock_client.fetch_devices.side_effect = Exception("Network error")
+
+        result = await api_client.fetch_devices()
+
+        assert result == []
+        mock_client.fetch_devices.assert_called_once()
+
+    async def test_fetch_pids_success(self, api_client, mock_client):
+        """Test fetching PIDs successfully."""
+        mock_client.fetch_pids.return_value = {
+            "code": 1,
+            "data": {"light": "pid1,pid2", "sensor": "pid3,pid4"},
+        }
+
+        result = await api_client.fetch_pids()
+
+        assert isinstance(result, dict)
+        assert result["light"] == "pid1,pid2"
+        assert result["sensor"] == "pid3,pid4"
+        mock_client.fetch_pids.assert_called_once()
+
+    async def test_fetch_device_statuses_success(self, api_client, mock_client):
+        """Test fetching device statuses successfully."""
+        mock_client.fetch_device_statuses.return_value = {
+            "code": 1,
+            "data": [{"deviceName": "device1", "temp": 22.5, "humi": 65.0}],
+        }
+
+        result = await api_client.fetch_device_statuses()
+
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert result[0]["temp"] == 22.5
+        mock_client.fetch_device_statuses.assert_called_once()
+
+    async def test_filter_sensor_devices(self, api_client):
+        """Test filtering sensor devices."""
+        devices = [
+            {"deviceName": "sensor1", "deviceMoldPid": "pid1"},
+            {"deviceName": "light1", "deviceMoldPid": "pid2"},
+            {"deviceName": "sensor2", "deviceMoldPid": "pid3"},
+        ]
+        pids = {"sensor": "pid1, pid3", "light": "pid2"}
+
+        result = api_client.filter_sensor_devices(devices, pids)
+
+        assert len(result) == 2
+        assert result[0]["deviceName"] == "sensor1"
+        assert result[1]["deviceName"] == "sensor2"
+
+    async def test_merge_device_status(self, api_client):
+        """Test merging device info with status."""
+        devices = [
+            {"deviceName": "device1", "deviceId": "id1"},
+            {"deviceName": "device2", "deviceId": "id2"},
+        ]
+        statuses = [
+            {"deviceName": "device1", "temp": 22.5, "humi": 65.0},
+        ]
+
+        result = api_client.merge_device_status(devices, statuses)
+
+        assert len(result) == 2
+        assert result[0]["temp"] == 22.5
+        assert result[0]["humi"] == 65.0
+        assert "temp" not in result[1]
+
+    async def test_close(self, api_client, mock_client):
+        """Test closing the API client."""
+        await api_client.close()
+
+        mock_client.close.assert_called_once()
+
+    async def test_api_without_client(self):
+        """Test API when DayBetter client is not available."""
         with patch(
-            "homeassistant.components.daybetter_services.daybetter_api.async_get_clientsession"
-        ) as mock_get_session:
-            mock_session = AsyncMock()
-            mock_get_session.return_value = mock_session
-
-            # Mock failed response
-            mock_response = AsyncMock()
-            mock_response.status = 400
-            mock_response.text = AsyncMock(return_value="Bad Request")
-            mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-            mock_response.__aexit__ = AsyncMock(return_value=None)
-
-            mock_session.post.return_value = mock_response
-
-            result = await api_client.fetch_mqtt_config()
-
-            assert result == {}
+            "homeassistant.components.daybetter_services.daybetter_api.DayBetterClient",
+            None,
+        ):
+            api = DayBetterApi(token="test_token")
+            devices = await api.fetch_devices()
+            assert devices == []

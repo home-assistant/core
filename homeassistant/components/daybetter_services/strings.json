@@ -2,27 +2,21 @@
   "config": {
     "step": {
       "user": {
-        "description": "Connect to DayBetter Services",
+        "title": "设置 DayBetter Services",
+        "description": "请输入您的 DayBetter 用户代码以创建集成。\n\n集成将自动：\n1. 创建连接并获取访问令牌\n2. 获取您的设备列表\n3. 获取设备类型信息 (PIDs)\n4. 定时同步温湿度传感器状态",
         "data": {
-          "user_code": "User Code"
-        }
-      },
-      "reauth_confirm": {
-        "description": "Re-authenticate with DayBetter Services",
-        "data": {
-          "user_code": "User Code"
+          "user_code": "用户代码 (User Code)"
         }
       }
     },
     "error": {
-      "auth_failed": "Authentication failed. Please check your user code.",
-      "connection_error": "Failed to connect to DayBetter services.",
-      "invalid_auth": "Invalid authentication credentials.",
-      "cannot_connect": "Unable to connect to DayBetter services.",
-      "unknown": "Unexpected error occurred."
+      "cannot_connect": "无法连接到 DayBetter 服务，请检查网络连接",
+      "invalid_code": "用户代码无效，请检查后重试",
+      "unknown": "未知错误，请查看日志"
     },
     "abort": {
-      "reauth_successful": "Re-authentication was successful."
+      "single_instance_allowed": "已经配置过了。只允许配置一个实例。",
+      "already_configured": "此集成已经配置过了"
     }
   }
 }
