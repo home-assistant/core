@@ -20,6 +20,7 @@ async def test_entry_diagnostics(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
+    mock_nextdns: AsyncMock,
 ) -> None:
     """Test config entry diagnostics."""
     await init_integration(hass, mock_config_entry)

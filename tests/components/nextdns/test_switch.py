@@ -39,6 +39,7 @@ async def test_switch(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
+    mock_nextdns: AsyncMock,
 ) -> None:
     """Test states of the switches."""
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.SWITCH]):
@@ -51,6 +52,7 @@ async def test_switch_on(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
+    mock_nextdns: AsyncMock,
 ) -> None:
     """Test the switch can be turned on."""
     await init_integration(hass, mock_config_entry)
@@ -78,6 +80,7 @@ async def test_switch_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
+    mock_nextdns: AsyncMock,
 ) -> None:
     """Test the switch can be turned on."""
     await init_integration(hass, mock_config_entry)
@@ -117,6 +120,7 @@ async def test_availability(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_nextdns_client: AsyncMock,
+    mock_nextdns: AsyncMock,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.SWITCH]):
@@ -162,6 +166,7 @@ async def test_switch_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
+    mock_nextdns: AsyncMock,
     exc: Exception,
 ) -> None:
     """Tests that the turn on/off service throws HomeAssistantError."""
@@ -182,6 +187,7 @@ async def test_switch_auth_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
+    mock_nextdns: AsyncMock,
 ) -> None:
     """Tests that the turn on/off action starts re-auth flow."""
     await init_integration(hass, mock_config_entry)

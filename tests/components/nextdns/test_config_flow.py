@@ -21,6 +21,7 @@ async def test_form_create_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_nextdns_client: AsyncMock,
+    mock_nextdns: AsyncMock,
 ) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
@@ -64,6 +65,7 @@ async def test_form_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_nextdns_client: AsyncMock,
+    mock_nextdns: AsyncMock,
     exc: Exception,
     base_error: str,
 ) -> None:
@@ -74,7 +76,7 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_nextdns_client.create.side_effect = exc
+    mock_nextdns.create.side_effect = exc
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -84,7 +86,7 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": base_error}
 
-    mock_nextdns_client.create.side_effect = None
+    mock_nextdns.create.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -110,6 +112,7 @@ async def test_form_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
+    mock_nextdns: AsyncMock,
 ) -> None:
     """Test that errors are shown when duplicates are added."""
     await init_integration(hass, mock_config_entry)
@@ -135,6 +138,7 @@ async def test_reauth_successful(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
+    mock_nextdns: AsyncMock,
 ) -> None:
     """Test starting a reauthentication flow."""
     await init_integration(hass, mock_config_entry)
@@ -168,6 +172,7 @@ async def test_reauth_errors(
     base_error: str,
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
+    mock_nextdns: AsyncMock,
 ) -> None:
     """Test reauthentication flow with errors."""
     await init_integration(hass, mock_config_entry)
@@ -176,7 +181,7 @@ async def test_reauth_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    mock_nextdns_client.create.side_effect = exc
+    mock_nextdns.create.side_effect = exc
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -185,7 +190,7 @@ async def test_reauth_errors(
 
     assert result["errors"] == {"base": base_error}
 
-    mock_nextdns_client.create.side_effect = None
+    mock_nextdns.create.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
