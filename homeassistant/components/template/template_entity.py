@@ -200,7 +200,13 @@ class TemplateEntity(AbstractTemplateEntity):
                 """Name of this state."""
                 return "<None>"
 
-        variables = {"this": DummyState()}
+        # Render the current variables and add a dummy this variable to them.
+        variables = (
+            self._run_variables
+            if isinstance(self._run_variables, dict)
+            else self._run_variables.async_render(self.hass, {})
+        )
+        variables = {"this": DummyState(), **variables}
 
         # Try to render the name as it can influence the entity ID
         self._attr_name = None

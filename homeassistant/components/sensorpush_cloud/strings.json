@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "To activate API access, log in to the [Gateway Cloud Dashboard](https://dashboard.sensorpush.com/) and agree to the terms of service. Devices are not available until activated with the SensorPush app on iOS or Android.",
+        "description": "To activate API access, log in to the [Gateway Cloud Dashboard]({dashboard_url}) and agree to the terms of service. Devices are not available until activated with the SensorPush app on iOS or Android.",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
