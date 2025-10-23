@@ -447,6 +447,6 @@ class WhirlpoolOvenCavitySensor(WhirlpoolOvenEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> StateType | str | int | float | None:
+    def native_value(self) -> StateType:
         """Return native value of sensor."""
         return self.entity_description.value_fn(self._appliance, self.cavity)
