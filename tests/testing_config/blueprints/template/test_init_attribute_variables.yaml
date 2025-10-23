@@ -1,0 +1,31 @@
+blueprint:
+  name: Switch to light
+  domain: template
+  input:
+    switch:
+      name: Switch
+      description: The switch which should be converted
+      selector:
+        entity:
+          multiple: false
+          filter:
+            - domain: switch
+      default: null
+
+variables:
+  switch: !input switch
+  on_icon: mdi:lightbulb
+  on_picture: "on.png"
+  extraa: "a"
+
+sensor:
+  variables:
+    off_icon: mdi:lightbulb-off
+    off_picture: "off.png"
+    extrab: "b"
+  name: "{{ state_attr(switch, 'friendly_name') }}"
+  icon: "{{ on_icon if is_state(switch, 'on') else off_icon }}"
+  picture: "{{ on_picture if is_state(switch, 'on') else off_picture }}"
+  state: "{{ is_state(switch, 'on') }}"
+  attributes:
+    extra: "{{ extraa ~ extrab }}"
