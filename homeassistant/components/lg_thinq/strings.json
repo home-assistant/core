@@ -1126,6 +1126,50 @@
   "exceptions": {
     "failed_to_connect_mqtt": {
       "message": "Failed to connect MQTT: {error}"
+    },
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided."
+    },
+    "invalid_device_id": {
+      "message": "Device for given device ID has not been configured."
+    },
+    "command_not_supported": {
+      "message": "The command is not supported: {message}"
+    },
+    "end_date_before_start_date": {
+      "message": "End date must be after start date."
+    }
+  },
+  "services": {
+    "service_get_energy_usage": {
+      "name": "Get energy usage",
+      "description": "Fetch energy usage by period. Retry after the next hour if rate-limited.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select a device"
+        },
+        "period": {
+          "name": "Period",
+          "description": "Select a daily or monthly options"
+        },
+        "start_date": {
+          "name": "Start date",
+          "description": "Maximum of 31 days (daily basis) and 6 months (monthly basis)"
+        },
+        "end_date": {
+          "name": "End date",
+          "description": "Maximum of 31 days (daily basis) and 6 months (monthly basis)"
+        }
+      }
+    }
+  },
+  "selector": {
+    "period_type": {
+      "options": {
+        "daily": "Daily",
+        "monthly": "Monthly"
+      }
     }
   }
 }

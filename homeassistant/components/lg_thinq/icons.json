@@ -466,5 +466,10 @@
         "default": "mdi:chart-bar"
       }
     }
+  },
+  "services": {
+    "service_get_energy_usage": {
+      "service": "mdi:chart-bar"
+    }
   }
 }

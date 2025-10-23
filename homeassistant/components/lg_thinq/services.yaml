@@ -1,0 +1,23 @@
+service_get_energy_usage:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: lg_thinq
+    period: &period
+      required: true
+      selector:
+        select:
+          options:
+            - daily
+            - monthly
+          translation_key: period_type
+    start_date: &start_date
+      required: true
+      selector:
+        date:
+    end_date: &end_date
+      required: true
+      selector:
+        date:
