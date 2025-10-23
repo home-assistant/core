@@ -102,6 +102,7 @@ async def test_options(
     hass.states.async_set("sensor.input", 10, {"unit_of_measurement": "dog"})
     hass.states.async_set("sensor.valid", 10, {"unit_of_measurement": "dog"})
     hass.states.async_set("sensor.invalid", 10, {"unit_of_measurement": "cat"})
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -118,6 +119,11 @@ async def test_options(
         "sensor.input",
         "sensor.valid",
     ]
+
+    state = hass.states.get(f"{platform}.my_derivative")
+    assert state.attributes["unit_of_measurement"] == f"{unit_prefix_used}dog/min"
+    hass.states.async_set("sensor.valid", 10, {"unit_of_measurement": "cat"})
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -188,12 +194,11 @@ async def test_update_unit(hass: HomeAssistant) -> None:
     time = dt_util.utcnow()
     with freeze_time(time) as freezer:
         # First state update of the source.
-        # Derivative does not learn the unit yet.
         hass.states.async_set(source_id, 5, {"unit_of_measurement": "dogs"})
         await hass.async_block_till_done()
         state = hass.states.get(derivative_id)
         assert state.state == "0.0"
-        assert state.attributes.get("unit_of_measurement") is None
+        assert state.attributes.get("unit_of_measurement") == "dogs/min"
 
         # Second state update of the source.
         time += timedelta(minutes=1)
@@ -217,10 +222,10 @@ async def test_update_unit(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        # Check the state after reconfigure. Neither unit or state has changed.
+        # Check the state after reconfigure.
         state = hass.states.get(derivative_id)
-        assert state.state == "2.0"
-        assert state.attributes.get("unit_of_measurement") == "dogs/min"
+        assert state.state == "0.0"
+        assert state.attributes.get("unit_of_measurement") == "dogs/s"
 
         # Third state update of the source.
         time += timedelta(seconds=1)
@@ -229,9 +234,7 @@ async def test_update_unit(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         state = hass.states.get(derivative_id)
         assert state.state == "3.0"
-        # While the state is correctly reporting a state of 3 dogs per second, it incorrectly keeps
-        # the unit as dogs/min
-        assert state.attributes.get("unit_of_measurement") == "dogs/min"
+        assert state.attributes.get("unit_of_measurement") == "dogs/s"
 
         # Fourth state update of the source.
         time += timedelta(seconds=1)
@@ -240,4 +243,4 @@ async def test_update_unit(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         state = hass.states.get(derivative_id)
         assert state.state == "10.0"
-        assert state.attributes.get("unit_of_measurement") == "dogs/min"
+        assert state.attributes.get("unit_of_measurement") == "dogs/s"
