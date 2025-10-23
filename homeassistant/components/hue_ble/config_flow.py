@@ -52,7 +52,7 @@ async def validate_input(hass: HomeAssistant, address: str) -> None:
         if not light.connected:
             raise CannotConnect
 
-        state_changed, errors = await light.poll_state()
+        _, errors = await light.poll_state()
         if not len(errors) == 0:
             raise CannotConnect
     finally:
