@@ -172,7 +172,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            user_input = {**user_input}
             transport = user_input.setdefault(CONF_TRANSPORT, TRANSPORT_SSE)
             try:
                 info = await validate_input(self.hass, user_input)
