@@ -65,5 +65,5 @@ class ViCareEntity(Entity):
                     self._attr_device_info["serial_number"] = "-".join(
                         ieee.upper()[i : i + 2] for i in range(0, 16, 2)
                     )
-            else:
-                self._attr_device_info["serial_number"] = device_serial
+        else:
+            self._attr_device_info["serial_number"] = device_serial
