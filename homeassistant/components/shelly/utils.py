@@ -399,11 +399,6 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
 
     if key in device.config and key != "em:0":
         # workaround for Pro 3EM, we don't want to get name for em:0
-        role = get_rpc_role_by_key(device.config, key)
-        if role.startswith("zone"):
-            # workaround for Irrigation controller, we don't want to get names for zones
-            return None
-
         if component_name := device.config[key].get("name"):
             if component in (*VIRTUAL_COMPONENTS, "input", "presencezone", "script"):
                 return cast(str, component_name)

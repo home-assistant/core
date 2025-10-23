@@ -12,7 +12,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import (
+    DOMAIN,
+    MODEL_FRANKEVER_IRRIGATION_CONTROLLER,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -493,7 +496,7 @@ async def test_shelly_fk_06x_with_zone_names(
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
     monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
 
-    await init_integration(hass, gen=3)
+    await init_integration(hass, gen=3, model=MODEL_FRANKEVER_IRRIGATION_CONTROLLER)
 
     # Main device
     entity_id = "sensor.test_name_average_temperature"
@@ -519,7 +522,7 @@ async def test_shelly_fk_06x_with_zone_names(
     ]
 
     for zone_name in zone_names:
-        entity_id = f"switch.{zone_name.lower().replace(' ', '_')}"
+        entity_id = f"valve.{zone_name.lower().replace(' ', '_')}"
 
         state = hass.states.get(entity_id)
         assert state
