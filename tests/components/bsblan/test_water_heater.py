@@ -335,20 +335,9 @@ async def test_water_heater_custom_temperature_limits_from_config(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test water heater uses custom temperature limits from DHW config."""
-    # Create a mock config with custom temperature limit values
-    mock_config = MagicMock()
-
-    # Mock reduced_setpoint with a custom value for min_temp
-    mock_reduced_setpoint = MagicMock()
-    mock_reduced_setpoint.value = 15.0  # Custom minimum temperature
-    mock_config.reduced_setpoint = mock_reduced_setpoint
-
-    # Mock nominal_setpoint_max with a custom value for max_temp
-    mock_nominal_setpoint_max = MagicMock()
-    mock_nominal_setpoint_max.value = 75.0  # Custom maximum temperature
-    mock_config.nominal_setpoint_max = mock_nominal_setpoint_max
-
-    mock_bsblan.hot_water_config.return_value = mock_config
+    # Set custom temperature limit values directly on the mock
+    mock_bsblan.hot_water_config.return_value.reduced_setpoint.value = 15.0
+    mock_bsblan.hot_water_config.return_value.nominal_setpoint_max.value = 75.0
 
     await setup_with_selected_platforms(
         hass, mock_config_entry, [Platform.WATER_HEATER]
