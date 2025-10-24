@@ -157,7 +157,7 @@ class S20Switch(SwitchEntity):
         """Turn the device on."""
         await self.hass.async_add_executor_job(self._turn_on)
 
-    def _turn_off(self, **kwargs: Any) -> None:
+    def _turn_off(self) -> None:
         """Turn the device off."""
         try:
             self._s20.on = False
