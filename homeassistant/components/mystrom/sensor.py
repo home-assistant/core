@@ -13,7 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfPower, UnitOfTemperature
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,11 +51,38 @@ SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
         value_fn=lambda device: device.consumption,
     ),
     MyStromSwitchSensorEntityDescription(
+        key="energy_since_boot",
+        translation_key="energy_since_boot",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_fn=lambda device: None
+        if device.energy_since_boot is None
+        else device.energy_since_boot / 3600000,
+    ),
+    MyStromSwitchSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda device: device.temperature,
+    ),
+    MyStromSwitchSensorEntityDescription(
+        key="time_since_boot",
+        translation_key="time_since_boot",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        value_fn=lambda device: device.time_since_boot,
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MyStromSwitchSensorEntityDescription(
+        key="boot_id",
+        translation_key="boot_id",
+        icon="mdi:identifier",
+        value_fn=lambda device: device.boot_id,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
