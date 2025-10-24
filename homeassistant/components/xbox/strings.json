@@ -55,6 +55,22 @@
       },
       "status": {
         "name": "Status"
+      },
+      "now_playing": {
+        "name": "Now playing",
+        "state_attributes": {
+          "short_description": { "name": "Short description" },
+          "publisher": { "name": "Publisher" },
+          "genres": { "name": "Genres" },
+          "developer": { "name": "Developer" },
+          "release_date": { "name": "Release date" },
+          "min_age": { "name": "Minimum age" },
+          "achievements": { "name": "Achievements" },
+          "gamerscore": {
+            "name": "[%key:component::xbox::entity::sensor::gamer_score::name%]"
+          },
+          "progress": { "name": "Progress" }
+        }
       }
     }
   },

@@ -6,8 +6,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import Any
 
 from xbox.webapi.api.provider.people.models import Person
+from xbox.webapi.api.provider.titlehub.models import Title
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -20,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import XboxConfigEntry
-from .entity import XboxBaseEntity, check_deprecated_entity
+from .entity import XboxBaseEntity, XboxBaseEntityDescription, check_deprecated_entity
 
 
 class XboxSensor(StrEnum):
@@ -33,42 +35,74 @@ class XboxSensor(StrEnum):
     LAST_ONLINE = "last_online"
     FOLLOWING = "following"
     FOLLOWER = "follower"
+    NOW_PLAYING = "now_playing"
 
 
 @dataclass(kw_only=True, frozen=True)
-class XboxSensorEntityDescription(SensorEntityDescription):
+class XboxSensorEntityDescription(XboxBaseEntityDescription, SensorEntityDescription):
     """Xbox sensor description."""
 
-    value_fn: Callable[[Person], StateType | datetime]
+    value_fn: Callable[[Person, Title | None], StateType | datetime]
     deprecated: bool | None = None
+
+
+def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:
+    """Attributes of the currently played title."""
+    attributes: dict[str, Any] = {}
+    if not title:
+        return attributes
+    if title.detail is not None:
+        attributes["short_description"] = title.detail.short_description
+        attributes["genres"] = (
+            ", ".join(title.detail.genres) if title.detail.genres else None
+        )
+        attributes["developer"] = title.detail.developer_name
+        attributes["publisher"] = title.detail.publisher_name
+        attributes["min_age"] = title.detail.min_age
+        attributes["release_date"] = (
+            title.detail.release_date.replace(tzinfo=UTC).date()
+            if title.detail.release_date
+            else None
+        )
+        attributes["min_age"] = title.detail.min_age
+    if (achievement := title.achievement) is not None:
+        attributes["achievements"] = (
+            f"{achievement.current_achievements} / {achievement.total_achievements}"
+        )
+        attributes["gamerscore"] = (
+            f"{achievement.current_gamerscore} / {achievement.total_gamerscore}"
+        )
+        attributes["progress"] = f"{int(achievement.progress_percentage)} %"
+
+    return attributes
 
 
 SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
     XboxSensorEntityDescription(
         key=XboxSensor.STATUS,
         translation_key=XboxSensor.STATUS,
-        value_fn=lambda x: x.presence_text,
+        value_fn=lambda x, _: x.presence_text,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.GAMER_SCORE,
         translation_key=XboxSensor.GAMER_SCORE,
-        value_fn=lambda x: x.gamer_score,
+        value_fn=lambda x, _: x.gamer_score,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.ACCOUNT_TIER,
-        value_fn=lambda _: None,
+        value_fn=lambda _, __: None,
         deprecated=True,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.GOLD_TENURE,
-        value_fn=lambda _: None,
+        value_fn=lambda _, __: None,
         deprecated=True,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.LAST_ONLINE,
         translation_key=XboxSensor.LAST_ONLINE,
         value_fn=(
-            lambda x: x.last_seen_date_time_utc.replace(tzinfo=UTC)
+            lambda x, _: x.last_seen_date_time_utc.replace(tzinfo=UTC)
             if x.last_seen_date_time_utc
             else None
         ),
@@ -77,12 +111,18 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
     XboxSensorEntityDescription(
         key=XboxSensor.FOLLOWING,
         translation_key=XboxSensor.FOLLOWING,
-        value_fn=lambda x: x.detail.following_count if x.detail else None,
+        value_fn=lambda x, _: x.detail.following_count if x.detail else None,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.FOLLOWER,
         translation_key=XboxSensor.FOLLOWER,
-        value_fn=lambda x: x.detail.follower_count if x.detail else None,
+        value_fn=lambda x, _: x.detail.follower_count if x.detail else None,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.NOW_PLAYING,
+        translation_key=XboxSensor.NOW_PLAYING,
+        value_fn=lambda _, title: title.name if title else None,
+        attributes_fn=now_playing_attributes,
     ),
 )
 
@@ -127,4 +167,4 @@ class XboxSensorEntity(XboxBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the requested attribute."""
-        return self.entity_description.value_fn(self.data)
+        return self.entity_description.value_fn(self.data, self.title_info)

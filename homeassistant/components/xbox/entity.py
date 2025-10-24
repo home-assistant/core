@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
+from xbox.webapi.api.provider.people.models import Person
 from xbox.webapi.api.provider.smartglass.models import ConsoleType, SmartglassConsole
+from xbox.webapi.api.provider.titlehub.models import Title
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
@@ -13,7 +19,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import ConsoleData, Person, XboxUpdateCoordinator
+from .coordinator import ConsoleData, XboxUpdateCoordinator
 
 MAP_MODEL = {
     ConsoleType.XboxOne: "Xbox One",
@@ -25,16 +31,25 @@ MAP_MODEL = {
 }
 
 
+@dataclass(kw_only=True, frozen=True)
+class XboxBaseEntityDescription(EntityDescription):
+    """Xbox base entity description."""
+
+    entity_picture_fn: Callable[[Person], str | None] | None = None
+    attributes_fn: Callable[[Person, Title | None], dict[str, Any] | None] | None = None
+
+
 class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
     """Base Sensor for the Xbox Integration."""
 
     _attr_has_entity_name = True
+    entity_description: XboxBaseEntityDescription
 
     def __init__(
         self,
         coordinator: XboxUpdateCoordinator,
         xuid: str,
-        entity_description: EntityDescription,
+        entity_description: XboxBaseEntityDescription,
     ) -> None:
         """Initialize Xbox entity."""
         super().__init__(coordinator)
@@ -53,8 +68,23 @@ class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
 
     @property
     def data(self) -> Person:
-        """Return coordinator data for this console."""
+        """Return coordinator data for this person."""
         return self.coordinator.data.presence[self.xuid]
+
+    @property
+    def title_info(self) -> Title | None:
+        """Return title info."""
+        return self.coordinator.data.title_info.get(self.xuid)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, float | None] | None:
+        """Return entity specific state attributes."""
+        return (
+            fn(self.data, self.title_info)
+            if hasattr(self.entity_description, "attributes_fn")
+            and (fn := self.entity_description.attributes_fn)
+            else None
+        )
 
 
 class XboxConsoleBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):

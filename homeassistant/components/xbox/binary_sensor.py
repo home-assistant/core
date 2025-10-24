@@ -5,8 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any
 
 from xbox.webapi.api.provider.people.models import Person
+from xbox.webapi.api.provider.titlehub.models import Title
 from yarl import URL
 
 from homeassistant.components.binary_sensor import (
@@ -18,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import XboxConfigEntry
-from .entity import XboxBaseEntity, check_deprecated_entity
+from .entity import XboxBaseEntity, XboxBaseEntityDescription, check_deprecated_entity
 
 
 class XboxBinarySensor(StrEnum):
@@ -32,11 +34,12 @@ class XboxBinarySensor(StrEnum):
 
 
 @dataclass(kw_only=True, frozen=True)
-class XboxBinarySensorEntityDescription(BinarySensorEntityDescription):
+class XboxBinarySensorEntityDescription(
+    XboxBaseEntityDescription, BinarySensorEntityDescription
+):
     """Xbox binary sensor description."""
 
     is_on_fn: Callable[[Person], bool | None]
-    entity_picture_fn: Callable[[Person], str | None] | None = None
     deprecated: bool | None = None
 
 
@@ -55,6 +58,15 @@ def profile_pic(person: Person) -> str | None:
     query = dict(url.query)
     query.pop("mode", None)
     return str(url.with_query(query))
+
+
+def profile_attributes(person: Person, _: Title | None) -> dict[str, Any]:
+    """Attributes for the profile."""
+    attributes: dict[str, Any] = {}
+    attributes["display_name"] = person.display_name
+    attributes["real_name"] = person.real_name or None
+    attributes["bio"] = person.detail.bio if person.detail else None
+    return attributes
 
 
 def in_game(person: Person) -> bool:
@@ -80,6 +92,7 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
         is_on_fn=lambda x: x.presence_state == "Online",
         name=None,
         entity_picture_fn=profile_pic,
+        attributes_fn=profile_attributes,
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_PARTY,
