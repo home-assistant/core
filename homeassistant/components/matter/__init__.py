@@ -27,6 +27,7 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .adapter import MatterAdapter
 from .addon import get_addon_manager
@@ -40,6 +41,7 @@ from .helpers import (
     node_from_ha_device_id,
 )
 from .models import MatterDeviceInfo
+from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
@@ -62,6 +64,12 @@ def get_matter_device_info(
         vendor_id=hex(node.device_info.vendorID),
         product_id=hex(node.device_info.productID),
     )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Matter integration services."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
