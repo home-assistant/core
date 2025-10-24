@@ -36,7 +36,10 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.hass_dict import HassKey
 
-from .panel_preferences import async_setup_panel_preferences
+from .panel_preferences import (
+    async_get_panel_preferences,
+    async_setup_panel_preferences,
+)
 from .storage import async_setup_frontend_storage
 
 _LOGGER = logging.getLogger(__name__)
@@ -784,7 +787,6 @@ def websocket_get_panels(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get panels command."""
-    from .panel_preferences import async_get_panel_preferences  # noqa: PLC0415
 
     user_is_admin = connection.user.is_admin
     panel_prefs = async_get_panel_preferences(hass)

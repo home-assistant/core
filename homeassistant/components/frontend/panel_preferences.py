@@ -43,7 +43,7 @@ async def async_setup_panel_preferences(hass: HomeAssistant) -> None:
     collection.DictStorageCollectionWebsocket(
         panel_prefs_collection,
         "frontend/panel_preferences",
-        "panel_preference",
+        "panel",
         PANEL_PREFERENCE_CREATE_FIELDS,
         PANEL_PREFERENCE_UPDATE_FIELDS,
     ).async_setup(hass)

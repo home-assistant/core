@@ -122,7 +122,7 @@ async def test_update_panel_preference(
     await client.send_json_auto_id(
         {
             "type": "frontend/panel_preferences/update",
-            "panel_preference_id": item_id,
+            "panel_id": item_id,
             "show_in_sidebar": False,
         }
     )
@@ -190,7 +190,7 @@ async def test_delete_panel_preference(
     await client.send_json_auto_id(
         {
             "type": "frontend/panel_preferences/delete",
-            "panel_preference_id": item_id,
+            "panel_id": item_id,
         }
     )
     msg = await client.receive_json()
@@ -324,7 +324,7 @@ async def test_panel_preferences_fire_update_event(
     await client.send_json_auto_id(
         {
             "type": "frontend/panel_preferences/update",
-            "panel_preference_id": item_id,
+            "panel_id": item_id,
             "show_in_sidebar": True,
         }
     )
@@ -336,7 +336,7 @@ async def test_panel_preferences_fire_update_event(
     await client.send_json_auto_id(
         {
             "type": "frontend/panel_preferences/delete",
-            "panel_preference_id": item_id,
+            "panel_id": item_id,
         }
     )
     await client.receive_json()
