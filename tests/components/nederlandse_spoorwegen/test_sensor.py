@@ -190,3 +190,57 @@ async def test_sensor_with_custom_time_parsing(
         route_name.lower() in friendly_name
         or route_name.replace(" ", "_").lower() in state.entity_id
     )
+
+
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")  # Amsterdam time: 16:30
+async def test_coordinator_time_based_fetch_logic(
+    hass: HomeAssistant,
+    mock_nsapi: AsyncMock,
+    mock_config_entry_coordinator_time_tests: MockConfigEntry,
+) -> None:
+    """Test coordinator time-based fetch logic through sensor behavior.
+
+    This test validates the coordinator's _get_time_from_route logic by checking
+    sensor states. The frozen time is 16:30 Amsterdam time (14:30 UTC).
+
+    The mock_config_entry includes 5 routes:
+    1. No time (None) - should always fetch and create sensor
+    2. Time: 08:00 - outside ±30min window - should NOT fetch, no sensor data
+    3. Time: 28:00 - malformed time - should fallback to fetch now
+    4. Time: 16:45 - within ±30min window - should fetch and create sensor
+    5. Time: 17:15 - outside ±30min window (45min away) - should NOT fetch
+    """
+    await setup_integration(hass, mock_config_entry_coordinator_time_tests)
+    await hass.async_block_till_done()
+
+    # Check API call count - should only fetch for 3 routes:
+    # Route 1 (no time), Route 3 (malformed time), Route 4 (within window)
+    # Routes 2 and 5 should NOT fetch (outside ±30min window)
+    assert mock_nsapi.get_trips.call_count == 3, (
+        f"Expected 3 API calls, got {mock_nsapi.get_trips.call_count}"
+    )
+
+    # Get all sensor states
+    sensor_states = hass.states.async_all("sensor")
+    sensor_entity_ids = [state.entity_id for state in sensor_states]
+
+    # Route 1 (no time) - should have sensor
+    route1_sensors = [s for s in sensor_entity_ids if "to_work" in s]
+    assert len(route1_sensors) > 0, "Route 1 (no time) should have created sensor"
+
+    # Route 3 (malformed time) - should have sensor (fallback to fetch now)
+    route3_sensors = [s for s in sensor_entity_ids if "malformed_time" in s]
+    assert len(route3_sensors) > 0, (
+        "Route 3 (malformed time) should have created sensor"
+    )
+
+    # Route 4 (within window) - should have sensor
+    route4_sensors = [s for s in sensor_entity_ids if "within_window" in s]
+    assert len(route4_sensors) > 0, "Route 4 (within window) should have created sensor"
+
+    # Verify sensors have valid data (not unavailable)
+    for sensor_id in route1_sensors + route3_sensors + route4_sensors:
+        state = hass.states.get(sensor_id)
+        assert state is not None
+        # Sensors should have valid state values
+        assert state.state not in [None, ""]
