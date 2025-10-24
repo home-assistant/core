@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
+from homeassistant.components.kiosker.sensor import parse_datetime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -67,6 +68,7 @@ async def test_sensors_setup(
         "sensor.kiosker_a98be1ce_battery_state",
         "sensor.kiosker_a98be1ce_last_interaction",
         "sensor.kiosker_a98be1ce_last_motion",
+        "sensor.kiosker_a98be1ce_ambient_light",
         "sensor.kiosker_a98be1ce_last_update",
         "sensor.kiosker_a98be1ce_blackout_state",
         "sensor.kiosker_a98be1ce_screensaver_visibility",
@@ -358,6 +360,64 @@ async def test_last_update_sensor(
     assert state.attributes["icon"] == "mdi:update"
 
 
+async def test_ambient_light_sensor(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test ambient light sensor."""
+    with patch("homeassistant.components.kiosker.KioskerAPI") as mock_api_class:
+        # Setup mock API
+        mock_api = MagicMock()
+        mock_api.host = "10.0.1.5"
+        mock_api_class.return_value = mock_api
+
+        # Setup mock data
+        mock_status = MagicMock()
+        mock_status.device_id = "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
+        mock_status.model = "iPad Pro"
+        mock_status.os_version = "18.0"
+        mock_status.app_name = "Kiosker"
+        mock_status.app_version = "25.1.1"
+        mock_status.battery_level = 85
+        mock_status.battery_state = "charging"
+        mock_status.last_interaction = "2025-01-01T12:00:00Z"
+        mock_status.last_motion = "2025-01-01T11:55:00Z"
+        mock_status.last_update = "2025-01-01T12:05:00Z"
+        mock_status.ambient_light = 2.6
+
+        mock_api.status.return_value = mock_status
+
+        # Add the config entry
+        mock_config_entry.add_to_hass(hass)
+
+        # Setup the integration
+        with patch(
+            "homeassistant.components.kiosker.coordinator.KioskerDataUpdateCoordinator._async_update_data"
+        ) as mock_update:
+            mock_update.return_value = {
+                "status": mock_status,
+            }
+
+            assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+            await hass.async_block_till_done()
+
+            # Manually set coordinator data and trigger update
+            coordinator = mock_config_entry.runtime_data
+            coordinator.data = {
+                "status": mock_status,
+            }
+            coordinator.async_update_listeners()
+            await hass.async_block_till_done()
+
+    # Check ambient light sensor
+    state = hass.states.get("sensor.kiosker_a98be1ce_ambient_light")
+    assert state is not None
+    assert state.state == "2.6"
+    assert state.attributes["icon"] == "mdi:brightness-6"
+    assert state.attributes["state_class"] == "measurement"
+    # Verify no unit of measurement (unit-less sensor)
+    assert "unit_of_measurement" not in state.attributes
+
+
 async def test_blackout_state_sensor_active(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -629,6 +689,7 @@ async def test_sensors_missing_data(
         del mock_status.battery_state
         del mock_status.last_interaction
         del mock_status.last_motion
+        del mock_status.ambient_light
         del mock_status.last_update
 
         mock_api.status.return_value = mock_status
@@ -663,6 +724,7 @@ async def test_sensors_missing_data(
         "sensor.kiosker_a98be1ce_battery_state",
         "sensor.kiosker_a98be1ce_last_interaction",
         "sensor.kiosker_a98be1ce_last_motion",
+        "sensor.kiosker_a98be1ce_ambient_light",
         "sensor.kiosker_a98be1ce_last_update",
     ]
 
@@ -739,6 +801,7 @@ async def test_sensor_unique_ids(
         ("sensor.kiosker_test_sen_battery_state", "TEST_SENSOR_ID_battery_state"),
         ("sensor.kiosker_test_sen_last_interaction", "TEST_SENSOR_ID_last_interaction"),
         ("sensor.kiosker_test_sen_last_motion", "TEST_SENSOR_ID_last_motion"),
+        ("sensor.kiosker_test_sen_ambient_light", "TEST_SENSOR_ID_ambient_light"),
         ("sensor.kiosker_test_sen_last_update", "TEST_SENSOR_ID_last_update"),
         ("sensor.kiosker_test_sen_blackout_state", "TEST_SENSOR_ID_blackout_state"),
         (
@@ -755,9 +818,6 @@ async def test_sensor_unique_ids(
 
 async def test_parse_datetime_function() -> None:
     """Test the parse_datetime utility function."""
-    # Import here to avoid circular imports during test discovery
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.kiosker.sensor import parse_datetime
 
     # Test with None
     assert parse_datetime(None) is None
