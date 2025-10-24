@@ -1044,7 +1044,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.82
+holidays==0.83
 
 # homeassistant.components.frontend
 home-assistant-frontend==20251001.4
@@ -1932,7 +1932,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.6
+pyportainer==1.0.7
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
