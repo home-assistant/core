@@ -1,7 +1,6 @@
 """The Rituals Perfume Genie integration."""
 
 import asyncio
-from contextlib import suppress
 import logging
 
 from aiohttp import ClientError, ClientResponseError
@@ -12,7 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import ACCOUNT_HASH, DOMAIN, PASSWORD, UPDATE_INTERVAL, USERNAME
 from .coordinator import RitualsDataUpdateCoordinator
@@ -31,9 +30,7 @@ PLATFORMS = [
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rituals Perfume Genie from a config entry."""
     _LOGGER.debug("async_setup_entry start (entry_id=%s)", entry.entry_id)
-    session = async_get_clientsession(hass)
-    with suppress(Exception):
-        session.cookie_jar.clear()
+    session = async_create_clientsession(hass)
 
     # Require credentials for runtime; if missing, trigger reauth and stop setup
     if USERNAME not in entry.data or PASSWORD not in entry.data:
