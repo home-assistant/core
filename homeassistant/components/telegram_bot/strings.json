@@ -801,10 +801,6 @@
           "name": "Read timeout",
           "description": "Timeout for sending the poll in seconds."
         },
-        "message_tag": {
-          "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
-          "description": "[%key:component::telegram_bot::services::send_message::fields::message_tag::description%]"
-        },
         "reply_to_message_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
