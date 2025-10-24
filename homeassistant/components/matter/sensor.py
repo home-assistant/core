@@ -1140,19 +1140,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             entity_category=EntityCategory.DIAGNOSTIC,
             options=list(OPERATIONAL_STATE_ERROR_MAP.values()),
-            device_to_ha=lambda x: (
-                # Determine the error label for the operational state:
-                # 1. If errorStateID is known in the mapping, return the mapped value.
-                # 2. If errorStateID is in the manufacturer range (0x80 to 0xBF) and errorStateLabel is present, return that label.
-                # 3. Otherwise, return "unknown".
-                OPERATIONAL_STATE_ERROR_MAP.get(x.errorStateID)
-                or (
-                    label
-                    if 0x80 <= x.errorStateID <= 0xBF
-                    and (label := getattr(x, "errorStateLabel", None))
-                    else None
-                )
-            ),
+            device_to_ha=lambda x: OPERATIONAL_STATE_ERROR_MAP.get(x.errorStateID),
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.OperationalState.Attributes.OperationalError,),
@@ -1245,19 +1233,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             entity_category=EntityCategory.DIAGNOSTIC,
             options=list(RVC_OPERATIONAL_STATE_ERROR_MAP.values()),
-            device_to_ha=lambda x: (
-                # Determine the error label for the RVC operational state:
-                # 1. If errorStateID is known in the mapping, return the mapped value.
-                # 2. If errorStateID is in the manufacturer range (0x80 to 0xBF) and errorStateLabel is present, return that label.
-                # 3. Otherwise, return "unknown".
-                RVC_OPERATIONAL_STATE_ERROR_MAP.get(x.errorStateID)
-                or (
-                    label
-                    if 0x80 <= x.errorStateID <= 0xBF
-                    and (label := getattr(x, "errorStateLabel", None))
-                    else None
-                )
-            ),
+            device_to_ha=lambda x: RVC_OPERATIONAL_STATE_ERROR_MAP.get(x.errorStateID),
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.RvcOperationalState.Attributes.OperationalError,),

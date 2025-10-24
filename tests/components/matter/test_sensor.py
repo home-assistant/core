@@ -690,14 +690,6 @@ async def test_vacuum_operational_error_sensor(
     assert state
     assert state.state == "dust_bin_missing"
 
-    # test manufacturer range error
-    set_node_attribute(matter_node, 1, 97, 5, {0: 128, 1: "custom_error"})
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("sensor.mock_vacuum_operational_error")
-    assert state
-    assert state.state == "custom_error"
-
     # test unknown errorStateID == 192 (0xC0)
     set_node_attribute(matter_node, 1, 97, 5, {0: 192})
     await trigger_subscription_callback(hass, matter_client)
