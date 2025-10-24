@@ -195,7 +195,7 @@ def pytest_runtest_setup() -> None:
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
-    class SocketBlockedError(pytest.Failed):
+    class SocketBlockedError(pytest.outcomes.Failed):
         def __init__(self, *_args, **_kwargs) -> None:
             super().__init__("A test tried to use socket.socket.")
 
