@@ -8,7 +8,7 @@ The component is an API integration for controlling the Kiosker app from Home As
 
 # Versions
 Support Home Assistant v. 25
-Use kiosker-python-api version 1.2.3 from PyPi
+Use kiosker-python-api version 1.2.6 from PyPi
 
 # Set up flow
 - Let the user set up Kiosker visually.
