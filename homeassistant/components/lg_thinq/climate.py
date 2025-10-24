@@ -257,9 +257,10 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
                 await self.async_call_api(
                     self.coordinator.api.async_turn_on(self.property_id)
                 )
-                await asyncio.sleep(2)
             except ServiceValidationError as exc:
                 _LOGGER.debug("%s", exc)
+            else:
+                await asyncio.sleep(2)
 
         # Compare with current hvac_mode to prevent exception
         if hvac_mode == self.hvac_mode:
@@ -366,9 +367,10 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
                 await self.async_call_api(
                     self.coordinator.api.async_turn_on(self.property_id)
                 )
-                await asyncio.sleep(2)
             except ServiceValidationError as exc:
                 _LOGGER.debug("%s", exc)
+            else:
+                await asyncio.sleep(2)
 
         if hvac_mode and hvac_mode != self.hvac_mode:
             try:
@@ -377,9 +379,10 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
                         self.property_id, HVAC_TO_STR.get(hvac_mode)
                     )
                 )
-                await asyncio.sleep(2)
             except ServiceValidationError as exc:
                 _LOGGER.debug("%s", exc)
+            else:
+                await asyncio.sleep(2)
 
         _LOGGER.debug(
             "[%s:%s] async_set_temperature: %s",
