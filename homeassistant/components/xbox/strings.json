@@ -30,6 +30,13 @@
   },
   "entity": {
     "binary_sensor": {
+      "online": {
+        "state_attributes": {
+          "display_name": { "name": "Display name" },
+          "real_name": { "name": "Real name" },
+          "bio": { "name": "Bio" }
+        }
+      },
       "has_game_pass": {
         "name": "Subscribed to Xbox Game Pass"
       },
