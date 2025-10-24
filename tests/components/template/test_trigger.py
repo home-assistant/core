@@ -882,22 +882,19 @@ async def test_if_fires_on_time_change(
     second_time = start_time.replace(minute=4, second=0)
     freezer.move_to(second_time)
     async_fire_time_changed(hass, second_time)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert len(calls) == 1
 
     # Trigger again (do not match template)
     third_time = start_time.replace(minute=5, second=0)
     freezer.move_to(third_time)
     async_fire_time_changed(hass, third_time)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert len(calls) == 1
 
     # Trigger again (match template)
     forth_time = start_time.replace(minute=8, second=0)
     freezer.move_to(forth_time)
     async_fire_time_changed(hass, forth_time)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert len(calls) == 2
