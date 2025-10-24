@@ -1,0 +1,133 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Saunum Leil Sauna Control Unit",
+        "description": "Enter the connection details for your Saunum Leil sauna control unit",
+        "data": {
+          "host": "IP address",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "Find IP address from Leil touch panel -> Settings -> Modbus Settings",
+          "port": "The port number for Modbus TCP communication (default: 502)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the device. Please check the IP address and port.",
+      "unknown": "An unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "This device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Customize sauna type names",
+        "description": "Customize the display names for sauna type options",
+        "data": {
+          "sauna_type_1_name": "Sauna type 1 name",
+          "sauna_type_2_name": "Sauna type 2 name",
+          "sauna_type_3_name": "Sauna type 3 name"
+        },
+        "data_description": {
+          "sauna_type_1_name": "Custom name for sauna type 1 (default: Sauna type 1)",
+          "sauna_type_2_name": "Custom name for sauna type 2 (default: Sauna type 2)",
+          "sauna_type_3_name": "Custom name for sauna type 3 (default: Sauna type 3)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "door_status": {
+        "name": "Door"
+      },
+      "alarm_door_open": {
+        "name": "Alarm door open"
+      },
+      "alarm_door_sensor": {
+        "name": "Alarm door sensor"
+      },
+      "alarm_thermal_cutoff": {
+        "name": "Alarm thermal cutoff"
+      },
+      "alarm_internal_temp": {
+        "name": "Alarm internal temperature"
+      },
+      "alarm_temp_sensor_shorted": {
+        "name": "Alarm temperature sensor shorted"
+      },
+      "alarm_temp_sensor_not_connected": {
+        "name": "Alarm temperature sensor not connected"
+      }
+    },
+    "climate": {
+      "sauna": {
+        "name": "Sauna"
+      }
+    },
+    "switch": {
+      "session_active": {
+        "name": "Session active"
+      }
+    },
+    "light": {
+      "sauna_light": {
+        "name": "Light"
+      }
+    },
+    "sensor": {
+      "current_temperature": {
+        "name": "Current temperature"
+      },
+      "on_time": {
+        "name": "On time"
+      },
+      "remaining_time": {
+        "name": "Remaining time"
+      },
+      "heater_status": {
+        "name": "Heater elements active"
+      },
+      "fan_speed_sensor": {
+        "name": "Fan speed"
+      },
+      "sauna_type_sensor": {
+        "name": "Sauna type"
+      }
+    },
+    "number": {
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "sauna_duration": {
+        "name": "Sauna duration"
+      },
+      "fan_duration": {
+        "name": "Fan duration"
+      }
+    },
+    "select": {
+      "fan_speed": {
+        "name": "Fan speed",
+        "state": {
+          "off": "Off",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "sauna_type": {
+        "name": "Sauna type",
+        "state": {
+          "1": "1",
+          "2": "2",
+          "3": "3"
+        }
+      }
+    }
+  }
+}
