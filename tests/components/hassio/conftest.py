@@ -108,6 +108,7 @@ def all_setup_requests(
                     "chassis": "vm",
                     "operating_system": "Debian GNU/Linux 10 (buster)",
                     "kernel": "4.19.0-6-amd64",
+                    "disk_free": 1.6,
                 },
             },
         },

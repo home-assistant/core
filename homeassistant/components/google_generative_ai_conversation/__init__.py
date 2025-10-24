@@ -29,6 +29,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -70,6 +71,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def generate_content(call: ServiceCall) -> ServiceResponse:
         """Generate content from text and optionally images."""
+        LOGGER.warning(
+            "Action '%s.%s' is deprecated and will be removed in the 2026.4.0 release. "
+            "Please use the 'ai_task.generate_data' action instead",
+            DOMAIN,
+            SERVICE_GENERATE_CONTENT,
+        )
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_generate_content",
+            breaks_in_ha_version="2026.4.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_generate_content",
+        )
 
         prompt_parts = [call.data[CONF_PROMPT]]
 
@@ -92,7 +108,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             prompt_parts.extend(
                 await async_prepare_files_for_prompt(
-                    hass, client, [Path(filename) for filename in files]
+                    hass, client, [(Path(filename), None) for filename in files]
                 )
             )
 

@@ -79,7 +79,6 @@ junit.xml
 .project
 .pydevproject
 
-.python-version
 .tool-versions
 
 # emacs auto backups
@@ -140,5 +139,5 @@ tmp_cache
 pytest_buckets.txt
 
 # AI tooling
-.claude
+.claude/settings.local.json
 

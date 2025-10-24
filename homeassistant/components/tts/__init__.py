@@ -16,7 +16,7 @@ from pathlib import Path
 import re
 import secrets
 from time import monotonic
-from typing import Any, Final, Generic, Protocol, TypeVar
+from typing import Any, Final, Protocol
 
 from aiohttp import web
 import mutagen
@@ -27,7 +27,6 @@ import voluptuous as vol
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_source import (
-    async_resolve_media,
     generate_media_source_id as ms_generate_media_source_id,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -43,7 +42,6 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
@@ -503,7 +501,7 @@ class ResultStream:
     _manager: SpeechManager
 
     # Override
-    _override_media_id: str | None = None
+    _override_media_path: Path | None = None
 
     @cached_property
     def url(self) -> str:
@@ -556,7 +554,7 @@ class ResultStream:
 
     async def async_stream_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of this result."""
-        if self._override_media_id is not None:
+        if self._override_media_path is not None:
             # Overridden
             async for chunk in self._async_stream_override_result():
                 yield chunk
@@ -570,46 +568,45 @@ class ResultStream:
 
         self.last_used = monotonic()
 
-    def async_override_result(self, media_id: str) -> None:
-        """Override the TTS stream with a different media id."""
-        self._override_media_id = media_id
+    def async_override_result(self, media_path: str | Path) -> None:
+        """Override the TTS stream with a different media path."""
+        self._override_media_path = Path(media_path)
 
     async def _async_stream_override_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of the overridden result."""
-        assert self._override_media_id is not None
-        media = await async_resolve_media(self.hass, self._override_media_id)
+        assert self._override_media_path is not None
 
-        # Determine if we need to do audio conversion
-        preferred_extension: str | None = self.options.get(ATTR_PREFERRED_FORMAT)
-        sample_rate: int | None = self.options.get(ATTR_PREFERRED_SAMPLE_RATE)
-        sample_channels: int | None = self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
-        sample_bytes: int | None = self.options.get(ATTR_PREFERRED_SAMPLE_BYTES)
+        preferred_format = self.options.get(ATTR_PREFERRED_FORMAT)
+        to_sample_rate = self.options.get(ATTR_PREFERRED_SAMPLE_RATE)
+        to_sample_channels = self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
+        to_sample_bytes = self.options.get(ATTR_PREFERRED_SAMPLE_BYTES)
 
         needs_conversion = (
-            preferred_extension
-            or (sample_rate is not None)
-            or (sample_channels is not None)
-            or (sample_bytes is not None)
+            (preferred_format is not None)
+            or (to_sample_rate is not None)
+            or (to_sample_channels is not None)
+            or (to_sample_bytes is not None)
         )
 
         if not needs_conversion:
-            # Stream directly from URL (no conversion)
-            session = async_get_clientsession(self.hass)
-            async with session.get(media.url) as response:
-                async for chunk in response.content:
-                    yield chunk
-
+            # Read file directly (no conversion)
+            yield await self.hass.async_add_executor_job(
+                self._override_media_path.read_bytes
+            )
             return
 
         # Use ffmpeg to convert audio to preferred format
+        if not preferred_format:
+            preferred_format = self._override_media_path.suffix[1:]  # strip .
+
         converted_audio = _async_convert_audio(
             self.hass,
             from_extension=None,
-            audio_input=media.path or media.url,
-            to_extension=preferred_extension,
-            to_sample_rate=sample_rate,
-            to_sample_channels=sample_channels,
-            to_sample_bytes=sample_bytes,
+            audio_input=self._override_media_path,
+            to_extension=preferred_format,
+            to_sample_rate=self.options.get(ATTR_PREFERRED_SAMPLE_RATE),
+            to_sample_channels=self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
+            to_sample_bytes=self.options.get(ATTR_PREFERRED_SAMPLE_BYTES),
         )
         async for chunk in converted_audio:
             yield chunk
@@ -631,10 +628,7 @@ class HasLastUsed(Protocol):
     last_used: float
 
 
-T = TypeVar("T", bound=HasLastUsed)
-
-
-class DictCleaning(Generic[T]):
+class DictCleaning[T: HasLastUsed]:
     """Helper to clean up the stale sessions."""
 
     unsub: CALLBACK_TYPE | None = None

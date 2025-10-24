@@ -31,9 +31,6 @@ from homeassistant.helpers.system_info import async_get_system_info
 
 from .common import async_build_source_set
 
-UPNP_SERVER_MIN_PORT = 40000
-UPNP_SERVER_MAX_PORT = 40100
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -95,26 +92,17 @@ async def _async_find_next_available_port(
 ) -> tuple[int, socket.socket]:
     """Get a free TCP port."""
     family = socket.AF_INET if is_ipv4_address(source) else socket.AF_INET6
-    # We use an ExitStack to ensure the socket is closed if we fail to find a port.
-    with ExitStack() as stack:
-        test_socket = stack.enter_context(socket.socket(family, socket.SOCK_STREAM))
+    test_socket = socket.socket(family, socket.SOCK_STREAM)
+    try:
         test_socket.setblocking(False)
-        test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        for port in range(UPNP_SERVER_MIN_PORT, UPNP_SERVER_MAX_PORT):
-            addr = (source[0], port, *source[2:])
-            try:
-                test_socket.bind(addr)
-            except OSError:
-                if port == UPNP_SERVER_MAX_PORT - 1:
-                    raise
-            else:
-                # The socket will be dealt by the caller, so we detach it from the stack
-                # before returning it to prevent it from being closed.
-                stack.pop_all()
-                return port, test_socket
-
-    raise RuntimeError("unreachable")
+        addr = (source[0], 0, *source[2:])
+        test_socket.bind(addr)
+        port = test_socket.getsockname()[1]
+    except BaseException:
+        test_socket.close()
+        raise
+    return port, test_socket
 
 
 class Server:

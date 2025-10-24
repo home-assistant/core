@@ -1,9 +1,9 @@
 """Alexa Devices tests configuration."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
-from aioamazondevices.api import AmazonDevice, AmazonDeviceSensor
 from aioamazondevices.const import DEVICE_TYPE_TO_MODEL
 import pytest
 
@@ -14,7 +14,7 @@ from homeassistant.components.alexa_devices.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import TEST_PASSWORD, TEST_SERIAL_NUMBER, TEST_USERNAME
+from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -45,29 +45,10 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.login_mode_interactive.return_value = {
             "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
         }
         client.get_devices_data.return_value = {
-            TEST_SERIAL_NUMBER: AmazonDevice(
-                account_name="Echo Test",
-                capabilities=["AUDIO_PLAYER", "MICROPHONE"],
-                device_family="mine",
-                device_type="echo",
-                device_owner_customer_id="amazon_ower_id",
-                device_cluster_members=[TEST_SERIAL_NUMBER],
-                online=True,
-                serial_number=TEST_SERIAL_NUMBER,
-                software_version="echo_test_software_version",
-                do_not_disturb=False,
-                response_style=None,
-                bluetooth_state=True,
-                entity_id="11111111-2222-3333-4444-555555555555",
-                appliance_id="G1234567890123456789012345678A",
-                sensors={
-                    "temperature": AmazonDeviceSensor(
-                        name="temperature", value="22.5", scale="CELSIUS"
-                    )
-                },
-            )
+            TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)
         }
         client.get_model_details = lambda device: DEVICE_TYPE_TO_MODEL.get(
             device.device_type
