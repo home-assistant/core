@@ -414,7 +414,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==2.0.1
+aiovodafone==3.0.0
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -1473,7 +1473,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.8.1
+plugwise==1.8.2
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
@@ -1932,7 +1932,7 @@ pypoint==3.0.0
 pyportainer==1.0.4
 
 # homeassistant.components.probe_plus
-pyprobeplus==1.1.1
+pyprobeplus==1.1.2
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
@@ -2468,7 +2468,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.7.9
+teslemetry-stream==0.7.10
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
