@@ -32,15 +32,13 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = []
     for device in devices:
-        if device.get("type") != 5:
-            continue
-
+        # Library already filters sensor devices, no need to check type
         device_name = device.get("deviceName", "unknown")
         device_id = device.get("deviceId", device_name)
         group = (
             str(device.get("deviceGroupName", device_name)).lower().replace(" ", "_")
         )
-
+        
         if "temp" in device:
             entities.append(
                 DayBetterTemperatureSensor(coordinator, device, device_id, group)
@@ -203,7 +201,8 @@ class DayBetterBatterySensor(DayBetterSensorBase):
         if not device:
             return None
 
-        battery = device.get("battery")
+        # Support both spellings for compatibility
+        battery = device.get("bettery") or device.get("battery")
         if battery is None:
             return None
 

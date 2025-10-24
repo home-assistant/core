@@ -26,7 +26,6 @@ async def test_sensor_setup(hass: HomeAssistant) -> None:
                     "deviceName": "test_sensor",
                     "deviceGroupName": "Test Group",
                     "deviceMoldPid": "pid1",
-                    "type": 5,
                     "temp": 225,  # Raw value, will be divided by 10 to get 22.5
                     "humi": 650,  # Raw value, will be divided by 10 to get 65.0
                 }
@@ -68,7 +67,6 @@ async def test_sensor_attributes(hass: HomeAssistant) -> None:
                     "deviceName": "test_sensor",
                     "deviceGroupName": "Test Group",
                     "deviceMoldPid": "pid1",
-                    "type": 5,
                     "temp": 225,  # Raw value, will be divided by 10 to get 22.5
                     "humi": 650,  # Raw value, will be divided by 10 to get 65.0
                 }
@@ -171,7 +169,6 @@ async def test_sensor_update(hass: HomeAssistant) -> None:
                     "deviceName": "test_sensor",
                     "deviceGroupName": "Test Group",
                     "deviceMoldPid": "pid1",
-                    "type": 5,
                     "temp": 225,  # Raw value, will be divided by 10 to get 22.5
                     "humi": 650,  # Raw value, will be divided by 10 to get 65.0
                 }
