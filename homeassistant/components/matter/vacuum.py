@@ -241,7 +241,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             # Start the vacuum cleaner after selecting areas.
             await self.async_start()
         except MatterError as err:
-            raise MatterError(f"Failed to start cleaning areas {areas}: {err}") from err
+            raise HomeAssistantError(f"Failed to start cleaning areas {areas}: {err}") from err
         return None
 
     def _get_area_name_by_id(self, area_id: int) -> str | None:
