@@ -74,28 +74,28 @@
   "entity": {
     "sensor": {
       "departure_platform_planned": {
-        "name": "Departure platform planned"
+        "name": "Planned departure platform"
       },
       "departure_platform_actual": {
-        "name": "Departure platform actual"
+        "name": "Actual departure platform"
       },
       "arrival_platform_planned": {
-        "name": "Arrival platform planned"
+        "name": "Planned arrival platform"
       },
       "arrival_platform_actual": {
-        "name": "Arrival platform actual"
+        "name": "Actual arrival platform"
       },
       "departure_time_planned": {
-        "name": "Departure time planned"
+        "name": "Planned departure time"
       },
       "departure_time_actual": {
-        "name": "Departure time actual"
+        "name": "Actual departure time"
       },
       "arrival_time_planned": {
-        "name": "Arrival time planned"
+        "name": "Planned arrival time"
       },
       "arrival_time_actual": {
-        "name": "Arrival time actual"
+        "name": "Actual arrival time"
       },
       "departure": {
         "name": "Departure"
