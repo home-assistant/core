@@ -494,6 +494,8 @@ build.json @home-assistant/supervisor
 /tests/components/filesize/ @gjohansson-ST
 /homeassistant/components/filter/ @dgomes
 /tests/components/filter/ @dgomes
+/homeassistant/components/fing/ @Lorenzo-Gasparini
+/tests/components/fing/ @Lorenzo-Gasparini
 /homeassistant/components/firefly_iii/ @erwindouna
 /tests/components/firefly_iii/ @erwindouna
 /homeassistant/components/fireservicerota/ @cyberjunky

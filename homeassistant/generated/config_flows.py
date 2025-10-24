@@ -202,6 +202,7 @@ FLOWS = {
         "fibaro",
         "file",
         "filesize",
+        "fing",
         "firefly_iii",
         "fireservicerota",
         "fitbit",
