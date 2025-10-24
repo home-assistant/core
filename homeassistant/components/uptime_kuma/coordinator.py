@@ -91,7 +91,8 @@ def async_migrate_entities_unique_ids(
     if (
         coordinator.version is None
         or coordinator.version.version == coordinator.api.version.version
-    ) or int(coordinator.api.version.major) < 2:
+        or int(coordinator.api.version.major) < 2
+    ):
         return
 
     entity_registry = er.async_get(hass)
