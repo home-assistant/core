@@ -14,7 +14,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, INTEGRATION_NAME
 from .coordinator import RedgtechConfigEntry, RedgtechDataUpdateCoordinator
 from .device import RedgtechDevice
 
@@ -82,12 +82,16 @@ class RedgtechSwitch(CoordinatorEntity[RedgtechDataUpdateCoordinator], SwitchEnt
                 "Failed to set switch state due to authentication error: %s", err
             )
             raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="switch_auth_error"
+                translation_domain=DOMAIN,
+                translation_key="switch_auth_error",
+                translation_placeholders={"integration_name": INTEGRATION_NAME},
             ) from err
         except RedgtechConnectionError as err:
             _LOGGER.error("Connection error: %s", err)
             raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="connection_error"
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"integration_name": INTEGRATION_NAME},
             ) from err
 
     async def async_turn_on(self, **kwargs: Any) -> None:

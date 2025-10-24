@@ -74,7 +74,7 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
         try:
             await self.ensure_token()
 
-            data = await self.api.get_data(self.access_token or "")
+            data = await self.api.get_data(self.access_token)
         except RedgtechAuthError:
             _LOGGER.debug("Auth failed, trying to renew token")
             try:
@@ -82,21 +82,9 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
                     self.config_entry.data[CONF_EMAIL],
                     self.config_entry.data[CONF_PASSWORD],
                 )
-                data = await self.api.get_data(self.access_token or "")
+                data = await self.api.get_data(self.access_token)
             except RedgtechAuthError as e:
-                # Start reauth flow instead of raising ConfigEntryError
-                _LOGGER.warning("Authentication failed, starting reauth flow")
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={
-                            "source": "reauth",
-                            "entry_id": self.config_entry.entry_id,
-                        },
-                        data=self.config_entry.data,
-                    )
-                )
-                raise UpdateFailed("Authentication failed, reauth flow started") from e
+                raise UpdateFailed("Authentication failed") from e
             except RedgtechConnectionError as e:
                 raise UpdateFailed("Connection error during token renewal") from e
 

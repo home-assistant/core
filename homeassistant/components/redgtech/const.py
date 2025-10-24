@@ -3,4 +3,5 @@
 from datetime import timedelta
 
 DOMAIN = "redgtech"
+INTEGRATION_NAME = "Redgtech"
 UPDATE_INTERVAL = timedelta(seconds=60)  # Update every 60 seconds

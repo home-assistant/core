@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from .const import DOMAIN
+from .const import DOMAIN, INTEGRATION_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,11 +53,15 @@ class RedgtechConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_EMAIL): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_EMAIL): str,
+                        vol.Required(CONF_PASSWORD): str,
+                    }
+                ),
+                user_input,
             ),
             errors=errors,
+            description_placeholders={"integration_name": INTEGRATION_NAME},
         )

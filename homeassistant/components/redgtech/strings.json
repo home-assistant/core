@@ -2,15 +2,15 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up Redgtech",
-        "description": "Please enter your credentials to connect to the Redgtech API.",
+        "title": "Set up {integration_name}",
+        "description": "Please enter your credentials to connect to the {integration_name} API.",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "email": "Enter the email address associated with your Redgtech account.",
-          "password": "Enter the password for your Redgtech account."
+          "email": "Enter the email address associated with your {integration_name} account.",
+          "password": "Enter the password for your {integration_name} account."
         }
       }
     },
@@ -25,16 +25,16 @@
   },
   "exceptions": {
     "api_error": {
-      "message": "Error while communicating with the Redgtech API"
+      "message": "Error while communicating with the {integration_name} API"
     },
     "authentication_failed": {
       "message": "Authentication failed. Please check your credentials."
     },
     "connection_error": {
-      "message": "Connection error with Redgtech API"
+      "message": "Connection error with {integration_name} API"
     },
     "switch_auth_error": {
-      "message": "Authentication failed when controlling Redgtech switch"
+      "message": "Authentication failed when controlling {integration_name} switch"
     }
   }
 }
