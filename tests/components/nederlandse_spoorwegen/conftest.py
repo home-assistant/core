@@ -16,7 +16,7 @@ from homeassistant.components.nederlandse_spoorwegen.const import (
     SUBENTRY_TYPE_ROUTE,
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 
 from .const import (
     API_KEY,
@@ -38,6 +38,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_sensor_platform() -> Generator:
+    """Override PLATFORMS for NS integration."""
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.PLATFORMS",
+        [Platform.SENSOR],
+    ) as mock_platform:
+        yield mock_platform
 
 
 @pytest.fixture

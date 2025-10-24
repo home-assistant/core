@@ -33,6 +33,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 async def test_config_import(
     hass: HomeAssistant,
     mock_nsapi,
+    mock_sensor_platform,
     mock_setup_entry: AsyncMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
@@ -69,6 +70,7 @@ async def test_config_import(
 async def test_sensor(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
+    mock_sensor_platform,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -83,6 +85,7 @@ async def test_sensor(
 async def test_single_trip_sensor(
     hass: HomeAssistant,
     mock_single_trip_nsapi: AsyncMock,
+    mock_sensor_platform,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -97,6 +100,7 @@ async def test_single_trip_sensor(
 async def test_no_trips_sensor(
     hass: HomeAssistant,
     mock_no_trips_nsapi: AsyncMock,
+    mock_sensor_platform,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -110,6 +114,7 @@ async def test_no_trips_sensor(
 async def test_sensor_with_api_connection_error(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
+    mock_sensor_platform,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensor behavior when API connection fails."""
@@ -135,6 +140,7 @@ async def test_sensor_with_api_connection_error(
 async def test_sensor_with_custom_time_parsing(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
+    mock_sensor_platform,
     time_input,
     route_name,
     description,
@@ -167,17 +173,15 @@ async def test_sensor_with_custom_time_parsing(
     await setup_integration(hass, config_entry)
     await hass.async_block_till_done()
 
-    # Should create one sensor for the route with time parsing
+    # Should create 13 sensors for the route with time parsing
     sensor_states = hass.states.async_all("sensor")
-    assert len(sensor_states) == 1
+    assert len(sensor_states) == 13
 
     # Verify sensor was created successfully with time parsing
     state = sensor_states[0]
     assert state is not None
     assert state.state != "unavailable"
     assert state.attributes.get("attribution") == "Data provided by NS"
-    assert state.attributes.get("device_class") == "timestamp"
-    assert state.attributes.get("icon") == "mdi:train"
 
     # The sensor should have a friendly name based on the route name
     friendly_name = state.attributes.get("friendly_name", "").lower()

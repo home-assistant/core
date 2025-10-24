@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 import logging
 from typing import Any
 
@@ -13,9 +16,10 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME, EntityCategory
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -24,7 +28,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -39,15 +43,35 @@ from .const import (
 )
 from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
 
+_LOGGER = logging.getLogger(__name__)
 
-def _get_departure_time(trip: Trip | None) -> datetime | None:
-    """Get next departure time from trip data."""
-    return trip.departure_time_actual or trip.departure_time_planned if trip else None
+PARALLEL_UPDATES = 0  # since we use coordinator pattern
+
+ROUTE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_FROM): cv.string,
+        vol.Required(CONF_TO): cv.string,
+        vol.Optional(CONF_VIA): cv.string,
+        vol.Optional(CONF_TIME): cv.time,
+    }
+)
+
+ROUTES_SCHEMA = vol.All(cv.ensure_list, [ROUTE_SCHEMA])
+
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_API_KEY): cv.string, vol.Optional(CONF_ROUTES): ROUTES_SCHEMA}
+)
 
 
 def _get_time_str(time: datetime | None) -> str | None:
     """Get time as string."""
     return time.strftime("%H:%M") if time else None
+
+
+def get_departure_time(trip: Trip | None) -> datetime | None:
+    """Get next departure time from trip data."""
+    return trip.departure_time_actual or trip.departure_time_planned if trip else None
 
 
 def _get_route(trip: Trip | None) -> list[str]:
@@ -66,22 +90,114 @@ def _get_delay(planned: datetime | None, actual: datetime | None) -> bool:
     return bool(planned and actual and planned != actual)
 
 
-_LOGGER = logging.getLogger(__name__)
+class TripStatus(Enum):
+    """Enumeration for trip status."""
 
-ROUTE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_FROM): cv.string,
-        vol.Required(CONF_TO): cv.string,
-        vol.Optional(CONF_VIA): cv.string,
-        vol.Optional(CONF_TIME): cv.time,
-    }
-)
+    CANCELLED = "CANCELLED"
+    CHANGE_NOT_POSSIBLE = "CHANGE_NOT_POSSIBLE"
+    ALTERNATIVE_TRANSPORT = "ALTERNATIVE_TRANSPORT"
+    DISRUPTION = "DISRUPTION"
+    MAINTENANCE = "MAINTENANCE"
+    UNCERTAIN = "UNCERTAIN"
+    REPLACEMENT = "REPLACEMENT"
+    ADDITIONAL = "ADDITIONAL"
+    SPECIAL = "SPECIAL"
+    NORMAL = "NORMAL"
 
-ROUTES_SCHEMA = vol.All(cv.ensure_list, [ROUTE_SCHEMA])
+    def __str__(self) -> str:
+        """Return the string representation."""
+        str_value = self.value.replace("_", " ")
+        return str_value.capitalize()
 
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_API_KEY): cv.string, vol.Optional(CONF_ROUTES): ROUTES_SCHEMA}
+
+@dataclass(frozen=True, kw_only=True)
+class NSSensorEntityDescription(SensorEntityDescription):
+    """Describes Nederlandse Spoorwegen sensor entity."""
+
+    is_next: bool = False
+    convert_fn: Callable[[Any], Any] | None = None
+    value_fn: Callable[[Any], Any] | None = None
+
+
+# Entity descriptions for all the different sensors we create per route
+SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
+    NSSensorEntityDescription(
+        key="actual_departure",
+        translation_key="departure",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=get_departure_time,
+    ),
+    NSSensorEntityDescription(
+        key="next_departure",
+        translation_key="next_departure_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        is_next=True,
+        value_fn=get_departure_time,
+    ),
+    # Platform information
+    NSSensorEntityDescription(
+        key="departure_platform_planned",
+        translation_key="departure_platform_planned",
+        value_fn=lambda trip: getattr(trip, "departure_platform_planned", None),
+    ),
+    NSSensorEntityDescription(
+        key="departure_platform_actual",
+        translation_key="departure_platform_actual",
+        value_fn=lambda trip: getattr(trip, "departure_platform_actual", None),
+    ),
+    NSSensorEntityDescription(
+        key="arrival_platform_planned",
+        translation_key="arrival_platform_planned",
+        value_fn=lambda trip: getattr(trip, "arrival_platform_planned", None),
+    ),
+    NSSensorEntityDescription(
+        key="arrival_platform_actual",
+        translation_key="arrival_platform_actual",
+        value_fn=lambda trip: getattr(trip, "arrival_platform_actual", None),
+    ),
+    NSSensorEntityDescription(
+        key="departure_time_planned",
+        translation_key="departure_time_planned",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda trip: getattr(trip, "departure_time_planned", None),
+    ),
+    NSSensorEntityDescription(
+        key="departure_time_actual",
+        translation_key="departure_time_actual",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda trip: getattr(trip, "departure_time_actual", None),
+    ),
+    NSSensorEntityDescription(
+        key="arrival_time_planned",
+        translation_key="arrival_time_planned",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda trip: getattr(trip, "arrival_time_planned", None),
+    ),
+    NSSensorEntityDescription(
+        key="arrival_time_actual",
+        translation_key="arrival_time_actual",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda trip: getattr(trip, "arrival_time_actual", None),
+    ),
+    # Trip information
+    NSSensorEntityDescription(
+        key="status",
+        translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        convert_fn=TripStatus,
+        value_fn=lambda trip: getattr(trip, "status", None),
+    ),
+    NSSensorEntityDescription(
+        key="transfers",
+        translation_key="transfers",
+        value_fn=lambda trip: getattr(trip, "nr_transfers", 0),
+    ),
+    # Route info sensors
+    NSSensorEntityDescription(
+        key="route",
+        translation_key="route",
+        value_fn=lambda trip: ", ".join(_get_route(trip)),
+    ),
 )
 
 
@@ -144,58 +260,76 @@ async def async_setup_entry(
     coordinators = config_entry.runtime_data
 
     for subentry_id, coordinator in coordinators.items():
+        subentry_entities: list[SensorEntity] = []
         # Build entity from coordinator fields directly
-        entity = NSDepartureSensor(
-            subentry_id,
-            coordinator,
+        subentry_entities.extend(
+            [
+                NSSensor(coordinator, subentry_id, description)
+                for description in SENSOR_DESCRIPTIONS
+            ]
         )
 
-        # Add entity with proper subentry association
-        async_add_entities([entity], config_subentry_id=subentry_id)
+        # Add all entities for this subentry
+        async_add_entities(subentry_entities, config_subentry_id=subentry_id)
 
 
-class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
-    """Implementation of a NS Departure Sensor."""
+class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
+    """Generic NS sensor based on entity description."""
 
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_has_entity_name = True
     _attr_attribution = "Data provided by NS"
-    _attr_icon = "mdi:train"
+    entity_description: NSSensorEntityDescription
 
     def __init__(
         self,
-        subentry_id: str,
         coordinator: NSDataUpdateCoordinator,
+        subentry_id: str,
+        description: NSSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._name = coordinator.name
+        self.entity_description = description
+        if self.entity_description.key != "actual_departure":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._subentry_id = subentry_id
-        self._attr_unique_id = f"{subentry_id}-actual_departure"
+
+        self._attr_unique_id = f"{subentry_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._subentry_id)},
-            name=self._name,
+            identifiers={(DOMAIN, subentry_id)},
+            name=coordinator.name,
             manufacturer=INTEGRATION_TITLE,
             model=ROUTE_MODEL,
         )
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self) -> datetime | None:
+    def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
-        route_data = self.coordinator.data
-        if not route_data.first_trip:
+        if (
+            not self.coordinator
+            or not self.coordinator.data
+            or not self.entity_description.value_fn
+        ):
             return None
 
-        first_trip = route_data.first_trip
-        return _get_departure_time(first_trip)
+        data = (
+            self.coordinator.data.first_trip
+            if not self.entity_description.is_next
+            else self.coordinator.data.next_trip
+        )
+        if data is None:
+            return None
+        if self.entity_description.convert_fn:
+            return self.entity_description.convert_fn(
+                self.entity_description.value_fn(data)
+            )
+        return self.entity_description.value_fn(data)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
+        if self.entity_description.key != "actual_departure":
+            return None
+
         first_trip = self.coordinator.data.first_trip
         next_trip = self.coordinator.data.next_trip
 
@@ -224,7 +358,7 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
             ),
             "arrival_platform_planned": first_trip.arrival_platform_planned,
             "arrival_platform_actual": first_trip.arrival_platform_actual,
-            "next": _get_time_str(_get_departure_time(next_trip)),
+            "next": _get_time_str(get_departure_time(next_trip)),
             "status": status.lower() if status else None,
             "transfers": first_trip.nr_transfers,
             "route": route,

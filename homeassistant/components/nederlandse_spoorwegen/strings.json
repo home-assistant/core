@@ -70,5 +70,54 @@
       "title": "[%key:component::nederlandse_spoorwegen::issues::deprecated_yaml_import_issue_invalid_auth::title%]",
       "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nWhile importing your configuration an invalid station was found. Please update your YAML configuration, or remove the existing YAML configuration and set the integration up via the UI."
     }
+  },
+  "entity": {
+    "sensor": {
+      "departure_platform_planned": {
+        "name": "Departure platform planned"
+      },
+      "departure_platform_actual": {
+        "name": "Departure platform actual"
+      },
+      "arrival_platform_planned": {
+        "name": "Arrival platform planned"
+      },
+      "arrival_platform_actual": {
+        "name": "Arrival platform actual"
+      },
+      "departure_time_planned": {
+        "name": "Departure time planned"
+      },
+      "departure_time_actual": {
+        "name": "Departure time actual"
+      },
+      "arrival_time_planned": {
+        "name": "Arrival time planned"
+      },
+      "arrival_time_actual": {
+        "name": "Arrival time actual"
+      },
+      "departure": {
+        "name": "Departure"
+      },
+      "next_departure_time": {
+        "name": "Next departure"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "transfers": {
+        "name": "Transfers"
+      },
+      "route_from": {
+        "name": "Route from"
+      },
+      "route_to": {
+        "name": "Route to"
+      },
+      "route": {
+        "name": "Route"
+      }
+    }
   }
 }
