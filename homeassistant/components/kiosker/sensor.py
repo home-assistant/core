@@ -78,6 +78,13 @@ SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
         else None,
     ),
     KioskerSensorEntityDescription(
+        key="ambientLight",
+        translation_key="ambient_light",
+        icon="mdi:brightness-6",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.ambient_light if hasattr(x, "ambient_light") else None,
+    ),
+    KioskerSensorEntityDescription(
         key="lastUpdate",
         translation_key="last_update",
         icon="mdi:update",

@@ -75,7 +75,6 @@ async def test_form(hass: HomeAssistant) -> None:
                 "api_token": "test-token",
                 "ssl": False,
                 "ssl_verify": False,
-                "poll_interval": 30,
             },
         )
         await hass.async_block_till_done()
@@ -88,7 +87,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "api_token": "test-token",
         "ssl": False,
         "ssl_verify": False,
-        "poll_interval": 30,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -111,7 +109,6 @@ async def test_form_invalid_host(hass: HomeAssistant) -> None:
                 "api_token": "test-token",
                 "ssl": False,
                 "ssl_verify": False,
-                "poll_interval": 30,
             },
         )
 
@@ -137,7 +134,6 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
                 "api_token": "test-token",
                 "ssl": False,
                 "ssl_verify": False,
-                "poll_interval": 30,
             },
         )
 
@@ -225,7 +221,6 @@ async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
                 "api_token": "test-token",
                 "ssl": False,
                 "ssl_verify": False,
-                "poll_interval": 30,
             },
         )
         await hass.async_block_till_done()
@@ -238,7 +233,6 @@ async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
         "api_token": "test-token",
         "ssl": False,
         "ssl_verify": False,
-        "poll_interval": 30,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -265,7 +259,6 @@ async def test_zeroconf_discovery_confirm_cannot_connect(hass: HomeAssistant) ->
                 "api_token": "test-token",
                 "ssl": False,
                 "ssl_verify": False,
-                "poll_interval": 30,
             },
         )
 
@@ -310,7 +303,6 @@ async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
                 "api_token": "test-token",
                 "ssl": False,
                 "ssl_verify": False,
-                "poll_interval": 30,
             },
         )
 
@@ -367,7 +359,6 @@ async def test_manual_setup_with_device_id_fallback(hass: HomeAssistant) -> None
                 "api_token": "test-token",
                 "ssl": False,
                 "ssl_verify": False,
-                "poll_interval": 30,
             },
         )
         await hass.async_block_till_done()
