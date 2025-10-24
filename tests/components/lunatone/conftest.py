@@ -27,6 +27,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_lunatone_devices() -> Generator[AsyncMock]:
     """Mock a Lunatone devices object."""
+    state = {"is_dimmable": False}
 
     def build_devices_mock(devices: Devices):
         device_list = []
@@ -36,6 +37,10 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
             device.id = device.data.id
             device.name = device.data.name
             device.is_on = device.data.features.switchable.status
+            device.brightness = device.data.features.dimmable.status
+            type(device).is_dimmable = PropertyMock(
+                side_effect=lambda s=state: s["is_dimmable"]
+            )
             device_list.append(device)
         return device_list
 
@@ -47,6 +52,7 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
         type(devices).devices = PropertyMock(
             side_effect=lambda d=devices: build_devices_mock(d)
         )
+        devices.set_is_dimmable = lambda value, s=state: s.update(is_dimmable=value)
         yield devices
 
 
