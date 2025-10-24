@@ -101,7 +101,8 @@
         "state_attributes": {
           "mode": {
             "state": {
-              "autoPro": "Auto Pro"
+              "autoPro": "Auto Pro",
+              "humidity": "Humidity"
             }
           }
         }
