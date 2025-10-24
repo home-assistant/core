@@ -1,5 +1,6 @@
 """Platform for light integration."""
 
+import logging
 from typing import Any
 
 from smarttub import SpaLight
@@ -20,6 +21,8 @@ from .const import ATTR_LIGHTS, DEFAULT_LIGHT_BRIGHTNESS, DEFAULT_LIGHT_EFFECT
 from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -125,10 +128,26 @@ class SmartTubLight(SmartTubEntity, LightEntity):
             kwargs.get(ATTR_BRIGHTNESS, DEFAULT_LIGHT_BRIGHTNESS)
         )
 
-        await self.light.set_mode(mode, intensity)
+        try:
+            await self.light.set_mode(mode, intensity)
+        except (AttributeError, TypeError) as ex:
+            # The smarttub library may raise exceptions when checking state.lights
+            # during state verification, even though the command succeeds
+            _LOGGER.debug(
+                "Error during light state verification (command likely succeeded): %s",
+                ex,
+            )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.light.set_mode(SpaLight.LightMode.OFF, 0)
+        try:
+            await self.light.set_mode(SpaLight.LightMode.OFF, 0)
+        except (AttributeError, TypeError) as ex:
+            # The smarttub library may raise exceptions when checking state.lights
+            # during state verification, even though the command succeeds
+            _LOGGER.debug(
+                "Error during light state verification (command likely succeeded): %s",
+                ex,
+            )
         await self.coordinator.async_request_refresh()

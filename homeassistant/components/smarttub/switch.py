@@ -1,6 +1,7 @@
 """Platform for switch integration."""
 
 import asyncio
+import logging
 from typing import Any
 
 from smarttub import SpaPump
@@ -14,6 +15,8 @@ from .const import API_TIMEOUT, ATTR_PUMPS
 from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -82,6 +85,14 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the pump on or off."""
-        async with asyncio.timeout(API_TIMEOUT):
-            await self.pump.toggle()
+        try:
+            async with asyncio.timeout(API_TIMEOUT):
+                await self.pump.toggle()
+        except (AttributeError, TypeError) as ex:
+            # The smarttub library may raise exceptions when checking state.pumps
+            # during state verification, even though the command succeeds
+            _LOGGER.debug(
+                "Error during pump state verification (command likely succeeded): %s",
+                ex,
+            )
         await self.coordinator.async_request_refresh()
