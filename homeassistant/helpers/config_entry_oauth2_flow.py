@@ -576,7 +576,7 @@ async def async_get_implementations(
         except ImplementationUnavailableError as err:
             exceptions.append(err)
 
-    if len(registered) == 0 and len(exceptions) > 0:
+    if not registered and exceptions:
         raise ImplementationUnavailableError(*exceptions)
 
     return registered

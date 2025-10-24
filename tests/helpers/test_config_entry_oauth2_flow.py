@@ -1171,7 +1171,8 @@ async def test_async_get_config_entry_implementation_with_failing_provider_and_s
         },
     )
 
-    # This should succeed and return the local implementation even though the failing cloud provider raised an exception
+    # This should succeed and return the local implementation
+    # even though the failing cloud provider raised an exception
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, config_entry
@@ -1211,7 +1212,8 @@ async def test_async_get_config_entry_implementation_with_failing_provider(
         },
     )
 
-    # This should fail since the local provider returned an empty list and the cloud provider raised an exception
+    # This should fail since the local provider returned an empty list
+    # and the cloud provider raised an exception
     with pytest.raises(config_entry_oauth2_flow.ImplementationUnavailableError):
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, config_entry
@@ -1221,25 +1223,19 @@ async def test_async_get_config_entry_implementation_with_failing_provider(
 async def test_async_get_config_entry_implementation_missing_provider(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_get_config_entry_implementation when one provider fails and the other is empty."""
+    """Test async_get_config_entry_implementation when both providers are empty."""
 
-    async def empty_cloud_provider(
-        _hass: HomeAssistant, _domain: str
-    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
-        """Provider that raises an exception."""
-        return []
-
-    async def empty_local_provider(
+    async def empty_provider(
         _hass: HomeAssistant, _domain: str
     ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
         """Provider that returns implementations."""
         return []
 
     config_entry_oauth2_flow.async_add_implementation_provider(
-        hass, "cloud", empty_cloud_provider
+        hass, "cloud", empty_provider
     )
     config_entry_oauth2_flow.async_add_implementation_provider(
-        hass, "application_credentials", empty_local_provider
+        hass, "application_credentials", empty_provider
     )
 
     config_entry = MockConfigEntry(
