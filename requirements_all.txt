@@ -1966,7 +1966,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.2
 
 # homeassistant.components.dobiss
-pydobiss==0.1.55
+pydobiss==0.1.56
 
 # homeassistant.components.doods
 pydoods==1.0.2
