@@ -640,10 +640,10 @@ async def test_async_user_not_allowed_do_auth(
 
 async def test_create_user_once(hass: HomeAssistant) -> None:
     """Test that we reuse the user."""
-    cur_users = len(await hass.auth.async_get_users())
+    cur_users = len(hass.auth.async_get_users())
     app = web.Application()
     await async_setup_auth(hass, app)
-    users = await hass.auth.async_get_users()
+    users = hass.auth.async_get_users()
     assert len(users) == cur_users + 1
 
     user: User = next((user for user in users if user.name == CONTENT_USER_NAME), None)
@@ -657,4 +657,4 @@ async def test_create_user_once(hass: HomeAssistant) -> None:
     await async_setup_auth(hass, app)
 
     # test it did not create a user
-    assert len(await hass.auth.async_get_users()) == cur_users + 1
+    assert len(hass.auth.async_get_users()) == cur_users + 1

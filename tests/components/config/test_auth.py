@@ -172,7 +172,7 @@ async def test_delete(
     client = await hass_ws_client(hass, hass_access_token)
     test_user = MockUser(id="efg").add_to_hass(hass)
 
-    cur_users = len(await hass.auth.async_get_users())
+    cur_users = len(hass.auth.async_get_users())
 
     await client.send_json(
         {"id": 5, "type": auth_config.WS_TYPE_DELETE, "user_id": test_user.id}
@@ -180,7 +180,7 @@ async def test_delete(
 
     result = await client.receive_json()
     assert result["success"], result
-    assert len(await hass.auth.async_get_users()) == cur_users - 1
+    assert len(hass.auth.async_get_users()) == cur_users - 1
 
 
 async def test_create(
@@ -189,15 +189,15 @@ async def test_create(
     """Test create command works."""
     client = await hass_ws_client(hass, hass_access_token)
 
-    cur_users = len(await hass.auth.async_get_users())
+    cur_users = len(hass.auth.async_get_users())
 
     await client.send_json({"id": 5, "type": "config/auth/create", "name": "Paulus"})
 
     result = await client.receive_json()
     assert result["success"], result
-    assert len(await hass.auth.async_get_users()) == cur_users + 1
+    assert len(hass.auth.async_get_users()) == cur_users + 1
     data_user = result["result"]["user"]
-    user = await hass.auth.async_get_user(data_user["id"])
+    user = hass.auth.async_get_user(data_user["id"])
     assert user is not None
     assert user.name == data_user["name"]
     assert user.is_active
@@ -213,7 +213,7 @@ async def test_create_user_group(
     """Test create user with a group."""
     client = await hass_ws_client(hass, hass_access_token)
 
-    cur_users = len(await hass.auth.async_get_users())
+    cur_users = len(hass.auth.async_get_users())
 
     await client.send_json(
         {
@@ -226,9 +226,9 @@ async def test_create_user_group(
 
     result = await client.receive_json()
     assert result["success"], result
-    assert len(await hass.auth.async_get_users()) == cur_users + 1
+    assert len(hass.auth.async_get_users()) == cur_users + 1
     data_user = result["result"]["user"]
-    user = await hass.auth.async_get_user(data_user["id"])
+    user = hass.auth.async_get_user(data_user["id"])
     assert user is not None
     assert user.name == data_user["name"]
     assert user.is_active

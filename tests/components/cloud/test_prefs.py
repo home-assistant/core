@@ -99,7 +99,7 @@ async def test_load_invalid_cloud_user(
 
     assert cloud_user_id != "non-existing"
 
-    cloud_user = await hass.auth.async_get_user(
+    cloud_user = hass.auth.async_get_user(
         hass_storage[STORAGE_KEY]["data"]["cloud_user"]
     )
 
@@ -117,14 +117,14 @@ async def test_setup_remove_cloud_user(
     await prefs.async_initialize()
     await prefs.async_set_username("user1")
 
-    cloud_user = await hass.auth.async_get_user(await prefs.get_cloud_user())
+    cloud_user = hass.auth.async_get_user(await prefs.get_cloud_user())
 
     assert cloud_user
     assert cloud_user.groups[0].id == GROUP_ID_ADMIN
 
     await prefs.async_set_username("user2")
 
-    cloud_user2 = await hass.auth.async_get_user(await prefs.get_cloud_user())
+    cloud_user2 = hass.auth.async_get_user(await prefs.get_cloud_user())
 
     assert cloud_user2
     assert cloud_user2.groups[0].id == GROUP_ID_ADMIN

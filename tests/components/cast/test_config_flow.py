@@ -68,7 +68,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    users = await hass.auth.async_get_users()
+    users = hass.auth.async_get_users()
     assert next(user for user in users if user.name == CAST_USER_NAME)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
@@ -90,7 +90,7 @@ async def test_user_setup_options(hass: HomeAssistant) -> None:
         result["flow_id"], {"known_hosts": ["192.168.0.1", "", " ", "192.168.0.2 "]}
     )
 
-    users = await hass.auth.async_get_users()
+    users = hass.auth.async_get_users()
     assert next(user for user in users if user.name == CAST_USER_NAME)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
@@ -110,7 +110,7 @@ async def test_zeroconf_setup(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    users = await hass.auth.async_get_users()
+    users = hass.auth.async_get_users()
     assert next(user for user in users if user.name == CAST_USER_NAME)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
@@ -130,7 +130,7 @@ async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
             "cast", context={"source": config_entries.SOURCE_ZEROCONF}
         )
 
-    users = await hass.auth.async_get_users()
+    users = hass.auth.async_get_users()
     assert next(user for user in users if user.name == CAST_USER_NAME)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {

@@ -249,7 +249,7 @@ async def test_login_as_existing_user(mock_hass) -> None:
     assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     credential = step["result"]
-    user = await manager.async_get_user_by_credentials(credential)
+    user = manager.async_get_user_by_credentials(credential)
     assert user is not None
     assert user.id == "mock-user"
     assert user.is_owner is False
@@ -292,17 +292,17 @@ async def test_linking_user_to_two_auth_providers(
         step["flow_id"], {"username": "another-user", "password": "another-password"}
     )
     new_credential = step["result"]
-    await manager.async_link_user(user, new_credential)
+    manager.async_link_user(user, new_credential)
     assert len(user.credentials) == 2
 
     # Linking it again to same user is a no-op
-    await manager.async_link_user(user, new_credential)
+    manager.async_link_user(user, new_credential)
     assert len(user.credentials) == 2
 
     # Linking a credential to a user while the credential is already linked to another user should raise
     user_2 = await manager.async_create_user("User 2")
     with pytest.raises(ValueError):
-        await manager.async_link_user(user_2, new_credential)
+        manager.async_link_user(user_2, new_credential)
     assert len(user_2.credentials) == 0
 
 
@@ -331,7 +331,7 @@ async def test_saving_loading(
     credential = step["result"]
     user = await manager.async_get_or_create_user(credential)
 
-    await manager.async_activate_user(user)
+    manager.async_activate_user(user)
     # the first refresh token will be used to create access token
     refresh_token = await manager.async_create_refresh_token(
         user, CLIENT_ID, credential=credential
@@ -346,7 +346,7 @@ async def test_saving_loading(
 
     store2 = auth_store.AuthStore(hass)
     await store2.async_load()
-    users = await store2.async_get_users()
+    users = store2.async_get_users()
     assert len(users) == 1
     assert users[0].permissions == user.permissions
     assert users[0] == user
@@ -1092,7 +1092,7 @@ async def test_async_remove_user(hass: HomeAssistant) -> None:
 
     await hass.auth.async_remove_user(user)
 
-    assert len(await manager.async_get_users()) == 0
+    assert len(manager.async_get_users()) == 0
     assert len(user.credentials) == 0
 
     await hass.async_block_till_done()
@@ -1104,7 +1104,7 @@ async def test_async_remove_user_fail_if_remove_credential_fails(
     hass: HomeAssistant, hass_admin_user: MockUser, hass_admin_credential: Credentials
 ) -> None:
     """Test removing a user."""
-    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
+    hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
 
     with (
         patch.object(hass.auth, "async_remove_credentials", side_effect=ValueError),

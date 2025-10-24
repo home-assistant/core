@@ -41,7 +41,7 @@ async def websocket_create(
     """Create credentials and attach to a user."""
     provider = auth_ha.async_get_provider(hass)
 
-    if (user := await hass.auth.async_get_user(msg["user_id"])) is None:
+    if (user := hass.auth.async_get_user(msg["user_id"])) is None:
         connection.send_error(msg["id"], "not_found", "User not found")
         return
 
@@ -58,7 +58,7 @@ async def websocket_create(
     credentials = await provider.async_get_or_create_credentials(
         {"username": msg["username"]}
     )
-    await hass.auth.async_link_user(user, credentials)
+    hass.auth.async_link_user(user, credentials)
 
     connection.send_result(msg["id"])
 
@@ -159,7 +159,7 @@ async def websocket_admin_change_password(
     if not connection.user.is_owner:
         raise Unauthorized(context=connection.context(msg))
 
-    if (user := await hass.auth.async_get_user(msg["user_id"])) is None:
+    if (user := hass.auth.async_get_user(msg["user_id"])) is None:
         connection.send_error(msg["id"], "user_not_found", "User not found")
         return
 
@@ -201,7 +201,7 @@ async def websocket_admin_change_username(
     if not connection.user.is_owner:
         raise Unauthorized(context=connection.context(msg))
 
-    if (user := await hass.auth.async_get_user(msg["user_id"])) is None:
+    if (user := hass.auth.async_get_user(msg["user_id"])) is None:
         connection.send_error(msg["id"], "user_not_found", "User not found")
         return
 

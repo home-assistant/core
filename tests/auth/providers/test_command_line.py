@@ -1,7 +1,7 @@
 """Tests for the command_line auth provider."""
 
 import os
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 import uuid
 
 import pytest
@@ -77,7 +77,7 @@ async def test_match_existing_credentials(
         data={"username": "good-user"},
         is_new=False,
     )
-    provider.async_credentials = AsyncMock(return_value=[existing])
+    provider.async_credentials = Mock(return_value=[existing])
     credentials = await provider.async_get_or_create_credentials(
         {"username": "good-user", "password": "irrelevant"}
     )

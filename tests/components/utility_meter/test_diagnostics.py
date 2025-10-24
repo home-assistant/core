@@ -25,7 +25,7 @@ async def generate_new_hass_access_token(
     hass: HomeAssistant, hass_admin_user: MockUser, hass_admin_credential: Credentials
 ) -> str:
     """Return an access token to access Home Assistant."""
-    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
+    hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
 
     refresh_token = await hass.auth.async_create_refresh_token(
         hass_admin_user, CLIENT_ID, credential=hass_admin_credential

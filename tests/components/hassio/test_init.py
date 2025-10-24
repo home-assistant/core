@@ -325,7 +325,7 @@ async def test_setup_api_push_api_data_default(
     assert not aioclient_mock.mock_calls[0][2]["ssl"]
     assert aioclient_mock.mock_calls[0][2]["port"] == 8123
     refresh_token = aioclient_mock.mock_calls[0][2]["refresh_token"]
-    hassio_user = await hass.auth.async_get_user(
+    hassio_user = hass.auth.async_get_user(
         hass_storage[STORAGE_KEY]["data"]["hassio_user"]
     )
     assert hassio_user is not None

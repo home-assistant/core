@@ -113,7 +113,7 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
     user = MockUser(
         id="mock-user", is_owner=False, is_active=False, name="Paulus"
     ).add_to_auth_manager(hass.auth)
-    await hass.auth.async_link_user(
+    hass.auth.async_link_user(
         user,
         auth_models.Credentials(
             id="mock-id",
@@ -350,7 +350,7 @@ async def test_not_raise_exception_when_service_not_exist(hass: HomeAssistant) -
     user = MockUser(
         id="mock-user", is_owner=False, is_active=False, name="Paulus"
     ).add_to_auth_manager(hass.auth)
-    await hass.auth.async_link_user(
+    hass.auth.async_link_user(
         user,
         auth_models.Credentials(
             id="mock-id",
