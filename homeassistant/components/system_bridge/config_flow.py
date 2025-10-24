@@ -24,7 +24,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DATA_WAIT_TIMEOUT, DOMAIN
+from .const import DATA_WAIT_TIMEOUT, DOMAIN, SYNTAX_KEYS_DOCUMENTATION_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,7 +135,7 @@ class SystemBridgeConfigFlow(
                 step_id="user",
                 data_schema=STEP_USER_DATA_SCHEMA,
                 description_placeholders={
-                    "syntax_keys_documentation_url": "http://robotjs.io/docs/syntax#keys"
+                    "syntax_keys_documentation_url": SYNTAX_KEYS_DOCUMENTATION_URL
                 },
             )
 
@@ -152,7 +152,7 @@ class SystemBridgeConfigFlow(
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
-                "syntax_keys_documentation_url": "http://robotjs.io/docs/syntax#keys"
+                "syntax_keys_documentation_url": SYNTAX_KEYS_DOCUMENTATION_URL
             },
         )
 
@@ -185,7 +185,7 @@ class SystemBridgeConfigFlow(
             data_schema=STEP_AUTHENTICATE_DATA_SCHEMA,
             description_placeholders={
                 "name": self._name,
-                "syntax_keys_documentation_url": "http://robotjs.io/docs/syntax#keys",
+                "syntax_keys_documentation_url": SYNTAX_KEYS_DOCUMENTATION_URL,
             },
             errors=errors,
         )
