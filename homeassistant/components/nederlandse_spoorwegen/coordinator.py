@@ -136,7 +136,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
                 trip_time = datetime.strptime(dt_str, "%d-%m-%Y %H:%M")
             except ValueError:
                 # Fallback: treat as fetch now
-                return dt_str, True
+                return now.strftime("%d-%m-%Y %H:%M"), True
 
             # Make trip_time timezone-aware if naive
             if (
