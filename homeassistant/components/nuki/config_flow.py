@@ -177,4 +177,5 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
             errors=errors,
+            description_placeholders={"sample_ip": "192.168.1.25"},
         )
