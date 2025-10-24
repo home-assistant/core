@@ -55,7 +55,7 @@
       "too_many_attempts": "Too many attempts with an invalid token, temporarily banned",
       "too_many_requests": "Too many requests, try again later",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unsupported_hardware": "Your {unsupported_device} hardware is not supported by this integration."
+      "unsupported_hardware": "Your {unsupported_device} hardware is not using the Overkiz platform and can't be supported by this integration."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
