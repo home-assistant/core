@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -28,7 +28,16 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .binary_sensor import get_delay
-from .const import CONF_ROUTES, DOMAIN, INTEGRATION_TITLE, ROUTE_MODEL, ROUTES_SCHEMA
+from .const import (
+    CONF_FROM,
+    CONF_ROUTES,
+    CONF_TIME,
+    CONF_TO,
+    CONF_VIA,
+    DOMAIN,
+    INTEGRATION_TITLE,
+    ROUTE_MODEL,
+)
 from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
 
 
@@ -54,6 +63,18 @@ def _get_route(trip: Trip | None) -> list[str]:
 
 
 _LOGGER = logging.getLogger(__name__)
+
+ROUTE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_FROM): cv.string,
+        vol.Required(CONF_TO): cv.string,
+        vol.Optional(CONF_VIA): cv.string,
+        vol.Optional(CONF_TIME): cv.time,
+    }
+)
+
+ROUTES_SCHEMA = vol.All(cv.ensure_list, [ROUTE_SCHEMA])
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_API_KEY): cv.string, vol.Optional(CONF_ROUTES): ROUTES_SCHEMA}
