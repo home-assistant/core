@@ -112,7 +112,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
         fetch_now is True if the time is within ±30 minutes of now, else False.
         """
         now = _now_nl()
-        fetch_now = True
         if not time_str:
             # No time specified, fetch now
             return now.strftime("%d-%m-%Y %H:%M"), True
@@ -125,20 +124,24 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
         ):
             today = now.strftime("%d-%m-%Y")
             dt_str = f"{today} {time_str[:5]}"
+
             try:
                 trip_time = datetime.strptime(dt_str, "%d-%m-%Y %H:%M")
-                # Make trip_time timezone-aware if naive
-                if (
-                    trip_time.tzinfo is None
-                    or trip_time.tzinfo.utcoffset(trip_time) is None
-                ):
-                    trip_time = trip_time.replace(tzinfo=now.tzinfo)
-                # Check if trip_time is within ±30min of now
-                delta = abs((trip_time - now).total_seconds())
-                fetch_now = delta <= 1800
             except ValueError:
                 # Fallback: treat as fetch now
-                fetch_now = True
+                return dt_str, True
+
+            # Make trip_time timezone-aware if naive
+            if (
+                trip_time.tzinfo is None
+                or trip_time.tzinfo.utcoffset(trip_time) is None
+            ):
+                trip_time = trip_time.replace(tzinfo=now.tzinfo)
+
+            # Check if trip_time is within ±30min of now
+            delta = abs((trip_time - now).total_seconds())
+            fetch_now = delta <= 1800
+
             return dt_str, fetch_now
 
         # Fallback: use current date and time
