@@ -60,7 +60,7 @@ async def test_turn_off_switch(
     mock_yardian_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test turning on a switch."""
+    """Test turning off a switch."""
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "switch.yardian_smart_sprinkler_zone_1"
