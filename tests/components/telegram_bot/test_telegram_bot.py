@@ -50,6 +50,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_URL,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    ATTR_WRITE_TIMEOUT,
     CHAT_ACTION_TYPING,
     CONF_CONFIG_ENTRY_ID,
     DOMAIN,
@@ -464,6 +465,35 @@ async def test_send_file(hass: HomeAssistant, webhook_platform, service: str) ->
 
     assert len(response["chats"]) == 1
     assert (response["chats"][0]["message_id"]) == 12345
+
+    # test timeouts
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot._read_file_as_bytesio",
+            _read_file_as_bytesio_mock,
+        ),
+        patch(
+            "homeassistant.components.telegram_bot.bot.TelegramNotificationService._send_msg",
+            AsyncMock(),
+        ) as mock_send_msg,
+    ):
+        response = await hass.services.async_call(
+            DOMAIN,
+            service,
+            {
+                ATTR_FILE: "/media/dummy",
+                ATTR_MESSAGE_THREAD_ID: "123",
+                ATTR_WRITE_TIMEOUT: 3,
+            },
+            blocking=True,
+            context=context,
+            return_response=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_send_msg.assert_called_once()
+    assert mock_send_msg.call_args.kwargs[ATTR_WRITE_TIMEOUT] == 3
 
 
 async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> None:
