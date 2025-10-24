@@ -12,6 +12,15 @@
       },
       "gold_tenure": {
         "default": "mdi:microsoft-xbox"
+      },
+      "last_online": {
+        "default": "mdi:account-clock"
+      },
+      "follower": {
+        "default": "mdi:account-arrow-left"
+      },
+      "following": {
+        "default": "mdi:account-arrow-right"
       }
     },
     "binary_sensor": {
@@ -26,6 +35,9 @@
       },
       "in_multiplayer": {
         "default": "mdi:account-multiple"
+      },
+      "has_game_pass": {
+        "default": "mdi:microsoft-xbox"
       }
     }
   }
