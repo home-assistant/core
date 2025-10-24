@@ -268,7 +268,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         current_area = self.get_matter_attribute_value(
             clusters.ServiceArea.Attributes.CurrentArea
         )
-        if current_area:
+        if current_area is not None:
             area_name = self._get_area_name_by_id(current_area)
             self._attr_current_area = current_area
             self._attr_current_area_name = area_name
