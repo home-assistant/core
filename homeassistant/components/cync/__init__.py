@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ssl
+
 from pycync import Auth, Cync, User
 from pycync.exceptions import AuthFailedError, CyncError
 
@@ -23,6 +25,10 @@ _PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
     """Set up Cync from a config entry."""
+    # Pre-load SSL context to avoid blocking I/O in event loop
+    # The pycync library calls ssl.create_default_context() in async methods
+    await hass.async_add_executor_job(ssl.create_default_context)
+
     user_info = User(
         entry.data[CONF_ACCESS_TOKEN],
         entry.data[CONF_REFRESH_TOKEN],
