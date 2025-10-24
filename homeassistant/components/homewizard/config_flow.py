@@ -135,14 +135,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         self.product_name = discovery_info.properties[CONF_PRODUCT_NAME]
         self.serial = discovery_info.properties[CONF_SERIAL]
 
-        LOGGER.debug(
-            "Discovered HomeWizard device: %s (%s | %s) at %s",
-            self.product_name,
-            self.product_type,
-            self.serial,
-            self.ip_address,
-        )
-
         await self.async_set_unique_id(f"{self.product_type}_{self.serial}")
         self._abort_if_unique_id_configured(
             updates={CONF_IP_ADDRESS: discovery_info.host}
