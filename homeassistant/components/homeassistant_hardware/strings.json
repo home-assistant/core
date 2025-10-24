@@ -67,7 +67,7 @@
         }
       },
       "abort": {
-        "not_hassio_thread": "The OpenThread Border Router add-on can only be installed with Home Assistant OS. If you would like to use the {model} as a Thread border router, please flash the firmware manually using the [web flasher]({docs_web_flasher_url}) and set up OpenThread Border Router to communicate with it.",
+        "not_hassio_thread": "The OpenThread Border Router add-on can only be installed with Home Assistant OS. If you would like to use the {model} as a Thread border router, please manually set up OpenThread Border Router to communicate with it.",
         "otbr_addon_already_running": "The OpenThread Border Router add-on is already running, it cannot be installed again.",
         "zha_still_using_stick": "This {model} is in use by the Zigbee Home Automation integration. Please migrate your Zigbee network to another adapter or delete the integration and try again.",
         "otbr_still_using_stick": "This {model} is in use by the OpenThread Border Router add-on. If you use the Thread network, make sure you have alternative border routers. Uninstall the add-on and try again.",
