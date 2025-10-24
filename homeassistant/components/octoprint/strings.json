@@ -36,7 +36,23 @@
       "get_api_key": "Open the OctoPrint UI and select **Allow** on the Access Request for **Home Assistant**."
     }
   },
+  "entity": {
+    "number": {
+      "bed_temperature": {
+        "name": "Bed temperature"
+      },
+      "extruder_temperature": {
+        "name": "Extruder temperature"
+      },
+      "extruder_n_temperature": {
+        "name": "Extruder {n} temperature"
+      }
+    }
+  },
   "exceptions": {
+    "error_setting_temperature": {
+      "message": "Error setting target {tool} temperature"
+    },
     "missing_client": {
       "message": "No client for device ID: {device_id}"
     }

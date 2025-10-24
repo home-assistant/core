@@ -53,7 +53,7 @@ async def init_integration(
     platform: Platform,
     printer: dict[str, Any] | UndefinedType | None = UNDEFINED,
     job: dict[str, Any] | None = None,
-) -> None:
+) -> MockConfigEntry:
     """Set up the octoprint integration in Home Assistant."""
     printer_info: OctoprintPrinterInfo | None = None
     if printer is UNDEFINED:
@@ -102,3 +102,4 @@ async def init_integration(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
+    return config_entry
