@@ -123,6 +123,9 @@
       "evse_fault_state": {
         "default": "mdi:ev-station"
       },
+      "operational_error": {
+        "default": "mdi:alert-circle"
+      },
       "pump_control_mode": {
         "default": "mdi:pipe-wrench"
       },

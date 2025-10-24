@@ -444,6 +444,33 @@
       "evse_soc": {
         "name": "State of charge"
       },
+      "operational_error": {
+        "name": "Operational error",
+        "state": {
+          "no_error": "No error",
+          "unable_to_start_or_resume": "Unable to start or resume",
+          "unable_to_complete_operation": "Unable to complete operation",
+          "command_invalid_in_state": "Command invalid in current state",
+          "failed_to_find_charging_dock": "Failed to find charging dock",
+          "stuck": "Stuck",
+          "dust_bin_missing": "Dust bin missing",
+          "dust_bin_full": "Dust bin full",
+          "water_tank_empty": "Water tank empty",
+          "water_tank_missing": "Water tank missing",
+          "water_tank_lid_open": "Water tank lid open",
+          "mop_cleaning_pad_missing": "Mop cleaning pad missing",
+          "low_battery": "Low battery",
+          "cannot_reach_target_area": "Cannot reach target area",
+          "dirty_water_tank_full": "Dirty water tank full",
+          "dirty_water_tank_missing": "Dirty water tank missing",
+          "wheels_jammed": "Wheels jammed",
+          "brush_jammed": "Brush jammed",
+          "navigation_sensor_obscured": "Navigation sensor obscured"
+        }
+      },
+      "pi_heating_demand": {
+        "name": "Heating demand"
+      },
       "nitrogen_dioxide": {
         "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
       },

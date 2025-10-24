@@ -191,6 +191,15 @@ async def test_remove_node_callback(
     device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
     assert device is not None
 
+    # Test device not removed when callback called with add=True
+    await mock_homee.add_nodes_listener.call_args_list[0][0][0](
+        mock_homee.nodes[2], add=True
+    )
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    assert device is not None
+
     # Simulate removal of node with id 3 in homee
     await mock_homee.add_nodes_listener.call_args_list[0][0][0](
         mock_homee.nodes[2], add=False
