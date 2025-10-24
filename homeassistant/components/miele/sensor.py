@@ -744,7 +744,7 @@ class MieleSensor(MieleEntity, SensorEntity):
             self._attr_unique_id = description.unique_id_fn(device_id, description)
 
     @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
 
