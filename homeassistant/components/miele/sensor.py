@@ -773,7 +773,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
             self._attr_native_value = last_data.native_value  # type: ignore[assignment]
 
     @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
+    def native_value(self) -> StateType:
         """Return the state of the sensor.
 
         It is necessary to override `native_value` to fall back to the default
