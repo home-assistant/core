@@ -15,7 +15,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
-from .const import CONF_CHAT_MODEL, CONF_RECOMMENDED, LOGGER, RECOMMENDED_IMAGE_MODEL
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_RECOMMENDED,
+    LOGGER,
+    RECOMMENDED_A_TASK_MAX_TOKENS,
+    RECOMMENDED_IMAGE_MODEL,
+)
 from .entity import (
     ERROR_GETTING_RESPONSE,
     GoogleGenerativeAILLMBaseEntity,
@@ -73,7 +79,9 @@ class GoogleGenerativeAITaskEntity(
         chat_log: conversation.ChatLog,
     ) -> ai_task.GenDataTaskResult:
         """Handle a generate data task."""
-        await self._async_handle_chat_log(chat_log, task.structure)
+        await self._async_handle_chat_log(
+            chat_log, task.structure, default_max_tokens=RECOMMENDED_A_TASK_MAX_TOKENS
+        )
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
             LOGGER.error(
