@@ -128,19 +128,23 @@ jobs:
     name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
     if: github.repository_owner == 'home-assistant'
     needs: init
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix: &matrix-build
         abi: ["cp313", "cp314"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
+        include:
+          - os: ubuntu-latest
+          - arch: aarch64
+            os: ubuntu-24.04-arm
         exclude:
-          - abi: "cp314"
-            arch: "armv7"
-          - abi: "cp314"
-            arch: "armhf"
-          - abi: "cp314"
-            arch: "i386"
+          - abi: cp314
+            arch: armv7
+          - abi: cp314
+            arch: armhf
+          - abi: cp314
+            arch: i386
     steps:
       - *checkout
 
@@ -187,7 +191,7 @@ jobs:
     name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
     if: github.repository_owner == 'home-assistant'
     needs: init
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix: *matrix-build
