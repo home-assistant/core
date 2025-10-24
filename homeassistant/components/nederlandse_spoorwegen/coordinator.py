@@ -106,10 +106,17 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
         )
 
     def _get_time_from_route(self, time_str: str | None) -> tuple[str, bool]:
-        """Combine today's date with a time string if needed.
+        """Combine today's date with a time string when appropriate.
 
-        Returns (datetime string, fetch_now boolean).
-        fetch_now is True if the time is within ±30 minutes of now, else False.
+        Args:
+            time_str: Time string in 'HH:MM' or 'HH:MM:SS' format, or None.
+
+        Returns:
+            tuple[str, bool]: A tuple of (datetime_string, fetch_now).
+            `datetime_string` is formatted as 'dd-mm-YYYY HH:MM'.
+            `fetch_now` is True when (a) no time was provided, (b) parsing failed,
+            or (c) the provided time is within ±30 minutes of the current
+            time in the Europe/Amsterdam timezone.
         """
         now = _now_nl()
         if not time_str:
