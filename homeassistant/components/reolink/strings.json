@@ -13,7 +13,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'.",
+          "host": "The hostname or IP address of your Reolink device. For example: '{reolink_ip}'.",
           "port": "The HTTP(s) port to connect to the Reolink device API. For HTTP normally: '80', for HTTPS normally '443'.",
           "use_https": "Use an HTTPS (SSL) connection to the Reolink device.",
           "baichuan_port": "The 'Basic Service Port' to connect to the Reolink device over TCP. Normally '9000' unless manually changed in the Reolink desktop client.",
@@ -114,7 +114,7 @@
   "issues": {
     "https_webhook": {
       "title": "Reolink webhook URL uses HTTPS (SSL)",
-      "description": "Reolink products can not push motion events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device"
+      "description": "Reolink products can not push motion events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be `{homeassistant_url}` where `{homeassistant_ip}` is the IP of the Home Assistant device"
     },
     "ssl": {
       "title": "Reolink incompatible with global SSL certificate",
@@ -122,7 +122,7 @@
     },
     "webhook_url": {
       "title": "Reolink webhook URL unreachable",
-      "description": "Did not receive initial ONVIF state from {name}. Most likely, the Reolink camera can not reach the current (local) Home Assistant URL `{base_url}`, please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}) that points to Home Assistant. For example `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device. Also, make sure the Reolink camera can reach that URL. Using fast motion/AI state polling until the first ONVIF push is received."
+      "description": "Did not receive initial ONVIF state from {name}. Most likely, the Reolink camera can not reach the current (local) Home Assistant URL `{base_url}`, please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}) that points to Home Assistant. For example `{homeassistant_url}` where `{homeassistant_ip}` is the IP of the Home Assistant device. Also, make sure the Reolink camera can reach that URL. Using fast motion/AI state polling until the first ONVIF push is received."
     },
     "enable_port": {
       "title": "Reolink port not enabled",

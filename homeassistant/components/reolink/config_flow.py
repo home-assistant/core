@@ -98,6 +98,11 @@ class ReolinkOptionsFlowHandler(OptionsFlowWithReload):
                     ),
                 }
             ),
+            description_placeholders={
+                "homeassistant_url": "http://192.168.1.10:8123",
+                "homeassistant_ip": "192.168.1.10",
+                "reolink_ip": "192.168.1.25",
+            },
         )
 
 
