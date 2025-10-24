@@ -472,6 +472,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         self,
         chat_log: conversation.ChatLog,
         structure: vol.Schema | None = None,
+        default_max_tokens: int | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -618,7 +619,9 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             if not chat_log.unresponded_tool_results:
                 break
 
-    def create_generate_content_config(self) -> GenerateContentConfig:
+    def create_generate_content_config(
+        self, default_max_tokens: int | None = None
+    ) -> GenerateContentConfig:
         """Create the GenerateContentConfig for the LLM."""
         options = self.subentry.data
         model = options.get(CONF_CHAT_MODEL, self.default_model)
@@ -632,7 +635,9 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
             top_k=options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
             top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-            max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            max_output_tokens=options.get(
+                CONF_MAX_TOKENS, default_max_tokens or RECOMMENDED_MAX_TOKENS
+            ),
             safety_settings=[
                 SafetySetting(
                     category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
