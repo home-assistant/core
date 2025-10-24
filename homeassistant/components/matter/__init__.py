@@ -14,6 +14,7 @@ from matter_server.client.exceptions import (
     ServerVersionTooOld,
 )
 from matter_server.common.errors import MatterError, NodeNotExists
+import voluptuous as vol
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -45,6 +46,11 @@ from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
+
+# Empty schema as config entries are used exclusively
+CONFIG_SCHEMA = vol.Schema(
+    {vol.Optional(DOMAIN): vol.Schema({})}, extra=vol.ALLOW_EXTRA
+)
 
 
 @callback
