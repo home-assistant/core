@@ -2198,6 +2198,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
+# homeassistant.components.saunum
 pymodbus==3.11.2
 
 # homeassistant.components.monoprice

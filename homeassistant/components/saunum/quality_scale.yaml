@@ -1,0 +1,25 @@
+rules:
+  # Bronze tier (mandatory)
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-configuration-parameters: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  appropriate-polling: done
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions.
