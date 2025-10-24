@@ -48,16 +48,27 @@ class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """
         try:
             await self.diffuser.update_data()
-        except AuthenticationException:
-            # Session likely expired; try to re-authenticate once, then retry.
+        except (AuthenticationException, ClientResponseError) as err:
+            # Treat 401/403 like AuthenticationException → one silent re-auth, single retry
+            status = getattr(err, "status", None)
+            if isinstance(err, ClientResponseError) and status not in (401, 403):
+                # Non-auth HTTP error → let HA retry
+                raise UpdateFailed(f"HTTP {status}") from err
+
+            self.logger.debug(
+                "Auth issue detected (%r). Attempting silent re-auth.", err
+            )
             try:
                 await self.account.authenticate()
                 await self.diffuser.update_data()
             except AuthenticationException as err2:
+                # Credentials invalid → trigger HA reauth
                 raise ConfigEntryAuthFailed from err2
-        except ClientResponseError as err:
-            # HTTP errors (e.g., 429/5xx)
-            raise UpdateFailed(f"HTTP {getattr(err, 'status', '?')}") from err
+            except ClientResponseError as err2:
+                # Still HTTP auth errors after refresh → trigger HA reauth
+                if getattr(err2, "status", None) in (401, 403):
+                    raise ConfigEntryAuthFailed from err2
+                raise UpdateFailed(f"HTTP {getattr(err2, 'status', '?')}") from err2
         except ClientError as err:
             # Network issues (timeouts, DNS, etc.)
             raise UpdateFailed(f"Network error: {err!r}") from err
