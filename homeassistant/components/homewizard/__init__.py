@@ -13,14 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import async_entries_for_config_entry
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DOMAIN, LOGGER, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 
 
@@ -29,23 +24,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
 
     api: HomeWizardEnergy
 
-    LOGGER.warning("Hi")
-
     if token := entry.data.get(CONF_TOKEN):
-        LOGGER.warning("Setting up HomeWizard Energy v2 API")
         api = HomeWizardEnergyV2(
             entry.data[CONF_IP_ADDRESS],
             token=token,
             clientsession=async_get_clientsession(hass),
         )
     else:
-        LOGGER.warning("Setting up HomeWizard Energy v1 API")
         api = HomeWizardEnergyV1(
             entry.data[CONF_IP_ADDRESS],
             clientsession=async_get_clientsession(hass),
         )
 
-        LOGGER.warning("Checking for v2 API support and creating issue if needed")
         await async_check_v2_support_and_create_issue(hass, entry)
 
     coordinator = HWEnergyDeviceUpdateCoordinator(hass, entry, api)
@@ -91,10 +81,7 @@ def get_main_device(
         device_registry, config_entry_id=entry.entry_id
     )
 
-    LOGGER.error(f"Device entries: {device_entries}")
-
     if not device_entries:
-        LOGGER.warning("No device entries found for config entry")
         return None
 
     # Get first device that is not a sub-device, as this is the main device in HomeWizard
@@ -114,24 +101,13 @@ async def async_check_v2_support_and_create_issue(
 
     title = entry.title
 
-    LOGGER.error("!!!!!")
-    LOGGER.error(entry.entry_id)
-
     # Try to get the name from the device registry
     # This is to make it clearer which device needs reconfiguration, as the config entry title is kept default most of the time
     if main_device := get_main_device(hass, entry):
         device_name = main_device.name_by_user or main_device.name
 
-        LOGGER.error(f"device name {main_device.name_by_user} {main_device.name}")
-
         if device_name and entry.title != device_name:
             title = f"{entry.title} ({device_name})"
-
-    async_delete_issue(
-        hass,
-        DOMAIN,
-        f"migrate_to_v2_api_{entry.entry_id}",
-    )
 
     async_create_issue(
         hass,

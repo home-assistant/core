@@ -175,17 +175,8 @@ async def test_load_creates_repair_issue_when_name_is_updated(
     assert issue.translation_placeholders["title"] == "Device"
 
     # # Update the device name
-    # devices = async_entries_for_config_entry(device_registry, mock_config_entry.entry_id)
-    # assert devices
-
-    # # Get first device without 'via_device_id' to filter out subdevices
-    # device = next(device for device in devices if device.via_device_id is None)
-
     device_registry = dr.async_get(hass)
     device = get_main_device(hass, mock_config_entry)
-
-    print(get_main_device(hass, mock_config_entry))
-    print(mock_config_entry.entry_id)
 
     # Update device name
     device_registry.async_update_device(
@@ -193,24 +184,16 @@ async def test_load_creates_repair_issue_when_name_is_updated(
         name_by_user="My HomeWizard Device",
     )
 
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    print(get_main_device(hass, mock_config_entry))
-    print(mock_config_entry.entry_id)
-
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
     # Reload integration to trigger issue update
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    with patch("homeassistant.components.homewizard.has_v2_api", return_value=True):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
     assert issue is not None
 
     # Title should now reflect updated device name
-    assert issue.translation_placeholders["title"] == "My HomeWizard Device"
+    assert issue.translation_placeholders["title"] == "Device (My HomeWizard Device)"
 
 
 @pytest.mark.usefixtures("mock_homewizardenergy")
