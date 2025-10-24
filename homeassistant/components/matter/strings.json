@@ -465,6 +465,9 @@
           "navigation_sensor_obscured": "Navigation sensor obscured"
         }
       },
+      "pi_heating_demand": {
+        "name": "Heating demand"
+      },
       "nitrogen_dioxide": {
         "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
       },
