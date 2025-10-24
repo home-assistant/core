@@ -9,6 +9,17 @@
       "description": "Attempting to import this device (MAC: {mac}, Host: {host}) from YAML has an issue. Please try reloading the integration, or removing the YAML block from configuration.yaml and creating the entry using the UI."
     }
   },
+  "exceptions": {
+    "turn_on_error": {
+      "message": "Error while turning on S20 {name}."
+    },
+    "turn_off_error": {
+      "message": "Error while turning off S20 {name}."
+    },
+    "update_error": {
+      "message": "Error while fetching state for S20 {name}."
+    }
+  },
   "config": {
     "progress": {
       "title": "Orvibo S20",

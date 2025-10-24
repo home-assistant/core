@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -150,8 +151,12 @@ class S20Switch(SwitchEntity):
     def _turn_on(self):
         try:
             self._s20.on = True
-        except self._exc:
-            _LOGGER.exception("Error while turning on S20")
+        except self._exc as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_on_error",
+                translation_placeholders={"name": self._name},
+            ) from err
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -161,8 +166,12 @@ class S20Switch(SwitchEntity):
         """Turn the device off."""
         try:
             self._s20.on = False
-        except self._exc:
-            _LOGGER.exception("Error while turning off S20")
+        except self._exc as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_off_error",
+                translation_placeholders={"name": self._name},
+            ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
@@ -172,8 +181,12 @@ class S20Switch(SwitchEntity):
         """Update device state."""
         try:
             self._state = self._s20.on
-        except self._exc:
-            _LOGGER.exception("Error while fetching S20 state")
+        except self._exc as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"name": self._name},
+            ) from err
 
     async def async_update(self) -> None:
         """Update th device state."""

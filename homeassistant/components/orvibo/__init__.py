@@ -1,7 +1,6 @@
 """The orvibo component."""
 
 from dataclasses import dataclass
-import logging
 
 from homeassistant import core
 from homeassistant.config_entries import ConfigEntry
@@ -19,8 +18,6 @@ class S20Data:
 
 
 type S20ConfigEntry = ConfigEntry[S20Data]
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SWITCH]
 
