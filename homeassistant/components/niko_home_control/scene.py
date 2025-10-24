@@ -33,12 +33,6 @@ class NikoHomeControlScene(NikoHomeControlEntity, BaseScene):
 
     _attr_name = None
 
-    def __init__(
-        self, action: NHCScene, controller: NHCController, unique_id: str
-    ) -> None:
-        """Set up the Niko Home Control scene platform."""
-        super().__init__(action, controller, unique_id)
-
     async def _async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         await self._action.activate()
