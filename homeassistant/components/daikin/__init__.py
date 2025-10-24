@@ -58,6 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
     except ClientConnectionError as err:
         _LOGGER.debug("ClientConnectionError to %s", host)
         raise ConfigEntryNotReady from err
+    except PermissionError as err:
+        _LOGGER.debug("PermissionError connecting to %s: %s", host, err)
+        raise ConfigEntryNotReady from err
 
     coordinator = DaikinCoordinator(hass, entry, device)
 

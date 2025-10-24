@@ -226,3 +226,19 @@ async def test_timeout_error(hass: HomeAssistant, mock_daikin) -> None:
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_permission_error(hass: HomeAssistant, mock_daikin) -> None:
+    """Test permission error on setup."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MAC,
+        data={CONF_HOST: HOST, KEY_MAC: MAC},
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_daikin.side_effect = PermissionError
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
