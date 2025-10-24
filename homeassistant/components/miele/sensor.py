@@ -762,6 +762,7 @@ class MieleSensor(MieleEntity, SensorEntity):
 class MieleRestorableSensor(MieleSensor, RestoreSensor):
     """Representation of a Sensor whose internal state can be restored."""
 
+    _attr_native_value: StateType
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
