@@ -1172,7 +1172,7 @@ async def test_async_get_config_entry_implementation_with_failing_provider_and_s
     )
 
     # This should succeed and return the local implementation
-    # even though the failing cloud provider raised an exception
+    # even though the failing cloud provider raised an exception.
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, config_entry
