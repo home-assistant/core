@@ -19,8 +19,6 @@ from .helpers import CannotConnect, InvalidAuth, parse_id
 
 _LOGGER = logging.getLogger(__name__)
 
-SAMPLE_IP = "192.168.1.25"
-
 USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
@@ -179,5 +177,5 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
             errors=errors,
-            description_placeholders={"sample_ip": SAMPLE_IP},
+            description_placeholders={"sample_ip": "192.168.1.25"},
         )
