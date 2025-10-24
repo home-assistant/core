@@ -636,7 +636,10 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             top_k=options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
             top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
             max_output_tokens=options.get(
-                CONF_MAX_TOKENS, default_max_tokens or RECOMMENDED_MAX_TOKENS
+                CONF_MAX_TOKENS,
+                default_max_tokens
+                if default_max_tokens is not None
+                else RECOMMENDED_MAX_TOKENS,
             ),
             safety_settings=[
                 SafetySetting(
