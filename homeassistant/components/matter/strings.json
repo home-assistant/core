@@ -611,10 +611,6 @@
           "description": "Temporary setpoint temperature in Celsius during the boost period."
         }
       }
-    },
-    "water_heater_cancel_boost": {
-      "name": "Cancel water heater boost",
-      "description": "Disables an ongoing water heater boost."
     }
   }
 }
