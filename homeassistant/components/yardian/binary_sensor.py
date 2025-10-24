@@ -37,16 +37,6 @@ def _zone_enabled_value(
         return None
 
 
-def _standby_value(coordinator: YardianUpdateCoordinator) -> bool:
-    """Return True if controller is in standby mode."""
-    return bool(coordinator.data.oper_info.get("iStandby", 0))
-
-
-def _freeze_prevent_value(coordinator: YardianUpdateCoordinator) -> bool:
-    """Return True if freeze prevent is active."""
-    return bool(coordinator.data.oper_info.get("fFreezePrevent", 0))
-
-
 def _zone_value_factory(
     zone_id: int,
 ) -> Callable[[YardianUpdateCoordinator], bool | None]:
@@ -69,14 +59,18 @@ SENSOR_DESCRIPTIONS: tuple[YardianBinarySensorEntityDescription, ...] = (
         key="standby",
         translation_key="standby",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_standby_value,
+        value_fn=lambda coordinator: bool(
+            coordinator.data.oper_info.get("iStandby", 0)
+        ),
     ),
     YardianBinarySensorEntityDescription(
         key="freeze_prevent",
         translation_key="freeze_prevent",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_freeze_prevent_value,
+        value_fn=lambda coordinator: bool(
+            coordinator.data.oper_info.get("fFreezePrevent", 0)
+        ),
     ),
 )
 
