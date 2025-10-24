@@ -281,8 +281,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
 
             # Skip selecting a device if only one new/unconfigured device was found
             if len(self.discovered_devices) == 1:
-                mac_address = next(iter(self.discovered_devices))
-                self.selected_device_info = self.discovered_devices[mac_address]
+                self.selected_device_info = list(self.discovered_devices.values())[0]
                 return self.async_show_progress_done(next_step_id="configure_device")
 
             return self.async_show_progress_done(next_step_id="select_device")
