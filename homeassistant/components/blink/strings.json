@@ -137,6 +137,9 @@
     },
     "failed_disarm_motion": {
       "message": "Blink failed to disarm camera motion detection."
+    },
+    "service_removed": {
+      "message": "The service {service_name} has been removed. Please use the 2FA flow in the Blink integration configuration instead."
     }
   },
   "issues": {
@@ -150,6 +153,10 @@
           }
         }
       }
+    },
+    "service_send_pin_deprecation": {
+      "title": "Blink send PIN service has been removed",
+      "description": "The service {service_name} has been removed and no longer works. Please use the 2FA flow in the Blink integration configuration instead."
     }
   }
 }
