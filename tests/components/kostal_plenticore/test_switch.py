@@ -3,11 +3,20 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from pykoplenti import SettingsData
+from pykoplenti import ApiClient, SettingsData
 import pytest
 
-from homeassistant.components.switch import SwitchEntityDescription
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SwitchEntityDescription,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -149,3 +158,61 @@ async def test_shadow_management_switch_state(
         state = hass.states.get("switch.scb_shadow_management_dc_string_2")
         assert state is not None
         assert state.state == string[1]
+
+
+@pytest.mark.parametrize(
+    ("initial_shadow_mgmt", "dc_string", "service", "shadow_mgmt"),
+    [
+        ("0", 1, SERVICE_TURN_ON, "1"),
+        ("0", 2, SERVICE_TURN_ON, "2"),
+        ("2", 1, SERVICE_TURN_ON, "3"),
+        ("1", 2, SERVICE_TURN_ON, "3"),
+        ("1", 1, SERVICE_TURN_OFF, "0"),
+        ("2", 2, SERVICE_TURN_OFF, "0"),
+        ("3", 1, SERVICE_TURN_OFF, "2"),
+        ("3", 2, SERVICE_TURN_OFF, "1"),
+    ],
+)
+async def test_shadow_management_switch_action(
+    hass: HomeAssistant,
+    mock_get_settings: dict[str, list[SettingsData]],
+    mock_get_setting_values: dict[str, dict[str, str]],
+    mock_plenticore_client: ApiClient,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    initial_shadow_mgmt: str,
+    dc_string: int,
+    service: str,
+    shadow_mgmt: str,
+) -> None:
+    """Test that the shadow management can be switch on/off."""
+
+    with patch(
+        "homeassistant.components.kostal_plenticore.switch.SwitchEntityDescription",
+        side_effect=_enabled_switch_entity_instance,
+    ):
+        mock_get_setting_values["devices:local"].update(
+            {
+                "Properties:StringCnt": "2",
+                "Generator:ShadowMgmt:Enable": initial_shadow_mgmt,
+            }
+        )
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=300))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            target={
+                ATTR_ENTITY_ID: f"switch.scb_shadow_management_dc_string_{dc_string}"
+            },
+            blocking=True,
+        )
+
+        mock_plenticore_client.set_setting_values.assert_called_with(
+            "devices:local", {"Generator:ShadowMgmt:Enable": shadow_mgmt}
+        )
