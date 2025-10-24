@@ -11,7 +11,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, UnitOfTemperature
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -161,7 +161,7 @@ async def test_set_tool_n_temp(
         },
         "temperature": {
             "tool0": {"actual": 20.0, "target": 30.0},
-            "tool1": {"actual": 21.0, "target": 31.0}
+            "tool1": {"actual": 21.0, "target": 31.0},
         },
     }
     job = __standard_job()
