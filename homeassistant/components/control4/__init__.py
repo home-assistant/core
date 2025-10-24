@@ -34,7 +34,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.LIGHT, Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.CLIMATE, Platform.LIGHT, Platform.MEDIA_PLAYER]
 
 
 @dataclass
