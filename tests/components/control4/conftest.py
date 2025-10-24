@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.control4.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -123,13 +123,26 @@ def mock_climate_update_variables(
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def mock_c4_climate() -> Generator[MagicMock]:
+    """Mock C4Climate class."""
+    with patch(
+        "homeassistant.components.control4.climate.C4Climate", autospec=True
+    ) as mock_class:
+        mock_instance = mock_class.return_value
+        mock_instance.setHvacMode = AsyncMock()
+        mock_instance.setHeatSetpointF = AsyncMock()
+        mock_instance.setCoolSetpointF = AsyncMock()
+        yield mock_instance
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
     """Platforms which should be loaded during the test."""
-    return ["media_player"]
+    return [Platform.MEDIA_PLAYER]
 
 
 @pytest.fixture(autouse=True)
-async def mock_patch_platforms(platforms: list[str]) -> AsyncGenerator[None]:
+async def mock_patch_platforms(platforms: list[Platform]) -> AsyncGenerator[None]:
     """Fixture to set up platforms for tests."""
     with patch("homeassistant.components.control4.PLATFORMS", platforms):
         yield

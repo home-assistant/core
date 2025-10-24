@@ -1,12 +1,14 @@
 """Test Control4 Climate."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
@@ -14,7 +16,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -27,13 +29,26 @@ ENTITY_ID = "climate.test_controller_residential_thermostat_v2"
 
 
 @pytest.fixture
-def platforms() -> list[str]:
-    """Override platforms fixture to only load climate."""
-    return ["climate"]
+def platforms() -> list[Platform]:
+    """Platforms which should be loaded during the test."""
+    return [Platform.CLIMATE]
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Set up the Control4 integration for testing."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await setup_integration(hass, mock_config_entry)
+    return mock_config_entry
 
 
 @pytest.mark.usefixtures(
-    "mock_c4_account", "mock_c4_director", "mock_climate_update_variables"
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
 )
 async def test_climate_entities(
     hass: HomeAssistant,
@@ -42,380 +57,274 @@ async def test_climate_entities(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test climate entities are set up correctly with proper attributes."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    await setup_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures(
-    "mock_c4_account", "mock_c4_director", "mock_climate_update_variables"
+@pytest.mark.parametrize(
+    (
+        "mock_climate_variables",
+        "expected_hvac_mode",
+        "expected_hvac_action",
+        "expected_temperature",
+        "expected_temp_high",
+        "expected_temp_low",
+    ),
+    [
+        pytest.param(
+            {
+                123: {
+                    "HVAC_STATE": "off",
+                    "HVAC_MODE": "Off",
+                    "TEMPERATURE_F": 72.0,
+                    "HUMIDITY": 50,
+                    "COOL_SETPOINT_F": 75.0,
+                    "HEAT_SETPOINT_F": 68.0,
+                }
+            },
+            HVACMode.OFF,
+            HVACAction.OFF,
+            None,
+            None,
+            None,
+            id="off",
+        ),
+        pytest.param(
+            {
+                123: {
+                    "HVAC_STATE": "cooling",
+                    "HVAC_MODE": "Cool",
+                    "TEMPERATURE_F": 74.0,
+                    "HUMIDITY": 55,
+                    "COOL_SETPOINT_F": 72.0,
+                    "HEAT_SETPOINT_F": 68.0,
+                }
+            },
+            HVACMode.COOL,
+            HVACAction.COOLING,
+            72.0,
+            None,
+            None,
+            id="cool",
+        ),
+        pytest.param(
+            {
+                123: {
+                    "HVAC_STATE": "heating",
+                    "HVAC_MODE": "Auto",
+                    "TEMPERATURE_F": 65.0,
+                    "HUMIDITY": 40,
+                    "COOL_SETPOINT_F": 75.0,
+                    "HEAT_SETPOINT_F": 68.0,
+                }
+            },
+            HVACMode.HEAT_COOL,
+            HVACAction.HEATING,
+            None,
+            75.0,
+            68.0,
+            id="auto",
+        ),
+    ],
 )
-async def test_climate_setup(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test climate entity is set up correctly."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == HVACMode.HEAT
-    assert state.attributes["current_temperature"] == 72
-    assert state.attributes["current_humidity"] == 45
-    assert state.attributes["temperature"] == 68
-    assert state.attributes["hvac_action"] == HVACAction.IDLE
-
-
-@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
-async def test_climate_off_state(
-    hass: HomeAssistant,
-    mock_config_entry,
-    platforms,
-) -> None:
-    """Test climate entity in off state."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    mock_config_entry.add_to_hass(hass)
-
-    climate_vars = {
-        123: {
-            "HVAC_STATE": "off",
-            "HVAC_MODE": "Off",
-            "TEMPERATURE_F": 72.0,
-            "HUMIDITY": 50,
-            "COOL_SETPOINT_F": 75.0,
-            "HEAT_SETPOINT_F": 68.0,
-        }
-    }
-
-    async def mock_update_vars(*args, **kwargs):
-        return climate_vars
-
-    with (
-        patch(
-            "homeassistant.components.control4.climate.update_variables_for_config_entry",
-            new=mock_update_vars,
-        ),
-        patch("homeassistant.components.control4.PLATFORMS", platforms),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == HVACMode.OFF
-    assert state.attributes["hvac_action"] == HVACAction.OFF
-    assert state.attributes["temperature"] is None
-
-
-@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
-async def test_climate_cool_state(
-    hass: HomeAssistant,
-    mock_config_entry,
-    platforms,
-) -> None:
-    """Test climate entity in cool state."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    mock_config_entry.add_to_hass(hass)
-
-    climate_vars = {
-        123: {
-            "HVAC_STATE": "cooling",
-            "HVAC_MODE": "Cool",
-            "TEMPERATURE_F": 74.0,
-            "HUMIDITY": 55,
-            "COOL_SETPOINT_F": 72.0,
-            "HEAT_SETPOINT_F": 68.0,
-        }
-    }
-
-    async def mock_update_vars(*args, **kwargs):
-        return climate_vars
-
-    with (
-        patch(
-            "homeassistant.components.control4.climate.update_variables_for_config_entry",
-            new=mock_update_vars,
-        ),
-        patch("homeassistant.components.control4.PLATFORMS", platforms),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == HVACMode.COOL
-    assert state.attributes["hvac_action"] == HVACAction.COOLING
-    assert state.attributes["temperature"] == 72.0
-
-
-@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
-async def test_climate_auto_state(
-    hass: HomeAssistant,
-    mock_config_entry,
-    platforms,
-) -> None:
-    """Test climate entity in auto state."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    mock_config_entry.add_to_hass(hass)
-
-    climate_vars = {
-        123: {
-            "HVAC_STATE": "heating",
-            "HVAC_MODE": "Auto",
-            "TEMPERATURE_F": 65.0,
-            "HUMIDITY": 40,
-            "COOL_SETPOINT_F": 75.0,
-            "HEAT_SETPOINT_F": 68.0,
-        }
-    }
-
-    async def mock_update_vars(*args, **kwargs):
-        return climate_vars
-
-    with (
-        patch(
-            "homeassistant.components.control4.climate.update_variables_for_config_entry",
-            new=mock_update_vars,
-        ),
-        patch("homeassistant.components.control4.PLATFORMS", platforms),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == HVACMode.HEAT_COOL
-    assert state.attributes["hvac_action"] == HVACAction.HEATING
-    assert state.attributes["target_temp_high"] == 75.0
-    assert state.attributes["target_temp_low"] == 68.0
-
-
 @pytest.mark.usefixtures(
-    "mock_c4_account", "mock_c4_director", "mock_climate_update_variables"
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
+async def test_climate_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    expected_hvac_mode: HVACMode,
+    expected_hvac_action: HVACAction,
+    expected_temperature: float | None,
+    expected_temp_high: float | None,
+    expected_temp_low: float | None,
+) -> None:
+    """Test climate entity in different states."""
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == expected_hvac_mode
+    assert state.attributes["hvac_action"] == expected_hvac_action
+
+    if expected_temperature is not None:
+        assert state.attributes["temperature"] == expected_temperature
+    else:
+        assert state.attributes.get("temperature") is None
+
+    if expected_temp_high is not None:
+        assert state.attributes["target_temp_high"] == expected_temp_high
+    if expected_temp_low is not None:
+        assert state.attributes["target_temp_low"] == expected_temp_low
+
+
+@pytest.mark.parametrize(
+    ("hvac_mode", "expected_c4_mode"),
+    [
+        pytest.param(HVACMode.COOL, "Cool", id="cool"),
+        pytest.param(HVACMode.OFF, "Off", id="off"),
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
 )
 async def test_set_hvac_mode(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_climate: MagicMock,
+    hvac_mode: HVACMode,
+    expected_c4_mode: str,
 ) -> None:
     """Test setting HVAC mode."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    await setup_integration(hass, mock_config_entry)
-
-    with patch(
-        "pyControl4.climate.C4Climate.setHvacMode", new_callable=AsyncMock
-    ) as mock_set:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.COOL},
-            blocking=True,
-        )
-        mock_set.assert_called_once_with("Cool")
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
+        blocking=True,
+    )
+    mock_c4_climate.setHvacMode.assert_called_once_with(expected_c4_mode)
 
 
-@pytest.mark.usefixtures(
-    "mock_c4_account", "mock_c4_director", "mock_climate_update_variables"
-)
-async def test_set_hvac_mode_to_off(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test setting HVAC mode to off."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    await setup_integration(hass, mock_config_entry)
-
-    with patch(
-        "pyControl4.climate.C4Climate.setHvacMode", new_callable=AsyncMock
-    ) as mock_set:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
-            blocking=True,
-        )
-        mock_set.assert_called_once_with("Off")
-
-
-@pytest.mark.usefixtures(
-    "mock_c4_account", "mock_c4_director", "mock_climate_update_variables"
-)
-async def test_set_temperature_heat_mode(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test setting temperature in heat mode."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    await setup_integration(hass, mock_config_entry)
-
-    with patch(
-        "pyControl4.climate.C4Climate.setHeatSetpointF", new_callable=AsyncMock
-    ) as mock_set:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 70.0},
-            blocking=True,
-        )
-        mock_set.assert_called_once_with(70.0)
-
-
-@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
-async def test_set_temperature_cool_mode(
-    hass: HomeAssistant,
-    mock_config_entry,
-    platforms,
-) -> None:
-    """Test setting temperature in cool mode."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    mock_config_entry.add_to_hass(hass)
-
-    climate_vars = {
-        123: {
-            "HVAC_STATE": "idle",
-            "HVAC_MODE": "Cool",
-            "TEMPERATURE_F": 74.0,
-            "HUMIDITY": 50,
-            "COOL_SETPOINT_F": 72.0,
-            "HEAT_SETPOINT_F": 68.0,
-        }
-    }
-
-    async def mock_update_vars(*args, **kwargs):
-        return climate_vars
-
-    with (
-        patch(
-            "homeassistant.components.control4.climate.update_variables_for_config_entry",
-            new=mock_update_vars,
+@pytest.mark.parametrize(
+    ("mock_climate_variables", "method_name"),
+    [
+        pytest.param(
+            {
+                123: {
+                    "HVAC_STATE": "idle",
+                    "HVAC_MODE": "Heat",
+                    "TEMPERATURE_F": 72.5,
+                    "HUMIDITY": 45,
+                    "COOL_SETPOINT_F": 75.0,
+                    "HEAT_SETPOINT_F": 68.0,
+                }
+            },
+            "setHeatSetpointF",
+            id="heat",
         ),
-        patch("homeassistant.components.control4.PLATFORMS", platforms),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        pytest.param(
+            {
+                123: {
+                    "HVAC_STATE": "idle",
+                    "HVAC_MODE": "Cool",
+                    "TEMPERATURE_F": 74.0,
+                    "HUMIDITY": 50,
+                    "COOL_SETPOINT_F": 72.0,
+                    "HEAT_SETPOINT_F": 68.0,
+                }
+            },
+            "setCoolSetpointF",
+            id="cool",
+        ),
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
+async def test_set_temperature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_climate: MagicMock,
+    method_name: str,
+) -> None:
+    """Test setting temperature in different modes."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 70.0},
+        blocking=True,
+    )
+    getattr(mock_c4_climate, method_name).assert_called_once_with(70.0)
 
-    with patch(
-        "pyControl4.climate.C4Climate.setCoolSetpointF", new_callable=AsyncMock
-    ) as mock_set:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 70.0},
-            blocking=True,
-        )
-        mock_set.assert_called_once_with(70.0)
 
-
-@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
+@pytest.mark.parametrize(
+    "mock_climate_variables",
+    [
+        {
+            123: {
+                "HVAC_STATE": "idle",
+                "HVAC_MODE": "Auto",
+                "TEMPERATURE_F": 70.0,
+                "HUMIDITY": 50,
+                "COOL_SETPOINT_F": 75.0,
+                "HEAT_SETPOINT_F": 68.0,
+            }
+        }
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
 async def test_set_temperature_range_auto_mode(
     hass: HomeAssistant,
-    mock_config_entry,
-    platforms,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_climate: MagicMock,
 ) -> None:
     """Test setting temperature range in auto mode."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    mock_config_entry.add_to_hass(hass)
-
-    climate_vars = {
-        123: {
-            "HVAC_STATE": "idle",
-            "HVAC_MODE": "Auto",
-            "TEMPERATURE_F": 70.0,
-            "HUMIDITY": 50,
-            "COOL_SETPOINT_F": 75.0,
-            "HEAT_SETPOINT_F": 68.0,
-        }
-    }
-
-    async def mock_update_vars(*args, **kwargs):
-        return climate_vars
-
-    with (
-        patch(
-            "homeassistant.components.control4.climate.update_variables_for_config_entry",
-            new=mock_update_vars,
-        ),
-        patch("homeassistant.components.control4.PLATFORMS", platforms),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    with (
-        patch(
-            "pyControl4.climate.C4Climate.setHeatSetpointF", new_callable=AsyncMock
-        ) as mock_heat,
-        patch(
-            "pyControl4.climate.C4Climate.setCoolSetpointF", new_callable=AsyncMock
-        ) as mock_cool,
-    ):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                "target_temp_low": 65.0,
-                "target_temp_high": 78.0,
-            },
-            blocking=True,
-        )
-        mock_heat.assert_called_once_with(65.0)
-        mock_cool.assert_called_once_with(78.0)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TARGET_TEMP_LOW: 65.0,
+            ATTR_TARGET_TEMP_HIGH: 78.0,
+        },
+        blocking=True,
+    )
+    mock_c4_climate.setHeatSetpointF.assert_called_once_with(65.0)
+    mock_c4_climate.setCoolSetpointF.assert_called_once_with(78.0)
 
 
-@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
+@pytest.mark.parametrize("mock_climate_variables", [{}])
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
 async def test_climate_not_created_when_no_initial_data(
     hass: HomeAssistant,
-    mock_config_entry,
-    platforms,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test climate entity is not created when coordinator has no initial data."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    mock_config_entry.add_to_hass(hass)
-
-    async def mock_update_vars(*args, **kwargs):
-        return {}
-
-    with (
-        patch(
-            "homeassistant.components.control4.climate.update_variables_for_config_entry",
-            new=mock_update_vars,
-        ),
-        patch("homeassistant.components.control4.PLATFORMS", platforms),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
     # Entity should not be created if there's no data during initial setup
     state = hass.states.get(ENTITY_ID)
     assert state is None
 
 
-@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
+@pytest.mark.parametrize(
+    "mock_climate_variables",
+    [
+        {
+            123: {
+                "HVAC_STATE": "idle",
+                "HVAC_MODE": "Heat",
+                # Missing TEMPERATURE_F and HUMIDITY
+                "COOL_SETPOINT_F": 75.0,
+                "HEAT_SETPOINT_F": 68.0,
+            }
+        }
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
 async def test_climate_missing_variables(
     hass: HomeAssistant,
-    mock_config_entry,
-    platforms,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test climate entity handles missing variables gracefully."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    mock_config_entry.add_to_hass(hass)
-
-    climate_vars = {
-        123: {
-            "HVAC_STATE": "idle",
-            "HVAC_MODE": "Heat",
-            # Missing TEMPERATURE_F and HUMIDITY
-            "COOL_SETPOINT_F": 75.0,
-            "HEAT_SETPOINT_F": 68.0,
-        }
-    }
-
-    async def mock_update_vars(*args, **kwargs):
-        return climate_vars
-
-    with (
-        patch(
-            "homeassistant.components.control4.climate.update_variables_for_config_entry",
-            new=mock_update_vars,
-        ),
-        patch("homeassistant.components.control4.PLATFORMS", platforms),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == HVACMode.HEAT
@@ -424,79 +333,63 @@ async def test_climate_missing_variables(
     assert state.attributes["temperature"] == 68.0
 
 
-@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
+@pytest.mark.parametrize(
+    "mock_climate_variables",
+    [
+        {
+            123: {
+                "HVAC_STATE": "idle",
+                "HVAC_MODE": "UnknownMode",
+                "TEMPERATURE_F": 72.0,
+                "HUMIDITY": 50,
+                "COOL_SETPOINT_F": 75.0,
+                "HEAT_SETPOINT_F": 68.0,
+            }
+        }
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
 async def test_climate_unknown_hvac_mode(
     hass: HomeAssistant,
-    mock_config_entry,
-    platforms,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test climate entity handles unknown HVAC mode."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    mock_config_entry.add_to_hass(hass)
-
-    climate_vars = {
-        123: {
-            "HVAC_STATE": "idle",
-            "HVAC_MODE": "UnknownMode",
-            "TEMPERATURE_F": 72.0,
-            "HUMIDITY": 50,
-            "COOL_SETPOINT_F": 75.0,
-            "HEAT_SETPOINT_F": 68.0,
-        }
-    }
-
-    async def mock_update_vars(*args, **kwargs):
-        return climate_vars
-
-    with (
-        patch(
-            "homeassistant.components.control4.climate.update_variables_for_config_entry",
-            new=mock_update_vars,
-        ),
-        patch("homeassistant.components.control4.PLATFORMS", platforms),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == HVACMode.OFF  # Defaults to OFF for unknown modes
 
 
-@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
+@pytest.mark.parametrize(
+    "mock_climate_variables",
+    [
+        {
+            123: {
+                "HVAC_STATE": "unknown_state",
+                "HVAC_MODE": "Heat",
+                "TEMPERATURE_F": 72.0,
+                "HUMIDITY": 50,
+                "COOL_SETPOINT_F": 75.0,
+                "HEAT_SETPOINT_F": 68.0,
+            }
+        }
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
 async def test_climate_unknown_hvac_state(
     hass: HomeAssistant,
-    mock_config_entry,
-    platforms,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test climate entity handles unknown HVAC state."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    mock_config_entry.add_to_hass(hass)
-
-    climate_vars = {
-        123: {
-            "HVAC_STATE": "unknown_state",
-            "HVAC_MODE": "Heat",
-            "TEMPERATURE_F": 72.0,
-            "HUMIDITY": 50,
-            "COOL_SETPOINT_F": 75.0,
-            "HEAT_SETPOINT_F": 68.0,
-        }
-    }
-
-    async def mock_update_vars(*args, **kwargs):
-        return climate_vars
-
-    with (
-        patch(
-            "homeassistant.components.control4.climate.update_variables_for_config_entry",
-            new=mock_update_vars,
-        ),
-        patch("homeassistant.components.control4.PLATFORMS", platforms),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes.get("hvac_action") is None

@@ -10,6 +10,8 @@ from pyControl4.climate import C4Climate
 from pyControl4.error_handling import C4Exception
 
 from homeassistant.components.climate import (
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -156,6 +158,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
     )
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
 
     def __init__(
         self,
@@ -183,11 +186,9 @@ class Control4Climate(Control4Entity, ClimateEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            self._idx in self.coordinator.data and self.coordinator.last_update_success
-        )
+        return super().available and self._thermostat_data is not None
 
-    def _create_api_object(self):
+    def _create_api_object(self) -> C4Climate:
         """Create a pyControl4 device object.
 
         This exists so the director token used is always the latest one, without needing to re-init the entire entity.
@@ -195,41 +196,43 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return C4Climate(self.runtime_data.director, self._idx)
 
     @property
+    def _thermostat_data(self) -> dict[str, Any] | None:
+        """Return the thermostat data from the coordinator."""
+        return self.coordinator.data.get(self._idx)
+
+    @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self._idx not in self.coordinator.data:
+        data = self._thermostat_data
+        if data is None:
             return None
-        return self.coordinator.data[self._idx].get(CONTROL4_CURRENT_TEMPERATURE)
+        return data.get(CONTROL4_CURRENT_TEMPERATURE)
 
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        if self._idx not in self.coordinator.data:
+        data = self._thermostat_data
+        if data is None:
             return None
-        humidity = self.coordinator.data[self._idx].get(CONTROL4_HUMIDITY)
+        humidity = data.get(CONTROL4_HUMIDITY)
         return int(humidity) if humidity is not None else None
 
     @property
     def hvac_mode(self) -> HVACMode:
         """Return current HVAC mode."""
-        if self._idx not in self.coordinator.data:
+        data = self._thermostat_data
+        if data is None:
             return HVACMode.OFF
-        c4_mode = self.coordinator.data[self._idx].get(CONTROL4_HVAC_MODE)
+        c4_mode = data.get(CONTROL4_HVAC_MODE) or ""
         return C4_TO_HA_HVAC_MODE.get(c4_mode, HVACMode.OFF)
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return available HVAC modes."""
-        # Return all modes that Control4 typically supports
-        # In the future, we could query this from the device
-        return [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
 
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC action."""
-        if self._idx not in self.coordinator.data:
+        data = self._thermostat_data
+        if data is None:
             return None
-        c4_state = self.coordinator.data[self._idx].get(CONTROL4_HVAC_STATE)
+        c4_state = data.get(CONTROL4_HVAC_STATE)
         if c4_state is None:
             return None
         # Convert state to lowercase for mapping
@@ -238,40 +241,39 @@ class Control4Climate(Control4Entity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        if self._idx not in self.coordinator.data:
+        data = self._thermostat_data
+        if data is None:
             return None
         hvac_mode = self.hvac_mode
         if hvac_mode == HVACMode.COOL:
-            return self.coordinator.data[self._idx].get(CONTROL4_COOL_SETPOINT)
+            return data.get(CONTROL4_COOL_SETPOINT)
         if hvac_mode == HVACMode.HEAT:
-            return self.coordinator.data[self._idx].get(CONTROL4_HEAT_SETPOINT)
+            return data.get(CONTROL4_HEAT_SETPOINT)
         return None
 
     @property
     def target_temperature_high(self) -> float | None:
         """Return the high target temperature for auto mode."""
-        if self._idx not in self.coordinator.data:
+        data = self._thermostat_data
+        if data is None:
             return None
         if self.hvac_mode == HVACMode.HEAT_COOL:
-            return self.coordinator.data[self._idx].get(CONTROL4_COOL_SETPOINT)
+            return data.get(CONTROL4_COOL_SETPOINT)
         return None
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the low target temperature for auto mode."""
-        if self._idx not in self.coordinator.data:
+        data = self._thermostat_data
+        if data is None:
             return None
         if self.hvac_mode == HVACMode.HEAT_COOL:
-            return self.coordinator.data[self._idx].get(CONTROL4_HEAT_SETPOINT)
+            return data.get(CONTROL4_HEAT_SETPOINT)
         return None
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
-        c4_hvac_mode = HA_TO_C4_HVAC_MODE.get(hvac_mode)
-        if c4_hvac_mode is None:
-            _LOGGER.error("Unsupported HVAC mode: %s", hvac_mode)
-            return
-
+        c4_hvac_mode = HA_TO_C4_HVAC_MODE[hvac_mode]
         c4_climate = self._create_api_object()
         await c4_climate.setHvacMode(c4_hvac_mode)
         await self.coordinator.async_request_refresh()
@@ -279,8 +281,8 @@ class Control4Climate(Control4Entity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         c4_climate = self._create_api_object()
-        low_temp = kwargs.get("target_temp_low")
-        high_temp = kwargs.get("target_temp_high")
+        low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
 
         # Handle temperature range for auto mode
