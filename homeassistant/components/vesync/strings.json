@@ -95,6 +95,17 @@
           }
         }
       }
+    },
+    "humidifier": {
+      "vesync": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "autoPro": "Auto Pro"
+            }
+          }
+        }
+      }
     }
   },
   "services": {
