@@ -202,5 +202,10 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="connect", data_schema=self._config_settings, errors=errors
+            step_id="connect",
+            data_schema=self._config_settings,
+            errors=errors,
+            description_placeholders={
+                "documentation_url": "https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-api-key",
+            },
         )

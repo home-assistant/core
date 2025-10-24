@@ -9,6 +9,7 @@ from aiohttp.client_exceptions import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.const import Scope, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     InvalidRegion,
     InvalidToken,
@@ -36,6 +37,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
+from .conftest import create_config_entry
 from .const import VEHICLE_ASLEEP, VEHICLE_DATA_ALT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -497,3 +499,65 @@ async def test_bad_implementation(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert not result["errors"]
+
+
+async def test_vehicle_without_location_scope(
+    hass: HomeAssistant,
+    expires_at: int,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test vehicle setup without VEHICLE_LOCATION scope excludes location endpoint."""
+
+    # Create config entry without VEHICLE_LOCATION scope
+    config_entry = create_config_entry(
+        expires_at,
+        [
+            Scope.OPENID,
+            Scope.OFFLINE_ACCESS,
+            Scope.VEHICLE_DEVICE_DATA,
+            # Deliberately exclude Scope.VEHICLE_LOCATION
+        ],
+    )
+
+    await setup_platform(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Verify that vehicle_data was called without LOCATION_DATA endpoint
+    mock_vehicle_data.assert_called()
+    call_args = mock_vehicle_data.call_args
+    endpoints = call_args.kwargs.get("endpoints", [])
+
+    # Should not include LOCATION_DATA endpoint
+    assert VehicleDataEndpoint.LOCATION_DATA not in endpoints
+
+    # Should include other endpoints
+    assert VehicleDataEndpoint.CHARGE_STATE in endpoints
+    assert VehicleDataEndpoint.CLIMATE_STATE in endpoints
+    assert VehicleDataEndpoint.DRIVE_STATE in endpoints
+    assert VehicleDataEndpoint.VEHICLE_STATE in endpoints
+    assert VehicleDataEndpoint.VEHICLE_CONFIG in endpoints
+
+
+async def test_vehicle_with_location_scope(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test vehicle setup with VEHICLE_LOCATION scope includes location endpoint."""
+    await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+
+    # Verify that vehicle_data was called with LOCATION_DATA endpoint
+    mock_vehicle_data.assert_called()
+    call_args = mock_vehicle_data.call_args
+    endpoints = call_args.kwargs.get("endpoints", [])
+
+    # Should include LOCATION_DATA endpoint when scope is present
+    assert VehicleDataEndpoint.LOCATION_DATA in endpoints
+
+    # Should include all other endpoints
+    assert VehicleDataEndpoint.CHARGE_STATE in endpoints
+    assert VehicleDataEndpoint.CLIMATE_STATE in endpoints
+    assert VehicleDataEndpoint.DRIVE_STATE in endpoints
+    assert VehicleDataEndpoint.VEHICLE_STATE in endpoints
+    assert VehicleDataEndpoint.VEHICLE_CONFIG in endpoints
