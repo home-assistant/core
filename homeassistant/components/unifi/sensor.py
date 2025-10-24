@@ -334,8 +334,7 @@ def _device_temperature(
     """Return the temperature of the device."""
     for temperature in temperatures:
         if temperature_name in temperature["name"]:
-            value: float = temperature["value"]
-            return value
+            return float(temperature["value"])
     return None
 
 
@@ -437,7 +436,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         api_handler_fn=lambda api: api.clients,
         device_info_fn=async_client_device_info_fn,
         is_connected_fn=async_client_is_connected_fn,
-        name_fn=lambda _: "Link speed",
         object_fn=lambda api, obj_id: api.clients[obj_id],
         unique_id_fn=lambda hub, obj_id: f"wired_speed-{obj_id}",
         value_fn=async_wired_client_speed_value_fn,
