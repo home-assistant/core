@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -78,8 +77,3 @@ class BSBLanDualCoordinatorEntity(BSBLanEntityBase[BSBLanFastCoordinator]):
         self.async_on_remove(
             self.slow_coordinator.async_add_listener(self._handle_coordinator_update)
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from either coordinator."""
-        self.async_write_ha_state()
