@@ -24,19 +24,19 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.integrate",
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.integrate",
             return_value={"code": 1, "data": {"hassCodeToken": "test_token_12345"}},
         ),
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_devices",
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.fetch_devices",
             return_value=[],
         ),
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_pids",
-            return_value=[],
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.fetch_pids",
+            return_value={},
         ),
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.close",
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.close",
         ),
         patch(
             "homeassistant.components.daybetter_services.async_setup_entry",
@@ -66,11 +66,11 @@ async def test_form_invalid_code(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.integrate",
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.integrate",
             return_value={"code": 0, "msg": "Invalid code"},
         ),
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.close",
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.close",
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -90,15 +90,15 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.integrate",
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.integrate",
             return_value={"code": 1, "data": {"hassCodeToken": "test_token"}},
         ),
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_devices",
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.fetch_devices",
             side_effect=Exception("Connection error"),
         ),
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.close",
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.close",
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(

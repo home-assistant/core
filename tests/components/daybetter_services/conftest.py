@@ -34,19 +34,11 @@ async def init_integration(
     """Set up the DayBetter Services integration in Home Assistant."""
     with (
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_devices",
+            "homeassistant.components.daybetter_services.coordinator.DayBetterClient.fetch_sensor_data",
             return_value=[],
         ),
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_pids",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_device_statuses",
-            return_value=[],
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.close",
+            "homeassistant.components.daybetter_services.coordinator.DayBetterClient.close",
             return_value=None,
         ),
     ):

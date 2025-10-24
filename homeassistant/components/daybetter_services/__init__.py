@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from daybetter_python import DayBetterClient
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_TOKEN, DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 from .coordinator import DayBetterCoordinator
-from .daybetter_api import DayBetterApi
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -25,11 +26,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not token:
         return False
 
-    api = DayBetterApi(token=token)
+    client = DayBetterClient(token=token)
 
     coordinator = DayBetterCoordinator(
         hass,
-        api,
+        client,
         timedelta(seconds=DEFAULT_SCAN_INTERVAL),
     )
 
@@ -37,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "coordinator": coordinator,
-        "api": api,
+        "client": client,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -50,6 +51,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         entry_data = hass.data[DOMAIN].pop(entry.entry_id, None)
-        if entry_data and "api" in entry_data:
-            await entry_data["api"].close()
+        if entry_data and "client" in entry_data:
+            await entry_data["client"].close()
     return unload_ok

@@ -18,19 +18,11 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_devices",
+            "homeassistant.components.daybetter_services.DayBetterClient.fetch_sensor_data",
             return_value=[],
         ),
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_pids",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_device_statuses",
-            return_value=[],
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.close",
+            "homeassistant.components.daybetter_services.DayBetterClient.close",
         ),
     ):
         config_entry.add_to_hass(hass)
@@ -41,7 +33,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
         assert DOMAIN in hass.data
         assert config_entry.entry_id in hass.data[DOMAIN]
         assert "coordinator" in hass.data[DOMAIN][config_entry.entry_id]
-        assert "api" in hass.data[DOMAIN][config_entry.entry_id]
+        assert "client" in hass.data[DOMAIN][config_entry.entry_id]
 
 
 async def test_async_setup_entry_no_token(hass: HomeAssistant) -> None:
@@ -67,19 +59,11 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_devices",
+            "homeassistant.components.daybetter_services.DayBetterClient.fetch_sensor_data",
             return_value=[],
         ),
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_pids",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_device_statuses",
-            return_value=[],
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.close",
+            "homeassistant.components.daybetter_services.DayBetterClient.close",
         ) as mock_close,
     ):
         config_entry.add_to_hass(hass)

@@ -2,7 +2,7 @@
   "domain": "daybetter_services",
   "name": "DayBetter Services",
   "documentation": "https://www.home-assistant.io/integrations/daybetter_services",
-  "requirements": ["daybetter-services-python==1.0.3"],
+  "requirements": ["daybetter-services-python==1.0.4"],
   "codeowners": ["@THDayBetter"],
   "config_flow": true,
   "iot_class": "cloud_polling"

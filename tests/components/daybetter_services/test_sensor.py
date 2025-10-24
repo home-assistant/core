@@ -19,25 +19,13 @@ async def test_sensor_setup(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_devices",
+            "homeassistant.components.daybetter_services.DayBetterClient.fetch_sensor_data",
             return_value=[
                 {
                     "deviceId": "test_device_1",
                     "deviceName": "test_sensor",
                     "deviceGroupName": "Test Group",
                     "deviceMoldPid": "pid1",
-                }
-            ],
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_pids",
-            return_value={"sensor": "pid1"},
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_device_statuses",
-            return_value=[
-                {
-                    "deviceName": "test_sensor",
                     "type": 5,
                     "temp": 225,  # Raw value, will be divided by 10 to get 22.5
                     "humi": 650,  # Raw value, will be divided by 10 to get 65.0
@@ -45,7 +33,7 @@ async def test_sensor_setup(hass: HomeAssistant) -> None:
             ],
         ),
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.close",
+            "homeassistant.components.daybetter_services.DayBetterClient.close",
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -73,25 +61,13 @@ async def test_sensor_attributes(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_devices",
+            "homeassistant.components.daybetter_services.DayBetterClient.fetch_sensor_data",
             return_value=[
                 {
                     "deviceId": "test_device_1",
                     "deviceName": "test_sensor",
                     "deviceGroupName": "Test Group",
                     "deviceMoldPid": "pid1",
-                }
-            ],
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_pids",
-            return_value={"sensor": "pid1"},
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_device_statuses",
-            return_value=[
-                {
-                    "deviceName": "test_sensor",
                     "type": 5,
                     "temp": 225,  # Raw value, will be divided by 10 to get 22.5
                     "humi": 650,  # Raw value, will be divided by 10 to get 65.0
@@ -99,7 +75,7 @@ async def test_sensor_attributes(hass: HomeAssistant) -> None:
             ],
         ),
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.close",
+            "homeassistant.components.daybetter_services.DayBetterClient.close",
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -136,19 +112,11 @@ async def test_sensor_no_devices(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_devices",
+            "homeassistant.components.daybetter_services.DayBetterClient.fetch_sensor_data",
             return_value=[],
         ),
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_pids",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_device_statuses",
-            return_value=[],
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.close",
+            "homeassistant.components.daybetter_services.DayBetterClient.close",
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -170,26 +138,11 @@ async def test_sensor_wrong_device_type(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_devices",
-            return_value=[
-                {
-                    "deviceId": "test_device_1",
-                    "deviceName": "test_device",
-                    "deviceGroupName": "Test Group",
-                    "deviceMoldPid": "light_pid1",  # Light PID, not sensor
-                }
-            ],
+            "homeassistant.components.daybetter_services.DayBetterClient.fetch_sensor_data",
+            return_value=[],  # Library filters out non-sensor devices
         ),
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_pids",
-            return_value={"light": "light_pid1", "sensor": "sensor_pid1"},
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_device_statuses",
-            return_value=[],
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.close",
+            "homeassistant.components.daybetter_services.DayBetterClient.close",
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -209,37 +162,23 @@ async def test_sensor_update(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    mock_devices = [
-        {
-            "deviceId": "test_device_1",
-            "deviceName": "test_sensor",
-            "deviceGroupName": "Test Group",
-            "deviceMoldPid": "pid1",
-        }
-    ]
-
     with (
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_devices",
-            return_value=mock_devices,
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_pids",
-            return_value={"sensor": "pid1"},
-        ),
-        patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.fetch_device_statuses",
+            "homeassistant.components.daybetter_services.DayBetterClient.fetch_sensor_data",
             return_value=[
                 {
+                    "deviceId": "test_device_1",
                     "deviceName": "test_sensor",
+                    "deviceGroupName": "Test Group",
+                    "deviceMoldPid": "pid1",
                     "type": 5,
                     "temp": 225,  # Raw value, will be divided by 10 to get 22.5
                     "humi": 650,  # Raw value, will be divided by 10 to get 65.0
                 }
             ],
-        ) as mock_fetch_statuses,
+        ) as mock_fetch,
         patch(
-            "homeassistant.components.daybetter_services.daybetter_api.DayBetterApi.close",
+            "homeassistant.components.daybetter_services.DayBetterClient.close",
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -252,9 +191,12 @@ async def test_sensor_update(hass: HomeAssistant) -> None:
         assert temp_sensors[0].state == "22.5"
 
         # Update with new values
-        mock_fetch_statuses.return_value = [
+        mock_fetch.return_value = [
             {
+                "deviceId": "test_device_1",
                 "deviceName": "test_sensor",
+                "deviceGroupName": "Test Group",
+                "deviceMoldPid": "pid1",
                 "type": 5,
                 "temp": 250,  # Raw value, will be divided by 10 to get 25.0
                 "humi": 700,  # Raw value, will be divided by 10 to get 70.0

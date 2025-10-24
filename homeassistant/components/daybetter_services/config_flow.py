@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from daybetter_python import DayBetterClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_TOKEN, CONF_USER_CODE, DOMAIN
-from .daybetter_api import DayBetterApi
 
 
 class DayBetterServicesConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -30,46 +30,42 @@ class DayBetterServicesConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_code = user_input[CONF_USER_CODE]
 
-            api = None
-            api_with_token = None
+            client = None
+            client_with_token = None
 
             try:
-                api = DayBetterApi()
+                client = DayBetterClient(token="")
 
-                try:
-                    integrate_result = await api.integrate(user_code)
+                integrate_result = await client.integrate(user_code)
 
-                    if (
-                        not integrate_result
-                        or integrate_result.get("code") != 1
-                        or "data" not in integrate_result
-                        or "hassCodeToken" not in integrate_result["data"]
-                    ):
-                        errors["base"] = "invalid_code"
-                    else:
-                        token = integrate_result["data"]["hassCodeToken"]
+                if (
+                    not integrate_result
+                    or integrate_result.get("code") != 1
+                    or "data" not in integrate_result
+                    or "hassCodeToken" not in integrate_result["data"]
+                ):
+                    errors["base"] = "invalid_code"
+                else:
+                    token = integrate_result["data"]["hassCodeToken"]
 
-                        api_with_token = DayBetterApi(token=token)
+                    client_with_token = DayBetterClient(token=token)
 
-                        try:
-                            await api_with_token.fetch_devices()
-                            await api_with_token.fetch_pids()
+                    try:
+                        await client_with_token.fetch_devices()
+                        await client_with_token.fetch_pids()
 
-                            return self.async_create_entry(
-                                title="DayBetter Services",
-                                data={
-                                    CONF_USER_CODE: user_code,
-                                    CONF_TOKEN: token,
-                                },
-                            )
-                        except Exception:  # noqa: BLE001
-                            errors["base"] = "cannot_connect"
-                        finally:
-                            if api_with_token is not None:
-                                await api_with_token.close()
-                finally:
-                    if api is not None:
-                        await api.close()
+                        return self.async_create_entry(
+                            title="DayBetter Services",
+                            data={
+                                CONF_USER_CODE: user_code,
+                                CONF_TOKEN: token,
+                            },
+                        )
+                    except Exception:  # noqa: BLE001
+                        errors["base"] = "cannot_connect"
+                    finally:
+                        if client_with_token is not None:
+                            await client_with_token.close()
 
             except InvalidCode:
                 errors["base"] = "invalid_code"
@@ -77,6 +73,9 @@ class DayBetterServicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
+            finally:
+                if client is not None:
+                    await client.close()
 
         return self.async_show_form(
             step_id="user",
