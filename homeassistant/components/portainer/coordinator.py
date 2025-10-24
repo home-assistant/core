@@ -144,7 +144,10 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 id=endpoint.id,
                 name=endpoint.name,
                 endpoint=endpoint,
-                containers={container.id: container for container in containers},
+                containers={
+                    container.names[0].replace("/", " ").strip(): container
+                    for container in containers
+                },
                 docker_version=docker_version,
                 docker_info=docker_info,
             )

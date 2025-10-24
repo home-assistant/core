@@ -123,7 +123,7 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
     def is_on(self) -> bool | None:
         """Return the state of the device."""
         return self.entity_description.is_on_fn(
-            self.coordinator.data[self.endpoint_id].containers[self.device_id]
+            self.coordinator.data[self.endpoint_id].containers[self.device_name]
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:

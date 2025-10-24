@@ -95,12 +95,7 @@ class PortainerButton(PortainerContainerEntity, ButtonEntity):
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
-        device_identifier = (
-            self._device_info.names[0].replace("/", " ").strip()
-            if self._device_info.names
-            else None
-        )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_identifier}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
