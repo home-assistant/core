@@ -1,0 +1,12 @@
+{
+  "domain": "saunum",
+  "name": "Saunum Leil",
+  "codeowners": ["@mettolen"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/saunum",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["pymodbus"],
+  "quality_scale": "bronze",
+  "requirements": ["pymodbus==3.11.2"]
+}
