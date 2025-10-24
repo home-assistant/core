@@ -29,6 +29,32 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 ENTITY_ID = "water_heater.bsb_lan"
 
 
+@pytest.fixture
+def mock_dhw_config_none(mock_bsblan: AsyncMock) -> None:
+    """Mock coordinator to return None for dhw_config."""
+    mock_bsblan.hot_water_config.return_value = None
+
+
+@pytest.fixture
+def mock_dhw_config_missing_attributes(mock_bsblan: AsyncMock) -> None:
+    """Mock config without the temperature limit attributes."""
+    mock_config = MagicMock()
+    mock_config.reduced_setpoint = None
+    mock_config.nominal_setpoint_max = None
+    mock_bsblan.hot_water_config.return_value = mock_config
+
+
+@pytest.fixture
+def mock_dhw_config_missing_value_attribute(mock_bsblan: AsyncMock) -> None:
+    """Mock config with objects that don't have 'value' attribute."""
+    mock_config = MagicMock()
+    mock_reduced_setpoint = MagicMock(spec=[])  # Empty spec means no attributes
+    mock_nominal_setpoint_max = MagicMock(spec=[])  # Empty spec means no attributes
+    mock_config.reduced_setpoint = mock_reduced_setpoint
+    mock_config.nominal_setpoint_max = mock_nominal_setpoint_max
+    mock_bsblan.hot_water_config.return_value = mock_config
+
+
 @pytest.mark.parametrize(
     ("dhw_file"),
     [
@@ -266,38 +292,30 @@ async def test_water_heater_no_sensors(
 
 
 @pytest.mark.parametrize(
-    ("config_setup", "test_description"),
+    ("fixture_name", "test_description"),
     [
-        (None, "no DHW config"),
-        ("missing_attributes", "DHW config with missing temperature attributes"),
-        ("missing_value_attribute", "DHW config with objects missing value attribute"),
+        ("mock_dhw_config_none", "no DHW config"),
+        (
+            "mock_dhw_config_missing_attributes",
+            "DHW config with missing temperature attributes",
+        ),
+        (
+            "mock_dhw_config_missing_value_attribute",
+            "DHW config with objects missing value attribute",
+        ),
     ],
 )
 async def test_water_heater_default_temperature_limits(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    config_setup: str | None,
+    fixture_name: str,
     test_description: str,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test water heater uses default temperature limits when config is unavailable."""
-    if config_setup is None:
-        # Mock coordinator to return None for dhw_config
-        mock_bsblan.hot_water_config.return_value = None
-    elif config_setup == "missing_attributes":
-        # Create a mock config without the temperature limit attributes
-        mock_config = MagicMock()
-        mock_config.reduced_setpoint = None
-        mock_config.nominal_setpoint_max = None
-        mock_bsblan.hot_water_config.return_value = mock_config
-    elif config_setup == "missing_value_attribute":
-        # Create a mock config with objects that don't have 'value' attribute
-        mock_config = MagicMock()
-        mock_reduced_setpoint = MagicMock(spec=[])  # Empty spec means no attributes
-        mock_nominal_setpoint_max = MagicMock(spec=[])  # Empty spec means no attributes
-        mock_config.reduced_setpoint = mock_reduced_setpoint
-        mock_config.nominal_setpoint_max = mock_nominal_setpoint_max
-        mock_bsblan.hot_water_config.return_value = mock_config
+    # Apply the fixture dynamically
+    request.getfixturevalue(fixture_name)
 
     await setup_with_selected_platforms(
         hass, mock_config_entry, [Platform.WATER_HEATER]
