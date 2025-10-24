@@ -107,14 +107,8 @@ def _get_coffee_profile(value: MieleDevice) -> str | None:
 class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
 
-    value_fn: Callable[[MieleDevice], StateType | date | datetime | Decimal]
-    end_value_fn: (
-        Callable[
-            [StateType | date | datetime | Decimal],
-            StateType | date | datetime | Decimal,
-        ]
-        | None
-    ) = None
+    value_fn: Callable[[MieleDevice], StateType]
+    end_value_fn: Callable[[StateType], StateType] | None = None
     extra_attributes: dict[str, Callable[[MieleDevice], StateType]] | None = None
     zone: int | None = None
     unique_id_fn: Callable[[str, MieleSensorDescription], str] | None = None
