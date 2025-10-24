@@ -150,6 +150,9 @@ class BaseFirmwareUpdateEntity(
 
         self._update_attributes()
 
+        # Fetch firmware info early to avoid prolonged Unknown state
+        await self.coordinator.async_request_refresh()
+
     @property
     def extra_restore_state_data(self) -> FirmwareUpdateExtraStoredData:
         """Return state data to be restored."""
