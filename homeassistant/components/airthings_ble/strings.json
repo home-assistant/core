@@ -41,6 +41,9 @@
       },
       "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
+      },
+      "ambient_noise": {
+        "name": "Ambient noise"
       }
     }
   }

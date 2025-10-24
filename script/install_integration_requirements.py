@@ -46,6 +46,8 @@ def main() -> int | None:
             "-c",
             "homeassistant/package_constraints.txt",
             "-U",
+            "--python",
+            sys.executable,
             *sorted(all_requirements),  # Sort for consistent output
         ]
         print(" ".join(cmd))

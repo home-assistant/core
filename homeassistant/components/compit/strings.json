@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please enter your https://inext.compit.pl/ credentials.",
+        "description": "Please enter your {compit_url} credentials.",
         "title": "Connect to Compit iNext",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",

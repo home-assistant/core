@@ -93,7 +93,6 @@ BASE_ENTITY_SCHEMA = vol.All(
 
 BINARY_SENSOR_KNX_SCHEMA = vol.Schema(
     {
-        "section_binary_sensor": KNXSectionFlat(),
         vol.Required(CONF_GA_SENSOR): GASelector(
             write=False, state_required=True, valid_dpt="1"
         ),
@@ -117,10 +116,8 @@ BINARY_SENSOR_KNX_SCHEMA = vol.Schema(
 COVER_KNX_SCHEMA = AllSerializeFirst(
     vol.Schema(
         {
-            "section_binary_control": KNXSectionFlat(),
             vol.Optional(CONF_GA_UP_DOWN): GASelector(state=False, valid_dpt="1"),
             vol.Optional(CoverConf.INVERT_UPDOWN): selector.BooleanSelector(),
-            "section_stop_control": KNXSectionFlat(),
             vol.Optional(CONF_GA_STOP): GASelector(state=False, valid_dpt="1"),
             vol.Optional(CONF_GA_STEP): GASelector(state=False, valid_dpt="1"),
             "section_position_control": KNXSectionFlat(collapsible=True),
@@ -195,11 +192,9 @@ _hs_color_inclusion_msg = (
 LIGHT_KNX_SCHEMA = AllSerializeFirst(
     vol.Schema(
         {
-            "section_switch": KNXSectionFlat(),
             vol.Optional(CONF_GA_SWITCH): GASelector(
                 write_required=True, valid_dpt="1"
             ),
-            "section_brightness": KNXSectionFlat(),
             vol.Optional(CONF_GA_BRIGHTNESS): GASelector(
                 write_required=True, valid_dpt="5.001"
             ),
@@ -229,28 +224,24 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
                 GroupSelectOption(
                     translation_key="individual_addresses",
                     schema={
-                        "section_red": KNXSectionFlat(),
                         vol.Optional(CONF_GA_RED_SWITCH): GASelector(
                             write_required=False, valid_dpt="1"
                         ),
                         vol.Required(CONF_GA_RED_BRIGHTNESS): GASelector(
                             write_required=True, valid_dpt="5.001"
                         ),
-                        "section_green": KNXSectionFlat(),
                         vol.Optional(CONF_GA_GREEN_SWITCH): GASelector(
                             write_required=False, valid_dpt="1"
                         ),
                         vol.Required(CONF_GA_GREEN_BRIGHTNESS): GASelector(
                             write_required=True, valid_dpt="5.001"
                         ),
-                        "section_blue": KNXSectionFlat(),
                         vol.Optional(CONF_GA_BLUE_SWITCH): GASelector(
                             write_required=False, valid_dpt="1"
                         ),
                         vol.Required(CONF_GA_BLUE_BRIGHTNESS): GASelector(
                             write_required=True, valid_dpt="5.001"
                         ),
-                        "section_white": KNXSectionFlat(),
                         vol.Optional(CONF_GA_WHITE_SWITCH): GASelector(
                             write_required=False, valid_dpt="1"
                         ),
@@ -313,7 +304,6 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
 
 SWITCH_KNX_SCHEMA = vol.Schema(
     {
-        "section_switch": KNXSectionFlat(),
         vol.Required(CONF_GA_SWITCH): GASelector(write_required=True, valid_dpt="1"),
         vol.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
         vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),

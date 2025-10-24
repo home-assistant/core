@@ -166,7 +166,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.SENSOR, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterSensorEntityDescription(SensorEntityDescription, MatterEntityDescription):
     """Describe Matter sensor entities."""
 
