@@ -5,7 +5,7 @@
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
       "credentials": {
-        "description": "Found a Switcher device that requires a token\nEnter your username and token\nFor more information see https://www.home-assistant.io/integrations/switcher_kis/#prerequisites",
+        "description": "Found a Switcher device that requires a token\nEnter your username and token\nFor more information see {prerequisites_url}",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "token": "[%key:common::config_flow::data::access_token%]"

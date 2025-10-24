@@ -9,7 +9,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "url": "Enter the full URL of your Uptime Kuma instance. Be sure to include the protocol (`http` or `https`), the hostname or IP address, the port number (if it is a non-default port), and any path prefix if applicable. Example: `https://uptime.example.com`",
+          "url": "Enter the full URL of your Uptime Kuma instance. Be sure to include the protocol (`http` or `https`), the hostname or IP address, the port number (if it is a non-default port), and any path prefix if applicable. Example: `{example_url}`",
           "verify_ssl": "Enable SSL certificate verification for secure connections. Disable only if connecting to an Uptime Kuma instance using a self-signed certificate or via IP address",
           "api_key": "Enter an API key. To create a new API key navigate to **Settings → API Keys** and select **Add API Key**"
         }
@@ -98,7 +98,7 @@
           "postgres": "PostgreSQL",
           "mysql": "MySQL/MariaDB",
           "mongodb": "MongoDB",
-          "radius": "Radius",
+          "radius": "RADIUS",
           "redis": "Redis",
           "tailscale_ping": "Tailscale Ping",
           "snmp": "SNMP",

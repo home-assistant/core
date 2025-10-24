@@ -1261,9 +1261,9 @@ async def async_api_set_mode(
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         position = mode.split(".")[1]
 
-        if position == cover.STATE_CLOSED:
+        if position == cover.CoverState.CLOSED:
             service = cover.SERVICE_CLOSE_COVER
-        elif position == cover.STATE_OPEN:
+        elif position == cover.CoverState.OPEN:
             service = cover.SERVICE_OPEN_COVER
         elif position == "custom":
             service = cover.SERVICE_STOP_COVER

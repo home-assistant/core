@@ -79,6 +79,9 @@ def async_setup_block_attribute_entities(
                 continue
 
             # Filter out non-existing sensors and sensors without a value
+            if description.models and coordinator.model not in description.models:
+                continue
+
             if getattr(block, sensor_id, None) is None:
                 continue
 
@@ -195,9 +198,11 @@ def async_setup_rpc_attribute_entities(
             ):
                 continue
 
-            if description.sub_key not in coordinator.device.status[
-                key
-            ] and not description.supported(coordinator.device.status[key]):
+            if (
+                description.sub_key
+                and description.sub_key not in coordinator.device.status[key]
+                and not description.supported(coordinator.device.status[key])
+            ):
                 continue
 
             # Filter and remove entities that according to settings/status
@@ -299,6 +304,7 @@ class BlockEntityDescription(EntityDescription):
     available: Callable[[Block], bool] | None = None
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
+    models: set[str] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -309,7 +315,7 @@ class RpcEntityDescription(EntityDescription):
     # restrict the type to str.
     name: str = ""
 
-    sub_key: str
+    sub_key: str | None = None
 
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None
@@ -317,7 +323,6 @@ class RpcEntityDescription(EntityDescription):
     use_polling_coordinator: bool = False
     supported: Callable = lambda _: False
     unit: Callable[[dict], str | None] | None = None
-    options_fn: Callable[[dict], list[str]] | None = None
     entity_class: Callable | None = None
     role: str | None = None
     models: set[str] | None = None
@@ -554,7 +559,9 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         self.entity_description = description
 
         self._attr_unique_id = f"{super().unique_id}-{attribute}"
-        self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
+        self._attr_name = get_rpc_entity_name(
+            coordinator.device, key, description.name, description.role
+        )
         self._last_value = None
         id_key = key.split(":")[-1]
         self._id = int(id_key) if id_key.isnumeric() else None
