@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.71.0
+PySwitchbot==0.72.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -176,7 +176,7 @@ aioairq==0.4.7
 aioairzone-cloud==0.7.2
 
 # homeassistant.components.airzone
-aioairzone==1.0.1
+aioairzone==1.0.2
 
 # homeassistant.components.alexa_devices
 aioamazondevices==6.4.6
@@ -414,7 +414,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==2.0.1
+aiovodafone==3.0.0
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -833,6 +833,9 @@ feedparser==6.0.12
 
 # homeassistant.components.file
 file-read-backwards==2.0.0
+
+# homeassistant.components.fing
+fing_agent_api==1.0.3
 
 # homeassistant.components.fints
 fints==3.1.0
@@ -1473,7 +1476,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.8.1
+plugwise==1.8.2
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
@@ -1662,7 +1665,7 @@ pydrawise==2025.9.0
 pydroid-ipcam==3.0.0
 
 # homeassistant.components.droplet
-pydroplet==2.3.3
+pydroplet==2.3.4
 
 # homeassistant.components.ecoforest
 pyecoforest==0.4.0
@@ -1929,10 +1932,10 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.4
+pyportainer==1.0.6
 
 # homeassistant.components.probe_plus
-pyprobeplus==1.1.1
+pyprobeplus==1.1.2
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
@@ -2468,7 +2471,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.7.9
+teslemetry-stream==0.7.10
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
@@ -2519,7 +2522,7 @@ triggercmd==0.0.36
 ttls==1.8.3
 
 # homeassistant.components.thethingsnetwork
-ttn_client==1.2.0
+ttn_client==1.2.2
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.4
