@@ -277,7 +277,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         selected_areas = self.get_matter_attribute_value(
             clusters.ServiceArea.Attributes.SelectedAreas
         )
-        if selected_areas:
+        if selected_areas is not None:
             self._attr_selected_areas = selected_areas
         # derive state from the run mode + operational state
         run_mode_raw: int = self.get_matter_attribute_value(
