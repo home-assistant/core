@@ -73,6 +73,12 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
 
     async def _async_update_data(self) -> NSRouteResult:
         """Fetch data from NS API for this specific route."""
+        # Determine if we should fetch trips for the specified time
+        time_str, fetch_now = self._get_time_from_route(self.departure_time)
+        if not fetch_now:
+            # If not within ±30min, return empty result
+            return NSRouteResult(trips=[], first_trip=None, next_trip=None)
+
         trips: list[Trip] = []
         first_trip: Trip | None = None
         next_trip: Trip | None = None
@@ -80,10 +86,9 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
             trips = await self._get_trips(
                 self.departure,
                 self.destination,
+                time_str,
                 self.via,
-                departure_time=self.departure_time,
             )
-
         except (ConnectionError, Timeout, HTTPError, ValueError) as err:
             # Surface API failures to Home Assistant so the entities become unavailable
             raise UpdateFailed(f"API communication error: {err}") from err
@@ -100,36 +105,59 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
             next_trip=next_trip,
         )
 
-    def _get_time_from_route(self, time_str: str | None) -> str:
-        """Combine today's date with a time string if needed."""
-        if not time_str:
-            return _now_nl().strftime("%d-%m-%Y %H:%M")
+    def _get_time_from_route(self, time_str: str | None) -> tuple[str, bool]:
+        """Combine today's date with a time string if needed.
 
+        Returns (datetime string, fetch_now boolean).
+        fetch_now is True if the time is within ±30 minutes of now, else False.
+        """
+        now = _now_nl()
+        fetch_now = True
+        if not time_str:
+            # No time specified, fetch now
+            return now.strftime("%d-%m-%Y %H:%M"), True
+
+        # Try to parse time_str as HH:MM or HH:MM:SS
         if (
             isinstance(time_str, str)
             and len(time_str.split(":")) in (2, 3)
             and " " not in time_str
         ):
-            today = _now_nl().strftime("%d-%m-%Y")
-            return f"{today} {time_str[:5]}"
+            today = now.strftime("%d-%m-%Y")
+            dt_str = f"{today} {time_str[:5]}"
+            try:
+                trip_time = datetime.strptime(dt_str, "%d-%m-%Y %H:%M")
+                # Make trip_time timezone-aware if naive
+                if (
+                    trip_time.tzinfo is None
+                    or trip_time.tzinfo.utcoffset(trip_time) is None
+                ):
+                    trip_time = trip_time.replace(tzinfo=now.tzinfo)
+                # Check if trip_time is within ±30min of now
+                delta = abs((trip_time - now).total_seconds())
+                fetch_now = delta <= 1800
+            except ValueError:
+                # Fallback: treat as fetch now
+                fetch_now = True
+            return dt_str, fetch_now
+
         # Fallback: use current date and time
-        return _now_nl().strftime("%d-%m-%Y %H:%M")
+        return now.strftime("%d-%m-%Y %H:%M"), True
 
     async def _get_trips(
         self,
         departure: str,
         destination: str,
+        departure_time: str,
         via: str | None = None,
-        departure_time: str | None = None,
     ) -> list[Trip]:
         """Get trips from NS API, sorted by departure time."""
 
         # Convert time to full date-time string if needed and default to Dutch local time if not provided
-        time_str = self._get_time_from_route(departure_time)
 
         trips = await self.hass.async_add_executor_job(
             self.nsapi.get_trips,
-            time_str,  # trip_time
+            departure_time,  # trip_time
             departure,  # departure
             via,  # via
             destination,  # destination
