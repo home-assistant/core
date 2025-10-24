@@ -12,7 +12,7 @@ from pyportainer import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer
+from pyportainer.models.docker import DockerContainer, DockerContainerStats
 from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint
 
@@ -38,9 +38,17 @@ class PortainerCoordinatorData:
     id: int
     name: str | None
     endpoint: Endpoint
-    containers: dict[str, DockerContainer]
+    containers: dict[str, PortainerContainerData]
     docker_version: DockerVersion
     docker_info: DockerInfo
+
+
+@dataclass(slots=True)
+class PortainerContainerData:
+    """Container data held by the Portainer coordinator."""
+
+    container: DockerContainer
+    stats: DockerContainerStats
 
 
 class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorData]]):
@@ -108,8 +116,6 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        else:
-            _LOGGER.debug("Fetched endpoints: %s", endpoints)
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
@@ -125,6 +131,19 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 containers = await self.portainer.get_containers(endpoint.id)
                 docker_version = await self.portainer.docker_version(endpoint.id)
                 docker_info = await self.portainer.docker_info(endpoint.id)
+
+                container_map: dict[str, PortainerContainerData] = {}
+                for container in containers:
+                    stats = await self.portainer.container_stats(
+                        endpoint_id=endpoint.id,
+                        container_id=container.id,
+                    )
+                    container_map[container.names[0].replace("/", " ").strip()] = (
+                        PortainerContainerData(
+                            container=container,
+                            stats=stats,
+                        )
+                    )
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
                 raise UpdateFailed(
@@ -144,10 +163,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 id=endpoint.id,
                 name=endpoint.name,
                 endpoint=endpoint,
-                containers={
-                    container.names[0].replace("/", " ").strip(): container
-                    for container in containers
-                },
+                containers=container_map,
                 docker_version=docker_version,
                 docker_info=docker_info,
             )

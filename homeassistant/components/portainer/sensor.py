@@ -5,8 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pyportainer.models.docker import DockerContainer
-
 from homeassistant.components.sensor import (
     EntityCategory,
     SensorDeviceClass,
@@ -15,11 +13,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import UnitOfInformation
+from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import PortainerConfigEntry, PortainerCoordinator
+from .coordinator import (
+    PortainerConfigEntry,
+    PortainerContainerData,
+    PortainerCoordinator,
+)
 from .entity import (
     PortainerContainerEntity,
     PortainerCoordinatorData,
@@ -31,7 +33,7 @@ from .entity import (
 class PortainerContainerSensorEntityDescription(SensorEntityDescription):
     """Class to hold Portainer container sensor description."""
 
-    value_fn: Callable[[DockerContainer], StateType]
+    value_fn: Callable[[PortainerContainerData], StateType]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -45,7 +47,89 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
     PortainerContainerSensorEntityDescription(
         key="image",
         translation_key="image",
-        value_fn=lambda data: data.image,
+        value_fn=lambda data: data.container.image,
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="memory_limit",
+        translation_key="memory_limit",
+        value_fn=lambda data: data.stats.memory_stats.limit,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="memory_usage",
+        translation_key="memory_usage",
+        value_fn=lambda data: data.stats.memory_stats.usage,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="cpu_usage_total",
+        translation_key="cpu_usage_total",
+        value_fn=lambda data: (
+            (
+                (
+                    data.stats.cpu_stats.cpu_usage.total_usage
+                    / data.stats.cpu_stats.system_cpu_usage
+                )
+                * data.stats.cpu_stats.online_cpus
+            )
+            * 100
+            if data.stats
+            else None
+        ),
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="cpu_usage_in_kernelmode",
+        translation_key="cpu_usage_in_kernelmode",
+        value_fn=lambda data: (
+            (
+                (
+                    data.stats.cpu_stats.cpu_usage.usage_in_kernelmode
+                    / data.stats.cpu_stats.system_cpu_usage
+                )
+                * data.stats.cpu_stats.online_cpus
+            )
+            * 100
+            if data.stats
+            else None
+        ),
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="cpu_usage_in_usermode",
+        translation_key="cpu_usage_in_usermode",
+        value_fn=lambda data: (
+            (
+                (
+                    data.stats.cpu_stats.cpu_usage.usage_in_usermode
+                    / data.stats.cpu_stats.system_cpu_usage
+                )
+                * data.stats.cpu_stats.online_cpus
+            )
+            * 100
+            if data.stats
+            else None
+        ),
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
@@ -194,7 +278,7 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
         self,
         coordinator: PortainerCoordinator,
         entity_description: PortainerContainerSensorEntityDescription,
-        device_info: DockerContainer,
+        device_info: PortainerContainerData,
         via_device: PortainerCoordinatorData,
     ) -> None:
         """Initialize the Portainer container sensor."""
@@ -211,9 +295,7 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(
-            self.coordinator.data[self.endpoint_id].containers[self.device_name]
-        )
+        return self.entity_description.value_fn(self.container_data)
 
 
 class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):

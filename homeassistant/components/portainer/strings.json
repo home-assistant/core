@@ -88,6 +88,21 @@
       },
       "cpu_total": {
         "name": "Total CPU"
+      },
+      "memory_limit": {
+        "name": "Memory limit"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      },
+      "cpu_usage_total": {
+        "name": "CPU usage total"
+      },
+      "cpu_usage_in_kernelmode": {
+        "name": "CPU usage kernelmode"
+      },
+      "cpu_usage_in_usermode": {
+        "name": "CPU usage usermode"
       }
     },
     "switch": {

@@ -13,7 +13,6 @@ from pyportainer.exceptions import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -27,7 +26,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
 from .const import DOMAIN
-from .coordinator import PortainerCoordinator, PortainerCoordinatorData
+from .coordinator import (
+    PortainerContainerData,
+    PortainerCoordinator,
+    PortainerCoordinatorData,
+)
 from .entity import PortainerContainerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,7 +91,7 @@ class PortainerButton(PortainerContainerEntity, ButtonEntity):
         self,
         coordinator: PortainerCoordinator,
         entity_description: PortainerButtonDescription,
-        device_info: DockerContainer,
+        device_info: PortainerContainerData,
         via_device: PortainerCoordinatorData,
     ) -> None:
         """Initialize the Portainer button entity."""

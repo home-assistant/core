@@ -42,6 +42,21 @@
       },
       "cpu_total": {
         "default": "mdi:cpu-64-bit"
+      },
+      "memory_limit": {
+        "default": "mdi:memory"
+      },
+      "memory_usage": {
+        "default": "mdi:memory"
+      },
+      "cpu_usage_total": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "cpu_usage_in_kernelmode": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "cpu_usage_in_usermode": {
+        "default": "mdi:cpu-64-bit"
       }
     },
     "switch": {
