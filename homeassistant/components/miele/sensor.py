@@ -770,7 +770,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         # recover last value from cache when adding entity
         last_data = await self.async_get_last_sensor_data()
         if last_data:
-            self._attr_native_value = last_data.native_value
+            self._attr_native_value = last_data.native_value  # type: ignore[assignment]
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
