@@ -63,6 +63,16 @@
           "stop": "Stop"
         }
       },
+      "q_adapt": {
+        "name": "Q-Adapt",
+        "state": {
+          "standard": "Standard",
+          "power": "Power",
+          "silence": "Silence",
+          "minimum": "Minimum",
+          "maximum": "Maximum"
+        }
+      },
       "sleep_times": {
         "name": "Sleep",
         "state": {

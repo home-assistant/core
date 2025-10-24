@@ -24,6 +24,9 @@
       },
       "sleep_health": {
         "default": "mdi:heart-pulse"
+      },
+      "jet_lag_prevention": {
+        "default": "mdi:airplane-clock"
       }
     },
     "sensor": {

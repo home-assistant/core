@@ -27,6 +27,9 @@ TEST_MESSAGE_HEADERS2 = (
 TEST_MULTIPART_HEADER = (
     b'Content-Type: multipart/related;\r\n\tboundary="Mark=_100584970350292485166"'
 )
+TEST_MULTIPART_ATTACHMENT_HEADER = (
+    b'Content-Type: multipart/mixed; boundary="------------qIuh0xG6dsImymfJo6f2M4Zv"'
+)
 
 TEST_MESSAGE_HEADERS3 = b""
 
@@ -34,6 +37,13 @@ TEST_MESSAGE = TEST_MESSAGE_HEADERS1 + DATE_HEADER1 + TEST_MESSAGE_HEADERS2
 
 TEST_MESSAGE_MULTIPART = (
     TEST_MESSAGE_HEADERS1 + DATE_HEADER1 + TEST_MESSAGE_HEADERS2 + TEST_MULTIPART_HEADER
+)
+
+TEST_MESSAGE_MULTIPART_ATTACHMENT = (
+    TEST_MESSAGE_HEADERS1
+    + DATE_HEADER1
+    + TEST_MESSAGE_HEADERS2
+    + TEST_MULTIPART_ATTACHMENT_HEADER
 )
 
 TEST_MESSAGE_NO_SUBJECT_TO_FROM = (
@@ -139,6 +149,45 @@ TEST_CONTENT_MULTIPART_BASE64_INVALID = (
     + TEST_CONTENT_HTML_BASE64
     + b"\r\n--Mark=_100584970350292485166--\r\n"
 )
+
+TEST_CONTENT_MULTIPART_WITH_ATTACHMENT = b"""
+\nThis is a multi-part message in MIME format.
+--------------qIuh0xG6dsImymfJo6f2M4Zv
+Content-Type: multipart/alternative;
+ boundary="------------N4zNjp2QWnOfrYQhtLL02Bk1"
+
+--------------N4zNjp2QWnOfrYQhtLL02Bk1
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+*Multi* part Test body
+
+--------------N4zNjp2QWnOfrYQhtLL02Bk1
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <p><b>Multi</b> part Test body</p>
+  </body>
+</html>
+
+--------------N4zNjp2QWnOfrYQhtLL02Bk1--
+--------------qIuh0xG6dsImymfJo6f2M4Zv
+Content-Type: text/plain; charset=UTF-8; name="Text attachment content.txt"
+Content-Disposition: attachment; filename="Text attachment content.txt"
+Content-Transfer-Encoding: base64
+
+VGV4dCBhdHRhY2htZW50IGNvbnRlbnQ=
+
+--------------qIuh0xG6dsImymfJo6f2M4Zv--
+"""
+
 
 EMPTY_SEARCH_RESPONSE = ("OK", [b"", b"Search completed (0.0001 + 0.000 secs)."])
 EMPTY_SEARCH_RESPONSE_ALT = ("OK", [b"Search completed (0.0001 + 0.000 secs)."])
@@ -299,6 +348,24 @@ TEST_FETCH_RESPONSE_MULTIPART_BASE64 = (
         )
         + b"}",
         bytearray(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART_BASE64),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
+TEST_FETCH_RESPONSE_MULTIPART_WITH_ATTACHMENT = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(
+            len(
+                TEST_MESSAGE_MULTIPART_ATTACHMENT
+                + TEST_CONTENT_MULTIPART_WITH_ATTACHMENT
+            )
+        ).encode("utf-8")
+        + b"}",
+        bytearray(
+            TEST_MESSAGE_MULTIPART_ATTACHMENT + TEST_CONTENT_MULTIPART_WITH_ATTACHMENT
+        ),
         b")",
         b"Fetch completed (0.0001 + 0.000 secs).",
     ],

@@ -66,6 +66,14 @@
         "default": "mdi:stop"
       }
     },
+    "number": {
+      "start_in_relative": {
+        "default": "mdi:progress-clock"
+      },
+      "finish_in_relative": {
+        "default": "mdi:progress-clock"
+      }
+    },
     "sensor": {
       "operation_state": {
         "default": "mdi:state-machine",
@@ -250,14 +258,6 @@
       },
       "i_dos_2_active": {
         "default": "mdi:numeric-2-circle"
-      }
-    },
-    "time": {
-      "start_in_relative": {
-        "default": "mdi:progress-clock"
-      },
-      "finish_in_relative": {
-        "default": "mdi:progress-clock"
       }
     }
   }

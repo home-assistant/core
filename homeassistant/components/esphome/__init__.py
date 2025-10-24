@@ -51,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
         client_info=CLIENT_INFO,
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
+        timezone=hass.config.time_zone,
     )
 
     domain_data = DomainData.get(hass)

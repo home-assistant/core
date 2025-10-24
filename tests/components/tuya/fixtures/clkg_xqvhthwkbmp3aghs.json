@@ -1,0 +1,114 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Pergola",
+  "category": "clkg",
+  "product_id": "xqvhthwkbmp3aghs",
+  "product_name": "Curtain switch",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2023-05-15T12:00:44+00:00",
+  "create_time": "2023-05-15T12:00:44+00:00",
+  "update_time": "2023-05-15T12:00:44+00:00",
+  "function": {
+    "control": {
+      "type": "Enum",
+      "value": {
+        "range": ["open", "stop", "close"]
+      }
+    },
+    "percent_control": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 10
+      }
+    },
+    "cur_calibration": {
+      "type": "Enum",
+      "value": {
+        "range": ["start", "end"]
+      }
+    },
+    "switch_backlight": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "control_back_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["forward", "back"]
+      }
+    },
+    "tr_timecon": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 10,
+        "max": 240,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "control": {
+      "type": "Enum",
+      "value": {
+        "range": ["open", "stop", "close"]
+      }
+    },
+    "percent_control": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 10
+      }
+    },
+    "cur_calibration": {
+      "type": "Enum",
+      "value": {
+        "range": ["start", "end"]
+      }
+    },
+    "switch_backlight": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "control_back_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["forward", "back"]
+      }
+    },
+    "tr_timecon": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 10,
+        "max": 240,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "control": "stop",
+    "percent_control": 0,
+    "cur_calibration": "end",
+    "switch_backlight": false,
+    "control_back_mode": "forward",
+    "tr_timecon": 32
+  },
+  "set_up": true,
+  "support_local": true
+}

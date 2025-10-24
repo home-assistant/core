@@ -14,7 +14,7 @@ from homeassistant.components.alexa_devices.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import TEST_DEVICE, TEST_PASSWORD, TEST_SERIAL_NUMBER, TEST_USERNAME
+from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -48,7 +48,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
             CONF_SITE: "https://www.amazon.com",
         }
         client.get_devices_data.return_value = {
-            TEST_SERIAL_NUMBER: deepcopy(TEST_DEVICE)
+            TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)
         }
         client.get_model_details = lambda device: DEVICE_TYPE_TO_MODEL.get(
             device.device_type

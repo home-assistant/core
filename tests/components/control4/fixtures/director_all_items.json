@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "typeName": "room",
+    "name": "Living Room",
+    "roomHidden": false
+  },
+  {
+    "id": 2,
+    "typeName": "room",
+    "name": "Thermostat Room",
+    "roomHidden": false
+  },
+  {
+    "id": 100,
+    "name": "TV"
+  }
+]

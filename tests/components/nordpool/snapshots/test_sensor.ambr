@@ -99,7 +99,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.01177',
+    'state': '1.99796',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_daily_average-entry]
@@ -154,7 +154,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.90074',
+    'state': '1.03398',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_exchange_rate-entry]
@@ -205,7 +205,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '11.6402',
+    'state': '11.05186',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_highest_price-entry]
@@ -249,9 +249,9 @@
 # name: test_sensor[sensor.nord_pool_se3_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'end': '2024-11-05T17:00:00+00:00',
+      'end': '2025-10-01T17:15:00+00:00',
       'friendly_name': 'Nord Pool SE3 Highest price',
-      'start': '2024-11-05T16:00:00+00:00',
+      'start': '2025-10-01T17:00:00+00:00',
       'unit_of_measurement': 'SEK/kWh',
     }),
     'context': <ANY>,
@@ -259,7 +259,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.51265',
+    'state': '3.82803',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_last_updated-entry]
@@ -308,7 +308,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-04T12:15:03+00:00',
+    'state': '2025-09-30T12:08:16+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_lowest_price-entry]
@@ -352,9 +352,9 @@
 # name: test_sensor[sensor.nord_pool_se3_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'end': '2024-11-05T03:00:00+00:00',
+      'end': '2025-10-01T02:15:00+00:00',
       'friendly_name': 'Nord Pool SE3 Lowest price',
-      'start': '2024-11-05T02:00:00+00:00',
+      'start': '2025-10-01T02:00:00+00:00',
       'unit_of_measurement': 'SEK/kWh',
     }),
     'context': <ANY>,
@@ -362,7 +362,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.06169',
+    'state': '0.44196',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_next_price-entry]
@@ -414,7 +414,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.83553',
+    'state': '1.21814',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_1_average-entry]
@@ -469,7 +469,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.42287',
+    'state': '0.74593',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_1_highest_price-entry]
@@ -524,7 +524,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.40614',
+    'state': '1.80996',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_1_lowest_price-entry]
@@ -579,7 +579,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.06169',
+    'state': '0.44196',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_1_time_from-entry]
@@ -628,7 +628,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-04T23:00:00+00:00',
+    'state': '2025-09-30T22:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_1_time_until-entry]
@@ -677,7 +677,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-05T07:00:00+00:00',
+    'state': '2025-10-01T06:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_2_average-entry]
@@ -732,7 +732,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.61079',
+    'state': '1.05461',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_2_highest_price-entry]
@@ -787,7 +787,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.83553',
+    'state': '1.99796',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_2_lowest_price-entry]
@@ -842,7 +842,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.28914',
+    'state': '0.78568',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_2_time_from-entry]
@@ -891,7 +891,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-05T19:00:00+00:00',
+    'state': '2025-10-01T18:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_2_time_until-entry]
@@ -940,7 +940,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-05T23:00:00+00:00',
+    'state': '2025-10-01T22:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_peak_average-entry]
@@ -995,7 +995,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.31597',
+    'state': '1.21913',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_peak_highest_price-entry]
@@ -1050,7 +1050,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.51265',
+    'state': '3.82803',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_peak_lowest_price-entry]
@@ -1105,7 +1105,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.92505',
+    'state': '0.60774',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_peak_time_from-entry]
@@ -1154,7 +1154,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-05T07:00:00+00:00',
+    'state': '2025-10-01T06:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_peak_time_until-entry]
@@ -1203,7 +1203,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-05T19:00:00+00:00',
+    'state': '2025-10-01T18:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_previous_price-entry]
@@ -1255,7 +1255,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.81983',
+    'state': '3.82803',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_currency-entry]
@@ -1413,7 +1413,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.16612',
+    'state': '1.18078',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_exchange_rate-entry]
@@ -1464,7 +1464,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '11.6402',
+    'state': '11.05186',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_highest_price-entry]
@@ -1508,9 +1508,9 @@
 # name: test_sensor[sensor.nord_pool_se4_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'end': '2024-11-05T17:00:00+00:00',
+      'end': '2025-10-01T17:15:00+00:00',
       'friendly_name': 'Nord Pool SE4 Highest price',
-      'start': '2024-11-05T16:00:00+00:00',
+      'start': '2025-10-01T17:00:00+00:00',
       'unit_of_measurement': 'SEK/kWh',
     }),
     'context': <ANY>,
@@ -1518,7 +1518,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3.53303',
+    'state': '4.44274',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_last_updated-entry]
@@ -1567,7 +1567,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-04T12:15:03+00:00',
+    'state': '2025-09-30T12:08:16+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_lowest_price-entry]
@@ -1611,9 +1611,9 @@
 # name: test_sensor[sensor.nord_pool_se4_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'end': '2024-11-05T19:00:00+00:00',
+      'end': '2025-10-01T18:15:00+00:00',
       'friendly_name': 'Nord Pool SE4 Lowest price',
-      'start': '2024-11-05T18:00:00+00:00',
+      'start': '2025-10-01T18:00:00+00:00',
       'unit_of_measurement': 'SEK/kWh',
     }),
     'context': <ANY>,
@@ -1673,7 +1673,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.11257',
+    'state': '1.40502',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_1_average-entry]
@@ -1728,7 +1728,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.49797',
+    'state': '0.86099',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_1_highest_price-entry]
@@ -1783,7 +1783,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.64825',
+    'state': '2.02934',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_1_lowest_price-entry]
@@ -1838,7 +1838,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.06519',
+    'state': '0.51546',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_1_time_from-entry]
@@ -1887,7 +1887,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-04T23:00:00+00:00',
+    'state': '2025-09-30T22:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_1_time_until-entry]
@@ -1936,7 +1936,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-05T07:00:00+00:00',
+    'state': '2025-10-01T06:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_2_average-entry]
@@ -1991,7 +1991,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.79398',
+    'state': '1.21907',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_2_highest_price-entry]
@@ -2046,7 +2046,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.11257',
+    'state': '2.31216',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_2_lowest_price-entry]
@@ -2101,7 +2101,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.34921',
+    'state': '0.91222',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_2_time_from-entry]
@@ -2150,7 +2150,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-05T19:00:00+00:00',
+    'state': '2025-10-01T18:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_2_time_until-entry]
@@ -2199,7 +2199,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-05T23:00:00+00:00',
+    'state': '2025-10-01T22:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_peak_average-entry]
@@ -2254,7 +2254,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.73559',
+    'state': '1.38122',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_peak_highest_price-entry]
@@ -2309,7 +2309,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3.53303',
+    'state': '4.44274',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_peak_lowest_price-entry]
@@ -2364,7 +2364,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.08172',
+    'state': '0.68312',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_peak_time_from-entry]
@@ -2413,7 +2413,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-05T07:00:00+00:00',
+    'state': '2025-10-01T06:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_peak_time_until-entry]
@@ -2462,7 +2462,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-11-05T19:00:00+00:00',
+    'state': '2025-10-01T18:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_previous_price-entry]
@@ -2514,6 +2514,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.52406',
+    'state': '4.44274',
   })
 # ---

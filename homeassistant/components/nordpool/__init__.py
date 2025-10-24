@@ -33,7 +33,8 @@ async def async_setup_entry(
     await cleanup_device(hass, config_entry)
 
     coordinator = NordPoolDataUpdateCoordinator(hass, config_entry)
-    await coordinator.fetch_data(dt_util.utcnow())
+    await coordinator.fetch_data(dt_util.utcnow(), True)
+    await coordinator.update_listeners(dt_util.utcnow())
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,

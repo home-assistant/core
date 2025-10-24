@@ -27,6 +27,7 @@ def event_only() -> Generator[None]:
         yield
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @freeze_time("2025-01-01T03:30:00.000Z")
 async def test_setup(
     hass: HomeAssistant,
@@ -123,8 +124,11 @@ async def test_setup(
                 "value2": "label",
             },
         ),
+        ("jet_lag_prevention", {"event": "jet_lag_start"}),
+        ("jet_lag_prevention", {"event": "jet_lag_stop"}),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @freeze_time("2025-01-01T03:30:00.000+00:00")
 async def test_webhook_event(
     hass: HomeAssistant,
