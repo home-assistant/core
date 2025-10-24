@@ -1,11 +1,12 @@
 """Global fixtures for Roborock integration."""
 
+import asyncio
 from collections.abc import Generator
 from copy import deepcopy
 import pathlib
 import tempfile
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
 from roborock import RoborockCategory, RoomMapping
@@ -70,6 +71,9 @@ class A01Mock(RoborockMqttClientA01):
 @pytest.fixture(name="bypass_api_client_fixture")
 def bypass_api_client_fixture() -> None:
     """Skip calls to the API client."""
+    base_url_future = asyncio.Future()
+    base_url_future.set_result(BASE_URL)
+
     with (
         patch(
             "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
@@ -81,6 +85,11 @@ def bypass_api_client_fixture() -> None:
         ),
         patch(
             "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.load_multi_map"
+        ),
+        patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.base_url",
+            new_callable=PropertyMock,
+            return_value=base_url_future,
         ),
     ):
         yield

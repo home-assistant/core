@@ -87,7 +87,6 @@ __all__ = [
     "async_get_chat_log",
     "async_get_result_from_chat_log",
     "async_set_agent",
-    "async_setup",
     "async_unset_agent",
 ]
 

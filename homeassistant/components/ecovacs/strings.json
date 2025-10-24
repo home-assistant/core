@@ -178,6 +178,9 @@
       }
     },
     "select": {
+      "active_map": {
+        "name": "Active map"
+      },
       "water_amount": {
         "name": "[%key:component::ecovacs::entity::number::water_amount::name%]",
         "state": {
