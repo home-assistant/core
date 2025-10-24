@@ -146,15 +146,10 @@ async def test_climate_states(
     assert state.state == expected_hvac_mode
     assert state.attributes["hvac_action"] == expected_hvac_action
 
-    if expected_temperature is not None:
-        assert state.attributes["temperature"] == expected_temperature
-    else:
-        assert state.attributes.get("temperature") is None
+    assert state.attributes.get("temperature") == expected_temperature
 
-    if expected_temp_high is not None:
-        assert state.attributes["target_temp_high"] == expected_temp_high
-    if expected_temp_low is not None:
-        assert state.attributes["target_temp_low"] == expected_temp_low
+    assert state.attributes.get("target_temp_high") == expected_temp_high
+    assert state.attributes.get("target_temp_low") == expected_temp_low
 
 
 @pytest.mark.parametrize(
