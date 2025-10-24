@@ -13,6 +13,7 @@ TEST_DEVICE_1 = AmazonDevice(
     capabilities=["AUDIO_PLAYER", "MICROPHONE"],
     device_family="mine",
     device_type="echo",
+    household_device=False,
     device_owner_customer_id="amazon_ower_id",
     device_cluster_members=[TEST_DEVICE_1_SN],
     online=True,
@@ -21,9 +22,21 @@ TEST_DEVICE_1 = AmazonDevice(
     entity_id="11111111-2222-3333-4444-555555555555",
     endpoint_id="G1234567890123456789012345678A",
     sensors={
-        "dnd": AmazonDeviceSensor(name="dnd", value=False, error=False, scale=None),
+        "dnd": AmazonDeviceSensor(
+            name="dnd",
+            value=False,
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale=None,
+        ),
         "temperature": AmazonDeviceSensor(
-            name="temperature", value="22.5", error=False, scale="CELSIUS"
+            name="temperature",
+            value="22.5",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale="CELSIUS",
         ),
     },
 )
@@ -35,6 +48,7 @@ TEST_DEVICE_2 = AmazonDevice(
     capabilities=["AUDIO_PLAYER", "MICROPHONE"],
     device_family="mine",
     device_type="echo",
+    household_device=True,
     device_owner_customer_id="amazon_ower_id",
     device_cluster_members=[TEST_DEVICE_2_SN],
     online=True,
@@ -44,7 +58,12 @@ TEST_DEVICE_2 = AmazonDevice(
     endpoint_id="G1234567890123456789012345678A",
     sensors={
         "temperature": AmazonDeviceSensor(
-            name="temperature", value="22.5", error=False, scale="CELSIUS"
+            name="temperature",
+            value="22.5",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale="CELSIUS",
         )
     },
 )

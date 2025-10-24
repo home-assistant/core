@@ -1,23 +1,39 @@
 """Tests for the Sonos Media Player platform."""
 
+from collections.abc import Generator
+from datetime import UTC, datetime
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+from freezegun import freeze_time
 import pytest
-from soco.data_structures import SearchResult
+from soco.data_structures import (
+    DidlAudioBroadcast,
+    DidlAudioLineIn,
+    DidlPlaylistContainer,
+    SearchResult,
+)
 from sonos_websocket.exception import SonosWebsocketError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ANNOUNCE,
+    ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_EXTRA,
+    ATTR_MEDIA_PLAYLIST,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
@@ -40,6 +56,7 @@ from homeassistant.components.sonos.services import (
     ATTR_ALARM_ID,
     ATTR_ENABLED,
     ATTR_INCLUDE_LINKED_ZONES,
+    ATTR_QUEUE_POSITION,
     ATTR_VOLUME,
     SERVICE_GET_QUEUE,
     SERVICE_RESTORE,
@@ -48,6 +65,7 @@ from homeassistant.components.sonos.services import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     ATTR_TIME,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -71,6 +89,13 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
+
+
+@pytest.fixture(autouse=True)
+def mock_token() -> Generator[MagicMock]:
+    """Mock token generator."""
+    with patch("secrets.token_hex", return_value="123456789") as token:
+        yield token
 
 
 async def test_device_registry(
@@ -1347,3 +1372,208 @@ async def test_service_update_alarm_dne(
             blocking=True,
         )
     assert soco.alarmClock.UpdateAlarm.call_count == 0
+
+
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
+async def test_position_updates(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+) -> None:
+    """Test the media player position updates."""
+
+    soco.get_current_track_info.return_value = current_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = "media_player.zone_a"
+    state = hass.states.get(entity_id)
+
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    # updated_at should be recent
+    updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+    assert updated_at == datetime.now(UTC)
+
+    # Position only updated by 1 second; should not update attributes
+    new_track_info = current_track_info.copy()
+    new_track_info["position"] = "00:00:43"
+    soco.get_current_track_info.return_value = new_track_info
+    new_media_event = SonosMockEvent(
+        soco, soco.avTransport, media_event.variables.copy()
+    )
+    new_media_event.variables["position"] = "00:00:43"
+    with freeze_time("2024-01-01T12:00:01Z"):
+        soco.avTransport.subscribe.return_value.callback(new_media_event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == updated_at
+
+    # Position jumped by more than 1.5 seconds; should update position
+    new_track_info = current_track_info.copy()
+    new_track_info["position"] = "00:01:10"
+    soco.get_current_track_info.return_value = new_track_info
+    new_media_event = SonosMockEvent(
+        soco, soco.avTransport, media_event.variables.copy()
+    )
+    new_media_event.variables["position"] = "00:01:10"
+    with freeze_time("2024-01-01T12:00:11Z"):
+        soco.avTransport.subscribe.return_value.callback(new_media_event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_MEDIA_POSITION] == 70
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == datetime.now(UTC)
+
+
+@pytest.mark.parametrize(
+    ("track_info", "event_variables"),
+    [
+        (
+            {
+                "title": "Something",
+                "artist": "The Beatles",
+                "album": "Abbey Road",
+                "album_art": "http://example.com/albumart.jpg",
+                "position": "00:00:42",
+                "playlist_position": "5",
+                "duration": "00:02:36",
+                "uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {},
+        ),
+        (
+            {
+                "title": "Something",
+                "artist": "The Beatles",
+                "album": "Abbey Road",
+                "position": "00:00:42",
+                "playlist_position": "5",
+                "duration": "00:02:36",
+                "uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {},
+        ),
+        (
+            {
+                "title": "Something",
+                "artist": "The Beatles",
+                "album": "Abbey Road",
+                "album_art": "http://example.com/albumart.jpg",
+                "playlist_position": "5",
+                "uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {},
+        ),
+        (
+            {
+                "uri": "x-rincon-stream:0",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {
+                "current_track_uri": "x-rincon-stream:0",
+                "current_track_meta_data": DidlAudioLineIn("Line-in", "-1", "-1"),
+            },
+        ),
+        (
+            {
+                "title": "Something",
+                "artist": "The Beatles",
+                "album": "Abbey Road",
+                "album_art": "http://example.com/albumart.jpg",
+                "playlist_position": "5",
+                "uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {
+                "enqueued_transport_uri_meta_data": DidlPlaylistContainer(
+                    "My Playlist", "-1", "-1"
+                )
+            },
+        ),
+        (
+            {
+                "album_art": "http://example.com/albumart.jpg",
+                "position": "00:00:42",
+                "duration": "00:02:36",
+                "uri": "x-sonosapi-stream:1234",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {
+                "enqueued_transport_uri_meta_data": DidlAudioBroadcast(
+                    "World News", "-1", "-1"
+                ),
+                "current_track_uri": "x-sonosapi-stream:1234",
+            },
+        ),
+        (
+            {
+                "album_art": "http://example.com/albumart.jpg",
+                "position": "00:00:42",
+                "duration": "00:02:36",
+                "uri": "x-sonosapi-stream:1234",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {
+                "enqueued_transport_uri_meta_data": DidlAudioBroadcast(
+                    "World News", "-1", "-1"
+                ),
+                "current_track_uri": "x-sonosapi-stream:1234",
+                "current_track_meta_data": DidlAudioBroadcast(
+                    "World News", "-1", "-1", radio_show="Live at 6"
+                ),
+            },
+        ),
+    ],
+    ids=[
+        "basic_track",
+        "basic_track_no_art",
+        "basic_track_no_position",
+        "line_in",
+        "playlist_container",
+        "radio_station",
+        "radio_station_with_show",
+    ],
+)
+async def test_media_info_attributes(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    track_info: dict[str, Any],
+    event_variables: dict[str, Any],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the media player info attributes using a variety of inputs."""
+    media_event.variables.update(event_variables)
+    soco.get_current_track_info.return_value = track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("media_player.zone_a")
+
+    snapshot_keys = [
+        ATTR_MEDIA_ALBUM_NAME,
+        ATTR_MEDIA_ARTIST,
+        ATTR_MEDIA_CONTENT_ID,
+        ATTR_MEDIA_CONTENT_TYPE,
+        ATTR_MEDIA_DURATION,
+        ATTR_MEDIA_POSITION,
+        ATTR_MEDIA_TITLE,
+        ATTR_QUEUE_POSITION,
+        ATTR_ENTITY_PICTURE,
+        ATTR_INPUT_SOURCE,
+        ATTR_MEDIA_PLAYLIST,
+        ATTR_MEDIA_CHANNEL,
+    ]
+
+    # Create a filtered dict of only those attributes
+    filtered_attrs = {k: state.attributes.get(k) for k in snapshot_keys}
+
+    # Use the snapshot assertion
+    assert filtered_attrs == snapshot

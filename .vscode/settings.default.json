@@ -7,6 +7,8 @@
   "python.testing.pytestEnabled": false,
   // https://code.visualstudio.com/docs/python/linting#_general-settings
   "pylint.importStrategy": "fromEnvironment",
+  // Pyright is too pedantic for Home Assistant
+  "python.analysis.typeCheckingMode": "basic",
   "json.schemas": [
         {
             "fileMatch": [

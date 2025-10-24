@@ -1,0 +1,61 @@
+{
+  "entity": {
+    "sensor": {
+      "pressure": {
+        "default": "mdi:tooth-outline",
+        "state": {
+          "high": "mdi:tooth",
+          "low": "mdi:alert",
+          "power_button_pressed": "mdi:power",
+          "button_pressed": "mdi:radiobox-marked"
+        }
+      },
+      "sector": {
+        "default": "mdi:circle-outline",
+        "state": {
+          "sector_1": "mdi:circle-slice-2",
+          "sector_2": "mdi:circle-slice-4",
+          "sector_3": "mdi:circle-slice-6",
+          "sector_4": "mdi:circle-slice-8",
+          "success": "mdi:check-circle-outline"
+        }
+      },
+      "toothbrush_state": {
+        "default": "mdi:toothbrush-electric",
+        "state": {
+          "initializing": "mdi:sync",
+          "idle": "mdi:toothbrush-electric",
+          "running": "mdi:waveform",
+          "charging": "mdi:battery-charging",
+          "setup": "mdi:wrench",
+          "flight_menu": "mdi:airplane",
+          "selection_menu": "mdi:menu",
+          "off": "mdi:power",
+          "sleeping": "mdi:sleep",
+          "transport": "mdi:dolly"
+        }
+      },
+      "number_of_sectors": {
+        "default": "mdi:chart-pie"
+      },
+      "mode": {
+        "default": "mdi:toothbrush-paste",
+        "state": {
+          "daily_clean": "mdi:repeat-once",
+          "sensitive": "mdi:feather",
+          "gum_care": "mdi:tooth-outline",
+          "intense": "mdi:shape-circle-plus",
+          "whitening": "mdi:shimmer",
+          "whiten": "mdi:shimmer",
+          "tongue_cleaning": "mdi:gate-and",
+          "super_sensitive": "mdi:feather",
+          "massage": "mdi:spa",
+          "deep_clean": "mdi:water",
+          "turbo": "mdi:car-turbocharger",
+          "off": "mdi:power",
+          "settings": "mdi:cog-outline"
+        }
+      }
+    }
+  }
+}

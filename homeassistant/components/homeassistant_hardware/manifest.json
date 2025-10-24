@@ -3,10 +3,11 @@
   "name": "Home Assistant Hardware",
   "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/core"],
+  "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_hardware",
   "integration_type": "system",
   "requirements": [
-    "universal-silabs-flasher==0.0.32",
+    "universal-silabs-flasher==0.0.35",
     "ha-silabs-firmware-client==0.2.0"
   ]
 }

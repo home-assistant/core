@@ -208,7 +208,7 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
 
     def __process_raw_value(self, entry: float | str | bytes) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
-        if self._nan_value and entry in (self._nan_value, -self._nan_value):
+        if self._nan_value is not None and entry in (self._nan_value, -self._nan_value):
             return None
         if isinstance(entry, bytes):
             return entry.decode()

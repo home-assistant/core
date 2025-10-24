@@ -704,6 +704,7 @@ class DPCode(StrEnum):
     DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
     DELAY_SET = "delay_set"
+    DEW_POINT_TEMP = "dew_point_temp"
     DISINFECTION = "disinfection"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
@@ -728,6 +729,7 @@ class DPCode(StrEnum):
     FEED_REPORT = "feed_report"
     FEED_STATE = "feed_state"
     FEEDIN_POWER_LIMIT_ENABLE = "feedin_power_limit_enable"
+    FEELLIKE_TEMP = "feellike_temp"
     FILTER = "filter"
     FILTER_DURATION = "filter_life"  # Filter duration (hours)
     FILTER_LIFE = "filter"  # Filter life (percentage)
@@ -739,6 +741,7 @@ class DPCode(StrEnum):
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
+    HEAT_INDEX = "heat_index"
     HUMIDIFIER = "humidifier"  # Humidification
     HUMIDITY = "humidity"  # Humidity
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
@@ -968,6 +971,7 @@ class DPCode(StrEnum):
     WET = "wet"  # Humidification
     WINDOW_CHECK = "window_check"
     WINDOW_STATE = "window_state"
+    WINDCHILL_INDEX = "windchill_index"
     WINDSPEED = "windspeed"
     WINDSPEED_AVG = "windspeed_avg"
     WIND_DIRECT = "wind_direct"
