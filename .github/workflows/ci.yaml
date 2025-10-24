@@ -523,22 +523,24 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-uv-${{
             env.UV_CACHE_VERSION }}-${{ steps.generate-uv-key.outputs.version }}-${{
             env.HA_SHORT_VERSION }}-
-      - name: Restore apt cache
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        id: cache-apt
-        uses: actions/cache@v4.2.4
+      - name: Check if apt cache exists
+        id: cache-apt-check
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
+          lookup-only: ${{ steps.cache-venv.outputs.cache-hit == 'true' }}
           path: |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+        if: |
+          steps.cache-venv.outputs.cache-hit != 'true'
+          || steps.cache-apt-check.outputs.cache-hit != 'true'
         timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          if [[ "${{ steps.cache-apt.outputs.cache-hit }}" != 'true' ]]; then
+          if [[ "${{ steps.cache-apt-check.outputs.cache-hit }}" != 'true' ]]; then
             mkdir -p ${{ env.APT_CACHE_DIR }}
             mkdir -p ${{ env.APT_LIST_CACHE_DIR }}
           fi
@@ -563,9 +565,18 @@ jobs:
             libswscale-dev \
             libudev-dev
 
-          if [[ "${{ steps.cache-apt.outputs.cache-hit }}" != 'true' ]]; then
+          if [[ "${{ steps.cache-apt-check.outputs.cache-hit }}" != 'true' ]]; then
             sudo chmod -R 755 ${{ env.APT_CACHE_BASE }}
           fi
+      - name: Save apt cache
+        if: steps.cache-apt-check.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: |
+            ${{ env.APT_CACHE_DIR }}
+            ${{ env.APT_LIST_CACHE_DIR }}
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |

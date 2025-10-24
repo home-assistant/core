@@ -40,6 +40,7 @@ from .utils import (
     get_virtual_component_ids,
     is_block_momentary_input,
     is_rpc_momentary_input,
+    is_view_for_platform,
 )
 
 PARALLEL_UPDATES = 0
@@ -273,6 +274,9 @@ RPC_SENSORS: Final = {
     "boolean": RpcBinarySensorDescription(
         key="boolean",
         sub_key="value",
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, BINARY_SENSOR_PLATFORM
+        ),
     ),
     "calibration": RpcBinarySensorDescription(
         key="blutrv",

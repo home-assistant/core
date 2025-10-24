@@ -1892,7 +1892,10 @@ async def test_register_entity_service_non_entity_service_schema(
             vol.Any(vol.Schema({"some": str})),
         )
     ):
-        expected_message = f"The mock_platform.hello_{idx} service registers an entity service with a non entity service schema"
+        expected_message = (
+            f"The mock_platform.hello_{idx} service registers "
+            "an entity service with a non entity service schema"
+        )
         with pytest.raises(HomeAssistantError, match=expected_message):
             entity_platform.async_register_entity_service(
                 f"hello_{idx}", schema, Mock()

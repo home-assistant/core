@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from http import HTTPStatus
+from functools import partial
 import logging
+from typing import Any
 
+import prowlpy
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -17,12 +19,11 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = "https://api.prowlapp.com/publicapi/"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
 
@@ -33,46 +34,49 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> ProwlNotificationService:
     """Get the Prowl notification service."""
-    return ProwlNotificationService(hass, config[CONF_API_KEY])
+    prowl = await hass.async_add_executor_job(
+        partial(prowlpy.Prowl, apikey=config[CONF_API_KEY])
+    )
+    return ProwlNotificationService(hass, prowl)
 
 
 class ProwlNotificationService(BaseNotificationService):
     """Implement the notification service for Prowl."""
 
-    def __init__(self, hass, api_key):
+    def __init__(self, hass: HomeAssistant, prowl: prowlpy.Prowl) -> None:
         """Initialize the service."""
         self._hass = hass
-        self._api_key = api_key
+        self._prowl = prowl
 
-    async def async_send_message(self, message, **kwargs):
+    async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
-        response = None
-        session = None
-        url = f"{_RESOURCE}add"
-        data = kwargs.get(ATTR_DATA)
-        payload = {
-            "apikey": self._api_key,
-            "application": "Home-Assistant",
-            "event": kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-            "description": message,
-            "priority": data["priority"] if data and "priority" in data else 0,
-        }
-        if data and data.get("url"):
-            payload["url"] = data["url"]
-
-        _LOGGER.debug("Attempting call Prowl service at %s", url)
-        session = async_get_clientsession(self._hass)
+        data = kwargs.get(ATTR_DATA, {})
+        if data is None:
+            data = {}
 
         try:
             async with asyncio.timeout(10):
-                response = await session.post(url, data=payload)
-                result = await response.text()
-
-            if response.status != HTTPStatus.OK or "error" in result:
-                _LOGGER.error(
-                    "Prowl service returned http status %d, response %s",
-                    response.status,
-                    result,
+                await self._hass.async_add_executor_job(
+                    partial(
+                        self._prowl.send,
+                        application="Home-Assistant",
+                        event=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
+                        description=message,
+                        priority=data.get("priority", 0),
+                        url=data.get("url"),
+                    )
                 )
-        except TimeoutError:
-            _LOGGER.error("Timeout accessing Prowl at %s", url)
+        except TimeoutError as ex:
+            _LOGGER.error("Timeout accessing Prowl API")
+            raise HomeAssistantError("Timeout accessing Prowl API") from ex
+        except prowlpy.APIError as ex:
+            if str(ex).startswith("Invalid API key"):
+                _LOGGER.error("Invalid API key for Prowl service")
+                raise HomeAssistantError("Invalid API key for Prowl service") from ex
+            if str(ex).startswith("Not accepted"):
+                _LOGGER.error("Prowl returned: exceeded rate limit")
+                raise HomeAssistantError(
+                    "Prowl service reported: exceeded rate limit"
+                ) from ex
+            _LOGGER.error("Unexpected error when calling Prowl API: %s", str(ex))
+            raise HomeAssistantError("Unexpected error when calling Prowl API") from ex

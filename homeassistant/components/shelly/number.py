@@ -41,6 +41,7 @@ from .utils import (
     get_device_entry_gen,
     get_virtual_component_ids,
     get_virtual_component_unit,
+    is_view_for_platform,
 )
 
 PARALLEL_UPDATES = 0
@@ -185,6 +186,9 @@ RPC_NUMBERS: Final = {
     "number": RpcNumberDescription(
         key="number",
         sub_key="value",
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, NUMBER_PLATFORM
+        ),
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
         mode_fn=lambda config: VIRTUAL_NUMBER_MODE_MAP.get(

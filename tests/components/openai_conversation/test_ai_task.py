@@ -155,14 +155,13 @@ async def test_generate_data_with_attachments(
                     path=Path("doorbell_snapshot.jpg"),
                 ),
                 media_source.PlayMedia(
-                    url="http://example.com/context.txt",
-                    mime_type="text/plain",
-                    path=Path("context.txt"),
+                    url="http://example.com/context.pdf",
+                    mime_type="application/pdf",
+                    path=Path("context.pdf"),
                 ),
             ],
         ),
         patch("pathlib.Path.exists", return_value=True),
-        # patch.object(hass.config, "is_allowed_path", return_value=True),
         patch(
             "homeassistant.components.openai_conversation.entity.guess_file_type",
             return_value=("image/jpeg", None),
@@ -176,7 +175,7 @@ async def test_generate_data_with_attachments(
             instructions="Test prompt",
             attachments=[
                 {"media_content_id": "media-source://media/doorbell_snapshot.jpg"},
-                {"media_content_id": "media-source://media/context.txt"},
+                {"media_content_id": "media-source://media/context.pdf"},
             ],
         )
 
@@ -205,9 +204,9 @@ async def test_generate_data_with_attachments(
             "type": "input_image",
         },
         {
-            "detail": "auto",
-            "image_url": "data:image/jpeg;base64,ZmFrZV9pbWFnZV9kYXRh",
-            "type": "input_image",
+            "filename": "context.pdf",
+            "file_data": "data:application/pdf;base64,ZmFrZV9pbWFnZV9kYXRh",
+            "type": "input_file",
         },
     ]
 

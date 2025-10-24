@@ -1103,11 +1103,11 @@ async def test_volume(
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: "media_player.zone_a", ATTR_MEDIA_VOLUME_LEVEL: 0.30},
+        {ATTR_ENTITY_ID: "media_player.zone_a", ATTR_MEDIA_VOLUME_LEVEL: 0.57},
         blocking=True,
     )
     # SoCo uses 0..100 for its range.
-    assert soco.volume == 30
+    assert soco.volume == 57
 
 
 @pytest.mark.parametrize(

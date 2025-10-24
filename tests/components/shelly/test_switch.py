@@ -659,6 +659,7 @@ async def test_rpc_device_virtual_switch(
     assert state.state == STATE_ON
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_device_virtual_binary_sensor(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -680,6 +681,7 @@ async def test_rpc_device_virtual_binary_sensor(
     assert hass.states.get(entity_id) is None
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_virtual_switch_when_mode_label(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,

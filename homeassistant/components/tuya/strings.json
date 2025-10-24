@@ -621,6 +621,36 @@
       "battery_state": {
         "name": "Battery state"
       },
+      "battery_soc": {
+        "name": "Battery SOC"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "total_pv_power": {
+        "name": "Total PV power"
+      },
+      "pv_channel_power": {
+        "name": "PV channel {index} power"
+      },
+      "inverter_output_power": {
+        "name": "Inverter output power"
+      },
+      "lifetime_pv_energy": {
+        "name": "Lifetime PV energy"
+      },
+      "lifetime_inverter_output_energy": {
+        "name": "Lifetime inverter output energy"
+      },
+      "lifetime_battery_discharge_energy": {
+        "name": "Lifetime battery discharge energy"
+      },
+      "lifetime_battery_charge_energy": {
+        "name": "Lifetime battery charge energy"
+      },
+      "lifetime_offgrid_port_energy": {
+        "name": "Lifetime off-grid port energy"
+      },
       "gas": {
         "name": "Gas"
       },

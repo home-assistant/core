@@ -1077,6 +1077,7 @@ async def test_rpc_device_virtual_text_sensor(
     assert state.state == "dolor sit amet"
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_text_virtual_sensor_when_mode_field(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -1181,6 +1182,7 @@ async def test_rpc_device_virtual_number_sensor(
     assert state.state == "56.7"
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_number_virtual_sensor_when_mode_field(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -1294,6 +1296,7 @@ async def test_rpc_device_virtual_enum_sensor(
     assert state.state == "two"
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_enum_virtual_sensor_when_mode_dropdown(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,

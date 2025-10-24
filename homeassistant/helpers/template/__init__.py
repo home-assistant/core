@@ -5,7 +5,7 @@ from __future__ import annotations
 from ast import literal_eval
 import asyncio
 import collections.abc
-from collections.abc import Callable, Generator, Iterable, MutableSequence
+from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from copy import deepcopy
@@ -18,7 +18,6 @@ from operator import contains
 import pathlib
 import random
 import re
-import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType, TracebackType
@@ -32,12 +31,11 @@ from typing import (
     cast,
     overload,
 )
-from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
 from awesomeversion import AwesomeVersion
 import jinja2
-from jinja2 import pass_context, pass_environment, pass_eval_context
+from jinja2 import pass_context, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
@@ -83,12 +81,7 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.translation import async_translate_state
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
-from homeassistant.util import (
-    convert,
-    dt as dt_util,
-    location as location_util,
-    slugify as slugify_util,
-)
+from homeassistant.util import convert, dt as dt_util, location as location_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -2047,119 +2040,9 @@ def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
     return wrapper
 
 
-def logarithm(value, base=math.e, default=_SENTINEL):
-    """Filter and function to get logarithm of the value with a specific base."""
-    try:
-        base_float = float(base)
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("log", base)
-        return default
-    try:
-        value_float = float(value)
-        return math.log(value_float, base_float)
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("log", value)
-        return default
-
-
-def sine(value, default=_SENTINEL):
-    """Filter and function to get sine of the value."""
-    try:
-        return math.sin(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("sin", value)
-        return default
-
-
-def cosine(value, default=_SENTINEL):
-    """Filter and function to get cosine of the value."""
-    try:
-        return math.cos(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("cos", value)
-        return default
-
-
-def tangent(value, default=_SENTINEL):
-    """Filter and function to get tangent of the value."""
-    try:
-        return math.tan(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("tan", value)
-        return default
-
-
-def arc_sine(value, default=_SENTINEL):
-    """Filter and function to get arc sine of the value."""
-    try:
-        return math.asin(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("asin", value)
-        return default
-
-
-def arc_cosine(value, default=_SENTINEL):
-    """Filter and function to get arc cosine of the value."""
-    try:
-        return math.acos(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("acos", value)
-        return default
-
-
-def arc_tangent(value, default=_SENTINEL):
-    """Filter and function to get arc tangent of the value."""
-    try:
-        return math.atan(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("atan", value)
-        return default
-
-
-def arc_tangent2(*args, default=_SENTINEL):
-    """Filter and function to calculate four quadrant arc tangent of y / x.
-
-    The parameters to atan2 may be passed either in an iterable or as separate arguments
-    The default value may be passed either as a positional or in a keyword argument
-    """
-    try:
-        if 1 <= len(args) <= 2 and isinstance(args[0], (list, tuple)):
-            if len(args) == 2 and default is _SENTINEL:
-                # Default value passed as a positional argument
-                default = args[1]
-            args = args[0]
-        elif len(args) == 3 and default is _SENTINEL:
-            # Default value passed as a positional argument
-            default = args[2]
-
-        return math.atan2(float(args[0]), float(args[1]))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("atan2", args)
-        return default
-
-
 def version(value):
     """Filter and function to get version object of the value."""
     return AwesomeVersion(value)
-
-
-def square_root(value, default=_SENTINEL):
-    """Filter and function to get square root of the value."""
-    try:
-        return math.sqrt(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("sqrt", value)
-        return default
 
 
 def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SENTINEL):
@@ -2315,118 +2198,6 @@ def fail_when_undefined(value):
     return value
 
 
-def min_max_from_filter(builtin_filter: Any, name: str) -> Any:
-    """Convert a built-in min/max Jinja filter to a global function.
-
-    The parameters may be passed as an iterable or as separate arguments.
-    """
-
-    @pass_environment
-    @wraps(builtin_filter)
-    def wrapper(environment: jinja2.Environment, *args: Any, **kwargs: Any) -> Any:
-        if len(args) == 0:
-            raise TypeError(f"{name} expected at least 1 argument, got 0")
-
-        if len(args) == 1:
-            if isinstance(args[0], Iterable):
-                return builtin_filter(environment, args[0], **kwargs)
-
-            raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
-
-        return builtin_filter(environment, args, **kwargs)
-
-    return pass_environment(wrapper)
-
-
-def average(*args: Any, default: Any = _SENTINEL) -> Any:
-    """Filter and function to calculate the arithmetic mean.
-
-    Calculates of an iterable or of two or more arguments.
-
-    The parameters may be passed as an iterable or as separate arguments.
-    """
-    if len(args) == 0:
-        raise TypeError("average expected at least 1 argument, got 0")
-
-    # If first argument is iterable and more than 1 argument provided but not a named
-    # default, then use 2nd argument as default.
-    if isinstance(args[0], Iterable):
-        average_list = args[0]
-        if len(args) > 1 and default is _SENTINEL:
-            default = args[1]
-    elif len(args) == 1:
-        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
-    else:
-        average_list = args
-
-    try:
-        return statistics.fmean(average_list)
-    except (TypeError, statistics.StatisticsError):
-        if default is _SENTINEL:
-            raise_no_default("average", args)
-        return default
-
-
-def median(*args: Any, default: Any = _SENTINEL) -> Any:
-    """Filter and function to calculate the median.
-
-    Calculates median of an iterable of two or more arguments.
-
-    The parameters may be passed as an iterable or as separate arguments.
-    """
-    if len(args) == 0:
-        raise TypeError("median expected at least 1 argument, got 0")
-
-    # If first argument is a list or tuple and more than 1 argument provided but not a named
-    # default, then use 2nd argument as default.
-    if isinstance(args[0], Iterable):
-        median_list = args[0]
-        if len(args) > 1 and default is _SENTINEL:
-            default = args[1]
-    elif len(args) == 1:
-        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
-    else:
-        median_list = args
-
-    try:
-        return statistics.median(median_list)
-    except (TypeError, statistics.StatisticsError):
-        if default is _SENTINEL:
-            raise_no_default("median", args)
-        return default
-
-
-def statistical_mode(*args: Any, default: Any = _SENTINEL) -> Any:
-    """Filter and function to calculate the statistical mode.
-
-    Calculates mode of an iterable of two or more arguments.
-
-    The parameters may be passed as an iterable or as separate arguments.
-    """
-    if not args:
-        raise TypeError("statistical_mode expected at least 1 argument, got 0")
-
-    # If first argument is a list or tuple and more than 1 argument provided but not a named
-    # default, then use 2nd argument as default.
-    if len(args) == 1 and isinstance(args[0], Iterable):
-        mode_list = args[0]
-    elif isinstance(args[0], list | tuple):
-        mode_list = args[0]
-        if len(args) > 1 and default is _SENTINEL:
-            default = args[1]
-    elif len(args) == 1:
-        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
-    else:
-        mode_list = args
-
-    try:
-        return statistics.mode(mode_list)
-    except (TypeError, statistics.StatisticsError):
-        if default is _SENTINEL:
-            raise_no_default("statistical_mode", args)
-        return default
-
-
 def forgiving_float(value, default=_SENTINEL):
     """Try to convert value to a float."""
     try:
@@ -2474,31 +2245,6 @@ def is_number(value):
     return True
 
 
-def _is_list(value: Any) -> bool:
-    """Return whether a value is a list."""
-    return isinstance(value, list)
-
-
-def _is_set(value: Any) -> bool:
-    """Return whether a value is a set."""
-    return isinstance(value, set)
-
-
-def _is_tuple(value: Any) -> bool:
-    """Return whether a value is a tuple."""
-    return isinstance(value, tuple)
-
-
-def _to_set(value: Any) -> set[Any]:
-    """Convert value to set."""
-    return set(value)
-
-
-def _to_tuple(value):
-    """Convert value to tuple."""
-    return tuple(value)
-
-
 def _is_datetime(value: Any) -> bool:
     """Return whether a value is a datetime."""
     return isinstance(value, datetime)
@@ -2507,61 +2253,6 @@ def _is_datetime(value: Any) -> bool:
 def _is_string_like(value: Any) -> bool:
     """Return whether a value is a string or string like object."""
     return isinstance(value, (str, bytes, bytearray))
-
-
-def regex_match(value, find="", ignorecase=False):
-    """Match value using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return bool(_regex_cache(find, flags).match(value))
-
-
-_regex_cache = lru_cache(maxsize=128)(re.compile)
-
-
-def regex_replace(value="", find="", replace="", ignorecase=False):
-    """Replace using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return _regex_cache(find, flags).sub(replace, value)
-
-
-def regex_search(value, find="", ignorecase=False):
-    """Search using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return bool(_regex_cache(find, flags).search(value))
-
-
-def regex_findall_index(value, find="", index=0, ignorecase=False):
-    """Find all matches using regex and then pick specific match index."""
-    return regex_findall(value, find, ignorecase)[index]
-
-
-def regex_findall(value, find="", ignorecase=False):
-    """Find all matches using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return _regex_cache(find, flags).findall(value)
-
-
-def bitwise_and(first_value, second_value):
-    """Perform a bitwise and operation."""
-    return first_value & second_value
-
-
-def bitwise_or(first_value, second_value):
-    """Perform a bitwise or operation."""
-    return first_value | second_value
-
-
-def bitwise_xor(first_value, second_value):
-    """Perform a bitwise xor operation."""
-    return first_value ^ second_value
 
 
 def struct_pack(value: Any | None, format_string: str) -> bytes | None:
@@ -2603,16 +2294,6 @@ def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | No
 def from_hex(value: str) -> bytes:
     """Perform hex string decode."""
     return bytes.fromhex(value)
-
-
-def ordinal(value):
-    """Perform ordinal conversion."""
-    suffixes = ["th", "st", "nd", "rd"] + ["th"] * 6  # codespell:ignore nd
-    return str(value) + (
-        suffixes[(int(str(value)[-1])) % 10]
-        if int(str(value)[-2:]) % 100 not in range(11, 14)
-        else "th"
-    )
 
 
 def from_json(value, default=_SENTINEL):
@@ -2761,16 +2442,6 @@ def time_until(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -
     return dt_util.get_time_remaining(value, precision)
 
 
-def urlencode(value):
-    """Urlencode dictionary and return as UTF-8 string."""
-    return urllib_urlencode(value).encode("utf-8")
-
-
-def slugify(value, separator="_"):
-    """Convert a string into a slug, such as what is used for entity ids."""
-    return slugify_util(value, separator=separator)
-
-
 def iif(
     value: Any, if_true: Any = True, if_false: Any = False, if_none: Any = _SENTINEL
 ) -> Any:
@@ -2791,96 +2462,9 @@ def iif(
     return if_false
 
 
-def shuffle(*args: Any, seed: Any = None) -> MutableSequence[Any]:
-    """Shuffle a list, either with a seed or without."""
-    if not args:
-        raise TypeError("shuffle expected at least 1 argument, got 0")
-
-    # If first argument is iterable and more than 1 argument provided
-    # but not a named seed, then use 2nd argument as seed.
-    if isinstance(args[0], Iterable):
-        items = list(args[0])
-        if len(args) > 1 and seed is None:
-            seed = args[1]
-    elif len(args) == 1:
-        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
-    else:
-        items = list(args)
-
-    if seed:
-        r = random.Random(seed)
-        r.shuffle(items)
-    else:
-        random.shuffle(items)
-    return items
-
-
 def typeof(value: Any) -> Any:
     """Return the type of value passed to debug types."""
     return value.__class__.__name__
-
-
-def flatten(value: Iterable[Any], levels: int | None = None) -> list[Any]:
-    """Flattens list of lists."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"flatten expected a list, got {type(value).__name__}")
-
-    flattened: list[Any] = []
-    for item in value:
-        if isinstance(item, Iterable) and not isinstance(item, str):
-            if levels is None:
-                flattened.extend(flatten(item))
-            elif levels >= 1:
-                flattened.extend(flatten(item, levels=(levels - 1)))
-            else:
-                flattened.append(item)
-        else:
-            flattened.append(item)
-    return flattened
-
-
-def intersect(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return the common elements between two lists."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"intersect expected a list, got {type(value).__name__}")
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(f"intersect expected a list, got {type(other).__name__}")
-
-    return list(set(value) & set(other))
-
-
-def difference(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return elements in first list that are not in second list."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"difference expected a list, got {type(value).__name__}")
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(f"difference expected a list, got {type(other).__name__}")
-
-    return list(set(value) - set(other))
-
-
-def union(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return all unique elements from both lists combined."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"union expected a list, got {type(value).__name__}")
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(f"union expected a list, got {type(other).__name__}")
-
-    return list(set(value) | set(other))
-
-
-def symmetric_difference(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return elements that are in either list but not in both."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(
-            f"symmetric_difference expected a list, got {type(value).__name__}"
-        )
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(
-            f"symmetric_difference expected a list, got {type(other).__name__}"
-        )
-
-    return list(set(value) ^ set(other))
 
 
 def combine(*args: Any, recursive: bool = False) -> dict[Any, Any]:
@@ -3064,56 +2648,35 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
         self.add_extension("homeassistant.helpers.template.extensions.Base64Extension")
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.CollectionExtension"
+        )
         self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
 
-        self.globals["acos"] = arc_cosine
+        self.globals["apply"] = apply
         self.globals["as_datetime"] = as_datetime
         self.globals["as_function"] = as_function
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timedelta"] = as_timedelta
         self.globals["as_timestamp"] = forgiving_as_timestamp
-        self.globals["asin"] = arc_sine
-        self.globals["atan"] = arc_tangent
-        self.globals["atan2"] = arc_tangent2
-        self.globals["average"] = average
         self.globals["bool"] = forgiving_boolean
         self.globals["combine"] = combine
-        self.globals["cos"] = cosine
-        self.globals["difference"] = difference
-        self.globals["e"] = math.e
-        self.globals["flatten"] = flatten
         self.globals["float"] = forgiving_float
         self.globals["iif"] = iif
         self.globals["int"] = forgiving_int
-        self.globals["intersect"] = intersect
         self.globals["is_number"] = is_number
-        self.globals["log"] = logarithm
-        self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
-        self.globals["median"] = median
         self.globals["merge_response"] = merge_response
-        self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["pack"] = struct_pack
-        self.globals["pi"] = math.pi
-        self.globals["set"] = _to_set
-        self.globals["shuffle"] = shuffle
-        self.globals["sin"] = sine
-        self.globals["slugify"] = slugify
-        self.globals["sqrt"] = square_root
-        self.globals["statistical_mode"] = statistical_mode
         self.globals["strptime"] = strptime
-        self.globals["symmetric_difference"] = symmetric_difference
-        self.globals["tan"] = tangent
-        self.globals["tau"] = math.pi * 2
         self.globals["timedelta"] = timedelta
-        self.globals["tuple"] = _to_tuple
         self.globals["typeof"] = typeof
-        self.globals["union"] = union
         self.globals["unpack"] = struct_unpack
-        self.globals["urlencode"] = urlencode
         self.globals["version"] = version
         self.globals["zip"] = zip
 
-        self.filters["acos"] = arc_cosine
         self.filters["add"] = add
         self.filters["apply"] = apply
         self.filters["as_datetime"] = as_datetime
@@ -3121,53 +2684,26 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["as_local"] = dt_util.as_local
         self.filters["as_timedelta"] = as_timedelta
         self.filters["as_timestamp"] = forgiving_as_timestamp
-        self.filters["asin"] = arc_sine
-        self.filters["atan"] = arc_tangent
-        self.filters["atan2"] = arc_tangent2
-        self.filters["average"] = average
-        self.filters["bitwise_and"] = bitwise_and
-        self.filters["bitwise_or"] = bitwise_or
-        self.filters["bitwise_xor"] = bitwise_xor
         self.filters["bool"] = forgiving_boolean
         self.filters["combine"] = combine
         self.filters["contains"] = contains
-        self.filters["cos"] = cosine
-        self.filters["difference"] = difference
-        self.filters["flatten"] = flatten
         self.filters["float"] = forgiving_float_filter
         self.filters["from_json"] = from_json
         self.filters["from_hex"] = from_hex
         self.filters["iif"] = iif
         self.filters["int"] = forgiving_int_filter
-        self.filters["intersect"] = intersect
         self.filters["is_defined"] = fail_when_undefined
         self.filters["is_number"] = is_number
-        self.filters["log"] = logarithm
-        self.filters["median"] = median
         self.filters["multiply"] = multiply
         self.filters["ord"] = ord
-        self.filters["ordinal"] = ordinal
         self.filters["pack"] = struct_pack
         self.filters["random"] = random_every_time
-        self.filters["regex_findall_index"] = regex_findall_index
-        self.filters["regex_findall"] = regex_findall
-        self.filters["regex_match"] = regex_match
-        self.filters["regex_replace"] = regex_replace
-        self.filters["regex_search"] = regex_search
         self.filters["round"] = forgiving_round
-        self.filters["shuffle"] = shuffle
-        self.filters["sin"] = sine
-        self.filters["slugify"] = slugify
-        self.filters["sqrt"] = square_root
-        self.filters["statistical_mode"] = statistical_mode
-        self.filters["symmetric_difference"] = symmetric_difference
-        self.filters["tan"] = tangent
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
         self.filters["to_json"] = to_json
         self.filters["typeof"] = typeof
-        self.filters["union"] = union
         self.filters["unpack"] = struct_unpack
         self.filters["version"] = version
 
@@ -3175,12 +2711,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.tests["contains"] = contains
         self.tests["datetime"] = _is_datetime
         self.tests["is_number"] = is_number
-        self.tests["list"] = _is_list
-        self.tests["match"] = regex_match
-        self.tests["search"] = regex_search
-        self.tests["set"] = _is_set
         self.tests["string_like"] = _is_string_like
-        self.tests["tuple"] = _is_tuple
 
         if hass is None:
             return
