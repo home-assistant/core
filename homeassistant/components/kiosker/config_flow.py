@@ -17,10 +17,8 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_API_TOKEN,
-    CONF_POLL_INTERVAL,
     CONF_SSL,
     CONF_SSL_VERIFY,
-    DEFAULT_POLL_INTERVAL,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_SSL_VERIFY,
@@ -34,7 +32,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Required(CONF_API_TOKEN): str,
-        vol.Optional(CONF_POLL_INTERVAL, default=DEFAULT_POLL_INTERVAL): int,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
         vol.Optional(CONF_SSL_VERIFY, default=DEFAULT_SSL_VERIFY): bool,
     }
@@ -200,9 +197,6 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
                 CONF_HOST: host,
                 CONF_PORT: port,
                 CONF_API_TOKEN: user_input[CONF_API_TOKEN],
-                CONF_POLL_INTERVAL: user_input.get(
-                    CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL
-                ),
                 CONF_SSL: user_input.get(CONF_SSL, DEFAULT_SSL),
                 CONF_SSL_VERIFY: user_input.get(CONF_SSL_VERIFY, DEFAULT_SSL_VERIFY),
             }
@@ -224,7 +218,6 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
         discovery_schema = vol.Schema(
             {
                 vol.Required(CONF_API_TOKEN): str,
-                vol.Optional(CONF_POLL_INTERVAL, default=DEFAULT_POLL_INTERVAL): int,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                 vol.Optional(CONF_SSL_VERIFY, default=DEFAULT_SSL_VERIFY): bool,
             }

@@ -34,7 +34,6 @@ def mock_config_entry() -> MockConfigEntry:
             "api_token": "test_token",
             "ssl": False,
             "ssl_verify": False,
-            "poll_interval": 30,
         },
         unique_id="A98BE1CE-5FE7-4A8D-B2C3-123456789ABC",
     )

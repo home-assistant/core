@@ -6,11 +6,9 @@ DOMAIN = "kiosker"
 CONF_API_TOKEN = "api_token"
 CONF_SSL = "ssl"
 CONF_SSL_VERIFY = "ssl_verify"
-CONF_POLL_INTERVAL = "poll_interval"
-
 # Default values
 DEFAULT_PORT = 8081
-DEFAULT_POLL_INTERVAL = 30
+POLL_INTERVAL = 30  # Fixed polling interval in seconds
 DEFAULT_SSL = False
 DEFAULT_SSL_VERIFY = False
 

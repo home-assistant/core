@@ -30,7 +30,6 @@ from .const import (
     ATTR_URL,
     ATTR_VISIBLE,
     CONF_API_TOKEN,
-    CONF_POLL_INTERVAL,
     CONF_SSL,
     CONF_SSL_VERIFY,
     DOMAIN,
@@ -387,7 +386,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> b
     coordinator = KioskerDataUpdateCoordinator(
         hass,
         api,
-        entry.data[CONF_POLL_INTERVAL],
+        entry,
     )
 
     await coordinator.async_config_entry_first_refresh()

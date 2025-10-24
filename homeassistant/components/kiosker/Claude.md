@@ -12,7 +12,7 @@ Use kiosker-python-api version 1.2.3 from PyPi
 
 # Set up flow
 - Let the user set up Kiosker visually.
-- Let the user configure the connection by host, port (default 8081), API token, SSL (bool), and poll interval (default 30s).
+- Let the user configure the connection by host, port (default 8081), API token, and SSL (bool).
 - Allow multiple Kiosker instances.
 
 # Switches

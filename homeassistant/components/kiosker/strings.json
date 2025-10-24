@@ -9,14 +9,12 @@
           "port": "Port",
           "api_token": "API Token",
           "ssl": "Use SSL",
-          "ssl_verify": "Verify certificate",
-          "poll_interval": "Poll Interval (seconds)"
+          "ssl_verify": "Verify certificate"
         },
         "data_description": {
           "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
           "host": "The hostname or IP address of the device running the Kiosker App",
           "port": "The port on which the Kiosker App is running. Default is 8081.",
-          "poll_interval": "The interval in seconds to poll the Kiosker App for updates.",
           "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
           "ssl_verify": "Verify SSL certificate. Enable for valid certificates only."
         }
@@ -30,13 +28,11 @@
         "submit": "Pair",
         "data": {
           "api_token": "API Token",
-          "poll_interval": "Poll Interval (seconds)",
           "ssl": "Use SSL",
           "ssl_verify": "Verify certificate"
         },
         "data_description": {
           "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
-          "poll_interval": "The interval in seconds to poll the Kiosker App for updates.",
           "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
           "ssl_verify": "Verify SSL certificate. Enable for valid certificates only."
         }
@@ -46,13 +42,11 @@
         "description": "Pair `{name}` at `{host}:{port}`",
         "data": {
           "api_token": "API Token",
-          "poll_interval": "Poll Interval (seconds)",
           "ssl": "Use SSL",
           "ssl_verify": "Verify certificate"
         },
         "data_description": {
           "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
-          "poll_interval": "The interval in seconds to poll the Kiosker App for updates.",
           "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
           "ssl_verify": "Verify SSL certificate. Enable for valid certificates only."
         }
@@ -110,6 +104,9 @@
       },
       "last_motion": {
         "name": "Last motion"
+      },
+      "ambient_light": {
+        "name": "Ambient Light"
       },
       "last_update": {
         "name": "Last update"

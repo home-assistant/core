@@ -8,11 +8,12 @@ from typing import Any
 
 from kiosker import KioskerAPI
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, POLL_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         api: KioskerAPI,
-        poll_interval: int,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize."""
         self.api = api
@@ -32,7 +33,8 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=poll_interval),
+            update_interval=timedelta(seconds=POLL_INTERVAL),
+            config_entry=config_entry,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
