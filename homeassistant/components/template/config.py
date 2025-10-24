@@ -76,7 +76,7 @@ PACKAGE_MERGE_HINT = "list"
 
 
 def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
-    """Validate that a binary sensors with auto_off have trigger."""
+    """Validate that binary sensors with auto_off have triggers."""
     if CONF_TRIGGERS not in obj and DOMAIN_BINARY_SENSOR in obj:
         binary_sensors: list[ConfigType] = obj[DOMAIN_BINARY_SENSOR]
         for binary_sensor in binary_sensors:
@@ -94,7 +94,7 @@ def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
                     identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
 
                 raise vol.Invalid(
-                    f"The auto_off option for template binary sensor: {identifier} requires a trigger, remove the auto_off option or add a trigger"
+                    f"The auto_off option for template binary sensor: {identifier} requires a trigger, remove the auto_off option or rewrite configuration to use a trigger"
                 )
 
     return obj

@@ -15,8 +15,6 @@ from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
-from .conftest import async_setup_component
-
 
 @pytest.mark.parametrize(
     "config",
