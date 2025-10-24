@@ -174,7 +174,7 @@ async def test_load_creates_repair_issue_when_name_is_updated(
     # Initial title should be "Device"
     assert issue.translation_placeholders["title"] == "Device"
 
-    # # Update the device name
+    # Update the device name
     device_registry = dr.async_get(hass)
     device = get_main_device(hass, mock_config_entry)
 
