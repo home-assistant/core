@@ -21,7 +21,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
-    STATE_UNKNOWN,
     EntityCategory,
     UnitOfEnergy,
     UnitOfTemperature,
@@ -952,7 +951,6 @@ class MieleConsumptionSensor(MieleRestorableSensor):
         last_value = (
             float(cast(str, self._attr_native_value))
             if self._attr_native_value is not None
-            and self._attr_native_value != STATE_UNKNOWN
             else 0
         )
 
