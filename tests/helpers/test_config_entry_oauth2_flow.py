@@ -1213,7 +1213,7 @@ async def test_async_get_config_entry_implementation_with_failing_provider(
     )
 
     # This should fail since the local provider returned an empty list
-    # and the cloud provider raised an exception
+    # and the cloud provider raised an exception.
     with pytest.raises(config_entry_oauth2_flow.ImplementationUnavailableError):
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, config_entry
