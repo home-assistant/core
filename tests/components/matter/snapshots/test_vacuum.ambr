@@ -95,7 +95,8 @@
       'current_area': 7,
       'current_area_name': 'My Location A',
       'friendly_name': 'Mock Vacuum',
-      'selected_areas': None,
+      'selected_areas': list([
+      ]),
       'supported_features': <VacuumEntityFeature: 12316>,
     }),
     'context': <ANY>,
