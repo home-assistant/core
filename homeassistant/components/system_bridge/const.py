@@ -4,6 +4,8 @@ from typing import Final
 
 from systembridgemodels.modules import Module
 
+SYNTAX_KEYS_DOCUMENTATION_URL = "http://robotjs.io/docs/syntax#keys"
+
 DOMAIN = "system_bridge"
 
 MODULES: Final[list[Module]] = [
