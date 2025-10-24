@@ -68,7 +68,8 @@ async def _get_target_coordinators(
     # If no targets specified, fail the action
     if not target_device_ids:
         raise ServiceValidationError(
-            "No target devices specified for Kiosker service call"
+            translation_domain=DOMAIN,
+            translation_key="no_target_devices",
         )
 
     # Get device registry
@@ -81,15 +82,21 @@ async def _get_target_coordinators(
         if hasattr(entry, "runtime_data") and entry.runtime_data
     }
 
-    # Find coordinators for target devices
+    # Find coordinators for target devices - optimized lookup
     for device_id in target_device_ids:
         device = device_registry.async_get(device_id)
         if device:
-            # Find the coordinator for this device using direct lookup
-            for entry_id in device.config_entries:
-                if entry_id in entry_to_coordinator:
-                    coordinators.append(entry_to_coordinator[entry_id])
-                    break
+            # Find the first matching coordinator for this device
+            coordinator = next(
+                (
+                    entry_to_coordinator[entry_id]
+                    for entry_id in device.config_entries
+                    if entry_id in entry_to_coordinator
+                ),
+                None,
+            )
+            if coordinator:
+                coordinators.append(coordinator)
 
     return coordinators
 
@@ -132,15 +139,23 @@ async def _navigate_url_handler(hass: HomeAssistant, call: ServiceCall) -> None:
         parsed_url = urlparse(url)
         if not parsed_url.scheme:
             raise ServiceValidationError(
-                f"Invalid URL format: {url}. URL must include a scheme"
+                translation_domain=DOMAIN,
+                translation_key="invalid_url_format",
+                translation_placeholders={"url": url},
             )
         # For schemes other than http/https, we only validate basic structure
         if parsed_url.scheme in ("http", "https") and not parsed_url.netloc:
             raise ServiceValidationError(
-                f"Invalid URL format: {url}. HTTP/HTTPS URLs must include domain"
+                translation_domain=DOMAIN,
+                translation_key="invalid_http_url",
+                translation_placeholders={"url": url},
             )
     except (ValueError, TypeError) as exc:
-        raise ServiceValidationError(f"Failed to parse URL {url}: {exc}") from exc
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_parse_url",
+            translation_placeholders={"url": url, "error": str(exc)},
+        ) from exc
 
     coordinators = await _get_target_coordinators(hass, call)
 
@@ -281,64 +296,57 @@ async def _blackout_clear_handler(hass: HomeAssistant, call: ServiceCall) -> Non
 async def _register_services(hass: HomeAssistant) -> None:
     """Register Kiosker services."""
 
-    async def navigate_url(call: ServiceCall) -> None:
-        """Navigate to URL service."""
-        await _navigate_url_handler(hass, call)
+    # Create partial functions with hass parameter bound
+    def make_service_handler(handler_func):
+        """Create a service handler with hass parameter bound."""
 
-    async def navigate_refresh(call: ServiceCall) -> None:
-        """Refresh page service."""
-        await _navigate_refresh_handler(hass, call)
+        async def service_wrapper(call: ServiceCall) -> None:
+            await handler_func(hass, call)
 
-    async def navigate_home(call: ServiceCall) -> None:
-        """Navigate home service."""
-        await _navigate_home_handler(hass, call)
+        return service_wrapper
 
-    async def navigate_backward(call: ServiceCall) -> None:
-        """Navigate backward service."""
-        await _navigate_backward_handler(hass, call)
-
-    async def navigate_forward(call: ServiceCall) -> None:
-        """Navigate forward service."""
-        await _navigate_forward_handler(hass, call)
-
-    async def print_page(call: ServiceCall) -> None:
-        """Print page service."""
-        await _print_page_handler(hass, call)
-
-    async def clear_cookies(call: ServiceCall) -> None:
-        """Clear cookies service."""
-        await _clear_cookies_handler(hass, call)
-
-    async def clear_cache(call: ServiceCall) -> None:
-        """Clear cache service."""
-        await _clear_cache_handler(hass, call)
-
-    async def screensaver_interact(call: ServiceCall) -> None:
-        """Interact with screensaver service."""
-        await _screensaver_interact_handler(hass, call)
-
-    async def blackout_set(call: ServiceCall) -> None:
-        """Set blackout service."""
-        await _blackout_set_handler(hass, call)
-
-    async def blackout_clear(call: ServiceCall) -> None:
-        """Clear blackout service."""
-        await _blackout_clear_handler(hass, call)
-
-    # Register services
-    hass.services.async_register(DOMAIN, SERVICE_NAVIGATE_URL, navigate_url)
-    hass.services.async_register(DOMAIN, SERVICE_NAVIGATE_REFRESH, navigate_refresh)
-    hass.services.async_register(DOMAIN, SERVICE_NAVIGATE_HOME, navigate_home)
-    hass.services.async_register(DOMAIN, SERVICE_NAVIGATE_BACKWARD, navigate_backward)
-    hass.services.async_register(DOMAIN, SERVICE_NAVIGATE_FORWARD, navigate_forward)
-    hass.services.async_register(DOMAIN, SERVICE_PRINT, print_page)
-    hass.services.async_register(DOMAIN, SERVICE_CLEAR_COOKIES, clear_cookies)
-    hass.services.async_register(DOMAIN, SERVICE_CLEAR_CACHE, clear_cache)
+    # Register services directly with handlers
     hass.services.async_register(
-        DOMAIN, SERVICE_SCREENSAVER_INTERACT, screensaver_interact
+        DOMAIN, SERVICE_NAVIGATE_URL, make_service_handler(_navigate_url_handler)
     )
-    hass.services.async_register(DOMAIN, SERVICE_BLACKOUT_SET, blackout_set)
-    hass.services.async_register(DOMAIN, SERVICE_BLACKOUT_CLEAR, blackout_clear)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_NAVIGATE_REFRESH,
+        make_service_handler(_navigate_refresh_handler),
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_NAVIGATE_HOME, make_service_handler(_navigate_home_handler)
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_NAVIGATE_BACKWARD,
+        make_service_handler(_navigate_backward_handler),
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_NAVIGATE_FORWARD,
+        make_service_handler(_navigate_forward_handler),
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_PRINT, make_service_handler(_print_page_handler)
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_CLEAR_COOKIES, make_service_handler(_clear_cookies_handler)
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_CLEAR_CACHE, make_service_handler(_clear_cache_handler)
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SCREENSAVER_INTERACT,
+        make_service_handler(_screensaver_interact_handler),
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_BLACKOUT_SET, make_service_handler(_blackout_set_handler)
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_BLACKOUT_CLEAR, make_service_handler(_blackout_clear_handler)
+    )
 
 
 type KioskerConfigEntry = ConfigEntry[KioskerDataUpdateCoordinator]

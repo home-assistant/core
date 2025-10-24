@@ -115,11 +115,21 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
                         if hasattr(status, "device_id")
                         else f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
                     )
-                except (OSError, TimeoutError, AttributeError) as exc:
+                except (
+                    OSError,
+                    TimeoutError,
+                    AttributeError,
+                    ValueError,
+                    TypeError,
+                    KeyError,
+                ) as exc:
                     _LOGGER.debug("Could not get device ID from status: %s", exc)
                     device_id = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-                except Exception:  # noqa: BLE001
-                    _LOGGER.debug("Unexpected error getting device ID from status")
+                except Exception as exc:  # noqa: BLE001
+                    # Broad exception in config flow for robustness during device discovery
+                    _LOGGER.debug(
+                        "Unexpected error getting device ID from status: %s", exc
+                    )
                     device_id = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
 
                 # Use device ID as unique identifier
@@ -208,8 +218,8 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
             except (ValueError, TypeError) as exc:
                 _LOGGER.error("Invalid discovery data: %s", exc)
                 errors[CONF_API_TOKEN] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception during discovery validation")
+            except AttributeError as exc:
+                _LOGGER.error("Invalid discovery data structure: %s", exc)
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=info["title"], data=config_data)
@@ -271,8 +281,8 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
                 errors={"base": "invalid_auth"},
             )
-        except Exception:
-            _LOGGER.exception("Unexpected exception during reauth")
+        except (ValueError, TypeError, AttributeError) as exc:
+            _LOGGER.error("Invalid reauth data: %s", exc)
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),

@@ -65,6 +65,7 @@
     "error": {
       "cannot_connect": "Failed to connect to Kiosker device.",
       "invalid_auth": "Authentication failed.",
+      "invalid_host": "Invalid host or network configuration.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -216,6 +217,20 @@
     "blackout_clear": {
       "name": "Clear blackout",
       "description": "Clear the blackout screen"
+    }
+  },
+  "exceptions": {
+    "no_target_devices": {
+      "message": "No target devices specified for Kiosker service call."
+    },
+    "invalid_url_format": {
+      "message": "Invalid URL format: {url}. URL must include a scheme."
+    },
+    "invalid_http_url": {
+      "message": "Invalid URL format: {url}. HTTP/HTTPS URLs must include domain."
+    },
+    "failed_to_parse_url": {
+      "message": "Failed to parse URL {url}: {error}"
     }
   }
 }

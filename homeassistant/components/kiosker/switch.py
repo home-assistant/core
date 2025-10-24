@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
@@ -11,6 +12,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import KioskerConfigEntry
 from .coordinator import KioskerDataUpdateCoordinator
 from .entity import KioskerEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 3
 
@@ -50,14 +53,44 @@ class KioskerScreensaverSwitch(KioskerEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on (disable screensaver)."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.screensaver_set_disabled_state, True
-        )
-        await self.coordinator.async_request_refresh()
+        try:
+            await self.hass.async_add_executor_job(
+                self.coordinator.api.screensaver_set_disabled_state, True
+            )
+            await self.coordinator.async_request_refresh()
+        except (OSError, TimeoutError) as exc:
+            _LOGGER.error(
+                "Failed to disable screensaver on device %s: %s",
+                self.coordinator.api.host,
+                exc,
+            )
+            raise
+        except Exception as exc:
+            _LOGGER.error(
+                "Unexpected error disabling screensaver on device %s: %s",
+                self.coordinator.api.host,
+                exc,
+            )
+            raise
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off (enable screensaver)."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.screensaver_set_disabled_state, False
-        )
-        await self.coordinator.async_request_refresh()
+        try:
+            await self.hass.async_add_executor_job(
+                self.coordinator.api.screensaver_set_disabled_state, False
+            )
+            await self.coordinator.async_request_refresh()
+        except (OSError, TimeoutError) as exc:
+            _LOGGER.error(
+                "Failed to enable screensaver on device %s: %s",
+                self.coordinator.api.host,
+                exc,
+            )
+            raise
+        except Exception as exc:
+            _LOGGER.error(
+                "Unexpected error enabling screensaver on device %s: %s",
+                self.coordinator.api.host,
+                exc,
+            )
+            raise

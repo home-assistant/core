@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.kiosker import convert_rgb_to_hex
 from homeassistant.components.kiosker.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -694,7 +695,7 @@ async def test_service_without_device_target_fails(
             await hass.async_block_till_done()
 
         # Try to call service without target - should raise ServiceValidationError
-        with pytest.raises(ServiceValidationError, match="No target devices specified"):
+        with pytest.raises(ServiceValidationError) as exc_info:
             await hass.services.async_call(
                 DOMAIN,
                 "navigate_refresh",
@@ -702,13 +703,13 @@ async def test_service_without_device_target_fails(
                 blocking=True,
             )
 
+        # Verify the exception has the correct translation attributes
+        assert exc_info.value.translation_domain == DOMAIN
+        assert exc_info.value.translation_key == "no_target_devices"
+
 
 async def test_convert_rgb_to_hex_function() -> None:
     """Test the convert_rgb_to_hex utility function."""
-    # Import here to avoid circular imports during test discovery
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.kiosker import convert_rgb_to_hex
-
     # Test with hex string (should be preserved)
     assert convert_rgb_to_hex("#FF0000") == "#FF0000"
     assert convert_rgb_to_hex("#ff0000") == "#ff0000"
@@ -842,56 +843,64 @@ async def test_navigate_url_validation(
         mock_api.navigate_url.reset_mock()
 
         # Test URL without scheme (should be rejected)
-        with pytest.raises(
-            ServiceValidationError, match="Invalid URL format.*must include a scheme"
-        ):
+        with pytest.raises(ServiceValidationError) as exc_info:
             await hass.services.async_call(
                 DOMAIN,
                 "navigate_url",
                 {"url": "www.example.com", "device_id": device_id},
                 blocking=True,
             )
+
+        # Verify the exception has the correct translation attributes
+        assert exc_info.value.translation_domain == DOMAIN
+        assert exc_info.value.translation_key == "invalid_url_format"
         # Should not call the API
         mock_api.navigate_url.assert_not_called()
         mock_api.navigate_url.reset_mock()
 
         # Test HTTP URL without domain (should be rejected)
-        with pytest.raises(
-            ServiceValidationError, match="Invalid URL format.*must include domain"
-        ):
+        with pytest.raises(ServiceValidationError) as exc_info:
             await hass.services.async_call(
                 DOMAIN,
                 "navigate_url",
                 {"url": "http://", "device_id": device_id},
                 blocking=True,
             )
+
+        # Verify the exception has the correct translation attributes
+        assert exc_info.value.translation_domain == DOMAIN
+        assert exc_info.value.translation_key == "invalid_http_url"
         # Should not call the API
         mock_api.navigate_url.assert_not_called()
         mock_api.navigate_url.reset_mock()
 
         # Test HTTPS URL without domain (should be rejected)
-        with pytest.raises(
-            ServiceValidationError, match="Invalid URL format.*must include domain"
-        ):
+        with pytest.raises(ServiceValidationError) as exc_info:
             await hass.services.async_call(
                 DOMAIN,
                 "navigate_url",
                 {"url": "https://", "device_id": device_id},
                 blocking=True,
             )
+
+        # Verify the exception has the correct translation attributes
+        assert exc_info.value.translation_domain == DOMAIN
+        assert exc_info.value.translation_key == "invalid_http_url"
         # Should not call the API
         mock_api.navigate_url.assert_not_called()
         mock_api.navigate_url.reset_mock()
 
         # Test malformed URL that would cause parsing exception
-        with pytest.raises(
-            ServiceValidationError, match="Failed to parse URL.*Invalid IPv6 URL"
-        ):
+        with pytest.raises(ServiceValidationError) as exc_info:
             await hass.services.async_call(
                 DOMAIN,
                 "navigate_url",
                 {"url": "malformed://[invalid", "device_id": device_id},
                 blocking=True,
             )
+
+        # Verify the exception has the correct translation attributes
+        assert exc_info.value.translation_domain == DOMAIN
+        assert exc_info.value.translation_key == "failed_to_parse_url"
         # Should not call the API
         mock_api.navigate_url.assert_not_called()
