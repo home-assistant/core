@@ -41,10 +41,32 @@ class BSBLanSlowData:
     dhw_schedule: HotWaterSchedule | None = None
 
 
-class BSBLanFastCoordinator(DataUpdateCoordinator[BSBLanFastData]):
-    """The BSB-Lan fast update coordinator for frequently changing data."""
+class BSBLanCoordinator[T](DataUpdateCoordinator[T]):
+    """Base BSB-Lan coordinator."""
 
     config_entry: ConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        client: BSBLAN,
+        name: str,
+        update_interval: timedelta,
+    ) -> None:
+        """Initialize the BSB-Lan coordinator."""
+        super().__init__(
+            hass,
+            logger=LOGGER,
+            config_entry=config_entry,
+            name=name,
+            update_interval=update_interval,
+        )
+        self.client = client
+
+
+class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
+    """The BSB-Lan fast update coordinator for frequently changing data."""
 
     def __init__(
         self,
@@ -55,12 +77,11 @@ class BSBLanFastCoordinator(DataUpdateCoordinator[BSBLanFastData]):
         """Initialize the BSB-Lan fast coordinator."""
         super().__init__(
             hass,
-            logger=LOGGER,
-            config_entry=config_entry,
+            config_entry,
+            client,
             name=f"{DOMAIN}_fast_{config_entry.data[CONF_HOST]}",
             update_interval=self._get_update_interval(),
         )
-        self.client = client
 
     def _get_update_interval(self) -> timedelta:
         """Get the update interval with a random offset.
@@ -100,10 +121,8 @@ class BSBLanFastCoordinator(DataUpdateCoordinator[BSBLanFastData]):
         )
 
 
-class BSBLanSlowCoordinator(DataUpdateCoordinator[BSBLanSlowData]):
+class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
     """The BSB-Lan slow update coordinator for infrequently changing data."""
-
-    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -114,12 +133,11 @@ class BSBLanSlowCoordinator(DataUpdateCoordinator[BSBLanSlowData]):
         """Initialize the BSB-Lan slow coordinator."""
         super().__init__(
             hass,
-            logger=LOGGER,
-            config_entry=config_entry,
+            config_entry,
+            client,
             name=f"{DOMAIN}_slow_{config_entry.data[CONF_HOST]}",
             update_interval=SCAN_INTERVAL_SLOW,
         )
-        self.client = client
 
     async def _async_update_data(self) -> BSBLanSlowData:
         """Fetch slow-changing data from the BSB-Lan device."""
