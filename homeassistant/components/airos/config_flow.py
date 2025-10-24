@@ -44,6 +44,7 @@ from .const import (
     DEFAULT_SSL,
     DEFAULT_USERNAME,
     DEFAULT_VERIFY_SSL,
+    DEVICE_NAME,
     DOMAIN,
     HOSTNAME,
     IP_ADDRESS,
@@ -85,9 +86,6 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = 1
 
     _discovery_task: asyncio.Task | None = None
-
-    airos_device: AirOS8
-    errors: dict[str, str]
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -314,7 +312,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_configure_device()
 
         list_options = {
-            mac: f"{device.get(HOSTNAME, mac)} ({device.get(IP_ADDRESS, 'airOS Device')})"
+            mac: f"{device.get(HOSTNAME, mac)} ({device.get(IP_ADDRESS, DEVICE_NAME)})"
             for mac, device in self.discovered_devices.items()
         }
 
@@ -344,14 +342,14 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         device_name = self.selected_device_info.get(
-            HOSTNAME, self.selected_device_info.get(IP_ADDRESS, "airOS Device")
+            HOSTNAME, self.selected_device_info.get(IP_ADDRESS, DEVICE_NAME)
         )
         return self.async_show_form(
             step_id="configure_device",
             data_schema=STEP_DISCOVERY_DATA_SCHEMA,
             errors=self.errors,
             description_placeholders={
-                "device_name": device_name if device_name else "airOS Device"
+                "device_name": device_name if device_name else DEVICE_NAME
             },
         )
 
