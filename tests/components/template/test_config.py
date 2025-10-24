@@ -261,52 +261,6 @@ async def test_combined_trigger_variables(
     assert variables.as_dict() == expected_entity
 
 
-@pytest.mark.parametrize(
-    ("config", "expected_warning"),
-    [
-        (
-            {
-                "trigger": {"trigger": "event", "event_type": "my_event"},
-            },
-            "Invalid template configuration found, trigger option is missing matching domain",
-        ),
-        (
-            {
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {"caller": "{{ this.entity_id }}"},
-                },
-                "sensor": {
-                    "state": "{{ states('sensor.test') }}",
-                    "unique_id": "test",
-                    "name": "test",
-                    "icon": "mdi:test",
-                },
-            },
-            "Invalid template configuration found, action option requires a trigger",
-        ),
-    ],
-)
-async def test_invalid_schema_raises_issue(
-    hass: HomeAssistant,
-    config: dict,
-    expected_warning: str,
-    issue_registry: ir.IssueRegistry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test invalid config schemas create issue and log warning."""
-
-    await async_setup_component(hass, "template", {"template": [config]})
-
-    assert expected_warning in caplog.text
-
-    assert len(issue_registry.issues) == 1
-    issue = next(iter(issue_registry.issues.values()))
-
-    assert issue.domain == "template"
-    assert issue.severity == ir.IssueSeverity.WARNING
-
-
 async def test_state_init_attribute_variables(
     hass: HomeAssistant,
 ) -> None:
@@ -361,3 +315,49 @@ async def test_state_init_attribute_variables(
     assert sensor.attributes["icon"] == "mdi:lightbulb-off"
     assert sensor.attributes["entity_picture"] == "off.png"
     assert sensor.attributes["friendly_name"] == "Foo"
+
+
+@pytest.mark.parametrize(
+    ("config", "expected_warning"),
+    [
+        (
+            {
+                "trigger": {"trigger": "event", "event_type": "my_event"},
+            },
+            "Invalid template configuration found, trigger option is missing matching domain",
+        ),
+        (
+            {
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"caller": "{{ this.entity_id }}"},
+                },
+                "sensor": {
+                    "state": "{{ states('sensor.test') }}",
+                    "unique_id": "test",
+                    "name": "test",
+                    "icon": "mdi:test",
+                },
+            },
+            "Invalid template configuration found, action option requires a trigger",
+        ),
+    ],
+)
+async def test_invalid_schema_raises_issue(
+    hass: HomeAssistant,
+    config: dict,
+    expected_warning: str,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config schemas create issue and log warning."""
+
+    await async_setup_component(hass, "template", {"template": [config]})
+
+    assert expected_warning in caplog.text
+
+    assert len(issue_registry.issues) == 1
+    issue = next(iter(issue_registry.issues.values()))
+
+    assert issue.domain == "template"
+    assert issue.severity == ir.IssueSeverity.WARNING
