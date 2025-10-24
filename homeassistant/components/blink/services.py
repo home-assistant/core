@@ -29,6 +29,7 @@ async def _send_pin(call: ServiceCall) -> None:
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.ERROR,
+        breaks_in_ha_version="2026.5.0",
         translation_key="service_send_pin_deprecation",
         translation_placeholders={"service_name": f"{DOMAIN}.{SERVICE_SEND_PIN}"},
     )

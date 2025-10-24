@@ -139,7 +139,7 @@
       "message": "Blink failed to disarm camera motion detection."
     },
     "service_removed": {
-      "message": "The service {service_name} has been removed. Please use the 2FA flow in the Blink integration configuration instead."
+      "message": "The service {service_name} has been removed and is no longer needed. Home Assistant will automatically prompt for reauthentication when required."
     }
   },
   "issues": {
@@ -156,7 +156,7 @@
     },
     "service_send_pin_deprecation": {
       "title": "Blink send PIN service has been removed",
-      "description": "The service {service_name} has been removed and no longer works. Please use the 2FA flow in the Blink integration configuration instead."
+      "description": "The service {service_name} has been removed and is no longer needed. When a new two-factor authentication code is required, Home Assistant will automatically prompt you to reauthenticate through the integration configuration. Please remove any automations or scripts that call this service."
     }
   }
 }
