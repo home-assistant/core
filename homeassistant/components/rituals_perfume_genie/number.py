@@ -72,3 +72,7 @@ class RitualsNumberEntity(DiffuserEntity, NumberEntity):
         await self.entity_description.set_value_fn(
             self.coordinator.diffuser, int(value)
         )
+        self.coordinator.diffuser.hub_data.setdefault("attributes", {})["speedc"] = str(
+            int(value)
+        )
+        self.async_write_ha_state()
