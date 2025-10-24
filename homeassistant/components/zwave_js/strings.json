@@ -40,6 +40,7 @@
     "step": {
       "configure_addon_user": {
         "data": {
+          "socket_path": "Socket device path",
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
         "description": "Select your Z-Wave adapter",
@@ -71,6 +72,7 @@
           "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::s2_access_control_key%]",
           "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::s2_authenticated_key%]",
           "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::s2_unauthenticated_key%]",
+          "socket_path": "[%key:component::zwave_js::config::step::configure_addon_user::data::socket_path%]",
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
         "description": "[%key:component::zwave_js::config::step::configure_addon_user::description%]",
@@ -158,6 +160,7 @@
       },
       "choose_serial_port": {
         "data": {
+          "socket_path": "[%key:component::zwave_js::config::step::configure_addon_user::data::socket_path%]",
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
         "title": "Select your Z-Wave device"
