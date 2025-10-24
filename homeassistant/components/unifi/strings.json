@@ -55,6 +55,9 @@
           "adoption_failed": "Adoption failed",
           "isolated": "Isolated"
         }
+      },
+      "wired_client_link_speed": {
+        "name": "Link speed"
       }
     }
   },
