@@ -116,7 +116,7 @@ def async_wired_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     client = hub.api.clients[obj_id]
     if not client.is_wired:
         return False
-    if client.wired_rate_mbps <= 0:
+    if not hasattr(client, "wired_rate_mbps") or client.wired_rate_mbps is None or client.wired_rate_mbps <= 0:
         return False
     return True
 
