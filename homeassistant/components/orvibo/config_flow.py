@@ -1,4 +1,4 @@
-"""Config Flow for Orvibo Integration."""
+"""The orvibo component."""
 
 import asyncio
 import logging
@@ -69,6 +69,8 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
             return filtered
 
         """Discover S20 devices."""
+
+        _LOGGER.debug("Discovering S20 switches")
 
         self._discovered_switches = await _filter_discovered_switches(
             await self.hass.async_add_executor_job(discover)

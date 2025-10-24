@@ -1,4 +1,4 @@
-"""Consts for Orvibo Integration."""
+"""The orvibo component."""
 
 DOMAIN = "orvibo"
 DEFAULT_NAME = "S20"

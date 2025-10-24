@@ -1,4 +1,4 @@
-"""Switch for Orvibo Integration."""
+"""The orvibo component."""
 
 from __future__ import annotations
 
@@ -13,12 +13,13 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
-from .repair import async_create_yaml_deprecation_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,18 +46,47 @@ async def async_setup_platform(
 ) -> None:
     """Set up the integration from configuration.yaml."""
     for switch in config.get("switches", []):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=switch,
-            )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=switch,
         )
-        await async_create_yaml_deprecation_issue(
+
+        if (
+            result.get("type") is FlowResultType.ABORT
+            and result.get("reason") != "already_configured"
+        ):
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"yaml_deprecation_import_issue_{switch.get('mac').replace(':', '').lower()}",
+                breaks_in_ha_version="2026.11.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="yaml_deprecation_import_issue",
+                translation_placeholders={
+                    "host": switch.get("host"),
+                    "mac": switch.get("mac"),
+                    "name": switch.get("name"),
+                },
+            )
+            return
+
+        ir.async_create_issue(
             hass,
-            host=switch.get("host", "unknown"),
-            mac=switch.get("mac", "unknown"),
-            name=switch.get("name", "Unnamed Switch"),
+            DOMAIN,
+            f"eyaml_deprecation_{switch.get('mac').replace(':', '').lower()}",
+            breaks_in_ha_version="2026.11.0",
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="yaml_deprecation",
+            translation_placeholders={
+                "host": switch.get("host"),
+                "mac": switch.get("mac"),
+                "name": switch.get("name"),
+            },
         )
 
 
@@ -65,7 +95,7 @@ async def async_setup_entry(
     entry: S20ConfigEntry,
     async_add_entities,
 ) -> None:
-    """Setup Entries."""
+    """Setup Entry."""
     switch = []
     switch.append(
         S20Switch(entry.data[CONF_NAME], entry.data[CONF_HOST], entry.data[CONF_MAC]),
@@ -99,17 +129,17 @@ class S20Switch(SwitchEntity):
 
     @property
     def should_poll(self):
-        """Should poll."""
+        """Should the component poll."""
         return True
 
     @property
     def has_entity_name(self):
-        """Has Entoty Name."""
+        """Does the component define the name."""
         return True
 
     @property
     def unique_id(self):
-        """Return Unique_ID."""
+        """Return the unique id."""
         return self._unique_id
 
     @property
@@ -132,7 +162,7 @@ class S20Switch(SwitchEntity):
             _LOGGER.exception("Error while turning on S20")
 
     async def async_turn_on(self):
-        """Turn the switch On."""
+        """Turn the device on."""
         await self.hass.async_add_executor_job(self._turn_on)
 
     def _turn_off(self, **kwargs: Any) -> None:
@@ -143,7 +173,7 @@ class S20Switch(SwitchEntity):
             _LOGGER.exception("Error while turning off S20")
 
     async def async_turn_off(self):
-        """Turn the switch off."""
+        """Turn the device off."""
         await self.hass.async_add_executor_job(self._turn_off)
 
     def _update(self) -> None:
@@ -154,5 +184,5 @@ class S20Switch(SwitchEntity):
             _LOGGER.exception("Error while fetching S20 state")
 
     async def async_update(self):
-        """Update the switch status."""
+        """Update th device state."""
         await self.hass.async_add_executor_job(self._update)
