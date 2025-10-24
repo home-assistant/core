@@ -62,13 +62,6 @@ class HisenseApiClient:
         supported_langs = ["en", "zh-Hans"]
         for lang in supported_langs:
             try:
-                # # 更新 async_get_translations 的调用
-                # translations = await async_get_translations(
-                #     hass,
-                #     language=lang,
-                #     category="sensor",
-                #     integrations=DOMAIN  # 正确参数
-                # )
                 if lang == "zh-Hans":
                     hass.data[f"{DOMAIN}.translations"][lang] = {
                         "indoor_temperature": "室内温度",
@@ -514,12 +507,11 @@ class HisenseApiClient:
                         _LOGGER.debug("Static data for propertyList %s: %s", deviceFeatureCode,
                                       propertyList)
 
-                        # 使用 get_device_parser 获取 parser 类
+                        # Get device parser class and instantiate
                         parser_class = get_device_parser(deviceTypeCode, deviceFeatureCode)
                         _LOGGER.debug("Static data for parser class %s: %s: %s", deviceTypeCode, deviceFeatureCode,
                                       parser_class)
 
-                        # 手动实例化 parser
                         parser = parser_class()
                         _LOGGER.debug("Static data for parser instance %s: %s: %s", deviceTypeCode, deviceFeatureCode, parser)
 
@@ -528,19 +520,19 @@ class HisenseApiClient:
                             self.parsers[device.device_id] =filtered_parser
                         elif isinstance(parser, SplitWater035699Parser):
                             if isinstance(parser, SplitWater035699Parser):
-                                # 判断有没有温区2
+                                # Check if zone 2 is available
                                 if device.status.get("f_zone2_select") == "0":
-                                    # 创建一个新的 parser 对象
+                                    # Create a new parser object without zone 2 attributes
                                     new_parser = SplitWater035699Parser()
 
-                                    # 复制除了 f_zone2water_temp2 和 t_zone2water_settemp2 之外的所有字段
+                                    # Copy all attributes except zone 2 temperature fields
                                     for key, value in parser.attributes.items():
                                         if key not in ["f_zone2water_temp2", "t_zone2water_settemp2"]:
                                             new_parser.attributes[key] = value
                                     parser = new_parser
 
                             self.parsers[device.device_id] = parser
-                            _LOGGER.debug("三联供设备解析字段 %s:%s",
+                            _LOGGER.debug("Triple supply device parsing fields %s:%s",
                                           device.device_id,
                                           self.parsers.get(device.device_id).attributes)
                         elif isinstance(parser, Humidity007Parser):
@@ -553,58 +545,36 @@ class HisenseApiClient:
                             return
 
 
-                        #判断是否有电量功能
+                        # Check if device has power monitoring feature
                         has_power = False
                         property_keys = {prop.get('propertyKey') for prop in propertyList if 'propertyKey' in prop}
-                        if deviceTypeCode == "009":#分体空调
+                        if deviceTypeCode == "009":  # Split AC
                             if "99" not in deviceFeatureCode:
-                                # _LOGGER.debug("009Ddevice feature code is :%s,and status = :%s", deviceFeatureCode,
-                                #               property_keys)
                                 target_keys = {'f_power_display', 'f_cool_qvalue', 'f_heat_qvalue'}
                                 if target_keys & property_keys:
                                     has_power = True
                             else:
-                                # _LOGGER.debug("009Ddevice feature code is :%s,and static_data = :%s",deviceFeatureCode,self.static_data[device.device_id])
                                 if self.static_data[device.device_id].get("Power_function") == "1" or self.static_data.get("f_cool_or_heat_qvalue") == "1":
                                     has_power = True
-                        elif deviceTypeCode in ['008','006']:#窗机 移动空调
+                        elif deviceTypeCode in ['008','006']:  # Window AC / Portable AC
                             if "99" not in deviceFeatureCode:
-                                # _LOGGER.debug("008 006Ddevice feature code is :%s,and status = :%s", deviceFeatureCode,
-                                #               property_keys)
                                 if 'f_power_display' in property_keys:
                                     has_power = True
                             else:
-                                # _LOGGER.debug("008 006Ddevice feature code is :%s,and static_data = :%s",deviceFeatureCode,self.static_data[device.device_id])
                                 if self.static_data[device.device_id].get("Power_function") == "1" :
                                     has_power = True
 
-                        elif deviceTypeCode == "007":#除湿机
+                        elif deviceTypeCode == "007":  # Dehumidifier
                             if "99" not in deviceFeatureCode:
-                                # _LOGGER.debug("007Ddevice feature code is :%s,and status = :%s", deviceFeatureCode,
-                                #               property_keys)
                                 if 'f_power_display' in property_keys:
                                     has_power = True
                             else:
-                                # _LOGGER.debug("007Ddevice feature code is :%s,and static_data = :%s",deviceFeatureCode,self.static_data[device.device_id])
                                 if self.static_data[device.device_id].get("Power_function") == "1" :
                                     has_power = True
                         else:
-                            # _LOGGER.debug("Ddevice feature code is :%s,and status = :%s", deviceFeatureCode,
-                            #               property_keys)
                             target_keys = {'f_power_display', 'f_cool_qvalue', 'f_heat_qvalue'}
                             if target_keys & property_keys:
                                 has_power = True
-
-                        # else:
-                        #     if "99" not in deviceFeatureCode:
-                        #         _LOGGER.debug("Ddevice feature code is :%s,and status = :%s and has_power:%s", deviceFeatureCode,
-                        #                       device.status,"f_power_display" in device.status)
-                        #         if "f_power_display" in device.status:
-                        #             has_power = True
-                        #     else:
-                        #         _LOGGER.debug("Ddevice feature code is :%s,and static_data = :%s",deviceFeatureCode,self.static_data)
-                        #         if self.static_data.get("Power_function") == 1 or self.static_data.get("Power_detection") == 1:
-                        #             has_power = True
 
                         if has_power:
                             current_date = datetime.now().date().isoformat()
@@ -614,7 +584,7 @@ class HisenseApiClient:
                             previous_hour = (current_time - timedelta(hours=1)).hour
                             previous_hour_str = str(previous_hour)
                             value = power.get(previous_hour_str)
-                            _LOGGER.debug("Static data for power_response %s: %s ，当前时间：%s ，上个小时的时间：%s ，上个小时的电量：%s", deviceFeatureCode,
+                            _LOGGER.debug("Static data for power_response %s: %s, current time: %s, previous hour: %s, power value: %s", deviceFeatureCode,
                                           power_response, current_time.hour,previous_hour_str, value)
                             _LOGGER.debug("Static data for device.status %s: %s", deviceFeatureCode,
                                           device.status)
@@ -625,19 +595,18 @@ class HisenseApiClient:
                             self.parsers[device.device_id].remove_attribute("f_power_consumption")
                         _LOGGER.debug("Static data for device.status %s: %s", deviceFeatureCode,
                                           device.status)
-                        #填充故障列表
+                        # Populate failure list
                         data = await self.async_api_self_check("1", device.puid)
                         failed_data = data.get("status", {}).get("selfCheckFailedList")
                         _LOGGER.debug(
-                            "Static data for self_check %s: 完整自检数据 %s: 单纯故障数据 %s",
+                            "Static data for self_check %s: full self-check data %s: failure data %s",
                             deviceFeatureCode,
                             data, failed_data)
                         if failed_data:
                             failed_list = [item.get("statusKey") for item in failed_data]
-                            # self.failed_data[device.device_id] = failed_list
                             device.failed_data = failed_list
                             _LOGGER.debug(
-                                "Static data for failed_list %s: 完整自检数据 %s: 单纯故障数据 %s: 取出所有的key %s",
+                                "Static data for failed_list %s: full self-check data %s: failure data %s: extracted keys %s",
                                 deviceFeatureCode,
                                 data, failed_data, failed_list)
                     else:
@@ -660,37 +629,37 @@ class HisenseApiClient:
 
     @staticmethod
     def create_humidity_parser(base_parser: Humidity007Parser, propertyList: list) -> Humidity007Parser:
-        # 获取Humidity007Parser的attributes字典
+        # Get the attributes dictionary from Humidity007Parser
         original_attributes = base_parser.attributes
 
-        # 确保 original_attributes 是一个字典
+        # Ensure original_attributes is a dictionary
         if not isinstance(original_attributes, dict):
             _LOGGER.error("original_attributes is not a dictionary: %s", original_attributes)
             return Humidity007Parser()
 
-        # 提取 propertyKey 形成一个新的列表
+        # Extract propertyKey to form a new list
         property_keys = [prop.get('propertyKey') for prop in propertyList if
                          isinstance(prop, dict) and 'propertyKey' in prop]
 
-        # 调试 property_keys 的内容
+        # Debug property_keys content
         _LOGGER.debug("property_keys content: %s", property_keys)
 
-        # 确保 property_keys 是一个可迭代的可哈希类型
+        # Ensure property_keys is an iterable of hashable types
         if not isinstance(property_keys, (list, set)):
             _LOGGER.error("property_keys is not a list or set: %s", property_keys)
             return Humidity007Parser()
 
-        # 确保 property_keys 中的元素是可哈希的类型
+        # Ensure elements in property_keys are hashable types
         if any(not isinstance(item, (str, int, float, tuple)) for item in property_keys):
             _LOGGER.error("property_keys contains unhashable types: %s", property_keys)
             return Humidity007Parser()
 
-        # 创建一个新的attributes字典，只包含交集中的DeviceAttribute
+        # Create a new attributes dictionary containing only the intersection
         filtered_attributes = {}
         for key in property_keys:
             if key in original_attributes:
                 attribute = original_attributes[key]
-                # 更新 value_range
+                # Update value_range
                 for prop in propertyList:
                     if prop.get('propertyKey') == key:
                         property_value_list = prop.get('propertyValueList')
@@ -698,64 +667,64 @@ class HisenseApiClient:
                             attribute.value_range = property_value_list
                             break
 
-                # 过滤 value_map
+                # Filter value_map
                 if attribute.value_map:
-                    # 将 property_value_list_keys 转换为集合
+                    # Convert property_value_list_keys to a set
                     property_value_list_keys = set(property_value_list.split(','))
 
-                    # 确保 value_map_keys 是一个集合
+                    # Ensure value_map_keys is a set
                     value_map_keys = set(attribute.value_map.keys())
 
-                    # 使用 intersection 方法计算交集
+                    # Calculate intersection
                     filtered_value_map = {k: attribute.value_map[k] for k in
                                           value_map_keys.intersection(property_value_list_keys)}
                     attribute.value_map = filtered_value_map
 
                 filtered_attributes[key] = attribute
 
-        _LOGGER.debug("除湿机filtered_attributes content: %s", filtered_attributes)
-        # 创建一个新的Humidity007Parser对象，并将filtered_attributes赋值给它的attributes属性
+        _LOGGER.debug("Dehumidifier filtered_attributes content: %s", filtered_attributes)
+        # Create a new Humidity007Parser object and assign filtered_attributes to its attributes
         new_parser = Humidity007Parser()
-        _LOGGER.debug("除湿机Static data for filtered_parser111111 %s",
+        _LOGGER.debug("Dehumidifier static data for filtered_parser before %s",
                       new_parser.attributes)
         new_parser._attributes = filtered_attributes
-        _LOGGER.debug("除湿机Static data for filtered_parser222222 %s",
+        _LOGGER.debug("Dehumidifier static data for filtered_parser after %s",
                       new_parser.attributes)
         return new_parser
 
     @staticmethod
     def create_filtered_parser(base_parser: BaseDeviceParser, propertyList: list) -> BaseBeanParser:
-        # 获取BaseBeanParser的attributes字典
+        # Get the attributes dictionary from BaseBeanParser
         original_attributes = base_parser.attributes
 
-        # 确保 original_attributes 是一个字典
+        # Ensure original_attributes is a dictionary
         if not isinstance(original_attributes, dict):
             _LOGGER.error("original_attributes is not a dictionary: %s", original_attributes)
             return BaseBeanParser()
 
-        # 提取 propertyKey 形成一个新的列表
+        # Extract propertyKey to form a new list
         property_keys = [prop.get('propertyKey') for prop in propertyList if
                          isinstance(prop, dict) and 'propertyKey' in prop]
 
-        # 调试 property_keys 的内容
+        # Debug property_keys content
         _LOGGER.debug("property_keys content: %s", property_keys)
 
-        # 确保 property_keys 是一个可迭代的可哈希类型
+        # Ensure property_keys is an iterable of hashable types
         if not isinstance(property_keys, (list, set)):
             _LOGGER.error("property_keys is not a list or set: %s", property_keys)
             return BaseBeanParser()
 
-        # 确保 property_keys 中的元素是可哈希的类型
+        # Ensure elements in property_keys are hashable types
         if any(not isinstance(item, (str, int, float, tuple)) for item in property_keys):
             _LOGGER.error("property_keys contains unhashable types: %s", property_keys)
             return BaseBeanParser()
 
-        # 创建一个新的attributes字典，只包含交集中的DeviceAttribute
+        # Create a new attributes dictionary containing only the intersection
         filtered_attributes = {}
         for key in property_keys:
             if key in original_attributes:
                 attribute = original_attributes[key]
-                # 更新 value_range
+                # Update value_range
                 for prop in propertyList:
                     if prop.get('propertyKey') == key:
                         property_value_list = prop.get('propertyValueList')
@@ -763,36 +732,36 @@ class HisenseApiClient:
                             attribute.value_range = property_value_list
                             break
 
-                # 过滤 value_map
+                # Filter value_map
                 if attribute.value_map:
-                    # 将 property_value_list_keys 转换为集合
+                    # Convert property_value_list_keys to a set
                     property_value_list_keys = set(property_value_list.split(','))
 
-                    # 确保 value_map_keys 是一个集合
+                    # Ensure value_map_keys is a set
                     value_map_keys = set(attribute.value_map.keys())
 
-                    # 使用 intersection 方法计算交集
+                    # Calculate intersection
                     filtered_value_map = {k: attribute.value_map[k] for k in
                                           value_map_keys.intersection(property_value_list_keys)}
                     attribute.value_map = filtered_value_map
 
                 filtered_attributes[key] = attribute
-                # 新增：强制添加f_power_consumption字段
+                # Force add f_power_consumption field
                 if "f_power_consumption" not in filtered_attributes:
-                    # 创建DeviceAttribute实例
+                    # Create DeviceAttribute instance
                     filtered_attributes["f_power_consumption"] = DeviceAttribute(
                         key="f_power_consumption",
-                        name="电量累积消耗值",
+                        name="Power Consumption",
                         attr_type="Number",
                         step=1,
                         read_write="R",
                     )
-                    _LOGGER.debug("强制添加了f_power_consumption字段到解析器:%s")
+                    _LOGGER.debug("Force added f_power_consumption field to parser")
 
         _LOGGER.debug("filtered_attributes content: %s", filtered_attributes)
-        # 创建一个新的BaseBeanParser对象，并将filtered_attributes赋值给它的attributes属性
+        # Create a new BaseBeanParser object and assign filtered_attributes to its attributes
         new_parser = BaseBeanParser()
-        _LOGGER.debug("Static data for filtered_parserqqqqqq %s",
+        _LOGGER.debug("Static data for filtered_parser %s",
                       new_parser.attributes)
         new_parser._attributes = filtered_attributes
 
@@ -871,7 +840,7 @@ class HisenseApiClient:
         puid: str,
         properties: dict[str, Any],
     ) -> dict[str, Any]:
-        _LOGGER.debug("测试设备反应时间，下发指令 %s", property)
+        _LOGGER.debug("Testing device response time, sending command %s", property)
         """Control device by setting properties.
         
         Args:

@@ -37,7 +37,7 @@ class HisenseWebSocket:
         self._last_ping = 0
         self._fail_count = 0
         self._max_fails = 3
-        self._last_message_time = 0  # 记录上一次处理消息的时间
+        self._last_message_time = 0  # Record last message processing time
 
     async def _generate_phone_code(self) -> str:
         """Generate a phone code (UUID)."""
@@ -149,7 +149,7 @@ class HisenseWebSocket:
                     if current_time - self._last_message_time < 1:
                         _LOGGER.debug("Skipping message due to rate limit")
                         continue
-                    self._last_message_time = current_time  # 更新上一次处理消息的时间
+                    self._last_message_time = current_time  # Update last message processing time
 
                     _LOGGER.debug("Received raw WebSocket message: %s", msg.data)
                     try:

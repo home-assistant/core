@@ -155,8 +155,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
 
     def get_device(self, device_id: str) -> DeviceInfo | None:
         """Get device by ID or puid."""
-        # 首先尝试直接通过device_id查找
-        # _LOGGER.debug("Trying to find device with ID: %s", device_id)
+        # First try to find directly by device_id
         # _LOGGER.debug("Available devices: %s", [f"{d.device_id} (puid: {d.puid}, type: {d.type_code}-{d.feature_code})" for d in self._devices.values()])
         
         device = self._devices.get(device_id)
@@ -164,7 +163,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Found device by device_id: %s", device_id)
             return device
             
-        # 如果找不到，尝试通过puid查找
+        # If not found, try to find by puid
         _LOGGER.debug("Device not found by device_id, trying puid")
         for dev in self._devices.values():
             if getattr(dev, 'puid', None) == device_id:

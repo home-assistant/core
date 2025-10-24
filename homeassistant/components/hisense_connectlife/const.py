@@ -27,38 +27,22 @@ ATTR_WATER_TANK_TEMP = "water_tank_temperature"
 ATTR_ZONE_TEMPERATURE = "zone_temperature"
 ATTR_AC_TYPE = "ac_type"
 
-# # 测试环境
-# OAUTH2_AUTHORIZE = "https://test-oauth.hijuconn.com/login"
-# OAUTH2_TOKEN = "https://test-oauth.hijuconn.com/oauth/token"
-# WEBSOCKET_URL = "wss://test-clife-eu-gateway.hijuconn.com/msg/get_msg_and_channels"
-# API_BASE_URL = "https://test-juapi-3rd.hijuconn.com"
-
-# 正式环境
+# Production environment OAuth2 and API configuration
 OAUTH2_AUTHORIZE = "https://oauth.hijuconn.com/login"
 OAUTH2_TOKEN = "https://oauth.hijuconn.com/oauth/token"
 WEBSOCKET_URL = "wss://clife-eu-gateway.hijuconn.com/msg/get_msg_and_channels"
 API_BASE_URL = "https://juapi-3rd.hijuconn.com"
 
-# OAuth2 Configuration
-# OAUTH2_AUTHORIZE = "https://test-oauth.hijuconn.com/login"
-# OAUTH2_TOKEN = "https://test-oauth.hijuconn.com/oauth/token"
-
 # WebSocket
-# WEBSOCKET_URL = "wss://clife-eu-gateway.hijuconn.com/msg/get_msg_and_channels"
-# WEBSOCKET_URL = "wss://test-clife-eu-gateway.hijuconn.com/msg/get_msg_and_channels"
 WEBSOCKET_RECONNECT_INTERVAL = 30  # seconds
 
-# API Configuration
-# API_BASE_URL = "https://test-clife-eu-gateway.hijuconn.com"
-# API_BASE_URL = "https://test-juapi.hijuconn.com"
-# API_BASE_URL = "https://test-juapi-3rd.hijuconn.com"
-
+# API Endpoints
 API_DEVICE_LIST = "/clife-svc/pu/get_device_status_list"
-API_GET_PROPERTY_LTST = "/clife-svc/get_property_list"#获取设备属性列表
-API_QUERY_STATIC_DATA = "/clife-svc/pu/query_static_data"#使用puId获取设备属性列表
+API_GET_PROPERTY_LTST = "/clife-svc/get_property_list"  # Get device property list
+API_QUERY_STATIC_DATA = "/clife-svc/pu/query_static_data"  # Get device property list using puId
 API_DEVICE_CONTROL = "/device/pu/property/set"
-API_SELF_CHECK = "/basic/self_check/info"#获取故障信息
-API_GET_HOUR_POWER = "/clife-svc/pu/get_hour_power"#获取电量信息
+API_SELF_CHECK = "/basic/self_check/info"  # Get fault information
+API_GET_HOUR_POWER = "/clife-svc/pu/get_hour_power"  # Get power consumption information
 
 CLIENT_ID = "9793620883275788"
 CLIENT_SECRET = "7h1m3gZVlILyBvIFBNmzXwoFYLhkGqG9NQd2jBzuZCqJKCTyCtYwQtXi4tVBjg9B"
@@ -96,25 +80,25 @@ class StatusKey:
     POWER = "t_power"
     MODE = "t_work_mode"  # Changed from t_mode to t_work_mode
     FAN_SPEED = "t_fan_speed"
-    TEMPERATURE = "f_temp_in"  # 只读温度
-    T_TEMP_TYPE = "t_temp_type"  # 只读温度
-    FHUMIDITY = "f_humidity"  # 只读湿度
-    WATER_TANK_TEMP = "f_water_tank_temp"  # 水箱温度
-    DHW_TEMP = "t_dhw_temp"  # 水箱温度
-    ZONE1WATER_TEMP1 = "f_zone1water_temp1"  # 水箱温度
-    ZONE1WATER_SETTEMP1 = "t_zone1water_settemp1"  # 水箱温度
-    ZONE2WATER_TEMP2 = "f_zone2water_temp2"  # 水箱温度
-    CONSUMPTION = "f_power_consumption"  # 耗电量
-    IN_WATER_TEMP = "f_in_water_temp"  # 进水口温度
-    OUT_WATER_TEMP = "f_out_water_temp"  # 出水口温度
-    ELECTRIC_HEATING = "f_electric_heating"  # 电加热状态
+    TEMPERATURE = "f_temp_in"  # Read-only temperature
+    T_TEMP_TYPE = "t_temp_type"  # Read-only temperature type
+    FHUMIDITY = "f_humidity"  # Read-only humidity
+    WATER_TANK_TEMP = "f_water_tank_temp"  # Water tank temperature
+    DHW_TEMP = "t_dhw_temp"  # Domestic hot water temperature
+    ZONE1WATER_TEMP1 = "f_zone1water_temp1"  # Zone 1 water temperature
+    ZONE1WATER_SETTEMP1 = "t_zone1water_settemp1"  # Zone 1 water target temperature
+    ZONE2WATER_TEMP2 = "f_zone2water_temp2"  # Zone 2 water temperature
+    CONSUMPTION = "f_power_consumption"  # Power consumption
+    IN_WATER_TEMP = "f_in_water_temp"  # Inlet water temperature
+    OUT_WATER_TEMP = "f_out_water_temp"  # Outlet water temperature
+    ELECTRIC_HEATING = "f_electric_heating"  # Electric heating status
     TARGET_TEMP = "t_temp"  # Target temperature
     HUMIDITY = "t_humidity"
     SWING = "t_up_down"  # Changed to match actual API response
     QUIET = "t_fan_mute"  # Changed to match actual API response
     RAPID = "t_super"  # Changed to match actual API response
-    EIGHTHEAT = "t_8heat"  # 8°加热
-    ECO = "t_eco"  # 8°加热
+    EIGHTHEAT = "t_8heat"  # 8-degree heating mode
+    ECO = "t_eco"  # ECO mode
     EIGHT_HEAT = "t_8_heat"
     ENERGY = "f_electricity"  # Changed to match actual API response
     WATER_TEMP = "t_water_temp"
@@ -195,12 +179,12 @@ OPERATION_MODE_VACATION = "vacation"
 # Fan Modes
 FAN_AUTO = "auto"
 FAN_ULTRA_LOW = "ultra_low"
-SFAN_ULTRA_LOW = "中低"
+SFAN_ULTRA_LOW = "medium_low"
 FAN_LOW = "low"
 FAN_MEDIUM = "medium"
 FAN_HIGH = "high"
 FAN_ULTRA_HIGH = "ultra_high"
-SFAN_ULTRA_HIGH = "中高"
+SFAN_ULTRA_HIGH = "medium_high"
 
 # Message Types
 class MessageType:

@@ -2,7 +2,7 @@
     "domain": "hisense_connectlife",
     "name": "Hisense ConnectLife",
     "codeowners": [
-        "@Connectlife-LLC"
+        "@qingshi688"
     ],
     "config_flow": true,
     "dependencies": ["application_credentials"],

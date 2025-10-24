@@ -5,15 +5,15 @@ rules:
     status: done
     comment: |
       Uses WebSocket for real-time updates with 30-second polling fallback
-  brands: done
+  brands: exempt
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
-  docs-high-level-description: done
-  docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-actions: exempt
+  docs-high-level-description: exempt
+  docs-installation-instructions: exempt
+  docs-removal-instructions: exempt
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -25,8 +25,8 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: done
-  docs-installation-parameters: done
+  docs-configuration-parameters: exempt
+  docs-installation-parameters: exempt
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -37,24 +37,24 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: done
-  discovery: done
-  docs-data-update: done
-  docs-examples: done
-  docs-known-limitations: done
-  docs-supported-devices: done
-  docs-supported-functions: done
-  docs-troubleshooting: done
-  docs-use-cases: done
+  discovery-update-info: exempt
+  discovery: exempt
+  docs-data-update: exempt
+  docs-examples: exempt
+  docs-known-limitations: exempt
+  docs-supported-devices: exempt
+  docs-supported-functions: exempt
+  docs-troubleshooting: exempt
+  docs-use-cases: exempt
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: done
+  entity-disabled-by-default: exempt
   entity-translations: done
-  exception-translations: done
+  exception-translations: exempt
   icon-translations: done
-  reconfiguration-flow: done
-  repair-issues: done
+  reconfiguration-flow: exempt
+  repair-issues: exempt
   stale-devices: done
 
   # Platinum

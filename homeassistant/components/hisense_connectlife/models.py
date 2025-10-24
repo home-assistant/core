@@ -164,7 +164,7 @@ class DeviceInfo:
 
     def is_devices(self) -> bool:
         """Check if this device type is supported."""
-        #009 分体空调 008 窗机 007 除湿机 006 移动空调
+        # 009: Split AC, 008: Window AC, 007: Dehumidifier, 006: Portable AC
         supported_device_types = ["009", "008", "007", "006", "016", "035"]
         return self.type_code in supported_device_types
     def is_water(self) -> bool:
@@ -183,7 +183,7 @@ class DeviceInfo:
         """Check if device has a specific attribute."""
         # First check if the attribute exists in status
         # Check if the attribute is defined in the parser
-        #先使用静态数据判断
+        # Use static data first to check
         attributes = parser.attributes
         if attributes:
             _LOGGER.debug("Checking if device has status: %s", attributes)
