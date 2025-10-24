@@ -95,7 +95,7 @@
         "name": "Battery missing"
       },
       "panel_fault_ac_fail": {
-        "name": "AC Failure"
+        "name": "AC failure"
       },
       "panel_fault_parameter_crc_fail_in_pif": {
         "name": "CRC failure in panel configuration"

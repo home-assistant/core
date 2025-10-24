@@ -1,0 +1,41 @@
+{
+  "entity": {
+    "event": {
+      "alarm_clock": {
+        "default": "mdi:alarm"
+      },
+      "user_notification": {
+        "default": "mdi:cellphone-message"
+      },
+      "smart_wakeup": {
+        "default": "mdi:brain"
+      },
+      "sleep_phase": {
+        "default": "mdi:bed"
+      },
+      "sound_event": {
+        "default": "mdi:chat-sleep-outline"
+      },
+      "sleep_tracking": {
+        "default": "mdi:record-rec"
+      },
+      "lullaby": {
+        "default": "mdi:cradle-outline"
+      },
+      "sleep_health": {
+        "default": "mdi:heart-pulse"
+      },
+      "jet_lag_prevention": {
+        "default": "mdi:airplane-clock"
+      }
+    },
+    "sensor": {
+      "alarm_time": {
+        "default": "mdi:alarm"
+      },
+      "alarm_label": {
+        "default": "mdi:label-outline"
+      }
+    }
+  }
+}

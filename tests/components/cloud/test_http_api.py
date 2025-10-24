@@ -28,14 +28,19 @@ from homeassistant.components.alexa import errors as alexa_errors
 
 # pylint: disable-next=hass-component-root-import
 from homeassistant.components.alexa.entities import LightCapabilities
-from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+    STORAGE_KEY,
+)
 from homeassistant.components.cloud.const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
 from homeassistant.components.cloud.http_api import validate_language_voice
-from homeassistant.components.google_assistant.helpers import GoogleEntity
+from homeassistant.components.google_assistant.helpers import (  # pylint: disable=hass-component-root-import
+    GoogleEntity,
+)
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.loader import async_get_loaded_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.location import LocationInfo
@@ -139,31 +144,34 @@ async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
 async def test_google_actions_sync(
     setup_cloud: None,
     hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
 ) -> None:
     """Test syncing Google Actions."""
     cloud_client = await hass_client()
-    with patch(
-        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=Mock(status=200),
-    ) as mock_request_sync:
-        req = await cloud_client.post("/api/cloud/google_actions/sync")
-        assert req.status == HTTPStatus.OK
-        assert mock_request_sync.call_count == 1
+
+    cloud.google_report_state.request_sync = AsyncMock(
+        return_value=Mock(status=HTTPStatus.OK)
+    )
+
+    req = await cloud_client.post("/api/cloud/google_actions/sync")
+    assert req.status == HTTPStatus.OK
+    assert len(cloud.google_report_state.request_sync.mock_calls) == 1
 
 
 async def test_google_actions_sync_fails(
     setup_cloud: None,
     hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
 ) -> None:
     """Test syncing Google Actions gone bad."""
     cloud_client = await hass_client()
-    with patch(
-        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=Mock(status=HTTPStatus.INTERNAL_SERVER_ERROR),
-    ) as mock_request_sync:
-        req = await cloud_client.post("/api/cloud/google_actions/sync")
-        assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
-        assert mock_request_sync.call_count == 1
+    cloud.google_report_state.request_sync = AsyncMock(
+        return_value=Mock(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    )
+
+    req = await cloud_client.post("/api/cloud/google_actions/sync")
+    assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert len(cloud.google_report_state.request_sync.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -1837,6 +1845,7 @@ async def test_logout_view_dispatch_event(
 
 
 @patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_support_package(
     hass: HomeAssistant,
     cloud: MagicMock,
@@ -1871,6 +1880,9 @@ async def test_download_support_package(
         MagicMock(async_register=async_register_mock_platform),
     )
     hass.config.components.add("mock_no_info_integration")
+
+    # Add mock custom integration for testing
+    hass.config.components.add("test")  # This is a custom integration from the fixture
 
     assert await async_setup_component(hass, "system_health", {})
 
@@ -1939,6 +1951,235 @@ async def test_download_support_package(
                 "os_version": "6.12.9",
                 "user": "hass",
             },
+        ),
+    ):
+        req = await cloud_client.get("/api/cloud/support_package")
+    assert req.status == HTTPStatus.OK
+    assert await req.text() == snapshot
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_download_support_package_custom_components_error(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test download support package when async_get_custom_components fails."""
+
+    aioclient_mock.get("https://cloud.bla.com/status", text="")
+    aioclient_mock.get(
+        "https://cert-server/directory", exc=Exception("Unexpected exception")
+    )
+    aioclient_mock.get(
+        "https://cognito-idp.us-east-1.amazonaws.com/AAAA/.well-known/jwks.json",
+        exc=aiohttp.ClientError,
+    )
+
+    def async_register_mock_platform(
+        hass: HomeAssistant, register: system_health.SystemHealthRegistration
+    ) -> None:
+        async def mock_empty_info(hass: HomeAssistant) -> dict[str, Any]:
+            return {}
+
+        register.async_register_info(mock_empty_info, "/config/mock_integration")
+
+    mock_platform(
+        hass,
+        "mock_no_info_integration.system_health",
+        MagicMock(async_register=async_register_mock_platform),
+    )
+    hass.config.components.add("mock_no_info_integration")
+
+    assert await async_setup_component(hass, "system_health", {})
+
+    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock:
+        hexmock.return_value = "12345678901234567890"
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    "user_pool_id": "AAAA",
+                    "region": "us-east-1",
+                    "acme_server": "cert-server",
+                    "relayer_server": "cloud.bla.com",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    await cloud.login("test-user", "test-pass")
+
+    cloud.remote.snitun_server = "us-west-1"
+    cloud.remote.certificate_status = CertificateStatus.READY
+    cloud.expiration_date = dt_util.parse_datetime("2025-01-17T11:19:31.0+00:00")
+
+    await cloud.client.async_system_message({"region": "xx-earth-616"})
+    await set_cloud_prefs(
+        {
+            "alexa_enabled": True,
+            "google_enabled": False,
+            "remote_enabled": True,
+            "cloud_ice_servers_enabled": True,
+        }
+    )
+
+    now = dt_util.utcnow()
+    tz = now.astimezone().tzinfo
+    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    logging.getLogger("hass_nabucasa.iot").info(
+        "This message will be dropped since this test patches MAX_RECORDS"
+    )
+    logging.getLogger("hass_nabucasa.iot").info("Hass nabucasa log")
+    logging.getLogger("snitun.utils.aiohttp_client").warning("Snitun log")
+    logging.getLogger("homeassistant.components.cloud.client").error("Cloud log")
+    freezer.move_to(now)
+
+    cloud_client = await hass_client()
+    with (
+        patch.object(hass.config, "config_dir", new="config"),
+        patch(
+            "homeassistant.components.homeassistant.system_health.system_info.async_get_system_info",
+            return_value={
+                "installation_type": "Home Assistant Core",
+                "version": "2025.2.0",
+                "dev": False,
+                "hassio": False,
+                "virtualenv": False,
+                "python_version": "3.13.1",
+                "docker": False,
+                "container_arch": None,
+                "arch": "x86_64",
+                "timezone": "US/Pacific",
+                "os_name": "Linux",
+                "os_version": "6.12.9",
+                "user": "hass",
+            },
+        ),
+        patch(
+            "homeassistant.components.cloud.http_api.async_get_custom_components",
+            side_effect=Exception("Custom components error"),
+        ),
+    ):
+        req = await cloud_client.get("/api/cloud/support_package")
+    assert req.status == HTTPStatus.OK
+    assert await req.text() == snapshot
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_download_support_package_integration_load_error(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test download support package when async_get_loaded_integration fails."""
+
+    aioclient_mock.get("https://cloud.bla.com/status", text="")
+    aioclient_mock.get(
+        "https://cert-server/directory", exc=Exception("Unexpected exception")
+    )
+    aioclient_mock.get(
+        "https://cognito-idp.us-east-1.amazonaws.com/AAAA/.well-known/jwks.json",
+        exc=aiohttp.ClientError,
+    )
+
+    def async_register_mock_platform(
+        hass: HomeAssistant, register: system_health.SystemHealthRegistration
+    ) -> None:
+        async def mock_empty_info(hass: HomeAssistant) -> dict[str, Any]:
+            return {}
+
+        register.async_register_info(mock_empty_info, "/config/mock_integration")
+
+    mock_platform(
+        hass,
+        "mock_no_info_integration.system_health",
+        MagicMock(async_register=async_register_mock_platform),
+    )
+    hass.config.components.add("mock_no_info_integration")
+    # Add a component that will fail to load integration info
+    hass.config.components.add("test")  # This is a custom integration from the fixture
+    hass.config.components.add("failing_integration")
+
+    assert await async_setup_component(hass, "system_health", {})
+
+    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock:
+        hexmock.return_value = "12345678901234567890"
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    "user_pool_id": "AAAA",
+                    "region": "us-east-1",
+                    "acme_server": "cert-server",
+                    "relayer_server": "cloud.bla.com",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    await cloud.login("test-user", "test-pass")
+
+    cloud.remote.snitun_server = "us-west-1"
+    cloud.remote.certificate_status = CertificateStatus.READY
+    cloud.expiration_date = dt_util.parse_datetime("2025-01-17T11:19:31.0+00:00")
+
+    await cloud.client.async_system_message({"region": "xx-earth-616"})
+    await set_cloud_prefs(
+        {
+            "alexa_enabled": True,
+            "google_enabled": False,
+            "remote_enabled": True,
+            "cloud_ice_servers_enabled": True,
+        }
+    )
+
+    now = dt_util.utcnow()
+    tz = now.astimezone().tzinfo
+    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    logging.getLogger("hass_nabucasa.iot").info(
+        "This message will be dropped since this test patches MAX_RECORDS"
+    )
+    logging.getLogger("hass_nabucasa.iot").info("Hass nabucasa log")
+    logging.getLogger("snitun.utils.aiohttp_client").warning("Snitun log")
+    logging.getLogger("homeassistant.components.cloud.client").error("Cloud log")
+    freezer.move_to(now)
+
+    cloud_client = await hass_client()
+    with (
+        patch.object(hass.config, "config_dir", new="config"),
+        patch(
+            "homeassistant.components.homeassistant.system_health.system_info.async_get_system_info",
+            return_value={
+                "installation_type": "Home Assistant Core",
+                "version": "2025.2.0",
+                "dev": False,
+                "hassio": False,
+                "virtualenv": False,
+                "python_version": "3.13.1",
+                "docker": False,
+                "container_arch": None,
+                "arch": "x86_64",
+                "timezone": "US/Pacific",
+                "os_name": "Linux",
+                "os_version": "6.12.9",
+                "user": "hass",
+            },
+        ),
+        patch(
+            "homeassistant.components.cloud.http_api.async_get_loaded_integration",
+            side_effect=lambda hass, domain: Exception("Integration load error")
+            if domain == "failing_integration"
+            else async_get_loaded_integration(hass, domain),
         ),
     ):
         req = await cloud_client.get("/api/cloud/support_package")

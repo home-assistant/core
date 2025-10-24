@@ -5,8 +5,9 @@
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/husqvarna_automower",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["aioautomower"],
   "quality_scale": "silver",
-  "requirements": ["aioautomower==2.1.2"]
+  "requirements": ["aioautomower==2.5.0"]
 }

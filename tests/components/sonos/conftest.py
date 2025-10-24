@@ -167,16 +167,26 @@ async def async_autosetup_sonos(async_setup_sonos):
     await async_setup_sonos()
 
 
+def reset_sonos_alarms(alarm_event: SonosMockEvent) -> None:
+    """Reset the Sonos alarms to a known state."""
+    sonos_alarms = Alarms()
+    sonos_alarms.alarms = {}
+    sonos_alarms._last_zone_used = None
+    sonos_alarms._last_alarm_list_version = None
+    sonos_alarms.last_uid = None
+    sonos_alarms.last_id = 0
+    alarm_event.variables["alarm_list_version"] = "RINCON_test:0"
+
+
 @pytest.fixture
 def async_setup_sonos(
-    hass: HomeAssistant, config_entry: MockConfigEntry, fire_zgs_event
+    hass: HomeAssistant, config_entry: MockConfigEntry, fire_zgs_event, alarm_event
 ) -> Callable[[], Coroutine[Any, Any, None]]:
     """Return a coroutine to set up a Sonos integration instance on demand."""
 
     async def _wrapper():
         config_entry.add_to_hass(hass)
-        sonos_alarms = Alarms()
-        sonos_alarms.last_alarm_list_version = "RINCON_test:0"
+        reset_sonos_alarms(alarm_event)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
         await fire_zgs_event()
@@ -214,11 +224,25 @@ class MockSoCo(MagicMock):
     surround_level = 3
     music_surround_level = 4
     soundbar_audio_input_format = "Dolby 5.1"
+    factory: SoCoMockFactory | None = None
 
     @property
     def visible_zones(self):
         """Return visible zones and allow property to be overridden by device classes."""
         return {self}
+
+    @property
+    def all_zones(self) -> set[MockSoCo]:
+        """Return all mock zones if a factory is set and enabled, else just self."""
+        return (
+            self.factory.mock_all_zones
+            if self.factory and self.factory.mock_all_zones
+            else {self}
+        )
+
+    def set_factory(self, factory: SoCoMockFactory) -> None:
+        """Set the factory for this mock."""
+        self.factory = factory
 
 
 class SoCoMockFactory:
@@ -243,12 +267,19 @@ class SoCoMockFactory:
         self.alarm_clock = alarm_clock
         self.sonos_playlists = sonos_playlists
         self.sonos_queue = sonos_queue
+        self.mock_zones: bool = False
+
+    @property
+    def mock_all_zones(self) -> set[MockSoCo] | None:
+        """Return a set of all mock zones, or None if not enabled."""
+        return set(self.mock_list.values()) if self.mock_zones else None
 
     def cache_mock(
         self, mock_soco: MockSoCo, ip_address: str, name: str = "Zone A"
     ) -> MockSoCo:
         """Put a user created mock into the cache."""
         mock_soco.mock_add_spec(SoCo)
+        mock_soco.set_factory(self)
         mock_soco.ip_address = ip_address
         if ip_address != "192.168.42.2":
             mock_soco.uid += f"_{ip_address}"
@@ -257,9 +288,15 @@ class SoCoMockFactory:
         mock_soco.music_source_from_uri = SoCo.music_source_from_uri
         mock_soco.get_sonos_playlists.return_value = self.sonos_playlists
         mock_soco.get_queue.return_value = self.sonos_queue
+        mock_soco._player_name = name
         my_speaker_info = self.speaker_info.copy()
         my_speaker_info["zone_name"] = name
         my_speaker_info["uid"] = mock_soco.uid
+        # Generate a different MAC for the non-default speakers.
+        # otherwise new devices will not be created.
+        if ip_address != "192.168.42.2":
+            last_octet = ip_address.split(".")[-1]
+            my_speaker_info["mac_address"] = f"00-00-00-00-00-{last_octet.zfill(2)}"
         mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
         mock_soco.add_to_queue = Mock(return_value=10)
         mock_soco.add_uri_to_queue = Mock(return_value=10)
@@ -278,7 +315,6 @@ class SoCoMockFactory:
 
         mock_soco.alarmClock = self.alarm_clock
         mock_soco.get_battery_info.return_value = self.battery_info
-        mock_soco.all_zones = {mock_soco}
         mock_soco.group.coordinator = mock_soco
         mock_soco.household_id = "test_household_id"
         self.mock_list[ip_address] = mock_soco
@@ -628,6 +664,9 @@ def music_library_fixture(
     music_library.browse_by_idstring = Mock(side_effect=mock_browse_by_idstring)
     music_library.get_music_library_information = mock_get_music_library_information
     music_library.browse = Mock(return_value=music_library_browse_categories)
+    music_library.build_album_art_full_uri = Mock(
+        return_value="build_album_art_full_uri.jpg"
+    )
     return music_library
 
 
@@ -700,6 +739,22 @@ def current_track_info_empty_fixture():
         "playlist_position": "1",
         "duration": "NOT_IMPLEMENTED",
         "uri": "",
+        "metadata": "NOT_IMPLEMENTED",
+    }
+
+
+@pytest.fixture(name="current_track_info")
+def current_track_info_fixture():
+    """Create current_track_info fixture."""
+    return {
+        "title": "Something",
+        "artist": "The Beatles",
+        "album": "Abbey Road",
+        "album_art": "http://example.com/albumart.jpg",
+        "position": "00:00:42",
+        "playlist_position": "5",
+        "duration": "00:02:36",
+        "uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
         "metadata": "NOT_IMPLEMENTED",
     }
 
@@ -799,6 +854,48 @@ def tv_event_fixture(soco):
     return SonosMockEvent(soco, soco.avTransport, variables)
 
 
+@pytest.fixture(name="media_event")
+def media_event_fixture(soco):
+    """Create media event fixture."""
+    variables = {
+        "transport_state": "PLAYING",
+        "current_play_mode": "NORMAL",
+        "current_crossfade_mode": "0",
+        "number_of_tracks": "1",
+        "current_track": "1",
+        "current_section": "0",
+        "current_track_uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+        "current_track_duration": "360",
+        "current_track_meta_data": DidlMusicTrack(
+            album="Abbey Road",
+            title="Something",
+            parent_id="-1",
+            item_id="-1",
+            restricted=True,
+            resources=[],
+            desc=None,
+            album_art_uri="http://example.com/albumart.jpg",
+        ),
+        "next_track_uri": "",
+        "next_track_meta_data": "",
+        "enqueued_transport_uri": "",
+        "enqueued_transport_uri_meta_data": "",
+        "playback_storage_medium": "NETWORK",
+        "av_transport_uri": f"x-sonos-htastream:{soco.uid}:spdif",
+        "av_transport_uri_meta_data": {
+            "title": soco.uid,
+            "parent_id": "0",
+            "item_id": "spdif-input",
+            "restricted": False,
+            "resources": [],
+            "desc": None,
+        },
+        "current_transport_actions": "Set, Play",
+        "current_valid_play_modes": "",
+    }
+    return SonosMockEvent(soco, soco.avTransport, variables)
+
+
 @pytest.fixture(name="zgs_discovery", scope="package")
 def zgs_discovery_fixture():
     """Load ZoneGroupState discovery payload and return it."""
@@ -824,11 +921,15 @@ def zgs_event_fixture(
 
 @pytest.fixture(name="sonos_setup_two_speakers")
 async def sonos_setup_two_speakers(
-    hass: HomeAssistant, soco_factory: SoCoMockFactory
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    alarm_event: SonosMockEvent,
 ) -> list[MockSoCo]:
     """Set up home assistant with two Sonos Speakers."""
     soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
     soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    reset_sonos_alarms(alarm_event)
+
     await async_setup_component(
         hass,
         DOMAIN,
@@ -882,3 +983,23 @@ def ungroup_speakers(coordinator: MockSoCo, group_member: MockSoCo) -> None:
     )
     coordinator.zoneGroupTopology.subscribe.return_value._callback(event)
     group_member.zoneGroupTopology.subscribe.return_value._callback(event)
+
+
+def create_rendering_control_event(
+    soco: MockSoCo,
+) -> SonosMockEvent:
+    """Create a Sonos Event for speaker rendering control."""
+    variables = {
+        "dialog_level": 1,
+        "speech_enhance_enable": 1,
+        "surround_level": 6,
+        "music_surround_level": 4,
+        "audio_delay": 0,
+        "audio_delay_left_rear": 0,
+        "audio_delay_right_rear": 0,
+        "night_mode": 0,
+        "surround_enabled": 1,
+        "surround_mode": 1,
+        "height_channel_level": 1,
+    }
+    return SonosMockEvent(soco, soco.renderingControl, variables)

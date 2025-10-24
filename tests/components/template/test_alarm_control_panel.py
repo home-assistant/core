@@ -973,3 +973,35 @@ async def test_optimistic(hass: HomeAssistant) -> None:
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == AlarmControlPanelState.ARMED_HOME
+
+
+@pytest.mark.parametrize(
+    ("count", "panel_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ states('alarm_control_panel.test') }}",
+                **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
+                "optimistic": False,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_panel")
+async def test_not_optimistic(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        "alarm_arm_away",
+        {"entity_id": TEST_ENTITY_ID, "code": "1234"},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN

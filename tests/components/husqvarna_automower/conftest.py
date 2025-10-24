@@ -1,7 +1,7 @@
 """Test helpers for Husqvarna Automower."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 import time
 from unittest.mock import AsyncMock, create_autospec, patch
 
@@ -16,7 +16,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.husqvarna_automower.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -137,3 +137,21 @@ def mock_automower_client(
             spec_set=True,
         )
         yield mock_instance
+
+
+@pytest.fixture
+def automower_ws_ready(mock_automower_client: AsyncMock) -> list[Callable[[], None]]:
+    """Fixture to capture ws_ready_callbacks."""
+
+    ws_ready_callbacks: list[Callable[[], None]] = []
+
+    @callback
+    def fake_register_ws_ready_callback(cb: Callable[[], None]) -> None:
+        ws_ready_callbacks.append(cb)
+
+    mock_automower_client.register_ws_ready_callback.side_effect = (
+        fake_register_ws_ready_callback
+    )
+    mock_automower_client.send_empty_message.return_value = True
+
+    return ws_ready_callbacks

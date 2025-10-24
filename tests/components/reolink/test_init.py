@@ -52,6 +52,7 @@ from .conftest import (
     DEFAULT_PROTOCOL,
     TEST_BC_PORT,
     TEST_CAM_MODEL,
+    TEST_CAM_NAME,
     TEST_HOST,
     TEST_HOST_MODEL,
     TEST_MAC,
@@ -337,24 +338,6 @@ async def test_removing_chime(
         "support_ch_uid",
     ),
     [
-        (
-            TEST_MAC,
-            f"{TEST_MAC}_firmware",
-            f"{TEST_MAC}",
-            f"{TEST_MAC}",
-            Platform.UPDATE,
-            False,
-            False,
-        ),
-        (
-            TEST_MAC,
-            f"{TEST_UID}_firmware",
-            f"{TEST_MAC}",
-            f"{TEST_UID}",
-            Platform.UPDATE,
-            True,
-            False,
-        ),
         (
             f"{TEST_MAC}_0_record_audio",
             f"{TEST_UID}_0_record_audio",
@@ -1034,7 +1017,7 @@ async def test_privacy_mode_change_callback(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.SWITCH}.{TEST_NVR_NAME}_record_audio"
+    entity_id = f"{Platform.SWITCH}.{TEST_CAM_NAME}_record_audio"
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # simulate a TCP push callback signaling a privacy mode change
@@ -1106,7 +1089,7 @@ async def test_camera_wake_callback(
         await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.SWITCH}.{TEST_NVR_NAME}_record_audio"
+    entity_id = f"{Platform.SWITCH}.{TEST_CAM_NAME}_record_audio"
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_host.sleeping.return_value = False

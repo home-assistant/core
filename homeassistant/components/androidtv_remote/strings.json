@@ -22,7 +22,7 @@
       },
       "zeroconf_confirm": {
         "title": "Discovered Android TV",
-        "description": "Do you want to add the Android TV ({name}) to Home Assistant?  It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
+        "description": "Do you want to add the Android TV ({name}) to Home Assistant? It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
       },
       "pair": {
         "description": "Enter the pairing code displayed on the Android TV ({name}).",
@@ -75,7 +75,7 @@
         },
         "data_description": {
           "app_name": "Name of the application as you would like it to be displayed in Home Assistant.",
-          "app_id": "E.g. com.plexapp.android for https://play.google.com/store/apps/details?id=com.plexapp.android",
+          "app_id": "E.g. {example_app_id} for {example_app_play_store_url}",
           "app_icon": "Image URL. From the Play Store app page, right click on the icon and select 'Copy image address' and then paste it here. Alternatively, download the image, upload it under /config/www/ and use the URL /local/filename",
           "app_delete": "Check this box to delete the application from the list."
         }
@@ -85,6 +85,19 @@
   "exceptions": {
     "connection_closed": {
       "message": "Connection to the Android TV device is closed"
+    },
+    "invalid_channel": {
+      "message": "Channel must be numeric: {media_id}"
+    },
+    "invalid_media_type": {
+      "message": "Invalid media type: {media_type}"
+    }
+  },
+  "selector": {
+    "apps": {
+      "options": {
+        "add_new": "Add new"
+      }
     }
   }
 }

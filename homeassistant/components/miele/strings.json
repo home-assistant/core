@@ -223,7 +223,8 @@
           "plate_step_16": "8\u2022",
           "plate_step_17": "9",
           "plate_step_18": "9\u2022",
-          "plate_step_boost": "Boost"
+          "plate_step_boost": "Boost",
+          "plate_step_boost_2": "Boost 2"
         }
       },
       "drying_step": {
@@ -290,6 +291,7 @@
           "not_running": "Not running",
           "pre_brewing": "Pre-brewing",
           "pre_dishwash": "Pre-cleaning",
+          "pre_heating": "Pre-heating",
           "pre_wash": "Pre-wash",
           "process_finished": "Process finished",
           "process_running": "Process running",
@@ -990,6 +992,18 @@
           "yom_tov": "Yom tov",
           "yorkshire_pudding": "Yorkshire pudding",
           "zander_fillet": "Zander (fillet)"
+        },
+        "state_attributes": {
+          "profile": {
+            "name": "Profile",
+            "state": {
+              "profile_1": "Profile 1",
+              "profile_2": "Profile 2",
+              "profile_3": "Profile 3",
+              "profile_4": "Profile 4",
+              "profile_5": "Profile 5"
+            }
+          }
         }
       },
       "spin_speed": {

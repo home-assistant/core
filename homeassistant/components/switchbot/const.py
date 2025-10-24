@@ -51,6 +51,12 @@ class SupportedModels(StrEnum):
     EVAPORATIVE_HUMIDIFIER = "evaporative_humidifier"
     FLOOR_LAMP = "floor_lamp"
     STRIP_LIGHT_3 = "strip_light_3"
+    RGBICWW_STRIP_LIGHT = "rgbicww_strip_light"
+    RGBICWW_FLOOR_LAMP = "rgbicww_floor_lamp"
+    PLUG_MINI_EU = "plug_mini_eu"
+    RELAY_SWITCH_2PM = "relay_switch_2pm"
+    K11_PLUS_VACUUM = "k11+_vacuum"
+    GARAGE_DOOR_OPENER = "garage_door_opener"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -81,6 +87,12 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.EVAPORATIVE_HUMIDIFIER: SupportedModels.EVAPORATIVE_HUMIDIFIER,
     SwitchbotModel.FLOOR_LAMP: SupportedModels.FLOOR_LAMP,
     SwitchbotModel.STRIP_LIGHT_3: SupportedModels.STRIP_LIGHT_3,
+    SwitchbotModel.RGBICWW_STRIP_LIGHT: SupportedModels.RGBICWW_STRIP_LIGHT,
+    SwitchbotModel.RGBICWW_FLOOR_LAMP: SupportedModels.RGBICWW_FLOOR_LAMP,
+    SwitchbotModel.PLUG_MINI_EU: SupportedModels.PLUG_MINI_EU,
+    SwitchbotModel.RELAY_SWITCH_2PM: SupportedModels.RELAY_SWITCH_2PM,
+    SwitchbotModel.K11_VACUUM: SupportedModels.K11_PLUS_VACUUM,
+    SwitchbotModel.GARAGE_DOOR_OPENER: SupportedModels.GARAGE_DOOR_OPENER,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -112,6 +124,11 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.EVAPORATIVE_HUMIDIFIER,
     SwitchbotModel.FLOOR_LAMP,
     SwitchbotModel.STRIP_LIGHT_3,
+    SwitchbotModel.RGBICWW_STRIP_LIGHT,
+    SwitchbotModel.RGBICWW_FLOOR_LAMP,
+    SwitchbotModel.PLUG_MINI_EU,
+    SwitchbotModel.RELAY_SWITCH_2PM,
+    SwitchbotModel.GARAGE_DOOR_OPENER,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -128,6 +145,11 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.EVAPORATIVE_HUMIDIFIER: switchbot.SwitchbotEvaporativeHumidifier,
     SwitchbotModel.FLOOR_LAMP: switchbot.SwitchbotStripLight3,
     SwitchbotModel.STRIP_LIGHT_3: switchbot.SwitchbotStripLight3,
+    SwitchbotModel.RGBICWW_STRIP_LIGHT: switchbot.SwitchbotRgbicLight,
+    SwitchbotModel.RGBICWW_FLOOR_LAMP: switchbot.SwitchbotRgbicLight,
+    SwitchbotModel.PLUG_MINI_EU: switchbot.SwitchbotRelaySwitch,
+    SwitchbotModel.RELAY_SWITCH_2PM: switchbot.SwitchbotRelaySwitch2PM,
+    SwitchbotModel.GARAGE_DOOR_OPENER: switchbot.SwitchbotRelaySwitch,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {

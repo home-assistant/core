@@ -6,18 +6,21 @@ from pathlib import Path
 from typing import cast
 
 from aiohttp import ClientResponseError
-from yalexs.const import Brand
 from yalexs.exceptions import AugustApiAIOHTTPError
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 from yalexs.manager.gateway import Config as YaleXSConfig
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    device_registry as dr,
+    issue_registry as ir,
+)
 
-from .const import DOMAIN, PLATFORMS
+from .const import DEFAULT_AUGUST_BRAND, DOMAIN, PLATFORMS
 from .data import AugustData
 from .gateway import AugustGateway
 from .util import async_create_august_clientsession
@@ -25,30 +28,24 @@ from .util import async_create_august_clientsession
 type AugustConfigEntry = ConfigEntry[AugustData]
 
 
-@callback
-def _async_create_yale_brand_migration_issue(
-    hass: HomeAssistant, entry: AugustConfigEntry
-) -> None:
-    """Create an issue for a brand migration."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "yale_brand_migration",
-        breaks_in_ha_version="2024.9",
-        learn_more_url="https://www.home-assistant.io/integrations/yale",
-        translation_key="yale_brand_migration",
-        is_fixable=False,
-        severity=ir.IssueSeverity.CRITICAL,
-        translation_placeholders={
-            "migrate_url": "https://my.home-assistant.io/redirect/config_flow_start?domain=yale"
-        },
-    )
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
     """Set up August from a config entry."""
+    # Check if this is a legacy config entry that needs migration to OAuth
+    if "auth_implementation" not in entry.data:
+        # This is a legacy entry using username/password, trigger reauth
+        raise ConfigEntryAuthFailed("Migration to OAuth required")
+
     session = async_create_august_clientsession(hass)
-    august_gateway = AugustGateway(Path(hass.config.config_dir), session)
+    try:
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
+        )
+    except ValueError as err:
+        raise ConfigEntryNotReady("OAuth implementation not available") from err
+    oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    august_gateway = AugustGateway(Path(hass.config.config_dir), session, oauth_session)
     try:
         await async_setup_august(hass, entry, august_gateway)
     except (RequireValidation, InvalidAuth) as err:
@@ -76,9 +73,7 @@ async def async_setup_august(
 ) -> None:
     """Set up the August component."""
     config = cast(YaleXSConfig, entry.data)
-    await august_gateway.async_setup(config)
-    if august_gateway.api.brand == Brand.YALE_HOME:
-        _async_create_yale_brand_migration_issue(hass, entry)
+    await august_gateway.async_setup({**config, "brand": DEFAULT_AUGUST_BRAND})
     await august_gateway.async_authenticate()
     await august_gateway.async_refresh_access_token_if_needed()
     data = entry.runtime_data = AugustData(hass, august_gateway)

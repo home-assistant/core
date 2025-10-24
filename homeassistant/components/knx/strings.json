@@ -339,5 +339,254 @@
       "name": "[%key:common::action::reload%]",
       "description": "Reloads the KNX integration."
     }
+  },
+  "config_panel": {
+    "entities": {
+      "create": {
+        "type_selection": {
+          "title": "Select entity type",
+          "header": "Create KNX entity"
+        },
+        "header": "Create new entity",
+        "_": {
+          "entity": {
+            "title": "Entity configuration",
+            "description": "Home Assistant specific settings.",
+            "name_title": "Device and entity name",
+            "name_description": "Define how the entity should be named in Home Assistant.",
+            "device_description": "A device allows to group multiple entities. Select the device this entity belongs to or create a new one.",
+            "entity_label": "Entity name",
+            "entity_description": "Optional if a device is selected, otherwise required. If the entity is assigned to a device, the device name is used as prefix.",
+            "entity_category_title": "Entity category",
+            "entity_category_description": "Classification of a non-primary entity. Leave empty for standard behavior."
+          },
+          "knx": {
+            "title": "KNX configuration",
+            "knx_group_address": {
+              "dpt": "Datapoint type",
+              "send_address": "Send address",
+              "state_address": "State address",
+              "passive_addresses": "Passive addresses",
+              "valid_dpts": "Valid DPTs"
+            },
+            "sync_state": {
+              "title": "State updater",
+              "description": "Actively request state updates from KNX bus for state addresses.",
+              "strategy": "Strategy",
+              "options": {
+                "true": "Use integration default",
+                "false": "Never",
+                "init": "Once when connection established",
+                "expire": "Expire after last value update",
+                "every": "Scheduled every"
+              }
+            }
+          }
+        },
+        "binary_sensor": {
+          "description": "Read-only entity for binary datapoints. Window or door states etc.",
+          "knx": {
+            "ga_sensor": {
+              "label": "State",
+              "description": "Group address representing a binary state."
+            },
+            "invert": {
+              "label": "Invert",
+              "description": "Invert payload before processing."
+            },
+            "section_advanced_options": {
+              "title": "State properties",
+              "description": "Properties of the binary sensor state."
+            },
+            "ignore_internal_state": {
+              "label": "Force update",
+              "description": "Write each update to the state machine, even if the data is the same."
+            },
+            "context_timeout": {
+              "label": "Context timeout",
+              "description": "The time in seconds between multiple identical telegram payloads would count towards an internal counter. This can be used to automate on multi-clicks of a button. `0` to disable this feature."
+            },
+            "reset_after": {
+              "label": "Reset after",
+              "description": "Reset back to “off” state after specified seconds."
+            }
+          }
+        },
+        "cover": {
+          "description": "The KNX cover platform is used as an interface to shutter actuators.",
+          "knx": {
+            "ga_up_down": {
+              "label": "Open/Close control",
+              "description": "Group addresses triggering a full movement."
+            },
+            "invert_updown": {
+              "label": "Invert open/close",
+              "description": "Default is UP (0) to open a cover and DOWN (1) to close a cover. Enable this to invert the open/close commands from/to your KNX actuator."
+            },
+            "ga_stop": {
+              "label": "Stop",
+              "description": "Group addresses for stopping movement."
+            },
+            "ga_step": {
+              "label": "Stepwise move",
+              "description": "Group addresses for stepwise movement. Used to stop the cover when no dedicated stop address is available."
+            },
+            "section_position_control": {
+              "title": "Position",
+              "description": "Control cover position."
+            },
+            "ga_position_set": {
+              "label": "Set position",
+              "description": "Group addresses for setting a new absolute position."
+            },
+            "ga_position_state": {
+              "label": "Current position",
+              "description": "Group addresses reporting the current position."
+            },
+            "invert_position": {
+              "label": "Invert position",
+              "description": "Invert telegram payload before processing. Enable if KNX reports 0% as fully closed."
+            },
+            "section_tilt_control": {
+              "title": "Tilt",
+              "description": "Control slat tilt angle."
+            },
+            "ga_angle": {
+              "label": "Tilt angle"
+            },
+            "invert_angle": {
+              "label": "Invert angle",
+              "description": "[%key:component::knx::config_panel::entities::create::cover::knx::invert_position::description%]"
+            },
+            "section_travel_time": {
+              "title": "Travel time",
+              "description": "Used to calculate intermediate positions of the cover while traveling."
+            },
+            "travelling_time_up": {
+              "label": "Time for opening",
+              "description": "Time in seconds the cover needs to fully open."
+            },
+            "travelling_time_down": {
+              "label": "Time for closing",
+              "description": "Time in seconds the cover needs to fully close."
+            }
+          }
+        },
+        "light": {
+          "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
+          "knx": {
+            "ga_switch": {
+              "label": "Switch",
+              "description": "Turn the light on/off."
+            },
+            "ga_brightness": {
+              "label": "Brightness",
+              "description": "Control the absolute brightness of the light."
+            },
+            "section_color_temp": {
+              "title": "Color temperature",
+              "description": "Control the color temperature of the light."
+            },
+            "ga_color_temp": {
+              "label": "Color temperature addresses",
+              "options": {
+                "5_001": "Percent",
+                "7_600": "Kelvin",
+                "9": "2-byte floating point"
+              }
+            },
+            "color_temp_min": {
+              "label": "Warmest possible color temperature"
+            },
+            "color_temp_max": {
+              "label": "Coldest possible color temperature"
+            },
+            "color": {
+              "title": "Color",
+              "description": "Control the color of the light.",
+              "options": {
+                "single_address": {
+                  "label": "Single address",
+                  "description": "RGB, RGBW or XYY color controlled by a single group address."
+                },
+                "individual_addresses": {
+                  "label": "Individual addresses",
+                  "description": "RGB(W) using individual group addresses for each color channel's state and brightness."
+                },
+                "hsv_addresses": {
+                  "label": "HSV",
+                  "description": "Hue, saturation and brightness controlled by individual group addresses."
+                }
+              },
+              "ga_color": {
+                "label": "Color addresses",
+                "options": {
+                  "232_600": "RGB",
+                  "242_600": "XYY",
+                  "251_600": "RGBW"
+                }
+              },
+              "ga_red_switch": {
+                "label": "Red switch",
+                "description": "Group address to switch the color channel on/off."
+              },
+              "ga_red_brightness": {
+                "label": "Red brightness",
+                "description": "Group address to control the brightness of the color channel. Required."
+              },
+              "ga_green_switch": {
+                "label": "Green switch",
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_switch::description%]"
+              },
+              "ga_green_brightness": {
+                "label": "Green brightness",
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_brightness::description%]"
+              },
+              "ga_blue_switch": {
+                "label": "Blue switch",
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_switch::description%]"
+              },
+              "ga_blue_brightness": {
+                "label": "Blue brightness",
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_brightness::description%]"
+              },
+              "ga_white_switch": {
+                "label": "White switch",
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_switch::description%]"
+              },
+              "ga_white_brightness": {
+                "label": "White brightness",
+                "description": "Group address to control the brightness of the color channel."
+              },
+              "ga_hue": {
+                "label": "Hue",
+                "description": "Controls the light's hue."
+              },
+              "ga_saturation": {
+                "label": "Saturation",
+                "description": "Controls the light's saturation."
+              }
+            }
+          }
+        },
+        "switch": {
+          "description": "The KNX switch platform is used as an interface to switching actuators.",
+          "knx": {
+            "ga_switch": {
+              "label": "Switch",
+              "description": "Group address to switch the device on/off."
+            },
+            "invert": {
+              "label": "Invert",
+              "description": "Invert payloads before processing or sending."
+            },
+            "respond_to_read": {
+              "label": "Respond to read",
+              "description": "Respond to GroupValueRead telegrams received to the configured send address."
+            }
+          }
+        }
+      }
+    }
   }
 }

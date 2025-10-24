@@ -83,7 +83,7 @@
       "motionmount_preset": {
         "name": "Preset",
         "state": {
-          "0_wall": "0: Wall"
+          "0_wall": "Wall"
         }
       }
     }

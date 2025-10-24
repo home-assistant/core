@@ -1,8 +1,10 @@
 """Test ZHA sensor."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smartenergy
@@ -519,8 +521,8 @@ async def async_test_pi_heating_demand(
 )
 async def test_sensor(
     hass: HomeAssistant,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
     cluster_id,
     entity_suffix,
     test_func,

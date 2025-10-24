@@ -16,6 +16,7 @@ from homeassistant.components.homeassistant_hardware.update import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    ResetTarget,
 )
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry
@@ -173,7 +174,7 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Yellow firmware update entity."""
 
-    bootloader_reset_type = "yellow"  # Triggers a GPIO reset
+    bootloader_reset_methods = [ResetTarget.YELLOW]  # Triggers a GPIO reset
 
     def __init__(
         self,

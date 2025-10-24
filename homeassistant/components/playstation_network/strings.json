@@ -69,7 +69,8 @@
       },
       "abort": {
         "already_configured_as_entry": "Already configured as a service. This account cannot be added as a friend.",
-        "already_configured": "Already configured as a friend in this or another account."
+        "already_configured": "Already configured as a friend in this or another account.",
+        "no_friends": "Looks like your friend list is empty right now. Add friends on PlayStation Network first."
       }
     }
   },
@@ -81,13 +82,13 @@
       "message": "Data retrieval failed when trying to access the PlayStation Network."
     },
     "group_invalid": {
-      "message": "Failed to send message to group {group_name}. The group is invalid or does not exist."
+      "message": "Failed to send message to group {name}. The group is invalid or does not exist."
     },
     "send_message_forbidden": {
-      "message": "Failed to send message to group {group_name}. You are not allowed to send messages to this group."
+      "message": "Failed to send message to {name}. You are not allowed to send messages to this group or friend."
     },
     "send_message_failed": {
-      "message": "Failed to send message to group {group_name}. Try again later."
+      "message": "Failed to send message to {name}. Try again later."
     },
     "user_profile_private": {
       "message": "Unable to retrieve data for {user}. Privacy settings restrict access to activity."
@@ -157,11 +158,17 @@
     },
     "notify": {
       "group_message": {
-        "name": "Group: {group_name}"
+        "name": "Group: {name}"
       },
       "direct_message": {
-        "name": "Direct message"
+        "name": "Direct message: {name}"
       }
+    }
+  },
+  "issues": {
+    "group_chat_forbidden": {
+      "title": "Failed to retrieve group chats for {name}",
+      "description": "The PlayStation Network integration was unable to retrieve group chats for **{name}**.\n\nThis is likely due to insufficient permissions (Error: `{error_message}`).\n\nTo resolve this issue, please ensure the account's chat and messaging feature is not restricted by parental controls or other privacy settings.\n\nIf the restriction is intentional, you can safely ignore this message."
     }
   }
 }

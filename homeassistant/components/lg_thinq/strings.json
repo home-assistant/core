@@ -70,6 +70,9 @@
       },
       "display_light": {
         "name": "Lighting"
+      },
+      "air_clean_operation_mode": {
+        "name": "[%key:component::lg_thinq::entity::climate::climate_air_conditioner::state_attributes::preset_mode::state::air_clean%]"
       }
     },
     "binary_sensor": {
@@ -120,7 +123,7 @@
             "state": {
               "slow": "Slow",
               "low": "[%key:common::state::low%]",
-              "mid": "[%key:common::state::medium%]",
+              "medium": "[%key:common::state::medium%]",
               "high": "[%key:common::state::high%]",
               "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
               "auto": "[%key:common::state::auto%]"
@@ -178,7 +181,7 @@
               "no_battery_error": "Robot cleaner's battery is low",
               "no_dust_bin_error": "Dust bin is not installed",
               "no_filter_error": "[%key:component::lg_thinq::entity::event::error::state_attributes::event_type::state::filter_clogging_error%]",
-              "out_of_balance_error": "Out of balance load",
+              "out_of_balance_error": "Out-of-balance load",
               "overfill_error": "Overfill error",
               "part_malfunction_error": "AIE error",
               "power_code_connection_error": "Power cord connection error",
@@ -220,7 +223,7 @@
               "error_during_cleaning": "Cleaning stopped due to an error",
               "error_during_washing": "An error has occurred in the washing machine",
               "error_has_occurred": "An error has occurred",
-              "frozen_is_complete": "Ice plus is done",
+              "frozen_is_complete": "Ice Plus is done",
               "homeguard_is_stopped": "Home Guard has stopped",
               "lack_of_water": "There is no water in the water tank",
               "motion_is_detected": "Photograph is sent as movement is detected during Home Guard",
@@ -238,7 +241,9 @@
               "timer_is_complete": "Timer has been completed",
               "washing_is_complete": "Washing is completed",
               "water_is_full": "Water is full",
-              "water_leak_has_occurred": "The dishwasher has detected a water leak"
+              "water_leak_has_occurred": "The dishwasher has detected a water leak",
+              "filter_reset_complete": "The filter lifetime has been reset",
+              "water_filter_reset_complete": "The water filter lifetime has been reset"
             }
           }
         }
@@ -605,8 +610,23 @@
       "filter_lifetime": {
         "name": "Filter remaining"
       },
+      "top_filter_remain_percent": {
+        "name": "Upper filter remaining"
+      },
       "used_time": {
         "name": "Water filter used"
+      },
+      "water_filter_state": {
+        "name": "Water filter"
+      },
+      "water_filter_1_remain_percent": {
+        "name": "[%key:component::lg_thinq::entity::sensor::water_filter_state::name%]"
+      },
+      "water_filter_2_remain_percent": {
+        "name": "Water filter stage 2"
+      },
+      "water_filter_3_remain_percent": {
+        "name": "Water filter stage 3"
       },
       "current_job_mode": {
         "name": "Operating mode",
@@ -920,6 +940,15 @@
       },
       "cycle_count_for_location": {
         "name": "{location} cycles"
+      },
+      "energy_usage_yesterday": {
+        "name": "Energy yesterday"
+      },
+      "energy_usage_this_month": {
+        "name": "Energy this month"
+      },
+      "energy_usage_last_month": {
+        "name": "Energy last month"
       }
     },
     "select": {

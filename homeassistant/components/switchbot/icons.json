@@ -1,6 +1,21 @@
 {
   "entity": {
     "sensor": {
+      "light_level": {
+        "default": "mdi:brightness-7",
+        "state": {
+          "1": "mdi:brightness-1",
+          "2": "mdi:brightness-1",
+          "3": "mdi:brightness-2",
+          "4": "mdi:brightness-3",
+          "5": "mdi:brightness-4",
+          "6": "mdi:brightness-5",
+          "7": "mdi:brightness-5",
+          "8": "mdi:brightness-6",
+          "9": "mdi:brightness-6",
+          "10": "mdi:brightness-7"
+        }
+      },
       "water_level": {
         "default": "mdi:water-percent",
         "state": {
@@ -84,7 +99,30 @@
               "rose": "mdi:flower",
               "colorful": "mdi:looks",
               "flickering": "mdi:led-strip-variant",
-              "breathing": "mdi:heart-pulse"
+              "breathing": "mdi:heart-pulse",
+              "romance": "mdi:heart-outline",
+              "energy": "mdi:run",
+              "heartbeat": "mdi:heart-pulse",
+              "party": "mdi:party-popper",
+              "dynamic": "mdi:palette",
+              "mystery": "mdi:alien-outline",
+              "lightning": "mdi:flash-outline",
+              "rock": "mdi:guitar-electric",
+              "starlight": "mdi:creation",
+              "valentine_day": "mdi:emoticon-kiss-outline",
+              "dream": "mdi:sleep",
+              "alarm": "mdi:alarm-light",
+              "fireworks": "mdi:firework",
+              "waves": "mdi:waves",
+              "rainbow": "mdi:looks",
+              "game": "mdi:gamepad-variant-outline",
+              "meditation": "mdi:meditation",
+              "starlit_sky": "mdi:weather-night",
+              "sleep": "mdi:power-sleep",
+              "movie": "mdi:popcorn",
+              "sunrise": "mdi:weather-sunset-up",
+              "new_year": "mdi:glass-wine",
+              "cherry_blossom": "mdi:flower-outline"
             }
           }
         }

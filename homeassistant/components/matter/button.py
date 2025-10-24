@@ -33,7 +33,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.BUTTON, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterButtonEntityDescription(ButtonEntityDescription, MatterEntityDescription):
     """Describe Matter Button entities."""
 
@@ -142,5 +142,17 @@ DISCOVERY_SCHEMAS = [
         ),
         value_contains=clusters.ActivatedCarbonFilterMonitoring.Commands.ResetCondition.command_id,
         allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="SmokeCoAlarmSelfTestRequest",
+            translation_key="self_test_request",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            command=clusters.SmokeCoAlarm.Commands.SelfTestRequest,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.AcceptedCommandList,),
+        value_contains=clusters.SmokeCoAlarm.Commands.SelfTestRequest.command_id,
     ),
 ]
