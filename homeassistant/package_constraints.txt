@@ -6,7 +6,7 @@ aiodns==3.5.0
 aiohasupervisor==0.3.3
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
-aiohttp==3.13.0
+aiohttp==3.13.1
 aiohttp_cors==0.8.1
 aiousbwatcher==1.1.1
 aiozoneinfo==0.2.3
@@ -49,7 +49,7 @@ mutagen==1.47.0
 orjson==3.11.3
 packaging>=23.1
 paho-mqtt==2.1.0
-Pillow==11.3.0
+Pillow==12.0.0
 propcache==0.4.1
 psutil-home-assistant==0.0.1
 PyJWT==2.10.1
@@ -69,7 +69,7 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.15.0,<5.0
 ulid-transform==1.5.2
 urllib3>=2.0
-uv==0.8.9
+uv==0.9.5
 voluptuous-openapi==0.1.0
 voluptuous-serialize==2.7.0
 voluptuous==0.15.2

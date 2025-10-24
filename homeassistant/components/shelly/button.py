@@ -23,7 +23,13 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER, MODEL_FRANKEVER_WATER_VALVE, SHELLY_GAS_MODELS
+from .const import (
+    DOMAIN,
+    LOGGER,
+    MODEL_FRANKEVER_WATER_VALVE,
+    ROLE_GENERIC,
+    SHELLY_GAS_MODELS,
+)
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
@@ -351,7 +357,7 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
 RPC_BUTTONS = {
     "button_generic": RpcButtonDescription(
         key="button",
-        role="generic",
+        role=ROLE_GENERIC,
     ),
     "button_open": RpcButtonDescription(
         key="button",
