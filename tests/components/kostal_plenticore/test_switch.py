@@ -20,11 +20,14 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+pytestmark = [
+    pytest.mark.usefixtures("mock_plenticore_client"),
+]
+
 
 async def test_installer_setting_not_available(
     hass: HomeAssistant,
     mock_get_settings: dict[str, list[SettingsData]],
-    mock_get_setting_values: dict[str, dict[str, str]],
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -56,7 +59,6 @@ async def test_installer_setting_not_available(
 async def test_installer_setting_available(
     hass: HomeAssistant,
     mock_get_settings: dict[str, list[SettingsData]],
-    mock_get_setting_values: dict[str, dict[str, str]],
     mock_installer_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -87,7 +89,6 @@ async def test_installer_setting_available(
 
 async def test_invalid_string_count_value(
     hass: HomeAssistant,
-    mock_get_settings: dict[str, list[SettingsData]],
     mock_get_setting_values: dict[str, dict[str, str]],
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
@@ -120,10 +121,8 @@ async def test_invalid_string_count_value(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_shadow_management_switch_state(
     hass: HomeAssistant,
-    mock_get_settings: dict[str, list[SettingsData]],
     mock_get_setting_values: dict[str, dict[str, str]],
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
     shadow_mgmt: str,
     string: tuple[str, str],
 ) -> None:
@@ -163,11 +162,9 @@ async def test_shadow_management_switch_state(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_shadow_management_switch_action(
     hass: HomeAssistant,
-    mock_get_settings: dict[str, list[SettingsData]],
     mock_get_setting_values: dict[str, dict[str, str]],
     mock_plenticore_client: Mock,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
     initial_shadow_mgmt: str,
     dc_string: int,
     service: str,

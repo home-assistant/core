@@ -19,14 +19,16 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+pytestmark = [
+    pytest.mark.usefixtures("mock_plenticore_client"),
+]
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_all_entries(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_get_settings: dict[str, list[SettingsData]],
-    mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test if all available entries are setup."""
 
@@ -47,7 +49,6 @@ async def test_setup_no_entries(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_get_settings: dict[str, list[SettingsData]],
-    mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test that no entries are setup if Plenticore does not provide data."""
 
@@ -82,7 +83,6 @@ async def test_setup_no_entries(
 async def test_number_has_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_settings: dict[str, list[SettingsData]],
     mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test if number has a value if data is provided on update."""
@@ -107,7 +107,6 @@ async def test_number_has_value(
 async def test_number_is_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_settings: dict[str, list[SettingsData]],
     mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test if number is unavailable if no data is provided on update."""
@@ -131,7 +130,6 @@ async def test_set_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
-    mock_get_settings: dict[str, list[SettingsData]],
     mock_get_setting_values: dict[str, dict[str, str]],
 ) -> None:
     """Test if a new value could be set."""
