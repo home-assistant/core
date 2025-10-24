@@ -1812,6 +1812,11 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         data = self.data
         if not self.check_unique_id(entry):
             # If unique id not valid, don't save entry.
+            _LOGGER.error(
+                "The entry %s unique id %s is not a string and will not be added",
+                entry.title,
+                entry.unique_id,
+            )
             return
         if entry_id in data:
             # This is likely a bug in a test that is adding the same entry twice.
@@ -1833,10 +1838,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         if (unique_id := entry.unique_id) is None:
             return True
         if not isinstance(unique_id, str):
-            _LOGGER.error(  # type: ignore[unreachable]
-                "The entry %s unique id %s is not a string", entry.title, unique_id
-            )
-            return False
+            return False  # type: ignore[unreachable]
         return True
 
     def _index_entry(self, entry: ConfigEntry) -> None:
