@@ -47,15 +47,6 @@ class BSBLanEntity(BSBLanEntityBase[BSBLanFastCoordinator]):
         self._setup_device_info(coordinator, data)
 
 
-class BSBLanSlowEntity(BSBLanEntityBase[BSBLanSlowCoordinator]):
-    """Defines a base BSBLan entity using the slow coordinator."""
-
-    def __init__(self, coordinator: BSBLanSlowCoordinator, data: BSBLanData) -> None:
-        """Initialize BSBLan entity."""
-        super().__init__(coordinator)
-        self._setup_device_info(coordinator, data)
-
-
 class BSBLanDualCoordinatorEntity(BSBLanEntityBase[BSBLanFastCoordinator]):
     """Entity that listens to both fast and slow coordinators."""
 
