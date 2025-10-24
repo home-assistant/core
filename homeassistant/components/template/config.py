@@ -75,33 +75,29 @@ from .helpers import async_get_blueprints, rewrite_legacy_to_modern_configs
 PACKAGE_MERGE_HINT = "list"
 
 
-def validate_binary_sensor_auto_off_has_trigger() -> Callable[[dict], dict]:
+def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
     """Validate that a binary sensors with auto_off have trigger."""
+    if CONF_TRIGGERS not in obj and DOMAIN_BINARY_SENSOR in obj:
+        binary_sensors: list[ConfigType] = obj[DOMAIN_BINARY_SENSOR]
+        for binary_sensor in binary_sensors:
+            if binary_sensor_platform.CONF_AUTO_OFF in binary_sensor:
+                identifier = f"{CONF_NAME}: {binary_sensor_platform.DEFAULT_NAME}"
+                if (
+                    (name := binary_sensor.get(CONF_NAME))
+                    and isinstance(name, Template)
+                    and name.template != binary_sensor_platform.DEFAULT_NAME
+                ):
+                    identifier = f"{CONF_NAME}: {name.template}"
+                elif default_entity_id := binary_sensor.get(CONF_DEFAULT_ENTITY_ID):
+                    identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+                elif unique_id := binary_sensor.get(CONF_UNIQUE_ID):
+                    identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
 
-    def validate(obj: dict):
-        if CONF_TRIGGERS not in obj and DOMAIN_BINARY_SENSOR in obj:
-            binary_sensors: list[ConfigType] = obj[DOMAIN_BINARY_SENSOR]
-            for binary_sensor in binary_sensors:
-                if binary_sensor_platform.CONF_AUTO_OFF in binary_sensor:
-                    identifier = f"{CONF_NAME}: {binary_sensor_platform.DEFAULT_NAME}"
-                    if (
-                        (name := binary_sensor.get(CONF_NAME))
-                        and isinstance(name, Template)
-                        and name.template != binary_sensor_platform.DEFAULT_NAME
-                    ):
-                        identifier = f"{CONF_NAME}: {name.template}"
-                    elif default_entity_id := binary_sensor.get(CONF_DEFAULT_ENTITY_ID):
-                        identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
-                    elif unique_id := binary_sensor.get(CONF_UNIQUE_ID):
-                        identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
+                raise vol.Invalid(
+                    f"The auto_off option for template binary sensor: {identifier} requires a trigger, remove the auto_off option or add a trigger"
+                )
 
-                    raise vol.Invalid(
-                        f"The auto_off option for template binary sensor: {identifier} requires a trigger, remove the auto_off option or add a trigger"
-                    )
-
-        return obj
-
-    return validate
+    return obj
 
 
 def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict], dict]:
@@ -199,7 +195,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
     ensure_domains_do_not_have_trigger_or_action(
         DOMAIN_BUTTON,
     ),
-    validate_binary_sensor_auto_off_has_trigger(),
+    validate_binary_sensor_auto_off_has_trigger,
 )
 
 TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
