@@ -43,7 +43,7 @@ class XboxBinarySensorEntityDescription(
     deprecated: bool | None = None
 
 
-def profile_pic(person: Person) -> str | None:
+def profile_pic(person: Person, _: Title | None) -> str | None:
     """Return the gamer pic."""
 
     # Xbox sometimes returns a domain that uses a wrong certificate which
@@ -159,13 +159,3 @@ class XboxBinarySensorEntity(XboxBaseEntity, BinarySensorEntity):
         """Return the status of the requested attribute."""
 
         return self.entity_description.is_on_fn(self.data)
-
-    @property
-    def entity_picture(self) -> str | None:
-        """Return the gamer pic."""
-
-        return (
-            fn(self.data)
-            if (fn := self.entity_description.entity_picture_fn) is not None
-            else super().entity_picture
-        )

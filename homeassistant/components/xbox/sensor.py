@@ -77,6 +77,16 @@ def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:
     return attributes
 
 
+def title_logo(_: Person, title: Title | None) -> str | None:
+    """Get the game logo."""
+
+    return (
+        next((i.url for i in title.images if i.type == "Logo"), None)
+        if title and title.images
+        else None
+    )
+
+
 SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
     XboxSensorEntityDescription(
         key=XboxSensor.STATUS,
@@ -123,6 +133,7 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         translation_key=XboxSensor.NOW_PLAYING,
         value_fn=lambda _, title: title.name if title else None,
         attributes_fn=now_playing_attributes,
+        entity_picture_fn=title_logo,
     ),
 )
 

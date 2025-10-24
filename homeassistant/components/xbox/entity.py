@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -35,8 +35,10 @@ MAP_MODEL = {
 class XboxBaseEntityDescription(EntityDescription):
     """Xbox base entity description."""
 
-    entity_picture_fn: Callable[[Person], str | None] | None = None
-    attributes_fn: Callable[[Person, Title | None], dict[str, Any] | None] | None = None
+    entity_picture_fn: Callable[[Person, Title | None], str | None] | None = None
+    attributes_fn: Callable[[Person, Title | None], Mapping[str, Any] | None] | None = (
+        None
+    )
 
 
 class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
@@ -77,13 +79,24 @@ class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
         return self.coordinator.data.title_info.get(self.xuid)
 
     @property
-    def extra_state_attributes(self) -> dict[str, float | None] | None:
+    def entity_picture(self) -> str | None:
+        """Return the entity picture."""
+
+        return (
+            entity_picture
+            if (fn := self.entity_description.entity_picture_fn) is not None
+            and (entity_picture := fn(self.data, self.title_info)) is not None
+            else super().entity_picture
+        )
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, float | None] | None:
         """Return entity specific state attributes."""
         return (
             fn(self.data, self.title_info)
             if hasattr(self.entity_description, "attributes_fn")
             and (fn := self.entity_description.attributes_fn)
-            else None
+            else super().extra_state_attributes
         )
 
 
