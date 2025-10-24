@@ -1245,7 +1245,7 @@ async def test_async_get_config_entry_implementation_missing_provider(
         },
     )
 
-    # This should fail since both providers are empty
+    # This should fail since both providers are empty.
     with pytest.raises(ValueError, match="Implementation not available"):
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, config_entry
