@@ -459,7 +459,12 @@ class TemplateEntity(AbstractTemplateEntity):
         """Render a preview."""
 
         def suppress_preview_errors(level: int, msg: str) -> None:
-            pass
+            """Suppress redundant template render errors.
+
+            Each template render returns the same error. These errors should be
+            suppressed to ensure the client receives a single error. The single
+            is error rendered when the template entity calls _handle_results
+            """
 
         self._preview_callback = preview_callback
         self._async_setup_templates()
