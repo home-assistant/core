@@ -16,7 +16,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
@@ -93,7 +96,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: S20ConfigEntry,
-    async_add_entities,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Setup Entry."""
     switch = []
@@ -105,6 +108,10 @@ async def async_setup_entry(
 
 class S20Switch(SwitchEntity):
     """Representation of an S20 switch."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_should_poll = True
 
     def __init__(self, name, host, mac):
         """Initialize the S20 device."""
@@ -118,24 +125,9 @@ class S20Switch(SwitchEntity):
         self._unique_id = "S20Switch_" + self._mac
 
     @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state
-
-    @property
-    def should_poll(self):
-        """Should the component poll."""
-        return True
-
-    @property
-    def has_entity_name(self):
-        """Does the component define the name."""
-        return True
 
     @property
     def unique_id(self):
@@ -161,7 +153,7 @@ class S20Switch(SwitchEntity):
         except self._exc:
             _LOGGER.exception("Error while turning on S20")
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.hass.async_add_executor_job(self._turn_on)
 
@@ -172,7 +164,7 @@ class S20Switch(SwitchEntity):
         except self._exc:
             _LOGGER.exception("Error while turning off S20")
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.hass.async_add_executor_job(self._turn_off)
 
@@ -183,6 +175,6 @@ class S20Switch(SwitchEntity):
         except self._exc:
             _LOGGER.exception("Error while fetching S20 state")
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update th device state."""
         await self.hass.async_add_executor_job(self._update)
