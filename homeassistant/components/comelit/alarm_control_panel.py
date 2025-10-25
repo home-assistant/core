@@ -6,7 +6,7 @@ import logging
 from typing import cast
 
 from aiocomelit.api import ComelitVedoAreaObject
-from aiocomelit.const import AlarmAreaState
+from aiocomelit.const import AlarmAreaState, BRIDGE
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -14,11 +14,13 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
+from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import ComelitConfigEntry, ComelitVedoSystem
+from .coordinator import ComelitConfigEntry, ComelitSerialBridge, ComelitVedoSystem
+from .utils import DeviceType, alarm_device_listener, new_device_listener
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -56,12 +58,32 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Comelit VEDO system alarm control panel devices."""
 
-    coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
+    if config_entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE:
+        coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
+        # Only setup if bridge has VEDO alarm enabled
+        if not coordinator._vedo_pin:
+            return
 
-    async_add_entities(
-        ComelitAlarmEntity(coordinator, device, config_entry.entry_id)
-        for device in coordinator.data["alarm_areas"].values()
-    )
+        def _add_new_entities(new_devices: list[DeviceType], dev_type: str) -> None:
+            """Add entities for new monitors."""
+            entities = [
+                ComelitBridgeAlarmEntity(coordinator, device, config_entry.entry_id)
+                for device in (coordinator.alarm_data or {}).get("alarm_areas", {}).values()
+                if device in new_devices
+            ]
+            if entities:
+                async_add_entities(entities)
+
+        config_entry.async_on_unload(
+            alarm_device_listener(coordinator, _add_new_entities, "alarm_areas")
+        )
+    else:
+        coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
+
+        async_add_entities(
+            ComelitAlarmEntity(coordinator, device, config_entry.entry_id)
+            for device in coordinator.data["alarm_areas"].values()
+        )
 
 
 class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanelEntity):
@@ -137,6 +159,134 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if code != str(self.coordinator.api.device_pin):
+            return
+        await self.coordinator.api.set_zone_status(
+            self._area.index, ALARM_ACTIONS[DISABLE]
+        )
+        await self._async_update_state(
+            AlarmAreaState.DISARMED, ALARM_AREA_ARMED_STATUS[DISABLE]
+        )
+
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
+        """Send arm away command."""
+        await self.coordinator.api.set_zone_status(
+            self._area.index, ALARM_ACTIONS[AWAY]
+        )
+        await self._async_update_state(
+            AlarmAreaState.ARMED, ALARM_AREA_ARMED_STATUS[AWAY]
+        )
+
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
+        """Send arm home command."""
+        await self.coordinator.api.set_zone_status(
+            self._area.index, ALARM_ACTIONS[HOME]
+        )
+        await self._async_update_state(
+            AlarmAreaState.ARMED, ALARM_AREA_ARMED_STATUS[HOME_P1]
+        )
+
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
+        """Send arm night command."""
+        await self.coordinator.api.set_zone_status(
+            self._area.index, ALARM_ACTIONS[NIGHT]
+        )
+        await self._async_update_state(
+            AlarmAreaState.ARMED, ALARM_AREA_ARMED_STATUS[NIGHT]
+        )
+
+
+class ComelitBridgeAlarmEntity(CoordinatorEntity[ComelitSerialBridge], AlarmControlPanelEntity):
+    """Representation of a VEDO alarm panel on a Serial Bridge."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_code_format = CodeFormat.NUMBER
+    _attr_code_arm_required = False
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_HOME
+    )
+
+    def __init__(
+        self,
+        coordinator: ComelitSerialBridge,
+        area: ComelitVedoAreaObject,
+        config_entry_entry_id: str,
+    ) -> None:
+        """Initialize the alarm panel."""
+        self._area_index = area.index
+        super().__init__(coordinator)
+        # Use config_entry.entry_id as base for unique_id
+        # because no serial number or mac is available
+        self._attr_unique_id = f"{config_entry_entry_id}-{area.index}"
+        self._attr_device_info = coordinator.platform_device_info(area, "area")
+        if area.p2:
+            self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_NIGHT
+
+    @property
+    def _area(self) -> ComelitVedoAreaObject:
+        """Return area object."""
+        if self.coordinator.alarm_data:
+            return self.coordinator.alarm_data["alarm_areas"][self._area_index]
+        # Return a default area object if no alarm data
+        return ComelitVedoAreaObject(
+            index=self._area_index,
+            name="Unknown",
+            p1=False,
+            p2=False,
+            ready=False,
+            armed=0,
+            alarm=False,
+            alarm_memory=False,
+            sabotage=False,
+            anomaly=False,
+            in_time=False,
+            out_time=False,
+            human_status=AlarmAreaState.UNKNOWN,
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if alarm is available."""
+        if not self.coordinator.alarm_data:
+            return False
+        if self._area.human_status in [AlarmAreaState.ANOMALY, AlarmAreaState.UNKNOWN]:
+            return False
+        return super().available
+
+    @property
+    def alarm_state(self) -> AlarmControlPanelState | None:
+        """Return the state of the alarm."""
+
+        _LOGGER.debug(
+            "Area %s status is: %s. Armed is %s",
+            self._area.name,
+            self._area.human_status,
+            self._area.armed,
+        )
+        if self._area.human_status == AlarmAreaState.ARMED:
+            if self._area.armed == ALARM_AREA_ARMED_STATUS[AWAY]:
+                return AlarmControlPanelState.ARMED_AWAY
+            if self._area.armed == ALARM_AREA_ARMED_STATUS[NIGHT]:
+                return AlarmControlPanelState.ARMED_NIGHT
+            return AlarmControlPanelState.ARMED_HOME
+
+        return {
+            AlarmAreaState.DISARMED: AlarmControlPanelState.DISARMED,
+            AlarmAreaState.ENTRY_DELAY: AlarmControlPanelState.DISARMING,
+            AlarmAreaState.EXIT_DELAY: AlarmControlPanelState.ARMING,
+            AlarmAreaState.TRIGGERED: AlarmControlPanelState.TRIGGERED,
+        }.get(self._area.human_status)
+
+    async def _async_update_state(self, area_state: AlarmAreaState, armed: int) -> None:
+        """Update state after action."""
+        self._area.human_status = area_state
+        self._area.armed = armed
+        await self.async_update_ha_state()
+
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
+        """Send disarm command."""
+        if code != str(self.coordinator._vedo_pin):
             return
         await self.coordinator.api.set_zone_status(
             self._area.index, ALARM_ACTIONS[DISABLE]

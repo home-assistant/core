@@ -154,6 +154,8 @@ class ComelitSerialBridge(
 
     _hw_version = "20003101"
     api: ComeliteSerialBridgeApi
+    _vedo_pin: str | None
+    alarm_data: AlarmDataObject | None = None
 
     def __init__(
         self,
@@ -162,25 +164,47 @@ class ComelitSerialBridge(
         host: str,
         port: int,
         pin: str,
+        vedo_pin: str | None,
         session: ClientSession,
     ) -> None:
         """Initialize the scanner."""
         self.api = ComeliteSerialBridgeApi(host, port, pin, session)
+        self._vedo_pin = vedo_pin
         super().__init__(hass, entry, BRIDGE, host)
 
     async def _async_update_system_data(
         self,
     ) -> dict[str, dict[int, ComelitSerialBridgeObject]]:
         """Specific method for updating data."""
-        data = await self.api.get_all_devices()
+        devices = await self.api.get_all_devices()
 
         if self.data:
             for dev_type in (CLIMATE, COVER, LIGHT, IRRIGATION, OTHER, SCENARIO):
                 await self._async_remove_stale_devices(
-                    self.data[dev_type], data[dev_type], dev_type
+                    self.data[dev_type], devices[dev_type], dev_type
                 )
 
-        return data
+        # Get VEDO alarm data if vedo_pin is configured
+        if self._vedo_pin:
+            try:
+                if await self.api.vedo_enabled(self._vedo_pin):
+                    self.alarm_data = await self.api.get_all_areas_and_zones()
+                    
+                    # Remove stale alarm devices
+                    if self.alarm_data:
+                        previous_alarm_data = getattr(self, "_previous_alarm_data", None)
+                        if previous_alarm_data:
+                            for obj_type in ("alarm_areas", "alarm_zones"):
+                                await self._async_remove_stale_devices(
+                                    previous_alarm_data[obj_type],
+                                    self.alarm_data[obj_type],
+                                    "area" if obj_type == "alarm_areas" else "zone",
+                                )
+                        self._previous_alarm_data = self.alarm_data
+            except (CannotAuthenticate, CannotConnect, CannotRetrieveData):
+                _LOGGER.warning("Failed to retrieve VEDO alarm data")
+
+        return devices
 
 
 class ComelitVedoSystem(ComelitBaseCoordinator[AlarmDataObject]):

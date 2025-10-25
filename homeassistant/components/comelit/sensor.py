@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge, ComelitVedoSystem
 from .entity import ComelitBridgeBaseEntity
-from .utils import DeviceType, new_device_listener
+from .utils import DeviceType, alarm_device_listener, new_device_listener
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -82,6 +82,25 @@ async def async_setup_bridge_entry(
     config_entry.async_on_unload(
         new_device_listener(coordinator, _add_new_entities, OTHER)
     )
+
+    # Add VEDO sensors if bridge has alarm data
+    if coordinator._vedo_pin:
+        def _add_new_alarm_entities(new_devices: list[DeviceType], dev_type: str) -> None:
+            """Add entities for new alarm zones."""
+            entities = [
+                ComelitVedoBridgeSensorEntity(
+                    coordinator, device, config_entry.entry_id, sensor_desc
+                )
+                for sensor_desc in SENSOR_VEDO_TYPES
+                for device in (coordinator.alarm_data or {}).get("alarm_zones", {}).values()
+                if device in new_devices
+            ]
+            if entities:
+                async_add_entities(entities)
+
+        config_entry.async_on_unload(
+            alarm_device_listener(coordinator, _add_new_alarm_entities, "alarm_zones")
+        )
 
 
 async def async_setup_vedo_entry(
@@ -171,6 +190,56 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
     def available(self) -> bool:
         """Sensor availability."""
         return self._zone_object.human_status != AlarmZoneState.UNAVAILABLE
+
+    @property
+    def native_value(self) -> StateType:
+        """Sensor value."""
+        if (status := self._zone_object.human_status) == AlarmZoneState.UNKNOWN:
+            return None
+
+        return cast(str, status.value)
+
+
+class ComelitVedoBridgeSensorEntity(CoordinatorEntity[ComelitSerialBridge], SensorEntity):
+    """VEDO sensor device on a Serial Bridge."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: ComelitSerialBridge,
+        zone: ComelitVedoZoneObject,
+        config_entry_entry_id: str,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Init sensor entity."""
+        self._zone_index = zone.index
+        super().__init__(coordinator)
+        # Use config_entry.entry_id as base for unique_id
+        # because no serial number or mac is available
+        self._attr_unique_id = f"{config_entry_entry_id}-{zone.index}"
+        self._attr_device_info = coordinator.platform_device_info(zone, "zone")
+
+        self.entity_description = description
+
+    @property
+    def _zone_object(self) -> ComelitVedoZoneObject:
+        """Zone object."""
+        if self.coordinator.alarm_data:
+            return self.coordinator.alarm_data["alarm_zones"][self._zone_index]
+        # Return a default zone object if no alarm data
+        return ComelitVedoZoneObject(
+            index=self._zone_index,
+            name="Unknown",
+            status_api="0x000",
+            status=0,
+            human_status=AlarmZoneState.UNAVAILABLE,
+        )
+
+    @property
+    def available(self) -> bool:
+        """Sensor availability."""
+        return self.coordinator.alarm_data is not None and self._zone_object.human_status != AlarmZoneState.UNAVAILABLE
 
     @property
     def native_value(self) -> StateType:
