@@ -47,10 +47,7 @@ from .services import async_setup_services
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
 
-# Empty schema as config entries are used exclusively
-CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): vol.Schema({})}, extra=vol.ALLOW_EXTRA
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
