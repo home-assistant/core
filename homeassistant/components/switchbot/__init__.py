@@ -101,6 +101,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.PLUG_MINI_EU.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_2PM.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.GARAGE_DOOR_OPENER.value: [Platform.COVER, Platform.SENSOR],
+    SupportedModels.CLIMATE_PANEL.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,

@@ -57,6 +57,7 @@ class SupportedModels(StrEnum):
     RELAY_SWITCH_2PM = "relay_switch_2pm"
     K11_PLUS_VACUUM = "k11+_vacuum"
     GARAGE_DOOR_OPENER = "garage_door_opener"
+    CLIMATE_PANEL = "climate_panel"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -93,6 +94,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.RELAY_SWITCH_2PM: SupportedModels.RELAY_SWITCH_2PM,
     SwitchbotModel.K11_VACUUM: SupportedModels.K11_PLUS_VACUUM,
     SwitchbotModel.GARAGE_DOOR_OPENER: SupportedModels.GARAGE_DOOR_OPENER,
+    SwitchbotModel.CLIMATE_PANEL: SupportedModels.CLIMATE_PANEL,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -106,6 +108,7 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.REMOTE: SupportedModels.REMOTE,
     SwitchbotModel.HUBMINI_MATTER: SupportedModels.HUBMINI_MATTER,
     SwitchbotModel.HUB3: SupportedModels.HUB3,
+    SwitchbotModel.CLIMATE_PANEL: SupportedModels.CLIMATE_PANEL,
 }
 
 SUPPORTED_MODEL_TYPES = (
