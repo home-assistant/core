@@ -361,6 +361,12 @@
           "bright": "Bright"
         }
       },
+      "average_temperature": {
+        "name": "Average temperature"
+      },
+      "rainfall_last_24h": {
+        "name": "Rainfall last 24h"
+      },
       "left_slot_vial": {
         "name": "Left slot vial"
       },

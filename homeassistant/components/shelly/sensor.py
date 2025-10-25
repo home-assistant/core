@@ -1423,6 +1423,7 @@ RPC_SENSORS: Final = {
     "number_average_temperature": RpcSensorDescription(
         key="number",
         sub_key="value",
+        translation_key="average_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -1434,6 +1435,7 @@ RPC_SENSORS: Final = {
     "number_last_precipitation": RpcSensorDescription(
         key="number",
         sub_key="value",
+        translation_key="rainfall_last_24h",
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         device_class=SensorDeviceClass.PRECIPITATION,
         role="last_precipitation",

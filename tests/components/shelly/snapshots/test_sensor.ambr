@@ -741,12 +741,12 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Average Temperature',
+    'original_name': 'Average temperature',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'average_temperature',
     'unique_id': '123456789ABC-number:200-number_average_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -755,7 +755,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Test name Average Temperature',
+      'friendly_name': 'Test name Average temperature',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -799,7 +799,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'rainfall_last_24h',
     'unique_id': '123456789ABC-number:201-number_last_precipitation',
     'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
   })
