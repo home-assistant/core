@@ -148,10 +148,11 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
 
             errors.update(result)
 
-            return self.async_update_reload_and_abort(
-                entry,
-                data_updates=user_input,
-            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates=user_input,
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -175,10 +176,11 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
 
             errors.update(result)
 
-            return self.async_update_reload_and_abort(
-                entry,
-                data_updates=user_input,
-            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates=user_input,
+                )
 
         return self.async_show_form(
             step_id="reconfigure",
