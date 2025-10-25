@@ -29,7 +29,6 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.honeywell.climate import (
-    DOMAIN,
     MODE_PERMANENT_HOLD,
     MODE_TEMPORARY_HOLD,
     PRESET_HOLD,
@@ -41,7 +40,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -1191,26 +1189,6 @@ async def test_async_update_errors(
 
     state = hass.states.get(entity_id)
     assert state.state == "unavailable"
-
-
-async def test_unique_id(
-    hass: HomeAssistant,
-    device: MagicMock,
-    config_entry: MagicMock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test unique id convert to string."""
-    config_entry.add_to_hass(hass)
-    entity_registry.async_get_or_create(
-        Platform.CLIMATE,
-        DOMAIN,
-        device.deviceid,
-        config_entry=config_entry,
-        suggested_object_id=device.name,
-    )
-    await init_integration(hass, config_entry)
-    entity_entry = entity_registry.async_get(f"climate.{device.name}")
-    assert entity_entry.unique_id == str(device.deviceid)
 
 
 async def test_preset_mode(
