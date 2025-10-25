@@ -30,20 +30,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
 
-    async_add_entities(
-        [
-            EnOceanBinarySensor(
-                enocean_id=config_entry.runtime_data.gateway.chip_id,
-                gateway=config_entry.runtime_data.gateway,
-                device_name="EnOcean Gateway",
-                name="Teach-In Active",
-                dev_type=EnOceanDeviceType(
-                    manufacturer="EnOcean", model="TCM300/310 Transmitter", eep=""
-                ),
-            )
-        ]
-    )
-
     devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
     for device in devices:

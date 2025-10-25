@@ -26,6 +26,18 @@ async def async_setup_entry(
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
     async_cleanup_device_registry(hass=hass, entry=config_entry)
 
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, gateway.chip_id.to_string())},
+        manufacturer="EnOcean",
+        name="EnOcean Gateway",
+        model="TCM300/310 Transmitter",
+        serial_number=gateway.chip_id.to_string(),
+        sw_version=gateway.sw_version,
+        hw_version=gateway.chip_version,
+    )
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
