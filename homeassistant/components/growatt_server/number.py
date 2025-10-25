@@ -147,7 +147,6 @@ class GrowattNumber(CoordinatorEntity[GrowattCoordinator], NumberEntity):
                 int_value,
             )
         except GrowattV1ApiError as e:
-            _LOGGER.error("Error while setting parameter: %s", e)
             raise HomeAssistantError(f"Error while setting parameter: {e}") from e
 
         # If no exception was raised, the write was successful
@@ -157,6 +156,7 @@ class GrowattNumber(CoordinatorEntity[GrowattCoordinator], NumberEntity):
             value,
         )
 
-        # Update the value in coordinator data
+        # Update the value in coordinator data to avoid triggering an immediate
+        # refresh that would hit the API rate limit (5-minute polling interval)
         self.coordinator.data[self.entity_description.api_key] = int_value
         self.async_write_ha_state()
