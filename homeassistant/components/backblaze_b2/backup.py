@@ -30,7 +30,9 @@ try:
 
     _USE_NEW_SIGNATURE = True
 except ImportError:
-    from homeassistant.components.backup.util import AsyncIteratorReader  # type: ignore[assignment]
+    from homeassistant.components.backup.util import (  # pylint: disable=hass-component-root-import
+        AsyncIteratorReader,
+    )
 
     _USE_NEW_SIGNATURE = False
 
@@ -164,6 +166,8 @@ class BackblazeBackupAgent(BackupAgent):
 
         self._all_files_cache_lock = asyncio.Lock()
         self._backup_list_cache_lock = asyncio.Lock()
+        # Limit concurrent metadata downloads to avoid exhausting connection pool
+        self._download_semaphore = asyncio.Semaphore(5)
 
     def _is_cache_valid(self, expiration_time: float) -> bool:
         """Check if cache is still valid based on expiration time."""
@@ -303,7 +307,7 @@ class BackblazeBackupAgent(BackupAgent):
         if _USE_NEW_SIGNATURE:
             reader = AsyncIteratorReader(self._hass.loop, stream)
         else:
-            reader = AsyncIteratorReader(self._hass, stream)  # type: ignore[call-arg]
+            reader = AsyncIteratorReader(self._hass, stream)  # type: ignore[arg-type]
 
         _LOGGER.info("Uploading backup file %s with streaming", filename)
         try:
@@ -385,13 +389,20 @@ class BackblazeBackupAgent(BackupAgent):
                 list(all_files_in_prefix.keys()),
             )
 
+            async def process_with_semaphore(
+                file_name: str, file_version: FileVersion
+            ) -> AgentBackup | None:
+                """Process metadata file with semaphore to limit concurrency."""
+                async with self._download_semaphore:
+                    return await self._hass.async_add_executor_job(
+                        self._process_metadata_file_sync,
+                        file_name,
+                        file_version,
+                        all_files_in_prefix,
+                    )
+
             tasks = [
-                self._hass.async_add_executor_job(
-                    self._process_metadata_file_sync,
-                    file_name,
-                    file_version,
-                    all_files_in_prefix,
-                )
+                process_with_semaphore(file_name, file_version)
                 for file_name, file_version in all_files_in_prefix.items()
                 if file_name.endswith(METADATA_FILE_SUFFIX)
             ]
@@ -444,14 +455,21 @@ class BackblazeBackupAgent(BackupAgent):
         """Find the main backup file and its associated metadata file version by backup ID."""
         all_files_in_prefix = await self._get_all_files_in_prefix()
 
+        async def process_with_semaphore(
+            file_name: str, file_version: FileVersion
+        ) -> tuple[FileVersion | None, FileVersion | None]:
+            """Process metadata file with semaphore to limit concurrency."""
+            async with self._download_semaphore:
+                return await self._hass.async_add_executor_job(
+                    self._process_metadata_file_for_id_sync,
+                    file_name,
+                    file_version,
+                    backup_id,
+                    all_files_in_prefix,
+                )
+
         tasks = [
-            self._hass.async_add_executor_job(
-                self._process_metadata_file_for_id_sync,
-                file_name,
-                file_version,
-                backup_id,
-                all_files_in_prefix,
-            )
+            process_with_semaphore(file_name, file_version)
             for file_name, file_version in all_files_in_prefix.items()
             if file_name.endswith(METADATA_FILE_SUFFIX)
         ]

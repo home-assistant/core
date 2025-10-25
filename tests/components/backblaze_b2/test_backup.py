@@ -553,3 +553,46 @@ async def test_upload_cleanup_on_failure(agent: BackblazeBackupAgent) -> None:
             )
 
         mock_file_info.delete.assert_called_once()
+
+
+async def test_semaphore_limits_concurrent_metadata_downloads(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that many backups can be listed without connection pool warnings."""
+    client = await hass_ws_client(hass)
+
+    # Create 15 mock metadata files to simulate many backups (more than default pool size of 10)
+    mock_files = {}
+    for i in range(15):
+        mock_metadata = Mock()
+        mock_metadata.file_name = f"testprefix/backup{i}.metadata.json"
+        mock_download = Mock()
+        mock_response = Mock()
+        mock_response.content = json.dumps(BACKUP_METADATA).encode()
+        mock_download.response = mock_response
+        mock_metadata.download.return_value = mock_download
+        mock_files[f"testprefix/backup{i}.metadata.json"] = mock_metadata
+
+        # Create corresponding tar file
+        mock_tar = Mock(size=TEST_BACKUP.size)
+        mock_tar.file_name = f"testprefix/backup{i}.tar"
+        mock_files[f"testprefix/backup{i}.tar"] = mock_tar
+
+    async def mock_get_all_files(_self):
+        return mock_files
+
+    with (
+        patch(
+            "homeassistant.components.backblaze_b2.backup.BackblazeBackupAgent._get_all_files_in_prefix",
+            mock_get_all_files,
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
+        await client.send_json_auto_id({"type": "backup/info"})
+        response = await client.receive_json()
+
+    assert response["success"]
+    # Verify no connection pool warnings appear (would contain "Connection pool is full")
+    assert "Connection pool is full" not in caplog.text
