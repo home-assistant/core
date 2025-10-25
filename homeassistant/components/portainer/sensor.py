@@ -76,6 +76,8 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         translation_key="memory_usage_percentage",
         value_fn=lambda data: (
             (data.stats.memory_stats.usage / data.stats.memory_stats.limit) * 100.0
+            if data.stats.memory_stats.limit > 0 and data.stats.memory_stats.limit > 0
+            else 0.0
         ),
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -99,6 +101,8 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
             * data.stats.cpu_stats.online_cpus
             * 100.0
             if data.stats_pre  # Previous stats need to be available, else no CPU can be calculated
+            and data.stats_pre.cpu_stats.system_cpu_usage > 0
+            and data.stats.cpu_stats.system_cpu_usage > 0
             else 0.0
         ),
         native_unit_of_measurement=PERCENTAGE,
