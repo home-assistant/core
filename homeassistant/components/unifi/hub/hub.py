@@ -7,6 +7,13 @@ from typing import TYPE_CHECKING
 
 import aiounifi
 
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
@@ -131,6 +138,19 @@ class UnifiHub:
         the entry might already have been reset and thus is not available.
         """
         hub = config_entry.runtime_data
+        check_keys = {
+            CONF_HOST: "host",
+            CONF_PORT: "port",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_SITE_ID: "site",
+            CONF_VERIFY_SSL: "ssl_context",
+        }
+        for key, value in check_keys.items():
+            if config_entry.data[key] != getattr(hub.config, value):
+                hass.config_entries.async_schedule_reload(config_entry.entry_id)
+                return
+
         hub.config = UnifiConfig.from_config_entry(config_entry)
         async_dispatcher_send(hass, hub.signal_options_update)
 
