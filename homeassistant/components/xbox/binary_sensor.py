@@ -91,6 +91,7 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
             else None
         ),
         entity_registry_enabled_default=False,
+        deprecated=True,
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_GAME,

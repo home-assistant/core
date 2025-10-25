@@ -10,11 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -106,12 +101,7 @@ def check_deprecated_entity(
     entity: XboxBaseEntity,
     entity_domain: str,
 ) -> bool:
-    """Check for deprecated entity.
-
-    If deprecated entity doesn't exist, don't create it.
-    If deprecated entity is used, raise a repair issue.
-    Otherwise remove it straight away.
-    """
+    """Check for deprecated entity and remove it."""
     if not getattr(entity.entity_description, "deprecated", False):
         return True
     ent_reg = er.async_get(hass)
@@ -120,27 +110,6 @@ def check_deprecated_entity(
         DOMAIN,
         f"{entity.xuid}_{entity.entity_description.key}",
     ):
-        if (entity_entry := ent_reg.async_get(entity_id)) is not None:
-            if entity_used_in(hass, entity_id) and not entity_entry.disabled:
-                async_create_issue(
-                    hass,
-                    DOMAIN,
-                    f"deprecated_entity_{entity.xuid}_{entity.entity_description.key}",
-                    breaks_in_ha_version="2026.5.0",
-                    is_fixable=False,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="deprecated_entity",
-                    translation_placeholders={
-                        "name": str(entity_entry.name or entity_entry.original_name),
-                        "entity": entity_id,
-                    },
-                )
-                return True
-            if not entity_used_in(hass, entity_id) or entity_entry.disabled:
-                ent_reg.async_remove(entity_id)
-                async_delete_issue(
-                    hass,
-                    DOMAIN,
-                    f"deprecated_entity_{entity.xuid}_{entity.entity_description.key}",
-                )
+        ent_reg.async_remove(entity_id)
+
     return False
