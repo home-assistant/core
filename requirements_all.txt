@@ -791,7 +791,7 @@ decora-wifi==1.4
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==15.1.0
+deebot-client==16.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
