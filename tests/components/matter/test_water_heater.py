@@ -8,14 +8,19 @@ from matter_server.common.helpers.util import create_attribute_path_from_attribu
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.matter.services import SERVICE_WATER_HEATER_BOOST
+from homeassistant.components.matter.services import (
+    ATTR_DURATION,
+    ATTR_EMERGENCY_BOOST,
+    ATTR_TEMPORARY_SETPOINT,
+    SERVICE_WATER_HEATER_BOOST,
+)
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_HIGH_DEMAND,
     STATE_OFF,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -288,10 +293,10 @@ async def test_async_boost_actions(
         "matter",
         SERVICE_WATER_HEATER_BOOST,
         {
-            "entity_id": "water_heater.water_heater",
-            "duration": 60,
-            "emergency_boost": True,
-            "temporary_setpoint": 55,
+            ATTR_ENTITY_ID: "water_heater.water_heater",
+            ATTR_DURATION: 60,
+            ATTR_EMERGENCY_BOOST: True,
+            ATTR_TEMPORARY_SETPOINT: 55,
         },
         blocking=True,
     )
