@@ -6,7 +6,7 @@ import logging
 from typing import cast
 
 from aiocomelit.api import ComelitVedoAreaObject
-from aiocomelit.const import AlarmAreaState, BRIDGE
+from aiocomelit.const import BRIDGE, AlarmAreaState
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge, ComelitVedoSystem
-from .utils import DeviceType, alarm_device_listener, new_device_listener
+from .utils import DeviceType, alarm_device_listener
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -61,14 +61,16 @@ async def async_setup_entry(
     if config_entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE:
         coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
         # Only setup if bridge has VEDO alarm enabled
-        if not coordinator._vedo_pin:
+        if not coordinator.vedo_pin:
             return
 
         def _add_new_entities(new_devices: list[DeviceType], dev_type: str) -> None:
             """Add entities for new monitors."""
             entities = [
                 ComelitBridgeAlarmEntity(coordinator, device, config_entry.entry_id)
-                for device in (coordinator.alarm_data or {}).get("alarm_areas", {}).values()
+                for device in (coordinator.alarm_data or {})
+                .get("alarm_areas", {})
+                .values()
                 if device in new_devices
             ]
             if entities:
@@ -195,7 +197,9 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
         )
 
 
-class ComelitBridgeAlarmEntity(CoordinatorEntity[ComelitSerialBridge], AlarmControlPanelEntity):
+class ComelitBridgeAlarmEntity(
+    CoordinatorEntity[ComelitSerialBridge], AlarmControlPanelEntity
+):
     """Representation of a VEDO alarm panel on a Serial Bridge."""
 
     _attr_has_entity_name = True
@@ -286,7 +290,7 @@ class ComelitBridgeAlarmEntity(CoordinatorEntity[ComelitSerialBridge], AlarmCont
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        if code != str(self.coordinator._vedo_pin):
+        if code != str(self.coordinator.vedo_pin):
             return
         await self.coordinator.api.set_zone_status(
             self._area.index, ALARM_ACTIONS[DISABLE]

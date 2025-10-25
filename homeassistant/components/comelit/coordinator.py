@@ -154,7 +154,7 @@ class ComelitSerialBridge(
 
     _hw_version = "20003101"
     api: ComeliteSerialBridgeApi
-    _vedo_pin: str | None
+    vedo_pin: str | None
     alarm_data: AlarmDataObject | None = None
 
     def __init__(
@@ -169,7 +169,7 @@ class ComelitSerialBridge(
     ) -> None:
         """Initialize the scanner."""
         self.api = ComeliteSerialBridgeApi(host, port, pin, session)
-        self._vedo_pin = vedo_pin
+        self.vedo_pin = vedo_pin
         super().__init__(hass, entry, BRIDGE, host)
 
     async def _async_update_system_data(
@@ -185,14 +185,16 @@ class ComelitSerialBridge(
                 )
 
         # Get VEDO alarm data if vedo_pin is configured
-        if self._vedo_pin:
+        if self.vedo_pin:
             try:
-                if await self.api.vedo_enabled(self._vedo_pin):
+                if await self.api.vedo_enabled(self.vedo_pin):
                     self.alarm_data = await self.api.get_all_areas_and_zones()
-                    
+
                     # Remove stale alarm devices
                     if self.alarm_data:
-                        previous_alarm_data = getattr(self, "_previous_alarm_data", None)
+                        previous_alarm_data = getattr(
+                            self, "_previous_alarm_data", None
+                        )
                         if previous_alarm_data:
                             for obj_type in ("alarm_areas", "alarm_zones"):
                                 await self._async_remove_stale_devices(

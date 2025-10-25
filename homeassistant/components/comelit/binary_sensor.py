@@ -33,7 +33,7 @@ async def async_setup_entry(
     if config_entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE:
         coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
         # Only setup if bridge has VEDO alarm enabled
-        if not coordinator._vedo_pin:
+        if not coordinator.vedo_pin:
             return
 
         def _add_new_entities(new_devices: list[DeviceType], dev_type: str) -> None:
@@ -42,7 +42,9 @@ async def async_setup_entry(
                 ComelitVedoBridgeBinarySensorEntity(
                     coordinator, device, config_entry.entry_id
                 )
-                for device in (coordinator.alarm_data or {}).get("alarm_zones", {}).values()
+                for device in (coordinator.alarm_data or {})
+                .get("alarm_zones", {})
+                .values()
                 if device in new_devices
             ]
             if entities:
@@ -134,5 +136,6 @@ class ComelitVedoBridgeBinarySensorEntity(
         if not self.coordinator.alarm_data:
             return False
         return (
-            self.coordinator.alarm_data["alarm_zones"][self._zone_index].status_api == "0001"
+            self.coordinator.alarm_data["alarm_zones"][self._zone_index].status_api
+            == "0001"
         )

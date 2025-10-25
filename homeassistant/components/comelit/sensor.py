@@ -84,15 +84,20 @@ async def async_setup_bridge_entry(
     )
 
     # Add VEDO sensors if bridge has alarm data
-    if coordinator._vedo_pin:
-        def _add_new_alarm_entities(new_devices: list[DeviceType], dev_type: str) -> None:
+    if coordinator.vedo_pin:
+
+        def _add_new_alarm_entities(
+            new_devices: list[DeviceType], dev_type: str
+        ) -> None:
             """Add entities for new alarm zones."""
             entities = [
                 ComelitVedoBridgeSensorEntity(
                     coordinator, device, config_entry.entry_id, sensor_desc
                 )
                 for sensor_desc in SENSOR_VEDO_TYPES
-                for device in (coordinator.alarm_data or {}).get("alarm_zones", {}).values()
+                for device in (coordinator.alarm_data or {})
+                .get("alarm_zones", {})
+                .values()
                 if device in new_devices
             ]
             if entities:
@@ -200,7 +205,9 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
         return cast(str, status.value)
 
 
-class ComelitVedoBridgeSensorEntity(CoordinatorEntity[ComelitSerialBridge], SensorEntity):
+class ComelitVedoBridgeSensorEntity(
+    CoordinatorEntity[ComelitSerialBridge], SensorEntity
+):
     """VEDO sensor device on a Serial Bridge."""
 
     _attr_has_entity_name = True
@@ -239,7 +246,10 @@ class ComelitVedoBridgeSensorEntity(CoordinatorEntity[ComelitSerialBridge], Sens
     @property
     def available(self) -> bool:
         """Sensor availability."""
-        return self.coordinator.alarm_data is not None and self._zone_object.human_status != AlarmZoneState.UNAVAILABLE
+        return (
+            self.coordinator.alarm_data is not None
+            and self._zone_object.human_status != AlarmZoneState.UNAVAILABLE
+        )
 
     @property
     def native_value(self) -> StateType:
