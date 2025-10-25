@@ -84,13 +84,7 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_PARTY,
-        translation_key=XboxBinarySensor.IN_PARTY,
-        is_on_fn=(
-            lambda x: bool(x.multiplayer_summary.in_party)
-            if x.multiplayer_summary
-            else None
-        ),
-        entity_registry_enabled_default=False,
+        is_on_fn=lambda _: None,
         deprecated=True,
     ),
     XboxBinarySensorEntityDescription(
@@ -100,13 +94,7 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_MULTIPLAYER,
-        translation_key=XboxBinarySensor.IN_MULTIPLAYER,
-        is_on_fn=(
-            lambda x: bool(x.multiplayer_summary.in_multiplayer_session)
-            if x.multiplayer_summary
-            else None
-        ),
-        entity_registry_enabled_default=False,
+        is_on_fn=lambda _: None,
         deprecated=True,
     ),
     XboxBinarySensorEntityDescription(

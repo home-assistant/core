@@ -37,12 +37,6 @@
         "name": "Gamerscore",
         "unit_of_measurement": "points"
       },
-      "account_tier": {
-        "name": "Account tier"
-      },
-      "gold_tenure": {
-        "name": "Gold tenure"
-      },
       "last_online": {
         "name": "Last online"
       },
@@ -56,14 +50,8 @@
       }
     },
     "binary_sensor": {
-      "in_party": {
-        "name": "In party"
-      },
       "in_game": {
         "name": "In game"
-      },
-      "in_multiplayer": {
-        "name": "In multiplayer"
       },
       "has_game_pass": {
         "name": "Subscribed to Xbox Game Pass"
@@ -76,12 +64,6 @@
     },
     "timeout_exception": {
       "message": "Failed to connect to Xbox Network due to a connection timeout"
-    }
-  },
-  "issues": {
-    "deprecated_entity": {
-      "title": "The Xbox {name} entity is deprecated",
-      "description": "The Xbox entity `{entity}` hasn’t been functioning for a while, so it’s been removed.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
     }
   }
 }

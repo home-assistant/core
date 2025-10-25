@@ -57,16 +57,12 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.ACCOUNT_TIER,
-        translation_key=XboxSensor.ACCOUNT_TIER,
-        entity_registry_enabled_default=False,
-        value_fn=lambda x: x.detail.account_tier if x.detail else None,
+        value_fn=lambda _: None,
         deprecated=True,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.GOLD_TENURE,
-        translation_key=XboxSensor.GOLD_TENURE,
-        entity_registry_enabled_default=False,
-        value_fn=lambda x: x.detail.tenure if x.detail else None,
+        value_fn=lambda _: None,
         deprecated=True,
     ),
     XboxSensorEntityDescription(
