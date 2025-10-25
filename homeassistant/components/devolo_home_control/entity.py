@@ -48,7 +48,6 @@ class DevoloDeviceEntity(Entity):
         )
 
         self.subscriber: Subscriber | None = None
-        self.sync_callback = self._sync
 
         self._value: float
 
@@ -69,7 +68,7 @@ class DevoloDeviceEntity(Entity):
             self._device_instance.uid, self.subscriber
         )
 
-    def _sync(self, message: tuple) -> None:
+    def sync_callback(self, message: tuple) -> None:
         """Update the state."""
         if message[0] == self._attr_unique_id:
             self._value = message[1]

@@ -5,7 +5,9 @@ from __future__ import annotations
 import datetime
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
-from homeassistant.components.manual.alarm_control_panel import ManualAlarm
+from homeassistant.components.manual.alarm_control_panel import (  # pylint: disable=hass-component-root-import
+    ManualAlarm,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ARMING_TIME, CONF_DELAY_TIME, CONF_TRIGGER_TIME
 from homeassistant.core import HomeAssistant

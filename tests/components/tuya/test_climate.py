@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tuya_sharing import CustomerDevice
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -17,7 +17,6 @@ from homeassistant.components.climate import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_TEMPERATURE,
 )
-from homeassistant.components.tuya import ManagerCompat
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
@@ -31,7 +30,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.CLIMATE])
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
@@ -49,7 +48,7 @@ async def test_platform_setup_and_discovery(
 )
 async def test_set_temperature(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
@@ -79,7 +78,7 @@ async def test_set_temperature(
 )
 async def test_fan_mode_windspeed(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
@@ -110,7 +109,7 @@ async def test_fan_mode_windspeed(
 )
 async def test_fan_mode_no_valid_code(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
@@ -144,7 +143,7 @@ async def test_fan_mode_no_valid_code(
 )
 async def test_set_humidity_not_supported(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:

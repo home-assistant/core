@@ -170,6 +170,9 @@ def gen_data_entry_schema(
                 vol.Optional("data"): {str: translation_value_validator},
                 vol.Optional("data_description"): {str: translation_value_validator},
                 vol.Optional("menu_options"): {str: translation_value_validator},
+                vol.Optional("menu_option_descriptions"): {
+                    str: translation_value_validator
+                },
                 vol.Optional("submit"): translation_value_validator,
                 vol.Optional("sections"): {
                     str: {
@@ -314,7 +317,25 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         translation_value_validator,
                         slug_validator=translation_key_validator,
                     ),
-                    vol.Optional("fields"): cv.schema_with_slug_keys(str),
+                    vol.Optional("fields"): vol.Any(
+                        # Old format:
+                        # "key": "translation"
+                        cv.schema_with_slug_keys(str),
+                        # New format:
+                        # "key": {
+                        #   "name": "translated field name",
+                        #   "description": "translated field description"
+                        # }
+                        cv.schema_with_slug_keys(
+                            {
+                                vol.Required("name"): str,
+                                vol.Required(
+                                    "description"
+                                ): translation_value_validator,
+                            },
+                            slug_validator=translation_key_validator,
+                        ),
+                    ),
                 },
                 slug_validator=vol.Any("_", cv.slug),
             ),

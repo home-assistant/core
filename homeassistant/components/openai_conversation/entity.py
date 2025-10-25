@@ -60,13 +60,14 @@ from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, llm
+from homeassistant.helpers import device_registry as dr, issue_registry as ir, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
@@ -82,6 +83,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
@@ -223,15 +225,17 @@ def _convert_content_to_param(
                     ResponseReasoningItemParam(
                         type="reasoning",
                         id=content.native.id,
-                        summary=[
-                            {
-                                "type": "summary_text",
-                                "text": summary,
-                            }
-                            for summary in reasoning_summary
-                        ]
-                        if content.thinking_content
-                        else [],
+                        summary=(
+                            [
+                                {
+                                    "type": "summary_text",
+                                    "text": summary,
+                                }
+                                for summary in reasoning_summary
+                            ]
+                            if content.thinking_content
+                            else []
+                        ),
                         encrypted_content=content.native.encrypted_content,
                     )
                 )
@@ -308,9 +312,11 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "tool_call_id": event.item.id,
                     "tool_name": "code_interpreter",
                     "tool_result": {
-                        "output": [output.to_dict() for output in event.item.outputs]  # type: ignore[misc]
-                        if event.item.outputs is not None
-                        else None
+                        "output": (
+                            [output.to_dict() for output in event.item.outputs]  # type: ignore[misc]
+                            if event.item.outputs is not None
+                            else None
+                        )
                     },
                 }
                 last_role = "tool_result"
@@ -464,7 +470,9 @@ class OpenAIBaseLLMEntity(Entity):
             model_args["reasoning"] = {
                 "effort": options.get(
                     CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                ),
+                )
+                if not model_args["model"].startswith("gpt-5-pro")
+                else "high",  # GPT-5 pro only supports reasoning.effort: high
                 "summary": "auto",
             }
             model_args["include"] = ["reasoning.encrypted_content"]
@@ -483,7 +491,7 @@ class OpenAIBaseLLMEntity(Entity):
 
         if options.get(CONF_WEB_SEARCH):
             web_search = WebSearchToolParam(
-                type="web_search_preview",
+                type="web_search",
                 search_context_size=options.get(
                     CONF_WEB_SEARCH_CONTEXT_SIZE, RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE
                 ),
@@ -510,13 +518,15 @@ class OpenAIBaseLLMEntity(Entity):
             model_args.setdefault("include", []).append("code_interpreter_call.outputs")  # type: ignore[union-attr]
 
         if force_image:
-            tools.append(
-                ImageGeneration(
-                    type="image_generation",
-                    input_fidelity="high",
-                    output_format="png",
-                )
+            image_model = options.get(CONF_IMAGE_MODEL, RECOMMENDED_IMAGE_MODEL)
+            image_tool = ImageGeneration(
+                type="image_generation",
+                model=image_model,
+                output_format="png",
             )
+            if image_model == "gpt-image-1":
+                image_tool["input_fidelity"] = "high"
+            tools.append(image_tool)
             model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")
             model_args["store"] = True  # Avoid sending image data back and forth
 
@@ -529,7 +539,7 @@ class OpenAIBaseLLMEntity(Entity):
         if last_content.role == "user" and last_content.attachments:
             files = await async_prepare_files_for_prompt(
                 self.hass,
-                [a.path for a in last_content.attachments],
+                [(a.path, a.mime_type) for a in last_content.attachments],
             )
             last_message = messages[-1]
             assert (
@@ -578,6 +588,20 @@ class OpenAIBaseLLMEntity(Entity):
                 ):
                     LOGGER.error("Insufficient funds for OpenAI: %s", err)
                     raise HomeAssistantError("Insufficient funds for OpenAI") from err
+                if "Verify Organization" in str(err):
+                    ir.async_create_issue(
+                        self.hass,
+                        DOMAIN,
+                        "organization_verification_required",
+                        is_fixable=False,
+                        is_persistent=False,
+                        learn_more_url="https://help.openai.com/en/articles/10910291-api-organization-verification",
+                        severity=ir.IssueSeverity.WARNING,
+                        translation_key="organization_verification_required",
+                        translation_placeholders={
+                            "platform_settings": "https://platform.openai.com/settings/organization/general"
+                        },
+                    )
 
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err
@@ -587,7 +611,7 @@ class OpenAIBaseLLMEntity(Entity):
 
 
 async def async_prepare_files_for_prompt(
-    hass: HomeAssistant, files: list[Path]
+    hass: HomeAssistant, files: list[tuple[Path, str | None]]
 ) -> ResponseInputMessageContentListParam:
     """Append files to a prompt.
 
@@ -597,11 +621,12 @@ async def async_prepare_files_for_prompt(
     def append_files_to_content() -> ResponseInputMessageContentListParam:
         content: ResponseInputMessageContentListParam = []
 
-        for file_path in files:
+        for file_path, mime_type in files:
             if not file_path.exists():
                 raise HomeAssistantError(f"`{file_path}` does not exist")
 
-            mime_type, _ = guess_file_type(file_path)
+            if mime_type is None:
+                mime_type = guess_file_type(file_path)[0]
 
             if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
                 raise HomeAssistantError(

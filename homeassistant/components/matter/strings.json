@@ -193,10 +193,13 @@
         "name": "Altitude above sea level"
       },
       "cook_time": {
-        "name": "Cook time"
+        "name": "Cooking time"
       },
       "pump_setpoint": {
         "name": "Setpoint"
+      },
+      "user_code_temporary_disable_time": {
+        "name": "User code temporary disable time"
       },
       "temperature_offset": {
         "name": "Temperature offset"
@@ -204,8 +207,8 @@
       "temperature_setpoint": {
         "name": "Temperature setpoint"
       },
-      "pir_occupied_to_unoccupied_delay": {
-        "name": "Occupied to unoccupied delay"
+      "hold_time": {
+        "name": "Hold time"
       },
       "auto_relock_timer": {
         "name": "Autorelock time"
@@ -218,6 +221,9 @@
       },
       "valve_configuration_and_control_default_open_duration": {
         "name": "Default open duration"
+      },
+      "wrong_code_entry_limit": {
+        "name": "Wrong code limit"
       }
     },
     "light": {
@@ -435,6 +441,36 @@
       "evse_soc": {
         "name": "State of charge"
       },
+      "operational_error": {
+        "name": "Operational error",
+        "state": {
+          "no_error": "No error",
+          "unable_to_start_or_resume": "Unable to start or resume",
+          "unable_to_complete_operation": "Unable to complete operation",
+          "command_invalid_in_state": "Command invalid in current state",
+          "failed_to_find_charging_dock": "Failed to find charging dock",
+          "stuck": "Stuck",
+          "dust_bin_missing": "Dust bin missing",
+          "dust_bin_full": "Dust bin full",
+          "water_tank_empty": "Water tank empty",
+          "water_tank_missing": "Water tank missing",
+          "water_tank_lid_open": "Water tank lid open",
+          "mop_cleaning_pad_missing": "Mop cleaning pad missing",
+          "low_battery": "Low battery",
+          "cannot_reach_target_area": "Cannot reach target area",
+          "dirty_water_tank_full": "Dirty water tank full",
+          "dirty_water_tank_missing": "Dirty water tank missing",
+          "wheels_jammed": "Wheels jammed",
+          "brush_jammed": "Brush jammed",
+          "navigation_sensor_obscured": "Navigation sensor obscured"
+        }
+      },
+      "pi_heating_demand": {
+        "name": "Heating demand"
+      },
+      "nitrogen_dioxide": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
+      },
       "pump_control_mode": {
         "name": "Control mode",
         "state": {
@@ -482,6 +518,9 @@
       "apparent_current": {
         "name": "Apparent current"
       },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
       "reactive_current": {
         "name": "Reactive current"
       },
@@ -502,11 +541,17 @@
       "power": {
         "name": "Power"
       },
+      "speaker_mute": {
+        "name": "Mute"
+      },
       "child_lock": {
         "name": "Child lock"
       },
       "evse_charging_switch": {
         "name": "Enable charging"
+      },
+      "privacy_mode_button": {
+        "name": "Privacy mode button"
       }
     },
     "vacuum": {

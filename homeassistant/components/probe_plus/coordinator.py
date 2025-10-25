@@ -8,10 +8,14 @@ import logging
 from pyprobeplus import ProbePlusDevice
 from pyprobeplus.exceptions import ProbePlusDeviceNotFound, ProbePlusError
 
+from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import DOMAIN
 
 type ProbePlusConfigEntry = ConfigEntry[ProbePlusDataUpdateCoordinator]
 
@@ -39,8 +43,17 @@ class ProbePlusDataUpdateCoordinator(DataUpdateCoordinator[None]):
             config_entry=entry,
         )
 
+        available_scanners = bluetooth.async_scanner_count(hass, connectable=True)
+
+        if available_scanners == 0:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="no_bleak_scanner",
+            )
+
         self.device: ProbePlusDevice = ProbePlusDevice(
             address_or_ble_device=entry.data[CONF_ADDRESS],
+            scanner=bluetooth.async_get_scanner(hass),
             name=entry.title,
             notify_callback=self.async_update_listeners,
         )

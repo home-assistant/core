@@ -1,0 +1,46 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "Your Cync account's email address",
+          "password": "Your Cync account's password"
+        }
+      },
+      "two_factor": {
+        "data": {
+          "two_factor_code": "Two-factor code"
+        },
+        "data_description": {
+          "two_factor_code": "The two-factor code sent to your Cync account's email"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Cync integration needs to re-authenticate for {email}",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::cync::config::step::user::data_description::email%]",
+          "password": "[%key:component::cync::config::step::user::data_description::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "An incorrect user was provided by Cync for your email address, please consult your Cync app"
+    }
+  }
+}

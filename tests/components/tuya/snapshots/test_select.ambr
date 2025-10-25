@@ -293,7 +293,123 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'low',
+    'state': 'mute',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.arida_stavern_countdown-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '1h',
+        '2h',
+        '3h',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.arida_stavern_countdown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Countdown',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'countdown',
+    'unique_id': 'tuya.8u5ftxkt52smougesccountdown_set',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.arida_stavern_countdown-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Arida Stavern  Countdown',
+      'options': list([
+        '1h',
+        '2h',
+        '3h',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.arida_stavern_countdown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.arida_stavern_target_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '40',
+        '50',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.arida_stavern_target_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Target humidity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'target_humidity',
+    'unique_id': 'tuya.8u5ftxkt52smougescdehumidify_set_enum',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.arida_stavern_target_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Arida Stavern  Target humidity',
+      'options': list([
+        '40',
+        '50',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.arida_stavern_target_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_platform_setup_and_discovery[select.aubess_cooker_indicator_light_mode-entry]
@@ -1702,6 +1818,63 @@
     'state': 'unknown',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.cbe_pro_2_inverter_work_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'self_powered',
+        'time_of_use',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.cbe_pro_2_inverter_work_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Inverter work mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'inverter_work_mode',
+    'unique_id': 'tuya.gbq8kiahk57ct0bpncjynxwork_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.cbe_pro_2_inverter_work_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CBE Pro 2 Inverter work mode',
+      'options': list([
+        'self_powered',
+        'time_of_use',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.cbe_pro_2_inverter_work_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'self_powered',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.ceiling_fan_with_light_countdown-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2721,6 +2894,124 @@
     'state': 'unknown',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.jie_hashuang_xiang_ji_liang_cha_zuo_indicator_light_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'relay',
+        'pos',
+        'none',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.jie_hashuang_xiang_ji_liang_cha_zuo_indicator_light_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indicator light mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_mode',
+    'unique_id': 'tuya.bjum5isf7h6xpbrvzclight_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.jie_hashuang_xiang_ji_liang_cha_zuo_indicator_light_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '接HA双向计量插座 Indicator light mode',
+      'options': list([
+        'relay',
+        'pos',
+        'none',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.jie_hashuang_xiang_ji_liang_cha_zuo_indicator_light_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'relay',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.jie_hashuang_xiang_ji_liang_cha_zuo_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'power_off',
+        'power_on',
+        'last',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.jie_hashuang_xiang_ji_liang_cha_zuo_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power on behavior',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_status',
+    'unique_id': 'tuya.bjum5isf7h6xpbrvzcrelay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.jie_hashuang_xiang_ji_liang_cha_zuo_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '接HA双向计量插座 Power on behavior',
+      'options': list([
+        'power_off',
+        'power_on',
+        'last',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.jie_hashuang_xiang_ji_liang_cha_zuo_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'power_off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.kalado_air_purifier_countdown-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2843,6 +3134,77 @@
     'state': 'forward',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.klarta_humea_spraying_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
+        'level_5',
+        'level_6',
+        'level_7',
+        'level_8',
+        'level_9',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.klarta_humea_spraying_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Spraying level',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidifier_level',
+    'unique_id': 'tuya.btpss2f6kwfi294rqsjlevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.klarta_humea_spraying_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'KLARTA HUMEA Spraying level',
+      'options': list([
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
+        'level_5',
+        'level_6',
+        'level_7',
+        'level_8',
+        'level_9',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.klarta_humea_spraying_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.lave_linge_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2959,6 +3321,303 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'power_on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.living_room_dehumidifier_countdown-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'cancel',
+        '1h',
+        '2h',
+        '3h',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.living_room_dehumidifier_countdown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Countdown',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'countdown',
+    'unique_id': 'tuya.g1qorlffoy2iyo9bsccountdown_set',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.living_room_dehumidifier_countdown-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living room dehumidifier Countdown',
+      'options': list([
+        'cancel',
+        '1h',
+        '2h',
+        '3h',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.living_room_dehumidifier_countdown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cancel',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.mesa_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mesa_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Level',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'desk_level',
+    'unique_id': 'tuya.vpfdskpi8pr8cbtfzjslevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.mesa_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'mesa Level',
+      'options': list([
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mesa_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'level_1',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.mesa_up_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'up',
+        'down',
+        'stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mesa_up_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Up/Down',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'desk_up_down',
+    'unique_id': 'tuya.vpfdskpi8pr8cbtfzjsup_down',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.mesa_up_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'mesa Up/Down',
+      'options': list([
+        'up',
+        'down',
+        'stop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mesa_up_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'stop',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.mirilla_puerta_anti_flicker-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mirilla_puerta_anti_flicker',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Anti-flicker',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'basic_anti_flicker',
+    'unique_id': 'tuya.i6xywcsymer1kmb6psbasic_anti_flicker',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.mirilla_puerta_anti_flicker-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mirilla puerta Anti-flicker',
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mirilla_puerta_anti_flicker',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.mirilla_puerta_ipc_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mirilla_puerta_ipc_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IPC mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ipc_work_mode',
+    'unique_id': 'tuya.i6xywcsymer1kmb6psipc_work_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.mirilla_puerta_ipc_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mirilla puerta IPC mode',
+      'options': list([
+        '0',
+        '1',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mirilla_puerta_ipc_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_platform_setup_and_discovery[select.office_indicator_light_mode-entry]
@@ -3134,6 +3793,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'back',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.projector_screen_motor_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'forward',
+        'back',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.projector_screen_motor_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motor mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'curtain_motor_mode',
+    'unique_id': 'tuya.aiag5pku0x39rkfllccontrol_back_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.projector_screen_motor_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Projector Screen Motor mode',
+      'options': list([
+        'forward',
+        'back',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.projector_screen_motor_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'forward',
   })
 # ---
 # name: test_platform_setup_and_discovery[select.raspy4_home_assistant_indicator_light_mode-entry]
@@ -3981,7 +4697,7 @@
     'state': 'level_5',
   })
 # ---
-# name: test_platform_setup_and_discovery[select.sunbeam_bedding_side_a_level-entry]
+# name: test_platform_setup_and_discovery[select.sunbeam_bedding_level_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4007,7 +4723,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.sunbeam_bedding_side_a_level',
+    'entity_id': 'select.sunbeam_bedding_level_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4019,20 +4735,20 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:thermometer-lines',
-    'original_name': 'Side A Level',
+    'original_name': 'Level 1',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'blanket_level',
+    'translation_key': 'indexed_blanket_level',
     'unique_id': 'tuya.fasvixqysw1lxvjprdlevel_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[select.sunbeam_bedding_side_a_level-state]
+# name: test_platform_setup_and_discovery[select.sunbeam_bedding_level_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sunbeam Bedding Side A Level',
+      'friendly_name': 'Sunbeam Bedding Level 1',
       'icon': 'mdi:thermometer-lines',
       'options': list([
         'level_1',
@@ -4048,14 +4764,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.sunbeam_bedding_side_a_level',
+    'entity_id': 'select.sunbeam_bedding_level_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'level_5',
   })
 # ---
-# name: test_platform_setup_and_discovery[select.sunbeam_bedding_side_b_level-entry]
+# name: test_platform_setup_and_discovery[select.sunbeam_bedding_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4081,7 +4797,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.sunbeam_bedding_side_b_level',
+    'entity_id': 'select.sunbeam_bedding_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4093,20 +4809,20 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:thermometer-lines',
-    'original_name': 'Side B Level',
+    'original_name': 'Level 2',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'blanket_level',
+    'translation_key': 'indexed_blanket_level',
     'unique_id': 'tuya.fasvixqysw1lxvjprdlevel_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[select.sunbeam_bedding_side_b_level-state]
+# name: test_platform_setup_and_discovery[select.sunbeam_bedding_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sunbeam Bedding Side B Level',
+      'friendly_name': 'Sunbeam Bedding Level 2',
       'icon': 'mdi:thermometer-lines',
       'options': list([
         'level_1',
@@ -4122,7 +4838,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.sunbeam_bedding_side_b_level',
+    'entity_id': 'select.sunbeam_bedding_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

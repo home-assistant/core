@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 import re
-from typing import Generic, TypeVar, cast
+from typing import cast
 
 from qbusmqttapi.discovery import QbusMqttDevice, QbusMqttOutput
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
@@ -19,8 +19,6 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import QbusControllerCoordinator
 
 _REFID_REGEX = re.compile(r"^\d+\/(\d+(?:\/\d+)?)$")
-
-StateT = TypeVar("StateT", bound=QbusMqttState)
 
 
 def create_new_entities(
@@ -78,7 +76,7 @@ def create_unique_id(serial_number: str, suffix: str) -> str:
     return f"ctd_{serial_number}_{suffix}"
 
 
-class QbusEntity(Entity, Generic[StateT], ABC):
+class QbusEntity[StateT: QbusMqttState](Entity, ABC):
     """Representation of a Qbus entity."""
 
     _state_cls: type[StateT] = cast(type[StateT], QbusMqttState)

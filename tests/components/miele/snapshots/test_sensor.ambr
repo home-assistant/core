@@ -1595,6 +1595,97 @@
     'state': 'in_use',
   })
 # ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'autocleaning',
+        'failure',
+        'idle',
+        'in_use',
+        'not_connected',
+        'off',
+        'on',
+        'pause',
+        'program_ended',
+        'program_interrupted',
+        'programmed',
+        'rinse_hold',
+        'service',
+        'supercooling',
+        'supercooling_superfreezing',
+        'superfreezing',
+        'superheating',
+        'waiting_to_start',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fridge_freezer_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:fridge-outline',
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'DummyAppliance_Fridge_Freezer_Offline-state_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Fridge freezer',
+      'icon': 'mdi:fridge-outline',
+      'options': list([
+        'autocleaning',
+        'failure',
+        'idle',
+        'in_use',
+        'not_connected',
+        'off',
+        'on',
+        'pause',
+        'program_ended',
+        'program_interrupted',
+        'programmed',
+        'rinse_hold',
+        'service',
+        'supercooling',
+        'supercooling_superfreezing',
+        'superfreezing',
+        'superheating',
+        'waiting_to_start',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fridge_freezer_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_connected',
+  })
+# ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1649,6 +1740,62 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.0',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fridge_freezer_temperature_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'DummyAppliance_Fridge_Freezer_Offline-state_temperature_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Fridge freezer Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fridge_freezer_temperature_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature_zone_2-entry]
@@ -1707,7 +1854,7 @@
     'state': '-18.0',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1741,7 +1888,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction',
+    'entity_id': 'sensor.kdma7774_app2_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1763,11 +1910,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction',
+      'friendly_name': 'KDMA7774 | APP2-2',
       'icon': 'mdi:pot-steam-outline',
       'options': list([
         'autocleaning',
@@ -1791,14 +1938,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction',
+    'entity_id': 'sensor.kdma7774_app2_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'in_use',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_1-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1836,7 +1983,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_1',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1858,11 +2005,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_1-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 1',
+      'friendly_name': 'KDMA7774 | APP2-2 Plate 1',
       'options': list([
         'plate_step_0',
         'plate_step_1',
@@ -1889,14 +2036,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_1',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'plate_step_0',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_2-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1934,7 +2081,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_2',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1956,11 +2103,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_2-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 2',
+      'friendly_name': 'KDMA7774 | APP2-2 Plate 2',
       'options': list([
         'plate_step_0',
         'plate_step_1',
@@ -1987,14 +2134,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_2',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'plate_step_warming',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_3-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2032,7 +2179,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_3',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2054,11 +2201,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_3-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 3',
+      'friendly_name': 'KDMA7774 | APP2-2 Plate 3',
       'options': list([
         'plate_step_0',
         'plate_step_1',
@@ -2085,14 +2232,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_3',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'plate_step_8',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_4-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2130,7 +2277,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_4',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2152,11 +2299,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_4-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 4',
+      'friendly_name': 'KDMA7774 | APP2-2 Plate 4',
       'options': list([
         'plate_step_0',
         'plate_step_1',
@@ -2183,14 +2330,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_4',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'plate_step_15',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_5-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2228,7 +2375,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_5',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2250,11 +2397,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_5-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 5',
+      'friendly_name': 'KDMA7774 | APP2-2 Plate 5',
       'options': list([
         'plate_step_0',
         'plate_step_1',
@@ -2281,7 +2428,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_5',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3102,6 +3249,7 @@
         'energy_save',
         'heating_up',
         'not_running',
+        'pre_heating',
         'process_finished',
         'process_running',
       ]),
@@ -3144,6 +3292,7 @@
         'energy_save',
         'heating_up',
         'not_running',
+        'pre_heating',
         'process_finished',
         'process_running',
       ]),
@@ -3270,7 +3419,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_start_in-entry]
@@ -3326,7 +3475,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_target_temperature-entry]
@@ -3757,7 +3906,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -3785,7 +3934,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_energy_forecast-entry]
@@ -4165,7 +4314,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_spin_speed-entry]
@@ -4270,7 +4419,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_target_temperature-entry]
@@ -4354,7 +4503,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
@@ -4382,7 +4531,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_water_forecast-entry]
@@ -5248,6 +5397,7 @@
         'energy_save',
         'heating_up',
         'not_running',
+        'pre_heating',
         'process_finished',
         'process_running',
       ]),
@@ -5290,6 +5440,7 @@
         'energy_save',
         'heating_up',
         'not_running',
+        'pre_heating',
         'process_finished',
         'process_running',
       ]),
@@ -5903,7 +6054,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -5931,7 +6082,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_energy_forecast-entry]
@@ -6311,7 +6462,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_spin_speed-entry]
@@ -6416,7 +6567,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_target_temperature-entry]
@@ -6500,7 +6651,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
@@ -6528,7 +6679,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_water_forecast-entry]
@@ -6952,6 +7103,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---

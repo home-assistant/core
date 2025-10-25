@@ -85,10 +85,10 @@
   "entity": {
     "sensor": {
       "current_temperature": {
-        "name": "Current Temperature"
+        "name": "Current temperature"
       },
       "outside_temperature": {
-        "name": "Outside Temperature"
+        "name": "Outside temperature"
       }
     }
   }

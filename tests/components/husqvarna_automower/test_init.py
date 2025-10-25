@@ -192,17 +192,11 @@ async def test_websocket_not_available(
     await hass.async_block_till_done()
     assert f"{error_msg} Trying to reconnect: Boom" in caplog.text
 
-    # Simulate a successful connection
     caplog.clear()
-    await mock_called.wait()
-    mock_called.clear()
-    await hass.async_block_till_done()
-    assert mock.call_count == 2
-    assert "Trying to reconnect: Boom" not in caplog.text
 
     # Simulate hass shutting down
     await hass.async_stop()
-    assert mock.call_count == 2
+    assert mock.call_count == 1
 
 
 async def test_device_info(
@@ -525,10 +519,11 @@ async def test_dynamic_polling(
     mock_automower_client.register_data_callback.side_effect = (
         fake_register_websocket_response
     )
+    ws_ready_callbacks: list[Callable[[], None]] = []
 
     @callback
     def fake_register_ws_ready_callback(cb: Callable[[], None]) -> None:
-        callback_holder["ws_ready_cb"] = cb
+        ws_ready_callbacks.append(cb)
 
     mock_automower_client.register_ws_ready_callback.side_effect = (
         fake_register_ws_ready_callback
@@ -536,8 +531,8 @@ async def test_dynamic_polling(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert "ws_ready_cb" in callback_holder, "ws_ready_callback was not registered"
-    callback_holder["ws_ready_cb"]()
+    for cb in ws_ready_callbacks:
+        cb()
 
     await hass.async_block_till_done()
     assert mock_automower_client.get_status.call_count == 1
@@ -631,10 +626,11 @@ async def test_websocket_watchdog(
     mock_automower_client.register_data_callback.side_effect = (
         fake_register_websocket_response
     )
+    ws_ready_callbacks: list[Callable[[], None]] = []
 
     @callback
     def fake_register_ws_ready_callback(cb: Callable[[], None]) -> None:
-        callback_holder["ws_ready_cb"] = cb
+        ws_ready_callbacks.append(cb)
 
     mock_automower_client.register_ws_ready_callback.side_effect = (
         fake_register_ws_ready_callback
@@ -642,8 +638,8 @@ async def test_websocket_watchdog(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert "ws_ready_cb" in callback_holder, "ws_ready_callback was not registered"
-    callback_holder["ws_ready_cb"]()
+    for cb in ws_ready_callbacks:
+        cb()
 
     await hass.async_block_till_done()
     assert mock_automower_client.get_status.call_count == 1

@@ -2,6 +2,35 @@
   "config": {
     "flow_title": "Ubiquiti airOS device",
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::airos::config::step::user::data_description::password%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::airos::config::step::user::data_description::password%]"
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "[%key:component::airos::config::step::user::sections::advanced_settings::name%]",
+            "data": {
+              "ssl": "[%key:component::airos::config::step::user::sections::advanced_settings::data::ssl%]",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "ssl": "[%key:component::airos::config::step::user::sections::advanced_settings::data_description::ssl%]",
+              "verify_ssl": "[%key:component::airos::config::step::user::sections::advanced_settings::data_description::verify_ssl%]"
+            }
+          }
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -12,6 +41,19 @@
           "host": "IP address or hostname of the airOS device",
           "username": "Administrator username for the airOS device, normally 'ubnt'",
           "password": "Password configured through the UISP app or web interface"
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "Advanced settings",
+            "data": {
+              "ssl": "Use HTTPS",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "ssl": "Whether the connection should be encrypted (required for most devices)",
+              "verify_ssl": "Whether the certificate should be verified when using HTTPS. This should be off for self-signed certificates"
+            }
+          }
         }
       }
     },
@@ -22,7 +64,10 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Re-authentication should be used for the same device not a new one"
     }
   },
   "entity": {

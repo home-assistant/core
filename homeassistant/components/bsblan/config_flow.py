@@ -25,7 +25,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize BSBLan flow."""
-        self.host: str | None = None
+        self.host: str = ""
         self.port: int = DEFAULT_PORT
         self.mac: str | None = None
         self.passkey: str | None = None

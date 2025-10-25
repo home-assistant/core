@@ -99,6 +99,7 @@ from homeassistant.helpers import (
     translation as translation_helper,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -158,6 +159,7 @@ asyncio.set_event_loop_policy = lambda policy: None
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
     parser.addoption("--dburl", action="store", default="sqlite://")
+    parser.addoption("--drop-existing-db", action="store_const", const=True)
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -185,10 +187,12 @@ def pytest_runtest_setup() -> None:
     destinations will be allowed.
 
     freezegun:
-    Modified to include https://github.com/spulec/freezegun/pull/424
+    Modified to include https://github.com/spulec/freezegun/pull/424 and improve class str.
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
+
+    freezegun.api.FakeDate = patch_time.HAFakeDate  # type: ignore[attr-defined]
 
     freezegun.api.datetime_to_fakedatetime = patch_time.ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
     freezegun.api.FakeDatetime = patch_time.HAFakeDatetime  # type: ignore[attr-defined]
@@ -1489,44 +1493,58 @@ def recorder_db_url(
     assert not hass_fixture_setup
 
     db_url = cast(str, pytestconfig.getoption("dburl"))
+    drop_existing_db = pytestconfig.getoption("drop_existing_db")
+
+    def drop_db() -> None:
+        import sqlalchemy as sa  # noqa: PLC0415
+        import sqlalchemy_utils  # noqa: PLC0415
+
+        if db_url.startswith("mysql://"):
+            made_url = sa.make_url(db_url)
+            db = made_url.database
+            engine = sa.create_engine(db_url)
+            # Check for any open connections to the database before dropping it
+            # to ensure that InnoDB does not deadlock.
+            with engine.begin() as connection:
+                query = sa.text(
+                    "select id FROM information_schema.processlist WHERE db=:db and id != CONNECTION_ID()"
+                )
+                rows = connection.execute(query, parameters={"db": db}).fetchall()
+                if rows:
+                    raise RuntimeError(
+                        f"Unable to drop database {db} because it is in use by {rows}"
+                    )
+            engine.dispose()
+            sqlalchemy_utils.drop_database(db_url)
+        elif db_url.startswith("postgresql://"):
+            sqlalchemy_utils.drop_database(db_url)
+
     if db_url == "sqlite://" and persistent_database:
         tmp_path = tmp_path_factory.mktemp("recorder")
         db_url = "sqlite:///" + str(tmp_path / "pytest.db")
-    elif db_url.startswith("mysql://"):
+    elif db_url.startswith(("mysql://", "postgresql://")):
         import sqlalchemy_utils  # noqa: PLC0415
 
-        charset = "utf8mb4' COLLATE = 'utf8mb4_unicode_ci"
-        assert not sqlalchemy_utils.database_exists(db_url)
-        sqlalchemy_utils.create_database(db_url, encoding=charset)
-    elif db_url.startswith("postgresql://"):
-        import sqlalchemy_utils  # noqa: PLC0415
+        if drop_existing_db and sqlalchemy_utils.database_exists(db_url):
+            drop_db()
 
-        assert not sqlalchemy_utils.database_exists(db_url)
-        sqlalchemy_utils.create_database(db_url, encoding="utf8")
+        if sqlalchemy_utils.database_exists(db_url):
+            raise RuntimeError(
+                f"Database {db_url} already exists. Use --drop-existing-db "
+                "to automatically drop existing database before start of test."
+            )
+
+        sqlalchemy_utils.create_database(
+            db_url,
+            encoding="utf8mb4' COLLATE = 'utf8mb4_unicode_ci"
+            if db_url.startswith("mysql://")
+            else "utf8",
+        )
     yield db_url
     if db_url == "sqlite://" and persistent_database:
         rmtree(tmp_path, ignore_errors=True)
-    elif db_url.startswith("mysql://"):
-        import sqlalchemy as sa  # noqa: PLC0415
-
-        made_url = sa.make_url(db_url)
-        db = made_url.database
-        engine = sa.create_engine(db_url)
-        # Check for any open connections to the database before dropping it
-        # to ensure that InnoDB does not deadlock.
-        with engine.begin() as connection:
-            query = sa.text(
-                "select id FROM information_schema.processlist WHERE db=:db and id != CONNECTION_ID()"
-            )
-            rows = connection.execute(query, parameters={"db": db}).fetchall()
-            if rows:
-                raise RuntimeError(
-                    f"Unable to drop database {db} because it is in use by {rows}"
-                )
-        engine.dispose()
-        sqlalchemy_utils.drop_database(db_url)
-    elif db_url.startswith("postgresql://"):
-        sqlalchemy_utils.drop_database(db_url)
+    elif db_url.startswith(("mysql://", "postgresql://")):
+        drop_db()
 
 
 async def _async_init_recorder_component(
@@ -1656,10 +1674,12 @@ async def async_test_recorder(
     migrate_entity_ids = (
         migration.EntityIDMigration.migrate_data if enable_migrate_entity_ids else None
     )
-    legacy_event_id_foreign_key_exists = (
-        migration.EventIDPostMigration._legacy_event_id_foreign_key_exists
+    post_migrate_event_ids = (
+        migration.EventIDPostMigration.needs_migrate_impl
         if enable_migrate_event_ids
-        else lambda _: None
+        else lambda _1, _2, _3: migration.DataMigrationStatus(
+            needs_migrate=False, migration_done=True
+        )
     )
     with (
         patch(
@@ -1698,8 +1718,8 @@ async def async_test_recorder(
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.migration.EventIDPostMigration._legacy_event_id_foreign_key_exists",
-            side_effect=legacy_event_id_foreign_key_exists,
+            "homeassistant.components.recorder.migration.EventIDPostMigration.needs_migrate_impl",
+            side_effect=post_migrate_event_ids,
             autospec=True,
         ),
         patch(
@@ -1857,9 +1877,10 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
     # pylint: disable-next=c-extension-no-member
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
 
-    # Mock BlueZ management controller
+    # Mock BlueZ management controller to successfully setup
+    # This prevents the manager from operating in degraded mode
     mock_mgmt_bluetooth_ctl = Mock()
-    mock_mgmt_bluetooth_ctl.setup = AsyncMock(side_effect=OSError("Mocked error"))
+    mock_mgmt_bluetooth_ctl.setup = AsyncMock(return_value=None)
 
     with (
         patch.object(
@@ -2090,3 +2111,21 @@ def disable_block_async_io() -> Generator[None]:
             blocking_call.object, blocking_call.function, blocking_call.original_func
         )
     calls.clear()
+
+
+# Ensure that incorrectly formatted mac addresses are rejected during
+# DhcpServiceInfo initialisation
+_real_dhcp_service_info_init = DhcpServiceInfo.__init__
+
+
+def _dhcp_service_info_init(self: DhcpServiceInfo, *args: Any, **kwargs: Any) -> None:
+    """Override __init__ for DhcpServiceInfo.
+
+    Ensure that the macaddress is always in lowercase and without colons to match DHCP service.
+    """
+    _real_dhcp_service_info_init(self, *args, **kwargs)
+    if self.macaddress != self.macaddress.lower().replace(":", ""):
+        raise ValueError("macaddress is not correctly formatted")
+
+
+DhcpServiceInfo.__init__ = _dhcp_service_info_init

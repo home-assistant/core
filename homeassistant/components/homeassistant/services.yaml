@@ -32,15 +32,12 @@ set_location:
 stop:
 toggle:
   target:
-    entity: {}
 
 turn_on:
   target:
-    entity: {}
 
 turn_off:
   target:
-    entity: {}
 
 update_entity:
   fields:
@@ -53,8 +50,6 @@ update_entity:
 reload_custom_templates:
 reload_config_entry:
   target:
-    entity: {}
-    device: {}
   fields:
     entry_id:
       advanced: true

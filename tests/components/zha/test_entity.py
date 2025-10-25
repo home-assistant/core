@@ -1,9 +1,12 @@
 """Test ZHA entities."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
+from zigpy.device import Device
 from zigpy.profiles import zha
+import zigpy.types as t
 from zigpy.zcl.clusters import general, measurement
 
 from homeassistant.components.zha.helpers import get_zha_gateway
@@ -32,8 +35,8 @@ def sensor_and_switch_platform_only():
 
 async def test_device_registry_via_device(
     hass: HomeAssistant,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test ZHA `via_device` is set correctly."""
@@ -94,9 +97,9 @@ async def test_device_registry_via_device(
 )
 async def test_entity_postfix(
     hass: HomeAssistant,
-    setup_zha,
-    zigpy_device_mock,
-    cluster_id,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+    cluster_id: t.uint16_t,
     entity_prefix: str,
     entity_suffix: str,
     n_endpoints: int,
