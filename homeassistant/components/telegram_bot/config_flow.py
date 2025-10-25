@@ -313,6 +313,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {
             "botfather_username": "@BotFather",
             "botfather_url": "https://t.me/botfather",
+            "socks_url": "socks5://username:password@proxy_ip:proxy_port",
         }
         if not user_input:
             return self.async_show_form(

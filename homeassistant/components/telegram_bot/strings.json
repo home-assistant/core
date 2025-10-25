@@ -18,7 +18,7 @@
               "proxy_url": "Proxy URL"
             },
             "data_description": {
-              "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n(socks5://username:password@proxy_ip:proxy_port)"
+              "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n({socks_url})"
             }
           }
         }
