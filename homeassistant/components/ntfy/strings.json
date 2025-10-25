@@ -307,7 +307,7 @@
         },
         "markdown": {
           "name": "Format as Markdown",
-          "description": "Enable Markdown formatting for the message body (Web app only). See the Markdown guide for syntax details: https://www.markdownguide.org/basic-syntax/."
+          "description": "Enable Markdown formatting for the message body. See the Markdown guide for syntax details: https://www.markdownguide.org/basic-syntax/."
         },
         "tags": {
           "name": "Tags/Emojis",

@@ -25,6 +25,9 @@
     "select_failed": {
       "message": "Error while updating {name} to {option}"
     },
+    "start_snoo_failed": {
+      "message": "Starting {name} failed"
+    },
     "switch_on_failed": {
       "message": "Turning {name} on failed"
     },
@@ -39,6 +42,11 @@
       },
       "right_clip": {
         "name": "Right safety clip"
+      }
+    },
+    "button": {
+      "start_snoo": {
+        "name": "Start"
       }
     },
     "event": {
@@ -68,6 +76,7 @@
         "name": "State",
         "state": {
           "baseline": "Baseline",
+          "weaning_baseline": "Baseline (Weaning)",
           "level1": "Level 1",
           "level2": "Level 2",
           "level3": "Level 3",

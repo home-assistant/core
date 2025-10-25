@@ -26,7 +26,10 @@ pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicle
 
 
 # Captur (fuel version) does not have a charge mode select
-_TEST_VEHICLES = [v for v in MOCK_VEHICLES if v != "captur_fuel"]
+# charge mode is also not available for all vehicles
+_TEST_VEHICLES = [
+    v for v in MOCK_VEHICLES if v not in ("captur_fuel", "captur_phev", "zoe_50")
+]
 
 
 @pytest.fixture(autouse=True)

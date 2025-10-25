@@ -7,7 +7,7 @@
     },
     "step": {
       "user": {
-        "description": "In order to access the Flume Personal API, you will need to request a 'Client ID' and 'Client Secret' at https://portal.flumetech.com/settings#token",
+        "description": "In order to access the Flume Personal API, you will need to request a 'Client ID' and 'Client Secret' at {api_url}",
         "title": "Connect to your Flume account",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",

@@ -21,7 +21,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -32,12 +32,12 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_FROM,
-    CONF_NAME,
     CONF_ROUTES,
     CONF_TIME,
     CONF_TO,
     CONF_VIA,
     DOMAIN,
+    INTEGRATION_TITLE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             if not errors:
                 return self.async_create_entry(
-                    title="Nederlandse Spoorwegen",
+                    title=INTEGRATION_TITLE,
                     data={CONF_API_KEY: user_input[CONF_API_KEY]},
                 )
         return self.async_show_form(
@@ -113,7 +113,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title="Nederlandse Spoorwegen",
+            title=INTEGRATION_TITLE,
             data={CONF_API_KEY: import_data[CONF_API_KEY]},
             subentries=subentries,
         )
