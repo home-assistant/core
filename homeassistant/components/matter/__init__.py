@@ -14,7 +14,6 @@ from matter_server.client.exceptions import (
     ServerVersionTooOld,
 )
 from matter_server.common.errors import MatterError, NodeNotExists
-import voluptuous as vol
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
