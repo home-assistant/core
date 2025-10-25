@@ -48,7 +48,7 @@ class PortainerContainerData:
     """Container data held by the Portainer coordinator."""
 
     container: DockerContainer
-    stats: DockerContainerStats | None
+    stats: DockerContainerStats
     stats_pre: DockerContainerStats | None
 
 

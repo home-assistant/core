@@ -52,11 +52,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
     PortainerContainerSensorEntityDescription(
         key="memory_limit",
         translation_key="memory_limit",
-        value_fn=lambda data: (
-            ms.limit
-            if (s := data.stats) and (ms := s.memory_stats) and ms.limit
-            else None
-        ),
+        value_fn=lambda data: data.stats.memory_stats.limit,
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -67,11 +63,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
     PortainerContainerSensorEntityDescription(
         key="memory_usage",
         translation_key="memory_usage",
-        value_fn=lambda data: (
-            ms.usage
-            if (s := data.stats) and (ms := s.memory_stats) and ms.usage
-            else None
-        ),
+        value_fn=lambda data: data.stats.memory_stats.usage,
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -83,9 +75,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         key="memory_usage_percentage",
         translation_key="memory_usage_percentage",
         value_fn=lambda data: (
-            (ms.usage / ms.limit) * 100.0
-            if (s := data.stats) and (ms := s.memory_stats) and ms.usage and ms.limit
-            else None
+            (data.stats.memory_stats.usage / data.stats.memory_stats.limit) * 100.0
         ),
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -96,23 +86,20 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         key="cpu_usage_total",
         translation_key="cpu_usage_total",
         value_fn=lambda data: (
-            (used_delta / system_delta) * online_cpus * 100.0
-            if (
-                (stats := data.stats)
-                and (stats_pre := data.stats_pre)
-                and (cpu := stats.cpu_stats)
-                and (pre_cpu := stats_pre.cpu_stats)
-                and (cpu_usage := cpu.cpu_usage)
-                and (pre_cpu_usage := pre_cpu.cpu_usage)
-                and (total_usage := cpu_usage.total_usage)
-                and (pre_total_usage := pre_cpu_usage.total_usage)
-                and (system_cpu_usage := cpu.system_cpu_usage)
-                and (pre_system_cpu_usage := pre_cpu.system_cpu_usage)
-                and (online_cpus := cpu.online_cpus)
-                and (system_delta := system_cpu_usage - pre_system_cpu_usage)
-                and (used_delta := total_usage - pre_total_usage)
+            (
+                (
+                    data.stats.cpu_stats.cpu_usage.total_usage
+                    - data.stats_pre.cpu_stats.cpu_usage.total_usage
+                )
+                / (
+                    data.stats.cpu_stats.system_cpu_usage
+                    - data.stats_pre.cpu_stats.system_cpu_usage
+                )
             )
-            else None
+            * data.stats.cpu_stats.online_cpus
+            * 100.0
+            if data.stats_pre  # Previous stats need to be available, else no CPU can be calculated
+            else 0.0
         ),
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
