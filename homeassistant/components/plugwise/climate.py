@@ -276,7 +276,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key=ERROR_NO_SCHEDULE,
-                    )
+                )
 
             await self.coordinator.api.set_schedule_state(
                 self._location,
@@ -284,7 +284,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
                 desired,
             )
             if self.hvac_mode == HVACMode.OFF and self._previous_action_mode:
-                await self.coordinator.api.set_regulation_mode(self._previous_action_mode)
+                await self.coordinator.api.set_regulation_mode(
+                    self._previous_action_mode
+                )
 
     @plugwise_command
     async def async_set_preset_mode(self, preset_mode: str) -> None:
