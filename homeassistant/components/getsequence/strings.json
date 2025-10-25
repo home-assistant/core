@@ -46,6 +46,9 @@
           "investment_accounts": "Select accounts that represent investments (brokerage, retirement, savings). Choose 'None' if you have no investments."
         }
       }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to Sequence API. Please check your network and credentials."
     }
   }
 }

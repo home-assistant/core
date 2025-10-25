@@ -2,7 +2,11 @@
 
 from unittest.mock import patch
 
-from GetSequenceIoApiClient import SequenceConnectionError
+from GetSequenceIoApiClient import (
+    SequenceApiError,
+    SequenceAuthError,
+    SequenceConnectionError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.getsequence.const import DOMAIN
@@ -10,6 +14,171 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+
+async def test_options_flow_empty_accounts_error_branch(hass: HomeAssistant) -> None:
+    """Test options flow error branch when fetching accounts fails and choices are empty."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={"access_token": "test_token"},
+        unique_id="test_unique_id",
+    )
+    mock_config.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.getsequence.config_flow.SequenceApiClient.async_get_accounts",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_options_flow_filters_none(hass: HomeAssistant) -> None:
+    """Test options flow filters out 'none' from input and marks liability configured."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={"access_token": "test_token"},
+        unique_id="test_unique_id",
+    )
+    mock_config.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.getsequence.config_flow.SequenceApiClient.async_get_accounts",
+        return_value={
+            "data": {
+                "accounts": [
+                    {"id": "1001", "name": "Credit Card", "type": "Account"},
+                    {"id": "1002", "name": "Investment Account", "type": "Account"},
+                ]
+            }
+        },
+    ):
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        # Input includes 'none' which should be filtered out
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                "liability_accounts": ["1001", "none"],
+                "investment_accounts": ["none", "1002"],
+            },
+        )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    # 'none' should be filtered out
+    assert result2["data"] == {
+        "liability_accounts": ["1001"],
+        "investment_accounts": ["1002"],
+        "liability_configured": True,
+    }
+
+
+async def test_reauth_confirm_invalid_auth(hass: HomeAssistant) -> None:
+    """Test reauth confirm step handles invalid_auth error."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={"access_token": "old_token"},
+        unique_id="test_unique_id",
+    )
+    mock_config.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config.entry_id,
+        },
+        data=mock_config.data,
+    )
+    with patch(
+        "homeassistant.components.getsequence.config_flow.SequenceApiClient.async_get_accounts",
+        side_effect=SequenceAuthError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"access_token": "bad_token"}
+        )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_reauth_confirm_cannot_connect(hass: HomeAssistant) -> None:
+    """Test reauth confirm step handles cannot_connect error."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={"access_token": "old_token"},
+        unique_id="test_unique_id",
+    )
+    mock_config.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config.entry_id,
+        },
+        data=mock_config.data,
+    )
+    with patch(
+        "homeassistant.components.getsequence.config_flow.SequenceApiClient.async_get_accounts",
+        side_effect=SequenceConnectionError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"access_token": "bad_token"}
+        )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_confirm_unknown_error(hass: HomeAssistant) -> None:
+    """Test reauth confirm step handles unknown error."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={"access_token": "old_token"},
+        unique_id="test_unique_id",
+    )
+    mock_config.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config.entry_id,
+        },
+        data=mock_config.data,
+    )
+    with patch(
+        "homeassistant.components.getsequence.config_flow.SequenceApiClient.async_get_accounts",
+        side_effect=SequenceApiError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"access_token": "bad_token"}
+        )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_reauth_confirm_description_placeholder(hass: HomeAssistant) -> None:
+    """Test reauth confirm step includes description placeholders."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={"access_token": "old_token"},
+        unique_id="test_unique_id",
+        title="Test Account Title",
+    )
+    mock_config.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config.entry_id,
+        },
+        data=mock_config.data,
+    )
+    # The form should include description_placeholders with account title
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert "description_placeholders" in result
+    assert result["description_placeholders"]["account"] == mock_config.title
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -62,20 +231,76 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     with patch(
         "homeassistant.components.getsequence.config_flow.SequenceApiClient.async_get_accounts",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "access_token": "test_token",
-            },
+            {"access_token": "test_token"},
         )
-
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_sequence_auth_error(hass: HomeAssistant) -> None:
+    """Test SequenceAuthError in config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.getsequence.config_flow.SequenceApiClient.async_get_accounts",
+        side_effect=SequenceAuthError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"access_token": "test_token"},
+        )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_sequence_api_error(hass: HomeAssistant) -> None:
+    """Test SequenceApiError in config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.getsequence.config_flow.SequenceApiClient.async_get_accounts",
+        side_effect=SequenceApiError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"access_token": "test_token"},
+        )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_no_pods(hass: HomeAssistant) -> None:
+    """Test config flow fallback when no pods exist."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with (
+        patch(
+            "homeassistant.components.getsequence.config_flow.SequenceApiClient.async_get_accounts",
+            return_value={"data": {"accounts": []}},
+        ),
+        patch(
+            "homeassistant.components.getsequence.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"access_token": "test_token"},
+        )
+        await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Sequence"
+    assert result2["data"] == {"access_token": "test_token"}
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:

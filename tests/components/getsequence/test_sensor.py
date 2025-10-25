@@ -1,10 +1,22 @@
-"""Test the Sequence sensor platform."""
+"""Test the Sequence sensor platform and coordinator error handling.
+
+Additional tests for uncovered lines:
+- create_device_info with and without entry_id
+- CashFlowSensor pod error branch
+- CashFlowSensor unknown account type data source
+"""
 
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.getsequence.const import DOMAIN
+from homeassistant.components.getsequence.sensor import (
+    AccountSensor,
+    CashFlowSensor,
+    DataAgeSensor,
+    create_device_info,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -16,6 +28,241 @@ from .fixtures import (
 )
 
 from tests.common import MockConfigEntry
+
+
+def test_create_device_info_with_and_without_entry_id() -> None:
+    """Test create_device_info with and without entry_id covers via_device logic."""
+    identifiers = {("getsequence", "test_id")}
+    name = "Test Device"
+    # Without entry_id
+    info = create_device_info(identifiers, name)
+    assert "via_device" not in info
+    # With entry_id
+    info_with = create_device_info(identifiers, name, entry_id="abc123")
+    assert info_with["via_device"] == ("getsequence", "abc123")
+
+
+def test_cash_flow_sensor_pod_error_branch() -> None:
+    """Test CashFlowSensor returns None for pod with balance error."""
+
+    class DummyCoordinator:
+        data = {
+            "pods": [
+                {
+                    "id": "1",
+                    "name": "Pod1",
+                    "balance": {"amountInDollars": 100, "error": "fail"},
+                }
+            ]
+        }
+        last_update_success = True
+
+    config_entry = type("ConfigEntry", (), {"entry_id": "eid", "unique_id": "uid"})()
+    pod = DummyCoordinator.data["pods"][0]
+    sensor = CashFlowSensor(
+        DummyCoordinator(),
+        config_entry,
+        "daily",
+        "individual",
+        account_data=pod,
+        account_type="Pod",
+    )
+    assert sensor.native_value is None
+
+
+async def test_account_sensor_pod_balance_error_logs_and_returns_none(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test AccountSensor returns None and logs warning if pod balance has error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"access_token": "test_token"},
+        unique_id="test_unique_id",
+    )
+    config_entry.add_to_hass(hass)
+
+    pod_data = {
+        "id": "8888",
+        "name": "Pod With Error",
+        "balance": {"amountInDollars": 1234.0, "error": "API timeout"},
+    }
+    coordinator = type(
+        "DummyCoordinator",
+        (),
+        {"data": {"pods": [pod_data]}, "last_update_success": True},
+    )()
+
+    sensor = AccountSensor(
+        coordinator,
+        config_entry,
+        pod_data,
+        "Pod",
+        "pods",
+        ["balance", "amountInDollars"],
+    )
+    with caplog.at_level("WARNING"):
+        value = sensor.native_value
+    assert value is None
+    assert any(
+        "Error getting balance for pod Pod With Error: API timeout" in r
+        for r in caplog.messages
+    )
+
+
+async def test_account_sensor_missing_balance_key(hass: HomeAssistant) -> None:
+    """Test AccountSensor returns None if balance path key is missing."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"access_token": "test_token"},
+        unique_id="test_unique_id",
+    )
+    config_entry.add_to_hass(hass)
+
+    # Account data missing 'amountInDollars' in balance
+    pod_data = {
+        "id": "9999",
+        "name": "Pod Missing Balance",
+        "balance": {"error": None},
+    }
+    coordinator = type(
+        "DummyCoordinator",
+        (),
+        {"data": {"pods": [pod_data]}, "last_update_success": True},
+    )()
+
+    sensor = AccountSensor(
+        coordinator,
+        config_entry,
+        pod_data,
+        "Pod",
+        "pods",
+        ["balance", "amountInDollars"],
+    )
+    # Should return None since 'amountInDollars' is missing
+    assert sensor.native_value is None
+
+
+def test_cash_flow_sensor_individual_pod_balance_error() -> None:
+    """Test CashFlowSensor._get_current_balance returns None if pod balance has error."""
+
+    class DummyCoordinator:
+        data = {
+            "pods": [
+                {
+                    "id": "1",
+                    "name": "Pod1",
+                    "balance": {"amountInDollars": 100, "error": "fail"},
+                }
+            ]
+        }
+        last_update_success = True
+
+    config_entry = type("ConfigEntry", (), {"entry_id": "eid", "unique_id": "uid"})()
+    pod = DummyCoordinator.data["pods"][0]
+    sensor = CashFlowSensor(
+        DummyCoordinator(),
+        config_entry,
+        "daily",
+        "individual",
+        account_data=pod,
+        account_type="Pod",
+    )
+    assert sensor._get_current_balance() is None
+
+
+def test_cash_flow_sensor_individual_non_number_balance() -> None:
+    """Test CashFlowSensor._get_current_balance returns None if balance is not a number."""
+
+    class DummyCoordinator:
+        data = {
+            "pods": [
+                {
+                    "id": "2",
+                    "name": "Pod2",
+                    "balance": {"amountInDollars": "not_a_number", "error": None},
+                }
+            ]
+        }
+        last_update_success = True
+
+    config_entry = type("ConfigEntry", (), {"entry_id": "eid", "unique_id": "uid"})()
+    pod = DummyCoordinator.data["pods"][0]
+    sensor = CashFlowSensor(
+        DummyCoordinator(),
+        config_entry,
+        "daily",
+        "individual",
+        account_data=pod,
+        account_type="Pod",
+    )
+    # Should return the string, but native_value will return 0.0 (default for non-numeric)
+    assert sensor._get_current_balance() == "not_a_number"
+    assert sensor.native_value == 0.0
+
+
+def test_cash_flow_sensor_aggregate_no_balance_source() -> None:
+    """Test CashFlowSensor._get_current_balance returns None if aggregate and no balance_source."""
+
+    class DummyCoordinator:
+        data = {}
+        last_update_success = True
+
+    config_entry = type("ConfigEntry", (), {"entry_id": "eid", "unique_id": "uid"})()
+    sensor = CashFlowSensor(
+        DummyCoordinator(),
+        config_entry,
+        "daily",
+        "aggregate",
+        account_type="Pods",
+        balance_source=None,
+    )
+    assert sensor._get_current_balance() is None
+
+
+def test_cash_flow_sensor_net_scope_missing_total_balance() -> None:
+    """Test CashFlowSensor._get_current_balance returns None if net scope and total_balance missing."""
+
+    class DummyCoordinator:
+        data = {}
+        last_update_success = True
+
+    config_entry = type("ConfigEntry", (), {"entry_id": "eid", "unique_id": "uid"})()
+    sensor = CashFlowSensor(
+        DummyCoordinator(),
+        config_entry,
+        "daily",
+        "net",
+    )
+    assert sensor._get_current_balance() is None
+
+
+def test_cash_flow_sensor_get_data_source_unknown_type() -> None:
+    """Test CashFlowSensor._get_data_source returns 'accounts' for unknown type."""
+    sensor = CashFlowSensor(
+        coordinator=type("DummyCoordinator", (), {"data": {}})(),
+        config_entry=type("ConfigEntry", (), {"entry_id": "eid", "unique_id": "uid"})(),
+        period="daily",
+        scope="individual",
+        account_data={"id": "1", "name": "Unknown"},
+        account_type="UnknownType",
+    )
+    assert sensor._get_data_source() == "accounts"
+
+
+def test_data_age_sensor_extra_state_attributes_none() -> None:
+    """Test DataAgeSensor.extra_state_attributes when last_update_success_time and update_interval are None."""
+
+    class DummyCoordinator:
+        last_update_success_time = None
+        update_interval = None
+        last_update_success = False
+
+    config_entry = type("ConfigEntry", (), {"entry_id": "eid", "unique_id": "uid"})()
+    sensor = DataAgeSensor(DummyCoordinator(), config_entry)
+    attrs = sensor.extra_state_attributes
+    assert attrs["last_update"] is None
+    assert attrs["update_interval_minutes"] is None
+    assert attrs["last_update_success"] is False
 
 
 @pytest.fixture
