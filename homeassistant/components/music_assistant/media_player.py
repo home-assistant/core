@@ -39,7 +39,6 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player import RepeatMode
 from homeassistant.const import ATTR_NAME, STATE_OFF, Platform
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
