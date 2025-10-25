@@ -116,6 +116,6 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         is_on: bool | None = self.gateway.binary_sensor_is_on(
-            self.enocean_id, self._channel
+            enocean_id=self.enocean_id, name=self._channel
         )
         return is_on
