@@ -23,7 +23,13 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER, MODEL_FRANKEVER_WATER_VALVE, SHELLY_GAS_MODELS
+from .const import (
+    DOMAIN,
+    LOGGER,
+    MODEL_FRANKEVER_WATER_VALVE,
+    ROLE_GENERIC,
+    SHELLY_GAS_MODELS,
+)
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
@@ -66,7 +72,7 @@ class RpcButtonDescription(RpcEntityDescription, ButtonEntityDescription):
 BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ShellyButtonDescription[ShellyBlockCoordinator | ShellyRpcCoordinator](
         key="reboot",
-        name="Reboot",
+        name="Restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_reboot",
@@ -173,7 +179,7 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set buttons for device."""
+    """Set up button entities."""
     entry_data = config_entry.runtime_data
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
@@ -351,7 +357,7 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
 RPC_BUTTONS = {
     "button_generic": RpcButtonDescription(
         key="button",
-        role="generic",
+        role=ROLE_GENERIC,
     ),
     "button_open": RpcButtonDescription(
         key="button",

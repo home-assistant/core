@@ -43,6 +43,16 @@
       "bedtime_alarm": {
         "name": "Bedtime alarm"
       }
+    },
+    "switch": {
+      "suspend_software": {
+        "name": "Suspend software"
+      }
+    },
+    "number": {
+      "today_max_screentime": {
+        "name": "Max screentime today"
+      }
     }
   },
   "exceptions": {

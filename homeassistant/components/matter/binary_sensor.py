@@ -35,7 +35,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.BINARY_SENSOR, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterBinarySensorEntityDescription(
     BinarySensorEntityDescription, MatterEntityDescription
 ):

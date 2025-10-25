@@ -42,7 +42,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.SWITCH, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterSwitchEntityDescription(SwitchEntityDescription, MatterEntityDescription):
     """Describe Matter Switch entities."""
 
@@ -120,7 +120,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
         )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterGenericCommandSwitchEntityDescription(
     SwitchEntityDescription, MatterEntityDescription
 ):
@@ -132,7 +132,7 @@ class MatterGenericCommandSwitchEntityDescription(
     command_timeout: int | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterNumericSwitchEntityDescription(
     SwitchEntityDescription, MatterEntityDescription
 ):

@@ -44,6 +44,7 @@ from .const import (
 )
 from .entity import TuyaEntity
 from .models import ComplexValue, ElectricityValue, EnumTypeData, IntegerTypeData
+from .util import get_dptype
 
 _WIND_DIRECTIONS = {
     "north": 0.0,
@@ -1689,7 +1690,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._type_data = enum_type
             self._type = DPType.ENUM
         else:
-            self._type = self.get_dptype(DPCode(description.key))
+            self._type = get_dptype(self.device, DPCode(description.key))
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
