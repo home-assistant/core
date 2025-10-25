@@ -29,12 +29,17 @@
         },
         "data_description": {
           "return_average": "air-Q allows to poll both the noisy sensor readings as well as the values averaged on the device (default)",
-          "clip_negatives": "For baseline calibration purposes, certain sensor values may briefly become negative. The default behaviour is to clip such values to 0"
+          "clip_negatives": "For baseline calibration purposes, certain sensor values may briefly become negative. The default behavior is to clip such values to 0"
         }
       }
     }
   },
   "entity": {
+    "number": {
+      "airq_led_brightness": {
+        "name": "LED brightness"
+      }
+    },
     "sensor": {
       "acetaldehyde": {
         "name": "Acetaldehyde"
@@ -92,9 +97,6 @@
       },
       "health_index": {
         "name": "Health index"
-      },
-      "absolute_humidity": {
-        "name": "Absolute humidity"
       },
       "hydrogen": {
         "name": "Hydrogen"

@@ -58,6 +58,7 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             update_method=self._async_on_update,
             needs_poll_method=self._async_needs_poll,
             poll_method=self._async_poll_data,
+            connectable=False,  # Polling only happens if active scanning is disabled
         )
 
     async def async_init(self) -> None:

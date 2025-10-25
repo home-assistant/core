@@ -2,6 +2,7 @@
   "title": "Sensor",
   "device_automation": {
     "condition_type": {
+      "is_absolute_humidity": "Current {entity_name} absolute humidity",
       "is_apparent_power": "Current {entity_name} apparent power",
       "is_aqi": "Current {entity_name} air quality index",
       "is_area": "Current {entity_name} area",
@@ -24,7 +25,7 @@
       "is_illuminance": "Current {entity_name} illuminance",
       "is_irradiance": "Current {entity_name} irradiance",
       "is_moisture": "Current {entity_name} moisture",
-      "is_monetary": "Current {entity_name} balance",
+      "is_monetary": "Current {entity_name} monetary balance",
       "is_nitrogen_dioxide": "Current {entity_name} nitrogen dioxide concentration level",
       "is_nitrogen_monoxide": "Current {entity_name} nitrogen monoxide concentration level",
       "is_nitrous_oxide": "Current {entity_name} nitrous oxide concentration level",
@@ -33,17 +34,20 @@
       "is_pm1": "Current {entity_name} PM1 concentration level",
       "is_pm10": "Current {entity_name} PM10 concentration level",
       "is_pm25": "Current {entity_name} PM2.5 concentration level",
+      "is_pm4": "Current {entity_name} PM4 concentration level",
       "is_power": "Current {entity_name} power",
       "is_power_factor": "Current {entity_name} power factor",
       "is_precipitation": "Current {entity_name} precipitation",
       "is_precipitation_intensity": "Current {entity_name} precipitation intensity",
       "is_pressure": "Current {entity_name} pressure",
+      "is_reactive_energy": "Current {entity_name} reactive energy",
       "is_reactive_power": "Current {entity_name} reactive power",
       "is_signal_strength": "Current {entity_name} signal strength",
       "is_sound_pressure": "Current {entity_name} sound pressure",
       "is_speed": "Current {entity_name} speed",
       "is_sulphur_dioxide": "Current {entity_name} sulphur dioxide concentration level",
       "is_temperature": "Current {entity_name} temperature",
+      "is_temperature_delta": "Current {entity_name} temperature interval",
       "is_value": "Current {entity_name} value",
       "is_volatile_organic_compounds": "Current {entity_name} volatile organic compounds concentration level",
       "is_volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::condition_type::is_volatile_organic_compounds%]",
@@ -56,6 +60,7 @@
       "is_wind_speed": "Current {entity_name} wind speed"
     },
     "trigger_type": {
+      "absolute_humidity": "{entity_name} absolute humidity changes",
       "apparent_power": "{entity_name} apparent power changes",
       "aqi": "{entity_name} air quality index changes",
       "area": "{entity_name} area changes",
@@ -78,7 +83,7 @@
       "illuminance": "{entity_name} illuminance changes",
       "irradiance": "{entity_name} irradiance changes",
       "moisture": "{entity_name} moisture changes",
-      "monetary": "{entity_name} balance changes",
+      "monetary": "{entity_name} monetary balance changes",
       "nitrogen_dioxide": "{entity_name} nitrogen dioxide concentration changes",
       "nitrogen_monoxide": "{entity_name} nitrogen monoxide concentration changes",
       "nitrous_oxide": "{entity_name} nitrous oxide concentration changes",
@@ -87,17 +92,20 @@
       "pm1": "{entity_name} PM1 concentration changes",
       "pm10": "{entity_name} PM10 concentration changes",
       "pm25": "{entity_name} PM2.5 concentration changes",
+      "pm4": "{entity_name} PM4 concentration changes",
       "power": "{entity_name} power changes",
       "power_factor": "{entity_name} power factor changes",
       "precipitation": "{entity_name} precipitation changes",
       "precipitation_intensity": "{entity_name} precipitation intensity changes",
       "pressure": "{entity_name} pressure changes",
+      "reactive_energy": "{entity_name} reactive energy changes",
       "reactive_power": "{entity_name} reactive power changes",
       "signal_strength": "{entity_name} signal strength changes",
       "sound_pressure": "{entity_name} sound pressure changes",
       "speed": "{entity_name} speed changes",
       "sulphur_dioxide": "{entity_name} sulphur dioxide concentration changes",
       "temperature": "{entity_name} temperature changes",
+      "temperature_delta": "{entity_name} temperature interval changes",
       "value": "{entity_name} value changes",
       "volatile_organic_compounds": "{entity_name} volatile organic compounds concentration changes",
       "volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::trigger_type::volatile_organic_compounds%]",
@@ -133,6 +141,7 @@
           "name": "State class",
           "state": {
             "measurement": "Measurement",
+            "measurement_angle": "Measurement angle",
             "total": "Total",
             "total_increasing": "Total increasing"
           }
@@ -144,6 +153,9 @@
     },
     "duration": {
       "name": "Duration"
+    },
+    "absolute_humidity": {
+      "name": "Absolute humidity"
     },
     "apparent_power": {
       "name": "Apparent power"
@@ -215,7 +227,7 @@
       "name": "Moisture"
     },
     "monetary": {
-      "name": "Balance"
+      "name": "Monetary balance"
     },
     "nitrogen_dioxide": {
       "name": "Nitrogen dioxide"
@@ -234,6 +246,9 @@
     },
     "pm1": {
       "name": "PM1"
+    },
+    "pm4": {
+      "name": "PM4"
     },
     "pm10": {
       "name": "PM10"
@@ -256,6 +271,9 @@
     "pressure": {
       "name": "Pressure"
     },
+    "reactive_energy": {
+      "name": "Reactive energy"
+    },
     "reactive_power": {
       "name": "Reactive power"
     },
@@ -273,6 +291,9 @@
     },
     "temperature": {
       "name": "Temperature"
+    },
+    "temperature_delta": {
+      "name": "Temperature delta"
     },
     "timestamp": {
       "name": "Timestamp"

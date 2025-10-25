@@ -32,6 +32,8 @@ from .const import (
     PLACEHOLDER_WEBHOOK_URL,
 )
 
+AUTH_TOKEN_URL = "https://intercom.help/plaato/en/articles/5004720-auth_token"
+
 
 class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handles a Plaato config flow."""
@@ -153,7 +155,10 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="api_method",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={PLACEHOLDER_DEVICE_TYPE: device_type.name},
+            description_placeholders={
+                PLACEHOLDER_DEVICE_TYPE: device_type.name,
+                "auth_token_url": AUTH_TOKEN_URL,
+            },
         )
 
     async def _get_webhook_id(self):

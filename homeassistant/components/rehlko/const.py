@@ -18,6 +18,7 @@ DEVICE_DATA_IS_CONNECTED = "isConnected"
 KOHLER = "Kohler"
 
 GENERATOR_DATA_DEVICE = "device"
+GENERATOR_DATA_EXERCISE = "exercise"
 
 CONNECTION_EXCEPTIONS = (
     TimeoutError,

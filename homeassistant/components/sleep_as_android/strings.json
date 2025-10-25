@@ -1,0 +1,145 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Sleep as Android",
+        "description": "Are you sure you want to set up the Sleep as Android integration?"
+      }
+    },
+    "abort": {
+      "cloud_not_connected": "[%key:common::config_flow::abort::cloud_not_connected%]",
+      "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
+    },
+    "create_entry": {
+      "default": "To send events to Home Assistant, you will need to set up a webhook.\n\nOpen Sleep as Android and go to *Settings → Services → Automation → Webhooks*\n\nEnable *Webhooks* and fill in the following webhook in the URL field:\n\n`{webhook_url}`\n\nSee [the documentation]({docs_url}) for further details."
+    }
+  },
+  "entity": {
+    "event": {
+      "sleep_tracking": {
+        "name": "Sleep tracking",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "paused": "[%key:common::state::paused%]",
+              "resumed": "Resumed",
+              "started": "Started",
+              "stopped": "[%key:common::state::stopped%]"
+            }
+          }
+        }
+      },
+      "alarm_clock": {
+        "name": "Alarm clock",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alert_dismiss": "Alarm dismissed",
+              "alert_start": "Alarm started",
+              "rescheduled": "Alarm rescheduled",
+              "skip_next": "Alarm skipped",
+              "snooze_canceled": "Snooze canceled",
+              "snooze_clicked": "Snoozing"
+            }
+          }
+        }
+      },
+      "smart_wakeup": {
+        "name": "Smart wake-up",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "before_smart_period": "45min before smart wake-up",
+              "smart_period": "Smart wake-up started"
+            }
+          }
+        }
+      },
+      "user_notification": {
+        "name": "User notification",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "wake_up_check": "Wake-up check",
+              "show_skip_next_alarm": "Skip next alarm",
+              "time_to_bed_alarm_alert": "Time to bed"
+            }
+          }
+        }
+      },
+      "sleep_phase": {
+        "name": "Sleep phase",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "awake": "Woke up",
+              "deep_sleep": "Deep sleep",
+              "light_sleep": "Light sleep",
+              "not_awake": "Fell asleep",
+              "rem": "REM sleep"
+            }
+          }
+        }
+      },
+      "sound_event": {
+        "name": "Sound recognition",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "baby": "Baby crying",
+              "cough": "Coughing or sneezing",
+              "laugh": "Laughter",
+              "snore": "Snoring",
+              "talk": "Talking"
+            }
+          }
+        }
+      },
+      "lullaby": {
+        "name": "Lullaby",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "start": "Started",
+              "stop": "[%key:common::state::stopped%]",
+              "volume_down": "Lowering volume"
+            }
+          }
+        }
+      },
+      "sleep_health": {
+        "name": "Sleep health",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "antisnoring": "Anti-snoring triggered",
+              "apnea_alarm": "Sleep apnea detected"
+            }
+          }
+        }
+      },
+      "jet_lag_prevention": {
+        "name": "Jet lag prevention",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "jet_lag_start": "[%key:component::sleep_as_android::entity::event::lullaby::state_attributes::event_type::state::start%]",
+              "jet_lag_stop": "[%key:common::state::stopped%]"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "next_alarm": {
+        "name": "Next alarm"
+      },
+      "alarm_label": {
+        "name": "Alarm label",
+        "state": {
+          "alarm": "Alarm"
+        }
+      }
+    }
+  }
+}

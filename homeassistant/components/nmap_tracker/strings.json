@@ -9,6 +9,7 @@
           "home_interval": "[%key:component::nmap_tracker::config::step::user::data::home_interval%]",
           "consider_home": "Seconds to wait till marking a device tracker as not home after not being seen.",
           "exclude": "[%key:component::nmap_tracker::config::step::user::data::exclude%]",
+          "mac_exclude": "[%key:component::nmap_tracker::config::step::user::data::mac_exclude%]",
           "scan_options": "[%key:component::nmap_tracker::config::step::user::data::scan_options%]",
           "interval_seconds": "Scan interval"
         }
@@ -21,11 +22,12 @@
   "config": {
     "step": {
       "user": {
-        "description": "Configure hosts to be scanned by Nmap. Network address and excludes can be IP addresses (192.168.1.1), IP networks (192.168.0.0/24) or IP ranges (192.168.1.0-32).",
+        "description": "Configure hosts to be scanned by Nmap. IP address and excludes can be addresses (192.168.1.1), networks (192.168.0.0/24) or ranges (192.168.1.0-32).",
         "data": {
-          "hosts": "Network addresses (comma separated) to scan",
+          "hosts": "IP address or range to scan",
           "home_interval": "Minimum number of minutes between scans of active devices (preserve battery)",
-          "exclude": "Network addresses (comma separated) to exclude from scanning",
+          "exclude": "IP address to exclude from tracking",
+          "mac_exclude": "MAC address to exclude from tracking",
           "scan_options": "Raw configurable scan options for Nmap"
         }
       }

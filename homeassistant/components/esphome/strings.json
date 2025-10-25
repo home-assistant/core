@@ -12,7 +12,7 @@
       "mqtt_missing_mac": "Missing MAC address in MQTT properties.",
       "mqtt_missing_api": "Missing API port in MQTT properties.",
       "mqtt_missing_ip": "Missing IP address in MQTT properties.",
-      "mqtt_missing_payload": "Missing MQTT Payload.",
+      "mqtt_missing_payload": "Missing MQTT payload.",
       "name_conflict_migrated": "The configuration for `{name}` has been migrated to a new device with MAC address `{mac}` from `{existing_mac}`.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "reauth_unique_id_changed": "**Re-authentication of `{name}` was aborted** because the address `{host}` points to a different device: `{unexpected_device_name}` (MAC: `{unexpected_mac}`) instead of the expected one (MAC: `{expected_mac}`).",
@@ -91,7 +91,7 @@
           "subscribe_logs": "Subscribe to logs from the device."
         },
         "data_description": {
-          "allow_service_calls": "When enabled, ESPHome devices can perform Home Assistant actions, such as calling services or sending events. Only enable this if you trust the device.",
+          "allow_service_calls": "When enabled, ESPHome devices can perform Home Assistant actions or send events. Only enable this if you trust the device.",
           "subscribe_logs": "When enabled, the device will send logs to Home Assistant and you can view them in the logs panel."
         }
       }
@@ -119,8 +119,9 @@
         }
       },
       "wake_word": {
-        "name": "Wake word",
+        "name": "Wake word{index}",
         "state": {
+          "no_wake_word": "No wake word",
           "okay_nabu": "Okay Nabu"
         }
       }
@@ -153,7 +154,7 @@
       "description": "To improve Bluetooth reliability and performance, we highly recommend updating {name} with ESPHome {version} or later. When updating the device from ESPHome earlier than 2022.12.0, it is recommended to use a serial cable instead of an over-the-air update to take advantage of the new partition scheme."
     },
     "api_password_deprecated": {
-      "title": "API Password deprecated on {name}",
+      "title": "API password deprecated on {name}",
       "description": "The API password for ESPHome is deprecated and the use of an API encryption key is recommended instead.\n\nRemove the API password and add an encryption key to your ESPHome device to resolve this issue."
     },
     "service_calls_not_allowed": {
@@ -192,10 +193,13 @@
       "message": "Error communicating with the device {device_name}: {error}"
     },
     "error_compiling": {
-      "message": "Error compiling {configuration}; Try again in ESPHome dashboard for more information."
+      "message": "Error compiling {configuration}. Try again in ESPHome dashboard for more information."
     },
     "error_uploading": {
-      "message": "Error during OTA of {configuration}; Try again in ESPHome dashboard for more information."
+      "message": "Error during OTA (Over-The-Air) update of {configuration}. Try again in ESPHome dashboard for more information."
+    },
+    "ota_in_progress": {
+      "message": "An OTA (Over-The-Air) update is already in progress for {configuration}."
     }
   }
 }

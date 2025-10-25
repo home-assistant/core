@@ -116,6 +116,9 @@
       }
     },
     "select": {
+      "active_map": {
+        "default": "mdi:floor-plan"
+      },
       "water_amount": {
         "default": "mdi:water"
       },

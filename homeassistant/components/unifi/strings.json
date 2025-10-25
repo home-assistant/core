@@ -34,6 +34,11 @@
     }
   },
   "entity": {
+    "light": {
+      "led_control": {
+        "name": "LED"
+      }
+    },
     "sensor": {
       "device_state": {
         "state": {
@@ -117,7 +122,7 @@
     },
     "remove_clients": {
       "name": "Remove clients from the UniFi Network",
-      "description": "Cleans up clients that has only been associated with the controller for a short period of time."
+      "description": "Cleans up clients that have only been associated with the controller for a short period of time."
     }
   }
 }

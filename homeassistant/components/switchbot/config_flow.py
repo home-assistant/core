@@ -11,12 +11,15 @@ from switchbot import (
     SwitchbotApiError,
     SwitchbotAuthenticationError,
     SwitchbotModel,
+    fetch_cloud_devices,
     parse_advertisement_data,
 )
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
     BluetoothServiceInfoBleak,
+    async_current_scanners,
     async_discovered_service_info,
 )
 from homeassistant.config_entries import (
@@ -87,6 +90,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_adv: SwitchBotAdvertisement | None = None
         self._discovered_advs: dict[str, SwitchBotAdvertisement] = {}
+        self._cloud_username: str | None = None
+        self._cloud_password: str | None = None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -176,9 +181,17 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the SwitchBot API auth step."""
-        errors = {}
+        errors: dict[str, str] = {}
         assert self._discovered_adv is not None
-        description_placeholders = {}
+        description_placeholders: dict[str, str] = {}
+
+        # If we have saved credentials from cloud login, try them first
+        if user_input is None and self._cloud_username and self._cloud_password:
+            user_input = {
+                CONF_USERNAME: self._cloud_username,
+                CONF_PASSWORD: self._cloud_password,
+            }
+
         if user_input is not None:
             model: SwitchbotModel = self._discovered_adv.data["modelName"]
             cls = ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS[model]
@@ -200,6 +213,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
                 errors = {"base": "auth_failed"}
                 description_placeholders = {"error_detail": str(ex)}
+                # Clear saved credentials if auth failed
+                self._cloud_username = None
+                self._cloud_password = None
             else:
                 return await self.async_step_encrypted_key(key_details)
 
@@ -239,7 +255,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the encryption key step."""
-        errors = {}
+        errors: dict[str, str] = {}
         assert self._discovered_adv is not None
         if user_input is not None:
             model: SwitchbotModel = self._discovered_adv.data["modelName"]
@@ -308,7 +324,73 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the user step to pick discovered device."""
+        """Handle the user step to choose cloud login or direct discovery."""
+        # Check if all scanners are in active mode
+        # If so, skip the menu and go directly to device selection
+        scanners = async_current_scanners(self.hass)
+        if scanners and all(
+            scanner.current_mode == BluetoothScanningMode.ACTIVE for scanner in scanners
+        ):
+            # All scanners are active, skip the menu
+            return await self.async_step_select_device()
+
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["cloud_login", "select_device"],
+        )
+
+    async def async_step_cloud_login(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the cloud login step."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                await fetch_cloud_devices(
+                    async_get_clientsession(self.hass),
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                )
+            except (SwitchbotApiError, SwitchbotAccountConnectionError) as ex:
+                _LOGGER.debug(
+                    "Failed to connect to SwitchBot API: %s", ex, exc_info=True
+                )
+                raise AbortFlow(
+                    "api_error", description_placeholders={"error_detail": str(ex)}
+                ) from ex
+            except SwitchbotAuthenticationError as ex:
+                _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
+                errors = {"base": "auth_failed"}
+                description_placeholders = {"error_detail": str(ex)}
+            else:
+                # Save credentials temporarily for the duration of this flow
+                # to avoid re-prompting if encrypted device auth is needed
+                # These will be discarded when the flow completes
+                self._cloud_username = user_input[CONF_USERNAME]
+                self._cloud_password = user_input[CONF_PASSWORD]
+                return await self.async_step_select_device()
+
+        user_input = user_input or {}
+        return self.async_show_form(
+            step_id="cloud_login",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_select_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the step to pick discovered device."""
         errors: dict[str, str] = {}
         device_adv: SwitchBotAdvertisement | None = None
         if user_input is not None:
@@ -333,7 +415,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_confirm()
 
         return self.async_show_form(
-            step_id="user",
+            step_id="select_device",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): vol.In(
@@ -367,7 +449,13 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                 ),
             ): int
         }
-        if self.config_entry.data.get(CONF_SENSOR_TYPE) == SupportedModels.LOCK_PRO:
+        if CONF_SENSOR_TYPE in self.config_entry.data and self.config_entry.data[
+            CONF_SENSOR_TYPE
+        ] in (
+            SupportedModels.LOCK,
+            SupportedModels.LOCK_PRO,
+            SupportedModels.LOCK_ULTRA,
+        ):
             options.update(
                 {
                     vol.Optional(

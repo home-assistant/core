@@ -1,0 +1,1021 @@
+# serializer version: 1
+# name: test_sensors[sensor.erics273_account_tier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.erics273_account_tier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Account tier',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.ACCOUNT_TIER: 'account_tier'>,
+    'unique_id': '2533274913657542_account_tier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.erics273_account_tier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'erics273 Account tier',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.erics273_account_tier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Silver',
+  })
+# ---
+# name: test_sensors[sensor.erics273_follower-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.erics273_follower',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Follower',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.FOLLOWER: 'follower'>,
+    'unique_id': '2533274913657542_follower',
+    'unit_of_measurement': 'people',
+  })
+# ---
+# name: test_sensors[sensor.erics273_follower-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'erics273 Follower',
+      'unit_of_measurement': 'people',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.erics273_follower',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18',
+  })
+# ---
+# name: test_sensors[sensor.erics273_following-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.erics273_following',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Following',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.FOLLOWING: 'following'>,
+    'unique_id': '2533274913657542_following',
+    'unit_of_measurement': 'people',
+  })
+# ---
+# name: test_sensors[sensor.erics273_following-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'erics273 Following',
+      'unit_of_measurement': 'people',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.erics273_following',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12',
+  })
+# ---
+# name: test_sensors[sensor.erics273_gamerscore-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.erics273_gamerscore',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gamerscore',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.GAMER_SCORE: 'gamer_score'>,
+    'unique_id': '2533274913657542_gamer_score',
+    'unit_of_measurement': 'points',
+  })
+# ---
+# name: test_sensors[sensor.erics273_gamerscore-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'erics273 Gamerscore',
+      'unit_of_measurement': 'points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.erics273_gamerscore',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3802',
+  })
+# ---
+# name: test_sensors[sensor.erics273_gold_tenure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.erics273_gold_tenure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gold tenure',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.GOLD_TENURE: 'gold_tenure'>,
+    'unique_id': '2533274913657542_gold_tenure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.erics273_gold_tenure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'erics273 Gold tenure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.erics273_gold_tenure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.erics273_last_online-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.erics273_last_online',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last online',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.LAST_ONLINE: 'last_online'>,
+    'unique_id': '2533274913657542_last_online',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.erics273_last_online-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'erics273 Last online',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.erics273_last_online',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-10-08T04:19:58+00:00',
+  })
+# ---
+# name: test_sensors[sensor.erics273_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.erics273_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.STATUS: 'status'>,
+    'unique_id': '2533274913657542_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.erics273_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'erics273 Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.erics273_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Last seen 17h ago: Home',
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_account_tier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gsr_ae_account_tier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Account tier',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.ACCOUNT_TIER: 'account_tier'>,
+    'unique_id': '271958441785640_account_tier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_account_tier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GSR Ae Account tier',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gsr_ae_account_tier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Gold',
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_follower-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gsr_ae_follower',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Follower',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.FOLLOWER: 'follower'>,
+    'unique_id': '271958441785640_follower',
+    'unit_of_measurement': 'people',
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_follower-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GSR Ae Follower',
+      'unit_of_measurement': 'people',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gsr_ae_follower',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '105',
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_following-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gsr_ae_following',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Following',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.FOLLOWING: 'following'>,
+    'unique_id': '271958441785640_following',
+    'unit_of_measurement': 'people',
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_following-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GSR Ae Following',
+      'unit_of_measurement': 'people',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gsr_ae_following',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '121',
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_gamerscore-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gsr_ae_gamerscore',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gamerscore',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.GAMER_SCORE: 'gamer_score'>,
+    'unique_id': '271958441785640_gamer_score',
+    'unit_of_measurement': 'points',
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_gamerscore-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GSR Ae Gamerscore',
+      'unit_of_measurement': 'points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gsr_ae_gamerscore',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '27750',
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_gold_tenure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gsr_ae_gold_tenure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gold tenure',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.GOLD_TENURE: 'gold_tenure'>,
+    'unique_id': '271958441785640_gold_tenure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_gold_tenure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GSR Ae Gold tenure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gsr_ae_gold_tenure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_last_online-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gsr_ae_last_online',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last online',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.LAST_ONLINE: 'last_online'>,
+    'unique_id': '271958441785640_last_online',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_last_online-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'GSR Ae Last online',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gsr_ae_last_online',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-10-09T00:12:27+00:00',
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gsr_ae_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.STATUS: 'status'>,
+    'unique_id': '271958441785640_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GSR Ae Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gsr_ae_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Last seen 49m ago: Xbox App',
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_account_tier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ikken_hissatsuu_account_tier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Account tier',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.ACCOUNT_TIER: 'account_tier'>,
+    'unique_id': '2533274838782903_account_tier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_account_tier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ikken Hissatsuu Account tier',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ikken_hissatsuu_account_tier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Gold',
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_follower-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ikken_hissatsuu_follower',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Follower',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.FOLLOWER: 'follower'>,
+    'unique_id': '2533274838782903_follower',
+    'unit_of_measurement': 'people',
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_follower-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ikken Hissatsuu Follower',
+      'unit_of_measurement': 'people',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ikken_hissatsuu_follower',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '81',
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_following-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ikken_hissatsuu_following',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Following',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.FOLLOWING: 'following'>,
+    'unique_id': '2533274838782903_following',
+    'unit_of_measurement': 'people',
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_following-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ikken Hissatsuu Following',
+      'unit_of_measurement': 'people',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ikken_hissatsuu_following',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '73',
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_gamerscore-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ikken_hissatsuu_gamerscore',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gamerscore',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.GAMER_SCORE: 'gamer_score'>,
+    'unique_id': '2533274838782903_gamer_score',
+    'unit_of_measurement': 'points',
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_gamerscore-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ikken Hissatsuu Gamerscore',
+      'unit_of_measurement': 'points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ikken_hissatsuu_gamerscore',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '27210',
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_gold_tenure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ikken_hissatsuu_gold_tenure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gold tenure',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.GOLD_TENURE: 'gold_tenure'>,
+    'unique_id': '2533274838782903_gold_tenure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_gold_tenure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ikken Hissatsuu Gold tenure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ikken_hissatsuu_gold_tenure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_last_online-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ikken_hissatsuu_last_online',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last online',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.LAST_ONLINE: 'last_online'>,
+    'unique_id': '2533274838782903_last_online',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_last_online-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Ikken Hissatsuu Last online',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ikken_hissatsuu_last_online',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ikken_hissatsuu_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.STATUS: 'status'>,
+    'unique_id': '2533274838782903_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ikken Hissatsuu Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ikken_hissatsuu_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Offline',
+  })
+# ---

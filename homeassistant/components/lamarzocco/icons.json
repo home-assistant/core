@@ -82,6 +82,9 @@
       "steam_boiler_ready_time": {
         "default": "mdi:av-timer"
       },
+      "brewing_start_time": {
+        "default": "mdi:clock-start"
+      },
       "total_coffees_made": {
         "default": "mdi:coffee"
       },

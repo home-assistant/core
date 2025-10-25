@@ -15,7 +15,13 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .conftest import MOCK_DEVICE_NAME, MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
+from .conftest import (
+    MOCK_DEVICE_NAME,
+    MOCK_HOST,
+    MOCK_HOSTNAME,
+    MOCK_PASSWORD,
+    MOCK_USERNAME,
+)
 
 from tests.common import MockConfigEntry
 
@@ -53,14 +59,14 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: "slzb-06p7.local",
+            CONF_HOST: MOCK_HOSTNAME,
         },
     )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "SLZB-06p7"
     assert result2["data"] == {
-        CONF_HOST: MOCK_HOST,
+        CONF_HOST: MOCK_HOSTNAME,
     }
     assert result2["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -82,7 +88,7 @@ async def test_user_flow_auth(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: "slzb-06p7.local",
+            CONF_HOST: MOCK_HOSTNAME,
         },
     )
     assert result2["type"] is FlowResultType.FORM
@@ -100,7 +106,7 @@ async def test_user_flow_auth(
     assert result3["data"] == {
         CONF_USERNAME: MOCK_USERNAME,
         CONF_PASSWORD: MOCK_PASSWORD,
-        CONF_HOST: MOCK_HOST,
+        CONF_HOST: MOCK_HOSTNAME,
     }
     assert result3["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1

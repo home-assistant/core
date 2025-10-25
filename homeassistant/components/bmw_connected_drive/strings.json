@@ -69,7 +69,7 @@
         "name": "Door lock state"
       },
       "condition_based_services": {
-        "name": "Condition based services"
+        "name": "Condition-based services"
       },
       "check_control_messages": {
         "name": "Check control messages"
@@ -81,7 +81,7 @@
         "name": "Connection status"
       },
       "is_pre_entry_climatization_enabled": {
-        "name": "Pre entry climatization"
+        "name": "Pre-entry climatization"
       }
     },
     "button": {

@@ -39,7 +39,7 @@ class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
 
         self.bridge = bridge
-        self.is_on: bool | None = False
+        self.is_on: bool | None = None
         self.async_extra_update: Callable[[], Coroutine[Any, Any, None]] | None = None
 
     async def _async_update_data(self) -> None:
@@ -52,7 +52,12 @@ class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         else:
             self.is_on = await self.bridge.async_is_on()
         if self.is_on != old_state:
-            LOGGER.debug("TV %s state updated to %s", self.bridge.host, self.is_on)
+            LOGGER.debug(
+                "TV %s state updated from %s to %s",
+                self.bridge.host,
+                old_state,
+                self.is_on,
+            )
 
         if self.async_extra_update:
             await self.async_extra_update()

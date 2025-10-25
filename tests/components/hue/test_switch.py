@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonArrayType
 
@@ -15,7 +16,7 @@ async def test_switch(
     """Test if (config) switches get created."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "switch")
+    await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
     # 4 entities should be created from test data
@@ -42,7 +43,7 @@ async def test_switch_turn_on_service(
     """Test calling the turn on service on a switch."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "switch")
+    await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
 
     test_entity_id = "switch.hue_motion_sensor_motion_sensor_enabled"
 
@@ -66,7 +67,7 @@ async def test_switch_turn_off_service(
     """Test calling the turn off service on a switch."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "switch")
+    await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
 
     test_entity_id = "switch.hue_motion_sensor_motion_sensor_enabled"
 
@@ -105,7 +106,7 @@ async def test_switch_added(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     """Test new switch added to bridge."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
 
-    await setup_platform(hass, mock_bridge_v2, "switch")
+    await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
 
     test_entity_id = "switch.hue_mocked_device_motion_sensor_enabled"
 

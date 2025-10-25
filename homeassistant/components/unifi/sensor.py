@@ -13,13 +13,13 @@ from decimal import Decimal
 from functools import partial
 from typing import TYPE_CHECKING, Literal
 
-from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.devices import Devices
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
-from aiounifi.models.api import ApiItemT
+from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 from aiounifi.models.device import (
     Device,
@@ -53,7 +53,6 @@ from homeassistant.util import dt as dt_util, slugify
 from . import UnifiConfigEntry
 from .const import DEVICE_STATES
 from .entity import (
-    HandlerT,
     UnifiEntity,
     UnifiEntityDescription,
     async_client_device_info_fn,
@@ -356,7 +355,7 @@ def make_device_temperatur_sensors() -> tuple[UnifiSensorEntityDescription, ...]
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiSensorEntityDescription(
+class UnifiSensorEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     SensorEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi sensor entity."""
@@ -652,7 +651,9 @@ async def async_setup_entry(
     )
 
 
-class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
+class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
+    UnifiEntity[HandlerT, ApiItemT], SensorEntity
+):
     """Base representation of a UniFi sensor."""
 
     entity_description: UnifiSensorEntityDescription[HandlerT, ApiItemT]

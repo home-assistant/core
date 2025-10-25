@@ -4,7 +4,7 @@ import json
 
 from freezegun import freeze_time
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 

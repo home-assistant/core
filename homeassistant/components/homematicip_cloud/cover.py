@@ -12,6 +12,7 @@ from homematicip.device import (
     FullFlushShutter,
     GarageDoorModuleTormatic,
     HoermannDrivesModule,
+    WiredDinRailBlind4,
 )
 from homematicip.group import ExtendedLinkedShutterGroup
 
@@ -21,13 +22,11 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .entity import HomematicipGenericEntity
-from .hap import HomematicipHAP
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 HMIP_COVER_OPEN = 0
 HMIP_COVER_CLOSED = 1
@@ -37,11 +36,11 @@ HMIP_SLATS_CLOSED = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HomematicIPConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP cover from a config entry."""
-    hap = hass.data[DOMAIN][config_entry.unique_id]
+    hap = config_entry.runtime_data
     entities: list[HomematicipGenericEntity] = [
         HomematicipCoverShutterGroup(hap, group)
         for group in hap.home.groups
@@ -50,7 +49,7 @@ async def async_setup_entry(
     for device in hap.home.devices:
         if isinstance(device, BlindModule):
             entities.append(HomematicipBlindModule(hap, device))
-        elif isinstance(device, DinRailBlind4):
+        elif isinstance(device, (DinRailBlind4, WiredDinRailBlind4)):
             entities.extend(
                 HomematicipMultiCoverSlats(hap, device, channel=channel)
                 for channel in range(1, 5)
@@ -284,19 +283,19 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        return self._device.doorState == DoorState.CLOSED
+        return self.functional_channel.doorState == DoorState.CLOSED
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._device.send_door_command_async(DoorCommand.OPEN)
+        await self.functional_channel.async_send_door_command(DoorCommand.OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self._device.send_door_command_async(DoorCommand.CLOSE)
+        await self.functional_channel.async_send_door_command(DoorCommand.CLOSE)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self._device.send_door_command_async(DoorCommand.STOP)
+        await self.functional_channel.async_send_door_command(DoorCommand.STOP)
 
 
 class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):

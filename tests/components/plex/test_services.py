@@ -17,7 +17,6 @@ from homeassistant.components.plex.const import (
     PLEX_SERVER_CONFIG,
     PLEX_URI_SCHEME,
     SERVICE_REFRESH_LIBRARY,
-    SERVICE_SCAN_CLIENTS,
 )
 from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.const import CONF_URL
@@ -105,15 +104,6 @@ async def test_refresh_library(
         )
     assert "Multiple Plex servers configured" in str(excinfo.value)
     assert refresh.call_count == 1
-
-
-async def test_scan_clients(hass: HomeAssistant, mock_plex_server) -> None:
-    """Test scan_for_clients service call."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SCAN_CLIENTS,
-        blocking=True,
-    )
 
 
 async def test_lookup_media_for_other_integrations(

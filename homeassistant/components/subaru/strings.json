@@ -12,7 +12,7 @@
       },
       "two_factor": {
         "title": "[%key:component::subaru::config::step::user::title%]",
-        "description": "Two factor authentication required",
+        "description": "Two-factor authentication required",
         "data": {
           "contact_method": "Please select a contact method:"
         }
@@ -102,11 +102,11 @@
   "services": {
     "unlock_specific_door": {
       "name": "Unlock specific door",
-      "description": "Unlocks specific door(s).",
+      "description": "Unlocks the driver door, all doors, or the tailgate.",
       "fields": {
         "door": {
           "name": "Door",
-          "description": "Which door(s) to open."
+          "description": "The specific door(s) to unlock."
         }
       }
     }

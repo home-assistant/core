@@ -27,6 +27,12 @@
       "install_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::install_addon::title%]"
       },
+      "install_thread_firmware": {
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_thread_firmware::title%]"
+      },
+      "install_zigbee_firmware": {
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_zigbee_firmware::title%]"
+      },
       "notify_channel_change": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::title%]",
         "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::description%]"
@@ -48,47 +54,31 @@
           "disable_multi_pan": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::data::disable_multi_pan%]"
         }
       },
-      "install_flasher_addon": {
-        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::install_flasher_addon::title%]"
-      },
-      "configure_flasher_addon": {
-        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::configure_flasher_addon::title%]"
-      },
-      "start_flasher_addon": {
-        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_flasher_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_flasher_addon::description%]"
-      },
       "pick_firmware": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::title%]",
         "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::description%]",
         "menu_options": {
+          "pick_firmware_zigbee": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_options::pick_firmware_zigbee%]",
           "pick_firmware_thread": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_options::pick_firmware_thread%]",
-          "pick_firmware_zigbee": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_options::pick_firmware_zigbee%]"
+          "pick_firmware_zigbee_migrate": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_options::pick_firmware_zigbee_migrate%]",
+          "pick_firmware_thread_migrate": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_options::pick_firmware_thread_migrate%]"
+        },
+        "menu_option_descriptions": {
+          "pick_firmware_zigbee": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_option_descriptions::pick_firmware_zigbee%]",
+          "pick_firmware_thread": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_option_descriptions::pick_firmware_thread%]",
+          "pick_firmware_zigbee_migrate": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_option_descriptions::pick_firmware_zigbee_migrate%]",
+          "pick_firmware_thread_migrate": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_option_descriptions::pick_firmware_thread_migrate%]"
         }
-      },
-      "install_zigbee_flasher_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_zigbee_flasher_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_zigbee_flasher_addon::description%]"
-      },
-      "run_zigbee_flasher_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::run_zigbee_flasher_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::run_zigbee_flasher_addon::description%]"
-      },
-      "zigbee_flasher_failed": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_flasher_failed::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_flasher_failed::description%]"
       },
       "confirm_zigbee": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::confirm_zigbee::title%]",
         "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::confirm_zigbee::description%]"
       },
       "install_otbr_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_otbr_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_otbr_addon::description%]"
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_otbr_addon::title%]"
       },
       "start_otbr_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::description%]"
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]"
       },
       "otbr_failed": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::otbr_failed::title%]",
@@ -97,6 +87,29 @@
       "confirm_otbr": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::confirm_otbr::title%]",
         "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::confirm_otbr::description%]"
+      },
+      "zigbee_installation_type": {
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::title%]",
+        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::description%]",
+        "menu_options": {
+          "zigbee_intent_recommended": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::menu_options::zigbee_intent_recommended%]",
+          "zigbee_intent_custom": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::menu_options::zigbee_intent_custom%]"
+        },
+        "menu_option_descriptions": {
+          "zigbee_intent_recommended": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::menu_option_descriptions::zigbee_intent_recommended%]",
+          "zigbee_intent_custom": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::menu_option_descriptions::zigbee_intent_custom%]"
+        }
+      },
+      "zigbee_integration": {
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::title%]",
+        "menu_options": {
+          "zigbee_integration_zha": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::menu_options::zigbee_integration_zha%]",
+          "zigbee_integration_other": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::menu_options::zigbee_integration_other%]"
+        },
+        "menu_option_descriptions": {
+          "zigbee_integration_zha": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::menu_option_descriptions::zigbee_integration_zha%]",
+          "zigbee_integration_other": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::menu_option_descriptions::zigbee_integration_other%]"
+        }
       }
     },
     "error": {
@@ -114,15 +127,16 @@
       "otbr_addon_already_running": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_addon_already_running%]",
       "zha_still_using_stick": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::zha_still_using_stick%]",
       "otbr_still_using_stick": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_still_using_stick%]",
-      "unsupported_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::unsupported_firmware%]"
+      "unsupported_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::unsupported_firmware%]",
+      "fw_download_failed": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::fw_download_failed%]",
+      "fw_install_failed": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::fw_install_failed%]"
     },
     "progress": {
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
+      "install_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_firmware%]",
+      "install_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_otbr_addon%]",
       "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
-      "start_otbr_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
-      "install_zigbee_flasher_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_zigbee_flasher_addon%]",
-      "run_zigbee_flasher_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::run_zigbee_flasher_addon%]",
-      "uninstall_zigbee_flasher_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::uninstall_zigbee_flasher_addon%]"
+      "start_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::start_otbr_addon%]"
     }
   },
   "config": {
@@ -133,36 +147,32 @@
         "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::description%]",
         "menu_options": {
           "pick_firmware_zigbee": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_options::pick_firmware_zigbee%]",
-          "pick_firmware_thread": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_options::pick_firmware_thread%]"
+          "pick_firmware_thread": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_options::pick_firmware_thread%]",
+          "pick_firmware_zigbee_migrate": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_options::pick_firmware_zigbee_migrate%]",
+          "pick_firmware_thread_migrate": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_options::pick_firmware_thread_migrate%]"
+        },
+        "menu_option_descriptions": {
+          "pick_firmware_zigbee": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_option_descriptions::pick_firmware_zigbee%]",
+          "pick_firmware_thread": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_option_descriptions::pick_firmware_thread%]",
+          "pick_firmware_zigbee_migrate": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_option_descriptions::pick_firmware_zigbee_migrate%]",
+          "pick_firmware_thread_migrate": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_option_descriptions::pick_firmware_thread_migrate%]"
         }
-      },
-      "install_zigbee_flasher_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_zigbee_flasher_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_zigbee_flasher_addon::description%]"
-      },
-      "run_zigbee_flasher_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::run_zigbee_flasher_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::run_zigbee_flasher_addon::description%]"
-      },
-      "uninstall_zigbee_flasher_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::uninstall_zigbee_flasher_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::uninstall_zigbee_flasher_addon::description%]"
-      },
-      "zigbee_flasher_failed": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_flasher_failed::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_flasher_failed::description%]"
       },
       "confirm_zigbee": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::confirm_zigbee::title%]",
         "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::confirm_zigbee::description%]"
       },
       "install_otbr_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_otbr_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_otbr_addon::description%]"
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_otbr_addon::title%]"
+      },
+      "install_thread_firmware": {
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_thread_firmware::title%]"
+      },
+      "install_zigbee_firmware": {
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_zigbee_firmware::title%]"
       },
       "start_otbr_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::description%]"
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]"
       },
       "otbr_failed": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::otbr_failed::title%]",
@@ -171,6 +181,29 @@
       "confirm_otbr": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::confirm_otbr::title%]",
         "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::confirm_otbr::description%]"
+      },
+      "zigbee_installation_type": {
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::title%]",
+        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::description%]",
+        "menu_options": {
+          "zigbee_intent_recommended": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::menu_options::zigbee_intent_recommended%]",
+          "zigbee_intent_custom": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::menu_options::zigbee_intent_custom%]"
+        },
+        "menu_option_descriptions": {
+          "zigbee_intent_recommended": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::menu_option_descriptions::zigbee_intent_recommended%]",
+          "zigbee_intent_custom": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::menu_option_descriptions::zigbee_intent_custom%]"
+        }
+      },
+      "zigbee_integration": {
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::title%]",
+        "menu_options": {
+          "zigbee_integration_zha": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::menu_options::zigbee_integration_zha%]",
+          "zigbee_integration_other": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::menu_options::zigbee_integration_other%]"
+        },
+        "menu_option_descriptions": {
+          "zigbee_integration_zha": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::menu_option_descriptions::zigbee_integration_zha%]",
+          "zigbee_integration_other": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::menu_option_descriptions::zigbee_integration_other%]"
+        }
       }
     },
     "abort": {
@@ -185,15 +218,16 @@
       "otbr_addon_already_running": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_addon_already_running%]",
       "zha_still_using_stick": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::zha_still_using_stick%]",
       "otbr_still_using_stick": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_still_using_stick%]",
-      "unsupported_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::unsupported_firmware%]"
+      "unsupported_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::unsupported_firmware%]",
+      "fw_download_failed": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::fw_download_failed%]",
+      "fw_install_failed": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::fw_install_failed%]"
     },
     "progress": {
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
+      "install_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_firmware%]",
+      "install_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_otbr_addon%]",
       "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
-      "start_otbr_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
-      "install_zigbee_flasher_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_zigbee_flasher_addon%]",
-      "run_zigbee_flasher_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::run_zigbee_flasher_addon%]",
-      "uninstall_zigbee_flasher_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::uninstall_zigbee_flasher_addon%]"
+      "start_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::start_otbr_addon%]"
     }
   },
   "exceptions": {

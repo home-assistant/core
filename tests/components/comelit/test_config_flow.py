@@ -6,6 +6,7 @@ from aiocomelit import CannotAuthenticate, CannotConnect
 from aiocomelit.const import BRIDGE, VEDO
 import pytest
 
+from homeassistant.components.comelit.config_flow import InvalidPin
 from homeassistant.components.comelit.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
@@ -13,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import (
+    BAD_PIN,
     BRIDGE_HOST,
     BRIDGE_PIN,
     BRIDGE_PORT,
@@ -96,6 +98,7 @@ async def test_flow_vedo(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
+        (InvalidPin, "invalid_pin"),
     ],
 )
 async def test_exception_connection(
@@ -180,6 +183,7 @@ async def test_reauth_successful(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
+        (InvalidPin, "invalid_pin"),
     ],
 )
 async def test_reauth_not_successful(
@@ -219,3 +223,139 @@ async def test_reauth_not_successful(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_vedo_config_entry.data[CONF_PIN] == VEDO_PIN
+
+
+async def test_reconfigure_successful(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the host can be reconfigured."""
+    mock_serial_bridge_config_entry.add_to_hass(hass)
+    result = await mock_serial_bridge_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # original entry
+    assert mock_serial_bridge_config_entry.data[CONF_HOST] == "fake_bridge_host"
+
+    new_host = "new_bridge_host"
+
+    reconfigure_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: new_host,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
+        },
+    )
+
+    assert reconfigure_result["type"] is FlowResultType.ABORT
+    assert reconfigure_result["reason"] == "reconfigure_successful"
+
+    # changed entry
+    assert mock_serial_bridge_config_entry.data[CONF_HOST] == new_host
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (CannotConnect, "cannot_connect"),
+        (CannotAuthenticate, "invalid_auth"),
+        (ConnectionResetError, "unknown"),
+        (InvalidPin, "invalid_pin"),
+    ],
+)
+async def test_reconfigure_fails(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test that the host can be reconfigured."""
+    mock_serial_bridge_config_entry.add_to_hass(hass)
+    result = await mock_serial_bridge_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_serial_bridge.login.side_effect = side_effect
+
+    reconfigure_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.100.60",
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
+        },
+    )
+
+    assert reconfigure_result["type"] is FlowResultType.FORM
+    assert reconfigure_result["step_id"] == "reconfigure"
+    assert reconfigure_result["errors"] == {"base": error}
+
+    mock_serial_bridge.login.side_effect = None
+
+    reconfigure_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.100.61",
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
+        },
+    )
+
+    assert reconfigure_result["type"] is FlowResultType.ABORT
+    assert reconfigure_result["reason"] == "reconfigure_successful"
+    assert mock_serial_bridge_config_entry.data == {
+        CONF_HOST: "192.168.100.61",
+        CONF_PORT: BRIDGE_PORT,
+        CONF_PIN: BRIDGE_PIN,
+        CONF_TYPE: BRIDGE,
+    }
+
+
+async def test_pin_format_serial_bridge(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test PIN is valid format."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BAD_PIN,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_pin"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: BRIDGE_HOST,
+        CONF_PORT: BRIDGE_PORT,
+        CONF_PIN: BRIDGE_PIN,
+        CONF_TYPE: BRIDGE,
+    }
+    assert not result["result"].unique_id
+    await hass.async_block_till_done()

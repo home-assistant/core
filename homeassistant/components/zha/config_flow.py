@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 import collections
 from contextlib import suppress
+from enum import StrEnum
 import json
 from typing import Any
 
@@ -13,11 +15,15 @@ import voluptuous as vol
 from zha.application.const import RadioType
 import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.exceptions import CannotWriteNetworkSettings, DestructiveWriteNetworkSettings
 
 from homeassistant.components import onboarding, usb
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonState
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
+from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
+    ZigbeeFlowStrategy,
+)
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -32,6 +38,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
@@ -40,6 +47,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_BAUDRATE, CONF_FLOW_CONTROL, CONF_RADIO_TYPE, DOMAIN
+from .helpers import get_zha_gateway
 from .radio_manager import (
     DEVICE_SCHEMA,
     HARDWARE_DISCOVERY_SCHEMA,
@@ -49,12 +57,22 @@ from .radio_manager import (
 )
 
 CONF_MANUAL_PATH = "Enter Manually"
-SUPPORTED_PORT_SETTINGS = (
-    CONF_BAUDRATE,
-    CONF_FLOW_CONTROL,
-)
 DECONZ_DOMAIN = "deconz"
 
+# The ZHA config flow takes different branches depending on if you are migrating to a
+# new adapter via discovery or setting it up from scratch
+
+# For the fast path, we automatically migrate everything and restore the most recent backup
+MIGRATION_STRATEGY_RECOMMENDED = "migration_strategy_recommended"
+MIGRATION_STRATEGY_ADVANCED = "migration_strategy_advanced"
+
+# Similarly, setup follows the same approach: we create a new network
+SETUP_STRATEGY_RECOMMENDED = "setup_strategy_recommended"
+SETUP_STRATEGY_ADVANCED = "setup_strategy_advanced"
+
+# For the advanced paths, we allow users to pick how to form a network: form a brand new
+# network, use the settings currently on the stick, restore from a database backup, or
+# restore from a JSON backup
 FORMATION_STRATEGY = "formation_strategy"
 FORMATION_FORM_NEW_NETWORK = "form_new_network"
 FORMATION_FORM_INITIAL_NETWORK = "form_initial_network"
@@ -64,9 +82,6 @@ FORMATION_UPLOAD_MANUAL_BACKUP = "upload_manual_backup"
 
 CHOOSE_AUTOMATIC_BACKUP = "choose_automatic_backup"
 OVERWRITE_COORDINATOR_IEEE = "overwrite_coordinator_ieee"
-
-OPTIONS_INTENT_MIGRATE = "intent_migrate"
-OPTIONS_INTENT_RECONFIGURE = "intent_reconfigure"
 
 UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 
@@ -83,6 +98,13 @@ ZEROCONF_PROPERTIES_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+class OptionsMigrationIntent(StrEnum):
+    """Zigbee options flow intents."""
+
+    MIGRATE = "intent_migrate"
+    RECONFIGURE = "intent_reconfigure"
 
 
 def _format_backup_choice(
@@ -149,6 +171,7 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
 class BaseZhaFlow(ConfigEntryBaseFlow):
     """Mixin for common ZHA flow steps and forms."""
 
+    _flow_strategy: ZigbeeFlowStrategy | None = None
     _hass: HomeAssistant
     _title: str
 
@@ -170,24 +193,25 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._hass = hass
         self._radio_mgr.hass = hass
 
-    async def _async_create_radio_entry(self) -> ConfigFlowResult:
-        """Create a config entry with the current flow state."""
+    def _get_config_entry_data(self) -> dict[str, Any]:
+        """Extract ZHA config entry data from the radio manager."""
         assert self._radio_mgr.radio_type is not None
         assert self._radio_mgr.device_path is not None
         assert self._radio_mgr.device_settings is not None
 
-        device_settings = self._radio_mgr.device_settings.copy()
-        device_settings[CONF_DEVICE_PATH] = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, self._radio_mgr.device_path
-        )
+        return {
+            CONF_DEVICE: DEVICE_SCHEMA(
+                {
+                    **self._radio_mgr.device_settings,
+                    CONF_DEVICE_PATH: self._radio_mgr.device_path,
+                }
+            ),
+            CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
+        }
 
-        return self.async_create_entry(
-            title=self._title,
-            data={
-                CONF_DEVICE: DEVICE_SCHEMA(device_settings),
-                CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
-            },
-        )
+    @abstractmethod
+    async def _async_create_radio_entry(self) -> ConfigFlowResult:
+        """Create a config entry with the current flow state."""
 
     async def async_step_choose_serial_port(
         self, user_input: dict[str, Any] | None = None
@@ -288,43 +312,46 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         if user_input is not None:
             self._title = user_input[CONF_DEVICE_PATH]
             self._radio_mgr.device_path = user_input[CONF_DEVICE_PATH]
-            self._radio_mgr.device_settings = user_input.copy()
+            self._radio_mgr.device_settings = DEVICE_SCHEMA(
+                {
+                    CONF_DEVICE_PATH: self._radio_mgr.device_path,
+                    CONF_BAUDRATE: user_input[CONF_BAUDRATE],
+                    # `None` shows up as the empty string in the frontend
+                    CONF_FLOW_CONTROL: (
+                        user_input[CONF_FLOW_CONTROL]
+                        if user_input[CONF_FLOW_CONTROL] != "none"
+                        else None
+                    ),
+                }
+            )
 
-            if await self._radio_mgr.radio_type.controller.probe(user_input):
+            if await self._radio_mgr.radio_type.controller.probe(
+                self._radio_mgr.device_settings
+            ):
                 return await self.async_step_verify_radio()
 
             errors["base"] = "cannot_connect"
 
-        schema = {
-            vol.Required(
-                CONF_DEVICE_PATH, default=self._radio_mgr.device_path or vol.UNDEFINED
-            ): str
-        }
-
-        source = self.context.get("source")
-        for (
-            param,
-            value,
-        ) in DEVICE_SCHEMA.schema.items():
-            if param not in SUPPORTED_PORT_SETTINGS:
-                continue
-
-            if source == SOURCE_ZEROCONF and param == CONF_BAUDRATE:
-                value = 115200
-                param = vol.Required(CONF_BAUDRATE, default=value)
-            elif (
-                self._radio_mgr.device_settings is not None
-                and param in self._radio_mgr.device_settings
-            ):
-                param = vol.Required(
-                    str(param), default=self._radio_mgr.device_settings[param]
-                )
-
-            schema[param] = value
+        device_settings = self._radio_mgr.device_settings or {}
 
         return self.async_show_form(
             step_id="manual_port_config",
-            data_schema=vol.Schema(schema),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_DEVICE_PATH,
+                        default=self._radio_mgr.device_path or vol.UNDEFINED,
+                    ): str,
+                    vol.Required(
+                        CONF_BAUDRATE,
+                        default=device_settings.get(CONF_BAUDRATE) or 115200,
+                    ): int,
+                    vol.Required(
+                        CONF_FLOW_CONTROL,
+                        default=device_settings.get(CONF_FLOW_CONTROL) or "none",
+                    ): vol.In(["hardware", "software", "none"]),
+                }
+            ),
             errors=errors,
         )
 
@@ -333,10 +360,15 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Add a warning step to dissuade the use of deprecated radios."""
         assert self._radio_mgr.radio_type is not None
+        await self._radio_mgr.async_read_backups_from_database()
 
         # Skip this step if we are using a recommended radio
         if user_input is not None or self._radio_mgr.radio_type in RECOMMENDED_RADIOS:
-            return await self.async_step_choose_formation_strategy()
+            # ZHA disables the single instance check and will decide at runtime if we
+            # are migrating or setting up from scratch
+            if self.hass.config_entries.async_entries(DOMAIN, include_ignore=False):
+                return await self.async_step_choose_migration_strategy()
+            return await self.async_step_choose_setup_strategy()
 
         return self.async_show_form(
             step_id="verify_radio",
@@ -347,6 +379,109 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 ),
             },
         )
+
+    async def async_step_choose_setup_strategy(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Choose how to set up the integration from scratch."""
+        if self._flow_strategy == ZigbeeFlowStrategy.RECOMMENDED:
+            # Fast path: automatically form a new network
+            return await self.async_step_setup_strategy_recommended()
+        if self._flow_strategy == ZigbeeFlowStrategy.ADVANCED:
+            # Advanced path: let the user choose
+            return await self.async_step_setup_strategy_advanced()
+
+        # Allow onboarding for new users to just create a new network automatically
+        if (
+            not onboarding.async_is_onboarded(self.hass)
+            and not self.hass.config_entries.async_entries(DOMAIN, include_ignore=False)
+            and not self._radio_mgr.backups
+        ):
+            return await self.async_step_setup_strategy_recommended()
+
+        return self.async_show_menu(
+            step_id="choose_setup_strategy",
+            menu_options=[
+                SETUP_STRATEGY_RECOMMENDED,
+                SETUP_STRATEGY_ADVANCED,
+            ],
+        )
+
+    async def async_step_setup_strategy_recommended(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Recommended setup strategy: form a brand-new network."""
+        return await self.async_step_form_new_network()
+
+    async def async_step_setup_strategy_advanced(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Advanced setup strategy: let the user choose."""
+        return await self.async_step_choose_formation_strategy()
+
+    async def async_step_choose_migration_strategy(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Choose how to deal with the current radio's settings during migration."""
+        if self._flow_strategy == ZigbeeFlowStrategy.RECOMMENDED:
+            # Fast path: automatically migrate everything
+            return await self.async_step_migration_strategy_recommended()
+        if self._flow_strategy == ZigbeeFlowStrategy.ADVANCED:
+            # Advanced path: let the user choose
+            return await self.async_step_migration_strategy_advanced()
+        return self.async_show_menu(
+            step_id="choose_migration_strategy",
+            menu_options=[
+                MIGRATION_STRATEGY_RECOMMENDED,
+                MIGRATION_STRATEGY_ADVANCED,
+            ],
+        )
+
+    async def async_step_migration_strategy_recommended(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Recommended migration strategy: automatically migrate everything."""
+
+        # Assume the most recent backup is the correct one
+        self._radio_mgr.chosen_backup = self._radio_mgr.backups[0]
+        return await self.async_step_maybe_reset_old_radio()
+
+    async def async_step_maybe_reset_old_radio(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Erase the old radio's network settings before migration."""
+
+        # Like in the options flow, pull the correct settings from the config entry
+        config_entries = self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False
+        )
+
+        if config_entries:
+            assert len(config_entries) == 1
+            config_entry = config_entries[0]
+
+            # Unload ZHA before connecting to the old adapter
+            with suppress(OperationNotAllowed):
+                await self.hass.config_entries.async_unload(config_entry.entry_id)
+
+            # Create a radio manager to connect to the old stick to reset it
+            temp_radio_mgr = ZhaRadioManager()
+            temp_radio_mgr.hass = self.hass
+            temp_radio_mgr.device_path = config_entry.data[CONF_DEVICE][
+                CONF_DEVICE_PATH
+            ]
+            temp_radio_mgr.device_settings = config_entry.data[CONF_DEVICE]
+            temp_radio_mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
+
+            await temp_radio_mgr.async_reset_adapter()
+
+        return await self.async_step_maybe_confirm_ezsp_restore()
+
+    async def async_step_migration_strategy_advanced(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Advanced migration strategy: let the user choose."""
+        return await self.async_step_choose_formation_strategy()
 
     async def async_step_choose_formation_strategy(
         self, user_input: dict[str, Any] | None = None
@@ -434,7 +569,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             except ValueError:
                 errors["base"] = "invalid_backup_json"
             else:
-                return await self.async_step_maybe_confirm_ezsp_restore()
+                return await self.async_step_maybe_reset_old_radio()
 
         return self.async_show_form(
             step_id="upload_manual_backup",
@@ -474,7 +609,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             index = choices.index(user_input[CHOOSE_AUTOMATIC_BACKUP])
             self._radio_mgr.chosen_backup = self._radio_mgr.backups[index]
 
-            return await self.async_step_maybe_confirm_ezsp_restore()
+            return await self.async_step_maybe_reset_old_radio()
 
         return self.async_show_form(
             step_id="choose_automatic_backup",
@@ -491,16 +626,37 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm restore for EZSP radios that require permanent IEEE writes."""
-        call_step_2 = await self._radio_mgr.async_restore_backup_step_1()
-        if not call_step_2:
-            return await self._async_create_radio_entry()
-
         if user_input is not None:
-            await self._radio_mgr.async_restore_backup_step_2(
-                user_input[OVERWRITE_COORDINATOR_IEEE]
+            if user_input[OVERWRITE_COORDINATOR_IEEE]:
+                # On confirmation, overwrite destructively
+                try:
+                    await self._radio_mgr.restore_backup(overwrite_ieee=True)
+                except CannotWriteNetworkSettings as exc:
+                    return self.async_abort(
+                        reason="cannot_restore_backup",
+                        description_placeholders={"error": str(exc)},
+                    )
+
+                return await self._async_create_radio_entry()
+
+            # On rejection, explain why we can't restore
+            return self.async_abort(reason="cannot_restore_backup_no_ieee_confirm")
+
+        # On first attempt, just try to restore nondestructively
+        try:
+            await self._radio_mgr.restore_backup()
+        except DestructiveWriteNetworkSettings:
+            # Restore cannot happen automatically, we need to ask for permission
+            pass
+        except CannotWriteNetworkSettings as exc:
+            return self.async_abort(
+                reason="cannot_restore_backup",
+                description_placeholders={"error": str(exc)},
             )
+        else:
             return await self._async_create_radio_entry()
 
+        # If it fails, show the form
         return self.async_show_form(
             step_id="maybe_confirm_ezsp_restore",
             data_schema=vol.Schema(
@@ -520,13 +676,8 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         """Set the flow's unique ID and update the device path in an ignored flow."""
         current_entry = await self.async_set_unique_id(unique_id)
 
-        if not current_entry:
-            return
-
-        if current_entry.source != SOURCE_IGNORE:
-            self._abort_if_unique_id_configured()
-        else:
-            # Only update the current entry if it is an ignored discovery
+        # Only update the current entry if it is an ignored discovery
+        if current_entry and current_entry.source == SOURCE_IGNORE:
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_DEVICE: {
@@ -548,24 +699,57 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a ZHA config flow start."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return await self.async_step_choose_serial_port(user_input)
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a discovery."""
+
         self._set_confirm_only()
 
-        # Don't permit discovery if ZHA is already set up
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+        zha_config_entries = self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False
+        )
+
+        if self._radio_mgr.device_path is not None:
+            # Ensure the radio manager device path is unique and will match ZHA's
+            try:
+                self._radio_mgr.device_path = await self.hass.async_add_executor_job(
+                    usb.get_serial_by_id, self._radio_mgr.device_path
+                )
+            except OSError as error:
+                raise AbortFlow(
+                    reason="cannot_resolve_path",
+                    description_placeholders={"path": self._radio_mgr.device_path},
+                ) from error
+
+            # mDNS discovery can advertise the same adapter on multiple IPs or via a
+            # hostname, which should be considered a duplicate
+            current_device_paths = {self._radio_mgr.device_path}
+
+            if self.source == SOURCE_ZEROCONF:
+                discovery_info = self.init_data
+                current_device_paths |= {
+                    f"socket://{ip}:{discovery_info.port}"
+                    for ip in discovery_info.ip_addresses
+                }
+
+            for entry in zha_config_entries:
+                path = entry.data.get(CONF_DEVICE, {}).get(CONF_DEVICE_PATH)
+
+                # Abort discovery if the device path is already configured
+                if path is not None and path in current_device_paths:
+                    return self.async_abort(reason="single_instance_allowed")
 
         # Without confirmation, discovery can automatically progress into parts of the
         # config flow logic that interacts with hardware.
-        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
+        # Ignore Zeroconf discoveries during onboarding, as they may be in use already.
+        if user_input is not None or (
+            not onboarding.async_is_onboarded(self.hass)
+            and not zha_config_entries
+            and self.source != SOURCE_ZEROCONF
+        ):
             # Probe the radio type if we don't have one yet
             if self._radio_mgr.radio_type is None:
                 probe_result = await self._radio_mgr.detect_radio_type()
@@ -686,11 +870,13 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self._title = title
         self._radio_mgr.device_path = device_path
         self._radio_mgr.radio_type = radio_type
-        self._radio_mgr.device_settings = {
-            CONF_DEVICE_PATH: device_path,
-            CONF_BAUDRATE: 115200,
-            CONF_FLOW_CONTROL: None,
-        }
+        self._radio_mgr.device_settings = DEVICE_SCHEMA(
+            {
+                CONF_DEVICE_PATH: device_path,
+                CONF_BAUDRATE: 115200,
+                CONF_FLOW_CONTROL: None,
+            }
+        )
 
         return await self.async_step_confirm()
 
@@ -707,6 +893,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         radio_type = self._radio_mgr.parse_radio_type(discovery_data["radio_type"])
         device_settings = discovery_data["port"]
         device_path = device_settings[CONF_DEVICE_PATH]
+        self._flow_strategy = discovery_data.get("flow_strategy")
 
         await self._set_unique_id_and_update_ignored_flow(
             unique_id=f"{name}_{radio_type.name}_{device_path}",
@@ -721,9 +908,37 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
+    async def _async_create_radio_entry(self) -> ConfigFlowResult:
+        """Create a config entry with the current flow state."""
+
+        # ZHA is still single instance only, even though we use discovery to allow for
+        # migrating to a new radio
+        zha_config_entries = self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False
+        )
+        data = self._get_config_entry_data()
+
+        if len(zha_config_entries) == 1:
+            return self.async_update_reload_and_abort(
+                entry=zha_config_entries[0],
+                title=self._title,
+                data=data,
+                reload_even_if_entry_is_unchanged=True,
+                reason="reconfigure_successful",
+            )
+        if not zha_config_entries:
+            return self.async_create_entry(
+                title=self._title,
+                data=data,
+            )
+        # This should never be reached
+        return self.async_abort(reason="single_instance_allowed")
+
 
 class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
     """Handle an options flow."""
+
+    _migration_intent: OptionsMigrationIntent
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
@@ -738,8 +953,20 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
     ) -> ConfigFlowResult:
         """Launch the options flow."""
         if user_input is not None:
-            # OperationNotAllowed: ZHA is not running
+            # Perform a backup first
+            try:
+                zha_gateway = get_zha_gateway(self.hass)
+            except ValueError:
+                pass
+            else:
+                # The backup itself will be stored in `zigbee.db`, which the radio
+                # manager will read when the class is initialized
+                application_controller = zha_gateway.application_controller
+                await application_controller.backups.create_backup(load_devices=True)
+
+            # Then unload the integration
             with suppress(OperationNotAllowed):
+                # OperationNotAllowed: ZHA is not running
                 await self.hass.config_entries.async_unload(self.config_entry.entry_id)
 
             return await self.async_step_prompt_migrate_or_reconfigure()
@@ -754,8 +981,8 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
         return self.async_show_menu(
             step_id="prompt_migrate_or_reconfigure",
             menu_options=[
-                OPTIONS_INTENT_RECONFIGURE,
-                OPTIONS_INTENT_MIGRATE,
+                OptionsMigrationIntent.RECONFIGURE,
+                OptionsMigrationIntent.MIGRATE,
             ],
         )
 
@@ -763,53 +990,41 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Virtual step for when the user is reconfiguring the integration."""
+        self._migration_intent = OptionsMigrationIntent.RECONFIGURE
         return await self.async_step_choose_serial_port()
 
     async def async_step_intent_migrate(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the user wants to reset their current radio."""
+        self._migration_intent = OptionsMigrationIntent.MIGRATE
+        return await self.async_step_choose_serial_port()
 
-        if user_input is not None:
-            await self._radio_mgr.async_reset_adapter()
-
-            return await self.async_step_instruct_unplug()
-
-        return self.async_show_form(step_id="intent_migrate")
-
-    async def async_step_instruct_unplug(
+    async def async_step_maybe_reset_old_radio(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Instruct the user to unplug the current radio, if possible."""
+        """Erase the old radio's network settings before migration."""
 
-        if user_input is not None:
-            # Now that the old radio is gone, we can scan for serial ports again
-            return await self.async_step_choose_serial_port()
+        # If we are reconfiguring, the old radio will not be available
+        if self._migration_intent is OptionsMigrationIntent.RECONFIGURE:
+            return await self.async_step_maybe_confirm_ezsp_restore()
 
-        return self.async_show_form(step_id="instruct_unplug")
+        return await super().async_step_maybe_reset_old_radio(user_input)
 
     async def _async_create_radio_entry(self):
         """Re-implementation of the base flow's final step to update the config."""
-        device_settings = self._radio_mgr.device_settings.copy()
-        device_settings[CONF_DEVICE_PATH] = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, self._radio_mgr.device_path
-        )
 
         # Avoid creating both `.options` and `.data` by directly writing `data` here
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
-            data={
-                CONF_DEVICE: device_settings,
-                CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
-            },
+            data=self._get_config_entry_data(),
             options=self.config_entry.options,
         )
 
         # Reload ZHA after we finish
         await self.hass.config_entries.async_setup(self.config_entry.entry_id)
 
-        # Intentionally do not set `data` to avoid creating `options`, we set it above
-        return self.async_create_entry(title=self._title, data={})
+        return self.async_abort(reason="reconfigure_successful")
 
     def async_remove(self):
         """Maybe reload ZHA if the flow is aborted."""

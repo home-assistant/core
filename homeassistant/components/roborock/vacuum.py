@@ -5,10 +5,6 @@ from typing import Any
 from roborock.code_mappings import RoborockStateCode
 from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
-from vacuum_map_parser_base.config.color import ColorsPalette
-from vacuum_map_parser_base.config.image_config import ImageConfig
-from vacuum_map_parser_base.config.size import Sizes
-from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -109,7 +105,6 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.FAN_SPEED
-        | VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.CLEAN_SPOT
@@ -143,21 +138,20 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         return STATE_CODE_TO_STATE.get(self._device_status.state)
 
     @property
-    def battery_level(self) -> int | None:
-        """Return the battery level of the vacuum cleaner."""
-        return self._device_status.battery
-
-    @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         return self._device_status.fan_power_name
 
     async def async_start(self) -> None:
         """Start the vacuum."""
-        if self._device_status.in_cleaning == 2:
+        if self._device_status.in_returning == 1:
+            await self.send(RoborockCommand.APP_CHARGE)
+        elif self._device_status.in_cleaning == 2:
             await self.send(RoborockCommand.RESUME_ZONED_CLEAN)
         elif self._device_status.in_cleaning == 3:
             await self.send(RoborockCommand.RESUME_SEGMENT_CLEAN)
+        elif self._device_status.in_cleaning == 4:
+            await self.send(RoborockCommand.APP_RESUME_BUILD_MAP)
         else:
             await self.send(RoborockCommand.APP_START)
 
@@ -225,8 +219,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
-        parser = RoborockMapDataParser(ColorsPalette(), Sizes(), [], ImageConfig(), [])
-        parsed_map = parser.parse(map_data)
+        parsed_map = self.coordinator.map_parser.parse(map_data)
         robot_position = parsed_map.vacuum_position
 
         if robot_position is None:

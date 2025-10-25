@@ -61,6 +61,14 @@
         "name": "Sensor update available"
       }
     },
+    "image": {
+      "plant_image": {
+        "name": "Plant image"
+      },
+      "plant_image_user": {
+        "name": "User image"
+      }
+    },
     "sensor": {
       "scientific_name": {
         "name": "Scientific name"
@@ -130,10 +138,64 @@
         }
       },
       "light": {
-        "name": "Light"
+        "name": "Light",
+        "state_attributes": {
+          "max_acceptable": { "name": "Maximum acceptable" },
+          "max_good": { "name": "Maximum good" },
+          "min_acceptable": { "name": "Minimum acceptable" },
+          "min_good": { "name": "Minimum good" }
+        }
+      },
+      "moisture": {
+        "name": "[%key:component::sensor::entity_component::moisture::name%]",
+        "state_attributes": {
+          "max_acceptable": {
+            "name": "[%key:component::fyta::entity::sensor::light::state_attributes::max_acceptable::name%]"
+          },
+          "max_good": {
+            "name": "[%key:component::fyta::entity::sensor::light::state_attributes::max_good::name%]"
+          },
+          "min_acceptable": {
+            "name": "[%key:component::fyta::entity::sensor::light::state_attributes::min_acceptable::name%]"
+          },
+          "min_good": {
+            "name": "[%key:component::fyta::entity::sensor::light::state_attributes::min_good::name%]"
+          }
+        }
       },
       "salinity": {
-        "name": "Salinity"
+        "name": "Salinity",
+        "state_attributes": {
+          "max_acceptable": {
+            "name": "[%key:component::fyta::entity::sensor::light::state_attributes::max_acceptable::name%]"
+          },
+          "max_good": {
+            "name": "[%key:component::fyta::entity::sensor::light::state_attributes::max_good::name%]"
+          },
+          "min_acceptable": {
+            "name": "[%key:component::fyta::entity::sensor::light::state_attributes::min_acceptable::name%]"
+          },
+          "min_good": {
+            "name": "[%key:component::fyta::entity::sensor::light::state_attributes::min_good::name%]"
+          }
+        }
+      },
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]",
+        "state_attributes": {
+          "max_acceptable": {
+            "name": "[%key:component::fyta::entity::sensor::light::state_attributes::max_acceptable::name%]"
+          },
+          "max_good": {
+            "name": "[%key:component::fyta::entity::sensor::light::state_attributes::max_good::name%]"
+          },
+          "min_acceptable": {
+            "name": "[%key:component::fyta::entity::sensor::light::state_attributes::min_acceptable::name%]"
+          },
+          "min_good": {
+            "name": "[%key:component::fyta::entity::sensor::light::state_attributes::min_good::name%]"
+          }
+        }
       },
       "last_fertilised": {
         "name": "Last fertilized"

@@ -236,7 +236,7 @@ class SynologyDSMBackupAgent(BackupAgent):
                 raise BackupAgentError("Failed to read meta data") from err
 
         try:
-            files = await self._file_station.get_files(path=self.path)
+            files = await self._file_station.get_files(path=self.path, limit=1000)
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to list backups") from err
 

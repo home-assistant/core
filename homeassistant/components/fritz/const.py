@@ -40,6 +40,9 @@ PLATFORMS = [
 CONF_OLD_DISCOVERY = "old_discovery"
 DEFAULT_CONF_OLD_DISCOVERY = False
 
+CONF_FEATURE_DEVICE_TRACKING = "feature_device_tracking"
+DEFAULT_CONF_FEATURE_DEVICE_TRACKING = True
+
 DSL_CONNECTION: Literal["dsl"] = "dsl"
 
 DEFAULT_DEVICE_NAME = "Unknown device"

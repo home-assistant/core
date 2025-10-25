@@ -9,8 +9,8 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfDataRate, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -20,7 +20,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .entity import FreeboxHomeEntity
-from .router import FreeboxRouter
+from .router import FreeboxConfigEntry, FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="rate_down",
         name="Freebox download speed",
         device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         icon="mdi:download-network",
     ),
@@ -36,6 +37,7 @@ CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="rate_up",
         name="Freebox upload speed",
         device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         icon="mdi:upload-network",
     ),
@@ -61,12 +63,11 @@ DISK_PARTITION_SENSORS: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: FreeboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
-    entities: list[SensorEntity] = []
+    router = entry.runtime_data
 
     _LOGGER.debug(
         "%s - %s - %s temperature sensors",
@@ -74,7 +75,7 @@ async def async_setup_entry(
         router.mac,
         len(router.sensors_temperature),
     )
-    entities = [
+    entities: list[SensorEntity] = [
         FreeboxSensor(
             router,
             SensorEntityDescription(
@@ -82,6 +83,7 @@ async def async_setup_entry(
                 name=f"Freebox {sensor_name}",
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=SensorStateClass.MEASUREMENT,
             ),
         )
         for sensor_name in router.sensors_temperature
@@ -102,14 +104,16 @@ async def async_setup_entry(
         for description in DISK_PARTITION_SENSORS
     )
 
-    for node in router.home_devices.values():
-        for endpoint in node["show_endpoints"]:
-            if (
-                endpoint["name"] == "battery"
-                and endpoint["ep_type"] == "signal"
-                and endpoint.get("value") is not None
-            ):
-                entities.append(FreeboxBatterySensor(hass, router, node, endpoint))
+    entities.extend(
+        FreeboxBatterySensor(router, node, endpoint)
+        for node in router.home_devices.values()
+        for endpoint in node["show_endpoints"]
+        if (
+            endpoint["name"] == "battery"
+            and endpoint["ep_type"] == "signal"
+            and endpoint.get("value") is not None
+        )
+    )
 
     if entities:
         async_add_entities(entities, True)

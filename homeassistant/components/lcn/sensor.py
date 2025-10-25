@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_DOMAIN,
@@ -19,6 +18,7 @@ from homeassistant.const import (
     CONF_SOURCE,
     CONF_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
+    PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfSpeed,
@@ -29,9 +29,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ADD_ENTITIES_CALLBACKS,
     CONF_DOMAIN_DATA,
-    DOMAIN,
     LED_PORTS,
     S0_INPUTS,
     SETPOINTS,
@@ -39,7 +37,9 @@ from .const import (
     VARIABLES,
 )
 from .entity import LcnEntity
-from .helpers import InputType
+from .helpers import InputType, LcnConfigEntry
+
+PARALLEL_UPDATES = 0
 
 DEVICE_CLASS_MAPPING = {
     pypck.lcn_defs.VarUnit.CELSIUS: SensorDeviceClass.TEMPERATURE,
@@ -51,6 +51,7 @@ DEVICE_CLASS_MAPPING = {
     pypck.lcn_defs.VarUnit.VOLT: SensorDeviceClass.VOLTAGE,
     pypck.lcn_defs.VarUnit.AMPERE: SensorDeviceClass.CURRENT,
     pypck.lcn_defs.VarUnit.PPM: SensorDeviceClass.CO2,
+    pypck.lcn_defs.VarUnit.PERCENT: SensorDeviceClass.HUMIDITY,
 }
 
 UNIT_OF_MEASUREMENT_MAPPING = {
@@ -63,11 +64,12 @@ UNIT_OF_MEASUREMENT_MAPPING = {
     pypck.lcn_defs.VarUnit.VOLT: UnitOfElectricPotential.VOLT,
     pypck.lcn_defs.VarUnit.AMPERE: UnitOfElectricCurrent.AMPERE,
     pypck.lcn_defs.VarUnit.PPM: CONCENTRATION_PARTS_PER_MILLION,
+    pypck.lcn_defs.VarUnit.PERCENT: PERCENTAGE,
 }
 
 
 def add_lcn_entities(
-    config_entry: ConfigEntry,
+    config_entry: LcnConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     entity_configs: Iterable[ConfigType],
 ) -> None:
@@ -86,7 +88,7 @@ def add_lcn_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LcnConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
@@ -96,7 +98,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+    config_entry.runtime_data.add_entities_callbacks.update(
         {DOMAIN_SENSOR: add_entities}
     )
 
@@ -112,7 +114,7 @@ async def async_setup_entry(
 class LcnVariableSensor(LcnEntity, SensorEntity):
     """Representation of a LCN sensor for variables."""
 
-    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN sensor."""
         super().__init__(config, config_entry)
 
@@ -157,7 +159,7 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
 class LcnLedLogicSensor(LcnEntity, SensorEntity):
     """Representation of a LCN sensor for leds and logicops."""
 
-    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN sensor."""
         super().__init__(config, config_entry)
 

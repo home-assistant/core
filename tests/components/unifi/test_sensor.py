@@ -10,7 +10,7 @@ from aiounifi.models.device import DeviceState
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -1042,9 +1042,9 @@ async def test_bandwidth_port_sensors(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
 
     # Verify sensor state
-    assert hass.states.get("sensor.mock_name_port_1_rx").state == "0.00921"
-    assert hass.states.get("sensor.mock_name_port_1_tx").state == "0.04089"
-    assert hass.states.get("sensor.mock_name_port_2_rx").state == "0.01229"
+    assert hass.states.get("sensor.mock_name_port_1_rx").state == "0.009208"
+    assert hass.states.get("sensor.mock_name_port_1_tx").state == "0.040888"
+    assert hass.states.get("sensor.mock_name_port_2_rx").state == "0.012288"
     assert hass.states.get("sensor.mock_name_port_2_tx").state == "0.02892"
 
     # Verify state update
@@ -1055,8 +1055,8 @@ async def test_bandwidth_port_sensors(
     mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.mock_name_port_1_rx").state == "27648.00000"
-    assert hass.states.get("sensor.mock_name_port_1_tx").state == "63128.00000"
+    assert hass.states.get("sensor.mock_name_port_1_rx").state == "27648.0"
+    assert hass.states.get("sensor.mock_name_port_1_tx").state == "63128.0"
 
     # Disable option
     options = config_entry_options.copy()

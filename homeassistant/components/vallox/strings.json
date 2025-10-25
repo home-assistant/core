@@ -34,7 +34,7 @@
   "entity": {
     "binary_sensor": {
       "post_heater": {
-        "name": "Post heater"
+        "name": "Post-heater"
       }
     },
     "number": {

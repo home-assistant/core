@@ -7,7 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from google.api_core.client_options import ClientOptions
-from google.api_core.exceptions import GoogleAPIError
+from google.api_core.exceptions import GoogleAPIError, PermissionDenied
 from google.maps.routing_v2 import (
     ComputeRoutesRequest,
     Route,
@@ -22,6 +22,7 @@ from google.protobuf import timestamp_pb2
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -58,7 +59,11 @@ from .const import (
     TRAVEL_MODES_TO_GOOGLE_SDK_ENUM,
     UNITS_TO_GOOGLE_SDK_ENUM,
 )
-from .helpers import convert_to_waypoint
+from .helpers import (
+    convert_to_waypoint,
+    create_routes_api_disabled_issue,
+    delete_routes_api_disabled_issue,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,6 +92,16 @@ def convert_time(time_str: str) -> timestamp_pb2.Timestamp | None:
     return timestamp
 
 
+SENSOR_DESCRIPTIONS = [
+    SensorEntityDescription(
+        key="duration",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+    )
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -101,20 +116,20 @@ async def async_setup_entry(
     client_options = ClientOptions(api_key=api_key)
     client = RoutesAsyncClient(client_options=client_options)
 
-    sensor = GoogleTravelTimeSensor(
-        config_entry, name, api_key, origin, destination, client
-    )
+    sensors = [
+        GoogleTravelTimeSensor(
+            config_entry, name, api_key, origin, destination, client, sensor_description
+        )
+        for sensor_description in SENSOR_DESCRIPTIONS
+    ]
 
-    async_add_entities([sensor], False)
+    async_add_entities(sensors, False)
 
 
 class GoogleTravelTimeSensor(SensorEntity):
     """Representation of a Google travel time sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_device_class = SensorDeviceClass.DURATION
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
@@ -124,8 +139,10 @@ class GoogleTravelTimeSensor(SensorEntity):
         origin: str,
         destination: str,
         client: RoutesAsyncClient,
+        sensor_description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        self.entity_description = sensor_description
         self._attr_name = name
         self._attr_unique_id = config_entry.entry_id
         self._attr_device_info = DeviceInfo(
@@ -271,8 +288,14 @@ class GoogleTravelTimeSensor(SensorEntity):
                 response = await self._client.compute_routes(
                     request, metadata=[("x-goog-fieldmask", FIELD_MASK)]
                 )
+                _LOGGER.debug("Received response: %s", response)
                 if response is not None and len(response.routes) > 0:
                     self._route = response.routes[0]
+                delete_routes_api_disabled_issue(self.hass, self._config_entry)
+            except PermissionDenied:
+                _LOGGER.error("Routes API is disabled for this API key")
+                create_routes_api_disabled_issue(self.hass, self._config_entry)
+                self._route = None
             except GoogleAPIError as ex:
                 _LOGGER.error("Error getting travel time: %s", ex)
                 self._route = None

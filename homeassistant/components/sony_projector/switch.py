@@ -64,7 +64,7 @@ class SonyProjector(SwitchEntity):
         self._attributes = {}
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if projector is available."""
         return self._available
 

@@ -6,7 +6,7 @@ from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import ClimateEntityFeature, HVACAction, HVACMode
 from homeassistant.const import Platform
@@ -85,6 +85,12 @@ async def test_thermostat_base(
     assert state
     assert state.attributes["hvac_action"] == HVACAction.HEATING
 
+    set_node_attribute(matter_node, 1, 513, 41, 5)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.attributes["hvac_action"] == HVACAction.HEATING
+
     set_node_attribute(matter_node, 1, 513, 41, 8)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac")
@@ -97,7 +103,19 @@ async def test_thermostat_base(
     assert state
     assert state.attributes["hvac_action"] == HVACAction.COOLING
 
+    set_node_attribute(matter_node, 1, 513, 41, 6)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.attributes["hvac_action"] == HVACAction.COOLING
+
     set_node_attribute(matter_node, 1, 513, 41, 16)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.attributes["hvac_action"] == HVACAction.COOLING
+
+    set_node_attribute(matter_node, 1, 513, 41, 66)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac")
     assert state
@@ -121,7 +139,7 @@ async def test_thermostat_base(
     assert state
     assert state.attributes["hvac_action"] == HVACAction.FAN
 
-    set_node_attribute(matter_node, 1, 513, 41, 66)
+    set_node_attribute(matter_node, 1, 513, 41, 128)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac")
     assert state
@@ -142,6 +160,59 @@ async def test_thermostat_base(
     state = hass.states.get("climate.longan_link_hvac")
     assert state
     assert state.attributes["temperature"] == 20
+
+
+@pytest.mark.parametrize("node_fixture", ["thermostat"])
+async def test_thermostat_humidity(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test thermostat humidity attribute and state updates."""
+    # test entity attributes
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+
+    measured_value = clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue
+
+    # test current humidity update from device
+    set_node_attribute(
+        matter_node,
+        1,
+        measured_value.cluster_id,
+        measured_value.attribute_id,
+        1234,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.attributes["current_humidity"] == 12.34
+
+    # test current humidity update from device with zero value
+    set_node_attribute(
+        matter_node,
+        1,
+        measured_value.cluster_id,
+        measured_value.attribute_id,
+        0,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.attributes["current_humidity"] == 0.0
+
+    # test current humidity update from device with None value
+    set_node_attribute(
+        matter_node,
+        1,
+        measured_value.cluster_id,
+        measured_value.attribute_id,
+        None,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert "current_humidity" not in state.attributes
 
 
 @pytest.mark.parametrize("node_fixture", ["thermostat"])

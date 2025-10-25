@@ -11,15 +11,18 @@ from typing import Any
 
 from aiohttp.web import Request, Response
 from webio_api import WebioAPI
-from webio_api.const import KEY_DEVICE_SERIAL, KEY_OUTPUTS, KEY_TYPE, TYPE_STATUS_UPDATE
+from webio_api.const import KEY_DEVICE_SERIAL, KEY_TYPE, TYPE_STATUS_UPDATE
 
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.update_coordinator import BaseDataUpdateCoordinatorProtocol
 
-from .const import STATUS_UPDATE_MAX_TIME_INTERVAL
+from .const import KEY_TEMP_SENSOR, STATUS_UPDATE_MAX_TIME_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
+
+KEY_INPUTS = "inputs"
+KEY_OUTPUTS = "outputs"
 
 
 class NotificationCoordinator:
@@ -96,8 +99,11 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
         self._job = HassJob(self._handle_max_update_interval, job_name)
         self._unsub_last_update_check: CALLBACK_TYPE | None = None
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
-        data: dict[str, Any] = {}
-        data[KEY_OUTPUTS] = self.webio_api.outputs
+        data: dict[str, Any] = {
+            KEY_OUTPUTS: self.webio_api.outputs,
+            KEY_INPUTS: self.webio_api.inputs,
+            KEY_TEMP_SENSOR: self.webio_api.temp_sensor,
+        }
         self.async_set_updated_data(data)
 
     def is_connection_confirmed(self) -> bool:
@@ -187,5 +193,9 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
     async def process_status_update(self, new_status: dict) -> None:
         """Process status update from NASweb."""
         self.webio_api.update_device_status(new_status)
-        new_data = {KEY_OUTPUTS: self.webio_api.outputs}
+        new_data = {
+            KEY_OUTPUTS: self.webio_api.outputs,
+            KEY_INPUTS: self.webio_api.inputs,
+            KEY_TEMP_SENSOR: self.webio_api.temp_sensor,
+        }
         self.async_set_updated_data(new_data)

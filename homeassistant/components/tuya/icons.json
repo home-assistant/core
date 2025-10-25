@@ -15,6 +15,9 @@
       },
       "tilt": {
         "default": "mdi:spirit-level"
+      },
+      "valve": {
+        "default": "mdi:pipe-valve"
       }
     },
     "button": {
@@ -370,6 +373,12 @@
       },
       "sterilization": {
         "default": "mdi:minus-circle-outline"
+      },
+      "arm_beep": {
+        "default": "mdi:volume-high"
+      },
+      "siren": {
+        "default": "mdi:alarm-light"
       }
     }
   }

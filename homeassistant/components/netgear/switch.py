@@ -41,8 +41,8 @@ class NetgearSwitchEntityDescriptionRequired:
 class NetgearSwitchEntityDescription(SwitchEntityDescription):
     """Class describing Netgear Switch entities."""
 
-    update: Callable[[NetgearRouter], bool]
-    action: Callable[[NetgearRouter], bool]
+    update: Callable[[NetgearRouter], Callable[[], bool | None]]
+    action: Callable[[NetgearRouter], Callable[[bool], bool]]
 
 
 ROUTER_SWITCH_TYPES = [
@@ -200,12 +200,12 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
         self._attr_is_on = None
         self._attr_available = False
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Fetch state when entity is added."""
         await self.async_update()
         await super().async_added_to_hass()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Poll the state of the switch."""
         async with self._router.api_lock:
             response = await self.hass.async_add_executor_job(
@@ -217,14 +217,14 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
             self._attr_is_on = response
             self._attr_available = True
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         async with self._router.api_lock:
             await self.hass.async_add_executor_job(
                 self.entity_description.action(self._router), True
             )
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         async with self._router.api_lock:
             await self.hass.async_add_executor_job(

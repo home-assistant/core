@@ -27,7 +27,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.device_automation.trigger import (
+from homeassistant.components.device_automation.trigger import (  # pylint: disable=hass-component-root-import
     async_validate_trigger_config,
 )
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN, EventDeviceClass
@@ -75,11 +75,12 @@ from homeassistant.helpers.entityfilter import (
     EntityFilter,
 )
 from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.service import (
-    async_extract_referenced_entity_ids,
-    async_register_admin_service,
-)
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.target import (
+    TargetSelectorData,
+    async_extract_referenced_entity_ids,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util.async_ import create_eager_task
@@ -223,9 +224,8 @@ RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-UNPAIR_SERVICE_SCHEMA = vol.All(
-    vol.Schema(cv.ENTITY_SERVICE_FIELDS),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+UNPAIR_SERVICE_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [str])}
 )
 
 
@@ -482,7 +482,9 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
 
     async def async_handle_homekit_unpair(service: ServiceCall) -> None:
         """Handle unpair HomeKit service call."""
-        referenced = async_extract_referenced_entity_ids(hass, service)
+        referenced = async_extract_referenced_entity_ids(
+            hass, TargetSelectorData(service.data)
+        )
         dev_reg = dr.async_get(hass)
         for device_id in referenced.referenced_devices:
             if not (dev_reg_ent := dev_reg.async_get(device_id)):

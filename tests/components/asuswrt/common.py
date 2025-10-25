@@ -1,7 +1,9 @@
 """Test code shared between test files."""
 
+from unittest.mock import MagicMock
+
 from aioasuswrt.asuswrt import Device as LegacyDevice
-from pyasuswrt.asuswrt import Device as HttpDevice
+from asusrouter.modules.client import ConnectionState
 
 from homeassistant.components.asuswrt.const import (
     CONF_SSH_KEY,
@@ -59,8 +61,23 @@ MOCK_MACS = [
 ]
 
 
-def new_device(protocol, mac, ip, name):
+def make_client(mac, ip, name, node):
+    """Create a modern mock client."""
+    connection = MagicMock()
+    connection.ip_address = ip
+    connection.node = node
+    description = MagicMock()
+    description.name = name
+    description.mac = mac
+    client = MagicMock()
+    client.connection = connection
+    client.description = description
+    client.state = ConnectionState.CONNECTED
+    return client
+
+
+def new_device(protocol, mac, ip, name, node=None):
     """Return a new device for specific protocol."""
     if protocol in [PROTOCOL_HTTP, PROTOCOL_HTTPS]:
-        return HttpDevice(mac, ip, name, ROUTER_MAC_ADDR, None)
+        return make_client(mac, ip, name, node)
     return LegacyDevice(mac, ip, name)

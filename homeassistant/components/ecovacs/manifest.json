@@ -4,7 +4,8 @@
   "codeowners": ["@mib1185", "@edenhaus", "@Augar"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ecovacs",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["sleekxmppfs", "sucks", "deebot_client"],
-  "requirements": ["py-sucks==0.9.10", "deebot-client==13.0.1"]
+  "requirements": ["py-sucks==0.9.11", "deebot-client==15.1.0"]
 }

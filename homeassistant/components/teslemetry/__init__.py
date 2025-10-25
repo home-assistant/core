@@ -23,7 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER, MODELS
+from .const import DOMAIN, LOGGER
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
@@ -32,7 +32,7 @@ from .coordinator import (
 )
 from .helpers import flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
-from .services import async_register_services
+from .services import async_setup_services
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -56,7 +56,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telemetry integration."""
-    async_register_services(hass)
+    async_setup_services(hass)
     return True
 
 
@@ -95,13 +95,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     energysites: list[TeslemetryEnergyData] = []
 
     # Create the stream
-    stream = TeslemetryStream(
-        session,
-        access_token,
-        server=f"{region.lower()}.teslemetry.com",
-        parse_timestamp=True,
-        manual=True,
-    )
+    stream: TeslemetryStream | None = None
+
+    # Remember each device identifier we create
+    current_devices: set[tuple[str, str]] = set()
 
     for product in products:
         if (
@@ -119,9 +116,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 manufacturer="Tesla",
                 configuration_url="https://teslemetry.com/console",
                 name=product["display_name"],
-                model=MODELS.get(vin[3]),
+                model=api.model,
                 serial_number=vin,
             )
+            current_devices.add((DOMAIN, vin))
+
+            # Create stream if required
+            if not stream:
+                stream = TeslemetryStream(
+                    session,
+                    access_token,
+                    server=f"{region.lower()}.teslemetry.com",
+                    parse_timestamp=True,
+                    manual=True,
+                )
 
             remove_listener = stream.async_add_listener(
                 create_handle_vehicle_stream(vin, coordinator),
@@ -129,7 +137,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
             firmware = vehicle_metadata[vin].get("firmware", "Unknown")
             stream_vehicle = stream.get_vehicle(vin)
-            poll = product["command_signing"] == "off"
+            poll = vehicle_metadata[vin].get("polling", False)
 
             vehicles.append(
                 TeslemetryVehicleData(
@@ -167,6 +175,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 name=product.get("site_name", "Energy Site"),
                 serial_number=str(site_id),
             )
+            current_devices.add((DOMAIN, str(site_id)))
+
+            if wall_connector:
+                for connector in product["components"]["wall_connectors"]:
+                    current_devices.add((DOMAIN, connector["din"]))
 
             # Check live status endpoint works before creating its coordinator
             try:
@@ -211,11 +224,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             energysite.info_coordinator.async_config_entry_first_refresh()
             for energysite in energysites
         ),
-        *(
-            energysite.history_coordinator.async_config_entry_first_refresh()
-            for energysite in energysites
-            if energysite.history_coordinator
-        ),
     )
 
     # Add energy device models
@@ -236,11 +244,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             config_entry_id=entry.entry_id, **energysite.device
         )
 
+    # Remove devices that are no longer present
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        if not any(
+            identifier in current_devices for identifier in device_entry.identifiers
+        ):
+            LOGGER.debug("Removing stale device %s", device_entry.id)
+            device_registry.async_update_device(
+                device_id=device_entry.id,
+                remove_config_entry_id=entry.entry_id,
+            )
+
     # Setup Platforms
-    entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)
+    entry.runtime_data = TeslemetryData(vehicles, energysites, scopes, stream)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
+    if stream:
+        entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
 
     return True
 

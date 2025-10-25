@@ -5,8 +5,12 @@
       'backups': list([
         dict({
           'backup_id': 'abc123',
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
           ]),
         }),
       ]),
@@ -40,7 +44,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -50,8 +54,12 @@
       'backups': list([
         dict({
           'backup_id': 'abc123',
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
           ]),
         }),
       ]),
@@ -80,13 +88,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -96,8 +103,12 @@
       'backups': list([
         dict({
           'backup_id': 'abc123',
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
           ]),
         }),
       ]),
@@ -131,7 +142,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -141,8 +152,12 @@
       'backups': list([
         dict({
           'backup_id': 'abc123',
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
           ]),
         }),
       ]),
@@ -171,13 +186,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -187,8 +201,18 @@
       'backups': list([
         dict({
           'backup_id': 'abc123',
+          'failed_addons': list([
+            dict({
+              'name': 'Test add-on',
+              'slug': 'test_addon',
+              'version': '1.0.0',
+            }),
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
+            'ssl',
           ]),
         }),
       ]),
@@ -226,7 +250,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -236,8 +260,18 @@
       'backups': list([
         dict({
           'backup_id': 'abc123',
+          'failed_addons': list([
+            dict({
+              'name': 'Test add-on',
+              'slug': 'test_addon',
+              'version': '1.0.0',
+            }),
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
+            'ssl',
           ]),
         }),
       ]),
@@ -270,13 +304,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -286,8 +319,12 @@
       'backups': list([
         dict({
           'backup_id': 'abc123',
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
           ]),
         }),
       ]),
@@ -325,7 +362,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -335,8 +372,12 @@
       'backups': list([
         dict({
           'backup_id': 'abc123',
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
           ]),
         }),
       ]),
@@ -369,13 +410,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -385,8 +425,12 @@
       'backups': list([
         dict({
           'backup_id': 'abc123',
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
           ]),
         }),
       ]),
@@ -424,7 +468,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -434,8 +478,12 @@
       'backups': list([
         dict({
           'backup_id': 'abc123',
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
           ]),
         }),
       ]),
@@ -468,13 +516,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -484,8 +531,12 @@
       'backups': list([
         dict({
           'backup_id': 'abc123',
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
           ]),
         }),
       ]),
@@ -526,7 +577,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -536,8 +587,12 @@
       'backups': list([
         dict({
           'backup_id': 'abc123',
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
           ]),
         }),
       ]),
@@ -573,13 +628,136 @@
           'days': list([
           ]),
           'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 7,
+    'version': 1,
+  })
+# ---
+# name: test_store_migration[store_data6]
+  dict({
+    'data': dict({
+      'backups': list([
+        dict({
+          'backup_id': 'abc123',
+          'failed_addons': list([
+            dict({
+              'name': 'Test add-on',
+              'slug': 'test_addon',
+              'version': '1.0.0',
+            }),
+          ]),
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+          'failed_folders': list([
+            'ssl',
+          ]),
+        }),
+      ]),
+      'config': dict({
+        'agents': dict({
+          'test.remote': dict({
+            'protected': True,
+            'retention': dict({
+              'copies': None,
+              'days': None,
+            }),
+          }),
+        }),
+        'automatic_backups_configured': True,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': 'hunter2',
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
           'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
+    'version': 1,
+  })
+# ---
+# name: test_store_migration[store_data6].1
+  dict({
+    'data': dict({
+      'backups': list([
+        dict({
+          'backup_id': 'abc123',
+          'failed_addons': list([
+            dict({
+              'name': 'Test add-on',
+              'slug': 'test_addon',
+              'version': '1.0.0',
+            }),
+          ]),
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+          'failed_folders': list([
+            'ssl',
+          ]),
+        }),
+      ]),
+      'config': dict({
+        'agents': dict({
+          'test.remote': dict({
+            'protected': True,
+            'retention': dict({
+              'copies': None,
+              'days': None,
+            }),
+          }),
+        }),
+        'automatic_backups_configured': True,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': 'hunter2',
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 7,
     'version': 1,
   })
 # ---

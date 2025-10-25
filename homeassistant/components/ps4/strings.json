@@ -2,7 +2,13 @@
   "config": {
     "step": {
       "creds": {
-        "description": "Credentials needed. Select **Submit** and then in the PS4 2nd Screen App, refresh devices and select the **Home-Assistant** device to continue."
+        "description": "Credentials needed. Select **Submit** and then in the PS4 2nd Screen App, refresh devices and select the **Home-Assistant** device to continue.",
+        "data": {
+          "token": "PSN Token"
+        },
+        "data_description": {
+          "token": "To get your PSN token, please follow these [instructions]({ps4_docs_url})."
+        }
       },
       "mode": {
         "data": {
@@ -35,8 +41,8 @@
       "credential_error": "Error fetching credentials.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "port_987_bind_error": "Could not bind to port 987. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
-      "port_997_bind_error": "Could not bind to port 997. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info."
+      "port_987_bind_error": "Could not bind to port 987. Refer to the [documentation]({ps4_docs_url}) for additional info.",
+      "port_997_bind_error": "Could not bind to port 997. Refer to the [documentation]({ps4_docs_url}) for additional info."
     }
   },
   "services": {

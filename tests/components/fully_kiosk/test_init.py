@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_load_unload_config_entry(
@@ -74,10 +74,10 @@ async def _load_config(
     ) as client_mock:
         client = client_mock.return_value
         client.getDeviceInfo.return_value = json.loads(
-            load_fixture(device_info_fixture, DOMAIN)
+            await async_load_fixture(hass, device_info_fixture, DOMAIN)
         )
         client.getSettings.return_value = json.loads(
-            load_fixture("listsettings.json", DOMAIN)
+            await async_load_fixture(hass, "listsettings.json", DOMAIN)
         )
 
         config_entry.add_to_hass(hass)

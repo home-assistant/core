@@ -19,14 +19,18 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     smart_home as alexa_smart_home,
 )
-from homeassistant.components.camera.webrtc import async_register_ice_servers
+from homeassistant.components.camera import async_register_ice_servers
 from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.util.aiohttp import MockRequest, serialize_response
 
 from . import alexa_config, google_config
@@ -36,8 +40,11 @@ from .prefs import CloudPreferences
 _LOGGER = logging.getLogger(__name__)
 
 VALID_REPAIR_TRANSLATION_KEYS = {
-    "warn_bad_custom_domain_configuration",
+    "connection_error",
+    "no_subscription",
     "reset_bad_custom_domain_configuration",
+    "subscription_expired",
+    "warn_bad_custom_domain_configuration",
 }
 
 
@@ -399,7 +406,12 @@ class CloudClient(Interface):
     ) -> None:
         """Create a repair issue."""
         if translation_key not in VALID_REPAIR_TRANSLATION_KEYS:
-            raise ValueError(f"Invalid translation key {translation_key}")
+            _LOGGER.error(
+                "Invalid translation key %s for repair issue %s",
+                translation_key,
+                identifier,
+            )
+            return
         async_create_issue(
             hass=self._hass,
             domain=DOMAIN,
@@ -409,3 +421,7 @@ class CloudClient(Interface):
             severity=IssueSeverity(severity),
             is_fixable=False,
         )
+
+    async def async_delete_repair_issue(self, identifier: str) -> None:
+        """Delete a repair issue."""
+        async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=identifier)

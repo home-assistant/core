@@ -74,7 +74,12 @@ from zha.event import EventBase
 from zha.exceptions import ZHAException
 from zha.mixins import LogMixin
 from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
-from zha.zigbee.device import ClusterHandlerConfigurationComplete, Device, ZHAEvent
+from zha.zigbee.device import (
+    ClusterHandlerConfigurationComplete,
+    Device,
+    DeviceFirmwareInfoUpdatedEvent,
+    ZHAEvent,
+)
 from zha.zigbee.group import Group, GroupInfo, GroupMember
 from zigpy.config import (
     CONF_DATABASE,
@@ -419,13 +424,26 @@ class ZHADeviceProxy(EventBase):
     @callback
     def handle_zha_event(self, zha_event: ZHAEvent) -> None:
         """Handle a ZHA event."""
+        if ATTR_UNIQUE_ID in zha_event.data:
+            unique_id = zha_event.data[ATTR_UNIQUE_ID]
+
+            # Client cluster handler unique IDs in the ZHA lib were disambiguated by
+            # adding a suffix of `_CLIENT`. Unfortunately, this breaks existing
+            # automations that match the `unique_id` key. This can be removed in a
+            # future release with proper notice of a breaking change.
+            unique_id = unique_id.removesuffix("_CLIENT")
+        else:
+            unique_id = zha_event.unique_id
+
         self.gateway_proxy.hass.bus.async_fire(
             ZHA_EVENT,
             {
                 ATTR_DEVICE_IEEE: str(zha_event.device_ieee),
-                ATTR_UNIQUE_ID: zha_event.unique_id,
                 ATTR_DEVICE_ID: self.device_id,
                 **zha_event.data,
+                # The order of these keys is intentional, `zha_event.data` can contain
+                # a `unique_id` key, which we explicitly replace
+                ATTR_UNIQUE_ID: unique_id,
             },
         )
 
@@ -518,7 +536,6 @@ class ZHAGatewayProxy(EventBase):
 
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
-        self._reload_task: asyncio.Task | None = None
         config_entry.async_on_unload(
             self.hass.bus.async_listen(
                 er.EVENT_ENTITY_REGISTRY_UPDATED,
@@ -604,15 +621,7 @@ class ZHAGatewayProxy(EventBase):
         """Handle a connection lost event."""
 
         _LOGGER.debug("Connection to the radio was lost: %r", event)
-
-        # Ensure we do not queue up multiple resets
-        if self._reload_task is not None:
-            _LOGGER.debug("Ignoring reset, one is already running")
-            return
-
-        self._reload_task = self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self.config_entry.entry_id),
-        )
+        self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
     @callback
     def handle_device_joined(self, event: DeviceJoinedEvent) -> None:
@@ -830,8 +839,23 @@ class ZHAGatewayProxy(EventBase):
                 name=zha_device.name,
                 manufacturer=zha_device.manufacturer,
                 model=zha_device.model,
+                sw_version=zha_device.firmware_version,
             )
             zha_device_proxy.device_id = device_registry_device.id
+
+            def update_sw_version(event: DeviceFirmwareInfoUpdatedEvent) -> None:
+                """Update software version in device registry."""
+                device_registry.async_update_device(
+                    device_registry_device.id,
+                    sw_version=event.new_firmware_version,
+                )
+
+            self._unsubs.append(
+                zha_device.on_event(
+                    DeviceFirmwareInfoUpdatedEvent.event_type, update_sw_version
+                )
+            )
+
         return zha_device_proxy
 
     def _async_get_or_create_group_proxy(self, group_info: GroupInfo) -> ZHAGroupProxy:

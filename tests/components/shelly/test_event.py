@@ -6,7 +6,7 @@ from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.const import MODEL_I3
 import pytest
 from pytest_unordered import unordered
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
@@ -14,13 +14,25 @@ from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
     EventDeviceClass,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, inject_rpc_device_event, register_entity
+from . import (
+    init_integration,
+    inject_rpc_device_event,
+    patch_platforms,
+    register_entity,
+)
 
 DEVICE_BLOCK_ID = 4
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.EVENT]):
+        yield
 
 
 async def test_rpc_button(
@@ -31,7 +43,7 @@ async def test_rpc_button(
 ) -> None:
     """Test RPC device event."""
     await init_integration(hass, 2)
-    entity_id = "event.test_name_input_0"
+    entity_id = "event.test_name_test_input_0"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
@@ -176,6 +188,7 @@ async def test_block_event(
 ) -> None:
     """Test block device event."""
     await init_integration(hass, 1)
+    # num_outputs is 2, device name and channel name is used
     entity_id = "event.test_name_channel_1"
 
     assert (state := hass.states.get(entity_id))
@@ -201,11 +214,12 @@ async def test_block_event(
 
 
 async def test_block_event_shix3_1(
-    hass: HomeAssistant, mock_block_device: Mock
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device event for SHIX3-1."""
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
     await init_integration(hass, 1, model=MODEL_I3)
-    entity_id = "event.test_name_channel_1"
+    entity_id = "event.test_name"
 
     assert (state := hass.states.get(entity_id))
     assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(

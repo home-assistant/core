@@ -93,7 +93,7 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
 
 
 @pytest.fixture
-def twitch_mock() -> Generator[AsyncMock]:
+def twitch_mock(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Return as fixture to inject other mocks."""
     with (
         patch(
@@ -106,13 +106,13 @@ def twitch_mock() -> Generator[AsyncMock]:
         ),
     ):
         mock_client.return_value.get_users = lambda *args, **kwargs: get_generator(
-            "get_users.json", TwitchUser
+            hass, "get_users.json", TwitchUser
         )
         mock_client.return_value.get_followed_channels.return_value = TwitchIterObject(
-            "get_followed_channels.json", FollowedChannel
+            hass, "get_followed_channels.json", FollowedChannel
         )
         mock_client.return_value.get_followed_streams.return_value = get_generator(
-            "get_followed_streams.json", Stream
+            hass, "get_followed_streams.json", Stream
         )
         mock_client.return_value.check_user_subscription.return_value = (
             UserSubscription(

@@ -17,8 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, PRODUCT, SERIAL_NUMBER, TITLE
+from .coordinator import DevoloHomeNetworkConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

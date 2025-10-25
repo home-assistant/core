@@ -30,6 +30,9 @@
     "get_recipe": {
       "service": "mdi:map"
     },
+    "get_recipes": {
+      "service": "mdi:book-open-page-variant"
+    },
     "import_recipe": {
       "service": "mdi:map-search"
     },

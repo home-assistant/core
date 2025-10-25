@@ -8,6 +8,6 @@
   "iot_class": "local_push",
   "loggers": ["music_assistant"],
   "quality_scale": "bronze",
-  "requirements": ["music-assistant-client==1.2.0"],
+  "requirements": ["music-assistant-client==1.2.4"],
   "zeroconf": ["_mass._tcp.local."]
 }

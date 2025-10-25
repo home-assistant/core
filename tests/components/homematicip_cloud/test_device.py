@@ -4,18 +4,12 @@ from unittest.mock import patch
 
 from homematicip.base.enums import EventType
 
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .helper import (
-    HAPID,
-    HomeFactory,
-    async_manipulate_test_data,
-    get_and_check_entity_basics,
-)
+from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
 
 from tests.common import MockConfigEntry
 
@@ -28,7 +22,7 @@ async def test_hmip_load_all_supported_devices(
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 325
+    assert len(mock_hap.hmip_device_by_entity_id) == 340
 
 
 async def test_hmip_remove_device(
@@ -115,7 +109,7 @@ async def test_hmip_add_device(
 
     assert len(device_registry.devices) == pre_device_count
     assert len(entity_registry.entities) == pre_entity_count
-    new_hap = hass.data[HMIPC_DOMAIN][HAPID]
+    new_hap = hmip_config_entry.runtime_data
     assert len(new_hap.hmip_device_by_entity_id) == pre_mapping_count
 
 
@@ -201,9 +195,14 @@ async def test_hap_reconnected(
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_UNAVAILABLE
 
-    mock_hap._accesspoint_connected = False
-    await async_manipulate_test_data(hass, mock_hap.home, "connected", True)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.AsyncHome.websocket_is_connected",
+        return_value=True,
+    ):
+        await async_manipulate_test_data(hass, mock_hap.home, "connected", True)
+        await mock_hap.ws_connected_handler()
+        await hass.async_block_till_done()
+
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
 
@@ -281,7 +280,7 @@ async def test_hmip_multi_area_device(
         test_devices=["Wired Eingangsmodul – 32-fach"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
     assert ha_state

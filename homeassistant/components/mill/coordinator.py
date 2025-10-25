@@ -10,7 +10,11 @@ from mill import Heater, Mill
 from mill_local import Mill as MillLocal
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -21,12 +25,13 @@ from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util.unit_conversion import EnergyConverter
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-TWO_YEARS = 2 * 365 * 24
+TWO_YEARS_DAYS = 2 * 365
 
 
 class MillDataUpdateCoordinator(DataUpdateCoordinator):
@@ -60,6 +65,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         *,
         mill_data_connection: Mill,
     ) -> None:
@@ -70,6 +76,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="MillHistoricDataUpdateCoordinator",
+            config_entry=config_entry,
         )
 
     async def _async_update_data(self):
@@ -91,7 +98,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
             if not last_stats or not last_stats.get(statistic_id):
                 hourly_data = (
                     await self.mill_data_connection.fetch_historic_energy_usage(
-                        dev_id, n_days=TWO_YEARS
+                        dev_id, n_days=TWO_YEARS_DAYS
                     )
                 )
                 hourly_data = dict(sorted(hourly_data.items(), key=lambda x: x[0]))
@@ -145,11 +152,12 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
                     )
                 )
             metadata = StatisticMetaData(
-                has_mean=False,
+                mean_type=StatisticMeanType.NONE,
                 has_sum=True,
                 name=f"{heater.name}",
                 source=DOMAIN,
                 statistic_id=statistic_id,
+                unit_class=EnergyConverter.UNIT_CLASS,
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             )
             async_add_external_statistics(self.hass, metadata, statistics)

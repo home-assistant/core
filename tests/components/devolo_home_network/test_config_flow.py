@@ -77,13 +77,29 @@ async def test_form_error(hass: HomeAssistant, exception_type, expected_error) -
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_IP_ADDRESS: IP,
-            },
+            {CONF_IP_ADDRESS: IP, CONF_PASSWORD: ""},
         )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_BASE: expected_error}
+
+    with (
+        patch(
+            "homeassistant.components.devolo_home_network.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.devolo_home_network.config_flow.Device",
+            new=MockDevice,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_IP_ADDRESS: IP, CONF_PASSWORD: ""},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf(hass: HomeAssistant) -> None:
@@ -287,5 +303,4 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
-
-    await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.data[CONF_PASSWORD] == "test-right-password"

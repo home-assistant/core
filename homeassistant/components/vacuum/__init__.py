@@ -79,6 +79,11 @@ DEFAULT_NAME = "Vacuum cleaner robot"
 _DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumActivity.IDLE, "2026.1")
 _DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumActivity.PAUSED, "2026.1")
 
+_BATTERY_DEPRECATION_IGNORED_PLATFORMS = (
+    "mqtt",
+    "template",
+)
+
 
 class VacuumEntityFeature(IntFlag):
     """Supported features of the vacuum entity."""
@@ -98,41 +103,6 @@ class VacuumEntityFeature(IntFlag):
     STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
     START = 8192
 
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the VacuumEntityFeature enum instead.
-_DEPRECATED_SUPPORT_TURN_ON = DeprecatedConstantEnum(
-    VacuumEntityFeature.TURN_ON, "2025.10"
-)
-_DEPRECATED_SUPPORT_TURN_OFF = DeprecatedConstantEnum(
-    VacuumEntityFeature.TURN_OFF, "2025.10"
-)
-_DEPRECATED_SUPPORT_PAUSE = DeprecatedConstantEnum(VacuumEntityFeature.PAUSE, "2025.10")
-_DEPRECATED_SUPPORT_STOP = DeprecatedConstantEnum(VacuumEntityFeature.STOP, "2025.10")
-_DEPRECATED_SUPPORT_RETURN_HOME = DeprecatedConstantEnum(
-    VacuumEntityFeature.RETURN_HOME, "2025.10"
-)
-_DEPRECATED_SUPPORT_FAN_SPEED = DeprecatedConstantEnum(
-    VacuumEntityFeature.FAN_SPEED, "2025.10"
-)
-_DEPRECATED_SUPPORT_BATTERY = DeprecatedConstantEnum(
-    VacuumEntityFeature.BATTERY, "2025.10"
-)
-_DEPRECATED_SUPPORT_STATUS = DeprecatedConstantEnum(
-    VacuumEntityFeature.STATUS, "2025.10"
-)
-_DEPRECATED_SUPPORT_SEND_COMMAND = DeprecatedConstantEnum(
-    VacuumEntityFeature.SEND_COMMAND, "2025.10"
-)
-_DEPRECATED_SUPPORT_LOCATE = DeprecatedConstantEnum(
-    VacuumEntityFeature.LOCATE, "2025.10"
-)
-_DEPRECATED_SUPPORT_CLEAN_SPOT = DeprecatedConstantEnum(
-    VacuumEntityFeature.CLEAN_SPOT, "2025.10"
-)
-_DEPRECATED_SUPPORT_MAP = DeprecatedConstantEnum(VacuumEntityFeature.MAP, "2025.10")
-_DEPRECATED_SUPPORT_STATE = DeprecatedConstantEnum(VacuumEntityFeature.STATE, "2025.10")
-_DEPRECATED_SUPPORT_START = DeprecatedConstantEnum(VacuumEntityFeature.START, "2025.10")
 
 # mypy: disallow-any-generics
 
@@ -247,6 +217,9 @@ class StateVacuumEntity(
     _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
 
     __vacuum_legacy_state: bool = False
+    __vacuum_legacy_battery_level: bool = False
+    __vacuum_legacy_battery_icon: bool = False
+    __vacuum_legacy_battery_feature: bool = False
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
@@ -255,15 +228,28 @@ class StateVacuumEntity(
             # Integrations should use the 'activity' property instead of
             # setting the state directly.
             cls.__vacuum_legacy_state = True
+        if any(
+            method in cls.__dict__
+            for method in ("_attr_battery_level", "battery_level")
+        ):
+            # Integrations should use a separate battery sensor.
+            cls.__vacuum_legacy_battery_level = True
+        if any(
+            method in cls.__dict__ for method in ("_attr_battery_icon", "battery_icon")
+        ):
+            # Integrations should use a separate battery sensor.
+            cls.__vacuum_legacy_battery_icon = True
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute.
 
-        Deprecation warning if setting '_attr_state' directly
-        unless already reported.
+        Deprecation warning if setting state, battery icon or battery level
+        attributes directly unless already reported.
         """
         if name == "_attr_state":
             self._report_deprecated_activity_handling()
+        if name in {"_attr_battery_level", "_attr_battery_icon"}:
+            self._report_deprecated_battery_properties(name[6:])
         return super().__setattr__(name, value)
 
     @callback
@@ -277,6 +263,10 @@ class StateVacuumEntity(
         super().add_to_platform_start(hass, platform, parallel_updates)
         if self.__vacuum_legacy_state:
             self._report_deprecated_activity_handling()
+        if self.__vacuum_legacy_battery_level:
+            self._report_deprecated_battery_properties("battery_level")
+        if self.__vacuum_legacy_battery_icon:
+            self._report_deprecated_battery_properties("battery_icon")
 
     @callback
     def _report_deprecated_activity_handling(self) -> None:
@@ -295,6 +285,54 @@ class StateVacuumEntity(
             exclude_integrations={DOMAIN},
         )
 
+    @callback
+    def _report_deprecated_battery_properties(self, property: str) -> None:
+        """Report on deprecated use of battery properties.
+
+        Integrations should implement a sensor instead.
+        """
+        if (
+            self.platform
+            and self.platform.platform_name
+            not in _BATTERY_DEPRECATION_IGNORED_PLATFORMS
+        ):
+            # Don't report usage until after entity added to hass, after init
+            report_usage(
+                f"is setting the {property} which has been deprecated."
+                f" Integration {self.platform.platform_name} should implement a sensor"
+                " instead with a correct device class and link it to the same device",
+                core_integration_behavior=ReportBehavior.IGNORE,
+                custom_integration_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2026.8",
+                integration_domain=self.platform.platform_name,
+                exclude_integrations={DOMAIN},
+            )
+
+    @callback
+    def _report_deprecated_battery_feature(self) -> None:
+        """Report on deprecated use of battery supported features.
+
+        Integrations should remove the battery supported feature when migrating
+        battery level and icon to a sensor.
+        """
+        if (
+            self.platform
+            and self.platform.platform_name
+            not in _BATTERY_DEPRECATION_IGNORED_PLATFORMS
+        ):
+            # Don't report usage until after entity added to hass, after init
+            report_usage(
+                f"is setting the battery supported feature which has been deprecated."
+                f" Integration {self.platform.platform_name} should remove this as part of migrating"
+                " the battery level and icon to a sensor",
+                core_behavior=ReportBehavior.LOG,
+                core_integration_behavior=ReportBehavior.IGNORE,
+                custom_integration_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2026.8",
+                integration_domain=self.platform.platform_name,
+                exclude_integrations={DOMAIN},
+            )
+
     @cached_property
     def battery_level(self) -> int | None:
         """Return the battery level of the vacuum cleaner."""
@@ -312,7 +350,7 @@ class StateVacuumEntity(
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
-        if VacuumEntityFeature.FAN_SPEED in self.supported_features_compat:
+        if VacuumEntityFeature.FAN_SPEED in self.supported_features:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
         return None
 
@@ -330,9 +368,12 @@ class StateVacuumEntity(
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
 
         if VacuumEntityFeature.BATTERY in supported_features:
+            if self.__vacuum_legacy_battery_feature is False:
+                self._report_deprecated_battery_feature()
+                self.__vacuum_legacy_battery_feature = True
             data[ATTR_BATTERY_LEVEL] = self.battery_level
             data[ATTR_BATTERY_ICON] = self.battery_icon
 
@@ -368,19 +409,6 @@ class StateVacuumEntity(
     def supported_features(self) -> VacuumEntityFeature:
         """Flag vacuum cleaner features that are supported."""
         return self._attr_supported_features
-
-    @property
-    def supported_features_compat(self) -> VacuumEntityFeature:
-        """Return the supported features as VacuumEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:
-            new_features = VacuumEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
 
     def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""

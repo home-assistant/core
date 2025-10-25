@@ -28,7 +28,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "insufficient_permissions": "User has insufficient permissions to access AVM FRITZ!Box settings and its phonebooks.",
+      "insufficient_permissions": "User has insufficient permissions to access FRITZ!Box settings and its phonebooks.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
@@ -39,9 +39,9 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure Prefixes",
+        "title": "Configure prefixes",
         "data": {
-          "prefixes": "Prefixes (comma separated list)"
+          "prefixes": "Prefixes (comma-separated list)"
         }
       }
     },

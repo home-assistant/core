@@ -8,12 +8,26 @@ from stookwijzer import Stookwijzer
 
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
 from .coordinator import StookwijzerConfigEntry, StookwijzerCoordinator
+from .services import setup_services
 
 PLATFORMS = [Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Stookwijzer component."""
+    setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: StookwijzerConfigEntry) -> bool:

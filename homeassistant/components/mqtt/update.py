@@ -105,10 +105,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend."""
-        if self._attr_entity_picture is not None:
-            return self._attr_entity_picture
-
-        return super().entity_picture
+        return self._attr_entity_picture
 
     @staticmethod
     def config_schema() -> VolSchemaType:

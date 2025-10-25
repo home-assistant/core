@@ -53,7 +53,6 @@ from .const import (
     CONF_ACME_SERVER,
     CONF_ALEXA,
     CONF_ALIASES,
-    CONF_CLOUDHOOK_SERVER,
     CONF_COGNITO_CLIENT_ID,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
@@ -61,7 +60,6 @@ from .const import (
     CONF_RELAYER_SERVER,
     CONF_REMOTESTATE_SERVER,
     CONF_SERVICEHANDLERS_SERVER,
-    CONF_THINGTALK_SERVER,
     CONF_USER_POOL_ID,
     DATA_CLOUD,
     DATA_CLOUD_LOG_HANDLER,
@@ -131,10 +129,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ACCOUNT_LINK_SERVER): str,
                 vol.Optional(CONF_ACCOUNTS_SERVER): str,
                 vol.Optional(CONF_ACME_SERVER): str,
-                vol.Optional(CONF_CLOUDHOOK_SERVER): str,
                 vol.Optional(CONF_RELAYER_SERVER): str,
                 vol.Optional(CONF_REMOTESTATE_SERVER): str,
-                vol.Optional(CONF_THINGTALK_SERVER): str,
                 vol.Optional(CONF_SERVICEHANDLERS_SERVER): str,
             }
         )

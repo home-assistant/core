@@ -1,8 +1,10 @@
 """Test ZHA sensor."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smartenergy
@@ -62,10 +64,10 @@ async def async_test_temperature(hass: HomeAssistant, cluster: Cluster, entity_i
 async def async_test_pressure(hass: HomeAssistant, cluster: Cluster, entity_id: str):
     """Test pressure sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 1000, 2: 10000})
-    assert_state(hass, entity_id, "1000.0", UnitOfPressure.HPA)
+    assert_state(hass, entity_id, "1000", UnitOfPressure.HPA)
 
     await send_attributes_report(hass, cluster, {0: 1000, 20: -1, 16: 10000})
-    assert_state(hass, entity_id, "1000.0", UnitOfPressure.HPA)
+    assert_state(hass, entity_id, "1000", UnitOfPressure.HPA)
 
 
 async def async_test_illuminance(hass: HomeAssistant, cluster: Cluster, entity_id: str):
@@ -211,17 +213,17 @@ async def async_test_em_power_factor(
     # update divisor cached value
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 1})
     await send_attributes_report(hass, cluster, {0: 1, 0x0510: 100, 10: 1000})
-    assert_state(hass, entity_id, "100.0", PERCENTAGE)
+    assert_state(hass, entity_id, "100", PERCENTAGE)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0510: 99, 10: 1000})
-    assert_state(hass, entity_id, "99.0", PERCENTAGE)
+    assert_state(hass, entity_id, "99", PERCENTAGE)
 
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 10})
     await send_attributes_report(hass, cluster, {0: 1, 0x0510: 100, 10: 5000})
-    assert_state(hass, entity_id, "100.0", PERCENTAGE)
+    assert_state(hass, entity_id, "100", PERCENTAGE)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0510: 99, 10: 5000})
-    assert_state(hass, entity_id, "99.0", PERCENTAGE)
+    assert_state(hass, entity_id, "99", PERCENTAGE)
 
 
 async def async_test_em_rms_current(
@@ -317,7 +319,7 @@ async def async_test_pi_heating_demand(
     await send_attributes_report(
         hass, cluster, {Thermostat.AttributeDefs.pi_heating_demand.id: 1}
     )
-    assert_state(hass, entity_id, "1.0", "%")
+    assert_state(hass, entity_id, "1", "%")
 
 
 @pytest.mark.parametrize(
@@ -519,8 +521,8 @@ async def async_test_pi_heating_demand(
 )
 async def test_sensor(
     hass: HomeAssistant,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
     cluster_id,
     entity_suffix,
     test_func,

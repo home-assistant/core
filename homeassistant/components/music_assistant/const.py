@@ -26,7 +26,6 @@ ATTR_OFFSET = "offset"
 ATTR_ORDER_BY = "order_by"
 ATTR_ALBUM_TYPE = "album_type"
 ATTR_ALBUM_ARTISTS_ONLY = "album_artists_only"
-ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_URI = "uri"
 ATTR_IMAGE = "image"
 ATTR_VERSION = "version"
@@ -66,5 +65,6 @@ ATTR_STREAM_TITLE = "stream_title"
 ATTR_PROVIDER = "provider"
 ATTR_ITEM_ID = "item_id"
 
+ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 
 LOGGER = logging.getLogger(__package__)

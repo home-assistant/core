@@ -3,18 +3,15 @@
 from datetime import datetime as dt
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
 
-from homeassistant.components.jewish_calendar.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("language", ["en", "he"])
@@ -59,7 +56,6 @@ TEST_PARAMS = [
             "attr": {
                 "device_class": "enum",
                 "friendly_name": "Jewish Calendar Holiday",
-                "icon": "mdi:calendar-star",
                 "id": "rosh_hashana_i",
                 "type": "YOM_TOV",
                 "options": lambda: HolidayDatabase(False).get_all_names(),
@@ -77,7 +73,6 @@ TEST_PARAMS = [
             "attr": {
                 "device_class": "enum",
                 "friendly_name": "Jewish Calendar Holiday",
-                "icon": "mdi:calendar-star",
                 "id": "chanukah, rosh_chodesh",
                 "type": "MELACHA_PERMITTED_HOLIDAY, ROSH_CHODESH",
                 "options": lambda: HolidayDatabase(False).get_all_names(),
@@ -94,21 +89,20 @@ TEST_PARAMS = [
             "state": "נצבים",
             "attr": {
                 "device_class": "enum",
-                "friendly_name": "Jewish Calendar Parshat Hashavua",
-                "icon": "mdi:book-open-variant",
-                "options": list(Parasha),
+                "friendly_name": "Jewish Calendar Weekly Torah portion",
+                "options": [str(p) for p in Parasha],
             },
         },
         "he",
-        "parshat_hashavua",
-        id="torah_reading",
+        "weekly_torah_portion",
+        id="torah_portion",
     ),
     pytest.param(
         "New York",
         dt(2018, 9, 8),
         {"state": dt(2018, 9, 8, 19, 47)},
         "he",
-        "t_set_hakochavim",
+        "nightfall_t_set_hakochavim",
         id="first_stars_ny",
     ),
     pytest.param(
@@ -116,7 +110,7 @@ TEST_PARAMS = [
         dt(2018, 9, 8),
         {"state": dt(2018, 9, 8, 19, 21)},
         "he",
-        "t_set_hakochavim",
+        "nightfall_t_set_hakochavim",
         id="first_stars_jerusalem",
     ),
     pytest.param(
@@ -124,8 +118,8 @@ TEST_PARAMS = [
         dt(2018, 10, 14),
         {"state": "לך לך"},
         "he",
-        "parshat_hashavua",
-        id="torah_reading_weekday",
+        "weekly_torah_portion",
+        id="torah_portion_weekday",
     ),
     pytest.param(
         "Jerusalem",
@@ -143,8 +137,9 @@ TEST_PARAMS = [
             "attr": {
                 "hebrew_year": "5779",
                 "hebrew_month_name": "מרחשוון",
+                "hebrew_month_standard_order": "2",
+                "hebrew_month_biblical_order": "8",
                 "hebrew_day": "6",
-                "icon": "mdi:star-david",
                 "friendly_name": "Jewish Calendar Date",
             },
         },
@@ -185,8 +180,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 9, 1, 20, 10),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 8, 31, 19, 12),
             "en_upcoming_shabbat_havdalah": dt(2018, 9, 1, 20, 10),
-            "en_parshat_hashavua": "Ki Tavo",
-            "he_parshat_hashavua": "כי תבוא",
+            "en_weekly_torah_portion": "Ki Tavo",
+            "he_weekly_torah_portion": "כי תבוא",
         },
         None,
         id="currently_first_shabbat",
@@ -199,8 +194,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 9, 1, 20, 18),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 8, 31, 19, 12),
             "en_upcoming_shabbat_havdalah": dt(2018, 9, 1, 20, 18),
-            "en_parshat_hashavua": "Ki Tavo",
-            "he_parshat_hashavua": "כי תבוא",
+            "en_weekly_torah_portion": "Ki Tavo",
+            "he_weekly_torah_portion": "כי תבוא",
         },
         50,  # Havdalah offset
         id="currently_first_shabbat_with_havdalah_offset",
@@ -213,8 +208,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_shabbat_havdalah": dt(2018, 9, 1, 20, 10),
             "en_upcoming_candle_lighting": dt(2018, 8, 31, 19, 12),
             "en_upcoming_havdalah": dt(2018, 9, 1, 20, 10),
-            "en_parshat_hashavua": "Ki Tavo",
-            "he_parshat_hashavua": "כי תבוא",
+            "en_weekly_torah_portion": "Ki Tavo",
+            "he_weekly_torah_portion": "כי תבוא",
         },
         None,
         id="currently_first_shabbat_bein_hashmashot_lagging_date",
@@ -227,8 +222,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 9, 8, 19, 58),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 9, 7, 19),
             "en_upcoming_shabbat_havdalah": dt(2018, 9, 8, 19, 58),
-            "en_parshat_hashavua": "Nitzavim",
-            "he_parshat_hashavua": "נצבים",
+            "en_weekly_torah_portion": "Nitzavim",
+            "he_weekly_torah_portion": "נצבים",
         },
         None,
         id="after_first_shabbat",
@@ -241,8 +236,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 9, 8, 19, 58),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 9, 7, 19),
             "en_upcoming_shabbat_havdalah": dt(2018, 9, 8, 19, 58),
-            "en_parshat_hashavua": "Nitzavim",
-            "he_parshat_hashavua": "נצבים",
+            "en_weekly_torah_portion": "Nitzavim",
+            "he_weekly_torah_portion": "נצבים",
         },
         None,
         id="friday_upcoming_shabbat",
@@ -255,8 +250,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 9, 11, 19, 53),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 9, 14, 18, 48),
             "en_upcoming_shabbat_havdalah": dt(2018, 9, 15, 19, 46),
-            "en_parshat_hashavua": "Vayeilech",
-            "he_parshat_hashavua": "וילך",
+            "en_weekly_torah_portion": "Vayeilech",
+            "he_weekly_torah_portion": "וילך",
             "en_holiday": "Erev Rosh Hashana",
             "he_holiday": "ערב ראש השנה",
         },
@@ -271,8 +266,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 9, 11, 19, 53),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 9, 14, 18, 48),
             "en_upcoming_shabbat_havdalah": dt(2018, 9, 15, 19, 46),
-            "en_parshat_hashavua": "Vayeilech",
-            "he_parshat_hashavua": "וילך",
+            "en_weekly_torah_portion": "Vayeilech",
+            "he_weekly_torah_portion": "וילך",
             "en_holiday": "Rosh Hashana I",
             "he_holiday": "א' ראש השנה",
         },
@@ -287,8 +282,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 9, 11, 19, 53),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 9, 14, 18, 48),
             "en_upcoming_shabbat_havdalah": dt(2018, 9, 15, 19, 46),
-            "en_parshat_hashavua": "Vayeilech",
-            "he_parshat_hashavua": "וילך",
+            "en_weekly_torah_portion": "Vayeilech",
+            "he_weekly_torah_portion": "וילך",
             "en_holiday": "Rosh Hashana II",
             "he_holiday": "ב' ראש השנה",
         },
@@ -303,8 +298,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 9, 29, 19, 22),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 9, 28, 18, 25),
             "en_upcoming_shabbat_havdalah": dt(2018, 9, 29, 19, 22),
-            "en_parshat_hashavua": "none",
-            "he_parshat_hashavua": "none",
+            "en_weekly_torah_portion": "none",
+            "he_weekly_torah_portion": "none",
         },
         None,
         id="currently_shabbat_chol_hamoed",
@@ -317,8 +312,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 10, 2, 19, 17),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 18, 13),
             "en_upcoming_shabbat_havdalah": dt(2018, 10, 6, 19, 11),
-            "en_parshat_hashavua": "Bereshit",
-            "he_parshat_hashavua": "בראשית",
+            "en_weekly_torah_portion": "Bereshit",
+            "he_weekly_torah_portion": "בראשית",
             "en_holiday": "Hoshana Raba",
             "he_holiday": "הושענא רבה",
         },
@@ -333,8 +328,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 10, 2, 19, 17),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 18, 13),
             "en_upcoming_shabbat_havdalah": dt(2018, 10, 6, 19, 11),
-            "en_parshat_hashavua": "Bereshit",
-            "he_parshat_hashavua": "בראשית",
+            "en_weekly_torah_portion": "Bereshit",
+            "he_weekly_torah_portion": "בראשית",
             "en_holiday": "Shmini Atzeret",
             "he_holiday": "שמיני עצרת",
         },
@@ -349,8 +344,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 10, 2, 19, 17),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 18, 13),
             "en_upcoming_shabbat_havdalah": dt(2018, 10, 6, 19, 11),
-            "en_parshat_hashavua": "Bereshit",
-            "he_parshat_hashavua": "בראשית",
+            "en_weekly_torah_portion": "Bereshit",
+            "he_weekly_torah_portion": "בראשית",
             "en_holiday": "Simchat Torah",
             "he_holiday": "שמחת תורה",
         },
@@ -365,8 +360,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 10, 1, 19, 1),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 17, 39),
             "en_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 54),
-            "en_parshat_hashavua": "Bereshit",
-            "he_parshat_hashavua": "בראשית",
+            "en_weekly_torah_portion": "Bereshit",
+            "he_weekly_torah_portion": "בראשית",
             "en_holiday": "Hoshana Raba",
             "he_holiday": "הושענא רבה",
         },
@@ -381,8 +376,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 10, 1, 19, 1),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 17, 39),
             "en_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 54),
-            "en_parshat_hashavua": "Bereshit",
-            "he_parshat_hashavua": "בראשית",
+            "en_weekly_torah_portion": "Bereshit",
+            "he_weekly_torah_portion": "בראשית",
             "en_holiday": "Shmini Atzeret, Simchat Torah",
             "he_holiday": "שמיני עצרת, שמחת תורה",
         },
@@ -397,8 +392,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2018, 10, 6, 18, 54),
             "en_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 17, 39),
             "en_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 54),
-            "en_parshat_hashavua": "Bereshit",
-            "he_parshat_hashavua": "בראשית",
+            "en_weekly_torah_portion": "Bereshit",
+            "he_weekly_torah_portion": "בראשית",
         },
         None,
         id="after_one_day_yom_tov_in_israel",
@@ -411,8 +406,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2016, 6, 13, 21, 19),
             "en_upcoming_shabbat_candle_lighting": dt(2016, 6, 10, 20, 9),
             "en_upcoming_shabbat_havdalah": "unknown",
-            "en_parshat_hashavua": "Bamidbar",
-            "he_parshat_hashavua": "במדבר",
+            "en_weekly_torah_portion": "Bamidbar",
+            "he_weekly_torah_portion": "במדבר",
             "en_holiday": "Erev Shavuot",
             "he_holiday": "ערב שבועות",
         },
@@ -427,8 +422,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2016, 6, 13, 21, 19),
             "en_upcoming_shabbat_candle_lighting": dt(2016, 6, 17, 20, 12),
             "en_upcoming_shabbat_havdalah": dt(2016, 6, 18, 21, 21),
-            "en_parshat_hashavua": "Nasso",
-            "he_parshat_hashavua": "נשא",
+            "en_weekly_torah_portion": "Nasso",
+            "he_weekly_torah_portion": "נשא",
             "en_holiday": "Shavuot",
             "he_holiday": "שבועות",
         },
@@ -443,8 +438,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2017, 9, 23, 19, 11),
             "en_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 17, 56),
             "en_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 11),
-            "en_parshat_hashavua": "Ha'Azinu",
-            "he_parshat_hashavua": "האזינו",
+            "en_weekly_torah_portion": "Ha'Azinu",
+            "he_weekly_torah_portion": "האזינו",
             "en_holiday": "Rosh Hashana I",
             "he_holiday": "א' ראש השנה",
         },
@@ -459,8 +454,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2017, 9, 23, 19, 11),
             "en_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 17, 56),
             "en_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 11),
-            "en_parshat_hashavua": "Ha'Azinu",
-            "he_parshat_hashavua": "האזינו",
+            "en_weekly_torah_portion": "Ha'Azinu",
+            "he_weekly_torah_portion": "האזינו",
             "en_holiday": "Rosh Hashana II",
             "he_holiday": "ב' ראש השנה",
         },
@@ -475,8 +470,8 @@ SHABBAT_PARAMS = [
             "en_upcoming_havdalah": dt(2017, 9, 23, 19, 11),
             "en_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 17, 56),
             "en_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 11),
-            "en_parshat_hashavua": "Ha'Azinu",
-            "he_parshat_hashavua": "האזינו",
+            "en_weekly_torah_portion": "Ha'Azinu",
+            "he_weekly_torah_portion": "האזינו",
             "en_holiday": "",
             "he_holiday": "",
         },
@@ -546,15 +541,29 @@ async def test_dafyomi_sensor(hass: HomeAssistant, results: str) -> None:
     assert hass.states.get("sensor.jewish_calendar_daf_yomi").state == results
 
 
-async def test_no_discovery_info(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    ("test_time", "results"),
+    [
+        (
+            dt(2025, 6, 10, 17),
+            {
+                "initial_state": "14 Sivan 5785",
+                "move_to": dt(2025, 6, 10, 23, 0),
+                "new_state": "15 Sivan 5785",
+            },
+        ),
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("setup_at_time")
+async def test_sensor_does_not_update_on_time_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, results: dict[str, Any]
 ) -> None:
-    """Test setup without discovery info."""
-    assert SENSOR_DOMAIN not in hass.config.components
-    assert await async_setup_component(
-        hass,
-        SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {CONF_PLATFORM: DOMAIN}},
-    )
+    """Test that the Jewish calendar sensor does not update after time advances (regression test for update bug)."""
+    sensor_id = "sensor.jewish_calendar_date"
+    assert hass.states.get(sensor_id).state == results["initial_state"]
+
+    freezer.move_to(results["move_to"])
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert SENSOR_DOMAIN in hass.config.components
+    assert hass.states.get(sensor_id).state == results["new_state"]

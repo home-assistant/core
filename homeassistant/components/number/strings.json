@@ -22,7 +22,7 @@
           "name": "Mode",
           "state": {
             "auto": "Automatic",
-            "box": "Box",
+            "box": "Input field",
             "slider": "Slider"
           }
         },
@@ -30,6 +30,9 @@
           "name": "Step"
         }
       }
+    },
+    "absolute_humidity": {
+      "name": "[%key:component::sensor::entity_component::absolute_humidity::name%]"
     },
     "apparent_power": {
       "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
@@ -109,6 +112,9 @@
     "pm1": {
       "name": "[%key:component::sensor::entity_component::pm1::name%]"
     },
+    "pm4": {
+      "name": "[%key:component::sensor::entity_component::pm4::name%]"
+    },
     "pm10": {
       "name": "[%key:component::sensor::entity_component::pm10::name%]"
     },
@@ -130,6 +136,9 @@
     "pressure": {
       "name": "[%key:component::sensor::entity_component::pressure::name%]"
     },
+    "reactive_energy": {
+      "name": "[%key:component::sensor::entity_component::reactive_energy::name%]"
+    },
     "reactive_power": {
       "name": "[%key:component::sensor::entity_component::reactive_power::name%]"
     },
@@ -147,6 +156,9 @@
     },
     "temperature": {
       "name": "[%key:component::sensor::entity_component::temperature::name%]"
+    },
+    "temperature_delta": {
+      "name": "[%key:component::sensor::entity_component::temperature_delta::name%]"
     },
     "volatile_organic_compounds": {
       "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"

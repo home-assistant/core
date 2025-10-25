@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_run_data_task_updates_chat_log
+  list([
+    dict({
+      'content': '''
+        You are a Home Assistant expert and help users with their tasks.
+        Current time is 15:59:00. Today's date is 2025-06-14.
+      ''',
+      'role': 'system',
+    }),
+    dict({
+      'attachments': None,
+      'content': 'Test prompt',
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'ai_task.test_task_entity',
+      'content': 'Mock result',
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---

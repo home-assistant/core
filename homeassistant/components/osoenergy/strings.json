@@ -3,14 +3,14 @@
     "step": {
       "user": {
         "title": "OSO Energy auth",
-        "description": "Enter the 'Subscription key' for your account generated at 'https://portal.osoenergy.no/'",
+        "description": "Enter the 'Subscription key' for your account generated at {portal_url}",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "reauth": {
         "title": "OSO Energy auth",
-        "description": "Enter a new 'Subscription key' for your account generated at 'https://portal.osoenergy.no/'.",
+        "description": "Enter a new 'Subscription key' for your account generated at {portal_url}",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
@@ -206,6 +206,16 @@
         "v40_min": {
           "name": "V40 Min",
           "description": "Minimum quantity of water at 40°C (200-350 for SAGA S200, 300-550 for SAGA S300)"
+        }
+      }
+    },
+    "turn_away_mode_on": {
+      "name": "Set away mode",
+      "description": "Turns on away mode for the water heater",
+      "fields": {
+        "duration_days": {
+          "name": "Duration in days",
+          "description": "Number of days to keep away mode active (1-365)"
         }
       }
     },

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock
 from aiostreammagic import StreamMagicError
 from aiostreammagic.models import CallbackType
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cambridge_audio.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState

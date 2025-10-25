@@ -6,15 +6,21 @@ from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.matter.services import (
+    ATTR_DURATION,
+    ATTR_EMERGENCY_BOOST,
+    ATTR_TEMPORARY_SETPOINT,
+    SERVICE_WATER_HEATER_BOOST,
+)
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_HIGH_DEMAND,
     STATE_OFF,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -166,6 +172,32 @@ async def test_water_heater_boostmode(
         command=clusters.WaterHeaterManagement.Commands.Boost(boostInfo=boost_info),
     )
 
+    # disable water_heater boostmode
+    await hass.services.async_call(
+        "water_heater",
+        "set_operation_mode",
+        {
+            "entity_id": "water_heater.water_heater",
+            "operation_mode": STATE_ECO,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=2,
+            attribute=clusters.Thermostat.Attributes.SystemMode,
+        ),
+        value=4,
+    )
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.WaterHeaterManagement.Commands.CancelBoost(),
+    )
+
 
 @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
 async def test_update_from_water_heater(
@@ -244,3 +276,43 @@ async def test_water_heater_turn_on_off(
         ),
         value=4,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
+async def test_async_boost_actions(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that set boost sends the correct command and updates the device."""
+    state = hass.states.get("water_heater.water_heater")
+    assert state
+
+    # Set boost with duration, emergency_boost, and temporary_setpoint
+    await hass.services.async_call(
+        "matter",
+        SERVICE_WATER_HEATER_BOOST,
+        {
+            ATTR_ENTITY_ID: "water_heater.water_heater",
+            ATTR_DURATION: 60,
+            ATTR_EMERGENCY_BOOST: True,
+            ATTR_TEMPORARY_SETPOINT: 55,
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.WaterHeaterManagement.Commands.Boost(
+            boostInfo=clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
+                duration=60,
+                oneShot=None,
+                emergencyBoost=True,
+                temporarySetpoint=5500,
+                targetPercentage=None,
+                targetReheat=None,
+            )
+        ),
+    )
+    matter_client.send_device_command.reset_mock()

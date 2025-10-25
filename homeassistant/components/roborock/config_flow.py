@@ -23,7 +23,7 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import callback
@@ -35,6 +35,7 @@ from . import RoborockConfigEntry
 from .const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
+    CONF_SHOW_BACKGROUND,
     CONF_USER_DATA,
     DEFAULT_DRAWABLES,
     DOMAIN,
@@ -81,7 +82,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._client
         errors: dict[str, str] = {}
         try:
-            await self._client.request_code()
+            await self._client.request_code_v4()
         except RoborockAccountDoesNotExist:
             errors["base"] = "invalid_email"
         except RoborockUrlException:
@@ -110,7 +111,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             code = user_input[CONF_ENTRY_CODE]
             _LOGGER.debug("Logging into Roborock account using email provided code")
             try:
-                user_data = await self._client.code_login(code)
+                user_data = await self._client.code_login_v4(code)
             except RoborockInvalidCode:
                 errors["base"] = "invalid_code"
             except RoborockException:
@@ -124,16 +125,11 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 if self.source == SOURCE_REAUTH:
                     self._abort_if_unique_id_mismatch(reason="wrong_account")
                     reauth_entry = self._get_reauth_entry()
-                    self.hass.config_entries.async_update_entry(
-                        reauth_entry,
-                        data={
-                            **reauth_entry.data,
-                            CONF_USER_DATA: user_data.as_dict(),
-                        },
+                    return self.async_update_reload_and_abort(
+                        reauth_entry, data_updates={CONF_USER_DATA: user_data.as_dict()}
                     )
-                    return self.async_abort(reason="reauth_successful")
                 self._abort_if_unique_id_configured(error="already_configured_account")
-                return self._create_entry(self._client, self._username, user_data)
+                return await self._create_entry(self._client, self._username, user_data)
 
         return self.async_show_form(
             step_id="code",
@@ -180,7 +176,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_code()
         return self.async_show_form(step_id="reauth_confirm", errors=errors)
 
-    def _create_entry(
+    async def _create_entry(
         self, client: RoborockApiClient, username: str, user_data: UserData
     ) -> ConfigFlowResult:
         """Finished config flow and create entry."""
@@ -189,7 +185,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_USERNAME: username,
                 CONF_USER_DATA: user_data.as_dict(),
-                CONF_BASE_URL: client.base_url,
+                CONF_BASE_URL: await client.base_url,
             },
         )
 
@@ -202,7 +198,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         return RoborockOptionsFlowHandler(config_entry)
 
 
-class RoborockOptionsFlowHandler(OptionsFlow):
+class RoborockOptionsFlowHandler(OptionsFlowWithReload):
     """Handle an option flow for Roborock."""
 
     def __init__(self, config_entry: RoborockConfigEntry) -> None:
@@ -220,6 +216,7 @@ class RoborockOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the map object drawable options."""
         if user_input is not None:
+            self.options[CONF_SHOW_BACKGROUND] = user_input.pop(CONF_SHOW_BACKGROUND)
             self.options.setdefault(DRAWABLES, {}).update(user_input)
             return self.async_create_entry(title="", data=self.options)
         data_schema = {}
@@ -232,6 +229,12 @@ class RoborockOptionsFlowHandler(OptionsFlow):
                     ),
                 )
             ] = bool
+        data_schema[
+            vol.Required(
+                CONF_SHOW_BACKGROUND,
+                default=self.config_entry.options.get(CONF_SHOW_BACKGROUND, False),
+            )
+        ] = bool
         return self.async_show_form(
             step_id=DRAWABLES,
             data_schema=vol.Schema(data_schema),
