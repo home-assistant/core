@@ -14,7 +14,8 @@
     "error": {
       "resolve_failed": "This host cannot be resolved",
       "connection_timeout": "Timeout when connecting to this host",
-      "connection_refused": "Connection refused when connecting to host"
+      "connection_refused": "Connection refused when connecting to host",
+      "connection_reset": "Connection reset when connecting to host"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
