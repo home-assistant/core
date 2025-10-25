@@ -496,7 +496,7 @@ async def test_rpc_smoke_mute_alarm_button(
         "sys": {"wakeup_period": 1000},
         "smoke:0": {
             "id": 0,
-            "alarm:": False,
+            "alarm": False,
             "mute": False,
         },
     }
