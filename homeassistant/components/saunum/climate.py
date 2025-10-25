@@ -26,6 +26,8 @@ from .helpers import (
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -58,6 +60,11 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         # Optimistic state for responsive UI
         self._optimistic_hvac_mode: HVACMode | None = None
         self._optimistic_target_temp: float | None = None
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
 
     @property
     def current_temperature(self) -> float | None:
