@@ -1,59 +1,4 @@
 # serializer version: 1
-# name: test_all_entities[sensor.focused_einstein_cpu_usage_kernelmode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.focused_einstein_cpu_usage_kernelmode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'CPU usage kernelmode',
-    'platform': 'portainer',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cpu_usage_in_kernelmode',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_cpu_usage_in_kernelmode',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[sensor.focused_einstein_cpu_usage_kernelmode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'focused_einstein CPU usage kernelmode',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.focused_einstein_cpu_usage_kernelmode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.62314257201468e-05',
-  })
-# ---
 # name: test_all_entities[sensor.focused_einstein_cpu_usage_total-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -106,62 +51,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.42212696900213e-05',
-  })
-# ---
-# name: test_all_entities[sensor.focused_einstein_cpu_usage_usermode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.focused_einstein_cpu_usage_usermode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'CPU usage usermode',
-    'platform': 'portainer',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cpu_usage_in_usermode',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_cpu_usage_in_usermode',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[sensor.focused_einstein_cpu_usage_usermode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'focused_einstein CPU usage usermode',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.focused_einstein_cpu_usage_usermode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.70523762002446e-05',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.focused_einstein_image-entry]
@@ -330,7 +220,7 @@
     'state': '6.537216',
   })
 # ---
-# name: test_all_entities[sensor.funny_chatelet_cpu_usage_kernelmode-entry]
+# name: test_all_entities[sensor.focused_einstein_memory_usage_percentage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -345,7 +235,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.funny_chatelet_cpu_usage_kernelmode',
+    'entity_id': 'sensor.focused_einstein_memory_usage_percentage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -360,29 +250,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'CPU usage kernelmode',
+    'original_name': 'Memory usage percentage',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'cpu_usage_in_kernelmode',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_cpu_usage_in_kernelmode',
+    'translation_key': 'memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_focused_einstein_memory_usage_percentage',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.funny_chatelet_cpu_usage_kernelmode-state]
+# name: test_all_entities[sensor.focused_einstein_memory_usage_percentage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'funny_chatelet CPU usage kernelmode',
+      'friendly_name': 'focused_einstein Memory usage percentage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.funny_chatelet_cpu_usage_kernelmode',
+    'entity_id': 'sensor.focused_einstein_memory_usage_percentage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.62314257201468e-05',
+    'state': '9.7412109375',
   })
 # ---
 # name: test_all_entities[sensor.funny_chatelet_cpu_usage_total-entry]
@@ -437,62 +327,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.42212696900213e-05',
-  })
-# ---
-# name: test_all_entities[sensor.funny_chatelet_cpu_usage_usermode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.funny_chatelet_cpu_usage_usermode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'CPU usage usermode',
-    'platform': 'portainer',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cpu_usage_in_usermode',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_cpu_usage_in_usermode',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[sensor.funny_chatelet_cpu_usage_usermode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'funny_chatelet CPU usage usermode',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.funny_chatelet_cpu_usage_usermode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.70523762002446e-05',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.funny_chatelet_image-entry]
@@ -659,6 +494,61 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.537216',
+  })
+# ---
+# name: test_all_entities[sensor.funny_chatelet_memory_usage_percentage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.funny_chatelet_memory_usage_percentage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Memory usage percentage',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_funny_chatelet_memory_usage_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.funny_chatelet_memory_usage_percentage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'funny_chatelet Memory usage percentage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.funny_chatelet_memory_usage_percentage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9.7412109375',
   })
 # ---
 # name: test_all_entities[sensor.my_environment_api_version-entry]
@@ -1311,61 +1201,6 @@
     'state': '2095882240',
   })
 # ---
-# name: test_all_entities[sensor.practical_morse_cpu_usage_kernelmode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.practical_morse_cpu_usage_kernelmode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'CPU usage kernelmode',
-    'platform': 'portainer',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cpu_usage_in_kernelmode',
-    'unique_id': 'portainer_test_entry_123_practical_morse_cpu_usage_in_kernelmode',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[sensor.practical_morse_cpu_usage_kernelmode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'practical_morse CPU usage kernelmode',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.practical_morse_cpu_usage_kernelmode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.62314257201468e-05',
-  })
-# ---
 # name: test_all_entities[sensor.practical_morse_cpu_usage_total-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1418,62 +1253,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.42212696900213e-05',
-  })
-# ---
-# name: test_all_entities[sensor.practical_morse_cpu_usage_usermode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.practical_morse_cpu_usage_usermode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'CPU usage usermode',
-    'platform': 'portainer',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cpu_usage_in_usermode',
-    'unique_id': 'portainer_test_entry_123_practical_morse_cpu_usage_in_usermode',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[sensor.practical_morse_cpu_usage_usermode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'practical_morse CPU usage usermode',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.practical_morse_cpu_usage_usermode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.70523762002446e-05',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.practical_morse_image-entry]
@@ -1642,7 +1422,7 @@
     'state': '6.537216',
   })
 # ---
-# name: test_all_entities[sensor.serene_banach_cpu_usage_kernelmode-entry]
+# name: test_all_entities[sensor.practical_morse_memory_usage_percentage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1657,7 +1437,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.serene_banach_cpu_usage_kernelmode',
+    'entity_id': 'sensor.practical_morse_memory_usage_percentage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1672,29 +1452,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'CPU usage kernelmode',
+    'original_name': 'Memory usage percentage',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'cpu_usage_in_kernelmode',
-    'unique_id': 'portainer_test_entry_123_serene_banach_cpu_usage_in_kernelmode',
+    'translation_key': 'memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_practical_morse_memory_usage_percentage',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.serene_banach_cpu_usage_kernelmode-state]
+# name: test_all_entities[sensor.practical_morse_memory_usage_percentage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'serene_banach CPU usage kernelmode',
+      'friendly_name': 'practical_morse Memory usage percentage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.serene_banach_cpu_usage_kernelmode',
+    'entity_id': 'sensor.practical_morse_memory_usage_percentage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.62314257201468e-05',
+    'state': '9.7412109375',
   })
 # ---
 # name: test_all_entities[sensor.serene_banach_cpu_usage_total-entry]
@@ -1749,62 +1529,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.42212696900213e-05',
-  })
-# ---
-# name: test_all_entities[sensor.serene_banach_cpu_usage_usermode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.serene_banach_cpu_usage_usermode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'CPU usage usermode',
-    'platform': 'portainer',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cpu_usage_in_usermode',
-    'unique_id': 'portainer_test_entry_123_serene_banach_cpu_usage_in_usermode',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[sensor.serene_banach_cpu_usage_usermode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'serene_banach CPU usage usermode',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.serene_banach_cpu_usage_usermode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.70523762002446e-05',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.serene_banach_image-entry]
@@ -1973,7 +1698,7 @@
     'state': '6.537216',
   })
 # ---
-# name: test_all_entities[sensor.stoic_turing_cpu_usage_kernelmode-entry]
+# name: test_all_entities[sensor.serene_banach_memory_usage_percentage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1988,7 +1713,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.stoic_turing_cpu_usage_kernelmode',
+    'entity_id': 'sensor.serene_banach_memory_usage_percentage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2003,29 +1728,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'CPU usage kernelmode',
+    'original_name': 'Memory usage percentage',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'cpu_usage_in_kernelmode',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_cpu_usage_in_kernelmode',
+    'translation_key': 'memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_serene_banach_memory_usage_percentage',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.stoic_turing_cpu_usage_kernelmode-state]
+# name: test_all_entities[sensor.serene_banach_memory_usage_percentage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'stoic_turing CPU usage kernelmode',
+      'friendly_name': 'serene_banach Memory usage percentage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.stoic_turing_cpu_usage_kernelmode',
+    'entity_id': 'sensor.serene_banach_memory_usage_percentage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.62314257201468e-05',
+    'state': '9.7412109375',
   })
 # ---
 # name: test_all_entities[sensor.stoic_turing_cpu_usage_total-entry]
@@ -2080,62 +1805,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.42212696900213e-05',
-  })
-# ---
-# name: test_all_entities[sensor.stoic_turing_cpu_usage_usermode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.stoic_turing_cpu_usage_usermode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'CPU usage usermode',
-    'platform': 'portainer',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cpu_usage_in_usermode',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_cpu_usage_in_usermode',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[sensor.stoic_turing_cpu_usage_usermode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'stoic_turing CPU usage usermode',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.stoic_turing_cpu_usage_usermode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.70523762002446e-05',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.stoic_turing_image-entry]
@@ -2302,5 +1972,60 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.537216',
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_memory_usage_percentage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.stoic_turing_memory_usage_percentage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Memory usage percentage',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_stoic_turing_memory_usage_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_memory_usage_percentage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'stoic_turing Memory usage percentage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stoic_turing_memory_usage_percentage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9.7412109375',
   })
 # ---

@@ -28,7 +28,7 @@ type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
 
 
 @dataclass
@@ -48,7 +48,8 @@ class PortainerContainerData:
     """Container data held by the Portainer coordinator."""
 
     container: DockerContainer
-    stats: DockerContainerStats
+    stats: DockerContainerStats | None
+    stats_pre: DockerContainerStats | None
 
 
 class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorData]]):
@@ -138,11 +139,28 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                         endpoint_id=endpoint.id,
                         container_id=container.id,
                     )
-                    container_map[container.names[0].replace("/", " ").strip()] = (
-                        PortainerContainerData(
-                            container=container,
-                            stats=stats,
-                        )
+
+                    container_name = container.names[0].replace("/", " ").strip()
+
+                    # Store previous stats if available
+                    # This is used to calculate deltas for CPU and network usage
+                    # NOTE to the reviewer: this is done as a optimization to avoid long waiting times with one_shot=False. This will lead to longer waits each time it needs to update. Docker API will wait another cycle. Which could mean an extra ~2 seconds loading time, per container.
+                    previous_data = self.data.get(endpoint.id) if self.data else None
+                    previous_container = (
+                        previous_data.containers.get(container_name)
+                        if previous_data is not None
+                        else None
+                    )
+                    previous_stats = (
+                        previous_container.stats
+                        if previous_container is not None
+                        else None
+                    )
+
+                    container_map[container_name] = PortainerContainerData(
+                        container=container,
+                        stats=stats,
+                        stats_pre=previous_stats,
                     )
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
