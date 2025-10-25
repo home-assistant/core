@@ -1396,15 +1396,12 @@ async def test_async_get_all_descriptions_new_service_added_while_loading(
 async def test_async_get_descriptions_with_placeholders(hass: HomeAssistant) -> None:
     """Test descriptions async_get_all_descriptions with placeholders.
 
-    Placeholders supplied with a service registration should be substituted
-    from the YAML services.yaml or strings.json.
+    Placeholders supplied with a service registration should be included.
     """
     service_descriptions = """
     happy_time:
       fields:
         topic:
-          name: "Topic {placeholder}"
-          example: "Beer {placeholder}"
           selector:
             text:
         duration:
@@ -1439,28 +1436,7 @@ async def test_async_get_descriptions_with_placeholders(hass: HomeAssistant) -> 
         with io.StringIO(service_descriptions) as file:
             return parse_yaml(file)
 
-    async def async_get_translations(
-        hass: HomeAssistant,
-        language: str,
-        category: str,
-        integrations: Iterable[str] | None = None,
-        config_flow: bool | None = None,
-    ) -> dict[str, Any]:
-        """Return all backend translations."""
-        translation_key_prefix = f"component.{domain}.services.happy_time"
-        return {
-            f"{translation_key_prefix}.name": "Translated name {placeholder}",
-            f"{translation_key_prefix}.description": "Translated description {placeholder}",
-            f"{translation_key_prefix}.fields.topic.name": "Field name {placeholder}",
-            f"{translation_key_prefix}.fields.topic.description": "Topic field description {placeholder}",
-            f"{translation_key_prefix}.fields.duration.example": "Duration field example {placeholder}",
-        }
-
     with (
-        patch(
-            "homeassistant.helpers.service.translation.async_get_translations",
-            side_effect=async_get_translations,
-        ),
         patch(
             "homeassistant.helpers.service._load_services_files",
             side_effect=service._load_services_files,
@@ -1482,14 +1458,9 @@ async def test_async_get_descriptions_with_placeholders(hass: HomeAssistant) -> 
     assert descriptions == {
         "test_domain": {
             "happy_time": {
-                "name": "Translated name beer",
-                "description": "Translated description beer",
                 "fields": {
                     "topic": {
-                        "name": "Field name beer",
-                        "example": "Beer {placeholder}",
-                        "selector": {"text": {"multiple": False, "multiline": False}},
-                        "description": "Topic field description beer",
+                        "selector": {"text": {"multiple": False, "multiline": False}}
                     },
                     "duration": {
                         "default": 5,
@@ -1502,9 +1473,9 @@ async def test_async_get_descriptions_with_placeholders(hass: HomeAssistant) -> 
                                 "mode": "slider",
                             }
                         },
-                        "example": "Duration field example beer",
                     },
                 },
+                "description_placeholders": {"placeholder": "beer"},
             }
         }
     }
