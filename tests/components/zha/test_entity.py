@@ -1,13 +1,33 @@
 """Test ZHA entities."""
 
+from unittest.mock import patch
+
+import pytest
 from zigpy.profiles import zha
-from zigpy.zcl.clusters import general
+from zigpy.zcl.clusters import general, measurement
 
 from homeassistant.components.zha.helpers import get_zha_gateway
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+
+ENTITY_ID_NO_PREFIX = "{}.fakemanufacturer_fakemodel"
+ENTITY_ID_PREFIX_NUM = "{}.fakemanufacturer_fakemodel_{}_{}"
+
+
+@pytest.fixture(autouse=True)
+def sensor_and_switch_platform_only():
+    """Only set up the switch and sensor platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.SENSOR,
+            Platform.SWITCH,
+        ),
+    ):
+        yield
 
 
 async def test_device_registry_via_device(
@@ -45,3 +65,70 @@ async def test_device_registry_via_device(
     )
 
     assert reg_device.via_device_id == reg_coordinator_device.id
+
+
+@pytest.mark.parametrize("n_endpoints", [1, 2])
+@pytest.mark.parametrize(
+    (
+        "cluster_id",
+        "entity_prefix",
+        "entity_suffix",
+    ),
+    [
+        (
+            measurement.TemperatureMeasurement.cluster_id,
+            "sensor",
+            "temperature",
+        ),
+        (
+            measurement.PressureMeasurement.cluster_id,
+            "sensor",
+            "pressure",
+        ),
+        (
+            general.OnOff.cluster_id,
+            "switch",
+            "switch",
+        ),
+    ],
+)
+async def test_entity_postfix(
+    hass: HomeAssistant,
+    setup_zha,
+    zigpy_device_mock,
+    cluster_id,
+    entity_prefix: str,
+    entity_suffix: str,
+    n_endpoints: int,
+) -> None:
+    """Test postfix being present in entity name."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    endpoint_definition = {
+        SIG_EP_INPUT: [cluster_id, general.Basic.cluster_id],
+        SIG_EP_OUTPUT: [],
+        SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+    }
+
+    # Create a device with n_endpoints identical endpoints
+    zigpy_device = zigpy_device_mock(
+        dict.fromkeys(range(1, n_endpoints + 1), endpoint_definition),
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    if n_endpoints > 1:
+        for n in range(1, n_endpoints + 1):
+            state = hass.states.get(
+                ENTITY_ID_PREFIX_NUM.format(entity_prefix, entity_suffix, n)
+            )
+            assert state is not None
+            assert state.name.endswith(f" ({n})")
+    else:
+        state = hass.states.get(ENTITY_ID_NO_PREFIX.format(entity_prefix))
+        assert state is not None
+        assert not state.name.endswith(")")
