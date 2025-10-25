@@ -21,13 +21,13 @@ UNSUPPORTED_DEVICES = [
     "Heatbox2_SRC",
     "E3_TCU10_x07",
     "E3_TCU41_x04",
-    "E3_FloorHeatingCircuitChannel",
-    "E3_FloorHeatingCircuitDistributorBox",
     "E3_RoomControl_One_522",
 ]
 
 VICARE_NAME = "ViCare"
 VICARE_TOKEN_FILENAME = "vicare_token.save"
+
+VIESSMANN_DEVELOPER_PORTAL = "https://app.developer.viessmann-climatesolutions.com"
 
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"

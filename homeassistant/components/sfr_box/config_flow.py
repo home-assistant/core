@@ -61,7 +61,13 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
 
         data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders={
+                "sample_ip": "192.168.1.1",
+                "sample_url": "https://sfrbox.example.com",
+            },
         )
 
     async def async_step_choose_auth(

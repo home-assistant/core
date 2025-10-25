@@ -22,7 +22,7 @@ class FoscamNumberEntityDescription(NumberEntityDescription):
 
     native_value_fn: Callable[[FoscamCoordinator], int]
     set_value_fn: Callable[[FoscamCamera, float], Any]
-    exists_fn: Callable[[FoscamCoordinator], bool]
+    exists_fn: Callable[[FoscamCoordinator], bool] = lambda _: True
 
 
 NUMBER_DESCRIPTIONS: list[FoscamNumberEntityDescription] = [
@@ -34,7 +34,6 @@ NUMBER_DESCRIPTIONS: list[FoscamNumberEntityDescription] = [
         native_step=1,
         native_value_fn=lambda coordinator: coordinator.data.device_volume,
         set_value_fn=lambda session, value: session.setAudioVolume(value),
-        exists_fn=lambda _: True,
     ),
     FoscamNumberEntityDescription(
         key="speak_volume",
