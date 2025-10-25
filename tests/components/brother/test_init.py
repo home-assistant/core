@@ -48,10 +48,11 @@ async def test_error_on_init(
     hass: HomeAssistant,
     exc: Exception,
     mock_config_entry: MockConfigEntry,
+    mock_brother: AsyncMock,
     mock_brother_client: AsyncMock,
 ) -> None:
     """Test for error on init."""
-    mock_brother_client.create.side_effect = exc
+    mock_brother.create.side_effect = exc
 
     await init_integration(hass, mock_config_entry)
 

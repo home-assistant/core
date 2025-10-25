@@ -99,10 +99,10 @@ async def test_errors(
 
 
 async def test_unsupported_model_error(
-    hass: HomeAssistant, mock_brother_client: AsyncMock
+    hass: HomeAssistant, mock_brother: AsyncMock, mock_brother_client: AsyncMock
 ) -> None:
     """Test unsupported printer model error."""
-    mock_brother_client.create.side_effect = UnsupportedModelError("error")
+    mock_brother.create.side_effect = UnsupportedModelError("error")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
@@ -153,10 +153,10 @@ async def test_zeroconf_exception(
 
 
 async def test_zeroconf_unsupported_model(
-    hass: HomeAssistant, mock_brother_client: AsyncMock
+    hass: HomeAssistant, mock_brother: AsyncMock, mock_brother_client: AsyncMock
 ) -> None:
     """Test unsupported printer model error."""
-    mock_brother_client.create.side_effect = UnsupportedModelError("error")
+    mock_brother.create.side_effect = UnsupportedModelError("error")
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
