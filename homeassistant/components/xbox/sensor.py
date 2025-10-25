@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
-from functools import partial
 
 from xbox.webapi.api.provider.people.models import Person
 
@@ -20,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
+from .coordinator import XboxConfigEntry
 from .entity import XboxBaseEntity, check_deprecated_entity
 
 
@@ -94,14 +93,27 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox Live friends."""
+    xuids_added: set[str] = set()
     coordinator = config_entry.runtime_data
 
-    update_friends = partial(
-        async_update_friends, hass, coordinator, {}, async_add_entities
-    )
+    @callback
+    def add_entities() -> None:
+        nonlocal xuids_added
 
-    config_entry.async_on_unload(coordinator.async_add_listener(update_friends))
-    update_friends()
+        current_xuids = set(coordinator.data.presence)
+        if new_xuids := current_xuids - xuids_added:
+            async_add_entities(
+                [
+                    XboxSensorEntity(coordinator, xuid, description)
+                    for xuid in new_xuids
+                    for description in SENSOR_DESCRIPTIONS
+                ]
+            )
+            xuids_added |= new_xuids
+        xuids_added &= current_xuids
+
+    coordinator.async_add_listener(add_entities)
+    add_entities()
 
 
 class XboxSensorEntity(XboxBaseEntity, SensorEntity):
@@ -113,31 +125,3 @@ class XboxSensorEntity(XboxBaseEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the requested attribute."""
         return self.entity_description.value_fn(self.data)
-
-
-@callback
-def async_update_friends(
-    hass: HomeAssistant,
-    coordinator: XboxUpdateCoordinator,
-    current: dict[str, list[XboxSensorEntity]],
-    async_add_entities,
-) -> None:
-    """Update friends."""
-    new_ids = set(coordinator.data.presence)
-    current_ids = set(current)
-
-    # Process new favorites, add them to Home Assistant
-    new_entities: list[XboxSensorEntity] = []
-    for xuid in new_ids - current_ids:
-        current[xuid] = []
-        for description in SENSOR_DESCRIPTIONS:
-            entity = XboxSensorEntity(coordinator, xuid, description)
-            if check_deprecated_entity(hass, entity, SENSOR_DOMAIN):
-                current[xuid].append(entity)
-        new_entities = new_entities + current[xuid]
-    if new_entities:
-        async_add_entities(new_entities)
-
-    # Process deleted favorites, remove them from Home Assistant
-    for xuid in current_ids - new_ids:
-        del current[xuid]
