@@ -39,6 +39,27 @@ async def async_init_nextdns(
     return nextdns
 
 
+async def async_validate_new_api_key(
+    hass: HomeAssistant, user_input: dict[str, Any], profile_id: str
+) -> dict[str, str]:
+    """Validate the new API key during reconfiguration or reauth."""
+    errors: dict[str, str] = {}
+
+    try:
+        await async_init_nextdns(hass, user_input[CONF_API_KEY], profile_id)
+    except InvalidApiKeyError:
+        errors["base"] = "invalid_api_key"
+    except (ApiError, ClientConnectorError, RetryError, TimeoutError):
+        errors["base"] = "cannot_connect"
+    except ProfileNotAvailable:
+        errors["base"] = "profile_not_available"
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+
+    return errors
+
+
 class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for NextDNS."""
 
@@ -116,28 +137,21 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
-
         entry = self._get_reauth_entry()
-        profile_id = entry.data[CONF_PROFILE_ID]
 
         if user_input is not None:
-            try:
-                await async_init_nextdns(
-                    self.hass, user_input[CONF_API_KEY], profile_id
-                )
-            except InvalidApiKeyError:
-                errors["base"] = "invalid_api_key"
-            except (ApiError, ClientConnectorError, RetryError, TimeoutError):
-                errors["base"] = "cannot_connect"
-            except ProfileNotAvailable:
+            result = await async_validate_new_api_key(
+                self.hass, user_input, entry.data[CONF_PROFILE_ID]
+            )
+            if result.get("base") == "profile_not_available":
                 return self.async_abort(reason="profile_not_available")
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                return self.async_update_reload_and_abort(
-                    entry, data_updates=user_input
-                )
+
+            errors.update(result)
+
+            return self.async_update_reload_and_abort(
+                entry,
+                data_updates=user_input,
+            )
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -150,29 +164,21 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
         errors: dict[str, str] = {}
-
         entry = self._get_reconfigure_entry()
-        profile_id = entry.data[CONF_PROFILE_ID]
 
         if user_input is not None:
-            try:
-                await async_init_nextdns(
-                    self.hass, user_input[CONF_API_KEY], profile_id
-                )
-            except InvalidApiKeyError:
-                errors["base"] = "invalid_api_key"
-            except (ApiError, ClientConnectorError, RetryError, TimeoutError):
-                errors["base"] = "cannot_connect"
-            except ProfileNotAvailable:
+            result = await async_validate_new_api_key(
+                self.hass, user_input, entry.data[CONF_PROFILE_ID]
+            )
+            if result.get("base") == "profile_not_available":
                 return self.async_abort(reason="profile_not_available")
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data_updates=user_input,
-                )
+
+            errors.update(result)
+
+            return self.async_update_reload_and_abort(
+                entry,
+                data_updates=user_input,
+            )
 
         return self.async_show_form(
             step_id="reconfigure",

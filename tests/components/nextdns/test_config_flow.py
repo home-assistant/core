@@ -222,6 +222,7 @@ async def test_reauth_errors(
         result["flow_id"],
         user_input={CONF_API_KEY: "new_api_key"},
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -292,6 +293,7 @@ async def test_reconfiguration_errors(
         result["flow_id"],
         user_input={CONF_API_KEY: "new_api_key"},
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
