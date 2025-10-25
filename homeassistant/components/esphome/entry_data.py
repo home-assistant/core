@@ -446,9 +446,7 @@ class RuntimeEntryData:
         self, hass: HomeAssistant, entry: ESPHomeConfigEntry
     ) -> None:
         """Handle options update."""
-        if self.original_options == entry.options:
-            return
-        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
     @callback
     def async_on_disconnect(self) -> None:
