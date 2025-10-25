@@ -28,7 +28,7 @@ type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 
 
 @dataclass
