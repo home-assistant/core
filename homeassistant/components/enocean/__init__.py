@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
+from home_assistant_enocean.enocean_id import EnOceanID
 from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
 
 from homeassistant.const import CONF_DEVICE
@@ -10,7 +12,14 @@ from homeassistant.helpers import device_registry as dr
 
 from .config_entry import EnOceanConfigEntry, EnOceanConfigRuntimeData
 from .config_flow import CONF_ENOCEAN_DEVICES
-from .const import DATA_ENOCEAN, DOMAIN, LOGGER, PLATFORMS
+from .const import (
+    CONF_ENOCEAN_DEVICE_ID,
+    CONF_ENOCEAN_DEVICE_TYPE_ID,
+    DATA_ENOCEAN,
+    DOMAIN,
+    LOGGER,
+    PLATFORMS,
+)
 
 
 async def async_setup_entry(
@@ -37,6 +46,25 @@ async def async_setup_entry(
         sw_version=gateway.sw_version,
         hw_version=gateway.chip_version,
     )
+
+    # add devices to gateway
+    devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
+    for device in devices:
+        try:
+            enocean_id = EnOceanID(device[CONF_ENOCEAN_DEVICE_ID])
+            device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
+            device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
+
+            gateway.add_device(
+                enocean_id=enocean_id,
+                device_type=device_type,
+            )
+        except ValueError as ex:
+            LOGGER.error(
+                "Failed to add EnOcean device %s: %s",
+                device.get(CONF_ENOCEAN_DEVICE_ID, "unknown"),
+                ex,
+            )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

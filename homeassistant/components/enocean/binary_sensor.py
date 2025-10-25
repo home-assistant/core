@@ -29,7 +29,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-
     devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
     for device in devices:
@@ -65,12 +64,7 @@ async def async_setup_entry(
 
 
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
-    """Representation of EnOcean binary sensors such as wall switches.
-
-    Supported EEPs (EnOcean Equipment Profiles):
-    - F6-02-01 (Light and Blind Control - Application Style 2)
-    - F6-02-02 (Light and Blind Control - Application Style 1)
-    """
+    """Representation of EnOcean binary sensors such as wall switches."""
 
     def __init__(
         self,
