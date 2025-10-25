@@ -12,6 +12,8 @@ from aurorapy.client import (
 )
 from serial import SerialException
 
+from homeassistant.exceptions import HomeAssistantError
+
 
 @dataclass
 class AuroraInverterIdentifier:
@@ -38,12 +40,12 @@ class AuroraInverterData:
     alarm: str
 
 
-class AuroraClientTimeoutError(Exception):
-    """Timeout error specific to AuroraClient."""
-
-
-class AuroraClientError(Exception):
+class AuroraClientError(HomeAssistantError):
     """Generic error specific to AuroraClient."""
+
+
+class AuroraClientTimeoutError(AuroraClientError):
+    """Timeout error specific to AuroraClient."""
 
 
 class AuroraClient:
@@ -56,7 +58,9 @@ class AuroraClient:
         self._client = client
 
     @classmethod
-    def from_serial(cls, inverter_serial_address: int, serial_comport: str):
+    def from_serial(
+        cls, inverter_serial_address: int, serial_comport: str
+    ) -> AuroraSerialClient:
         """Create an AuroraClient using a serial connection."""
         client = AuroraSerialClient(
             address=inverter_serial_address,
@@ -67,7 +71,9 @@ class AuroraClient:
         return cls(client)
 
     @classmethod
-    def from_tcp(cls, inverter_serial_address: int, tcp_host: str, tcp_port: int):
+    def from_tcp(
+        cls, inverter_serial_address: int, tcp_host: str, tcp_port: int
+    ) -> AuroraTCPClient:
         """Create an AuroraClient using a TCP connection."""
         client = AuroraTCPClient(
             ip=tcp_host,

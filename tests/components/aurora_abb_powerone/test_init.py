@@ -40,7 +40,7 @@ CURRENT_VERSION = AuroraABBConfigFlow.VERSION
         },
         {
             CONF_TRANSPORT: TRANSPORT_TCP,
-            CONF_TCP_HOST: "192.168.1.10",
+            CONF_TCP_HOST: "127.0.0.1",
             CONF_TCP_PORT: 8899,
             CONF_INVERTER_SERIAL_ADDRESS: 2,
         },
@@ -206,7 +206,7 @@ async def test_unload_entry_tcp(hass: HomeAssistant) -> None:
         title="Aurora TCP",
         data={
             CONF_TRANSPORT: TRANSPORT_TCP,
-            CONF_TCP_HOST: "192.168.1.10",
+            CONF_TCP_HOST: "127.0.0.1",
             CONF_TCP_PORT: 8899,
             CONF_INVERTER_SERIAL_ADDRESS: 3,
             ATTR_MODEL: "modelXYZ",

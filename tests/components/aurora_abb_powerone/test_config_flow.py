@@ -282,7 +282,7 @@ async def test_tcp_error_cannot_connect(hass: HomeAssistant) -> None:
         form_result = await hass.config_entries.flow.async_configure(
             configure_tcp_result["flow_id"],
             {
-                CONF_TCP_HOST: "192.0.2.10",
+                CONF_TCP_HOST: "127.0.0.1",
                 CONF_TCP_PORT: 8899,
                 CONF_INVERTER_SERIAL_ADDRESS: INVERTER_SERIAL_ADDRESS_DEFAULT,
             },
@@ -381,8 +381,8 @@ async def test_reconfigure_serial(hass: HomeAssistant) -> None:
     await setup.async_setup_component(hass, DOMAIN, {})
 
     unique_id = "SERIAL-1"
-    fakecomport_old = "/dev/ttyUSB0"
-    fakecomport_new = "/dev/ttyUSB1"
+    fakecomport_old = "/dev/ttyUSB8"
+    fakecomport_new = "/dev/ttyUSB9"
     fakecomports = [
         list_ports_common.ListPortInfo(fakecomport_old),
         list_ports_common.ListPortInfo(fakecomport_new),
@@ -462,7 +462,7 @@ async def test_reconfigure_unique_id_mismatch_serial(hass: HomeAssistant) -> Non
     await setup.async_setup_component(hass, DOMAIN, {})
 
     unique_id_old = "SERIAL-OLD"
-    fakecomport = "/dev/ttyUSB0"
+    fakecomport = "/dev/ttyUSB7"
     fakecomports = [list_ports_common.ListPortInfo(fakecomport)]
 
     with patch("serial.tools.list_ports.comports", return_value=fakecomports):

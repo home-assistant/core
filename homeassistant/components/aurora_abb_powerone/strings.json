@@ -2,9 +2,9 @@
   "config": {
     "step": {
       "choose_transport": {
-        "description": "Please select the transport method you want to use to connect to the inverter.",
+        "description": "Please select how you would like to communicate with the inverter.",
         "data": {
-          "transport": "Available transport methods"
+          "transport": "Available communication options"
         }
       },
       "configure_serial": {
