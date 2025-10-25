@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enocean.protocol.packet import Packet
 from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
 from home_assistant_enocean.enocean_id import EnOceanID
 from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
@@ -11,7 +10,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import _LOGGER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -35,8 +33,8 @@ async def async_setup_entry(
     async_add_entities(
         [
             EnOceanBinarySensor(
-                device_id=config_entry.runtime_data.gateway.chip_id,
-                enocean_gateway=config_entry.runtime_data.gateway,
+                enocean_id=config_entry.runtime_data.gateway.chip_id,
+                gateway=config_entry.runtime_data.gateway,
                 device_name="EnOcean Gateway",
                 name="Teach-In Active",
                 dev_type=EnOceanDeviceType(
@@ -59,8 +57,8 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     EnOceanBinarySensor(
-                        device_id=device_id,
-                        enocean_gateway=config_entry.runtime_data.gateway,
+                        enocean_id=device_id,
+                        gateway=config_entry.runtime_data.gateway,
                         device_name=device["name"],
                         channel=channel,
                         dev_type=device_type,
@@ -90,8 +88,8 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        device_id: EnOceanID,
-        enocean_gateway: EnOceanHomeAssistantGateway,
+        enocean_id: EnOceanID,
+        gateway: EnOceanHomeAssistantGateway,
         device_name: str,
         device_class: BinarySensorDeviceClass | None = None,
         channel: str | None = None,
@@ -100,18 +98,13 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the EnOcean binary sensor."""
         super().__init__(
-            enocean_id=device_id,
-            gateway=enocean_gateway,
+            enocean_id=enocean_id,
+            gateway=gateway,
             device_name=device_name,
             device_type=dev_type,
             name=name,
         )
         self._attr_device_class = device_class
-
-        self._attr_on = False
-
-        self._attr_should_poll = False
-
         self._channel = channel
 
     @property
@@ -122,58 +115,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self._attr_on
-
-    def value_changed(self, packet: Packet) -> None:
-        """Fire an event with the data that have changed.
-
-        This method is called when there is an incoming packet associated
-        with this platform.
-
-        Example packet data:
-        - 2nd button pressed
-            ['0xf6', '0x10', '0x00', '0x2d', '0xcf', '0x45', '0x30']
-        - button released
-            ['0xf6', '0x00', '0x00', '0x2d', '0xcf', '0x45', '0x20']
-        """
-        # Energy Bow
-        # pushed = None
-
-        # if packet.data[6] == 0x30:
-        #     pushed = 1
-        # elif packet.data[6] == 0x20:
-        #     pushed = 0
-
-        action = packet.data[1]
-        if action == 0x70:
-            if self._channel == "A0":
-                self._attr_on = True
-        elif action == 0x50:
-            if self._channel == "A1":
-                self._attr_on = True
-        elif action == 0x30:
-            if self._channel == "B0":
-                self._attr_on = True
-        elif action == 0x10:
-            if self._channel == "B1":
-                self._attr_on = True
-        elif action == 0x37:
-            if self._channel == "AB0":
-                self._attr_on = True
-        elif action == 0x15:
-            if self._channel == "AB1":
-                self._attr_on = True
-        elif action == 0x17:
-            if self._channel == "A0B1":
-                self._attr_on = True
-        elif action == 0x35:
-            if self._channel == "A1B0":
-                self._attr_on = True
-
-        elif action == 0x00:
-            self._attr_on = False
-        else:
-            _LOGGER.warning("Unknown action: %s", action)
-            self._attr_on = False
-
-        self.schedule_update_ha_state()
+        is_on = False
+        if self.gateway.binary_sensor_is_on(self.enocean_id, self._channel):
+            is_on = True
+        return is_on

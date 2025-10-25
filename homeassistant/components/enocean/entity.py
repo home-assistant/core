@@ -1,7 +1,5 @@
 """Representation of an EnOcean device."""
 
-from abc import abstractmethod
-
 from enocean.protocol.constants import PACKET
 from enocean.protocol.packet import Packet
 from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
@@ -58,12 +56,6 @@ class EnOceanEntity(Entity):
 
     def _message_received_callback(self, packet: Packet) -> None:
         """Handle incoming packets."""
-        if packet.sender_int == self.__enocean_id.to_number():
-            self.value_changed(packet)
-
-    @abstractmethod
-    def value_changed(self, packet: Packet) -> None:
-        """Update the internal state of the device when a packet arrives."""
 
     def send_command(
         self, data: None | list, optional: None | list, packet_type: PACKET
@@ -85,6 +77,11 @@ class EnOceanEntity(Entity):
     def enocean_id(self) -> EnOceanID:
         """Return the EnOcean device id."""
         return self.__enocean_id
+
+    @property
+    def gateway(self) -> EnOceanHomeAssistantGateway:
+        """Return the gateway instance."""
+        return self.__gateway
 
     @property
     def gateway_id(self) -> EnOceanID:
