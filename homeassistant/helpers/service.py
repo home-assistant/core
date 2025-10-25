@@ -605,7 +605,6 @@ async def async_get_all_descriptions(
         for service_name, service in services_map.items():
             cache_key = (domain, service_name)
             description = descriptions_cache.get(cache_key)
-            description_placeholders = service.description_placeholders
             if description is not None:
                 domain_descriptions[service_name] = description
                 continue
@@ -624,6 +623,8 @@ async def async_get_all_descriptions(
             # Don't warn for missing services, because it triggers false
             # positives for things like scripts, that register as a service
             description = {"fields": yaml_description.get("fields", {})}
+            if description_placeholders := service.description_placeholders:
+                description["description_placeholders"] = description_placeholders
 
             for item in ("description", "name", "target"):
                 if item in yaml_description:
