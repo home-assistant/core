@@ -33,12 +33,14 @@ from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import (
+    SOURCE_USER,
     ConfigEntry,
     ConfigFlowResult,
     ConfigSubentry,
     ConfigSubentryData,
     ConfigSubentryFlow,
     FlowType,
+    SubentryFlowContext,
     SubentryFlowResult,
 )
 from homeassistant.const import (
@@ -521,9 +523,20 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         return super().async_create_entry(
             data=data,
             subentries=subentries,
-            next_flow=(FlowType.CONFIG_SUBENTRIES_FLOW, None, "observation"),
             **kwargs,
         )
+
+    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
+        """Create subentry flow after creating the main entry."""
+        subentry_result = await self.hass.config_entries.subentries.async_init(
+            (result["result"].entry_id, "observation"),
+            context=SubentryFlowContext(source=SOURCE_USER),
+        )
+        result["next_flow"] = (
+            FlowType.CONFIG_SUBENTRIES_FLOW,
+            subentry_result["flow_id"],
+        )
+        return result
 
 
 class ObservationSubentryFlowHandler(ConfigSubentryFlow):

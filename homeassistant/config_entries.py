@@ -300,7 +300,7 @@ class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
     """Typed result dict for config flow."""
 
     # Extra keys, only present if type is CREATE_ENTRY
-    next_flow: tuple[FlowType, str, str]  # (flow type, flow id, subentry_type)
+    next_flow: tuple[FlowType, str]  # (flow type, flow id)
     minor_version: int
     options: Mapping[str, Any]
     result: ConfigEntry
@@ -1545,6 +1545,23 @@ class ConfigEntriesFlowManager(
                 issue_id = f"config_entry_reauth_{flow.handler}_{entry_id}"
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
+    def _async_validate_next_flow(
+        self,
+        result: ConfigFlowResult,
+    ) -> None:
+        """Validate and set next_flow in result if provided."""
+        if (next_flow := result.get("next_flow")) is None:
+            return
+        flow_type, flow_id = next_flow
+        if flow_type not in {FlowType.CONFIG_FLOW, FlowType.CONFIG_SUBENTRIES_FLOW}:
+            raise HomeAssistantError("Invalid next_flow type")
+        if flow_type == FlowType.CONFIG_FLOW:
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.flow.async_get(flow_id)
+        if flow_type == FlowType.CONFIG_SUBENTRIES_FLOW:
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.subentries.async_get(flow_id)
+
     async def async_finish_flow(
         self,
         flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
@@ -1695,6 +1712,10 @@ class ConfigEntriesFlowManager(
             version=result["version"],
         )
 
+        if not existing_entry:
+            result = await flow.async_on_create_entry(result)
+            self._async_validate_next_flow(result)
+
         if existing_entry is not None:
             # Unload and remove the existing entry, but don't clean up devices and
             # entities until the new entry is added
@@ -1707,20 +1728,6 @@ class ConfigEntriesFlowManager(
             self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
-
-        if (
-            result.get("next_flow")
-            and result["next_flow"][0] == FlowType.CONFIG_SUBENTRIES_FLOW
-        ):
-            subentry_result = await self.hass.config_entries.subentries.async_init(
-                (entry.entry_id, result["next_flow"][2]),
-                context=SubentryFlowContext(source=SOURCE_USER),
-            )
-            result["next_flow"] = (
-                result["next_flow"][0],
-                subentry_result["flow_id"],
-                result["next_flow"][2],
-            )
 
         return result
 
@@ -3185,41 +3192,27 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Handle a flow initialized by Zeroconf discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    def _async_set_next_flow_if_valid(
-        self,
-        result: ConfigFlowResult,
-        next_flow: tuple[FlowType, str, str] | None,
-    ) -> None:
-        """Validate and set next_flow in result if provided."""
-        if next_flow is None:
-            return
-        flow_type, flow_id, subentry_type = next_flow
-        if flow_type not in {FlowType.CONFIG_FLOW, FlowType.CONFIG_SUBENTRIES_FLOW}:
-            raise HomeAssistantError("Invalid next_flow type")
-        if flow_type == FlowType.CONFIG_FLOW:
-            # Raises UnknownFlow if the flow does not exist.
-            self.hass.config_entries.flow.async_get(flow_id)
-        if flow_type == FlowType.CONFIG_SUBENTRIES_FLOW and not subentry_type:
-            raise HomeAssistantError(
-                "subentry_type must be provided for subentry flows"
-            )
-
-        result["next_flow"] = next_flow
-
     @callback
     def async_abort(
         self,
         *,
         reason: str,
         description_placeholders: Mapping[str, str] | None = None,
-        next_flow: tuple[FlowType, str, str] | None = None,
+        next_flow: tuple[FlowType, str] | None = None,
     ) -> ConfigFlowResult:
         """Abort the config flow."""
         result = super().async_abort(
             reason=reason,
             description_placeholders=description_placeholders,
         )
-        self._async_set_next_flow_if_valid(result, next_flow)
+        return result  # noqa: RET504
+
+    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
+        """Run when config flow creates a config entry.
+
+        Should be overwritten by integrations to add additional data to the result.
+        Example: creating next flow entries to the result.
+        """
         return result
 
     @callback
@@ -3230,7 +3223,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
-        next_flow: tuple[FlowType, str, str] | None = None,
+        next_flow: tuple[FlowType, str] | None = None,
         options: Mapping[str, Any] | None = None,
         subentries: Iterable[ConfigSubentryData] | None = None,
     ) -> ConfigFlowResult:
@@ -3251,7 +3244,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
         )
 
         result["minor_version"] = self.MINOR_VERSION
-        self._async_set_next_flow_if_valid(result, next_flow)
         result["options"] = options or {}
         result["subentries"] = subentries or ()
         result["version"] = self.VERSION
