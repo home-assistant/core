@@ -535,16 +535,6 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
-
-    def _substitute_description_placeholders(
-        description: str | None, description_placeholders: Mapping[str, str] | None
-    ) -> str | None:
-        if not description or not description_placeholders:
-            return description
-        with suppress(KeyError):
-            description = description.format(**description_placeholders)
-        return description
-
     descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     # We don't mutate services here so we avoid calling
