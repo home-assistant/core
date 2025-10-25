@@ -31,7 +31,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     FlowType,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
@@ -397,7 +397,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 "name": conflict_entry.data.get(CONF_DEVICE_NAME, "unknown"),
                 "mac": format_mac(conflict_entry.unique_id),
             },
-            reload_on_update=False,
         )
 
     async def async_step_mqtt(
@@ -522,7 +521,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle creating a new entry by removing the old one and creating new."""
         assert self._entry_with_name_conflict is not None
         if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
-            return self.async_update_and_abort(
+            return self.async_update_reload_and_abort(
                 self._entry_with_name_conflict,
                 title=self._name,
                 unique_id=self.unique_id,
@@ -919,7 +918,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler()
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow for esphome."""
 
     async def async_step_init(

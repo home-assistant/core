@@ -442,12 +442,6 @@ class RuntimeEntryData:
             # save delay has passed.
             await self.store.async_save(self._pending_storage())
 
-    async def async_update_listener(
-        self, hass: HomeAssistant, entry: ESPHomeConfigEntry
-    ) -> None:
-        """Handle options update."""
-        hass.config_entries.async_schedule_reload(entry.entry_id)
-
     @callback
     def async_on_disconnect(self) -> None:
         """Call when the entry has been disconnected.
