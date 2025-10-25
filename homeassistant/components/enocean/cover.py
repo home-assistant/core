@@ -11,6 +11,7 @@ from enocean.protocol.constants import RORG
 from enocean.protocol.packet import Packet, RadioPacket
 from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
 from home_assistant_enocean.enocean_id import EnOceanID
+from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -83,7 +84,7 @@ async def async_setup_entry(
                 EnOceanCover(
                     sender_id=sender_id,
                     enocean_id=device_id,
-                    gateway_id=config_entry.runtime_data.gateway.chip_id,
+                    gateway=config_entry.runtime_data.gateway,
                     device_name=device[CONF_ENOCEAN_DEVICE_NAME],
                     device_type=device_type,
                     name=None,
@@ -107,7 +108,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self,
         sender_id: EnOceanID,
         enocean_id: EnOceanID,
-        gateway_id: EnOceanID,
+        gateway: EnOceanHomeAssistantGateway,
         device_name: str,
         device_type: EnOceanDeviceType,
         name: str | None,
@@ -115,7 +116,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         """Initialize the EnOcean Cover."""
         super().__init__(
             enocean_id=enocean_id,
-            gateway_id=gateway_id,
+            gateway=gateway,
             device_name=device_name,
             device_type=device_type,
             name=name,

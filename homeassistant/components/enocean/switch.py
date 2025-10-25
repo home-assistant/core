@@ -7,6 +7,7 @@ from typing import Any
 from enocean.protocol.packet import Packet
 from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
 from home_assistant_enocean.enocean_id import EnOceanID
+from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -70,7 +71,7 @@ async def async_setup_entry(
                     EnOceanSwitch(
                         dev_id=device_id,
                         dev_name=device["name"],
-                        gateway_id=entry.runtime_data.gateway.chip_id,
+                        gateway=entry.runtime_data.gateway,
                         channel=0,
                         dev_type=device_type,
                         name="Switch",
@@ -81,7 +82,7 @@ async def async_setup_entry(
                     EnOceanSwitch(
                         dev_id=device_id,
                         dev_name=device["name"],
-                        gateway_id=entry.runtime_data.gateway.chip_id,
+                        gateway=entry.runtime_data.gateway,
                         channel=channel,
                         dev_type=device_type,
                         name="Switch " + str(channel + 1),
@@ -97,7 +98,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     def __init__(
         self,
         dev_id: EnOceanID,
-        gateway_id: EnOceanID,
+        gateway: EnOceanHomeAssistantGateway,
         dev_name: str,
         channel: int,
         dev_type: EnOceanDeviceType = EnOceanDeviceType(),
@@ -106,7 +107,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         """Initialize the EnOcean switch device."""
         super().__init__(
             enocean_id=dev_id,
-            gateway_id=gateway_id,
+            gateway=gateway,
             device_name=dev_name,
             name=name,
             device_type=dev_type,

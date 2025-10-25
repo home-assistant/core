@@ -8,6 +8,7 @@ from typing import Any
 from enocean.protocol.packet import Packet
 from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
 from home_assistant_enocean.enocean_id import EnOceanID
+from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -63,7 +64,7 @@ async def async_setup_entry(
                         dev_name=device["name"],
                         dev_id=device_id,
                         dev_type=device_type,
-                        gateway_id=entry.runtime_data.gateway.chip_id,
+                        gateway=entry.runtime_data.gateway,
                     )
                 ]
             )
@@ -81,7 +82,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self,
         sender_id: EnOceanID,
         dev_id: EnOceanID,
-        gateway_id: EnOceanID,
+        gateway: EnOceanHomeAssistantGateway,
         dev_name: str,
         dev_type: EnOceanDeviceType = EnOceanDeviceType(),
         name: str | None = None,
@@ -89,7 +90,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         """Initialize the EnOcean light source."""
         super().__init__(
             enocean_id=dev_id,
-            gateway_id=gateway_id,
+            gateway=gateway,
             device_name=dev_name,
             name=name,
             device_type=dev_type,

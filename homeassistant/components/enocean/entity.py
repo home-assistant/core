@@ -6,6 +6,7 @@ from enocean.protocol.constants import PACKET
 from enocean.protocol.packet import Packet
 from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
 from home_assistant_enocean.enocean_id import EnOceanID
+from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
 
 from homeassistant.config_entries import _LOGGER
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -21,7 +22,7 @@ class EnOceanEntity(Entity):
     def __init__(
         self,
         enocean_id: EnOceanID,
-        gateway_id: EnOceanID,
+        gateway: EnOceanHomeAssistantGateway,
         device_name: str,
         name: str | None = None,
         device_type: EnOceanDeviceType = EnOceanDeviceType(),
@@ -38,7 +39,7 @@ class EnOceanEntity(Entity):
         self.__enocean_id: EnOceanID = enocean_id
         self.__device_name: str = device_name
         self.__device_type: EnOceanDeviceType = device_type
-        self.__gateway_id: EnOceanID = gateway_id
+        self.__gateway: EnOceanHomeAssistantGateway = gateway
 
     async def async_added_to_hass(self) -> None:
         """Get gateway ID and register callback."""
@@ -88,7 +89,7 @@ class EnOceanEntity(Entity):
     @property
     def gateway_id(self) -> EnOceanID:
         """Return the gateway's chip id."""
-        return self.__gateway_id
+        return self.__gateway.chip_id
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -107,13 +108,13 @@ class EnOceanEntity(Entity):
             }
         )
 
-        if self.__enocean_id.to_number() == self.__gateway_id.to_number():
+        if self.__enocean_id.to_number() == self.__gateway.chip_id.to_number():
             if self.platform.config_entry is None:
                 return info
             info.update(
                 {
-                    "sw_version": self.platform.config_entry.runtime_data.gateway.sw_version,
-                    "hw_version": self.platform.config_entry.runtime_data.gateway.chip_version,
+                    "sw_version": self.__gateway.sw_version,
+                    "hw_version": self.__gateway.chip_version,
                 }
             )
             return info

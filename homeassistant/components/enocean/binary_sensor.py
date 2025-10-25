@@ -5,6 +5,7 @@ from __future__ import annotations
 from enocean.protocol.packet import Packet
 from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
 from home_assistant_enocean.enocean_id import EnOceanID
+from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -35,7 +36,7 @@ async def async_setup_entry(
         [
             EnOceanBinarySensor(
                 device_id=config_entry.runtime_data.gateway.chip_id,
-                enocean_gateway_id=config_entry.runtime_data.gateway.chip_id,
+                enocean_gateway=config_entry.runtime_data.gateway,
                 device_name="EnOcean Gateway",
                 name="Teach-In Active",
                 dev_type=EnOceanDeviceType(
@@ -59,7 +60,7 @@ async def async_setup_entry(
                 [
                     EnOceanBinarySensor(
                         device_id=device_id,
-                        enocean_gateway_id=config_entry.runtime_data.gateway.chip_id,
+                        enocean_gateway=config_entry.runtime_data.gateway,
                         device_name=device["name"],
                         channel=channel,
                         dev_type=device_type,
@@ -90,7 +91,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
     def __init__(
         self,
         device_id: EnOceanID,
-        enocean_gateway_id: EnOceanID,
+        enocean_gateway: EnOceanHomeAssistantGateway,
         device_name: str,
         device_class: BinarySensorDeviceClass | None = None,
         channel: str | None = None,
@@ -100,7 +101,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         """Initialize the EnOcean binary sensor."""
         super().__init__(
             enocean_id=device_id,
-            gateway_id=enocean_gateway_id,
+            gateway=enocean_gateway,
             device_name=device_name,
             device_type=dev_type,
             name=name,

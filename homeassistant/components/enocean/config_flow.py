@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from . import gateway
-from .config_entry import EnOceanConfigEntry
+from .config_entry import EnOceanConfigEntry, EnOceanConfigRuntimeData
 from .const import (
     CONF_ENOCEAN_DEVICE_ID,
     CONF_ENOCEAN_DEVICE_NAME,
@@ -159,7 +159,8 @@ class OptionsFlowHandler(OptionsFlow):
         default_device_type = ""
         default_device_id = ""
         default_device_name = ""
-        default_sender_id = self.config_entry.runtime_data.gateway.base_id.to_string()
+        runtime_data: EnOceanConfigRuntimeData = self.config_entry.runtime_data
+        default_sender_id = runtime_data.gateway.base_id.to_string()
 
         device_id: EnOceanID | None = None
         device_name: str | None = None

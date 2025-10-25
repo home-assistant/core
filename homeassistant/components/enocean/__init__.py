@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
+
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -9,7 +11,6 @@ from homeassistant.helpers import device_registry as dr
 from .config_entry import EnOceanConfigEntry, EnOceanConfigRuntimeData
 from .config_flow import CONF_ENOCEAN_DEVICES
 from .const import DATA_ENOCEAN, DOMAIN, LOGGER, PLATFORMS
-from .gateway import EnOceanGateway
 
 
 async def async_setup_entry(
@@ -17,8 +18,8 @@ async def async_setup_entry(
     config_entry: EnOceanConfigEntry,
 ) -> bool:
     """Set up an EnOcean gateway for the given config entry."""
-    gateway = EnOceanGateway(hass, config_entry.data[CONF_DEVICE])
-    await gateway.async_setup()
+    gateway = EnOceanHomeAssistantGateway(config_entry.data[CONF_DEVICE])
+    await gateway.start()
 
     config_entry.runtime_data = EnOceanConfigRuntimeData(gateway=gateway)
 

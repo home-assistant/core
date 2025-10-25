@@ -5,6 +5,7 @@ from __future__ import annotations
 from enocean.protocol.packet import Packet
 from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
 from home_assistant_enocean.enocean_id import EnOceanID
+from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -118,7 +119,7 @@ async def async_setup_entry(
                     EnOceanTemperatureSensor(
                         enocean_id=device_id,
                         dev_name=device_name,
-                        gateway_id=config_entry.runtime_data.gateway.chip_id,
+                        gateway=config_entry.runtime_data.gateway,
                         description=SENSOR_DESC_TEMPERATURE,
                         scale_min=min_temp,
                         scale_max=max_temp,
@@ -153,7 +154,7 @@ async def async_setup_entry(
                     EnOceanTemperatureSensor(
                         enocean_id=device_id,
                         dev_name=device_name,
-                        gateway_id=config_entry.runtime_data.gateway.chip_id,
+                        gateway=config_entry.runtime_data.gateway,
                         description=SENSOR_DESC_TEMPERATURE,
                         scale_min=min_temp,
                         scale_max=max_temp,
@@ -165,7 +166,7 @@ async def async_setup_entry(
                     EnOceanHumiditySensor(
                         enocean_id=device_id,
                         dev_name=device_name,
-                        gateway_id=config_entry.runtime_data.gateway.chip_id,
+                        gateway=config_entry.runtime_data.gateway,
                         description=SENSOR_DESC_HUMIDITY,
                         dev_type=device_type,
                         name="Humidity",
@@ -190,7 +191,7 @@ async def async_setup_entry(
                         EnOceanTemperatureSensor(
                             enocean_id=device_id,
                             dev_name=device_name,
-                            gateway_id=config_entry.runtime_data.gateway.chip_id,
+                            gateway=config_entry.runtime_data.gateway,
                             description=SENSOR_DESC_TEMPERATURE,
                             scale_min=0,
                             scale_max=40,
@@ -207,7 +208,7 @@ async def async_setup_entry(
                         EnOceanTemperatureSensor(
                             enocean_id=device_id,
                             dev_name=device_name,
-                            gateway_id=config_entry.runtime_data.gateway.chip_id,
+                            gateway=config_entry.runtime_data.gateway,
                             description=SENSOR_DESC_TEMPERATURE,
                             scale_min=0,
                             scale_max=40,
@@ -219,7 +220,7 @@ async def async_setup_entry(
                         EnOceanHumiditySensor(
                             enocean_id=device_id,
                             dev_name=device_name,
-                            gateway_id=config_entry.runtime_data.gateway.chip_id,
+                            gateway=config_entry.runtime_data.gateway,
                             description=SENSOR_DESC_HUMIDITY,
                             dev_type=device_type,
                             name="Humidity",
@@ -240,7 +241,7 @@ async def async_setup_entry(
                     EnOceanPowerSensor(
                         enocean_id=device_id,
                         dev_name=device_name,
-                        gateway_id=config_entry.runtime_data.gateway.chip_id,
+                        gateway=config_entry.runtime_data.gateway,
                         description=SENSOR_DESC_POWER,
                         dev_type=device_type,
                         name="Power usage",
@@ -256,7 +257,7 @@ async def async_setup_entry(
                     EnOceanTemperatureSensor(
                         enocean_id=device_id,
                         dev_name=device_name,
-                        gateway_id=config_entry.runtime_data.gateway.chip_id,
+                        gateway=config_entry.runtime_data.gateway,
                         description=SENSOR_DESC_TEMPERATURE,
                         scale_min=0,
                         scale_max=40,
@@ -276,7 +277,7 @@ async def async_setup_entry(
                     EnOceanWindowHandle(
                         enocean_id=device_id,
                         dev_name=device_name,
-                        gateway_id=config_entry.runtime_data.gateway.chip_id,
+                        gateway=config_entry.runtime_data.gateway,
                         description=SENSOR_DESC_WINDOWHANDLE,
                         dev_type=device_type,
                     )
@@ -293,7 +294,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         enocean_id: EnOceanID,
         dev_name: str,
         description: SensorEntityDescription,
-        gateway_id: EnOceanID,
+        gateway: EnOceanHomeAssistantGateway,
         dev_type: EnOceanDeviceType = EnOceanDeviceType(),
         name: str | None = None,
     ) -> None:
@@ -303,7 +304,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
             device_name=dev_name,
             name=name,
             device_type=dev_type,
-            gateway_id=gateway_id,
+            gateway=gateway,
         )
         self.entity_description = description
 
@@ -362,7 +363,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
     def __init__(
         self,
         enocean_id: EnOceanID,
-        gateway_id: EnOceanID,
+        gateway: EnOceanID,
         dev_name: str,
         description: SensorEntityDescription,
         *,
@@ -380,7 +381,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
             name=name,
             description=description,
             dev_type=dev_type,
-            gateway_id=gateway_id,
+            gateway=gateway,
         )
         self._scale_min = scale_min
         self._scale_max = scale_max
