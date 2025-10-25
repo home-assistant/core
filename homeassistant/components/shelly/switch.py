@@ -165,6 +165,7 @@ RPC_SWITCHES = {
     "boolean_zone0": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -175,6 +176,7 @@ RPC_SWITCHES = {
     "boolean_zone1": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -185,6 +187,7 @@ RPC_SWITCHES = {
     "boolean_zone2": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -195,6 +198,7 @@ RPC_SWITCHES = {
     "boolean_zone3": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -205,6 +209,7 @@ RPC_SWITCHES = {
     "boolean_zone4": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -215,6 +220,7 @@ RPC_SWITCHES = {
     "boolean_zone5": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
