@@ -109,7 +109,9 @@ BINARY_SENSOR_KNX_SCHEMA = vol.Schema(
                 min=0, max=600, step=0.1, unit_of_measurement="s"
             )
         ),
-        vol.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+        vol.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
+            allow_false=True
+        ),
     },
 )
 
