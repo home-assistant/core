@@ -24,9 +24,7 @@ class Config:
     recalculate_interval_seconds: int = 10
     house_consumption_amps_entity: str
     mains_voltage_entity: str
-    allow_grid_import_entity: str | None = None
     solar_generation_kw_entity: str | None = None
-    allow_grid_import: bool = False
     allow_solar_consumption: bool = False
     controllable_loads: dict[str, ControllableLoadConfig] = {}
 

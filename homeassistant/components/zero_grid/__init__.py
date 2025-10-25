@@ -7,6 +7,7 @@ import logging
 
 from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
@@ -17,12 +18,6 @@ from homeassistant.loader import bind_hass
 
 from .config import Config, ControllableLoadConfig
 from .const import DOMAIN
-
-# from .sensor import (
-#     AvailableAmpsSensor,
-#     EnableLoadControlSwitch,
-#     LoadControlAmpsSensor,
-# )
 from .helpers import parse_entity_domain
 from .state import ControllableLoadPlanState, ControllableLoadState, PlanState, State
 
@@ -42,8 +37,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     initialise_state(hass)
     subscribe_to_entity_changes(hass)
 
-    # load_platform(hass, "sensor", DOMAIN, domain_config, config)
-    # load_platform(hass, "switch", DOMAIN, domain_config, config)
+    # Set up platforms
+    hass.async_create_task(
+        async_load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
+    )
+    hass.async_create_task(
+        async_load_platform(hass, Platform.SWITCH, DOMAIN, {}, config)
+    )
 
     return True
 
@@ -83,11 +83,6 @@ def parse_config(domain_config):
         "house_consumption_amps_entity"
     )
     CONFIG.mains_voltage_entity = domain_config.get("mains_voltage_entity")
-
-    CONFIG.allow_grid_import_entity = domain_config.get(
-        "allow_grid_import_entity", None
-    )
-    CONFIG.allow_grid_import = CONFIG.allow_grid_import_entity is not None
 
     CONFIG.solar_generation_kw_entity = domain_config.get(
         "solar_generation_kw_entity", None
@@ -150,10 +145,8 @@ def initialise_state(hass: HomeAssistant):
     else:
         STATE.solar_generation_kw = 0.0
 
-    if CONFIG.allow_grid_import_entity is not None:
-        state = hass.states.get(CONFIG.allow_grid_import_entity)
-        if state is not None:
-            STATE.allow_grid_import = state.state.lower() == "on"
+    # Initialize allow_grid_import from switch entity (will be set up by platform)
+    STATE.allow_grid_import = True  # Default to True
 
     # match to controllable loads
     for load_name in CONFIG.controllable_loads:  # pylint: disable=consider-using-dict-items
@@ -180,8 +173,6 @@ def subscribe_to_entity_changes(hass: HomeAssistant):
         CONFIG.house_consumption_amps_entity,
         CONFIG.mains_voltage_entity,
     ]
-    if CONFIG.allow_grid_import_entity is not None:
-        entity_ids.append(CONFIG.allow_grid_import_entity)
     if CONFIG.solar_generation_kw_entity is not None:
         entity_ids.append(CONFIG.solar_generation_kw_entity)
 
@@ -189,6 +180,9 @@ def subscribe_to_entity_changes(hass: HomeAssistant):
         entity_ids.append(control.load_amps_entity)
         if control.switch_entity is not None:
             entity_ids.append(control.switch_entity)
+
+    # Subscribe to integration's own switch entities
+    entity_ids.append(f"switch.{DOMAIN}_allow_grid_import")
 
     async def state_automation_listener(event: Event[EventStateChangedData]) -> None:
         if event.event_type != "state_changed":
@@ -231,9 +225,16 @@ def subscribe_to_entity_changes(hass: HomeAssistant):
                 )
                 return
 
-        elif entity_id == CONFIG.allow_grid_import_entity:
+        elif entity_id == f"switch.{DOMAIN}_allow_grid_import":
+            # User toggled the allow grid import switch
             if new_state is not None:
                 STATE.allow_grid_import = new_state.state.lower() == "on"
+                _LOGGER.info(
+                    "Allow grid import changed to: %s (user action)",
+                    STATE.allow_grid_import,
+                )
+            else:
+                STATE.allow_grid_import = True  # Default to safe state
 
         else:
             STATE.load_control_consumption_amps = 0.0
@@ -341,21 +342,36 @@ async def calculate_effective_available_power():
     safety_margin_amps = CONFIG.hysteresis_amps
     grid_available_amps = CONFIG.max_house_load_amps - STATE.house_consumption_amps
 
-    # Solar power is what is left of solar generation after house consumption
-    solar_available_amps = 0.0
+    # Convert solar generation to amps
+    solar_generation_amps = 0.0
     if STATE.solar_generation_kw > 0:
-        solar_available_amps = (
-            (STATE.solar_generation_kw * 1000) / STATE.mains_voltage
-        ) - STATE.house_consumption_amps
-
-        # Safety check to not blow house fuse
-        solar_available_amps = min(solar_available_amps, grid_available_amps)
+        solar_generation_amps = (STATE.solar_generation_kw * 1000) / STATE.mains_voltage
 
     base_available_amps = 0.0
-    if CONFIG.allow_grid_import and STATE.allow_grid_import:
-        base_available_amps = grid_available_amps - safety_margin_amps
-    elif CONFIG.allow_solar_consumption and solar_available_amps > 0:
-        base_available_amps = solar_available_amps - safety_margin_amps
+    if STATE.allow_grid_import:
+        # When grid import is allowed, we have the grid headroom available
+        base_available_amps = grid_available_amps
+
+        # Solar generation can be used on top, but total must not exceed max house load
+        if CONFIG.allow_solar_consumption and solar_generation_amps > 0:
+            # Total available is grid headroom + solar, but capped at max to prevent exceeding main fuse
+            # The cap is: we can't use more than (max_load - consumption)
+            base_available_amps = min(
+                grid_available_amps + solar_generation_amps,
+                CONFIG.max_house_load_amps,  # Never exceed the absolute maximum
+            )
+
+        base_available_amps -= safety_margin_amps
+
+    elif CONFIG.allow_solar_consumption and solar_generation_amps > 0:
+        # When grid import is NOT allowed, only use solar that exceeds current consumption
+        # Solar available = solar generation minus what's already being consumed by the house
+        solar_net_available = solar_generation_amps - STATE.house_consumption_amps
+
+        # Can't use more than what the grid would allow anyway (don't exceed main fuse)
+        solar_net_available = min(solar_net_available, grid_available_amps)
+
+        base_available_amps = max(0, solar_net_available - safety_margin_amps)
 
     # Calculate additional power available from loads consuming less than expected
     reactive_available_amps = 0.0
@@ -375,31 +391,65 @@ async def calculate_effective_available_power():
                     load_name,
                 )
 
-    total_available_amps = base_available_amps + reactive_available_amps
+    # For internal planning, we can use base + reactive power
+    # But we cap it to never exceed physical grid capacity
+    max_safe_available = grid_available_amps - safety_margin_amps
+    total_for_planning = base_available_amps + reactive_available_amps
+    if total_for_planning > max_safe_available:
+        _LOGGER.debug(
+            "Capping planning available power from %f A to %f A (grid limit)",
+            total_for_planning,
+            max_safe_available,
+        )
+        total_for_planning = max_safe_available
+
     _LOGGER.debug(
-        "Effective available power: base=%f A, reactive=%f A, total=%f A",
+        "Effective available power: base=%f A, reactive=%f A, total_for_planning=%f A",
         base_available_amps,
         reactive_available_amps,
-        total_available_amps,
+        total_for_planning,
     )
 
-    return total_available_amps
+    # Return only base available power for display purposes
+    # Reactive power is internal reallocation and shouldn't be shown as "available"
+    return base_available_amps, total_for_planning
 
 
 @bind_hass
-@bind_hass
-async def recalculate_load_control(hass: HomeAssistant):
-    """The core of the load control algorithm."""
+async def recalculate_load_control(hass: HomeAssistant):  # noqa: C901
+    """The core of the load control algorithm.
+
+    This function is intentionally complex as it handles the complete load planning
+    algorithm including priority management, power allocation, throttling, rate limiting,
+    overload protection, and reactive reallocation.
+    """
+    # Check if load control is enabled
+    if DOMAIN in hass.data and "enable_load_control_switch" in hass.data[DOMAIN]:
+        if not hass.data[DOMAIN]["enable_load_control_switch"].is_on:
+            _LOGGER.debug("Load control is disabled, skipping recalculation")
+            return
+
     now = datetime.now()
     new_plan = PlanState()
 
     # Calculate effective available power (including reactive reallocation)
-    available_amps = await calculate_effective_available_power()
+    # Returns: (display_available, planning_available)
+    # - display_available: shown to user, excludes reactive reallocation
+    # - planning_available: used for planning, includes reactive reallocation
+    display_available, available_amps = await calculate_effective_available_power()
 
     new_plan.available_amps = available_amps
-    hass.states.async_set("zero_grid.enable_load_control", str(True))
-    hass.states.async_set("zero_grid.available_load", str(available_amps))
-    _LOGGER.debug("Available amps: %f", available_amps)
+
+    # Update entities instead of setting state directly
+    if DOMAIN in hass.data:
+        if "available_load_sensor" in hass.data[DOMAIN]:
+            hass.data[DOMAIN]["available_load_sensor"].update_value(display_available)
+
+    _LOGGER.debug(
+        "Available amps for planning: %f, for display: %f",
+        available_amps,
+        display_available,
+    )
 
     # If the available load we have to play with has not changed meaningfully, do nothing
     # Exception: always recalculate if available power is zero/negative (safety)
@@ -452,9 +502,23 @@ async def recalculate_load_control(hass: HomeAssistant):
         )
         available_amps += current_load_credit + freed_power_this_cycle
         freed_power_this_cycle = 0.0  # Reset after adding to available_amps
-        _LOGGER.debug(
-            "After credit for %s: available_amps=%f", load_name, available_amps
-        )
+
+        # Cap available_amps to never exceed physical grid capacity
+        # This prevents crediting back loads from inflating available power beyond safe limits
+        grid_available_amps = CONFIG.max_house_load_amps - STATE.house_consumption_amps
+        max_safe_available = grid_available_amps - safety_margin_amps
+        if available_amps > max_safe_available:
+            _LOGGER.debug(
+                "After credit for %s: capping available_amps from %f to %f (grid limit)",
+                load_name,
+                available_amps,
+                max_safe_available,
+            )
+            available_amps = max_safe_available
+        else:
+            _LOGGER.debug(
+                "After credit for %s: available_amps=%f", load_name, available_amps
+            )
 
         # Calculate minimum power requirements for all remaining lower-priority loads
         remaining_loads_min_power = 0.0
@@ -623,7 +687,23 @@ async def recalculate_load_control(hass: HomeAssistant):
             will_consume_amps = previous_plan.expected_load_amps
             _LOGGER.debug("Unable to throttle load %s due to rate limit", load_name)
 
-    hass.states.async_set("zero_grid.controlled_load", str(new_plan.used_amps))
+    # Cap used_amps to never exceed the physical grid capacity
+    # This is a safety check - if we've somehow over-allocated, we need to reduce loads
+    # But don't artificially inflate used_amps to match available when loads use less
+    grid_available_amps = CONFIG.max_house_load_amps - STATE.house_consumption_amps
+    max_safe_available = grid_available_amps - safety_margin_amps
+    if new_plan.used_amps > max_safe_available:
+        _LOGGER.error(
+            "CRITICAL: Planned consumption %f A exceeds safe limit %f A - emergency load shedding required!",
+            new_plan.used_amps,
+            max_safe_available,
+        )
+        # This should trigger emergency load shedding below, but cap for safety
+        # Don't update used_amps here - let the emergency shedding handle it
+
+    # Update entity with actual planned consumption (not capped to available)
+    if DOMAIN in hass.data and "controlled_load_sensor" in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["controlled_load_sensor"].update_value(new_plan.used_amps)
 
     # Post-planning adjustment: throttle down lower-priority loads to make room for higher-priority loads
     for load_index, load_name in enumerate(prioritised_loads):
@@ -732,7 +812,7 @@ async def recalculate_load_control(hass: HomeAssistant):
 
 @bind_hass
 async def execute_plan(hass: HomeAssistant, plan: PlanState):
-    """Changes entity states to acheive laod control plan."""
+    """Changes entity states to achieve load control plan."""
     now = datetime.now()
 
     for load_name in plan.controllable_loads:  # pylint: disable=consider-using-dict-items
@@ -750,6 +830,13 @@ async def execute_plan(hass: HomeAssistant, plan: PlanState):
         )
 
         # Turn on or off load only when we need to
+        if not config.switch_entity:
+            _LOGGER.error(
+                "Switch entity not configured for load %s, skipping control",
+                load_name,
+            )
+            continue
+
         switch_domain = parse_entity_domain(config.switch_entity)
 
         # Check if entity exists before attempting service calls
@@ -831,7 +918,7 @@ async def execute_plan(hass: HomeAssistant, plan: PlanState):
             )
 
         if (
-            config.can_throttle and new_plan.is_on
+            config.can_throttle and new_plan.is_on and config.throttle_amps_entity
         ):  # Removed is_on_load_control requirement
             # Check if throttle entity exists
             if hass.states.get(config.throttle_amps_entity) is None:
@@ -928,13 +1015,12 @@ async def safety_abort(hass: HomeAssistant):
     _LOGGER.error("Aborting load control, cutting all loads")
 
     plan = PlanState()
-    plan.available_amps = 0
-    plan.controllable_loads = 0
-    plan.used_amps = 0
+    plan.available_amps = 0.0
+    plan.used_amps = 0.0
     for control in CONFIG.controllable_loads.values():
         load_plan = ControllableLoadPlanState()
         load_plan.is_on = False
-        load_plan.expected_load_amps = 0
+        load_plan.expected_load_amps = 0.0
         plan.controllable_loads[control.name] = load_plan
 
     await execute_plan(hass, plan)

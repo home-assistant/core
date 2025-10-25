@@ -1,49 +1,77 @@
-"""Entities for ZeroGrid."""
+"""Sensor entities for ZeroGrid."""
 
-from homeassistant.components.sensor import SensorEntity
+from __future__ import annotations
+
+import logging
+
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import UnitOfElectricCurrent
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the ZeroGrid sensor platform."""
+    _LOGGER.debug("Setting up ZeroGrid sensor platform")
+
+    available_load_sensor = AvailableAmpsSensor()
+    controlled_load_sensor = LoadControlAmpsSensor()
+
+    # Store references in hass.data for updates
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN]["available_load_sensor"] = available_load_sensor
+    hass.data[DOMAIN]["controlled_load_sensor"] = controlled_load_sensor
+
+    async_add_entities([available_load_sensor, controlled_load_sensor])
 
 
 class AvailableAmpsSensor(SensorEntity):
-    """Current available for load control."""
+    """Sensor for current available for load control."""
+
+    _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.CURRENT
+    _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
+    _attr_should_poll = False
 
     def __init__(self) -> None:
-        """Initialise the sensor."""
-        self._attr_name = "Available Load"
-        self._attr_unique_id = "available_load"
-        self._attr_native_unit_of_measurement = "A"
+        """Initialize the sensor."""
+        self._attr_name = "Available load"
+        self._attr_unique_id = f"{DOMAIN}_available_load"
         self._attr_native_value = 0.0
 
-    @property
-    def native_value(self) -> float:
-        """Returns the native value."""
-        return self._attr_native_value
-
-    async def update_value(self, amps: float):
+    @callback
+    def update_value(self, amps: float) -> None:
         """Update the sensor value and notify HA."""
-        self._attr_native_value = amps
+        self._attr_native_value = round(amps, 2)
         self.async_write_ha_state()
 
 
 class LoadControlAmpsSensor(SensorEntity):
-    """Total current controlled by load control."""
+    """Sensor for total current controlled by load control."""
+
+    _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.CURRENT
+    _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
+    _attr_should_poll = False
 
     def __init__(self) -> None:
-        """Initialise the sensor."""
-        self._attr_name = "Controlled Load"
-        self._attr_unique_id = "controlled_load"
-        self._attr_native_unit_of_measurement = "A"
+        """Initialize the sensor."""
+        self._attr_name = "Controlled load"
+        self._attr_unique_id = f"{DOMAIN}_controlled_load"
         self._attr_native_value = 0.0
 
-    @property
-    def native_value(self) -> float:
-        """Returns the native value."""
-        return self._attr_native_value
-
-    async def update_value(self, amps: float):
+    @callback
+    def update_value(self, amps: float) -> None:
         """Update the sensor value and notify HA."""
-        self._attr_native_value = amps
+        self._attr_native_value = round(amps, 2)
         self.async_write_ha_state()
-
-
-async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None):
-    async_add_entities([AvailableAmpsSensor, LoadControlAmpsSensor()])

@@ -9,7 +9,7 @@ class ControllableLoadPlanState:
     def __init__(self) -> None:
         """Initialize the controllable load plan state."""
         self.is_on: bool = False
-        self.expected_load_amps: int = 0
+        self.expected_load_amps: float = 0.0
         self.throttle_amps: float = 0.0
 
 
@@ -18,8 +18,8 @@ class PlanState:
 
     def __init__(self) -> None:
         """Initialize the plan state."""
-        self.available_amps: float = 0
-        self.used_amps: float = 0
+        self.available_amps: float = 0.0
+        self.used_amps: float = 0.0
         self.controllable_loads: dict[str, ControllableLoadPlanState] = {}
 
 
@@ -47,7 +47,7 @@ class State:
 
     def __init__(self) -> None:
         """Initialize the state."""
-        self.available_amps: float = 0
+        self.available_amps: float = 0.0
         self.house_consumption_amps: float = 0.0
         self.load_control_consumption_amps: float = 0.0
         self.mains_voltage: float = 230.0
