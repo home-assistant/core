@@ -34,7 +34,7 @@ async def test_sensor_setup(hass: HomeAssistant, mock_sequence_data) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.getsequence.api.SequenceApiClient.async_get_accounts",
+        "GetSequenceIoApiClient.SequenceApiClient.async_get_accounts",
         return_value=mock_sequence_data,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -100,7 +100,7 @@ async def test_sensor_attributes(hass: HomeAssistant, mock_sequence_data) -> Non
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.getsequence.api.SequenceApiClient.async_get_accounts",
+        "GetSequenceIoApiClient.SequenceApiClient.async_get_accounts",
         return_value=mock_sequence_data,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -151,7 +151,7 @@ async def test_utility_meter_functionality(hass: HomeAssistant) -> None:
     cash_flow_data = get_mock_sequence_cash_flow_data()
 
     with patch(
-        "homeassistant.components.getsequence.api.SequenceApiClient.async_get_accounts",
+        "GetSequenceIoApiClient.SequenceApiClient.async_get_accounts",
         return_value=cash_flow_data[0],  # Initial state
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -175,7 +175,7 @@ async def test_utility_meter_functionality(hass: HomeAssistant) -> None:
 
     # Update with positive cash flow
     with patch(
-        "homeassistant.components.getsequence.api.SequenceApiClient.async_get_accounts",
+        "GetSequenceIoApiClient.SequenceApiClient.async_get_accounts",
         return_value=cash_flow_data[1],  # After positive flow
     ):
         coordinator = config_entry.runtime_data
@@ -194,7 +194,7 @@ async def test_utility_meter_functionality(hass: HomeAssistant) -> None:
 
     # Update with more positive cash flow
     with patch(
-        "homeassistant.components.getsequence.api.SequenceApiClient.async_get_accounts",
+        "GetSequenceIoApiClient.SequenceApiClient.async_get_accounts",
         return_value=cash_flow_data[2],  # More positive flow
     ):
         await coordinator.async_refresh()
@@ -221,7 +221,7 @@ async def test_external_account_categorization(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.getsequence.api.SequenceApiClient.async_get_accounts",
+        "GetSequenceIoApiClient.SequenceApiClient.async_get_accounts",
         return_value=get_mock_sequence_data(),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -279,7 +279,7 @@ async def test_error_handling_in_sensors(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.getsequence.api.SequenceApiClient.async_get_accounts",
+        "GetSequenceIoApiClient.SequenceApiClient.async_get_accounts",
         return_value=get_mock_sequence_data_with_errors(),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -305,7 +305,7 @@ async def test_individual_utility_meters_creation(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.getsequence.api.SequenceApiClient.async_get_accounts",
+        "GetSequenceIoApiClient.SequenceApiClient.async_get_accounts",
         return_value=get_mock_sequence_data(),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -367,7 +367,7 @@ async def test_utility_meter_state_class_and_attributes(hass: HomeAssistant) -> 
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.getsequence.api.SequenceApiClient.async_get_accounts",
+        "GetSequenceIoApiClient.SequenceApiClient.async_get_accounts",
         return_value=get_mock_sequence_data(),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

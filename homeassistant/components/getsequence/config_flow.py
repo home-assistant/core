@@ -6,6 +6,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from GetSequenceIoApiClient import (
+    SequenceApiClient,
+    SequenceApiError,
+    SequenceAuthError,
+    SequenceConnectionError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -18,12 +24,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import (
-    SequenceApiClient,
-    SequenceApiError,
-    SequenceAuthError,
-    SequenceConnectionError,
-)
 from .const import (
     ACCOUNT_TYPE_ACCOUNT,
     CONF_ACCESS_TOKEN,

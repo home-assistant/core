@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 import aiohttp
+from GetSequenceIoApiClient import SequenceApiClient, SequenceApiError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,7 +17,6 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .api import SequenceApiClient, SequenceApiError
 from .const import (
     CONF_ACCESS_TOKEN,
     CONF_INVESTMENT_ACCOUNTS,

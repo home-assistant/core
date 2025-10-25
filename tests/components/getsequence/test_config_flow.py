@@ -2,8 +2,9 @@
 
 from unittest.mock import patch
 
+from GetSequenceIoApiClient import SequenceConnectionError
+
 from homeassistant import config_entries
-from homeassistant.components.getsequence.api import SequenceConnectionError
 from homeassistant.components.getsequence.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
