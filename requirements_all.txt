@@ -2926,7 +2926,7 @@ streamlabswater==1.0.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.7.13
+subarulink==0.7.15
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
