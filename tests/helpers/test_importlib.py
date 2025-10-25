@@ -1,6 +1,7 @@
 """Tests for the importlib helper."""
 
-import time
+import asyncio
+import threading
 from typing import Any
 from unittest.mock import patch
 
@@ -49,11 +50,9 @@ async def test_async_import_module_failures(hass: HomeAssistant) -> None:
 
     mock_module = MockModule()
     # The failure should be not be cached
-    with (
-        patch(
-            "homeassistant.helpers.importlib.importlib.import_module",
-            return_value=mock_module,
-        ),
+    with patch(
+        "homeassistant.helpers.importlib.importlib.import_module",
+        return_value=mock_module,
     ):
         assert await importlib.async_import_module(hass, "test.module") is mock_module
 
@@ -90,8 +89,12 @@ async def test_async_import_module_concurrency(
     """Test importing a module with concurrency."""
     mock_module = MockModule()
 
+    ready = threading.Event()
+    release = threading.Event()
+
     def _mock_import(name: str, *args: Any) -> MockModule:
-        time.sleep(0.1)
+        ready.set()
+        release.wait()
         return mock_module
 
     with patch(
@@ -104,6 +107,9 @@ async def test_async_import_module_concurrency(
         task2 = hass.async_create_task(
             importlib.async_import_module(hass, "test.module"), eager_start=eager_start
         )
+        await hass.async_add_executor_job(ready.wait)
+        await asyncio.sleep(0)
+        release.set()
         module1 = await task1
         module2 = await task2
 
