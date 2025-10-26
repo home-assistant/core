@@ -157,6 +157,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
                     # Store previous stats if available
                     # This is used to calculate deltas for CPU and network usage
+                    # Added a walrus pattern to check if not None on previous_stats
                     previous_stats = (
                         prev_container.stats
                         if (
