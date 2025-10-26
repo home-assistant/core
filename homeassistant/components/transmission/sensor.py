@@ -151,7 +151,6 @@ class TransmissionSensor(TransmissionEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
-        self._attr_translation_key = entity_description.key
 
     @property
     def native_value(self) -> StateType:
