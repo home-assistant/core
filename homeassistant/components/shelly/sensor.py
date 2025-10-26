@@ -30,6 +30,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
@@ -1490,6 +1491,27 @@ RPC_SENSORS: Final = {
         translation_key="illuminance_level",
         device_class=SensorDeviceClass.ENUM,
         options=["dark", "twilight", "bright"],
+    ),
+    "number_average_temperature": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        role="average_temperature",
+        removal_condition=lambda config, _s, _k: not config.get("service:0", {}).get(
+            "weather_api", False
+        ),
+    ),
+    "number_last_precipitation": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+        role="last_precipitation",
+        removal_condition=lambda config, _s, _k: not config.get("service:0", {}).get(
+            "weather_api", False
+        ),
     ),
     "number_current_humidity": RpcSensorDescription(
         key="number",
