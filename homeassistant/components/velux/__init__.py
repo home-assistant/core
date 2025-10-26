@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.exception("Can't connect to velux interface: %s", ex)
         return False
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = module
+    entry.runtime_data = module
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -66,3 +66,6 @@ class VeluxModule:
         LOGGER.debug("Velux interface started")
         await self.pyvlx.load_scenes()
         await self.pyvlx.load_nodes()
+
+
+type VeluxConfigEntry = ConfigEntry[VeluxModule]
