@@ -445,7 +445,8 @@
           "main_area": "Main area",
           "secondary_area": "Secondary area",
           "home": "Home",
-          "demo": "Demo"
+          "demo": "Demo",
+          "poi": "Point of interest"
         }
       },
       "uptime": {
