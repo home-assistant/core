@@ -312,8 +312,7 @@ class FlowType(StrEnum):
     """Flow type."""
 
     CONFIG_FLOW = "config_flow"
-    # Add other flow types here as needed in the future,
-    # if we want to support them in the `next_flow` parameter.
+    OPTIONS_FLOW = "options_flow"
     CONFIG_SUBENTRIES_FLOW = "config_subentries_flow"
 
 
