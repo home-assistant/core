@@ -691,7 +691,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nice_go",
     "nightscout",
     "nilu",
-    "nina",
     "nissan_leaf",
     "nmap_tracker",
     "nmbs",
