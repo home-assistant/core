@@ -1,1 +1,1 @@
-"""The sony_projector component."""
+"""The Sony Projector integration."""

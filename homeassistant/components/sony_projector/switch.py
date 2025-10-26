@@ -12,15 +12,15 @@ from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_NAME
 
-DEFAULT_NAME = "Sony Projector"
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
@@ -37,6 +37,11 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Connect to Sony projector using network."""
+
+    _LOGGER.warning(
+        "The sony_projector switch platform is deprecated; use the media_player "
+        "platform instead"
+    )
 
     host = config[CONF_HOST]
     name = config[CONF_NAME]
@@ -59,7 +64,7 @@ class SonyProjector(SwitchEntity):
         """Init of the Sony projector."""
         self._sdcp = sdcp_connection
         self._name = name
-        self._state = None
+        self._state: bool | None = None
         self._available = False
         self._attributes = {}
 
@@ -86,7 +91,7 @@ class SonyProjector(SwitchEntity):
     def update(self) -> None:
         """Get the latest state from the projector."""
         try:
-            self._state = self._sdcp.get_power()
+            self._state = bool(self._sdcp.get_power())
             self._available = True
         except ConnectionRefusedError:
             _LOGGER.error("Projector connection refused")
@@ -97,7 +102,7 @@ class SonyProjector(SwitchEntity):
         _LOGGER.debug("Powering on projector '%s'", self.name)
         if self._sdcp.set_power(True):
             _LOGGER.debug("Powered on successfully")
-            self._state = STATE_ON
+            self._state = True
         else:
             _LOGGER.error("Power on command was not successful")
 
@@ -106,6 +111,6 @@ class SonyProjector(SwitchEntity):
         _LOGGER.debug("Powering off projector '%s'", self.name)
         if self._sdcp.set_power(False):
             _LOGGER.debug("Powered off successfully")
-            self._state = STATE_OFF
+            self._state = False
         else:
             _LOGGER.error("Power off command was not successful")
