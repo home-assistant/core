@@ -3205,7 +3205,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
             reason=reason,
             description_placeholders=description_placeholders,
         )
-        return result  # noqa: RET504
+        if next_flow:
+            result["next_flow"] = next_flow
+        return result
 
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
         """Run when config flow creates a config entry.
@@ -3244,6 +3246,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
         )
 
         result["minor_version"] = self.MINOR_VERSION
+        if next_flow:
+            result["next_flow"] = next_flow
         result["options"] = options or {}
         result["subentries"] = subentries or ()
         result["version"] = self.VERSION
