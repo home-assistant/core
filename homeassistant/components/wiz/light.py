@@ -120,6 +120,30 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         super()._async_update_attrs()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Instruct the light to turn on."""
-        await self._device.turn_on(_async_pilot_builder(**kwargs))
+        """Instruct the light to turn on, handling effects and mode transitions properly."""
+        # If an effect is requested, apply it directly.
+        if ATTR_EFFECT in kwargs:
+            scene_name = kwargs[ATTR_EFFECT]
+            scene_id = get_id_from_scene_name(scene_name)
+            if scene_id == 1000:  # rhythm
+                pilot = PilotBuilder()
+            else:
+                pilot = PilotBuilder(
+                    scene=scene_id,
+                    brightness=kwargs.get(ATTR_BRIGHTNESS),
+                )
+            await self._device.turn_on(pilot)
+            await self.coordinator.async_request_refresh()
+            return
+
+        # If we’re changing color or color temp, clear any running effect.
+        if self._attr_effect:
+            # Send a "neutral" update to exit effect mode.
+            # This ensures we can control color/temp again.
+            await self._device.turn_on(PilotBuilder(scene=None))
+
+        # Normal handling for color temp / RGB / brightness
+        pilot = _async_pilot_builder(**kwargs)
+        await self._device.turn_on(pilot)
         await self.coordinator.async_request_refresh()
+
