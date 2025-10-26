@@ -1,0 +1,9 @@
+{
+  "batteries": [
+    {
+      "id": "identifier",
+      "name": "name",
+      "serial_number": "serial number"
+    }
+  ]
+}

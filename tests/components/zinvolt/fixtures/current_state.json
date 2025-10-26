@@ -1,0 +1,51 @@
+{
+  "sn": "ALG001124100107",
+  "name": "ALG001124100107",
+  "longitude": 4.8936,
+  "latitude": 52.3792,
+  "onlineStatus": "ONLINE",
+  "currentPower": {
+    "soc": 4,
+    "coc": 0.04,
+    "pbt": 0,
+    "ppv": 0,
+    "pso": 0,
+    "onGrid": true,
+    "onlineStatus": "ONLINE",
+    "smp": 800,
+    "isDormancy": false
+  },
+  "smartMode": "DYNAMIC",
+  "globalSettings": {
+    "maxOutput": 800,
+    "maxOutputLimit": 800,
+    "maxOutputUnlocked": false,
+    "batHighCap": 100,
+    "batUseCap": 25,
+    "maxChargePower": 900,
+    "feedModePower": {
+      "modeType": "FIXED",
+      "fixedPower": 200,
+      "pvFeedLimitPower": 800,
+      "equips": []
+    },
+    "haveElectricityPrices": true,
+    "standbyTime": 60
+  },
+  "tips": [],
+  "bpd": 493,
+  "updating": {
+    "units": []
+  },
+  "statistic": {
+    "co2": 0,
+    "saveAmount": 0,
+    "totalCapacity": 0
+  },
+  "isShowStatistic": false,
+  "meterReaders": [],
+  "isHomeDisplay": false,
+  "dynamicPriceStatus": "CONFIGURED",
+  "dynamicStrategyStatus": "CONFIGURED",
+  "remindManualSocCalibration": true
+}
