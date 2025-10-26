@@ -86,8 +86,11 @@ PyQRCode==1.2.1
 # homeassistant.components.rmvtransport
 PyRMVtransport==0.3.3
 
+# homeassistant.components.sunricher_dali_center
+PySrDaliGateway==0.13.1
+
 # homeassistant.components.switchbot
-PySwitchbot==0.71.0
+PySwitchbot==0.72.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -191,7 +194,7 @@ aioairq==0.4.7
 aioairzone-cloud==0.7.2
 
 # homeassistant.components.airzone
-aioairzone==1.0.1
+aioairzone==1.0.2
 
 # homeassistant.components.alexa_devices
 aioamazondevices==6.4.6
@@ -393,7 +396,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.14.0
+aioshelly==13.15.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -435,7 +438,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==2.0.1
+aiovodafone==3.0.0
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -791,7 +794,7 @@ decora-wifi==1.4
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==15.1.0
+deebot-client==16.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -957,6 +960,9 @@ feedparser==6.0.12
 
 # homeassistant.components.file
 file-read-backwards==2.0.0
+
+# homeassistant.components.fing
+fing_agent_api==1.0.3
 
 # homeassistant.components.fints
 fints==3.1.0
@@ -1195,7 +1201,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.82
+holidays==0.83
 
 # homeassistant.components.frontend
 home-assistant-frontend==20251001.4
@@ -1204,7 +1210,7 @@ home-assistant-frontend==20251001.4
 home-assistant-intents==2025.10.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.3.0
+homematicip==2.3.1
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1300,7 +1306,7 @@ isal==1.8.0
 ismartgate==5.0.2
 
 # homeassistant.components.israel_rail
-israel-rail-api==0.1.3
+israel-rail-api==0.1.4
 
 # homeassistant.components.abode
 jaraco.abode==6.2.1
@@ -1331,7 +1337,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.10.17.202411
+knx-frontend==2025.10.26.81530
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1735,7 +1741,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.8.1
+plugwise==1.8.2
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -1981,7 +1987,7 @@ pydrawise==2025.9.0
 pydroid-ipcam==3.0.0
 
 # homeassistant.components.droplet
-pydroplet==2.3.3
+pydroplet==2.3.4
 
 # homeassistant.components.ebox
 pyebox==1.1.4
@@ -2305,10 +2311,10 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.4
+pyportainer==1.0.9
 
 # homeassistant.components.probe_plus
-pyprobeplus==1.1.1
+pyprobeplus==1.1.2
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
@@ -2580,7 +2586,7 @@ python-tado==0.18.15
 python-technove==2.0.0
 
 # homeassistant.components.telegram_bot
-python-telegram-bot[socks]==21.5
+python-telegram-bot[socks]==22.1
 
 # homeassistant.components.vlc
 python-vlc==3.0.18122
@@ -2926,7 +2932,7 @@ streamlabswater==1.0.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.7.13
+subarulink==0.7.15
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
@@ -2982,7 +2988,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.7.9
+teslemetry-stream==0.7.10
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
@@ -3045,7 +3051,7 @@ triggercmd==0.0.36
 ttls==1.8.3
 
 # homeassistant.components.thethingsnetwork
-ttn_client==1.2.0
+ttn_client==1.2.2
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.4
@@ -3241,7 +3247,7 @@ youless-api==2.2.0
 youtubeaio==2.0.0
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.09.26
+yt-dlp[default]==2025.10.22
 
 # homeassistant.components.zabbix
 zabbix-utils==2.0.3
