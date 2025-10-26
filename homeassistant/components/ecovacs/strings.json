@@ -70,14 +70,14 @@
       "reset_lifespan_side_brush": {
         "name": "Reset side brush lifespan"
       },
-      "station_action_empty_dustbin": {
-        "name": "Empty dustbin"
+      "station_action_clean_base": {
+        "name": "Clean base"
       },
       "station_action_dry_mop": {
         "name": "Dry mop"
       },
-      "station_action_clean_base": {
-        "name": "Clean base"
+      "station_action_empty_dustbin": {
+        "name": "Empty dustbin"
       }
     },
     "event": {
