@@ -9,12 +9,6 @@ add_bonus_time:
           max: 1440
           unit_of_measurement: minutes
           mode: box
-    config_entry_id:
-      required: true
-      example: 1234567890abcdef1234567890abcdef
-      selector:
-        config_entry:
-          integration: nintendo_parental_controls
     device_id:
       required: true
       example: 1234567890abcdef1234567890abcdef

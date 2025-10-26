@@ -81,10 +81,6 @@
           "description": "The ID of the device to add bonus time to.",
           "example": "1234567890abcdef",
           "name": "Device"
-        },
-        "config_entry_id": {
-          "description": "The ID of the account to which the device belongs.",
-          "name": "Account"
         }
       },
       "name": "Add Bonus Time"

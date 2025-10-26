@@ -5,12 +5,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import ATTR_BONUS_TIME, DOMAIN
+from .coordinator import NintendoParentalControlsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +33,6 @@ def async_setup_services(
         service_func=async_add_bonus_time,
         schema=vol.Schema(
             {
-                vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
                 vol.Required(ATTR_DEVICE_ID): cv.string,
                 vol.Required(ATTR_BONUS_TIME): vol.All(int, vol.Range(min=5, max=30)),
             }
@@ -40,20 +40,18 @@ def async_setup_services(
     )
 
 
-def get_config_entry(hass: HomeAssistant, account_id: str):
-    """Get the coordinator from the Home Assistant instance."""
-    return hass.config_entries.async_get_entry(account_id)
+def _get_nintendo_device_id(dev: dr.DeviceEntry) -> str | None:
+    """Get the Nintendo device ID from a device entry."""
+    for identifier in dev.identifiers:
+        if identifier[0] == DOMAIN:
+            return identifier[1].split("_")[-1]
+    return None
 
 
 async def async_add_bonus_time(call: ServiceCall) -> None:
     """Add bonus time to a device."""
+    config_entry: NintendoParentalControlsConfigEntry | None
     data = call.data
-    config_entry = get_config_entry(call.hass, data[ATTR_CONFIG_ENTRY_ID])
-    if config_entry is None:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="config_entry_not_found",
-        )
     device_id: str = data[ATTR_DEVICE_ID]
     bonus_time: int = data[ATTR_BONUS_TIME]
     device = dr.async_get(call.hass).async_get(device_id)
@@ -62,8 +60,12 @@ async def async_add_bonus_time(call: ServiceCall) -> None:
             translation_domain=DOMAIN,
             translation_key="device_not_found",
         )
-    device_id = next(iter(device.identifiers))[1].split("_")[-1]
-
-    coordinator = config_entry.runtime_data
-
-    await coordinator.api.devices[device_id].add_extra_time(bonus_time)
+    for entry_id in device.config_entries:
+        config_entry = call.hass.config_entries.async_get_entry(entry_id)
+        if config_entry is not None and config_entry.domain == DOMAIN:
+            break
+    nintendo_device_id = _get_nintendo_device_id(device)
+    if config_entry and nintendo_device_id:
+        await config_entry.runtime_data.api.devices[nintendo_device_id].add_extra_time(
+            bonus_time
+        )
