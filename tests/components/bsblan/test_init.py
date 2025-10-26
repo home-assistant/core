@@ -179,3 +179,25 @@ async def test_config_entry_timeout_error(
 
     # Should be in retry state due to timeout
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_slow_no_dhw_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test slow coordinator when device does not support DHW (AttributeError)."""
+    # Mock that device doesn't support DHW - raises AttributeError
+    mock_bsblan.hot_water_config.side_effect = AttributeError(
+        "Device does not support DHW"
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Integration should still load even if DHW is not supported
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Verify slow coordinator handled the AttributeError gracefully
+    assert mock_bsblan.hot_water_config.called
