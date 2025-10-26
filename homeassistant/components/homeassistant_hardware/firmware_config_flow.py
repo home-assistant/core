@@ -336,6 +336,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             description_placeholders={
                 **self._get_translation_placeholders(),
                 "firmware_name": self.installing_firmware_name,
+                "integration_docs_url": "https://www.home-assistant.io/integrations/",
             },
         )
 
