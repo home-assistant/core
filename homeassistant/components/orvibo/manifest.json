@@ -5,11 +5,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/orvibo",
   "iot_class": "local_polling",
-  "loggers": [
-    "orvibo"
-  ],
+  "loggers": ["orvibo"],
   "quality_scale": "legacy",
-  "requirements": [
-    "orvibo==1.1.2"
-  ]
+  "requirements": ["orvibo==1.1.2"]
 }
