@@ -72,6 +72,12 @@
       },
       "station_action_empty_dustbin": {
         "name": "Empty dustbin"
+      },
+      "station_action_dry_mop": {
+        "name": "Dry mop"
+      },
+      "station_action_clean_base": {
+        "name": "Clean base"
       }
     },
     "event": {

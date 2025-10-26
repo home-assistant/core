@@ -38,6 +38,12 @@
       },
       "station_action_empty_dustbin": {
         "default": "mdi:delete-restore"
+      },
+      "station_action_dry_mop": {
+        "default": "mdi:broom"
+      },
+      "station_action_clean_base": {
+        "default": "mdi:home"
       }
     },
     "event": {

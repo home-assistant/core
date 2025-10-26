@@ -23,7 +23,11 @@ SUPPORTED_LIFESPANS = (
     LifeSpan.STATION_FILTER,
 )
 
-SUPPORTED_STATION_ACTIONS = (StationAction.EMPTY_DUSTBIN,)
+SUPPORTED_STATION_ACTIONS = (
+    StationAction.EMPTY_DUSTBIN,
+    StationAction.DRY_MOP,
+    StationAction.CLEAN_BASE,
+)
 
 LEGACY_SUPPORTED_LIFESPANS = (
     "main_brush",
