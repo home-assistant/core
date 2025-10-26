@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 import urllib
 import zoneinfo
 
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from todoist_api_python.models import Due
@@ -36,6 +37,13 @@ from tests.typing import ClientSessionGenerator
 # This keeps UTC-6 all year round
 TZ_NAME = "America/Regina"
 TIMEZONE = zoneinfo.ZoneInfo(TZ_NAME)
+
+
+@pytest.fixture(autouse=True)
+def freeze_the_time():
+    """Freeze the time."""
+    with freeze_time("2024-05-24 12:00:00"):
+        yield
 
 
 @pytest.fixture(autouse=True)
