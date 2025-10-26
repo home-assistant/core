@@ -35,6 +35,7 @@ from .const import (
     CONF_DEGREE,
     CONF_LOWER_LIMIT,
     CONF_POLYNOMIAL,
+    CONF_POLYNOMIAL_CONFIG,
     CONF_PRECISION,
     CONF_UPPER_LIMIT,
     DATA_COMPENSATION,
@@ -168,11 +169,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Compensation from a config entry."""
     config = dict(entry.options)
-    data_points: list[dict[str, float]] = config[CONF_DATAPOINTS]
+    data_points: list[dict[str, float]] = config[CONF_POLYNOMIAL_CONFIG][
+        CONF_DATAPOINTS
+    ]
     new_data_points = [
         [data_point["compensated_value"], data_point["uncompensated_value"]]
         for data_point in data_points
     ]
+    config[CONF_DEGREE] = config[CONF_POLYNOMIAL_CONFIG][CONF_DEGREE]
     config[CONF_DATAPOINTS] = new_data_points
 
     await create_compensation_data(hass, entry.entry_id, config, True)

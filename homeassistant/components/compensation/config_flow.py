@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
 )
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -37,6 +38,7 @@ from .const import (
     CONF_DATAPOINTS,
     CONF_DEGREE,
     CONF_LOWER_LIMIT,
+    CONF_POLYNOMIAL_CONFIG,
     CONF_PRECISION,
     CONF_UPPER_LIMIT,
     DEFAULT_DEGREE,
@@ -52,27 +54,45 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
 
     return vol.Schema(
         {
-            vol.Required(CONF_DATAPOINTS): ObjectSelector(
-                ObjectSelectorConfig(
-                    label_field="uncompensated_value",
-                    description_field="compensated_value",
-                    multiple=True,
-                    translation_key=CONF_DATAPOINTS,
-                    fields={
-                        "uncompensated_value": ObjectSelectorField(
-                            required=True,
-                            selector=NumberSelector(
-                                NumberSelectorConfig(mode=NumberSelectorMode.BOX)
-                            ),
+            vol.Required(CONF_POLYNOMIAL_CONFIG): section(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_DATAPOINTS): ObjectSelector(
+                            ObjectSelectorConfig(
+                                label_field="uncompensated_value",
+                                description_field="compensated_value",
+                                multiple=True,
+                                translation_key=CONF_DATAPOINTS,
+                                fields={
+                                    "uncompensated_value": ObjectSelectorField(
+                                        required=True,
+                                        selector=NumberSelector(
+                                            NumberSelectorConfig(
+                                                mode=NumberSelectorMode.BOX
+                                            )
+                                        ),
+                                    ),
+                                    "compensated_value": ObjectSelectorField(
+                                        required=True,
+                                        selector=NumberSelector(
+                                            NumberSelectorConfig(
+                                                mode=NumberSelectorMode.BOX
+                                            )
+                                        ),
+                                    ),
+                                },
+                            )
                         ),
-                        "compensated_value": ObjectSelectorField(
-                            required=True,
-                            selector=NumberSelector(
-                                NumberSelectorConfig(mode=NumberSelectorMode.BOX)
-                            ),
+                        vol.Optional(
+                            CONF_DEGREE, default=DEFAULT_DEGREE
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=0, max=7, step=1, mode=NumberSelectorMode.BOX
+                            )
                         ),
                     },
-                )
+                ),
+                SectionConfig(collapsed=False),
             ),
             vol.Optional(CONF_ATTRIBUTE): AttributeSelector(
                 AttributeSelectorConfig(entity_id=entity_id)
@@ -81,9 +101,6 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
             vol.Optional(CONF_LOWER_LIMIT, default=False): BooleanSelector(),
             vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): NumberSelector(
                 NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
-            ),
-            vol.Optional(CONF_DEGREE, default=DEFAULT_DEGREE): NumberSelector(
-                NumberSelectorConfig(min=0, max=7, step=1, mode=NumberSelectorMode.BOX)
             ),
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): TextSelector(),
         }
