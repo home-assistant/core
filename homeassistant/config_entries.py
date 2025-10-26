@@ -1664,6 +1664,8 @@ class ConfigEntriesFlowManager(
                 self.config_entries.async_update_entry(
                     entry, discovery_keys=new_discovery_keys
                 )
+
+            self._async_validate_next_flow(result)
             return result
 
         # Mark the step as done.
