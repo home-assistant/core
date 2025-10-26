@@ -1019,10 +1019,10 @@ async def test_rpc_rgbcct_light(
         blocking=True,
     )
 
-    mock_rpc_device.mock_update()
     mock_rpc_device.call_rpc.assert_called_once_with(
         "RGBCCT.Set", {"id": 0, "on": True}
     )
+    mock_rpc_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
@@ -1062,7 +1062,6 @@ async def test_rpc_rgbcct_light(
     )
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbcct:0", "ct", 4444)
-
     mock_rpc_device.mock_update()
 
     mock_rpc_device.call_rpc.assert_called_once_with(
@@ -1086,7 +1085,6 @@ async def test_rpc_rgbcct_light(
         monkeypatch, mock_rpc_device, "rgbcct:0", "rgb", [100, 150, 200]
     )
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbcct:0", "mode", "rgb")
-
     mock_rpc_device.mock_update()
 
     mock_rpc_device.call_rpc.assert_called_once_with(
