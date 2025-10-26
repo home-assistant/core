@@ -45,7 +45,6 @@
         "title": "Edit Orvibo S20 Configuration",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]",
           "mac": "MAC Address"
         }
       },
@@ -60,13 +59,6 @@
         "description": "No S20 switches were discovered on the network.",
         "menu_options": {
           "edit": "Enter configuration manually"
-        }
-      },
-      "edit_discovered": {
-        "title": "Edit additional connection information",
-        "description": "S20 Host: {host}, MAC {mac}",
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]"
         }
       }
     }

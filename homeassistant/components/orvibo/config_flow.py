@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 FULL_EDIT_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_MAC): cv.string,
     }
@@ -31,11 +30,6 @@ FULL_EDIT_SCHEMA = vol.Schema(
 
 def _format_mac(mac_bytes: bytes) -> str:
     return format_mac(":".join(f"{b:02x}" for b in mac_bytes).lower())
-
-
-SHORT_EDIT_SCHEMA = vol.Schema(
-    {vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string}
-)
 
 
 class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -104,6 +98,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
             if not error:
                 await self.async_set_unique_id("S20Switch_" + user_input[CONF_MAC])
                 self._abort_if_unique_id_configured()
+                user_input[CONF_NAME] = f"{DEFAULT_NAME} ({user_input[CONF_HOST]})"
                 return self.async_create_entry(
                     title=user_input[CONF_HOST], data=user_input
                 )
@@ -151,8 +146,16 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
                 if _chosen_host == host:
                     self.chosen_switch[CONF_HOST] = host
                     self.chosen_switch[CONF_MAC] = _format_mac(data[CONF_MAC])
+                    self.chosen_switch[CONF_NAME] = f"{DEFAULT_NAME} ({host})"
 
-            return await self.async_step_edit_discovered()
+                await self.async_set_unique_id(
+                    "S20Switch_" + self.chosen_switch[CONF_MAC]
+                )
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=self.chosen_switch
+                )
 
         _LOGGER.debug("discovered switches: %s", self._discovered_switches)
 
@@ -163,29 +166,6 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="choose_switch",
             data_schema=vol.Schema({vol.Required(CONF_SWITCH_LIST): vol.In(_options)}),
-        )
-
-    async def async_step_edit_discovered(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Edit a discovered or manually inputted server."""
-
-        if user_input:
-            user_input[CONF_HOST] = self.chosen_switch[CONF_HOST]
-            user_input[CONF_MAC] = self.chosen_switch[CONF_MAC]
-
-            await self.async_set_unique_id("S20Switch_" + user_input[CONF_MAC])
-            self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
-
-        return self.async_show_form(
-            step_id="edit_discovered",
-            description_placeholders={
-                "host": self.chosen_switch[CONF_HOST],
-                "mac": self.chosen_switch[CONF_MAC],
-            },
-            data_schema=SHORT_EDIT_SCHEMA,
         )
 
     async def async_step_discovery_failed(
