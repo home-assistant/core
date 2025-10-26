@@ -17,23 +17,19 @@ rules:
   docs-removal-instructions: done
   entity-event-setup:
     status: todo
-    comment: not checked yet
+    comment: subscribe is ok, unsubscribe needs to be added
   entity-unique-id: done
   has-entity-name:
     status: todo
-    comment: recheck
+    comment: light name still needs to be fixed, all else ok
   runtime-data:
     status: todo
     comment: addressed in https://github.com/home-assistant/core/pull/155207
-  test-before-configure:
-    status: todo
-    comment: not checked yet
+  test-before-configure: done
   test-before-setup:
     status: todo
-    comment: not checked yet
-  unique-config-entry:
-    status: todo
-    comment: not checked yet
+    comment: needs rework, failure to setup currently only returns false
+  unique-config-entry: done
 
   # Silver
   action-exceptions: todo
