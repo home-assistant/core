@@ -5,7 +5,6 @@ get_areas:
     entity:
       integration: matter
       domain: vacuum
-
 clean_areas:
   target:
     entity:
@@ -17,3 +16,29 @@ clean_areas:
       example:
         - 1
         - 3
+water_heater_boost:
+  target:
+    entity:
+      domain: water_heater
+  fields:
+    duration:
+      selector:
+        number:
+          min: 60
+          max: 14400
+          step: 60
+          mode: box
+      default: 3600
+      required: true
+    emergency_boost:
+      selector:
+        boolean:
+      default: false
+    temporary_setpoint:
+      selector:
+        number:
+          min: 30
+          max: 65
+          step: 1
+          mode: slider
+      default: 65
